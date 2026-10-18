@@ -51,13 +51,13 @@ SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
     ; Bank $03 jump table (9 entries, called via rst $10 with H=$03)
     dw label4013             ; Entry 0: Serial/link communication
     dw label443f             ; Entry 1: MonsterInfoLoad → $DA33
-    dw SetMon_6980         ; Entry 2
-    dw label69a2             ; Entry 3
-    dw label6e24             ; Entry 4
-    dw SetMon_7160         ; Entry 5
-    dw label7190             ; Entry 6
-    dw label71b6             ; Entry 7
-    dw CallMon_7134         ; Entry 8
+    dw ItemLoadRecord   ; Entry 2: ItemLoadRecord — item [$DA5E]'s 12-byte record -> $DA62-$DA6D (S151)
+    dw ItemCheckUsable   ; Entry 3: ItemCheckUsable — may item [$DA5E] be used now? ($FF = no; S151)
+    dw ItemApplyEffect   ; Entry 4: ItemApplyEffect — the item's FIELD effect (S151)
+    dw ItemBagCompact   ; Entry 5: ItemBagCompact — close the bag's gaps (S151)
+    dw ItemBagAdd   ; Entry 6: ItemBagAdd — [$DA5E] into the first free bag slot ($FF = full; S151)
+    dw ItemBagRemove   ; Entry 7: ItemBagRemove — one [$DA5E] out of the bag ($FF = none; S151)
+    dw ItemConsumeRoll   ; Entry 8: ItemConsumeRoll — used up? (RNG mod 100 < record +3; S151)
 
 label4013:
     ld a, [$c864]
@@ -3684,13 +3684,28 @@ MonsterInfo_220_Unused_220:
     db 1, 0, 3, 3, 2, 3, 2, 2, 1, 1, 2, 2, 0  ; Resist O-Z+unused: Sacrifice..GigaSlash+unused
     db 7  ; Tier/rank
 
-SetMon_6980:
+; -----------------------------------------------------------------------------
+; ITEMS (bank $03 entries 2-8; decoded S151, ROADMAP E9 — DATA_STRUCTURES "Items (S151)").
+; RAM: $DA5E = the item in use ($FF = refused / none), $DA5F = its bag slot, $DA60 =
+; the target monster's party slot, $DA62-$DA6D = its record (ItemInfoTable below):
+;   +0 group (not read), +1/+2 buy price, +3 used-up chance % (entry 8), +4 field use
+;   (0/1 usable; 2/3 "uses it as a tool. But nothing happens" — bank $07), +5 target
+;   (0/2/4 = the WHO window), +6 -, +7 use line / +8 result line (bank $41 mode 13),
+;   +9 POWER ($DA6B: heal = power + 0-10, seeds + power, meats wildness - power),
+;   +10 -, +11 flags (bit 0 = not on the SELL list, bit 2 = kept after a lost battle).
+; Entry 2 ItemLoadRecord copies the record (patched builds: bank $77 entry 16
+; ItemRecordCopy, + wItemBase); entry 3 ItemCheckUsable / entry 4 ItemApplyEffect
+; dispatch on the id through two 44-entry rst $00 tables (ItemUsableTable $69AC /
+; ItemEffectTable $6E31 — mgbdis decoded them as code below; the clean form, every
+; handler named, is patches/bank_003.asm, tools/resection_items_03.py).
+; -----------------------------------------------------------------------------
+ItemLoadRecord:
     ld de, $da62
-    call SaveMon_6987
+    call ItemCopyRecord
     ret
 
 
-SaveMon_6987:
+ItemCopyRecord:
     push de
     ld a, [$da5e]
     ld c, $0c
@@ -3713,7 +3728,10 @@ jr_003_699b:
 
     ret
 
-label69a2:
+; Entry 3 ItemCheckUsable (S151): rst $00 over the item id into ItemUsableTable
+; ($69AC, the 44 dw below decoded by mgbdis as `inc b / ld l, d …`; clean form with every
+; handler named: patches/bank_003.asm). Patched builds dispatch on wItemBase.
+ItemCheckUsable:
     ld a, [$da5e]
     cp $ff
     ret z
@@ -3809,7 +3827,7 @@ SetMon_69ca:
     rst $18
     ld l, l
     ld [wWarpGateId], a
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -3997,7 +4015,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4023,7 +4041,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4037,7 +4055,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4051,7 +4069,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4065,7 +4083,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4079,7 +4097,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4104,7 +4122,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4115,7 +4133,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4126,7 +4144,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4137,7 +4155,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4148,7 +4166,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4159,7 +4177,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4170,13 +4188,13 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4190,7 +4208,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4204,7 +4222,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4218,7 +4236,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4232,7 +4250,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4246,7 +4264,7 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4529,7 +4547,9 @@ jr_003_6e0b:
     ret
 
 
-LoadMon_6e11:
+; ItemTargetUnusable (S151): NZ + $DA5E := $FF when the target [$DA60]'s record byte
+; $CB0B (+$4A) has bit 7 set (the item cannot act on it).
+ItemTargetUnusable:
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
@@ -4541,12 +4561,15 @@ LoadMon_6e11:
     or a
     ret
 
-label6e24:
+; Entry 4 ItemApplyEffect (S151): the record copied (entry 2), then rst $00 over the
+; item id into ItemEffectTable ($6E31, 44 dw decoded by mgbdis as `adc c / ld l, [hl] …`;
+; clean form: patches/bank_003.asm). Patched builds dispatch on wItemBase.
+ItemApplyEffect:
     ld a, [$da5e]
     cp $ff
     ret z
 
-    call SetMon_6980
+    call ItemLoadRecord
     ld a, [$da5e]
     rst $00
     adc c
@@ -4649,7 +4672,7 @@ label6e24:
     ld h, $00
     ld a, [$da60]
     call GetMonsterSkillData
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4662,7 +4685,7 @@ label6e24:
     ld a, $02
     ld [$da60], a
     call CallMon_6ec4
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4688,7 +4711,7 @@ CallMon_6ec4:
     call SetMon_6ef2
     ld a, $02
     call SetMon_6ef2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4698,7 +4721,7 @@ SetMon_6ef2:
     ret nc
 
     ld [$da60], a
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
 
     ld a, [$da60]
@@ -4722,7 +4745,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call GetMonsterSlotAndPush
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4732,7 +4755,7 @@ SetMon_6ef2:
     ld a, [$da60]
     ld hl, $cb15
     call WriteMonsterWord
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4740,7 +4763,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 2, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4748,7 +4771,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 3, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4756,7 +4779,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 4, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4764,7 +4787,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 0, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4772,7 +4795,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 1, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4788,7 +4811,7 @@ SetMon_6ef2:
     call WriteMonsterWord
     ld hl, $0103
     rst $10
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4797,7 +4820,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call AddMonsterHP_Setup
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4806,7 +4829,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call MonsterStatAddWrap
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4815,7 +4838,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SetATKMax999
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4824,7 +4847,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterATK_Alt
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4833,7 +4856,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call MonsterStatDecLoop
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4842,7 +4865,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call AddMonsterINT_Alt
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4851,7 +4874,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterWLD
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4864,7 +4887,7 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     set 2, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4873,7 +4896,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterWLD
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4892,7 +4915,7 @@ SetMon_6ef2:
     ret
 
 
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4904,7 +4927,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat1
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4913,7 +4936,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat1
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4922,7 +4945,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat3
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4931,7 +4954,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat3
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4940,7 +4963,7 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4949,24 +4972,24 @@ SetMon_6ef2:
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
     ret
 
 
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
     ld hl, $c93e
     set 1, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4980,7 +5003,7 @@ SetMon_6ef2:
     ld [$da09], a
     ld hl, $c90d
     inc [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4988,7 +5011,7 @@ SetMon_6ef2:
     ld bc, $0010
     ld a, $01
     call FillNBytesWithRegA
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -4996,7 +5019,7 @@ SetMon_6ef2:
     or a
     jr nz, jr_003_710f
 
-    call CallMon_7134
+    call ItemConsumeRoll
     di
     call SaveGameState
     ei
@@ -5045,7 +5068,10 @@ jr_003_712e:
     ret
 
 
-CallMon_7134:
+; Entry 8 (S151): RNG16 mod 100 < [$DA65] (record +3) -> the item is used up: $DA5E :=
+; $FF, bag slot [$DA5F] := $FF, the bag compacted. +3 = 100 always, 0 never. The use
+; message "The X falls apart!" (line 0) shows when used up with +3 < 100 (bank $07).
+ItemConsumeRoll:
     call GenerateRNG
     ld a, [wRNG1]
     ld l, a
@@ -5067,11 +5093,13 @@ CallMon_7134:
     adc h
     ld h, a
     ld [hl], $ff
-    call SetMon_7160
+    call ItemBagCompact
     ret
 
 
-SetMon_7160:
+; Entry 5 (S151): the bag (wInventory, 20 B) copied to $C0D8, cleared to $FF, and
+; refilled without the $00 / $FF gaps.
+ItemBagCompact:
     ld hl, $c0d8
     ld de, wInventory
     ld b, $14
@@ -5108,7 +5136,9 @@ jr_003_718c:
 
     ret
 
-label7190:
+; Entry 6 (S151): [$DA5E] into the first empty ($00 / $FF) bag slot; a full bag ->
+; $DA5E := $FF.
+ItemBagAdd:
     ld a, [$da5e]
     cp $00
     ret z
@@ -5141,7 +5171,9 @@ jr_003_71b1:
     ld [hl], a
     ret
 
-label71b6:
+; Entry 7 (S151): the first bag slot holding [$DA5E] := $FF, then entry 5; none ->
+; $DA5E := $FF.
+ItemBagRemove:
     ld a, [$da5e]
     cp $00
     ret z
@@ -5168,7 +5200,7 @@ jr_003_71c4:
 
 jr_003_71d4:
     ld [hl], $ff
-    call SetMon_7160
+    call ItemBagCompact
     ret
 
 
@@ -5180,10 +5212,14 @@ ItemInfoTable:
     ;        3 meat, 4 staff, 5 WarpWing, 6 TinyMedal, 7 key / field)
     ;   +$01/+$02 BUY PRICE, 16-bit LE ($DA63/$DA64; the shop lists, the
     ;        sell price = bank $09 ShopSellPrice; == the FAQ's prices)
-    ;   +$0B flags: bit 2 = kept after a lost battle (bank $50)
-    ;   +$03-$0A: not decoded yet (ROADMAP E9 item authoring).
-    ; The patched build owns this table as compiler region gd_item_info
-    ; (gamedata.items: prices). Re-sectioned S117 (tools/resection_shops.py).
+    ;   +$0B flags: bit 0 = not on the SELL list (bank $09), bit 2 = kept after
+    ;        a lost battle (banks $06 / $50)
+    ;   +$03 used-up chance % (entry 8), +$04 field use (0/1 yes, 2/3 "as a tool"),
+    ;   +$05 target (0/2/4 = the WHO window), +$06 / +$0A not read, +$07 use line /
+    ;   +$08 result line (bank $41 mode 13), +$09 POWER — all decoded S151 (the
+    ;   field list: ItemLoadRecord's header). Since S151 patched builds read the
+    ;   records from bank $77 ItemTable (gd_item_info keeps these original bytes).
+    ; Re-sectioned S117 (tools/resection_shops.py).
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [ 0] id 0 = no item
     db $00, $08, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [ 1] ITEM_HERB — HP/MP restore, price 8
     db $00, $50, $00, $64, $00, $04, $01, $03, $04, $3c, $46, $00   ; [ 2] ITEM_LOVEWATER — HP/MP restore, price 80

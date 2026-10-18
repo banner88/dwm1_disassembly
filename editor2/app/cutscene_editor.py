@@ -96,7 +96,9 @@ STEP_HELP = {
     'followers': 'Hides the monsters walking behind the player (or shows them again) — for '
                  'scenes where they would be in the way.',
     'give_item': 'Puts an item in the bag. The game says nothing by itself: write what the '
-                 'player reads ("Then say"), and what happens when the bag is full.',
+                 'player reads ("Then say"), and what happens when the bag is full — by '
+                 'default the scene ends there, so the steps after it run only when the '
+                 'item was given.',
     'give_monster': 'Gives a monster (it goes to the party or the farm). Write what the player '
                     'reads, and what happens when there is no room.',
     'tiles': 'Changes a piece of the room picture (an opened door, a cleared path …) to how it '
@@ -906,6 +908,11 @@ class StepForm(QWidget):
         self._text('When it is full', v.get('full') or {'boxes': [['']]},
                    lambda t: self._upd(k, 'full', t if _text_from_boxes(t).strip(' …') else None),
                    'The game gives nothing when the bag (20 items) / the monster farm is full.')
+        # S151: nothing given -> the scene ends (default) or the steps below run anyway
+        self._combo('When there is no room', [('the scene ends here', 'stop'),
+                                              ('carry on with the steps below', 'continue')],
+                    v.get('on_full', 'stop'),
+                    lambda x: self._upd(k, 'on_full', None if x == 'stop' else x))
 
     def f_give_monster(self, v):
         self.f_give_item(v, 'give_monster')
@@ -2257,8 +2264,8 @@ class CutsceneEditor(QWidget):
             QMessageBox.information(self, 'Sound', f'Cannot play it here: {ex}')
 
     def item_items(self):
-        from editor2.core.shops import item_names
-        return [(f'{n} ({i})', i) for i, n in sorted(item_names().items())]
+        from editor2.app.story_widgets import item_choices      # S151: + the project's items
+        return item_choices(getattr(self.s, 'doc', None))
 
     def enemy_items(self):
         from editor2.core.conversation import vanilla_enemies

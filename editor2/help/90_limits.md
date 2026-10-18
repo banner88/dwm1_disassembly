@@ -149,10 +149,20 @@
   custom boss of a game's gate does not move that portal room's own step
   counter (other people in that room stay as the game leaves them; the
   swirl itself follows your boss).
+- NPCs on one screen (S151 r3, measured): with the party, 3 keep the game
+  smooth, 4 drop frames, 5 or more halve its speed (the hard cap is 8; the
+  Game Boy draws about 6 with the party and 1 per row the party walks along).
 - Shops (S117): a shop sells 1-20 items; at most 250 shops; prices are per
   item (every shop), 0-65535 gold; what shops pay is the game's rule (3/4,
-  staffs 1/10, the gate shop the full price) and is not editable. Item
-  effects are not editable yet.
+  staffs 1/10, the gate shop the full price) and is not editable.
+- Items (S151, the Items tab): every field of the game's 43 items is editable;
+  up to 84 items of your own (ids 44-127), each WORKING LIKE one of the
+  game's 43 (its code, field and battle; its own name, words, price, power,
+  used-up chance, lines). Power 0-255 (a seed's stat stops at 999 / 511 / 255);
+  a battle power 0-999 (the game's items 1-37; yours use their base's). The
+  Medal Man counts only the game's TinyMedal, the gate map's compass needs the
+  game's BeastTail, the gate-floor chests give the game's items only. The bag
+  holds 20 items, the Vault 40 (the game's).
 - Services (S126): the Vault, the farm and the medal count are one for the
   whole game (every NPC of a kind shares them). The gate guide's list is the
   original game's 31 gates. The Medal Man gives 1-8 eggs, at most 999

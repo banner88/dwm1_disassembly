@@ -875,8 +875,9 @@ jr_054_53f5:
 
 
 LoadB54_53f6:
-    ld a, [$db8a]
-    sub $af
+    ld a, [wItemInUse]          ; S151 (ROADMAP E9): the item the hero used (was `ld a,
+    nop                         ;   [$db8a] / sub $af`): "The <item> falls apart!" names a
+    nop                         ;   project item 44+ by its own name, not its base's
     ld l, a
     ld h, $08
     ld de, $c190

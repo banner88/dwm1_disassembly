@@ -2209,8 +2209,8 @@ ShopSellPrice:
     cp $50
     ret z
 
-    ld a, [$da5e]
-    cp $18
+    ld a, [wItemBase]           ; S151: the BEHAVIOUR id (was [$da5e]; the copy above set
+    cp $18                      ;   it): a project item based on a staff sells for / 10 too
     jr z, jr_009_4bfb
 
     cp $19
@@ -2265,7 +2265,7 @@ SetFld9_4c24:
     ld hl, $0305
     rst $10
     ld hl, $d665
-    ld bc, $0030
+    ld bc, $0080                ; S151: 128 item ids (was $30 = 48: the game's 0-43)
     xor a
     call FillNBytesWithRegA
     ld hl, $c0d8
@@ -2312,7 +2312,7 @@ jr_009_4c68:
 jr_009_4c6b:
     ld hl, $d666
     ld de, $c0d8
-    ld b, $2f
+    ld b, $7f                   ; S151: ids 1-127 (was $2F: 1-47)
     ld c, $01
 
 jr_009_4c75:
@@ -3080,7 +3080,7 @@ SetFld9_5199:
     ld hl, $0305
     rst $10
     ld hl, $d665
-    ld bc, $0030
+    ld bc, $0080                ; S151: 128 item ids (was $30 = 48: the game's 0-43)
     xor a
     call FillNBytesWithRegA
     ld hl, $c0d8
@@ -3113,7 +3113,7 @@ jr_009_51b6:
 jr_009_51cf:
     ld hl, $d666
     ld de, $c0d8
-    ld b, $2f
+    ld b, $7f                   ; S151: ids 1-127 (was $2F: 1-47)
     ld c, $01
 
 jr_009_51d9:
@@ -3689,7 +3689,7 @@ CallFld9_5576:
 CallFld9_5598:
     call SetFld9_5aea
     ld hl, $d665
-    ld bc, $0030
+    ld bc, $0080                ; S151: 128 item ids (was $30 = 48: the game's 0-43)
     xor a
     call FillNBytesWithRegA
     ld hl, $c0d8
@@ -3721,7 +3721,7 @@ jr_009_55b4:
 jr_009_55ca:
     ld hl, $d666
     ld de, $c0d8
-    ld b, $2f
+    ld b, $7f                   ; S151: ids 1-127 (was $2F: 1-47)
     ld c, $01
 
 jr_009_55d4:

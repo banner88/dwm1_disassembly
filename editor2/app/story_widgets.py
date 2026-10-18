@@ -25,9 +25,24 @@ from editor2.core import story as ST
 
 
 # ------------------------------------------------------------------ choices
-def item_choices():
-    from editor2.core.shops import item_names
-    return [(f'{n} ({i})', i) for i, n in sorted(item_names().items()) if 1 <= i <= 43]
+def item_choices(doc=None):
+    """(label, id) of every item: the game's 1-43 (S151: + the project's 44+ with a doc)."""
+    if doc is not None and hasattr(doc, 'item_names_all'):
+        names = doc.item_names_all()
+    else:
+        from editor2.core.shops import item_names
+        names = {i: n for i, n in item_names().items() if 1 <= i <= 43}
+    return [(f'{n} ({i})', i) for i, n in sorted(names.items()) if i >= 1]
+
+
+def _doc_of(w):
+    """The Document of the dialog a widget sits in (S151), else None."""
+    while w is not None:
+        d = getattr(w, 'doc', None)
+        if d is not None:
+            return d
+        w = w.parent() if hasattr(w, 'parent') else None
+    return None
 
 
 def species_choices(doc):
@@ -135,7 +150,7 @@ class ItemCountList(QWidget):
             return
         r = self.table.rowCount()
         self.table.insertRow(r)
-        c = _combo(item_choices(), it.get('item', 0x01))
+        c = _combo(item_choices(_doc_of(self)), it.get('item', 0x01))
         c.activated.connect(lambda _i: self.changed.emit())
         self.table.setCellWidget(r, 0, c)
         s = _spin(1, 20, it.get('count', 1))
@@ -248,7 +263,7 @@ class CheckDialog(QDialog):
         w.setLayout(f)
         self._fields = {}
         if k == 'item':
-            self._fields['item'] = _combo(item_choices(), sp.get('item', 0x01))
+            self._fields['item'] = _combo(item_choices(self.doc), sp.get('item', 0x01))
             self._fields['count'] = _spin(1, 20, sp.get('count', 1))
             f.addRow('item', self._fields['item'])
             f.addRow('at least', self._fields['count'])

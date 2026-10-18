@@ -5,11 +5,11 @@ SHOP system in BOTH trees, zero byte change (clean build stays 1ca6579…).
 
 What was decoded S117 (PyBoy-measured on the user's save — DATA_STRUCTURES
 "Shops (S117)"):
-  * bank $03 entry 2 (SetMon_6980 -> $DA62..$DA6D) copies a 12-byte ITEM
+  * bank $03 entry 2 (ItemLoadRecord -> $DA62..$DA6D) copies a 12-byte ITEM
     RECORD from the table mgbdis named `SpriteFrameDataTable` ($03:$71DA):
     44 records (ids 0-43), +1/+2 = the BUY PRICE (16-bit LE, == the FAQ's
     shop lists), +$0B bit 2 = kept on a lost battle (SIDEQUEST_MAP). Was fake
-    code -> `ItemInfoTable` db rows (the reference in SaveMon_6987 renamed).
+    code -> `ItemInfoTable` db rows (the reference in ItemCopyRecord renamed).
   * bank $09 screen-effect type 0 (script opcode $04 $0000 $0680) = THE SHOP:
     outer machine on $C905 ($45F3, `ShopOuterStateTable` 5 dw), the
     BUY / SELL / QUIT menu (`ShopMenuTable` 3 dw), the BUY inner machine on

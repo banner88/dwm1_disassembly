@@ -329,6 +329,15 @@ def _pv(v):
         return v
 
 
+
+def _on_full(g, ctx):
+    """S151: a Give step's `on_full` — 'stop' (default: the conversation / cutscene ends
+    after the "full" words) or 'continue' (the steps after the Give run anyway)."""
+    v = g.get('on_full', 'stop')
+    if v not in ('stop', 'continue'):
+        raise ProjectError(f"{ctx}: on_full is 'stop' or 'continue' (not {v!r})")
+    return v
+
 class ProjectError(ValueError):
     pass
 
@@ -939,8 +948,11 @@ class Project:
                     ops.append(['op', 'add_monster', self.enemy_ref(g.get('enemy'), c)])
                 elif cnt == 1:
                     item = F.val(g.get('item'))
-                    if not isinstance(item, int) or not 1 <= item <= 43:
-                        raise ProjectError(f"{c}: give_item needs an item 1-43")
+                    from . import items as _IT
+                    try:
+                        _IT.check_id(self, item, f"{c}: give_item")
+                    except _IT.ItemError as ex:      # S151: + the project's items 44-127
+                        raise ProjectError(str(ex)) from None
                     ops.append(['op', 'check_inv_full', f'@gfull{n}'])
                     ops.append(['op', 'give_item', item])
                 else:
@@ -957,6 +969,12 @@ class Project:
                     if field:
                         ops.append(['op', 'init_dialog'])
                     ops.append(['text', g['full']])
+                # S151 (user: "asked when inventory full. Then wouldnt give because asked a
+                # second time"): nothing given -> the conversation STOPS here by default —
+                # the steps after a Give (a flag "given", more words) run only when it was
+                # given; on_full "continue" keeps going (the S129 behaviour)
+                if _on_full(g, c) == 'stop':
+                    ops.append(['end'])
                 ops.append(f'label:gdone{n}')
             elif kind == 'take_item':
                 g = st['take_item'] or {}
@@ -1423,7 +1441,9 @@ class Project:
                 n = SH.shop_id_byte(self, sp['shop'], ctx)
             except SH.ShopError as e:
                 raise ProjectError(str(e))
-            s['ops'] = [['text', sp.get('text') or SH.SHOP_TEXT_BASE],
+            # S151 r2: op $3C — the greeting's box opens at the BOTTOM (the shop's windows
+            # are drawn for it; talked to from the lower half it opened at the TOP)
+            s['ops'] = [['op', '0x3C'], ['text', sp.get('text') or SH.SHOP_TEXT_BASE],
                         ['op', 'write_ram', 'wShopID', n],
                         ['op', '0x04', 0, SH.SHOP_TEXT_BASE],   # the shop opcode
                         ['text', SH.SHOP_TEXT_BASE + 2],
@@ -2953,7 +2973,7 @@ class Project:
         """A story command step -> the op $24 word $FF00 + n (deduped; n >= 1)."""
         from . import story as _ST
         try:
-            rec = _ST.cmd_record(kind, params, ctx)
+            rec = _ST.cmd_record(kind, params, ctx, self)
         except _ST.StoryError as ex:
             raise ProjectError(str(ex))
         if rec not in self._story_cmds:

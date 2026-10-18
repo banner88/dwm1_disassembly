@@ -2884,6 +2884,10 @@ jr_050_4fec:
     jr z, jr_050_5020
 
     push bc
+    ; S151 (items): the battle ITEM menu's probe — is the item in this bag slot usable in
+    ; battle? Its battle skill = item id + $AF (items 1-43 = skills $B0-$DA); bank $54
+    ; entry 0 reads that skill record's +10 (1 = not usable). Patched builds: bank $77
+    ; entry 17 BattleItemProbe (the skill of the item's BEHAVIOUR id, wItemBase).
     ld a, [hl]
     add $af
     ld a, a
@@ -3051,6 +3055,9 @@ jr_050_50f4:
     add a
     add a
     add [hl]
+    ; S151 (items): the battle ITEM pick — A = the bag slot (page * 4 + row); [$db4c] :=
+    ; the item's battle skill (id + $AF), then bank $54 entry 5 (its targets). Patched
+    ; builds: bank $77 entry 18 BattleItemPick (+ wItemInUse := the item).
     ld hl, wInventory
     add l
     ld l, a

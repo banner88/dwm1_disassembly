@@ -318,6 +318,64 @@ def party_walks(room):
     return not (isinstance(src, int) and src in PARTY_ABSENT_SOURCES)
 
 
+# S151 r3 — the game's SPEED with NPCs on screen (user: "You put so many NPCs in that room
+# some of them are invisible and the whole thing lags massively"). Measured in PyBoy on the
+# user's save with a full party (tools: ROM0 VBlank handler $036E -> VBlankFinish $044D,
+# the scan lines one game frame's work takes; the field's tick counter $C8A4): an empty
+# custom room 93 of the 154 lines a frame has, each NPC on screen about 13-14 more (the
+# game's own rooms the same: the Castle with 2 / 3 NPCs on screen 115 / 128 lines, the
+# custom rooms 119 / 133). 3 NPCs 133 lines: every frame kept. 4 standing NPCs 147 lines —
+# on the edge: 86-93 % of frames kept (the S151 demo's hall 86 %); 5-8 NPCs 188-220 lines:
+# every game frame takes two — HALF SPEED. Walking NPCs cost more (4 pacing: 77 % speed).
+# A room without the walking party (party_walks: the arena battle) is not warned.
+FRAME_LINES = 154           # scan lines in one Game Boy frame
+NPC_SMOOTH_MAX = 3          # NPCs on screen (with the walking party) that keep every frame
+WALKERS = {0x2, 0x3, 0x4, 0x5, 0x8, 0x9, 0xA, 0xE, 0xF}
+
+
+def frame_budget(npcs, party=True):
+    """[warning text] for one screen state's npcs[]: the game slows down — 4 NPCs on screen
+    (with the party) drop frames (86-93 % speed measured; walking ones more), 5 or more halve
+    the speed. Counted as sprite_budget counts (hidden NPCs do not count; conditional ones
+    do). A room without the walking party (a copy of the Arena Battle room: its NPCs ARE
+    the party) is not measured — the game's own arena shows 8 there — no warning."""
+    if not party:
+        return []
+    n = walk = 0
+    for e in npcs or []:
+        k = e.get('kind')
+        if k == 'npc':
+            if e.get('hidden'):
+                continue
+            fac = e.get('facing', 'down')
+            if not isinstance(fac, str) and val(fac) & 0x40:
+                continue
+            try:
+                b = behaviour_value(e.get('behaviour', 0))
+            except ValueError:
+                b = 0
+        elif k == 'raw' and e.get('bytes') and val(e['bytes'][0]) < 0x80:
+            if val(e['bytes'][0]) & 0x40:
+                continue
+            b = val(e['bytes'][0]) & 0x0F
+        else:
+            continue
+        n += 1
+        walk += b in WALKERS
+    smooth = NPC_SMOOTH_MAX
+    who = ' with you and your 3 monsters'
+    if n > smooth + 1:
+        return [f"{n} NPCs on screen: the game runs at HALF SPEED here — each NPC on screen "
+                f"takes about a tenth of the Game Boy's frame and{who} more than {smooth + 1} "
+                f"do not fit in one (measured) — at most {smooth} on a screen keeps it smooth"]
+    if n == smooth + 1:
+        return [f"{n} NPCs on screen{' and ' + str(walk) + ' of them walk' if walk else ''}: "
+                f"the game drops frames here (measured: about {'3' if walk else '9'} frames in "
+                f"{'4' if walk else '10'} kept{who}) — at most {smooth} on a screen keeps it "
+                "smooth"]
+    return []
+
+
 def sprite_budget(npcs, party=True):
     """[warning text] for one screen state's npcs[] entries: rows whose NPCs
     the hardware hides while the party walks along that row, and NPCs past

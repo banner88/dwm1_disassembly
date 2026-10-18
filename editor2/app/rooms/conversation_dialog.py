@@ -54,9 +54,11 @@ KIND_TIPS = {
     'end': 'Ends the conversation here.',
     # S129 (ROADMAP P3.14b / c)
     'give_item': 'Gives an item (several at once: all of them or none). The bag full → '
-                 'the "full" words instead.',
+                 'the "full" words instead, and (by default) the conversation stops there: '
+                 'the steps after the Give (a flag "given", more words) run only when it '
+                 'was given.',
     'give_monster': 'A monster joins (built from an enemy row). The farm full → the "full" '
-                    'words instead.',
+                    'words instead, and (by default) the conversation stops there.',
     'take_item': 'Takes items out of the bag (the last ones first). Check first — an If '
                  'with a story check "the bag holds …".',
     'gold': 'Gives or takes gold (gold never goes below 0 or above 99,999).',
@@ -878,10 +880,29 @@ class ConversationDialog(QDialog):
             bl.setVisible(box.isChecked())
             self.rv.addWidget(box, 1)
 
+    def _on_full_box(self, g):
+        """S151 (user: the KEYKEEPER asked with a full bag, then refused): what happens
+        after the "no room" words — stop (default) or carry on with the steps below."""
+        c = QComboBox()
+        c.addItem('No room: the conversation stops here', 'stop')
+        c.addItem('No room: carry on with the steps below anyway', 'continue')
+        c.setCurrentIndex(max(0, c.findData(g.get('on_full', 'stop'))))
+
+        def ch(_i=None):
+            if c.currentData() == 'continue':
+                g['on_full'] = 'continue'
+            else:
+                g.pop('on_full', None)
+            self._refresh_label()
+        c.activated.connect(ch)
+        self.on_full = c
+        self.rv.addWidget(c)
+
     def _ed_give_item(self, st):
         g = st['give_item'] = st.get('give_item') or {}
         self._item_form(g)
         self._got_full(g, 'You got an item!', 'Your bag is full!')
+        self._on_full_box(g)
 
     def _ed_give_monster(self, st):
         from editor2.app.story_widgets import _combo
@@ -898,6 +919,7 @@ class ConversationDialog(QDialog):
         w.setLayout(f)
         self.rv.addWidget(w)
         self._got_full(g, 'A monster joined!', 'There is no room for it.')
+        self._on_full_box(g)
 
     def _ed_take_item(self, st):
         g = st['take_item'] = st.get('take_item') or {}

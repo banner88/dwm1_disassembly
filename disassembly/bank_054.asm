@@ -876,6 +876,8 @@ jr_054_53f5:
 
 
 LoadB54_53f6:
+    ; S151 (items): the item of the working skill ([$db8a] - $AF) — its name copied to
+    ; $C190 for "The X falls apart!" (bank $41 mode 8). Patched builds: wItemInUse.
     ld a, [$db8a]
     sub $af
     ld l, a

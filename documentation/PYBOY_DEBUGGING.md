@@ -1033,3 +1033,38 @@ edge and the battle waits for input forever.
   caller's DE stays the original table) — every edited check fails, the rest pass.
 - **The credits without the ending:** poking game mode 4 runs the credits' text calls (the
   rows are handed from the text bank) but not their picture; a screenshot needs the real ending.
+
+## S151 techniques — items through the game's own routines, menus driven by state, battle hooks
+
+- **Every item id through every routine:** a WRAM stub (`ld hl, $03xx / rst $10` + a marker
+  write) per bank $03 entry, with `$DA5E` = the id; the field dispatches read at their `rst $00`
+  (hook the instruction, record A = the id the table is indexed by, then ABANDON: SP restored,
+  PC → the marker) so no handler runs (`tools/census_items.py`). The battle menu's probe / pick:
+  hook bank $54 entries 0 / 5 and read `[$db4c]` (the skill handed over), then abandon.
+- **Shops by state, not by timing:** the BUY / SELL / EXIT menu is `$C905` = 2; the list is
+  `$C906` 2 / 4 (2 = with its prompt — A picks there); 5-7 = how many / the price / YES.
+  Wait until (`$C905`, `$C906`, `$C825` text busy) are still for 20 frames, then press. The
+  list's cursor = `$C8E3` (page, 4 a page) / `$C8E2` (row, bit 7 = chosen): poking both once
+  before the A works (`tools/walk_items.py` `shop_buy`). The greeting box waits for A first.
+- **The field item menu:** face nothing (a wall), A, right, A = ITEM; 5 items a page — right
+  turns the page, down moves the row (pokes of `$C8DC` / `$C8DB` are overwritten by the menu's
+  own redraw — navigate with the pad); A = USE / DEL, A = USE, A = the monster.
+- **The battle item menu:** FIGHT ITEM / PLAN RUN — right, A; 4 a page (right = next page);
+  A = the item, WHO: US / FOE (A = US), A = the monster. Read / poke HP at `$DBA3` (battle copy).
+  The item name the battle prints: hook the instruction after `ld a, [wItemInUse]` in banks $52
+  / $54 (the first `nop`) and record A — robust where scanning RAM for the name is not (the bag
+  list already drew it).
+- **A gate floor without walking there:** the warp mailbox with `$C96D` / `$C96E` / `$C96C` = 1
+  and the kick byte (walk_regions `keep_enc`), then the WarpWing (or an item based on it) from
+  the field menu takes the party home (`$C969` = 0).
+- **Where a talk's boxes opened (S151 r2):** sample `$FFD3` (1 top / 2 bottom) every 2 frames
+  while `$C8EB` bit 0 (a box) is set, collapse runs → `[2]` = always bottom; drive the talk
+  with A while the print pointer stands still, YES / NO by `$C83C`, and B once a screen
+  (`$C905` ≠ 0) has been still for 40 frames (`walk_items.py` `box_talk`). Then talk to a
+  plain NPC from below: `[1]` proves no bottom request was left over.
+- **The game's speed (S151 r3):** the field tick counter `$C8A4/$C8A5` (+1 per completed
+  VBlank tick) against frames: 1.00 = full speed, 0.50 = half. For the cost: hook ROM0
+  `VBlankSaveAF` `$036E` (start, when `$C8A2` bit 0 is clear) and `VBlankFinish` `$044D`; the
+  cost = (frames between) × 154 + LY end − LY start. Count the NPCs actually on screen from
+  the OAM (objects with Y 1-159: the party = 16, an NPC 4) — the NPC slots include off-screen
+  ones. Trap: warping to a game room's other screens can hang PyBoy (S127): measure screen 0.

@@ -297,8 +297,8 @@ Laurel 80, WorldLeaf. (`extracted/gamedata_vanilla.json` tables `shop_*`.)
 
 **Prices** live in the item records: **`ItemInfoTable` `$03:$71DA`** (44 × 12 B, index =
 item id 0-43; bank $03 entry 2 copies one to `$DA62-$DA6D`) — **+$01/+$02 = the buy
-price** (16-bit LE), +$00 group, +$0B bit 2 = kept after a lost battle; +$03-$0A not
-decoded. The table was mgbdis fake code labelled `SpriteFrameDataTable` (DOC_AUDIT
+price** (16-bit LE), +$00 group, +$0B bit 2 = kept after a lost battle; S151: every field
+decoded — "Items (S151)" below. The table was mgbdis fake code labelled `SpriteFrameDataTable` (DOC_AUDIT
 S117); re-sectioned S117 (`tools/resection_shops.py`). **Sell price** = bank $09
 `ShopSellPrice` ($4BC8): the full price in the gate-floor shop (map `$50`), a staff
 (`$18-$1C`, `$25`, `$27`) price / 10, anything else price − price / 4.
@@ -346,6 +346,65 @@ rows 13-15 from `$C300`, HUD rows from `$C1C0`) and the S97 r2 attribute save
 are re-seated at the bottom. Checked: stub calls (test_compiler `test_screen_push_rom`) +
 PyBoy on the user's save (Bazaar, a plain and a free-colour custom room: tiles and
 attributes back to the room's after the dialog closes).
+
+### Items (S151 — ROM-traced + PyBoy-measured; patched builds: ROADMAP E9, PROJECT_COMPILER §2.59)
+
+**The record** (`ItemInfoTable` `$03:$71DA`, 44 × 12 B, index = item id 0-43; 0 = no item).
+Bank $03 entry 2 `ItemLoadRecord` copies item `[$DA5E]`'s record to **`$DA62-$DA6D`**; every
+flow (field, battle, shop, Vault) does that first. Every load of `$DA62-$DA6D` in the ROM was
+found by a byte scan and agrees with the disassembly:
+
+| + | meaning | read by |
+|---|---|---|
+| 0 | group (0 HP/MP, 1 cure, 2 seed / nut / book, 3 meat, 4 staff, 5 WarpWing, 6 TinyMedal, 7 key / field) | nothing |
+| 1-2 | buy price (16-bit LE) | bank $09 (lists, `ShopSellPrice`) |
+| 3 | **used-up chance %**: entry 8 `ItemConsumeRoll` — RNG16 mod 100 < +3 → used up (100 always, **0 never** = permanent); used up with +3 < 100 → use line 0 "The X falls apart!" | bank $03, $07 `$4FEE`, $54 `$53E2` |
+| 4 | field use: 0 / 1 usable; 2 / 3 → use line 1 "… uses the X as a tool." + line 2 "But nothing happens." (and no WHO window) | bank $07 `$4D51` / `$4F3B` |
+| 5 | target: 0 / 2 / 4 → the WHO window (pick a monster) | bank $07 `$4D5C` |
+| 6 | — | nothing |
+| 7 | the use line (bank $41 mode 13, 48 rows; `{ins 00}` hero, `{ins 10}` monster, `{ins 20}` item) | bank $07 |
+| 8 | the result line (0 none; the SageStone / WorldDew handlers write 39-41 themselves) | bank $07 |
+| 9 | **power** (`$DA6B`): heal = power + RNG mod 11, seeds + power (caps 999 / 999 / 999 / 999 / 511 / 255), meats wildness − power (BadMeat + poison) | bank $03 handlers |
+| 10 | — | nothing |
+| 11 | flags: bit 0 = NOT on the SELL list; bit 2 = kept after a lost battle | bank $09; banks $06 / $50 |
+
+**The code** (bank $03; names S151, clean form in `patches/bank_003.asm`,
+`tools/resection_items_03.py`): entry 3 `ItemCheckUsable` → `rst $00` on the id into
+**`ItemUsableTable` `$69AC`** (44 dw; a handler refuses by `[$DA5E]` := `$FF`; `$DA60` = the
+target's party slot): heal items need the target alive and hurt (`ItemTargetUnusable` =
+record byte `$CB0B` bit 7), MP items MP not full, cures the status bit, seeds / books a live
+target, the staffs / WarpWing / TinyMedal always (`ItemCanUse_Always` — +4 gates them), the
+gate tools a gate floor (`$C969` ≠ 0; the Repellant also `$C93E` bit 1 clear). Entry 4
+`ItemApplyEffect` → **`ItemEffectTable` `$6E31`**: heal one / the party / all fully, MP,
+cures (status bits: 2 poison, 3 paralysis, 4 the SkyBell's, 0 the Laurel's curse, 1 sleep),
+revive (WorldLeaf), seeds, meats, books (personality), WarpWing (the bank $07 path), BeastTail
+(the hole's direction), Repellant (`$C93E` bit 1), ShinyHarp (a battle request), MapHerb
+(`$C950` fill), BookMark (save in a gate); most end with entry 8. Entries 5 / 6 / 7 = the bag:
+compact / add (`$FF` = full) / remove one. `$DA5F` = the bag slot in use.
+
+**Ids tested elsewhere:** bank $07 `LoadFld_4da6` (the target window shows MP for $05 / $06 /
+$0E; nothing for cures / seeds / meats / books), `$4F72` (`$1D` WarpWing: sound $57), `$4FAB`
+(`$1D` / `$27` WarpStaff: leave the gate); bank $09 `ShopSellPrice` (staffs $18-$1C, $25, $27:
+/ 10; the gate shop map $50 full; else 3/4) and the SELL / Vault-deposit / Vault-withdraw lists
+(`SetFld9_4c24` / `SetFld9_5199` / `CallFld9_5598`: a count per id at `$D665 + id`, 48 B, ids
+1-47 → `$C0D8` in id order; SELL skips +11 bit 0); bank $50 the battle ITEM menu: an item's
+battle skill = **id + $AF** (items 1-43 = skills $B0-$DA; 1-37 have item_effect records —
+the battle power; field10 = 1 not usable in battle), probe `jr_050_4fec` / pick `jr_050_50f4`
+(+ bank $54 entries 0 / 5); banks $52 `Jump_052_727a` / $54 `LoadB54_53f6` name the item as
+skill − $AF; bank $12 the Medal Man counts the real TinyMedal `$1E`; bank $19 the gate map's
+compass needs the real BeastTail `$26`. Bag `wInventory` `$CA51` (20 B), Vault `wBankSlots`
+`$CA65` (40 B); `$00` / `$FF` = empty. Menus: the field item list 5 a page (`$C8DC` page,
+`$C8DB` row), the battle list 4 a page (FIGHT ITEM / PLAN RUN; then WHO: US / FOE, then the
+monster).
+
+**Patched builds (S151):** the records are read from bank $77 `ItemTable` (entry 16
+`ItemRecordCopy`, which also sets **`wItemBase` $D564** = the item's BEHAVIOUR id: itself for
+0-43, its base for a project item 44-127); entries 3 / 4, bank $07's tests and the sell price
+dispatch on `wItemBase`; the battle menu uses the base's skill (bank $77 entries 17 / 18) and
+names the item from **`wItemInUse` $D565**; the count lists cover 128 ids. Measured:
+`tools/census_items.py` (every id 0-127 through every routine, 1,607 / 1,607),
+`tools/walk_items.py` (the user's save: bought, used, given, sold, in battle, the WarpWing /
+a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 

@@ -1,5 +1,52 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-16 (Session 149 — **ROADMAP ARC CAP5 BATTLES BOX BUILT: ENEMY ROWS PAST 640 (UP TO 3,321 —
+> BANK $6B, THEN BATTLE BANKS $80+) AND BATTLE LISTS PAST 128 (UP TO 3,968, 16-BIT NUMBERS); FOUND + FIXED: THE MONSTER
+> CONSTRUCTOR GAVE A PROJECT ROW A FIXED / JUNK GENDER, A RIVAL TAMER'S NAME (EID 561) OR THE EGG FLAG (EID 606) — TWO
+> ORIGINAL LOOKUPS WITH NO BOUND; A GENDER PER ROW; THE BATTLE JOIN IS ENTRY 3 (`CreateJoinedMonster`, A MISNOMER
+> FIXED); THE ARC'S LOOSE ENDS: THE S148 ROOM-STATES "9 / 780" = A HARNESS RACE (789 / 789), NO MORE ROOM HOLES IN THE
+> EDITOR, THE S141 CHECKS WALKED (THE ARENA / A WORLD / A SAVE IN A DIVE FROM REGION 1); S148 USER-CONFIRMED**
+> (user: "Continue on the 4 mb expansion. I confirm S148 works" → the audit (the next ceiling for a campaign = battles;
+> measured: rows 519-532 always male, later rows junk genders, EID 561 a rival's master + nickname, EID 606 an egg) + 5
+> questions → "1) Yes 2) Sounds good 3) [clarified] A is fine there is no reason to expand beyond vanilla funcitonality
+> on this specifically 4) Yes fold in loose ends 5) Yes"). **Built S149; USER-CONFIRMED 2026-10-16 22:59 ("yep fixed. Give final files. Everything works") on r2** (r1 partly: "Healer and dracky
+> came out male, pixie female"; holes "I see thats fine"; then "0 HP should never be possible" → r2's editor rule: an enemy
+> row's HP is at least 2, old projects raised on open — PROJECT_COMPILER §2.57 r2; byte-neutral for the example). Test ROM `DWM-S149r2-muster-test.gbc` (`aa4d40e1…`, patched;
+> r1 `DWM-S149-muster-test.gbc` `f2495f4b…`, patched — its hall monsters joined FAINTED: the demo rows had HP 1 / MP 0, the
+> creation roll ×0.80-1.00 rounded down = 0 HP; the game's rows are HP 2+; r2 = level-5 stats + a walk check, KEY_LESSONS
+> S149) = the user's project + THE MUSTER HALL + THE FAR WING. Example pin
+> `92060f65…` (patched; was `6b01894d…`, patched): banks $14, $6B, $76. The user's project builds `06721083…` (patched;
+> its 3 rows now roll their gender — they were always male).
+> **Built (engine):** `patches/bank_014.asm` (same size; the `$7EAD` free bytes): the constructor's gender
+> read → `EnemyGenderCode` (EIDs < `$200` the original `EnemyGroupTable`, `$200`+ bank $6B entry 1 `EnemyGenderOf`),
+> its foreign-name jump → `ForeignNamesGate` (high byte ≥ 2: no name / nickname / egg). Re-pinned
+> `templates/bank_06b_head.asm` (entry 1, `RowIndexOf`, the far row copy via `RowBankTable`; TEMPLATE_SIZE 100) and
+> `templates/bank_076_head.asm` (list numbers 16-bit: the room target word, floor runs `[db, dw]`, `LISTS_HERE` /
+> `ListBankTable` far copy, D = `$80` for bank $01; TEMPLATE_SIZE 580); NEW pinned `templates/battle_bank.asm` (entry 0
+> `BattleRowCopy`, entry 1 `BattleListCopy`). PROJECT_COMPILER §2.57, MONSTER_DATA "Project enemy rows" (S149).
+> **Built (compiler + editor):** NEW `editor2/core/battles.py` (the plan; battle banks after the song banks);
+> `progression.enemies[].gender` (rolled / male / female; a copy of an original row keeps its gender); caps 3,321 rows /
+> 3,968 lists; `bank_usage` counts $6B + the battle banks; the Monsters tab's Gender column, the Enemies dialog;
+> `simulator/raising.py` `Tables.genders`; holes — `Document.room_holes` / `fill_room_holes` (Add screen fills the
+> new gaps, one undo step) / `holes_if_removed` (refused) / `is_game_room_copy` / an open-log warning. `EDITOR_REVISION`
+> S149; help 10, 50, 52, 59, 90.
+> **The acceptance (machine half):** NEW `tools/census_battles.py` (`extracted/battles_census.json`): 1,502 project
+> rows + 600 lists over $6B / $76 / $80 / $81 — rows 1,541 / 1,541, creations 3,004 / 3,004 == the model, lists 728 /
+> 728, the original rival / egg / nickname rows 4 / 4; `--negative` fails every class. NEW `tools/walk_battles.py` on
+> the user's `.sav` (`examples/s149_muster_demo/`): the hall's three rows fought and joined (the player as master, no
+> egg, male / the game's own roll / female), the farm screen, a wild battle from list 700 (a battle bank) with a
+> battle-bank Golem row; THE FAR WING (region 1): the arena from region 1 and region 0, a world in region 1, a JOURNAL
+> save on a served gate floor + CONTINUE there — **53 checks, 0 failed** (r2: + joined healthy; on the r1 ROM those 3 FAIL);
+> `--negative` (the S148 creation): 4 FAIL.
+> **Loose ends:** `tools/walk_room_states.py` reads at the arrival frame (screens outside a room's view are left by
+> the game's own camera 5-40 frames after a warp — the originals too): 789 / 789 on the user's current save (S148:
+> 9 / 780). **Annotation (Iron Rule 6):** bank $14 — entry 3 renamed `CreateJoinedMonster` (was "party slot
+> init/clear"), the constructor's two unbounded reads, `EnemyGroupTable` `$4A1D` / 512 B (S130 said `$4A0F` / 526);
+> bank $51 the join call (both trees; build `1ca65793…`).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1604 PASSED (r2; + `test_s149`, 16); test_app PASS;
+> test_canvas `--rom` PASS (its Add screen 8 now fills the gap screen 4). **Next:** CAP5 as the next ceiling binds (flags 1,965 — WRAM-bound; story checks /
+> steps; gates + worlds 64; the ROM space ≈660 rooms; bank $71 ≈965 rooms), or Phase D/F annotation.
+
 > Last verified: 2026-10-15 (Session 148 — **ROADMAP ARC CAP4 "$3E" BOX BUILT: WHERE A SCRIPT ENDS — ONE RULE
 > FROM THE HANDLERS (ONLY THE SIX ROOM CHANGES THAT CLEAR wScriptStateFlags; `$3E` AND `$16` YIELD AND GO ON);
 > FOUND + FIXED: MAKE EDITABLE STOPPED AT `$16` AND ITS COPIES OF THE CASTLE / STARRY SHRINE / PRIEST FLOOR FELL

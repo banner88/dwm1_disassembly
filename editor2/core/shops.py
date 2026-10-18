@@ -40,7 +40,11 @@ op $04 0 $0680 (the shop opcode, handler $04:$57A1, 2 params; left unnamed in
 scriptgen.OPS — a name there would make Document._migrate rewrite every raw
 "0x04" in existing projects), text $0682, end.
 
-Limits (ERROR): an item id outside 1-43; a list empty or longer than 20 (the
+S151 (ROADMAP E9): gamedata.items (every field of the game's 43 items) and the
+project's NEW items (custom.items, ids 44-127) belong to editor2/core/items.py; a shop
+list may hold them. The item records are emitted into bank $77 (ItemTable).
+
+Limits (ERROR): an item the project does not have; a list empty or longer than 20 (the
 $C0D8 buffer the shop clears and counts); a price outside 0-65535; more than
 250 lists; a `shop` script naming an unknown shop.
 """
@@ -120,7 +124,7 @@ def _data(prj_or_data):
     return getattr(prj_or_data, 'data', prj_or_data)
 
 
-def _check_list(lst, what):
+def _check_list(lst, what, valid=None):
     if not isinstance(lst, list) or not lst:
         raise ShopError(f"{what}: a list of 1-{LIST_MAX} item ids")
     if len(lst) > LIST_MAX:
@@ -129,43 +133,32 @@ def _check_list(lst, what):
     out = []
     for i, v in enumerate(lst):
         n = _int(v, f"{what}[{i}]")
-        if not 1 <= n < ITEM_COUNT:
-            raise ShopError(f"{what}[{i}]: item {n} — items are 1-{ITEM_COUNT - 1}")
+        if not (1 <= n < ITEM_COUNT or (valid is not None and n in valid)):
+            raise ShopError(f"{what}[{i}]: item {n} — the game's items are 1-{ITEM_COUNT - 1}"
+                            + (", the project's: " + ", ".join(str(x) for x in sorted(valid)
+                                                                if x >= ITEM_COUNT)
+                               if valid and max(valid) >= ITEM_COUNT else ""))
         out.append(n)
     return out
 
 
 def resolve(prj_or_data, repo_root=None):
-    """{'prices': [44], 'lists': [(key, label, [ids], vanilla?)], 'index': {key: n},
-    'edited_prices': set} — raises ShopError."""
+    """{'prices': [count], 'lists': [(key, label, [ids], vanilla?)], 'index': {key: n},
+    'edited_prices': set} — raises ShopError. S151: the items (prices, the project's
+    new items) are editor2/core/items.py's."""
+    from . import items as IT
     d = _data(prj_or_data)
     repo = repo_root or getattr(prj_or_data, 'repo_root', None) or _repo()
     van = vanilla(repo)
     gd = d.get('gamedata') or {}
-    prices = [r[1] | r[2] << 8 for r in van['items']]
-    edited = set()
-    items = gd.get('items') or {}
-    if not isinstance(items, dict):
-        raise ShopError('gamedata.items: an object keyed by item id ("1"-"43")')
-    for k, e in items.items():
-        if str(k).startswith('_'):
-            continue
-        what = f"gamedata.items.{k}"
-        i = _int(k, what)
-        if not 1 <= i < ITEM_COUNT:
-            raise ShopError(f"{what}: items are 1-{ITEM_COUNT - 1}")
-        if not isinstance(e, dict):
-            raise ShopError(f"{what}: an object ({{\"price\": n}})")
-        extra = {x for x in e if not str(x).startswith('_')} - {'price', 'comment'}
-        if extra:
-            raise ShopError(f"{what}: unknown field(s) {sorted(extra)} (price)")
-        if 'price' in e:
-            p = _int(e['price'], what + '.price')
-            if not 0 <= p <= 0xFFFF:
-                raise ShopError(f"{what}.price {p}: 0-65535 gold (a 16-bit word)")
-            prices[i] = p
-            if p != (van['items'][i][1] | van['items'][i][2] << 8):
-                edited.add(i)
+    try:
+        ir = IT.resolve(prj_or_data, repo)
+    except IT.ItemError as e:
+        raise ShopError(str(e)) from None
+    prices = [r[1] | r[2] << 8 for r in ir['records']]
+    edited = {i for i in range(1, ITEM_COUNT)
+              if prices[i] != (van['items'][i][1] | van['items'][i][2] << 8)}
+    valid = set(range(1, ITEM_COUNT)) | set(ir['new'])
     shops = gd.get('shops') or {}
     if not isinstance(shops, dict):
         raise ShopError('gamedata.shops: an object keyed by ' +
@@ -173,7 +166,7 @@ def resolve(prj_or_data, repo_root=None):
     lists, index = [], {}
     for key, label, _tab, rule in VANILLA_SHOPS:
         if key in shops:
-            lst = _check_list(shops[key], f"gamedata.shops.{key}")
+            lst = _check_list(shops[key], f"gamedata.shops.{key}", valid)
         else:
             lst = list(van['shops'][key])
         index[key] = len(lists)
@@ -193,7 +186,7 @@ def resolve(prj_or_data, repo_root=None):
         if sid in index:
             raise ShopError(f"{what}: shop id {sid!r} is used twice (or is a vanilla shop's)")
         index[sid] = len(lists)
-        lists.append((sid, s.get('name') or sid, _check_list(s.get('items'), what + '.items'),
+        lists.append((sid, s.get('name') or sid, _check_list(s.get('items'), what + '.items', valid),
                       False))
     if len(lists) > 250:
         raise ShopError(f"{len(lists)} shop lists — at most 250 (wShopID is one byte)")
@@ -222,7 +215,7 @@ def resolve(prj_or_data, repo_root=None):
             if not isinstance(t, dict) or 'flag' not in t or \
                     t.get('is', 'set') not in ('set', 'clear'):
                 raise ShopError(f"{what}.when[{j}]: {{\"flag\": name, \"is\": set|clear}}")
-        lst = _check_list(st.get('items'), what + '.items')
+        lst = _check_list(st.get('items'), what + '.items', valid)
         sets.append({'shop': key, 'shop_index': index[key], 'when': when, 'items': lst,
                      'name': st.get('name') or f"{key} set {i + 1}",
                      'list_index': len(lists) + len(sets)})
@@ -251,23 +244,15 @@ def check(prj):
 # ---------------------------------------------------------------------------
 
 def emit_item_info(prj, warnings):
-    r = resolve(prj)
-    van = vanilla(getattr(prj, 'repo_root', None))
-    names = item_names(getattr(prj, 'repo_root', None))
-    out = ["ItemInfoTable:  ; 44 x 12 B; +1/+2 = buy price (gamedata.items.<id>.price)"]
-    for i, rec in enumerate(van['items']):
-        b = bytearray(rec)
-        if i:
-            b[1], b[2] = r['prices'][i] & 0xFF, r['prices'][i] >> 8
-        what = f"[{i:2d}] {names.get(i, 'none')}" + (f", price {r['prices'][i]}" if i else '')
-        out.append("    db " + ", ".join(f"${x:02x}" for x in b) + f"   ; {what}"
-                   + ("   ; (edited)" if i in r['edited_prices'] else ''))
-    return "\n".join(out) + "\n"
+    """S151: the region keeps the ORIGINAL ItemInfoTable (no longer read) — items.py."""
+    from . import items as IT
+    return IT.emit_item_info(prj, warnings)
 
 
 def emit_bank_077(prj, warnings, head):
     r = resolve(prj)
-    names = item_names(getattr(prj, 'repo_root', None))
+    from . import items as IT
+    names = IT.names(prj, getattr(prj, 'repo_root', None))
     nv = len(VANILLA_SHOPS)
     out = [head.rstrip('\n'), "",
            "; " + "=" * 77,
@@ -318,6 +303,9 @@ def emit_bank_077(prj, warnings, head):
     # S129 (P3.14b): the story checks and story commands (entries 10 / 11)
     from . import story as ST
     out.extend(ST.emit_lines(prj))
+    out.append("")
+    # S151 (ROADMAP E9): the item records + behaviour ids (entries 16-18)
+    out.extend(IT.emit_lines(prj))
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

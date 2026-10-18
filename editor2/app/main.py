@@ -250,6 +250,11 @@ class MainWindow(QMainWindow):
                 self.tabs.addTab(self.music_tab, 'Music')
                 # S117 (P3.13c): shops — the five vanilla lists, the project's
                 # own shops (sold by NPCs made shopkeepers), item prices
+                # S151 (ROADMAP E9): every item's record, words, battle half;
+                # the project's NEW items (ids 44-127) working like a game item
+                from editor2.app.items_tab import ItemsTab
+                self.items_tab = ItemsTab(self.session)
+                self.tabs.addTab(self.items_tab, 'Items')
                 from editor2.app.shops_tab import ShopsTab
                 self.shops_tab = ShopsTab(self.session)
                 self.tabs.addTab(self.shops_tab, 'Shops')

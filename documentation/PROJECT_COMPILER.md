@@ -47,7 +47,7 @@ to the proven overlay:
 | `patches/bank_ext.asm` | S134 (ROADMAP ARC CAP1): banks $80-$FF of the 4 MB ROM — a section + self-ID byte per bank (`emit_bank_ext`); a bank whose whole content another emitter writes (ARC CAP2 place banks, `emitters.ext_bank_files`) is INCLUDEd instead. `patches/game.asm` INCLUDEs it |
 | `patches/bank_080.asm` … (only when needed) | S135 (ROADMAP ARC CAP2a): the LZ stream overflow banks — layouts / attr maps / tilesets that did not fit $64 / $67 (`emit_stream_banks`, §2.44). Whole files, INCLUDEd by `bank_ext.asm`; `--apply` deletes one an earlier apply left that this project no longer generates |
 | `patches/bank_0xx.asm` place banks (only when needed) | S136 (ROADMAP ARC CAP2b): the places (custom rooms' scripts, lists, states, casts, tile patches) and text sections that did not fit bank $60 (`places.emit_place_banks`, §2.45). Whole files, INCLUDEd by `bank_ext.asm`; numbered after the stream banks |
-| `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32) |
+| `patches/bank_077.asm` + region `gd_item_info` in `patches/bank_003.asm` | S117: the shop lists (`ShopFill` / `ShopClose` template head) and the item buy prices, from `gamedata.shops` / `custom.shops` / `gamedata.items` (§2.32). S151: + `ITEM_COUNT` / `ItemTable` / `ItemBaseTable` (every item's record and base, `gamedata.items` + `custom.items`, `items.emit_lines`); `gd_item_info` keeps the ORIGINAL bytes (no longer read; §2.59) |
 
 **S120 — the committed overlay IS the compiler's example build.** `patches/*` must
 assemble to the pin (`editor2/tests/test_compiler.py` `REFERENCE_MD5`) —
@@ -4498,6 +4498,123 @@ editor. Engine side and the measurements: TEXT_SYSTEM "Edited game text (S150)".
   through a Python model of `TextOvrFind` — every edit found, an unedited text none); the S105
   nickname-redirect test now runs bank $60 `TextOverride` (MiniSM83); `test_app` `s150_text`.
 
+## §2.59 S151 — ITEMS: every field of the game's items, NEW items 44-127 (ROADMAP E9)
+
+**Built S151 (r2 / r3 after the user's tests); USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3)** (user: "Lets do items. Lest also do it in 1 session").
+Engine (same-size hooks in banks $03 / $07 / $09 / $50 / $52 / $54 + the bank $77 head
+re-pinned) + compiler (`editor2/core/items.py`) + editor (the Items tab). The record and the
+code that reads it: DATA_STRUCTURES "Items (S151)".
+
+- **Why (measured S151):** since S117 an item could change its price, since S150 its words —
+  nothing else, and there were exactly the game's 43. What an item DOES is code chosen by its
+  id (bank $03 entry 3 "may it be used now?" / entry 4 the field effect: two 44-entry rst $00
+  tables), plus id tests in banks $07 (the item menu), $09 (staff sell price; the SELL / Vault
+  lists count ids 1-47), $50 (the battle item = skill id + $AF), $52 / $54 (the battle text
+  names the item from the skill id), $12 (the Medal Man counts $1E), $19 (the gate-map
+  compass tests $26). A new id runs nothing — so a new item names a BASE (one of the game's
+  1-43) whose code it runs, and every dispatch reads the base.
+- **Schema:** `gamedata.items.<1-43>` = sparse field edits of the game's items: `price`
+  (0-65535), `consume` (used-up chance %, 0-100; 0 = permanent), `field_use` (bool),
+  `pick_monster` (bool: the WHO window), `use_message` / `result_message` (0-255; the game's
+  lines 0-47), `power` (0-255), `sellable` (bool), `keep_on_loss` (bool), `raw`
+  ({offset: byte} for the unnamed bytes +0 / +4 / +5 / +6 / +10 / +11 only). `custom.items[]`
+  = the project's items: `id` (44-127, unique), `name` (1-9 glyphs, unique among them),
+  `base` (1-43), the same fields (a missing one = the base's), `description` (markup; none =
+  the base's), `use_text` / `result_text` (markup: a line of its OWN, numbered 48+ in the
+  build). A game item's name / description stay `gamedata.text.item_name / item_description`
+  (S150); its battle power = `gamedata.skills.<176-212>.record` (`party_min` / `enemy_min`,
+  `party_range` / `enemy_range`, `field10` = 1 not usable in battle).
+- **Validation (`items.check`, run by `validators` before the shops' check):** every field's
+  range; ids / names unique; a base 1-43; `gamedata.items` keys 1-43; unknown fields refused;
+  a shop list, item set, story check, give / take item (scripts, cutscenes, quests) naming
+  an item the project does not have → an error (`items.check_id`, `story._item_exists`).
+  Warnings: a description past 2 lines / 18 cells.
+- **Emit (bank $77, after the shop / service data):** `ITEM_COUNT EQU <max id + 1>`,
+  `ItemTable` (`ITEM_COUNT` × 12 B: the game's 44 with their edits, then the new items; a
+  gap id = zeros), `ItemBaseTable` (`ITEM_COUNT` B: itself for 0-43, the base for a new
+  item, 0 for a gap). Region `gd_item_info` (bank $03 `ItemInfoTable`) now emits the
+  ORIGINAL bytes — no longer read. The new items' names / descriptions (bank $41 tables
+  `$48E7` / `$493F`, rows 44+) and own lines (`$4A1B`, rows 48+) are S150 text slots past the
+  tables' ends (`items.text_slots`, appended by `gametext.resolve`; the S150 lookup serves any
+  row).
+- **Engine (`patches/`):** `wram.asm` `wItemBase` $D564 (the behaviour id of the item last
+  copied), `wItemInUse` $D565 (the battle's item), `ITEM_FIRST_NEW EQU $2C` (2 B from
+  `wCustomPool`). Bank $03 `ItemCopyRecord` (was `SaveMon_6987`, same 27 B) → `ld hl, $7710 /
+  rst $10` = bank $77 entry 16 `ItemRecordCopy` (DE = destination; an id ≥ `ITEM_COUNT` copies
+  zeros, behaviour 0); `ItemCheckUsable` / `ItemApplyEffect` dispatch on `wItemBase`. Bank $07:
+  `LoadFld_4da6`'s store → `call ItemStoreBase07`, the WarpWing sound / path tests → `call
+  ItemBase07` (both at the bank's free end; ids < 44 and $FF unchanged). Bank $09:
+  `ShopSellPrice` tests the staffs on `wItemBase`; the three count builders clear 128 B (`ld bc,
+  $0080`) and scan ids 1-127 (`ld b, $7f`) — the $D665 scratch is 128 B inside staging slot 20.
+  Bank $50: the battle menu's probe → bank $77 entry 17 `BattleItemProbe` (E = the item: [$db4c]
+  := the base's skill = base + $AF, [$db4d] := 0, [$db4e] := $0A, bank $54 entry 0), the pick →
+  entry 18 `BattleItemPick` (E = the bag slot: `wItemInUse` := the item, [$db4c] := its skill,
+  bank $54 entry 5). Banks $52 (`Jump_052_727a`) / $54 (`LoadB54_53f6`): `ld a, [wItemInUse] /
+  nop / nop` (was `ld a, [skill] / sub $af`). `templates/bank_077_head.asm` entries 16-18 +
+  `BattleSkillOf` (`TEMPLATE_SIZE[$77]` 2074, was 1967; sha re-pinned).
+- **Pin:** example `046319ef…` (patched; was `96d05355…`, patched): banks $00 (header), $03,
+  $07, $09, $50, $52, $54, $77 — exactly the hooks (A/B diff of the two example ROMs: $03 31 B,
+  $07 25 B, $09 8 B, $50 37 B, $52 4 B, $54 4 B, $77 2,468 B; the example edits no item). The
+  user's project + the S151 demo builds `631b7b71…` (patched).
+- **The editor:** the **Items** tab (`app/items_tab.py`, before Shops; model `items_doc.ItemsMixin`
+  in `Document`): the list (the game's 43, then yours), New item… (works like …) / Copy / Delete /
+  Original; the words (name, description) and own use / result lines as markup with the
+  game-font picture (`MarkupField`, rows style); Works like; the power, used-up %, field use, WHO
+  window, price (shops pay — the base's rule), sellable, kept on loss; the use / result line
+  combos (the game's 48); the battle half (items 1-37: power, + random, usable in battle; a new
+  item: its base's, said so); where the project sells / gives / checks it. `Document`:
+  `item_list`, `item_info`, `set_item_field` (game items sparse), `set_item_name`,
+  `set_item_description`, `set_item_own_line`, `set_item_battle`, `new_item(base, name,
+  copy_of)`, `set_item_base`, `delete_item(force)` (refused while used), `reset_item`. The Shops
+  tab's item box, the story widgets' item choices, the cutscene editor's item list and the
+  flag index list the new items. Help `74_items.md` (+ 00 / 56_text / 62 / 90).
+  `EDITOR_REVISION` S151.
+- **Measured:** `tools/census_items.py` (`extracted/items_census.json`; TOOLS_AND_DATA S151):
+  a project with 84 new items (ids 44-127, every base twice, own lines) + edits — every id 0-127
+  (+128 / 200 / 254 / 255) through the record copy, both field dispatches, the battle probe /
+  pick, 342 text slots shown + copied, the sell price, the SELL / Vault lists: 1,607 / 1,607;
+  `--negative` (base: `ItemRecordCopy` without its `wItemBase` store → 407 FAIL; battle:
+  `BattleSkillOf` without the base read → 254 FAIL). `tools/walk_items.py` on the user's `.sav`
+  (`examples/s151_items_demo/`): 33 checks, 0 failed; `--negative` 20 FAIL.
+- **r2 (the user's test, 2026-10-17: "Vault: text box starts at top then jumped when vault
+  menu appears. Should always be on bottom. Make sure other services dont have this issue" /
+  "Key: asked when inventory full. Then wouldnt give because asked a second time. Your bad
+  editing or editor issue?"):** both. (1) **Every service and shop box at the bottom:**
+  `services._bottom_boxes` puts op `$3C` before every op that OPENS a box in a service script
+  (the greeting, the farewell after a screen, an `init_dialog`; not a text right after an
+  `init_dialog`) — all kinds (was the egg appraiser / namer / librarian only); a shopkeeper
+  script starts with op `$3C` (`Project._lower_shop_scripts`; the line-set rewrite finds the
+  greeting after it). PyBoy (`walk_items.py services`, the SERVICE ROW from below): before,
+  the stall / Vault / farm / Medal Man / gate guide opened at the top and the librarian's
+  farewell too (7 FAIL); after, every box `$FFD3` = 2 and a plain NPC talked to next from
+  below still opens at the top (no request left over), the gate guide's NO path too. The
+  user's project builds `d495eb5f…` (patched; its shops / services); the example is
+  unchanged. (2) **A Give with no room stops:** `give_item` / `give_monster` steps take
+  `on_full` — `"stop"` (default: conversations `end` after the "full" words, cutscenes go to
+  their end) or `"continue"` (S129's fall-through). The demo's KEYKEEPER set its "given" flag
+  after the Give: with a full bag the flag was set and the key never given. The conversation
+  dialog and the cutscene editor show the choice; the step's line says "— no room: stop
+  here". PyBoy: `walk_items.py keyfull` 5 / 5; with `on_full: continue` the "room again"
+  check FAILS (the user's report). `EDITOR_REVISION` S151r2.
+- **r3 (the user's test, 2026-10-18: "You put so many NPCs in that room some of them are
+  invisible and the whole thing lags massively. Did the editor not make a warning about this
+  kind of thing?"):** it did — the build warned that rows 3 / 4 / 5 hide NPCs and that only 6
+  of 8 are drawn — but the demo was built by a script whose output filtered the warnings out
+  (`grep -v WARN`). The lag had NO warning: measured (ROOM_DATA_FORMAT "Sprite limits",
+  S151 r3) each NPC on screen costs ≈13-14 of the 154 lines of a frame; with the party 3
+  stay smooth, 4 drop frames, 5+ halve the game's speed — the engine's own cost (the Castle
+  measures the same). NEW `formats.frame_budget` (build warning per screen state + the Rooms
+  tab note "Speed: …"); the sheet warning now counts DIFFERENT sprites (it counted NPCs: 4
+  NPCs of 3 sprites warned). The demo: at most 3 NPCs a screen, one per row (the service
+  rows 1-4, two services each); `build_demo.py` stops when its rooms have a build warning;
+  `walk_items.py speed` checks every demo room ticks every frame (the r2 layout: the hall
+  0.86, the service row 0.50). `EDITOR_REVISION` S151r3.
+- Tests: `test_compiler.test_s151` (24: the decoded record, resolve, bank $77 emit, the text
+  slots, `TEMPLATE_SIZE`, 13 refusals, Document ops; `--rom`: the hook bytes and
+  `ItemRecordCopy` run on dwm/sm83 for ids 0-127 / 200 / 255; r2: + the Give `on_full` ops and
+  refusal); `test_app` `s151_items` (+ the conversation dialog's "no room" choice); the S117
+  price tests read bank $77; the S117 / S126 shop and service script shapes carry op `$3C`.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player
@@ -4622,6 +4739,9 @@ $77 entry 10), bank $71 head 951 B (`GATE_ANY`, `ScaledChance`), bank $77 head 1
 
 **S129 re-pin (§2.42):** bank $77 head 1788 B (`StoryCheck`, `StoryCommand`, `ShopSetPick`;
 sha `eb0f0997…`), bank $71 head 1070 B (`MusicRulePick`; sha `cbd0cdec…`).
+
+**S151 re-pin (§2.59):** bank $77 head 2074 B (entries 16-18 `ItemRecordCopy` /
+`BattleItemProbe` / `BattleItemPick` + `BattleSkillOf`; sha `3ee9e06e…`).
 
 ## New verified opcodes (S70, handler-byte-verified)
 

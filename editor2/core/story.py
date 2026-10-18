@@ -75,7 +75,7 @@ CHECK_KIND_ORDER = ['item', 'gold', 'species', 'family', 'monsters', 'level', 's
 WHERE = {'anywhere': 0, 'party': 1}
 LEVEL_MODES = {'any': 0, 'average': 1, 'all': 2}
 GOLD_MAX = 99999                   # ROM0 CompareGold caps the purse here
-ITEM_MIN, ITEM_MAX = 1, 43
+ITEM_MIN, ITEM_MAX = 1, 127   # S151: the game's 1-43 + the project's items 44-127 (items.py)
 PROTECTED_SPECIES = range(215, 221)  # Iron Rule 8: not monsters
 
 CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3}
@@ -137,6 +137,18 @@ def check_terms_refs(chk):
     return []
 
 
+def _item_exists(prj, n, what):
+    """S151: an item 44+ must be one of the project's (custom.items)."""
+    data = prj if isinstance(prj, dict) else getattr(prj, 'data', None)
+    if data is None or n < 44:
+        return
+    from . import items as IT
+    try:
+        IT.check_id(data, n, what)
+    except IT.ItemError as e:
+        raise StoryError(str(e)) from None
+
+
 def check_record(prj, chk, ctx):
     """custom.checks entry -> the record bytes of bank $77 StoryCheckPtrs.
     prj.resolve_flag_ref resolves the terms (any / all)."""
@@ -145,8 +157,9 @@ def check_record(prj, chk, ctx):
         raise StoryError(f"{ctx}: kind {k!r} — one of {', '.join(CHECK_KIND_ORDER)}")
     code = CHECK_KINDS[k][0]
     if k == 'item':
-        return [code, _int(chk.get('item'), ctx + '.item', ITEM_MIN, ITEM_MAX),
-                _int(chk.get('count', 1), ctx + '.count', 1, 20)]
+        it = _int(chk.get('item'), ctx + '.item', ITEM_MIN, ITEM_MAX)
+        _item_exists(prj, it, ctx + '.item')
+        return [code, it, _int(chk.get('count', 1), ctx + '.count', 1, 20)]
     if k == 'gold':
         a = _int(chk.get('amount'), ctx + '.amount', 0, GOLD_MAX)
         return [code, a & 0xFF, (a >> 8) & 0xFF, a >> 16]
@@ -312,13 +325,14 @@ def describe_check(chk, item_name=None, species_name=None, family_name=None,
 # commands
 # ---------------------------------------------------------------------------
 
-def cmd_record(kind, params, ctx):
+def cmd_record(kind, params, ctx, prj=None):
     if kind not in CMD_KINDS:
         raise StoryError(f"{ctx}: unknown command {kind!r}")
     code = CMD_KINDS[kind]
     if kind in ('take_item', 'give_item'):
-        return (code, _int(params.get('item'), ctx + '.item', ITEM_MIN, ITEM_MAX),
-                _int(params.get('count', 1), ctx + '.count', 1, 20))
+        it = _int(params.get('item'), ctx + '.item', ITEM_MIN, ITEM_MAX)
+        _item_exists(prj, it, ctx + '.item')
+        return (code, it, _int(params.get('count', 1), ctx + '.count', 1, 20))
     a = _int(params.get('amount'), ctx + '.amount', 1, GOLD_MAX)
     return (code, a & 0xFF, (a >> 8) & 0xFF, a >> 16)
 

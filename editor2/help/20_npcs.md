@@ -80,6 +80,14 @@ party, about **6 NPCs** per screen. Put NPCs on different rows. The Rooms
 tab (the note above the canvas) and the build warnings tell you when a
 screen goes over.
 
+**Speed (S151 r3, measured).** Every NPC on the screen costs the Game Boy
+about a tenth of a frame of work. With you and your 3 monsters, **3 NPCs**
+on a screen keep the game smooth; **4** make it drop frames now and then
+(more when they walk); **5 or more** make the whole game run at **half
+speed** while you are on that screen. The game's own rooms keep to this too.
+Spread people over screens or rooms. The note above the canvas says
+"Speed: …" and the build warns.
+
 
 ## Text: speakers, voices, names (S120)
 

@@ -236,7 +236,7 @@ YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
 | Name the hero | opens the game's naming screen (the King's "What is your name?"): the player types a name of up to 4 letters or takes the one offered (MILLY with the Milly hook, else TERRY); the scene goes on after "… okay?" YES. Texts after it can use the name (Insert ▾ → the hero's name) |
 | Heal the party | every monster's HP and MP back, ailments cured (the game's own heal; silent) |
 | Take an item, Give / take gold, Refresh the room (S129) | as in conversations — *Give an item* can give several (all or none); *Refresh the room* ends the scene (the room loads again, its states and music pick again) |
-| Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations; *Warp the player* can go **home — the hub** (see *The hub*), to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
+| Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations (S151 r2: a Give with no room ends the scene after its "full" words, unless *When there is no room* says carry on); *Warp the player* can go **home — the hub** (see *The hub*), to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
 
 **Where the player stands.** In an entry scene the walks of the player are
 counted from *Player starts at*; on a step-on spot he stands on it. When the

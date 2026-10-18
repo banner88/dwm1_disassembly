@@ -2072,6 +2072,11 @@ LoadFld_4da6:
     adc h
     ld h, a
     ld a, [hl]
+    ; S151 (items): the field item menu — A = the chosen bag slot's item -> [$da5e]; the
+    ; cp chain below picks the numbers the target window shows by item id (MP for
+    ; $05 Potion / $06 ElfWater / $0E MysticNut; none for the cures, seeds, meats,
+    ; books). Patched builds: `call ItemStoreBase07` (a project item 44+ compares
+    ; as its base, wItemBase).
     ld [$da5e], a
     cp $05
     jp z, Jump_007_4e56
@@ -2317,6 +2322,8 @@ jr_007_4f68:
     call LoadFld_690d
     ld hl, $c90e
     inc [hl]
+    ; S151 (items): the WarpWing ($1D) plays sound $57 here; patched builds compare
+    ; the behaviour id (`call ItemBase07`).
     ld a, [$da5e]
     cp $1d
     ret nz
@@ -2360,6 +2367,8 @@ jr_007_4fa2:
     or a
     ret nz
 
+    ; S151 (items): after the use line — the WarpWing ($1D) and the WarpStaff ($27) take
+    ; their own paths (leave the gate); patched builds compare the behaviour id.
     ld a, [$da5e]
     cp $1d
     jr z, jr_007_5012

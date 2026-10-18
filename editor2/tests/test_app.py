@@ -1156,6 +1156,7 @@ def s127r3_game_text_rule(app, w):
     allowed = {('app/main.py', 'self.log'), ('app/cutscenes_tab.py', 'self.log'),
                ('app/cutscenes_tab.py', 'self.textbox'),
                ('app/text_tab.py', 'self.edit'),     # S150: the game's own texts — markup with the game-font picture beside it
+               ('app/items_tab.py', 'self.edit'),    # S151: MarkupField — an item's words as markup with the game-font picture beside it
                ('app/services_tab.py', 'self.line_edit'),
                ('app/rooms/talk_editor.py', 'self.edit'),
                ('app/rooms/play_dialog.py', 'self.preview')}     # S132: read-only party preview
@@ -3060,6 +3061,139 @@ def s150_text(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s151_items(app, w):
+    """S151 (ROADMAP E9; user: "Lets do items"): the Items tab — the game's 43 then the
+    project's own; a game item's power / used-up chance edited (sparse gamedata.items),
+    its battle power (the item skill's record); New item… (works like the Herb) with its
+    own price, power and use line; Copy; Delete; the Shops tab offers the new item;
+    Original; undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    import editor2.app.items_tab as ITm
+    from editor2.core import items as IT
+    tmp = tempfile.mkdtemp(prefix='s151_items_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert titles.index('Items') + 1 == titles.index('Shops'), titles
+        it = w.items_tab
+        w.tabs.setCurrentWidget(it)
+        it.refresh()
+        app.processEvents()
+        assert it.list.count() == 43 and it.current_id() == 1, it.list.count()
+        assert it.name.text() == 'Herb' and it.power.value() == 30 and \
+            not it.name.pic.pixmap().isNull() and \
+            it.consume.value() == 100 and it.b_power.isEnabled(), it.power.value()
+        n0 = w.session.undo.index()
+        it.power.setValue(40)
+        it._field('power', it.power.value())
+        it.b_power.setValue(45)
+        it._battle(power=45)
+        app.processEvents()
+        assert doc.data['gamedata']['items'] == {'1': {'power': 40}}, doc.data['gamedata']['items']
+        assert doc.data['gamedata']['skills'][str(1 + 0xAF)]['record'] == \
+            {'party_min': 45, 'enemy_min': 45}, doc.data['gamedata']['skills']
+        assert it.list.item(0).foreground().color() == ITm.EDITED
+        # the WarpWing (29): permanent
+        it._select(29)
+        app.processEvents()
+        assert it.info['name'] == 'WarpWing' and it.consume.value() == 100
+        it.consume.setValue(0)
+        it._field('consume', 0)
+        assert doc.data['gamedata']['items']['29'] == {'consume': 0}
+        # New item… works like the Herb
+        k_gi, k_gt = ITm.QInputDialog.getItem, ITm.QInputDialog.getText
+        ITm.QInputDialog.getItem = staticmethod(lambda _p, _t, _l, labels, *a, **k:
+                                                (labels[0], True))
+        ITm.QInputDialog.getText = staticmethod(lambda *a, **k: ('MegaHerb', True))
+        try:
+            it._new()
+        finally:
+            ITm.QInputDialog.getItem, ITm.QInputDialog.getText = k_gi, k_gt
+        app.processEvents()
+        assert it.current_id() == 44 and it.info['new'] and it.info['base'] == 1, it.info
+        assert it.base.isEnabled() and not it.b_power.isEnabled()
+        assert it.info['fields']['power'] == 40          # starts as the (edited) Herb
+        it.power.setValue(80)
+        it._field('power', 80)
+        it.price.setValue(300)
+        it._field('price', 300)
+        it.own_use.edit.setPlainText('{ins 00} feeds\n{ins 10} a\n{ins 20}!')
+        app.processEvents()
+        assert it.own_use.apply_b.isEnabled() and it.own_use.pic.pixmap() is not None and \
+            not it.own_use.pic.pixmap().isNull(), it.own_use.status.text()
+        it.own_use._apply()
+        app.processEvents()
+        e = doc.new_item_entry(44)
+        assert e['power'] == 80 and e['price'] == 300 and \
+            e['use_text'] == '{ins 00} feeds\n{ins 10} a\n{ins 20}!' and 'use_message' not in e, e
+        assert not it.use_line.isEnabled() and '(its own line)' in it.use_line.currentText()
+        r = IT.resolve(doc.data, REPO)
+        assert r['records'][44][9] == 80 and r['base'][44] == 1 and \
+            r['records'][44][7] == IT.USE_MESSAGES, r['records'][44]
+        # Copy, then Delete the copy
+        it._copy()
+        app.processEvents()
+        assert it.current_id() == 45 and doc.new_item_entry(45)['power'] == 80
+        k_q = ITm.QMessageBox.question
+        ITm.QMessageBox.question = staticmethod(lambda *a, **k: ITm.QMessageBox.Yes)
+        try:
+            it._delete()
+        finally:
+            ITm.QMessageBox.question = k_q
+        app.processEvents()
+        assert doc.new_item_entry(45) is None and it.list.count() == 44
+        # the Shops tab offers it
+        st = w.shops_tab
+        st.refresh()
+        assert st.pick.findData(44) >= 0 and '(yours)' in st.pick.itemText(st.pick.findData(44))
+        # Original: the Herb back
+        it._select(1)
+        app.processEvents()
+        it._original()
+        assert '1' not in (doc.data['gamedata'].get('items') or {}) and \
+            str(1 + 0xAF) not in (doc.data['gamedata'].get('skills') or {})
+        # S151 r2: a Give step's "no room" choice — stop (default) / carry on
+        from editor2.app.rooms import conversation_dialog as CVm
+        dlg = CVm.ConversationDialog(doc, rom=w.session.renderer.rom, room=doc.room('gate_island'),
+                                     key=0, spec={'steps': [{'give_item': {'item': 44}},
+                                                            {'say': {'boxes': [['Done!']]}}]},
+                                     parent=it)
+        dlg.tree.setCurrentItem(dlg.tree.topLevelItem(0))
+        app.processEvents()
+        assert dlg.on_full.currentData() == 'stop', dlg.on_full.currentData()
+        assert 'no room: stop here' in dlg.tree.topLevelItem(0).text(0), \
+            dlg.tree.topLevelItem(0).text(0)
+        dlg.on_full.setCurrentIndex(1)
+        dlg.on_full.activated.emit(1)
+        app.processEvents()
+        assert dlg.spec()['steps'][0]['give_item'].get('on_full') == 'continue', dlg.spec()
+        dlg.reject()
+        # the Text tab's Items page still opens (the new item's words are the Items tab's)
+        tt = w.dialogue_tab
+        ip = tt.pages['items']
+        tt.tabs.setCurrentWidget(ip)
+        w.tabs.setCurrentWidget(tt)
+        app.processEvents()
+        while w.session.undo.index() > n0:
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Items tab (S151) — the Herb\'s power and battle power, a permanent WarpWing, '
+              'a new MegaHerb (works like the Herb) with its own price / power / use line, '
+              'Copy, Delete, offered by the Shops tab, Original; undo restores everything')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -4270,7 +4404,9 @@ def main():
     outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
     b77 = outs['patches/bank_077.asm']
     assert 'SHOP_COUNT EQU 6' in b77 and 'Mirror stall' in b77 and '$1d, $01, $ff' in b77, b77
-    assert 'price 12' in outs['patches/bank_003.asm']
+    # S151: the records live in bank $77's ItemTable (bank $03's table is no longer read)
+    assert '    db $00, $0c, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [  1] Herb (edited)' \
+        in b77, [ln for ln in b77.splitlines() if '[  1]' in ln]
     b60 = outs['patches/bank_060.asm']
     assert 'VanillaNPCExtTable:' in b60 and 'is CLEAR' in b60, 'no swirl conditions'
     e_q = STm.QMessageBox.question
@@ -4490,6 +4626,7 @@ def main():
     s144_states(app, w)
     s145_capacity(app, w)
     s150_text(app, w)
+    s151_items(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

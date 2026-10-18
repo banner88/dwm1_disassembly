@@ -1048,6 +1048,13 @@ class Lowerer:
         if not isinstance(what, int):
             self.err(ctx, 'pick an item' if not monster else 'pick a monster')
             return
+        if not monster and getattr(self.env, 'prj', None) is not None:
+            from . import items as _IT          # S151: the game's 1-43 + the project's
+            try:
+                _IT.check_id(self.env.prj, what, ctx)
+            except _IT.ItemError as ex:
+                self.err(ctx, str(ex))
+                return
         cnt = 1 if monster else int(g.get('count', 1) or 1)
         if cnt > 1:
             # S129: several of an item — story command 3 (all of them or none;
@@ -1071,6 +1078,14 @@ class Lowerer:
             self.box = False
             self.text(g['full'], ctx, self.label('fulltext'))
             self.close()
+        on_full = g.get('on_full', 'stop')
+        if on_full not in ('stop', 'continue'):
+            self.err(ctx, "on_full is 'stop' or 'continue'")
+        elif on_full == 'stop':
+            # S151: nothing given -> the scene ends here (as an End step: its tail runs);
+            # the steps after the Give play only when it was given
+            self.op('goto', f'@{self.p}_done')
+            rec['note'].append('the bag / farm full: the scene ends after the "full" words')
         self.ops.append('label:' + done)
         self.box = False
 
@@ -1678,7 +1693,8 @@ def describe(st, names=None, place=None):
         return f'{"Hide" if v == "hide" else "Show"} the monsters following the player'
     if k == 'give_item':
         n = int(v.get('count', 1) or 1)
-        return f'Give item {v.get("item")}' + (f' × {n}' if n > 1 else '')
+        return f'Give item {v.get("item")}' + (f' × {n}' if n > 1 else '') + \
+            (' — no room: carry on' if v.get('on_full') == 'continue' else ' — no room: the scene ends')
     if k == 'take_item':
         n = int(v.get('count', 1) or 1)
         return f'Take item {v.get("item")}' + (f' × {n}' if n > 1 else '') + ' from the bag'
@@ -1688,7 +1704,8 @@ def describe(st, names=None, place=None):
     if k == 'refresh':
         return 'Refresh the room (its state rules pick again)'
     if k == 'give_monster':
-        return f'Give monster {v.get("enemy")}'
+        return f'Give monster {v.get("enemy")}' + \
+            (' — no room: carry on' if v.get('on_full') == 'continue' else ' — no room: the scene ends')
     if k == 'tiles':
         rows = v.get('rows') or []
         w = max((len(r) for r in rows), default=0)

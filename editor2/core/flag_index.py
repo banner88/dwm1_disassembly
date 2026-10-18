@@ -357,8 +357,8 @@ class FlagIndex:
         from . import story as _ST
         c = self.check_defs.get(name) or {}
         try:
-            from .shops import item_names
-            items = item_names(self.repo)
+            from . import items as _IT
+            items = _IT.names(getattr(self, 'data', None), self.repo)
         except Exception:                                        # noqa: BLE001
             items = {}
         return _ST.describe_check(c, item_name=lambda i: items.get(i, f'item {i}'),

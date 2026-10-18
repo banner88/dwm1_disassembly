@@ -51,13 +51,13 @@ SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
     ; Bank $03 jump table (9 entries, called via rst $10 with H=$03)
     dw label4013             ; Entry 0: Serial/link communication
     dw label443f             ; Entry 1: MonsterInfoLoad → $DA33
-    dw SetMon_6980         ; Entry 2
-    dw label69a2             ; Entry 3
-    dw label6e24             ; Entry 4
-    dw SetMon_7160         ; Entry 5
-    dw label7190             ; Entry 6
-    dw label71b6             ; Entry 7
-    dw CallMon_7134         ; Entry 8
+    dw ItemLoadRecord   ; Entry 2: ItemLoadRecord — item [$DA5E]'s 12-byte record -> $DA62-$DA6D (S151)
+    dw ItemCheckUsable   ; Entry 3: ItemCheckUsable — may item [$DA5E] be used now? ($FF = no; S151)
+    dw ItemApplyEffect   ; Entry 4: ItemApplyEffect — the item's FIELD effect (S151)
+    dw ItemBagCompact   ; Entry 5: ItemBagCompact — close the bag's gaps (S151)
+    dw ItemBagAdd   ; Entry 6: ItemBagAdd — [$DA5E] into the first free bag slot ($FF = full; S151)
+    dw ItemBagRemove   ; Entry 7: ItemBagRemove — one [$DA5E] out of the bag ($FF = none; S151)
+    dw ItemConsumeRoll   ; Entry 8: ItemConsumeRoll — used up? (RNG mod 100 < record +3; S151)
 
 label4013:
     ld a, [$c864]
@@ -1456,134 +1456,112 @@ MonsterInfo_220_Unused_220:  ; (unused) — Boss
     db $02, $02, $02, $02, $02, $02, $02, $02, $03, $01, $01, $02, $02, $01, $01, $00, $03, $03, $02, $03, $02, $02, $01, $01, $02, $02, $00, $07
 ; @BUILD_PROJECT END gd_monster_info
 
-SetMon_6980:
+; -----------------------------------------------------------------------------
+; ITEMS (bank $03 entries 2-8; decoded S151, ROADMAP E9 — DATA_STRUCTURES "Items (S151)").
+; RAM: $DA5E = the item in use ($FF = refused / none), $DA5F = its bag slot, $DA60 =
+; the target monster's party slot, $DA62-$DA6D = its record (ItemInfoTable below):
+;   +0 group (not read), +1/+2 buy price, +3 used-up chance % (entry 8), +4 field use
+;   (0/1 usable; 2/3 "uses it as a tool. But nothing happens" — bank $07), +5 target
+;   (0/2/4 = the WHO window), +6 -, +7 use line / +8 result line (bank $41 mode 13),
+;   +9 POWER ($DA6B: heal = power + 0-10, seeds + power, meats wildness - power),
+;   +10 -, +11 flags (bit 0 = not on the SELL list, bit 2 = kept after a lost battle).
+; Entry 2 ItemLoadRecord copies the record (patched builds: bank $77 entry 16
+; ItemRecordCopy, + wItemBase); entry 3 ItemCheckUsable / entry 4 ItemApplyEffect
+; dispatch on the id through two 44-entry rst $00 tables (ItemUsableTable $69AC /
+; ItemEffectTable $6E31 — re-sectioned here S151 with every handler named,
+; tools/resection_items_03.py; disassembly/ keeps mgbdis's fake-code form).
+; -----------------------------------------------------------------------------
+ItemLoadRecord:
     ld de, $da62
-    call SaveMon_6987
+    call ItemCopyRecord
     ret
 
 
-SaveMon_6987:
-    push de
-    ld a, [$da5e]
-    ld c, $0c
-    call Mul8x8To16
-    ld a, l
-    add LOW(ItemInfoTable)
-    ld l, a
-    ld a, h
-    adc HIGH(ItemInfoTable)
-    ld h, a
-    pop de
-    ld b, $0c
-
-jr_003_699b:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, jr_003_699b
-
+ItemCopyRecord:
+    ; S151 (ROADMAP E9, PROJECT_COMPILER §2.59): SAME SIZE (27 B). The copy of item
+    ; [$DA5E]'s 12-byte record to DE (ItemInfoTable below, 44 records) is now bank $77
+    ; entry 16 ItemRecordCopy: the records of every item — the game's 44 (prices and
+    ; fields edited by gamedata.items) + the project's new items 44+ (custom.items) —
+    ; and wItemBase := the item's BEHAVIOUR id (its own id for 0-43, its base for a new
+    ; item). ItemInfoTable here is no longer read (kept at the original bytes).
+    ld hl, $7710                ; bank $77 entry 16 ItemRecordCopy (DE = the destination)
+    rst $10
     ret
+    ds 22, $00                  ; the rest of the vanilla copy loop (ItemCheckUsable stays at $69A2)
 
-label69a2:
+ItemCheckUsable:
     ld a, [$da5e]
     cp $ff
     ret z
 
-    ld a, [$da5e]
-    rst $00
+    ld a, [wItemBase]           ; S151: dispatch on the item's BEHAVIOUR id (was [$da5e];
+    rst $00                     ;   a new item 44+ runs its base's check — bank $07 copied
+                                ;   the record, so wItemBase is this item's)
 
-Jump_003_69ac:
-    inc b
-    ld l, d
-    dec b
-    ld l, d
-    dec b
-    ld l, d
-    inc l
-    ld l, d
-    inc l
-    ld l, d
-    add hl, hl
-    ld l, e
-    add hl, hl
-    ld l, e
-    ld d, b
-    ld l, e
-    ld h, [hl]
-    ld l, e
-    ld a, h
-    ld l, e
-    sub d
-    ld l, e
-    xor b
-    ld l, e
-    cp [hl]
-    ld l, e
-    ret nc
+    ; ---------------------------------------------------------------------------
+    ; ItemUsableTable (S151): entry 3 ItemCheckUsable's rst $00 table — one handler
+    ; per item id 0-43 (patched builds dispatch on wItemBase, the item's BEHAVIOUR id:
+    ; a project item 44+ runs its base's). A handler REFUSES by writing $FF to
+    ; [$DA5E] (the item in use); [$DA60] = the target monster's party slot. The
+    ; field item menu (bank $07) then shows "But nothing happens" / greys the use.
+    ; ---------------------------------------------------------------------------
+ItemUsableTable:
+Jump_003_69ac:   ; (mgbdis named this table row; fake code elsewhere in the bank calls it — kept)
+    dw ItemCanUse_None           ; [ 0] None
+    dw ItemCanUse_Herb           ; [ 1] Herb
+    dw ItemCanUse_Herb           ; [ 2] Lovewater
+    dw ItemCanUse_Party          ; [ 3] SageStone
+    dw ItemCanUse_Party          ; [ 4] WorldDew
+    dw ItemCanUse_RestoreMP      ; [ 5] Potion
+    dw ItemCanUse_RestoreMP      ; [ 6] ElfWater
+    dw ItemCanUse_Antidote       ; [ 7] Antidote
+    dw ItemCanUse_MoonHerb       ; [ 8] MoonHerb
+    dw ItemCanUse_SkyBell        ; [ 9] SkyBell
+    dw ItemCanUse_Laurel         ; [10] Laurel
+    dw ItemCanUse_AwakeSand      ; [11] AwakeSand
+    dw ItemCanUse_WorldLeaf      ; [12] WorldLeaf
+    dw ItemCanUse_LifeAcorn      ; [13] LifeAcorn
+    dw ItemCanUse_MysticNut      ; [14] MysticNut
+SetMon_69ca:   ; (mgbdis named this table row; fake code elsewhere in the bank calls it — kept)
+    dw ItemCanUse_AtkSeed        ; [15] AtkSeed
+    dw ItemCanUse_DefSeed        ; [16] DefSeed
+    dw ItemCanUse_AglSeed        ; [17] AglSeed
+    dw ItemCanUse_IntSeed        ; [18] IntSeed
+    dw ItemCanUse_Meat           ; [19] BeefJerky
+    dw ItemCanUse_Meat           ; [20] PorkChop
+    dw ItemCanUse_Meat           ; [21] Rib
+    dw ItemCanUse_Meat           ; [22] BadMeat
+    dw ItemCanUse_Meat           ; [23] Sirloin
+    dw ItemCanUse_Always         ; [24] BoltStaff
+    dw ItemCanUse_Always         ; [25] WindStaff
+    dw ItemCanUse_Always         ; [26] MistStaff
+    dw ItemCanUse_Always         ; [27] LavaStaff
+    dw ItemCanUse_Always         ; [28] SnowStaff
+    dw ItemCanUse_Always         ; [29] WarpWing
+    dw ItemCanUse_Always         ; [30] TinyMedal
+    dw ItemCanUse_QuestBk        ; [31] QuestBk
+    dw ItemCanUse_HorrorBk       ; [32] HorrorBk
+    dw ItemCanUse_BeniceBk       ; [33] BeniceBk
+    dw ItemCanUse_CheaterBk      ; [34] CheaterBk
+    dw ItemCanUse_SmartBk        ; [35] SmartBk
+    dw ItemCanUse_ComedyBk       ; [36] ComedyBk
+    dw ItemCanUse_FireStaff      ; [37] FireStaff
+    dw ItemCanUse_BeastTail      ; [38] BeastTail
+    dw ItemCanUse_WarpStaff      ; [39] WarpStaff
+    dw ItemCanUse_Repellant      ; [40] Repellant
+    dw ItemCanUse_InGate         ; [41] ShinyHarp
+    dw ItemCanUse_InGate         ; [42] MapHerb
+    dw ItemCanUse_BookMark       ; [43] BookMark
 
-    ld l, e
-    db $e4
-    ld l, e
+; item(s) 0 None: may it be used now? (nothing)
+ItemCanUse_None:
+    ret
 
-SetMon_69ca:
-    ld hl, sp+$6b
-    inc c
-    ld l, h
-    jr nz, @+$6e
 
-    inc [hl]
-    ld l, h
-    ld c, b
-    ld l, h
-    ld c, b
-    ld l, h
-    ld c, b
-    ld l, h
-    ld c, b
-    ld l, h
-    ld c, b
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, h
-    ld l, h
-    ld c, l
-    ld l, h
-    ld h, e
-    ld l, h
-    ld a, b
-    ld l, h
-    adc [hl]
-    ld l, h
-    and e
-    ld l, h
-    cp c
-    ld l, h
-    adc $6c
-    rst $08
-    ld l, h
+; item(s) 1 Herb, 2 Lovewater: may it be used now? (heal HP)
+ItemCanUse_Herb:
+    call ItemTargetUnusable
     ret nz
-
-    ld l, l
-    call $df6d
-    ld l, l
-    rst $18
-    ld l, l
-    ld [wWarpGateId], a
-    call LoadMon_6e11
-    ret nz
-
     ld a, [$da60]
     ld hl, $cb13
     call ReadMonsterWord
@@ -1596,27 +1574,26 @@ SetMon_69ca:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
+; item(s) 3 SageStone, 4 WorldDew: may it be used now? (heal the party)
+ItemCanUse_Party:
     ld a, [$ca8d]
     or a
     jp z, Jump_003_6ab9
-
     ld a, $00
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
     jr nz, jr_003_6a5b
-
     ld a, $00
     ld hl, $cb13
     call ReadMonsterWord
@@ -1629,7 +1606,7 @@ SetMon_69ca:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
@@ -1638,14 +1615,12 @@ SetMon_69ca:
 jr_003_6a5b:
     ld a, [$ca8d]
     cp $01
-    jr z, jr_003_6ab9
-
+    jr z, Jump_003_6ab9
     ld a, $01
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
     jr nz, jr_003_6a8a
-
     ld a, $01
     ld hl, $cb13
     call ReadMonsterWord
@@ -1658,7 +1633,7 @@ jr_003_6a5b:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
@@ -1667,14 +1642,12 @@ jr_003_6a5b:
 jr_003_6a8a:
     ld a, [$ca8d]
     cp $02
-    jr z, jr_003_6ab9
-
+    jr z, Jump_003_6ab9
     ld a, $02
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
-    jr nz, jr_003_6ab9
-
+    jr nz, Jump_003_6ab9
     ld a, $02
     ld hl, $cb13
     call ReadMonsterWord
@@ -1687,7 +1660,7 @@ jr_003_6a8a:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
@@ -1709,7 +1682,7 @@ jr_003_6abf:
     ld a, $02
     call FuncMon_6ad7
     ld a, $26
-    add d
+    add a, d
     ld [$da6a], a
     ret
 
@@ -1719,14 +1692,12 @@ FuncMon_6ad7:
     ld hl, $ca8d
     cp [hl]
     ret nc
-
     push de
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
     pop de
     ret nz
-
     push de
     ld a, [$da60]
     ld hl, $cb13
@@ -1741,20 +1712,19 @@ FuncMon_6ad7:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
     ret z
-
     push de
     ld a, d
     swap a
     ld hl, $c1b0
-    add l
+    add a, l
     ld l, a
     ld a, $00
-    adc h
+    adc a, h
     ld h, a
     push hl
     ld a, [$da60]
@@ -1769,9 +1739,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 5 Potion, 6 ElfWater: may it be used now? (restore MP)
+ItemCanUse_RestoreMP:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb17
     call ReadMonsterWord
@@ -1784,101 +1755,102 @@ FuncMon_6ad7:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 7 Antidote: may it be used now? (cure poison)
+ItemCanUse_Antidote:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 2, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 8 MoonHerb: may it be used now? (cure paralysis)
+ItemCanUse_MoonHerb:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 3, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 9 SkyBell: may it be used now? (cure (SkyBell))
+ItemCanUse_SkyBell:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 4, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 10 Laurel: may it be used now? (break a curse)
+ItemCanUse_Laurel:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 0, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 11 AwakeSand: may it be used now? (wake up)
+ItemCanUse_AwakeSand:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 1, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
+; item(s) 12 WorldLeaf: may it be used now? (revive)
+ItemCanUse_WorldLeaf:
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 13 LifeAcorn: may it be used now? (max HP up)
+ItemCanUse_LifeAcorn:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb13
     call ReadMonsterWord
@@ -1887,9 +1859,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 14 MysticNut: may it be used now? (max MP up)
+ItemCanUse_MysticNut:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb17
     call ReadMonsterWord
@@ -1898,9 +1871,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 15 AtkSeed: may it be used now? (ATK up)
+ItemCanUse_AtkSeed:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb19
     call ReadMonsterWord
@@ -1909,9 +1883,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 16 DefSeed: may it be used now? (DEF up)
+ItemCanUse_DefSeed:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb1b
     call ReadMonsterWord
@@ -1920,9 +1895,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 17 AglSeed: may it be used now? (AGL up)
+ItemCanUse_AglSeed:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb1d
     call ReadMonsterWord
@@ -1931,9 +1907,10 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 18 IntSeed: may it be used now? (INT up)
+ItemCanUse_IntSeed:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb1f
     call ReadMonsterWord
@@ -1942,102 +1919,110 @@ FuncMon_6ad7:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 19 BeefJerky, 20 PorkChop, 21 Rib, 22 BadMeat, 23 Sirloin: may it be used now? (feed (meat))
+ItemCanUse_Meat:
+    call ItemTargetUnusable
     ret nz
 
+; item(s) 24 BoltStaff, 25 WindStaff, 26 MistStaff, 27 LavaStaff, 28 SnowStaff, 29 WarpWing, 30 TinyMedal: may it be used now? (staff)
+ItemCanUse_Always:
     ret
 
 
-    call LoadMon_6e11
+; item(s) 31 QuestBk: may it be used now? (personality)
+ItemCanUse_QuestBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb25
     call ReadMonsterByte
     cp $ff
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 32 HorrorBk: may it be used now? (personality)
+ItemCanUse_HorrorBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb25
     call ReadMonsterByte
     or a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 33 BeniceBk: may it be used now? (personality)
+ItemCanUse_BeniceBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb26
     call ReadMonsterByte
     cp $ff
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 34 CheaterBk: may it be used now? (personality)
+ItemCanUse_CheaterBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb26
     call ReadMonsterByte
     or a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 35 SmartBk: may it be used now? (personality)
+ItemCanUse_SmartBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb28
     call ReadMonsterByte
     cp $ff
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
-    call LoadMon_6e11
+; item(s) 36 ComedyBk: may it be used now? (personality)
+ItemCanUse_ComedyBk:
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb28
     call ReadMonsterByte
     or a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
+; item(s) 37 FireStaff: may it be used now? (staff)
+ItemCanUse_FireStaff:
     ret
 
 
-    ldh a, [$95]
+; item(s) 38 BeastTail: may it be used now? (point to the stairs)
+ItemCanUse_BeastTail:
+    ldh a, [$ff95]
     ld l, a
-    ldh a, [$96]
+    ldh a, [$ff96]
     ld h, a
     ld a, l
     and $f0
@@ -2053,23 +2038,22 @@ FuncMon_6ad7:
     sub e
     ld l, a
     ld a, h
-    sbc d
+    sbc a, d
     ld h, a
     jr nc, jr_003_6cf7
-
     ld a, l
     cpl
-    add $01
+    add a, $01
     ld l, a
     ld a, h
     cpl
-    adc $00
+    adc a, $00
     ld h, a
 
 jr_003_6cf7:
-    ldh a, [$92]
+    ldh a, [$ff92]
     ld e, a
-    ldh a, [$93]
+    ldh a, [$ff93]
     ld d, a
     ld a, e
     and $f0
@@ -2085,17 +2069,16 @@ jr_003_6cf7:
     sub c
     ld e, a
     ld a, d
-    sbc b
+    sbc a, b
     ld d, a
     jr nc, jr_003_6d1f
-
     ld a, e
     cpl
-    add $01
+    add a, $01
     ld e, a
     ld a, d
     cpl
-    adc $00
+    adc a, $00
     ld d, a
 
 jr_003_6d1f:
@@ -2104,26 +2087,22 @@ jr_003_6d1f:
     ld a, h
     or a
     jr nz, jr_003_6d44
-
     ld a, d
     or a
     jr nz, jr_003_6d44
-
     ld a, l
     cp $20
     jr nz, jr_003_6d37
-
     ld a, e
     cp $50
     jr c, jr_003_6d44
-
     ld b, $00
     jr jr_003_6d64
+
 
 jr_003_6d37:
     cp $10
     jr nz, jr_003_6d44
-
     ld a, e
     cp $30
     jr c, jr_003_6d44
@@ -2132,10 +2111,11 @@ Jump_003_6d40:
     ld b, $00
     jr jr_003_6d64
 
+
 jr_003_6d44:
-    ldh a, [$95]
+    ldh a, [$ff95]
     ld l, a
-    ldh a, [$96]
+    ldh a, [$ff96]
     ld h, a
     ld a, [$c966]
     ld e, a
@@ -2145,16 +2125,14 @@ jr_003_6d44:
     sub e
     ld l, a
     ld a, h
-    sbc d
+    sbc a, d
     ld h, a
     ld b, $06
     jr c, jr_003_6d64
-
     ld a, h
     or l
     ld b, $03
     jr nz, jr_003_6d64
-
     ld b, $00
 
 jr_003_6d64:
@@ -2163,37 +2141,33 @@ jr_003_6d64:
     ld a, h
     or a
     jr nz, jr_003_6d89
-
     ld a, d
     or a
     jr nz, jr_003_6d89
-
     ld a, e
     cp $20
     jr nz, jr_003_6d7c
-
     ld a, l
     cp $50
     jr c, jr_003_6d89
-
     ld a, $00
     jr jr_003_6da9
+
 
 jr_003_6d7c:
     cp $10
     jr nz, jr_003_6d89
-
     ld a, l
     cp $30
     jr c, jr_003_6d89
-
     ld a, $00
     jr jr_003_6da9
 
+
 jr_003_6d89:
-    ldh a, [$92]
+    ldh a, [$ff92]
     ld l, a
-    ldh a, [$93]
+    ldh a, [$ff93]
     ld h, a
     ld a, [$c964]
     ld e, a
@@ -2203,21 +2177,19 @@ jr_003_6d89:
     sub e
     ld l, a
     ld a, h
-    sbc d
+    sbc a, d
     ld h, a
     ld a, $02
     jr c, jr_003_6da9
-
     ld a, h
     or l
     ld a, $01
     jr nz, jr_003_6da9
-
     ld a, $00
 
 jr_003_6da9:
-    add b
-    add $3a
+    add a, b
+    add a, $3a
     ld l, a
     ld h, $02
     ld de, $c1b0
@@ -2225,16 +2197,16 @@ jr_003_6da9:
     ld a, [wInGateworld]
     or a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
+; item(s) 39 WarpStaff: may it be used now? (WarpStaff)
+ItemCanUse_WarpStaff:
     ld a, [wInGateworld]
     or a
     jr z, jr_003_6dc7
-
     ret
 
 
@@ -2244,10 +2216,11 @@ jr_003_6dc7:
     ret
 
 
+; item(s) 40 Repellant: may it be used now? (repel monsters)
+ItemCanUse_Repellant:
     ld a, [$c93e]
     bit 1, a
     jr nz, jr_003_6dd9
-
     ld a, [wInGateworld]
     or a
     ret nz
@@ -2258,38 +2231,34 @@ jr_003_6dd9:
     ret
 
 
+; item(s) 41 ShinyHarp, 42 MapHerb: may it be used now? (call a battle)
+ItemCanUse_InGate:
     ld a, [wInGateworld]
     or a
     ret nz
-
     ld a, $ff
     ld [$da5e], a
     ret
 
 
+; item(s) 43 BookMark: may it be used now? (save)
+ItemCanUse_BookMark:
     ld a, [wInGateworld]
     or a
     ret nz
-
-    call ArenaMapID          ; S128: was ld a, [wMapID] — your arena copies count as $06 / $5D (the skill fizzles there too)
+    call ArenaMapID                 ; S128: was ld a, [wMapID] — your arena copies count as $06 / $5D (the skill fizzles there too)
     cp $53
     jr c, jr_003_6e0b
-
     cp $5a
     jr z, jr_003_6e0b
-
     cp $5b
     jr z, jr_003_6e0b
-
     cp $5c
     jr z, jr_003_6e0b
-
     cp $5d
     jr z, jr_003_6e0b
-
     cp $60
     jr z, jr_003_6e0b
-
     ret
 
 
@@ -2299,114 +2268,91 @@ jr_003_6e0b:
     ret
 
 
-LoadMon_6e11:
+; ItemTargetUnusable (S151): NZ + $DA5E := $FF when the target [$DA60]'s record byte
+; $CB0B (+$4A) has bit 7 set (the item cannot act on it).
+ItemTargetUnusable:
     ld a, [$da60]
     ld hl, $cb0b
     call ReadMonsterByte
     bit 7, a
     ret z
-
     ld a, $ff
     ld [$da5e], a
     or a
     ret
 
-label6e24:
+
+ItemApplyEffect:
     ld a, [$da5e]
     cp $ff
     ret z
 
-    call SetMon_6980
-    ld a, [$da5e]
-    rst $00
-    adc c
-    ld l, [hl]
-    adc d
-    ld l, [hl]
-    adc d
-    ld l, [hl]
-    xor b
-    ld l, [hl]
-    rst $18
-    ld l, [hl]
-    ld de, $2f6f
-    ld l, a
-    ld b, l
-    ld l, a
-    ld d, h
-    ld l, a
-    ld h, e
-    ld l, a
-    ld [hl], d
-    ld l, a
-    add c
-    ld l, a
-    sub b
-    ld l, a
-    or l
-    ld l, a
-    push bc
-    ld l, a
-    push de
-    ld l, a
-    push hl
-    ld l, a
-    push af
-    ld l, a
-    dec b
-    ld [hl], b
-    dec d
-    ld [hl], b
-    dec d
-    ld [hl], b
-    dec d
-    ld [hl], b
-    dec h
-    ld [hl], b
-    ld b, b
-    ld [hl], b
-    ld d, b
-    ld [hl], b
-    ld d, c
-    ld [hl], b
-    ld d, d
-    ld [hl], b
-    ld d, e
-    ld [hl], b
-    ld d, h
-    ld [hl], b
-    ld d, l
-    ld [hl], b
-    ld e, c
-    ld [hl], b
-    ld e, d
-    ld [hl], b
-    ld l, d
-    ld [hl], b
-    ld a, d
-    ld [hl], b
-    adc d
-    ld [hl], b
-    sbc d
-    ld [hl], b
-    xor d
-    ld [hl], b
-    cp d
-    ld [hl], b
-    cp e
-    ld [hl], b
-    cp a
-    ld [hl], b
-    jp $cc70
+    call ItemLoadRecord
+    ld a, [wItemBase]           ; S151: the BEHAVIOUR id (was [$da5e]; ItemLoadRecord just
+    rst $00                     ;   set it: a new item 44+ runs its base's field effect)
+    ; ---------------------------------------------------------------------------
+    ; ItemEffectTable (S151): entry 4 ItemApplyEffect's rst $00 table — the FIELD
+    ; effect of item id 0-43 (patched: of wItemBase). The record was just copied to
+    ; $DA62-$DA6D (entry 2); [$DA6B] = record +9 = the POWER, [$DA60] = the target
+    ; slot. Most effects end with `call ItemConsumeRoll` (entry 8: RNG mod 100 <
+    ; record +3 -> the item is used up). Items whose effect needs a gate / battle
+    ; (BeastTail … BookMark, the staffs) do their work elsewhere (bank $07 / $50).
+    ; ---------------------------------------------------------------------------
+ItemEffectTable:
+    dw ItemEffect_None           ; [ 0] None
+    dw ItemEffect_Herb           ; [ 1] Herb
+    dw ItemEffect_Herb           ; [ 2] Lovewater
+    dw ItemEffect_SageStone      ; [ 3] SageStone
+    dw ItemEffect_WorldDew       ; [ 4] WorldDew
+    dw ItemEffect_Potion         ; [ 5] Potion
+    dw ItemEffect_ElfWater       ; [ 6] ElfWater
+    dw ItemEffect_Antidote       ; [ 7] Antidote
+    dw ItemEffect_MoonHerb       ; [ 8] MoonHerb
+    dw ItemEffect_SkyBell        ; [ 9] SkyBell
+    dw ItemEffect_Laurel         ; [10] Laurel
+    dw ItemEffect_AwakeSand      ; [11] AwakeSand
+    dw ItemEffect_WorldLeaf      ; [12] WorldLeaf
+    dw ItemEffect_LifeAcorn      ; [13] LifeAcorn
+    dw ItemEffect_MysticNut      ; [14] MysticNut
+    dw ItemEffect_AtkSeed        ; [15] AtkSeed
+    dw ItemEffect_DefSeed        ; [16] DefSeed
+    dw ItemEffect_AglSeed        ; [17] AglSeed
+    dw ItemEffect_IntSeed        ; [18] IntSeed
+    dw ItemEffect_Meat           ; [19] BeefJerky
+    dw ItemEffect_Meat           ; [20] PorkChop
+    dw ItemEffect_Meat           ; [21] Rib
+    dw ItemEffect_BadMeat        ; [22] BadMeat
+    dw ItemEffect_Sirloin        ; [23] Sirloin
+    dw ItemEffect_BoltStaff      ; [24] BoltStaff
+    dw ItemEffect_WindStaff      ; [25] WindStaff
+    dw ItemEffect_MistStaff      ; [26] MistStaff
+    dw ItemEffect_LavaStaff      ; [27] LavaStaff
+    dw ItemEffect_SnowStaff      ; [28] SnowStaff
+    dw ItemEffect_WarpWing       ; [29] WarpWing
+    dw ItemEffect_TinyMedal      ; [30] TinyMedal
+    dw ItemEffect_QuestBk        ; [31] QuestBk
+    dw ItemEffect_HorrorBk       ; [32] HorrorBk
+    dw ItemEffect_BeniceBk       ; [33] BeniceBk
+    dw ItemEffect_CheaterBk      ; [34] CheaterBk
+    dw ItemEffect_SmartBk        ; [35] SmartBk
+    dw ItemEffect_ComedyBk       ; [36] ComedyBk
+    dw ItemEffect_FireStaff      ; [37] FireStaff
+    dw ItemEffect_BeastTail      ; [38] BeastTail
+    dw ItemEffect_WarpStaff      ; [39] WarpStaff
+    dw ItemEffect_Repellant      ; [40] Repellant
+    dw ItemEffect_ShinyHarp      ; [41] ShinyHarp
+    dw ItemEffect_MapHerb        ; [42] MapHerb
+    dw ItemEffect_BookMark       ; [43] BookMark
 
-
-    ld [hl], b
-    and $70
-    push af
-    ld [hl], b
+; item(s) 0 None:
+;   Nothing happens.
+ItemEffect_None:
     ret
 
 
+; item(s) 1 Herb, 2 Lovewater:
+;   Heals one monster by the power ([$DA6B]) + 0-10 HP (it must be alive and hurt).
+ItemEffect_Herb:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -2414,15 +2360,18 @@ label6e24:
     call Div8x8
     ld b, a
     ld a, [$da6b]
-    add b
+    add a, b
     ld l, a
     ld h, $00
     ld a, [$da60]
     call GetMonsterSkillData
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 3 SageStone:
+;   Heals every hurt monster of the party by the power ([$DA6B]) + 0-10 HP.
+ItemEffect_SageStone:
     ld a, $00
     ld [$da60], a
     call CallMon_6ec4
@@ -2432,7 +2381,7 @@ label6e24:
     ld a, $02
     ld [$da60], a
     call CallMon_6ec4
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -2444,7 +2393,7 @@ CallMon_6ec4:
     call Div8x8
     ld b, a
     ld a, [$da6b]
-    add b
+    add a, b
     ld l, a
     ld h, $00
     ld a, [$da60]
@@ -2452,13 +2401,16 @@ CallMon_6ec4:
     ret
 
 
+; item(s) 4 WorldDew:
+;   Fully heals the HP of every monster of the party.
+ItemEffect_WorldDew:
     ld a, $00
     call SetMon_6ef2
     ld a, $01
     call SetMon_6ef2
     ld a, $02
     call SetMon_6ef2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
@@ -2466,11 +2418,9 @@ SetMon_6ef2:
     ld hl, $ca8d
     cp [hl]
     ret nc
-
     ld [$da60], a
-    call LoadMon_6e11
+    call ItemTargetUnusable
     ret nz
-
     ld a, [$da60]
     ld hl, $cb13
     call ReadMonsterWord
@@ -2480,6 +2430,9 @@ SetMon_6ef2:
     ret
 
 
+; item(s) 5 Potion:
+;   Restores one monster's MP by the power ([$DA6B]) + 0-10 (alive, MP not full).
+ItemEffect_Potion:
     call GenerateRNG
     ld a, [wRNG1]
     ld b, a
@@ -2487,65 +2440,86 @@ SetMon_6ef2:
     call Div8x8
     ld b, a
     ld a, [$da6b]
-    add b
+    add a, b
     ld l, a
     ld h, $00
     ld a, [$da60]
     call GetMonsterSlotAndPush
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 6 ElfWater:
+;   Fully restores one monster's MP (alive, MP not full).
+ItemEffect_ElfWater:
     ld a, [$da60]
     ld hl, $cb17
     call ReadMonsterWord
     ld a, [$da60]
     ld hl, $cb15
     call WriteMonsterWord
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 7 Antidote:
+;   Cures one monster of poison.
+ItemEffect_Antidote:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 2, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 8 MoonHerb:
+;   Cures one monster of paralysis.
+ItemEffect_MoonHerb:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 3, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 9 SkyBell:
+;   Cures one monster of what the SkyBell cures (status bit 4).
+ItemEffect_SkyBell:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 4, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 10 Laurel:
+;   Breaks the curse on one monster.
+ItemEffect_Laurel:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 0, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 11 AwakeSand:
+;   Wakes one monster up.
+ItemEffect_AwakeSand:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     res 1, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 12 WorldLeaf:
+;   Revives a fallen monster with full HP.
+ItemEffect_WorldLeaf:
     ld a, [$da60]
     ld hl, $cb0b
     call GetCurrentMonsterPtr
@@ -2558,73 +2532,97 @@ SetMon_6ef2:
     call WriteMonsterWord
     ld hl, $0103
     rst $10
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 13 LifeAcorn:
+;   Raises one monster's max HP by the power ([$DA6B]) (up to 999).
+ItemEffect_LifeAcorn:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call AddMonsterHP_Setup
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 14 MysticNut:
+;   Raises one monster's max MP by the power ([$DA6B]) (up to 999).
+ItemEffect_MysticNut:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call MonsterStatAddWrap
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 15 AtkSeed:
+;   Raises one monster's ATK by the power ([$DA6B]) (up to 999).
+ItemEffect_AtkSeed:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SetATKMax999
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 16 DefSeed:
+;   Raises one monster's DEF by the power ([$DA6B]) (up to 999).
+ItemEffect_DefSeed:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterATK_Alt
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 17 AglSeed:
+;   Raises one monster's AGL by the power ([$DA6B]) (up to 511).
+ItemEffect_AglSeed:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call MonsterStatDecLoop
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 18 IntSeed:
+;   Raises one monster's INT by the power ([$DA6B]) (up to 255).
+ItemEffect_IntSeed:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call AddMonsterINT_Alt
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 19 BeefJerky, 20 PorkChop, 21 Rib:
+;   Feeds one monster: its wildness drops by the power ([$DA6B]).
+ItemEffect_Meat:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterWLD
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 22 BadMeat:
+;   Feeds one monster: its wildness drops by the power ([$DA6B]) and it is poisoned.
+ItemEffect_BadMeat:
     ld a, [$da6b]
     ld l, a
     ld h, $00
@@ -2634,115 +2632,172 @@ SetMon_6ef2:
     ld hl, $cb0b
     call GetCurrentMonsterPtr
     set 2, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 23 Sirloin:
+;   Feeds one monster: its wildness drops by the power ([$DA6B]).
+ItemEffect_Sirloin:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterWLD
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 24 BoltStaff:
+;   No field effect (in battle: the BoltStaff).
+ItemEffect_BoltStaff:
     ret
 
 
+; item(s) 25 WindStaff:
+;   No field effect (in battle: the WindStaff).
+ItemEffect_WindStaff:
     ret
 
 
+; item(s) 26 MistStaff:
+;   No field effect (in battle: the MistStaff).
+ItemEffect_MistStaff:
     ret
 
 
+; item(s) 27 LavaStaff:
+;   No field effect (in battle: the LavaStaff).
+ItemEffect_LavaStaff:
     ret
 
 
+; item(s) 28 SnowStaff:
+;   No field effect (in battle: the SnowStaff).
+ItemEffect_SnowStaff:
     ret
 
 
-    call CallMon_7134
+; item(s) 29 WarpWing:
+;   Leaves the gate for home (the hub / the Castle), as the WarpWing.
+ItemEffect_WarpWing:
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 30 TinyMedal:
+;   Nothing (the Medal Man counts only the real TinyMedal).
+ItemEffect_TinyMedal:
     ret
 
 
+; item(s) 31 QuestBk:
+;   Reads a story to one monster (QuestBK: braver).
+ItemEffect_QuestBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat1
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 32 HorrorBk:
+;   Reads a story to one monster (HorrorBK: a coward).
+ItemEffect_HorrorBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat1
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 33 BeniceBk:
+;   Reads a story to one monster (BeNiceBK: kinder).
+ItemEffect_BeniceBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat3
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 34 CheaterBk:
+;   Reads a story to one monster (CheaterBK: shrewder).
+ItemEffect_CheaterBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat3
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 35 SmartBk:
+;   Reads a story to one monster (SmartBK: smarter).
+ItemEffect_SmartBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call AddMonsterAIWeightCat2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 36 ComedyBk:
+;   Reads a story to one monster (ComedyBK: naive).
+ItemEffect_ComedyBk:
     ld a, [$da6b]
     ld l, a
     ld h, $00
     ld a, [$da60]
     call SubMonsterAIWeightCat2
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 37 FireStaff:
+;   No field effect (in battle: the FireStaff).
+ItemEffect_FireStaff:
     ret
 
 
-    call CallMon_7134
+; item(s) 38 BeastTail:
+;   In a gate: says which way the floor's hole is (the gate map's compass is the real BeastTail's only).
+ItemEffect_BeastTail:
+    call ItemConsumeRoll
     ret
 
 
-    call CallMon_7134
+; item(s) 39 WarpStaff:
+;   In a gate: as the WarpStaff.
+ItemEffect_WarpStaff:
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 40 Repellant:
+;   In a gate: no more random battles on this floor.
+ItemEffect_Repellant:
     ld hl, $c93e
     set 1, [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 41 ShinyHarp:
+;   In a gate: starts a battle with the floor's monsters.
+ItemEffect_ShinyHarp:
     ld hl, $010b
     rst $10
-    ld hl, wGameState
+    ld hl, $c8eb
     set 6, [hl]
     xor a
     ld [$c905], a
@@ -2750,23 +2805,28 @@ SetMon_6ef2:
     ld [$da09], a
     ld hl, $c90d
     inc [hl]
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 42 MapHerb:
+;   In a gate: shows the whole floor's map.
+ItemEffect_MapHerb:
     ld hl, $c950
     ld bc, $0010
     ld a, $01
     call FillNBytesWithRegA
-    call CallMon_7134
+    call ItemConsumeRoll
     ret
 
 
+; item(s) 43 BookMark:
+;   In a gate (not in its special rooms): records to the Journal.
+ItemEffect_BookMark:
     ld a, [$c83c]
     or a
     jr nz, jr_003_710f
-
-    call CallMon_7134
+    call ItemConsumeRoll
     di
     call SaveGameState
     ei
@@ -2785,22 +2845,18 @@ LoadMon_7110:
     sub c
     ld l, a
     ld a, h
-    sbc b
+    sbc a, b
     ld h, a
     ld a, h
     or l
     jr z, jr_003_712e
-
     ld a, h
     or a
     ld a, [$da6b]
     jr nz, jr_003_7127
-
     cp l
     jr z, jr_003_7127
-
     jr c, jr_003_7127
-
     ld a, l
 
 jr_003_7127:
@@ -2815,7 +2871,10 @@ jr_003_712e:
     ret
 
 
-CallMon_7134:
+; Entry 8 (S151): RNG16 mod 100 < [$DA65] (record +3) -> the item is used up: $DA5E :=
+; $FF, bag slot [$DA5F] := $FF, the bag compacted. +3 = 100 always, 0 never. The use
+; message "The X falls apart!" (line 0) shows when used up with +3 < 100 (bank $07).
+ItemConsumeRoll:
     call GenerateRNG
     ld a, [wRNG1]
     ld l, a
@@ -2837,11 +2896,13 @@ CallMon_7134:
     adc h
     ld h, a
     ld [hl], $ff
-    call SetMon_7160
+    call ItemBagCompact
     ret
 
 
-SetMon_7160:
+; Entry 5 (S151): the bag (wInventory, 20 B) copied to $C0D8, cleared to $FF, and
+; refilled without the $00 / $FF gaps.
+ItemBagCompact:
     ld hl, $c0d8
     ld de, wInventory
     ld b, $14
@@ -2878,7 +2939,9 @@ jr_003_718c:
 
     ret
 
-label7190:
+; Entry 6 (S151): [$DA5E] into the first empty ($00 / $FF) bag slot; a full bag ->
+; $DA5E := $FF.
+ItemBagAdd:
     ld a, [$da5e]
     cp $00
     ret z
@@ -2911,7 +2974,9 @@ jr_003_71b1:
     ld [hl], a
     ret
 
-label71b6:
+; Entry 7 (S151): the first bag slot holding [$DA5E] := $FF, then entry 5; none ->
+; $DA5E := $FF.
+ItemBagRemove:
     ld a, [$da5e]
     cp $00
     ret z
@@ -2938,7 +3003,7 @@ jr_003_71c4:
 
 jr_003_71d4:
     ld [hl], $ff
-    call SetMon_7160
+    call ItemBagCompact
     ret
 
 
@@ -2952,55 +3017,57 @@ jr_003_71d4:
 ; +$01/+$02 BUY PRICE, 16-bit LE ($DA63/$DA64; the shop lists, the
 ; sell price = bank $09 ShopSellPrice; == the FAQ's prices)
 ; +$0B flags: bit 2 = kept after a lost battle (bank $50)
-; +$03-$0A: not decoded yet (ROADMAP E9 item authoring).
-; The patched build owns this table as compiler region gd_item_info
-; (gamedata.items: prices). Re-sectioned S117 (tools/resection_shops.py).
+; S151: every field decoded (ItemLoadRecord's header above); since S151 the game
+; reads the records from bank $77 ItemTable (gamedata.items + custom.items, entry 16
+; ItemRecordCopy) and this region keeps the ORIGINAL bytes. Re-sectioned S117
+; (tools/resection_shops.py).
 ; @BUILD_PROJECT BEGIN gd_item_info
-ItemInfoTable:  ; 44 x 12 B; +1/+2 = buy price (gamedata.items.<id>.price)
+ItemInfoTable:  ; 44 x 12 B — the ORIGINAL records, NOT READ since S151 (the game
+                ; copies every record from bank $77 ItemTable: entry 16 ItemRecordCopy)
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [ 0] none
-    db $00, $08, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [ 1] Herb, price 8
-    db $00, $50, $00, $64, $00, $04, $01, $03, $04, $3c, $46, $00   ; [ 2] Lovewater, price 80
-    db $00, $e8, $03, $14, $02, $05, $00, $05, $04, $2d, $37, $00   ; [ 3] SageStone, price 1000
-    db $00, $f4, $01, $64, $00, $05, $01, $06, $04, $ff, $ff, $00   ; [ 4] WorldDew, price 500
-    db $00, $c8, $00, $64, $00, $04, $01, $03, $07, $14, $1e, $00   ; [ 5] Potion, price 200
-    db $00, $d0, $07, $64, $00, $04, $01, $03, $07, $ff, $ff, $00   ; [ 6] ElfWater, price 2000
-    db $01, $0a, $00, $64, $00, $04, $00, $03, $08, $00, $00, $00   ; [ 7] Antidote, price 10
-    db $01, $1e, $00, $64, $00, $04, $00, $03, $09, $00, $00, $00   ; [ 8] MoonHerb, price 30
-    db $01, $32, $00, $64, $00, $04, $02, $03, $0a, $00, $00, $00   ; [ 9] SkyBell, price 50
-    db $01, $50, $00, $64, $00, $04, $06, $06, $0b, $00, $00, $00   ; [10] Laurel, price 80
-    db $01, $32, $00, $64, $00, $04, $01, $03, $0c, $00, $00, $00   ; [11] AwakeSand, price 50
-    db $01, $e8, $03, $64, $00, $04, $00, $03, $0d, $00, $00, $00   ; [12] WorldLeaf, price 1000
-    db $02, $1a, $00, $64, $00, $04, $03, $03, $0e, $05, $00, $00   ; [13] LifeAcorn, price 26
-    db $02, $1e, $00, $64, $00, $04, $03, $03, $0f, $05, $00, $00   ; [14] MysticNut, price 30
-    db $02, $16, $00, $64, $00, $04, $03, $03, $10, $03, $00, $00   ; [15] AtkSeed, price 22
-    db $02, $16, $00, $64, $00, $04, $03, $03, $11, $03, $00, $00   ; [16] DefSeed, price 22
-    db $02, $12, $00, $64, $00, $04, $03, $03, $12, $03, $00, $00   ; [17] AglSeed, price 18
-    db $02, $0f, $00, $64, $00, $04, $03, $03, $13, $03, $00, $00   ; [18] IntSeed, price 15
-    db $03, $14, $00, $64, $00, $04, $04, $14, $15, $05, $0a, $00   ; [19] BeefJerky, price 20
-    db $03, $50, $00, $64, $00, $04, $04, $14, $15, $0a, $1e, $00   ; [20] PorkChop, price 80
-    db $03, $2c, $01, $64, $00, $04, $04, $14, $15, $14, $64, $00   ; [21] Rib, price 300
-    db $03, $14, $00, $64, $00, $04, $04, $14, $16, $05, $05, $01   ; [22] BadMeat, price 20
-    db $03, $e8, $03, $64, $00, $04, $04, $14, $15, $64, $ff, $00   ; [23] Sirloin, price 1000
-    db $04, $b8, $0b, $14, $02, $03, $05, $17, $18, $23, $32, $00   ; [24] BoltStaff, price 3000
-    db $04, $dc, $05, $0a, $02, $03, $05, $17, $19, $08, $18, $00   ; [25] WindStaff, price 1500
-    db $04, $bc, $02, $14, $02, $03, $05, $17, $1a, $00, $00, $00   ; [26] MistStaff, price 700
-    db $04, $d0, $07, $14, $02, $03, $05, $17, $1b, $1e, $2a, $00   ; [27] LavaStaff, price 2000
-    db $04, $a0, $0f, $14, $02, $03, $05, $17, $1c, $78, $8c, $00   ; [28] SnowStaff, price 4000
-    db $05, $64, $00, $64, $01, $07, $06, $1d, $00, $00, $00, $00   ; [29] WarpWing, price 100
-    db $06, $01, $00, $64, $03, $07, $07, $1e, $00, $00, $00, $05   ; [30] TinyMedal, price 1
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $20, $80, $80, $00   ; [31] QuestBk, price 5000
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $21, $80, $80, $00   ; [32] HorrorBk, price 5000
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $22, $80, $80, $00   ; [33] BeniceBk, price 5000
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $23, $80, $80, $00   ; [34] CheaterBk, price 5000
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $24, $80, $80, $00   ; [35] SmartBk, price 5000
-    db $02, $88, $13, $64, $01, $00, $00, $1f, $25, $80, $80, $00   ; [36] ComedyBk, price 5000
-    db $04, $88, $13, $14, $02, $02, $05, $17, $26, $b4, $c8, $00   ; [37] FireStaff, price 5000
-    db $07, $90, $01, $00, $01, $01, $07, $1e, $2a, $00, $00, $04   ; [38] BeastTail, price 400
-    db $07, $64, $00, $64, $01, $01, $07, $1e, $00, $00, $00, $04   ; [39] WarpStaff, price 100
-    db $07, $c8, $00, $64, $01, $01, $07, $1e, $2b, $00, $00, $00   ; [40] Repellant, price 200
-    db $07, $b8, $0b, $00, $01, $01, $07, $2c, $00, $00, $00, $04   ; [41] ShinyHarp, price 3000
-    db $07, $46, $00, $64, $01, $01, $07, $1e, $2d, $00, $00, $00   ; [42] MapHerb, price 70
-    db $07, $64, $00, $64, $01, $07, $07, $1e, $2e, $00, $00, $04   ; [43] BookMark, price 100
+    db $00, $08, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [ 1] Herb
+    db $00, $50, $00, $64, $00, $04, $01, $03, $04, $3c, $46, $00   ; [ 2] Lovewater
+    db $00, $e8, $03, $14, $02, $05, $00, $05, $04, $2d, $37, $00   ; [ 3] SageStone
+    db $00, $f4, $01, $64, $00, $05, $01, $06, $04, $ff, $ff, $00   ; [ 4] WorldDew
+    db $00, $c8, $00, $64, $00, $04, $01, $03, $07, $14, $1e, $00   ; [ 5] Potion
+    db $00, $d0, $07, $64, $00, $04, $01, $03, $07, $ff, $ff, $00   ; [ 6] ElfWater
+    db $01, $0a, $00, $64, $00, $04, $00, $03, $08, $00, $00, $00   ; [ 7] Antidote
+    db $01, $1e, $00, $64, $00, $04, $00, $03, $09, $00, $00, $00   ; [ 8] MoonHerb
+    db $01, $32, $00, $64, $00, $04, $02, $03, $0a, $00, $00, $00   ; [ 9] SkyBell
+    db $01, $50, $00, $64, $00, $04, $06, $06, $0b, $00, $00, $00   ; [10] Laurel
+    db $01, $32, $00, $64, $00, $04, $01, $03, $0c, $00, $00, $00   ; [11] AwakeSand
+    db $01, $e8, $03, $64, $00, $04, $00, $03, $0d, $00, $00, $00   ; [12] WorldLeaf
+    db $02, $1a, $00, $64, $00, $04, $03, $03, $0e, $05, $00, $00   ; [13] LifeAcorn
+    db $02, $1e, $00, $64, $00, $04, $03, $03, $0f, $05, $00, $00   ; [14] MysticNut
+    db $02, $16, $00, $64, $00, $04, $03, $03, $10, $03, $00, $00   ; [15] AtkSeed
+    db $02, $16, $00, $64, $00, $04, $03, $03, $11, $03, $00, $00   ; [16] DefSeed
+    db $02, $12, $00, $64, $00, $04, $03, $03, $12, $03, $00, $00   ; [17] AglSeed
+    db $02, $0f, $00, $64, $00, $04, $03, $03, $13, $03, $00, $00   ; [18] IntSeed
+    db $03, $14, $00, $64, $00, $04, $04, $14, $15, $05, $0a, $00   ; [19] BeefJerky
+    db $03, $50, $00, $64, $00, $04, $04, $14, $15, $0a, $1e, $00   ; [20] PorkChop
+    db $03, $2c, $01, $64, $00, $04, $04, $14, $15, $14, $64, $00   ; [21] Rib
+    db $03, $14, $00, $64, $00, $04, $04, $14, $16, $05, $05, $01   ; [22] BadMeat
+    db $03, $e8, $03, $64, $00, $04, $04, $14, $15, $64, $ff, $00   ; [23] Sirloin
+    db $04, $b8, $0b, $14, $02, $03, $05, $17, $18, $23, $32, $00   ; [24] BoltStaff
+    db $04, $dc, $05, $0a, $02, $03, $05, $17, $19, $08, $18, $00   ; [25] WindStaff
+    db $04, $bc, $02, $14, $02, $03, $05, $17, $1a, $00, $00, $00   ; [26] MistStaff
+    db $04, $d0, $07, $14, $02, $03, $05, $17, $1b, $1e, $2a, $00   ; [27] LavaStaff
+    db $04, $a0, $0f, $14, $02, $03, $05, $17, $1c, $78, $8c, $00   ; [28] SnowStaff
+    db $05, $64, $00, $64, $01, $07, $06, $1d, $00, $00, $00, $00   ; [29] WarpWing
+    db $06, $01, $00, $64, $03, $07, $07, $1e, $00, $00, $00, $05   ; [30] TinyMedal
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $20, $80, $80, $00   ; [31] QuestBk
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $21, $80, $80, $00   ; [32] HorrorBk
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $22, $80, $80, $00   ; [33] BeniceBk
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $23, $80, $80, $00   ; [34] CheaterBk
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $24, $80, $80, $00   ; [35] SmartBk
+    db $02, $88, $13, $64, $01, $00, $00, $1f, $25, $80, $80, $00   ; [36] ComedyBk
+    db $04, $88, $13, $14, $02, $02, $05, $17, $26, $b4, $c8, $00   ; [37] FireStaff
+    db $07, $90, $01, $00, $01, $01, $07, $1e, $2a, $00, $00, $04   ; [38] BeastTail
+    db $07, $64, $00, $64, $01, $01, $07, $1e, $00, $00, $00, $04   ; [39] WarpStaff
+    db $07, $c8, $00, $64, $01, $01, $07, $1e, $2b, $00, $00, $00   ; [40] Repellant
+    db $07, $b8, $0b, $00, $01, $01, $07, $2c, $00, $00, $00, $04   ; [41] ShinyHarp
+    db $07, $46, $00, $64, $01, $01, $07, $1e, $2d, $00, $00, $00   ; [42] MapHerb
+    db $07, $64, $00, $64, $01, $07, $07, $1e, $2e, $00, $00, $04   ; [43] BookMark
 ; @BUILD_PROJECT END gd_item_info
 ; NOTE: unreferenced fake-decode labels removed with this block: jr_003_72d8, jr_003_7327
     xor a

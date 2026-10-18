@@ -561,7 +561,8 @@ def lower(prj):
             ops.insert(k + 2, ['op', 'write_ram', WSERVICE_LINES, 0])
         # the greeting / thank-you the script speaks: the set's when it has them
         if not sp.get('text'):
-            ops[0] = ['text', _text_ref(prj, sid, 'shop', 0)]
+            g = next(i for i, o in enumerate(ops) if o[0] == 'text')   # S151 r2: after $3C
+            ops[g] = ['text', _text_ref(prj, sid, 'shop', 0)]
         for i, o in enumerate(ops):
             if o[0] == 'text' and _pv(o[1]) == base_id('shop') + 2:
                 ops[i] = ['text', _text_ref(prj, sid, 'shop', 2)]
@@ -593,7 +594,13 @@ def service_ops(prj, kind, sid, sv, ctx):
             raise ServiceError(f"{ctx}.first_time: {{\"text\": <dialogue id>, \"flag\": <flag>}}")
         fl = prj._flag_index(ft['flag'], f"{ctx}.first_time")
         intro = ft['text']
-    box = [['op', '0x3C']] if kind in ('eggs', 'namer', 'library') else []
+    # S151 r2 (user: "Vault: text box starts at top then jumped when vault menu appears.
+    # Should always be on bottom. Make sure other services dont have this issue"): EVERY
+    # service's boxes open at the bottom — the screens draw their windows for a bottom box;
+    # talked to from the lower half of the screen the greeting opened at the TOP (PyBoy:
+    # the stall, Vault, farm, Medal Man, gate guide; the librarian's farewell). Was the
+    # egg appraiser / namer / (S137) librarian only.
+    box = [['op', '0x3C']]
     # S137: the library too — its screen keeps speaking into the box the greeting opened
     # (the text engine's box base $C83E); the vanilla Library's counter always puts the
     # player in the upper half, so that box is the BOTTOM one. A librarian talked to from
@@ -606,10 +613,10 @@ def service_ops(prj, kind, sid, sv, ctx):
         if fl is not None:
             head = [['op', 'if_flag_set', fl, '@known'], ['text', intro],
                     ['op', 'set_flag', fl], 'label:known']
-        return head + [
+        return _bottom_boxes(head + [
             ['text', sv.get('ask') or GATES_ASK], ['op', 'check_and_branch', 0xC83C, 1, '@no'],
             ['op', '0x04', KINDS['gates']['screen'], 0], ['op', 'nop'], ['op', 'init_dialog'],
-            'label:no', ['text', sv.get('bye') or GATES_BYE], ['end']]
+            'label:no', ['text', sv.get('bye') or GATES_BYE], ['end']])
     base = base_id(kind, repo)
     scr = KINDS[kind]['screen']
     greet = ['text', _text_ref(prj, sid, kind, 0)]
@@ -636,10 +643,30 @@ def service_ops(prj, kind, sid, sv, ctx):
         seq += [['op', 'nop'], ['op', 'init_dialog']]
     seq += off
     if KINDS[kind]['bye'] is not None:
-        # after the library's init_dialog an op $3C would only arm the NEXT box (another
-        # talk's) — the library's farewell goes without it
-        seq += (box if kind != 'library' else []) + [['text', _text_ref(prj, sid, kind, 2)]]
-    return seq + [['end']]
+        seq += [['text', _text_ref(prj, sid, kind, 2)]]
+    return _bottom_boxes(seq + [['end']])
+
+
+def _bottom_boxes(ops):
+    """S151 r2: op $3C (the next box opens at the BOTTOM) before every op that OPENS a
+    box — a text when no box is open, an init_dialog. Not before a text right after an
+    init_dialog (that box is open: an op $3C there would only arm the NEXT box, another
+    talk's — S137). PyBoy (tools/walk_items.py `services`): every service and the stall
+    talked to from below keep the bottom box; a plain NPC after them still opens at the
+    top."""
+    out = []
+    prev = None
+    for op in ops:
+        is_text = isinstance(op, list) and op and op[0] == 'text'
+        is_init = isinstance(op, list) and op[:2] == ['op', 'init_dialog']
+        after_init = isinstance(prev, list) and prev[:2] == ['op', 'init_dialog']
+        if (is_init or (is_text and not after_init)) and \
+                not (out and out[-1] == ['op', '0x3C']):
+            out.append(['op', '0x3C'])
+        out.append(op)
+        if not (isinstance(op, list) and op == ['op', '0x3C']):
+            prev = op
+    return out
 
 
 # --------------------------------------------------------------- emitters

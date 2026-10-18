@@ -441,11 +441,11 @@ class ConversationMixin:
             n = int(g.get('count', 1) or 1)
             return (f"{'Give' if k == 'give_item' else 'Take'} item {g.get('item')}"
                     + (f' × {n}' if n > 1 else '')
-                    + ('' if k == 'give_item' else ' from the bag'))
+                    + (_full_words(g) if k == 'give_item' else ' from the bag'))
         if k == 'give_monster':
             g = st[k] or {}
             e = g.get('enemy')
-            return f"Give a monster: {enemy_name(e) if enemy_name else e}"
+            return f"Give a monster: {enemy_name(e) if enemy_name else e}" + _full_words(g)
         if k == 'gold':
             g = st[k] or {}
             return (f"Give {g.get('give')} gold" if 'give' in g else f"Take {g.get('take')} gold")
@@ -604,3 +604,9 @@ class EnemiesMixin:
         src['join_as'] = jid
         self.touch()
         return jid
+
+
+def _full_words(g):
+    """S151: what a Give step does when there is no room (on_full)."""
+    return (' — no room: carry on' if (g or {}).get('on_full') == 'continue'
+            else ' — no room: stop here')

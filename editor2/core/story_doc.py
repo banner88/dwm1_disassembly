@@ -81,6 +81,7 @@ class StoryMixin:
         # the shape the compiler needs (numbers in range): a dry run of the record
         if k not in ('all', 'any', 'story'):
             class _P:
+                data = self.data                  # S151: the project's items exist
                 def resolve_flag_ref(self, ref, ctx=''):
                     return 0
             try:
@@ -148,9 +149,8 @@ class StoryMixin:
         c = self.check(name_or_spec) if isinstance(name_or_spec, str) else name_or_spec
         if not c:
             return '?'
-        from .shops import item_names
         from .gamedata import FAMILY_NAMES
-        items = item_names()
+        items = self.item_names_all()                     # S151: + the project's items
         try:
             from .conversation import species_names
             sp = species_names()

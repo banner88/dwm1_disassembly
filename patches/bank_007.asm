@@ -2090,8 +2090,8 @@ LoadFld_4da6:
     adc h
     ld h, a
     ld a, [hl]
-    ld [$da5e], a
-    cp $05
+    call ItemStoreBase07        ; S151: [$da5e] := the item, A := its BEHAVIOUR id (was
+    cp $05                      ;   `ld [$da5e], a`: a new item 44+ shows its base's numbers)
     jp z, Jump_007_4e56
 
     cp $06
@@ -2335,8 +2335,8 @@ jr_007_4f68:
     call LoadFld_690d
     ld hl, $c90e
     inc [hl]
-    ld a, [$da5e]
-    cp $1d
+    call ItemBase07             ; S151: the BEHAVIOUR id (was `ld a, [$da5e]`): a new item
+    cp $1d                      ;   based on the WarpWing plays its sound too
     ret nz
 
     ld a, $57
@@ -2378,8 +2378,8 @@ jr_007_4fa2:
     or a
     ret nz
 
-    ld a, [$da5e]
-    cp $1d
+    call ItemBase07             ; S151: the BEHAVIOUR id (was `ld a, [$da5e]`): a new item
+    cp $1d                      ;   based on the WarpWing / WarpStaff takes their path
     jr z, jr_007_5012
 
     cp $27
@@ -10894,3 +10894,25 @@ Anchor07Post:
                                 ;   SetFld_6a8f itself, restores tiles/OAM, clears
                                 ;   wGameState.1 and c90d — measured S73: c90d=1
                                 ;   only returns to the MAIN MENU page)
+
+; =============================================================================
+; S151 (ROADMAP E9, PROJECT_COMPILER §2.59) — ITEMS: the item menu's choices by
+; the item's BEHAVIOUR id. Bank $77 entry 16 ItemRecordCopy (the record copy every
+; flow does first, bank $03 entry 2) sets wItemBase: the id itself for the game's
+; items 0-43, the base for a project item 44+ (custom.items[].base). The item
+; menu picks by id in three places — LoadFld_4da6 (which numbers the target
+; window shows: MP for Potion / ElfWater / MysticNut, none for cures / seeds /
+; meat / books), the WarpWing's sound and the WarpWing / WarpStaff paths — they
+; call these instead of reading [$da5e] (same size: `ld a, [nn]` / `ld [nn], a`
+; -> `call nn`). Ids 0-43 and $FF come back unchanged. Clobbers nothing else.
+; =============================================================================
+ItemStoreBase07:                ; A = an item -> [$da5e] := A, A := its behaviour id
+    ld [$da5e], a
+ItemBase07:                     ; A := the behaviour id of [$da5e]
+    ld a, [$da5e]
+    cp ITEM_FIRST_NEW
+    ret c                       ; the game's items: themselves
+    cp $ff
+    ret z                       ; "used up / failed" stays $FF
+    ld a, [wItemBase]           ; a project item: its base (the record copy set it)
+    ret

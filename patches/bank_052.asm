@@ -9645,8 +9645,9 @@ jr_052_7286:
     ld de, $ca42
     ld hl, $c180
     call Copy4Bytes
-    ld a, [$db78]
-    sub $af
+    ld a, [wItemInUse]          ; S151 (ROADMAP E9): the item the hero picked (was `ld a,
+    nop                         ;   [$db78] / sub $af` = the item of the battle skill — a
+    nop                         ;   project item 44+ uses its base's skill, so name it here)
     ld l, a
     ld h, $08
     ld de, $c190

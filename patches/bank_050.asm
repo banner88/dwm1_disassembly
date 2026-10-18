@@ -2875,17 +2875,15 @@ jr_050_4fec:
     jr z, jr_050_5020
 
     push bc
-    ld a, [hl]
-    add $af
-    ld a, a
-    ld [$db4c], a
-    ld a, $00
-    ld [$db4d], a
-    ld a, $0a
-    ld [$db4e], a
-    ; [S110 rec] record +10 of an ITEM skill: 1 = not usable in battle (seeds, books, medals)
-    ld hl, $5400
+    ; S151 (ROADMAP E9): SAME SIZE (22 B) — was `ld a, [hl] / add $af / ld [$db4c], a`
+    ; (the item's battle skill = id + $AF), $db4d := 0, $db4e := $0A and bank $54 entry
+    ; 0 (the skill record's +10: 1 = not usable in battle). Now bank $77 entry 17
+    ; BattleItemProbe does all of it with the skill of the item's BEHAVIOUR id (its
+    ; base for a project item 44+; id + $AF for the game's items, as before).
+    ld e, [hl]                  ; E = the item in this bag slot
+    ld hl, $7711                ; bank $77 entry 17 BattleItemProbe
     rst $10
+    ds 16, $00
     ld a, [$db4c]
     cp $01
     pop bc
@@ -3042,17 +3040,14 @@ jr_050_50f4:
     add a
     add a
     add [hl]
-    ld hl, wInventory
-    add l
-    ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, $af
-    add [hl]
-    ld [$db4c], a
-    ld hl, $5405
+    ; S151 (ROADMAP E9): SAME SIZE (19 B) — was HL := wInventory + A, `ld a, $af /
+    ; add [hl] / ld [$db4c], a` and bank $54 entry 5 (the item's target lookup). Now
+    ; bank $77 entry 18 BattleItemPick: wItemInUse := the item (the battle names it from
+    ; there), [$db4c] := the skill of its BEHAVIOUR id, then bank $54 entry 5.
+    ld e, a                     ; E = the bag slot
+    ld hl, $7712                ; bank $77 entry 18 BattleItemPick
     rst $10
+    ds 14, $00
     ld a, [$db4c]
     or a
     jr z, jr_050_5199

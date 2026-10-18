@@ -1213,6 +1213,10 @@ class RoomsTab(QWidget):
         for msg in _F.sprite_budget(self.s.doc._state_target(room, self.key, self.state_idx).get('npcs'),
                                     party=_F.party_walks(room)):        # S143: arena copies
             msgs.append('Sprite limit: ' + msg + '.')
+        # S151 r3: the game's speed (5+ NPCs on a screen halve it — measured)
+        for msg in _F.frame_budget(self.s.doc._state_target(room, self.key, self.state_idx).get('npcs'),
+                                   party=_F.party_walks(room)):
+            msgs.append('Speed: ' + msg + '.')
         self.banner.setText('\n'.join(msgs))
         self.banner.setVisible(bool(msgs))
         gfx, pals = self.canvas.gfx, self.canvas.pals

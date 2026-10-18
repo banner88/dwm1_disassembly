@@ -6818,3 +6818,71 @@ gives up early; the positive run keeps the full budget.
 **Read a file before opening it for writing.** `editor2/help/_revision.md` was emptied: the
 script opened it with `'w'` and then read it. Restored from git. **Rule:** read → change →
 write, never open-for-write first (the same file, one handle).
+
+## S151 — items: a new id runs nothing; give it a base (ROADMAP E9)
+
+**What a game does with an id is code chosen by the id — so a new id needs a stand-in.** The
+item record (12 B) holds the numbers (price, power, used-up %, flags), but what an item DOES is
+two `rst $00` tables in bank $03 plus ~10 `cp <id>` sites in banks $07 / $09 / $12 / $19 / $50 /
+$52 / $54. A new id falls off every table. **Fix:** every new item names a BASE (one of the
+game's 43); the record copy that every flow does first (bank $03 entry 2) also stores the base
+(`wItemBase`), and every dispatch reads it. **Rule:** before adding ids to a table-driven
+system, list every site that tests the id (a byte scan for `cp $xx` / `sub $xx` / `+ $AF` near
+the copy target, then the disassembly) and decide per site: keyed by the base, or by the
+item's own id (the name: banks $52 / $54 read `wItemInUse`).
+
+**A byte scan of the record's RAM is the decode.** All twelve record bytes were placed by
+scanning the ROM for every load of `$DA62-$DA6D` (`ld a, [$da6b]` …) and reading each site —
+three bytes are read by nothing (+0, +6, +10). Faster and more complete than following the menu
+code. **Rule:** for a copied record, scan for every absolute load of each byte of the copy.
+
+**"Unused" scratch must be measured to its end.** The SELL / Vault lists count items at `$D665
++ id`, cleared 48 B and scanned 47 ids — ids 44-127 needed 128 B. `$D665` is staging slot 20
+(breeding / trade transit), unused while a menu list is built; 128 B stay inside its 149 B.
+**Rule:** when a count array grows, prove the new end is inside a region nothing else holds at
+that moment (here: the staging slot is only live during breeding / trades).
+
+**Drive a menu from a known screen, never from a saved state that might be inside another.**
+The walk's field-item step pressed A from a state saved right after the shop — facing the
+shopkeeper, so A opened the shop again and every later press bought things. PYBOY_DEBUGGING
+already said "A opens the field menu when FACING NOTHING". **Rule:** a walk step that opens a
+menu first moves to a known quiet tile and faces a wall; grep PYBOY_DEBUGGING before a menu walk.
+
+**A battle shows its own HP copy.** Poking a party monster's record HP during a battle changes
+nothing on screen — the battle works on `$DBA3 + 2·combatant` and writes back at the end
+(known_RAM_map). The walk's heal check read the record and saw no change. **Rule:** in battle,
+read / poke the battle stat tables.
+
+### S151 r2 — a box rule the S127 fix only applied to some services
+
+**Symptom** (user, the S151 ROM): the Vault keeper talked to from below opened its greeting at
+the TOP; the box jumped to the bottom when the menu appeared. **Root cause:** the S127 r3 /
+S137 fixes (op `$3C`, the bottom box) went to the services whose bug was REPORTED (breeding,
+the egg appraiser, the namer, the librarian) — not to the Vault, farm, Medal Man, gate guide
+or shops, which share the same cause (bank $06 opens a talk's box opposite the player; every
+service screen draws its windows for a bottom box). **Rule:** when a bug's cause is a shared
+mechanism, fix and test every user of that mechanism together — the walk talks to all of them
+from the lower half (`walk_items.py services`), and checks the next plain talk is unaffected.
+
+### S151 r2 — "the step after it" must not run when the step did nothing
+
+**Symptom** (user): the KEYKEEPER, asked with a full bag, said "full"; asked again he said
+"I gave you the key already" — and never gave it. **Root cause:** the demo set the "given" flag
+in the step after the Give, and a Give with no room fell through to the next step (S129). The
+editor made the mistake the natural way to write it. **Fix:** a Give's `on_full` defaults to
+`stop` (the conversation ends after the "full" words; a cutscene goes to its end); `continue`
+keeps the old flow. **Rule:** a step that can fail must make the steps after it conditional by
+default — an author reads a list of steps as "then", not "regardless".
+
+### S151 r3 — never filter a build's warnings out of sight
+
+**Symptom** (user): "You put so many NPCs in that room some of them are invisible and the whole
+thing lags massively. Did the editor not make a warning about this kind of thing?" **Root
+cause:** the build DID warn (rows hiding NPCs, 6 of 8 drawn); the session ran the demo build
+as `build_project.py … | grep -v WARN` to shorten its output and never saw them. The lag had no
+warning at all (measured now: ≈13-14 of 154 scan lines per NPC on screen; 5+ with the party =
+half speed). **Fix:** `frame_budget` warnings; the demo script compiles its own project and
+stops on any warning about its rooms; the walk measures every demo room's speed. **Rule:** a
+build's warnings are read, not filtered — a demo / test project must build with ZERO warnings
+about the content the session added; anything a player can see or feel (sprites, speed) gets
+a walk check (here: ticks per frame ≥ 0.97 in every room).

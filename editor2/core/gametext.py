@@ -218,6 +218,19 @@ def resolve(prj_or_data, repo_root=None):
         if cap is not None and any(k == 'c' for k, _b in TM._units(raw)):
             raise GameTextError(f"{what}: a name takes letters only (no codes)")
         out.append((x, raw + bytes([TM.END])))
+    # S151 (ROADMAP E9): the project's NEW items' names / descriptions (rows 44+) and
+    # their own use lines (item_use_message 48+) — slots past the game's tables, served
+    # by the same lookup (editor2/core/items.py validates them; errors are its own)
+    from . import items as IT
+    src_of = {IT.NAME_TABLE: 'item_name', IT.DESC_TABLE: 'item_description',
+              IT.USE_TABLE: 'item_use_message'}
+    for bank, table, idx, raw, what in IT.text_slots(prj_or_data, repo_root):
+        x = Entry()
+        x.source, x.key = src_of[table], str(idx)
+        x.bank, x.table, x.index, x.addr = bank, table, idx, 0
+        x.raw, x.style, x.group, x.owner, x.title = raw[:-1], 'rows', 'items', 'Items', what
+        x.same, x.first, x._markup, x.inside = [], True, None, None
+        out.append((x, raw))
     return out
 
 

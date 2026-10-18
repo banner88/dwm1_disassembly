@@ -1854,6 +1854,9 @@ ReadScreenState:
 
 
 ; SetupTilemapTransfer: Store source/dest for tilemap VRAM transfer
+; MISNOMER (S151, DOC_AUDIT): it SHOWS a text — bank $41 entry 0 (H = the text mode /
+; table: 8 item names, 9 item descriptions, 13 item use lines …, L = the row) through
+; the text engine. Name kept (hundreds of callers).
 SetupTilemapTransfer:
     ld a, h
     ld [$c822], a
@@ -1865,6 +1868,8 @@ SetupTilemapTransfer:
 
 
 ; SetupVRAMParams: Store DE/HL as VRAM transfer parameters
+; MISNOMER (S151, DOC_AUDIT): it COPIES a text — bank $41 entry 1 (H = the mode, L = the
+; row) into the buffer at DE (e.g. an item's name to $C190 for a battle message).
 SetupVRAMParams:
     ld a, e
     ld [$c837], a

@@ -34,5 +34,9 @@ checks hold — e.g. "after chapter 2 the Bazaar sells the Shields". The first
 set whose conditions all hold is sold; none = the shop's own list. Read each
 time BUY opens. A set holds 1-20 items and up to 8 conditions.
 
+**Your own items** (S151, the Items tab) can be sold too — they are in the
+item box marked "(yours)"; their price is set here or on the Items tab, and
+what shops pay follows the game item they work like.
+
 Deleting a shop makes its shopkeepers stop selling (they no longer talk);
 Undo brings it all back.

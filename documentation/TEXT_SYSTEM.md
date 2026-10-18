@@ -381,6 +381,15 @@ redirect 512 / 512; the negative build (hook off) fails. `tools/walk_text.py` on
 user's save: the throne room's speech, the bag's names / descriptions, an item's use
 line in the field, a battle message, the demo's rooms — 17 checks; negative 8 FAIL.
 
+**S151 — the project's items' words (ROADMAP E9):** a new item 44-127 has its name / its
+description as rows 44+ of bank $41's tables `$48E7` (mode 8) / `$493F` (mode 9), and a line of
+its own (`custom.items[].use_text` / `result_text`) as a row 48+ of the use lines `$4A1B` (mode
+13) — slots PAST the tables' ends, served by the same `TextOvrFind` lookup (it keys by table +
+row, not by the table's size; `editor2/core/items.py` `text_slots`, appended by
+`gametext.resolve`). Measured: `tools/census_items.py` shows / copies all 342 such slots of its
+project == the project's words; the walk's "MegaHerb" in the shop list, its own use line, its
+name in a battle message.
+
 **Not reached (ROADMAP T-follow):** words drawn as TILES (the field menu's INFO /
 ITEM / SKIL / OPTN, the INFO page's ATK / DEF, the HP / MP bar — no SBAS call draws
 them, measured); how the packed menu-word field messages (`PUT TAKEEXIT`,

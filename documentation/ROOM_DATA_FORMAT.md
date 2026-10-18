@@ -613,6 +613,20 @@ With 3 party monsters it is 8 NPCs = 32 objects and at most 3 characters (6 obje
 row — nothing vanishes. `formats.party_walks(room)` is False for a copy of `$5D`
 (`PARTY_ABSENT_SOURCES`), and `sprite_budget(npcs, party=False)` then counts the NPCs alone
 (10 objects a line, 40 in all) — the user's own arena room no longer warns.
+**S151 r3 — NPCs and the game's SPEED (measured in PyBoy, the user's save, a full party;
+user: "You put so many NPCs in that room some of them are invisible and the whole thing lags
+massively").** The field's frame work runs in the VBlank handler (ROM0 `VBlankSaveAF`
+`$036E` … `VBlankFinish` `$044D`; `$C8A2` bit 0 = busy — a VBlank that finds it set goes to
+`VBlankReentry` and skips the tick; `$C8A4/$C8A5` counts the ticks done; the game stores LY
+at the end in `$C886`). Scan lines from the handler's start to `VBlankFinish` (154 a
+frame): an empty custom room 93, then **≈13-14 lines per NPC on screen** — 1: 106, 2: 119,
+3: 133, 4: 147, 5: 188, 6: 201, 7: 210, 8: 220 (median of 300 ticks); the game's own Castle
+with 2 / 3 NPCs on screen 115 / 128 — the engine's own cost, not the patches'. Ticks per
+frame: 0-3 NPCs 1.00, 4 standing 0.93 (the S151 demo hall 0.86), 4 pacing (`pace_x2`) 0.77,
+**5-8: 0.50 — every game frame takes two (half speed)**; 4 different sprites 0.91, 4 monster
+NPCs 0.94. The editor warns (`formats.frame_budget`: 4 = drops frames, 5+ = half speed; not
+in a party-less arena copy — unmeasured, the game's own arena shows 8). Off-screen NPC slots
+cost little (the Castle's 7 slots, 2 on screen: 115 lines).
 
 **Screens per room.** Engine ceiling = **16** (4×4): `RoomEntry2` scroll
 math clamps row = Y/128 to 0-3 and col = X/160 to 0-3. Vanilla max = the

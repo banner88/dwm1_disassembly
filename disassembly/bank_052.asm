@@ -9774,6 +9774,9 @@ jr_052_7286:
     ld de, $ca42
     ld hl, $c180
     call Copy4Bytes
+    ; S151 (items): the battle text's item name = the battle skill - $AF (the item id),
+    ; shown by SetupVRAMParams (a misnomer: bank $41 text COPY mode H=$08, id L, into
+    ; DE = $C190). Patched builds read wItemInUse (a project item's own name).
     ld a, [$db78]
     sub $af
     ld l, a

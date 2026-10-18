@@ -395,7 +395,12 @@
                  [S150] wTextOvrPtr $D562-$D563 — an edited text's address (show) or the
                  copy buffer [$C837] (copy); SaveBankAndSwitch's level 2 reads it through
                  DE = wTextOvrPtr - 2 * id (TEXT_SYSTEM "Edited game text (S150)") /
-                 wCustomPool $D564-$D5E4 (transient reserve; $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S151] wItemBase $D564 — the BEHAVIOUR id of the item whose record was copied
+                 last (bank $77 entry 16 ItemRecordCopy): itself for 0-43, the base for a
+                 project item 44-127; banks $03 / $07 / $09 dispatch on it /
+                 [S151] wItemInUse $D565 — the item the hero picked in battle (bank $77 entry
+                 18); banks $52 / $54 name the item from it (DATA_STRUCTURES "Items (S151)") /
+                 wCustomPool $D566-$D5E4 (transient reserve; $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap
@@ -946,6 +951,14 @@
 ;                writing 1 only returns to the main menu. [S73]
 ;   DA5E    1    Field menu: SELECTED skill id (SKIL flow) or item id (ITEM
 ;                flow); bank $14 entry 4 sets $FF = "fizzle". [S73]
+;                S151: the item in use for every item routine (bank $03 entries
+;                2-8: $FF = refused / used up); $DA5F = its bag slot; $DA60 =
+;                the target's party slot; $DA62-$DA6D = its 12-byte record
+;                (+9 power = $DA6B, +3 used-up % = $DA65). DATA_STRUCTURES
+;                "Items (S151)".
+;   D665  128    S151: bank $09's item COUNT scratch ($D665 + id) for the SELL /
+;                Vault lists — 48 B in the game, 128 B patched (ids 0-127); it is
+;                staging slot 20's first bytes, free while a list is built.
 ;   D9D7    1    wAnchorGate  — persistent (save image): anchored gate 0-31
 ;   D9D8    1    wAnchorFloor — persistent: anchored floor, 1-BASED
 ;                (wCurrentFloor is 0-based); 0 = no anchor. Flags $01E0-$01EF

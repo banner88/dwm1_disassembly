@@ -48,6 +48,9 @@ built from it (the original ROM is never changed).
 - **Music** — every song (the game's, DWM2's, MIDI files you import) with ▶
   preview on the game's own sound engine, your names for them, and the song of
   each room, gate and kind of battle.
+- **Items** — every item's name, description, price, power, how likely it is used
+  up, field / battle use, lines; and **new items** that work like one of the
+  game's (S151).
 - **Shops** — the game's five shops and your own: what each sells (up to 20
   items) and every item's price; an NPC sells a shop via Rooms tab → NPC →
   Shopkeeper….

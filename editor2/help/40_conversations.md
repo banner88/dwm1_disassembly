@@ -22,7 +22,7 @@ none.
 | Heal the party | every monster's HP and MP back, ailments cured (silent — say it in a text) |
 | Vanish (this NPC leaves) | the NPC talking **flickers out** (the game's own vanish) or disappears **at once**, there and then. To keep it gone, give it *shown when* a flag (set before the Vanish) is OFF — *Make boss…* does both |
 | Stop here | ends the conversation |
-| Give an item / Give a monster (S129) | *n* of an item (all or none) / an enemy row joins; words when given and when there is no room |
+| Give an item / Give a monster (S129) | *n* of an item (all or none) / an enemy row joins; words when given and when there is no room. **No room: the conversation stops there** (S151 r2, the default) — the steps after the Give (a flag "given", more words) run only when it was given; pick *carry on with the steps below* to go on anyway |
 | Take an item (S129) | up to *n* of an item out of the bag |
 | Give / take gold (S129) | never below 0, never above 99,999 |
 | Refresh the room (S129) | the room loads again where the player stands — its states pick again (a door unlocked now opens); nothing after it runs |

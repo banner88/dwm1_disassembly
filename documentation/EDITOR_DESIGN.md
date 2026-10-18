@@ -1780,6 +1780,37 @@ as well while you're there."
   > 6 NPCs on screen — the hardware hides the rest while your party is around; user: "Just
   warning is fine for now, and Ill build around it"); help `20_npcs.md` "Sprite limits".
 
+### 5.6d Items tab (as built S151 — ROADMAP E9; built, PyBoy-verified, USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3))
+
+`app/items_tab.py`, model `core/items_doc.py` (`ItemsMixin`), compiler `core/items.py`
+(PROJECT_COMPILER §2.59); help `74_items.md`. User (S151): "Lets do items. Lest also do it in 1
+session". A tab before Shops.
+* **The list** (left): the game's 43 (edited orange) then the project's (green, "— like
+  <base>"); **New item…** (pick what it works like + a name; starts with the base's fields),
+  **Copy** (a new item with the selected one's fields / lines), **Delete** (project items;
+  warns with its uses), **Original** (a game item back: fields, words, battle record); "n of 84
+  new items".
+* **Words:** name / description as markup with the game-font picture beside them
+  (`MarkupField`: the Text tab's codec + `render`, rows style, cells past 9 / 18 red) + Apply.
+  A game item's words are the Text tab's Items rows (`set_game_text`).
+* **What it does:** **Works like** (project items; the game's items keep their own code), the
+  effect in words (`items.EFFECTS` with the power), **Power**, **Used up %**, **Can be used from
+  the field menu**, **Asks which monster**.
+* **Shops and battles lost:** Price (also the Shops tab's column), Shops pay (the base's rule),
+  **Shops buy it**, **Kept when the party loses a battle**.
+* **Lines:** the use / result line combos (the game's 48, as words with ‹hero› / ‹monster› /
+  ‹item›); project items: an **own** use / result line (markup + picture; empty + Apply = back
+  to a game line).
+* **In battle:** the game's items 1-37: battle power, + random, can be used in battle (the item
+  skill's record, `gamedata.skills.<176-212>.record`); 38-43 "does nothing in battle"; a project
+  item: its base's, said in words.
+* Where the project sells / gives / checks it (`item_uses`). Every edit one SnapshotCommand.
+* The Shops tab's item box, the story widgets (`item_choices(doc)`), the cutscene editor and the
+  flag index list the project's items.
+* **r2:** the conversation dialog's and the cutscene editor's Give steps carry "No room: the
+  conversation stops here / carry on with the steps below" (`on_full`, default stop); the
+  step's line ends "— no room: stop here".
+
 ### 5.6c Services tab (as built S126 — ROADMAP P3.14e1; built, PyBoy-verified, NOT yet user-tested)
 
 `app/services_tab.py`, model `core/services_doc.py` (`ServicesMixin`), compiler

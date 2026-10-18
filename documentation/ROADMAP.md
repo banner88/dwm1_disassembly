@@ -2045,7 +2045,7 @@ recipes are pure authoring.
       bought (gold −12), DEFseed on page 3 bought at its price; the Bazaar's vanilla list
       with Herb at 12G; the shop closes with wShopID 0; `ShopFill` census == the original
       for every map × screen. **Residuals:** sell prices are the game's rule (not
-      editable); item EFFECTS / names / new items = E9; a shop's own greeting texts beyond
+      editable); item EFFECTS / names / new items = E9 (built S151); a shop's own greeting texts beyond
       the first box (the "What would you like?" family $0683+) are the vanilla ones.
       **S117b (user on the S117 ROM: "The rest works" + "New shop in custom room - menu
       glitches with background colours from custom tiles"):** every bank $09 screen push →
@@ -2336,7 +2336,8 @@ recipes are pure authoring.
         flag pairs, newest first — GATE_GENERATION §7.7); exits that open by flag
         (bank $60 entry 7 reads every exit — avoids a room state per combination of open
         doors); room music and shop stock by flag. Banked (own investigation): a battle
-        you may lose without going to the hub; using a key item in the field (E9); the
+        you may lose without going to the hub; using a key item in the field (E9 — S151: a
+        key item's field use can be turned off / on; a field effect of its own is not built); the
         ending / credits (E5).
 - [x] **P3.15 — Balance tab** (simulator-as-a-service) — **S132: both parts done (P3.15a /
       P3.15b built; P3.15b's remaining items banked by the user).** **split S130** (user: "Split sounds
@@ -3325,6 +3326,28 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       WarpWing lands in SameBoy (stays in inventory after use, occupies a
       single slot); the class/consume bit locations documented.
       *Confidence: MEDIUM (bits unlocated; likely near the item tables).*
+      **BUILT S151 (engine + compiler + editor; built S151, USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3); the box stays open
+      for the "single-slot" answer below;** user: "Lets
+      do items. Lest also do it in 1 session"). The record decoded in full (DATA_STRUCTURES
+      "Items (S151)"): +3 = the used-up chance % (bank $03 entry 8: RNG mod 100 < +3; 100 =
+      always, **0 = permanent** — the consume bit the spec asked for), +4 field use, +5 the
+      WHO window, +7 / +8 the use / result lines, +9 the power, +11 bit 0 = not sellable /
+      bit 2 = kept after a lost battle; what an item DOES = code chosen by its id (bank $03
+      entries 3 / 4: two 44-entry rst $00 tables, re-sectioned + every handler named,
+      `tools/resection_items_03.py`). Every field of the 43 items editable
+      (`gamedata.items`), their battle power (the item skill records 176-212), and **new
+      items 44-127** (`custom.items`): each WORKS LIKE a game item (its base) — bank $77
+      entry 16 `ItemRecordCopy` (+ `wItemBase`), entries 17 / 18 (the battle menu),
+      `wItemInUse` (the battle names it); bank $07 / $09 / $50 / $52 / $54 same-size hooks;
+      the SELL / Vault counts 128 ids. The Items tab (before Shops); names / descriptions /
+      own use lines in the S150 text banks. PROJECT_COMPILER §2.59. The spec's half that is
+      DONE: the WarpWing permanent (`gamedata.items.29.consume` = 0; walked on the user's save:
+      it leaves the gate and stays in the bag). **OPEN (asked S151):** what "single-slot like
+      BeastTail" means — every bag slot holds one item already (no stacks); the user's answer
+      decides the rule (one in the bag / the shop will not sell a second / never in the Vault).
+      Follow-ups (not built): a project item's OWN battle power (today its base's skill);
+      items that work like the TinyMedal / BeastTail lack the Medal Man count / the gate-map
+      compass (both test the real id); the gate-floor chests give the game's items only.
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work

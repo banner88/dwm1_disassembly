@@ -459,7 +459,17 @@ wNpcSheetIdx:: db ;d560 — the cache index c of the NPC sprite sheet being DMA'
 ; 2 * id; WRAM reads the same whatever ROM bank is mapped). Transient.
 wTextOvrMode:: db ;d561 — 1 = the current text lookup is a copy (RunTextHandler)
 wTextOvrPtr:: dw ;d562 — the edited text's address for SaveBankAndSwitch's level 2
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 ;d564-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr)
+; S151 (ROADMAP E9) — ITEMS: an item's BEHAVIOUR id. Bank $77 entry 16 ItemRecordCopy
+; (every item record copy — bank $03 entry 2) writes wItemBase = the item's base: the id
+; itself for the game's 44 items, the item a project item works like (custom.items[].base)
+; for ids 44+. The dispatches that pick code by the item (bank $03 entries 3 / 4, bank $07
+; ItemBase07, bank $09 ShopSellPrice) read it instead of [$DA5E]. wItemInUse = the item the
+; hero picked in battle (bank $77 entry 18 BattleItemPick): the battle names it from here
+; (banks $52 / $54 read it where they used to compute skill − $AF). Transient.
+ITEM_FIRST_NEW EQU $2C ; S151: the first project item id (the game's items are 0-43)
+wItemBase:: db ;d564 — the behaviour id of the item last copied to $DA62 (S151)
+wItemInUse:: db ;d565 — the item the hero uses in battle (S151)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 ;d566-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

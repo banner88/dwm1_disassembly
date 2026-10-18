@@ -2150,6 +2150,8 @@ jr_009_4bbc:
 ; ShopSellPrice (S117): HL = what the shop PAYS for item [$DA5E]: the full
 ; price in the gate-floor shop (map $50); a staff ($18-$1C, $25 FireStaff,
 ; $27 WarpStaff) price / 10; anything else price - price / 4 (3/4).
+; S151 (items): patched builds test the staff ids on wItemBase (a project item based
+; on a staff sells for / 10 too).
 ShopSellPrice:
     ld hl, $0302
     rst $10
@@ -2213,6 +2215,10 @@ jr_009_4c09:
     ret
 
 
+; S151 (items): the SELL list: the bag's items (record +11 bit 0 clear = sellable), from a COUNT per item id at $D665 + id (48 B cleared:
+; `ld bc, $0030`; ids 1-47 scanned: `ld b, $2f`) — every distinct item once, in id
+; order, into $C0D8. Patched builds count 128 ids ($0080 / $7F) so the project's
+; items 44-127 are listed too (the $D665 scratch is 128 B inside staging slot 20).
 SetFld9_4c24:
     ld hl, $0305
     rst $10
@@ -3028,6 +3034,10 @@ CallFld9_5177:
     ret
 
 
+; S151 (items): the Vault DEPOSIT list: the bag's items, from a COUNT per item id at $D665 + id (48 B cleared:
+; `ld bc, $0030`; ids 1-47 scanned: `ld b, $2f`) — every distinct item once, in id
+; order, into $C0D8. Patched builds count 128 ids ($0080 / $7F) so the project's
+; items 44-127 are listed too (the $D665 scratch is 128 B inside staging slot 20).
 SetFld9_5199:
     ld hl, $0305
     rst $10
@@ -3638,6 +3648,10 @@ CallFld9_5576:
     ret
 
 
+; S151 (items): the Vault WITHDRAW list: wBankSlots' 40 items, from a COUNT per item id at $D665 + id (48 B cleared:
+; `ld bc, $0030`; ids 1-47 scanned: `ld b, $2f`) — every distinct item once, in id
+; order, into $C0D8. Patched builds count 128 ids ($0080 / $7F) so the project's
+; items 44-127 are listed too (the $D665 scratch is 128 B inside staging slot 20).
 CallFld9_5598:
     call SetFld9_5aea
     ld hl, $d665

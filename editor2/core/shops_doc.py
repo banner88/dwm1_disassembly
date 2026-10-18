@@ -30,7 +30,9 @@ class ShopsMixin:
         return SH.resolve(self.data, getattr(self, 'repo_root', None))
 
     def shop_item_names(self):
-        return SH.item_names(getattr(self, 'repo_root', None))
+        """S151: every item of the project (the game's 43 — renamed ones by their new
+        name — + the project's items 44+)."""
+        return self.item_names_all()
 
     def shop_list(self):
         """[{key, name, items, vanilla, rule, edited, sellers}] in ShopPtrTable order."""
@@ -55,11 +57,15 @@ class ShopsMixin:
             for i in lst:
                 shops.setdefault(i, []).append(label)
         out = []
-        for i in range(1, SH.ITEM_COUNT):
+        ir = self.items_resolved()
+        for i in list(range(1, SH.ITEM_COUNT)) + sorted(ir['new']):
             p = r['prices'][i]
+            b = ir['base'][i]
+            vp = (van[i][1] | van[i][2] << 8) if i < SH.ITEM_COUNT else p
             out.append({'id': i, 'name': names.get(i, f'item {i}'), 'price': p,
-                        'vanilla_price': van[i][1] | van[i][2] << 8,
-                        'sell': SH.sell_price(i, p), 'sell_gate': SH.sell_price(i, p, True),
+                        'vanilla_price': vp, 'new': i >= SH.ITEM_COUNT,
+                        'sell': SH.sell_price(b, p), 'sell_gate': SH.sell_price(b, p, True),
+                        'sellable': not ir['records'][i][11] & 1,
                         'shops': shops.get(i, [])})
         return out
 
@@ -93,27 +99,25 @@ class ShopsMixin:
 
     # ------------------------------------------------------------ editing
     def set_item_price(self, item, price):
-        """price None = the game's own price."""
+        """price None = the game's own price (S151: one field of the item — items_doc)."""
         item = int(item)
+        if item >= SH.ITEM_COUNT:
+            if price is None:
+                raise ValueError('a project item has no original price')
+            self.set_item_field(item, 'price', int(price))
+            return
         if not 1 <= item < SH.ITEM_COUNT:
             raise ValueError(f'items are 1-{SH.ITEM_COUNT - 1}')
-        gd = self.data.setdefault('gamedata', {})
-        items = gd.setdefault('items', {})
         van = SH.vanilla(getattr(self, 'repo_root', None))['items'][item]
-        if price is None or int(price) == (van[1] | van[2] << 8):
-            items.pop(str(item), None)
-        else:
-            p = int(price)
-            if not 0 <= p <= 0xFFFF:
-                raise ValueError('a price is 0-65535 gold')
-            items[str(item)] = {'price': p}
-        if not items:
-            gd.pop('items')
-        self.touch()
+        p = (van[1] | van[2] << 8) if price is None else int(price)
+        if not 0 <= p <= 0xFFFF:
+            raise ValueError('a price is 0-65535 gold')
+        self.set_item_field(item, 'price', p)
 
     def set_shop_items(self, key, items):
         items = [int(i) for i in items]
-        SH._check_list(items, f'shop {key}')
+        from editor2.core import items as _IT
+        SH._check_list(items, f'shop {key}', _IT.item_ids(self.data, getattr(self, 'repo_root', None)))
         vk = [k for k, *_ in SH.VANILLA_SHOPS]
         if key in vk:
             gd = self.data.setdefault('gamedata', {})

@@ -154,8 +154,9 @@ class ShopsTab(QWidget):
                 it.setForeground(EDITED)
             self.list.addItem(it)
         self.pick.clear()
-        for i in range(1, SH.ITEM_COUNT):
-            self.pick.addItem(f"{self.names.get(i, i)}", i)
+        for i in sorted(self.names):               # S151: + the project's items 44+
+            self.pick.addItem(f"{self.names.get(i, i)}" + ('  (yours)' if i >= SH.ITEM_COUNT
+                                                           else ''), i)
         self.prices.setRowCount(len(rows))
         for r, row in enumerate(rows):
             vals = [row['name'], str(row['price']), str(row['sell']), str(row['vanilla_price']),

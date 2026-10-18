@@ -77,6 +77,7 @@ SELFTEST_TOOLS = [
     "recomment_script_banks.py",  # S148: the script data of banks $0C-$0F (+ patches/bank_00e.asm) carries the handler decoder's annotation (no stale S43 comments)
     "annotate_text_slots.py",    # S150: every text pointer slot in the text banks' head tables carries its comment (text id / table row / mode list, from dialogue.json)
     "census_text_override.py",   # S150: the markup codec reads back every original text (both styles); text_override_census.json clean (every text slot, shown + copied, in PyBoy == the project's edit or the original; the S105 nickname redirect)
+    "census_items.py",           # S151: the model's 44 records == the ROM (decode / apply round-trip); items_census.json clean (every item id 0-127 through the game's item routines in PyBoy: record copy + wItemBase, the field dispatches, the battle probe / pick, the texts, the sell price, the SELL / Vault lists == editor2/core/items.py)
 ]
 
 PATCH_FILES = [

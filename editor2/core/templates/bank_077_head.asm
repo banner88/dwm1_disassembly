@@ -146,9 +146,24 @@
 ;     floor (= exactly the sheets the loaders put in bank 1) — OAM attr bit 3 (VRAM bank 1)
 ;     on every piece the call wrote (shadow OAM $C000 + 4n, n from the old to the new
 ;     $FFCB).
+; Entries 16-18 (S151, ROADMAP E9 — ITEMS; PROJECT_COMPILER §2.59, DATA_STRUCTURES
+;   "Items (S151)"): the item records and the project's NEW items (ids 44-127).
+;  16 ItemRecordCopy: bank $03 entry 2's copy (bank $03 ItemCopyRecord, a same-size far
+;     call): item [$DA5E]'s 12-byte record from ItemTable (ITEM_COUNT records: the game's
+;     44 with the project's edits, then the project's items) to DE — the game copies it
+;     to $DA62-$DA6D; an id past the table (none in a valid bag) copies item 0's zeros —
+;     and wItemBase := ItemBaseTable[id], the item's BEHAVIOUR id: itself for 0-43, the
+;     game item a project item works like (custom.items[].base). Keeps DE's start.
+;  17 BattleItemProbe (E = an item): the battle menu's "is any item usable?" scan (bank
+;     $50, same size): [$db4c] := the battle skill of E's behaviour id (base + $AF; the
+;     game's items: id + $AF as before), [$db4d] := 0, [$db4e] := $0A, then bank $54
+;     entry 0 (the skill record's +10: 1 = not usable in battle).
+;  18 BattleItemPick (E = the bag slot): the battle menu's pick (bank $50, same size):
+;     wItemInUse := the item, [$db4c] := its battle skill as above, then bank $54 entry 5
+;     (the item's target lookup). Banks $52 / $54 name the item from wItemInUse.
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
 ;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
-;   ServicePairs_n (S126).
+;   ServicePairs_n (S126); S151: ITEM_COUNT, ItemTable, ItemBaseTable.
 ; =============================================================================
 
 SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
@@ -171,6 +186,9 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw NpcSheetLoad06                   ; entry 13 (HL=$770D, S141 r3)
     dw NpcDrawPlain                     ; entry 14 (HL=$770E, S141 r3)
     dw NpcDrawMonster                   ; entry 15 (HL=$770F, S141 r3)
+    dw ItemRecordCopy                   ; entry 16 (HL=$7710, S151)
+    dw BattleItemProbe                  ; entry 17 (HL=$7711, S151)
+    dw BattleItemPick                   ; entry 18 (HL=$7712, S151)
 
 ShopFill:
     ld a, [wShopID]
@@ -1673,4 +1691,81 @@ NpcDrawBank:                            ; (BC / DE pass through to the builder u
     add hl, de
     dec b
     jr nz, .piece
+    ret
+
+; -----------------------------------------------------------------------------
+; Entries 16-18 (S151): the item records and the project's items (see the header)
+; -----------------------------------------------------------------------------
+ItemRecordCopy:                         ; DE = where the 12 bytes go
+    ld a, [$da5e]
+    cp ITEM_COUNT
+    jr c, .known
+    xor a                               ; past the table: item 0 (zeros, behaviour 0)
+.known:
+    ld c, a                             ; C = the item
+    ld hl, ItemBaseTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    ld [wItemBase], a                   ; the behaviour id
+    ld l, c
+    ld h, $00
+    add hl, hl
+    add hl, hl                          ; x 4
+    ld b, h
+    ld c, l
+    add hl, hl                          ; x 8
+    add hl, bc                          ; x 12
+    ld bc, ItemTable
+    add hl, bc
+    ld b, 12
+.copy:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .copy
+    ret
+
+; A = an item -> A = its battle skill: the behaviour id + $AF (the game's items 1-43
+; = skills $B0-$DA, as bank $50 computed them). Clobbers HL.
+BattleSkillOf:
+    cp ITEM_COUNT
+    jr nc, .skill                       ; past the table: id + $AF (as before)
+    ld hl, ItemBaseTable
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+.skill:
+    add $af
+    ret
+
+BattleItemProbe:                        ; E = the item
+    ld a, e
+    call BattleSkillOf
+    ld [$db4c], a
+    xor a
+    ld [$db4d], a
+    ld a, $0a
+    ld [$db4e], a
+    ld hl, $5400                        ; bank $54 entry 0: the skill record's +10
+    rst $10
+    ret
+
+BattleItemPick:                         ; E = the bag slot
+    ld hl, wInventory
+    ld d, $00
+    add hl, de
+    ld a, [hl]
+    ld [wItemInUse], a
+    call BattleSkillOf
+    ld [$db4c], a
+    ld hl, $5405                        ; bank $54 entry 5: the item's target lookup
+    rst $10
     ret

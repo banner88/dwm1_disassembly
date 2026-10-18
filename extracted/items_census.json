@@ -1,0 +1,54 @@
+{
+ "_generator": "tools/census_items.py (S151): every item id stub-called through the game's item routines in PyBoy on a build of census_items2",
+ "items": 128,
+ "new": 84,
+ "checks": 1607,
+ "by_class": {
+  "record": [
+   132,
+   132
+  ],
+  "wItemBase": [
+   132,
+   132
+  ],
+  "usable": [
+   127,
+   127
+  ],
+  "effect": [
+   127,
+   127
+  ],
+  "battle probe": [
+   127,
+   127
+  ],
+  "battle pick": [
+   127,
+   127
+  ],
+  "item_name": [
+   254,
+   254
+  ],
+  "item_description": [
+   254,
+   254
+  ],
+  "item_use_message": [
+   176,
+   176
+  ],
+  "sell": [
+   139,
+   139
+  ],
+  "deposit": [
+   12,
+   12
+  ]
+ },
+ "fails": [],
+ "texts": 342
+}

@@ -110,6 +110,12 @@ class TextCtx:
             return ''
 
     def item(self, n):
+        for doc in (getattr(self.cat, 'doc', None), self.cat):   # S151: + the project's items
+            if doc is not None and hasattr(doc, 'item_names_all'):
+                try:
+                    return doc.item_names_all().get(n, '')
+                except Exception:                        # noqa: BLE001
+                    break
         from editor2.core.shops import item_names
         return self._data('items', item_names).get(n, '')
 

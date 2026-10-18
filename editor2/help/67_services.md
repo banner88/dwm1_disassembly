@@ -3,6 +3,11 @@
 The game's **service NPCs** work in **any room** — yours too. Rooms tab →
 select an NPC → **Service…** → pick one:
 
+(S151 r2) Every service's words — and a shopkeeper's — open in the **bottom** box, wherever
+the player stands: the menus are drawn at the top for a bottom box (talked to from the
+lower half of the screen, the greeting used to open at the top and jump down when the
+menu appeared). Other people keep the game's rule (the box opposite the player).
+
 - **Vault keeper** — stores items and gold.
 - **Farm keeper** — drop off / pick up / check / separate / let monsters
   sleep (Pulio's menu).
