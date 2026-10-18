@@ -284,6 +284,18 @@ audience), plus the room bytes `$D92B` 1, `$D92C` 3, `$D92D` 1, `$D93C` 1, `$D93
 scene: the editor's New game… "as after the original opening" (PROJECT_COMPILER §2.60;
 DATA_STRUCTURES "New game start (S152)").
 
+## The original story at a point (S153 — the Story point step)
+
+A project's **Story point** step (PROJECT_COMPILER §2.61) writes, at once, the game's own flags
+`$0000-$017F` / `$0248-$0257`, the room bytes `$D92A-$D99A`, the King's speech `$D9E3` and
+(optionally) the arena classes `$CAB4` as the original game's scripts leave them at one of
+its 42 points (`story_state.state_at`, the 41 VANILLA_STEPS + "everything done"), played from
+the original opening's state above — not from zero. The editor's own pool flags
+`$0159-$0167` inside that range are kept (`$D9C6` keep `$7F`, `$D9C7` keep `$FF`); the
+extended flags `$1000+` are not touched. `tools/census_story_state.py --opening` replays every
+step from the opening's state in PyBoy and compares: 40 played (Monster Grandpa's match not
+played by the census), all equal (S153).
+
 ## Analysis Tool
 
 ```bash

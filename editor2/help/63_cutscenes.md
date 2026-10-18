@@ -252,6 +252,9 @@ YES / If NO / Then / Otherwise* row; ▲ ▼ ⧉ ✕ move, duplicate, remove):
 | Heal the party | every monster's HP and MP back, ailments cured (the game's own heal; silent) |
 | Take an item, Give / take gold, Refresh the room (S129) | as in conversations — *Give an item* can give several (all or none); *Refresh the room* ends the scene (the room loads again, its states and music pick again) |
 | Give a monster (S152) | into the **farm** (the default — the player picks it up from a farm keeper's menu, as the game's first monster) or, ticked, **straight into the party** when it has room; **the player names it** opens the naming screen for it (otherwise it gets its species' name) |
+| Story point (S153) | the ORIGINAL game's story jumps to a point of its own story (e.g. "everything done"): every game flag and room state its scripts would have left, at once — your own flags stay. See *Your title screen and your ending* |
+| Roll the credits (S153) | the credits (Title & ending… sets the pages), then the game goes on in the room and tile you pick — its entry scenes play. The scene ends here |
+| TO BE CONTINUED (S153) | the game's "…TO BE CONTINUED", "save?" → YES saves; then the player switches off. CONTINUE comes back to this room, **without** its entry scenes — start the post-game from a talk / step-on scene or a door. The scene ends here |
 | Turn flags ON / OFF, Give an item / a monster, Battle, Warp the player, Stop here | as in conversations (S151 r2: a Give with no room ends the scene after its "full" words, unless *When there is no room* says carry on); *Warp the player* can go **home — the hub** (see *The hub*), to any of your rooms or any game room — only to a screen that room has (a missing screen would crash the game; the build stops) |
 
 **Where the player stands.** In an entry scene the walks of the player are

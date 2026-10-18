@@ -469,7 +469,14 @@ wTextOvrPtr:: dw ;d562 — the edited text's address for SaveBankAndSwitch's lev
 ITEM_FIRST_NEW EQU $2C ; S151: the first project item id (the game's items are 0-43)
 wItemBase:: db ;d564 — the behaviour id of the item last copied to $DA62 (S151)
 wItemInUse:: db ;d565 — the item the hero uses in battle (S151)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 ;d566-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse)
+; S153 (ROADMAP E5) — THE ENDING: where the field goes after the credits. A project's
+; "Roll the credits" step runs bank $77 story command 6 credits_after just before the
+; mode change (op $3E, game mode 4): +0 = 1 (set), +1 the map id, +2 the region + 1
+; (0 = region 0), +3 / +4 X px, +5 / +6 Y px. Bank $5F CreditsDone (region credits_after)
+; far-calls bank $79 entry 4 CreditsAfter, which writes the warp mailbox from it (+0 = 0:
+; the game's own intro bedroom) and clears +0. Transient (set and used in one ending).
+wCreditsAfter:: ds 7 ;d566-d56c
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 ;d56d-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

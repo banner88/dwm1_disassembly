@@ -358,6 +358,15 @@ another id's string are marked `inside`) + 22 tables, 1,329 rows:
 | field_message / personality / family_name / watabou_message | $41:$4101 (2) / $4997 (10) / $41E3 (3) / $4A17 (12) | 113 / 27 / 160 / 2 | rows |
 | skill_description / monster_description | $56:$6667 / $4D:$420B | 256 / 215 | owned by the Skills / Monsters tabs |
 
+**The credits' texts (S153, measured).** credits_role (mode 5) is drawn into a 20 × 2 tile
+grid at $8000, credits_name (mode 6) into 11 × 12 at $8260 (tile $26 on) — COPY mode: `$F1`
+moves to the START of the line + one row and nothing wraps, so a line longer than its row
+runs on into the next row's tiles (the game's page 19 "YONEYAMA" loses its last letter under
+the monster). credits_end row 0 = "…TO BE CONTINUED". A project's own credits pages
+(PROJECT_COMPILER §2.61) are S150 text slots of these tables; rows past 26 are slots past the
+tables' ends (as S151's items), owner "Credits" — with `custom.credits` the Text tab's credits
+rows are edited in Cutscenes → Title & ending…
+
 **Text ends are parameter-aware (S150 correction).** A text ends at the first $F0
 that is NOT a control code's parameter (E8: 2 bytes, E9 / F8 / F9 / FB / FC: 1) — the
 battle tutorial's `$FB $F0` is code $FB with its parameter byte $F0 (`$C835` := $F0), not the end (the S108

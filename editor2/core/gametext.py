@@ -231,6 +231,17 @@ def resolve(prj_or_data, repo_root=None):
         x.raw, x.style, x.group, x.owner, x.title = raw[:-1], 'rows', 'items', 'Items', what
         x.same, x.first, x._markup, x.inside = [], True, None, None
         out.append((x, raw))
+    # S153 (ROADMAP E5): the credits' pages (custom.credits, editor2/core/ending.py) —
+    # every role / names text that differs from the game's, and the rows past 26
+    from . import ending as EN
+    src_of = {EN.ROLE_TABLE: 'credits_role', EN.NAME_TABLE: 'credits_name'}
+    for bank, table, idx, raw, what in EN.text_slots(prj_or_data, repo_root):
+        x = Entry()
+        x.source, x.key = src_of[table], str(idx)
+        x.bank, x.table, x.index, x.addr = bank, table, idx, 0
+        x.raw, x.style, x.group, x.owner, x.title = raw[:-1], 'rows', 'credits', 'Credits', what
+        x.same, x.first, x._markup, x.inside = [], True, None, None
+        out.append((x, raw))
     return out
 
 

@@ -166,8 +166,8 @@ def arm_tail(eng, rom, g, bm, bank, start, code, flag):
 def run_step(eng, step, kind, n, gates, rom, log):
     from editor2.core import story_state as SS
     from editor2.core import cutscenes as CS
-    pre_st = SS.state_at(step)
-    post_st = SS.state_at(step + 1)
+    pre_st = _state(step)
+    post_st = _state(step + 1)
     pre = model(pre_st)
     ram = {a: v for a, v in pre_st['ram'].items()}
     if kind == 'class':
@@ -216,6 +216,15 @@ def run_step(eng, step, kind, n, gates, rom, log):
     return res
 
 
+START = None          # S153 --opening: the model begins from the original opening's state
+
+
+def _state(step):
+    """The interpreter's state at `step` (S153: from START when --opening)."""
+    from editor2.core import story_state as SS
+    return SS.state_at(step, start=START) if START is not None else SS.state_at(step)
+
+
 def _warp(eng, mp, x, y):
     from editor2.core import playback as PB
     m = eng.m
@@ -241,7 +250,7 @@ def run_starry(eng, step, log):
     """S144: the ending, played (module doc). Returns the run record."""
     from editor2.core import story_state as SS
     from editor2.core import cutscenes as CS
-    pre_st, post_st = SS.state_at(step), SS.state_at(step + 1)
+    pre_st, post_st = _state(step), _state(step + 1)
     pre = model(pre_st)
     ram = dict(pre_st['ram'])
     ram.update({SS.ARENA_GROUP: 8, SS.COLISEUM: 3})
@@ -344,9 +353,17 @@ def main(argv):
     ap.add_argument('--steps', help='comma list of step indices (default: a sample)')
     ap.add_argument('--out', default=OUT)
     ap.add_argument('--selftest', action='store_true')
+    ap.add_argument('--opening', action='store_true',
+                    help='S153: start the model from the original opening\'s measured state '
+                         '(editor2/core/ending.py opening_state — the story-point step) and '
+                         'compare only; the saved census file is not written')
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+    if a.opening:
+        global START
+        from editor2.core import ending as EN
+        START = EN.opening_state()
     from editor2.core import playback as PB
     from editor2.core import story_state as SS
     from editor2.core.balance import VANILLA_STEPS
@@ -366,6 +383,11 @@ def main(argv):
             print(f'step {s}: {kind} — not played by this census (skipped)')
             continue
         out.append(run_step(eng, s, kind, n, gates, rom, print))
+    if START is not None:                       # S153 --opening: compare only
+        clean = all(not r.get('mismatches') and not r.get('error') for r in out)
+        print(f"--opening: {len(out)} steps run from the original opening's state, "
+              f"{'all equal' if clean else 'MISMATCHES'}")
+        return 0 if clean else 1
     states = {str(s): SS.state_at(s) for s in range(len(VANILLA_STEPS) + 1)}
     for v in states.values():
         v.pop('log', None)

@@ -383,6 +383,23 @@ def _project_rows(prj, data, rows):
     add('commands', 'Text and story', 'Different story steps (take / give items, gold)',
         lambda: len(getattr(prj, '_story_cmds', []) or []), ST.STORY_CMD_MAX,
         'the build stops', 'Progression && Flags', tech='op $24 $FF01-$FFFF')
+    # S153 (ROADMAP E5): the title screen, the credits, the original story's points
+    from . import ending as END
+
+    def title_tiles():
+        return len(END.title_layout(custom)[0]) if END.title(custom) else 0
+    add('title_tiles', 'Text and story', 'Letters on the title screen (different letters)',
+        title_tiles, END.TITLE_MAX_TILES, 'the editor refuses another', 'Cutscenes',
+        tech='tiles $80-$FF at $8800 (VRAM bank 1), the title\'s own art keeps bank 0 '
+             '(bank $79 entry 3 TitleText)')
+    add('credit_pages', 'Text and story', 'Credits pages (the game\'s 27 + yours)',
+        lambda: len(END.pages(custom)), END.MAX_PAGES, 'the editor refuses another',
+        'Cutscenes', tech='page numbers in $C0D9 (bank $5F regions credits_last_a / _b); '
+                          'their words = credits_role / credits_name rows')
+    add('story_points', 'Text and story', 'Different points of the original story used '
+        '(the "Story point" step)', lambda: len(getattr(prj, '_story_points', []) or []),
+        END.MAX_POINTS, 'the build stops', 'Cutscenes',
+        tech='bank $79 entry 5 StoryPointApply, StoryPointPtrs')
     from . import services as SV
     add('line_sets', 'Text and story', 'Line sets of shop and service people',
         lambda: len(SV.resolve(prj)['numbers']), SV.MAX_SETS, 'the build stops',

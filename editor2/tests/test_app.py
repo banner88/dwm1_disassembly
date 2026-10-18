@@ -1157,6 +1157,8 @@ def s127r3_game_text_rule(app, w):
                ('app/cutscenes_tab.py', 'self.textbox'),
                ('app/text_tab.py', 'self.edit'),     # S150: the game's own texts — markup with the game-font picture beside it
                ('app/items_tab.py', 'self.edit'),    # S151: MarkupField — an item's words as markup with the game-font picture beside it
+               ('app/ending_dialog.py', 'self.role'),     # S153: a credits page's role / names — the page as the game
+               ('app/ending_dialog.py', 'self.names'),    # draws it (its font, pixel exact) beside them
                ('app/services_tab.py', 'self.line_edit'),
                ('app/rooms/talk_editor.py', 'self.edit'),
                ('app/rooms/play_dialog.py', 'self.preview')}     # S132: read-only party preview
@@ -3279,6 +3281,152 @@ def s152_opening(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s153_ending(app, w):
+    """S153 (ROADMAP E5; user: "If intro has "Milayou's Journey" or whatever text I want
+    added to it that would be cool. The final cutscene before credits also should be
+    editable and you can send a given cutscene to credits."): the Cutscenes tab's Title &
+    ending… button and dialog (title lines + preview, credits pages + preview, seconds),
+    the three ending steps in the cutscene editor (story point / roll the credits / TO BE
+    CONTINUED: forms, help, no problems), the build carries them; undo restores
+    project.json exactly."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QMessageBox, QPushButton
+    from editor2.app.ending_dialog import EndingDialog
+    from editor2.app.rooms import commands as C
+    from editor2.app.cutscene_editor import STEP_HELP
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import ending as EN
+    from editor2.core import compiler as Cc
+    tmp = tempfile.mkdtemp(prefix='s153_ending_')
+    real_warn, real_info = QMessageBox.warning, QMessageBox.information
+    said = []
+    QMessageBox.warning = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    QMessageBox.information = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        s = w.session
+        doc = s.doc
+        before = doc.dumps()
+        n0 = s.undo.index()
+        ct = w.cutscenes_tab
+        assert any(b.text() == 'Title & ending…' for b in ct.findChildren(QPushButton)), \
+            'no Title & ending… button on the Cutscenes tab'
+        dlg = EndingDialog(s, w)
+        assert dlg.lines.rowCount() == 0 and len(dlg.pages) == EN.VANILLA_PAGES, \
+            'a new project: no title lines, the game\'s 27 pages'
+        assert dlg.title_pic.pixmap() is not None and not dlg.title_pic.pixmap().isNull()
+        dlg._add_line({'text': "Milayou's Journey", 'row': 13, 'colour': 'orange'})
+        dlg._add_line({'text': 'v1', 'row': 17, 'col': 17, 'colour': 'black'})
+        assert 'Milayou' not in dlg.title_problem.text()
+        dlg.page_list.setCurrentRow(EN.VANILLA_PAGES - 2)
+        app.processEvents()
+        dlg._add_page()
+        app.processEvents()
+        i = dlg.page_list.currentRow()
+        assert i == EN.VANILLA_PAGES - 1, i
+        dlg.role.setPlainText('ROMHACK')
+        dlg.names.setPlainText('MILAYOU')
+        dlg.monster.setCurrentIndex(dlg.monster.findData(20))
+        app.processEvents()
+        assert dlg.pages[i] == {'role': 'ROMHACK', 'names': 'MILAYOU', 'monster': 20}, dlg.pages[i]
+        assert not dlg.page_pic.pixmap().isNull(), 'the page preview'
+        dlg.seconds.setValue(3)
+        # a page that cannot be drawn: refused with the reason, nothing changed
+        dlg.names.setPlainText('\n'.join(['X'] * 14))
+        app.processEvents()
+        dlg._ok()
+        assert said and 'page' in said[-1], said
+        assert doc.dumps() == before
+        dlg.names.setPlainText('MILAYOU')
+        app.processEvents()
+        dlg._ok()
+        dlg.deleteLater()
+        t = doc.title_settings()
+        assert [ln['text'] for ln in t['lines']] == ["Milayou's Journey", 'v1'], t
+        c = doc.credits_settings()
+        assert c['own'] and len(c['pages']) == EN.VANILLA_PAGES + 1 and c['seconds'] == 3, \
+            (len(c['pages']), c['seconds'])
+        assert c['pages'][-2]['role'] == 'ROMHACK' and c['pages'][-1] == \
+            EN.vanilla_pages()[-1], 'the new page before the closing page'
+        dlg2 = EndingDialog(s, w)                    # shows what was saved
+        assert dlg2.lines.rowCount() == 2 and len(dlg2.pages) == EN.VANILLA_PAGES + 1 and \
+            dlg2.seconds.value() == 3
+        dlg2.deleteLater()
+        # the cutscene editor: the three ending steps
+        w.tabs.setCurrentWidget(ct)
+        app.processEvents()
+        if ct.cat is None:
+            ct.load()
+        cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island',
+                                                                  'The end', 0, 'entry'))
+        s.undo.push(cmd)
+        sid = cmd.result
+        app.processEvents()
+        ct.refresh()
+        app.processEvents()
+        mine = ct.tree.topLevelItem(0)
+        pick = None
+        for a in range(mine.childCount()):
+            for b in range(mine.child(a).childCount()):
+                if 'The end' in mine.child(a).child(b).text(0):
+                    pick = mine.child(a).child(b)
+        ct.tree.setCurrentItem(pick)
+        app.processEvents()
+        ed = ct.editor
+        assert ed.scene_id == sid
+        from editor2.app.cutscene_editor import default_step
+        for k in ('story_point', 'credits'):
+            ed.add_step(k, default_step(k, ed))
+        app.processEvents()
+        assert 'no problems' in ed.problems.text(), ed.problems.text()
+        for n, k in enumerate(('story_point', 'credits')):
+            ed.path = (n,)
+            ed.refresh()
+            assert ed.form.about.text() == STEP_HELP[k], (k, ed.form.about.text())
+            assert ed.form.form.rowCount() >= 1, k
+        r, sc = CD.find(doc, sid)
+        assert sc['steps'][1]['credits']['dest'].startswith('room:'), sc['steps'][1]
+        # a second scene: TO BE CONTINUED
+        cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island',
+                                                                  'Paused', 0, 'entry'))
+        s.undo.push(cmd)
+        sid2 = cmd.result
+        app.processEvents()
+        r2, sc2 = CD.find(doc, sid2)
+        sc2['steps'] = [default_step('to_be_continued', ed)]
+        s.undo.push(C.SnapshotCommand(s, 'tbc', lambda d: CD.set_scene(d, sid2, sc2)))
+        app.processEvents()
+        assert 'do not play on CONTINUE' in STEP_HELP['to_be_continued']
+        # the build carries them (bank $79 entries 3-5, the bank $5F regions)
+        td = tempfile.mkdtemp()
+        shutil.copytree(doc.project_dir, os.path.join(td, 'p'),
+                        ignore=shutil.ignore_patterns('build'))
+        open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+        outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+        b79, b5f = outs['patches/bank_079.asm'], outs['patches/bank_05f.asm']
+        assert 'TitleTextData:' in b79 and 'StoryPoint_0:' in b79, 'bank $79 data'
+        assert 'cp $1b' in b5f.lower() and 'cp $03' in b5f.lower(), 'pages / seconds regions'
+        shutil.rmtree(td, ignore_errors=True)
+        while s.undo.index() > n0:
+            s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Title & ending… (S153) — title lines + preview, a credits page before the '
+              'closing page + preview, seconds, a broken page refused; the story point / roll '
+              'the credits / TO BE CONTINUED steps (forms, help, no problems); the build '
+              'carries them; undo restores everything')
+    finally:
+        QMessageBox.warning, QMessageBox.information = real_warn, real_info
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -4713,6 +4861,7 @@ def main():
     s150_text(app, w)
     s151_items(app, w)
     s152_opening(app, w)
+    s153_ending(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402
@@ -4729,6 +4878,16 @@ def main():
         assert res.rom_md5 == want, \
             f'GUI build md5 {res.rom_md5} != pinned {want}'
         print(f'OK: GUI build byte-identical to pin {want}')
+        # S153: the build thread's Python wrapper outlived the QApplication at exit
+        # ("pure virtual method called", exit 134 / 139 after PASS) — free it first
+        worker.log.disconnect()
+        worker.finished_build.disconnect()
+        worker.deleteLater()
+        app.processEvents()
+        del worker
+    w.close()
+    w.deleteLater()
+    app.processEvents()
     print('PASS')
 
 

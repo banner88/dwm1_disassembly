@@ -1,0 +1,22 @@
+{
+ "rom": "build/build/rom.gbc",
+ "md5": "000f77dcb40f0c09c62c6efe9134747e",
+ "rooms": {
+  "glade": {
+   "id": "the_last_glade",
+   "mid": "0x6B"
+  },
+  "after": {
+   "id": "the_after_room",
+   "mid": "0x6C"
+  }
+ },
+ "flag_numbers": {
+  "journey_over": 345,
+  "tbc_shown": 346,
+  "post_game_seen": 347
+ },
+ "warnings": [
+  "credits page 19: 1 letter(s) fall outside the picture (a line longer than its row, or a role line past 19 / 18 letters) \u2014 see the preview"
+ ]
+}

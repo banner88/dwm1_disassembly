@@ -1,5 +1,73 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-17 (Session 151 — **ROADMAP E9 BUILT: ITEMS — EVERY FIELD OF THE GAME'S 43 ITEMS EDITABLE
+> (THE 12-BYTE RECORD DECODED IN FULL: USED-UP %, FIELD USE, THE WHO WINDOW, LINES, POWER, SELLABLE, KEPT ON A LOST
+> BATTLE) + THEIR BATTLE POWER; NEW ITEMS 44-127 THAT WORK LIKE ONE OF THE GAME'S (ITS BASE); THE ITEMS TAB; THE
+> WARPWING PERMANENT (THE S72 SPEC'S CONSUME HALF)** (user: "Lets do items. Lest also do it in 1 session").
+> **Built S151; USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3).** Test ROM `DWM-S151-curio-test.gbc` (`631b7b71…`, patched) = the user's project +
+> a permanent WarpWing, the Herb 40-50 (battle 45-55), five new items + THE CURIO HALL / YARD (way in: the CURIO GUIDE,
+> Cities_FOUNT (3, 4)). Example pin `046319ef…` (patched; was `96d05355…`, patched): banks $03 / $07 / $09 / $50 / $52 /
+> $54 / $77 (the hooks only — A/B diff). The user's project builds `ed3374c5…` (patched; vs S150 `22d857d9…`).
+> **The decode (ROM byte scan of every `$DA62-$DA6D` load + the code):** +3 = the used-up chance % (bank $03 entry 8:
+> RNG mod 100 < +3; **0 = never** — the permanent item), +4 field use (2 / 3 = "uses it as a tool. But nothing
+> happens"), +5 the WHO window, +7 / +8 the use / result lines (bank $41 mode 13), +9 the power, +11 bit 0 not
+> sellable; +0 / +6 / +10 read by nothing. What an item DOES = code chosen by its id: bank $03 entries 3 / 4 (two
+> 44-entry `rst $00` tables — mgbdis had decoded them as code; re-sectioned in patches/ with every handler named,
+> NEW `tools/resection_items_03.py`) + id tests in banks $07 / $09 / $12 / $19 / $50 / $52 / $54. DATA_STRUCTURES
+> "Items (S151)".
+> **Built (engine):** a new item names a BASE (1-43); bank $77 entry 16 `ItemRecordCopy` (bank $03's record copy,
+> same size) copies from `ItemTable` and sets `wItemBase` ($D564: itself / the base); bank $03's two dispatches, bank
+> $07's three id tests (`ItemStoreBase07` / `ItemBase07`), bank $09's staff sell price read it; the SELL / Vault count
+> lists cover 128 ids (`$D665`, 128 B inside staging slot 20); the battle menu's probe / pick → entries 17 / 18 (the
+> base's skill = base + $AF), `wItemInUse` ($D565) names the item in banks $52 / $54. Re-pinned bank $77 head
+> (TEMPLATE_SIZE 2074). PROJECT_COMPILER §2.59.
+> **Built (compiler + editor):** NEW `editor2/core/items.py` (`gamedata.items` sparse field edits, `custom.items`
+> new items, checks, `ITEM_COUNT` / `ItemTable` / `ItemBaseTable`, the new items' words as S150 text slots past the
+> tables' ends), NEW `items_doc.py`, NEW `app/items_tab.py` (the Items tab before Shops: words with the game-font
+> picture, Works like, power / used-up / field use / WHO / price / sellable / kept, the line combos + own lines, the
+> battle half, uses; New / Copy / Delete / Original); shops / story checks / give / take / cutscenes accept the new
+> ids. Help `74_items.md` (NEW) + `56_text.md` (re-created — the S150 file was missing in the repo; `56_dialogue.md`
+> deleted) + 00 / 62 / 90; `EDITOR_REVISION` S151.
+> **The acceptance (machine half):** NEW `tools/census_items.py` (`extracted/items_census.json`): 84 new items + edits —
+> every id 0-127 (+4 past the table) through the record copy, both field dispatches, the battle probe / pick, 342 text
+> slots, the sell price, the SELL / Vault lists: **1,607 / 1,607**; `--negative` 407 / 254 FAIL. NEW
+> `tools/walk_items.py` on the user's `.sav` (`examples/s151_items_demo/`): bought 4 new items (names, prices), the
+> MegaHerb +81 with its own line and used up, HeroSeed ATK +10, the Herb +40; the DOOR WARDEN's story check before /
+> after the OldKey; the OldKey "as a tool" and kept; the SELL list (SparkRod 200 G = a tenth, no OldKey); a battle:
+> MegaHerb +45, the name sites read 44; the WarpWing out of a gate and STILL in the bag; the Feather (works like the
+> WarpWing) out of a gate; a lost battle keeps the OldKey, loses the MegaHerb — **33 checks, 0 failed**; `--negative`
+> 20 FAIL.
+> **Annotation (Iron Rule 6):** bank $03 entries 2-8 renamed + commented (`ItemLoadRecord` … `ItemConsumeRoll`),
+> `ItemUsableTable` / `ItemEffectTable` + 72 named handlers (patches/), the record's fields (both trees); the item
+> sites in banks $07 / $09 / $50 / $52 / $54; ROM0 `SetupTilemapTransfer` / `SetupVRAMParams` misnomers (they show /
+> copy a text). Clean `1ca6579…` byte-perfect.
+> **Checks (r3):** verify_integrity PASS (+ `census_items.py` selftest); test_compiler `--rom` ALL 1653 PASSED (+ `test_s151`,
+> 28); test_app `--rom` PASS (60 OK, + `s151_items`; the GUI build == the pin) / test_canvas `--rom` PASS (58 OK).
+> **r2 (the user's test, 2026-10-17 22:34: "Vault: text box starts at top then jumped when vault menu appears. Should
+> always be on bottom. Make sure other services dont have this issue" / "Key: asked when inventory full. Then wouldnt
+> give because asked a second time. Your bad editing or editor issue?") — both, fixed in the editor:** (1) every
+> service's and every shopkeeper's boxes open at the BOTTOM (op `$3C` before each box a service / shop script opens —
+> `services._bottom_boxes`; was the egg appraiser / namer / librarian only): PyBoy, THE SERVICE ROW from below — the
+> r1 build FAILS 7 (stall, Vault ×2, farm, librarian's farewell, Medal Man, gate guide at the top), r2 every box
+> `$FFD3` = 2 and the next plain talk still opens at the top. (2) A Give with no room now STOPS the conversation /
+> cutscene (`on_full`: "stop" default, "continue" = S129's fall-through) — the demo set its "given" flag after the
+> Give, so a full bag set it without giving; the dialog / cutscene editor show the choice. Walk r2: **58 checks, 0
+> failed** (+ `keyfull`, `services`); `on_full: continue` FAILS the "room again" check. Test ROM
+> **`DWM-S151r2-curio-test.gbc`** (`fa9e2ebf…`, patched; + THE SERVICE ROW, ROW GUIDE in the hall at (8, 4), the gate
+> guide at (6, 5)). Example pin unchanged; the user's project builds `d495eb5f…` (patched). `EDITOR_REVISION` S151r2.
+> **r3 (the user, 2026-10-18 08:14: "You put so many NPCs in that room some of them are invisible and the whole thing
+> lags massively. Did the editor not make a warning about this kind of thing?"):** the build DID warn (rows hiding NPCs,
+> 6 of 8 drawn) — the session's demo build filtered its warnings out (`grep -v WARN`; KEY_LESSONS S151 r3). The lag had
+> no warning: measured each NPC on screen costs ≈13-14 of the 154 scan lines of a frame (the engine's own cost — the
+> Castle measures the same); with the party 3 are smooth, 4 drop frames (86-93 %), 5-8 run at HALF speed (the r2 hall /
+> service row 0.86 / 0.50 ticks a frame). NEW `formats.frame_budget` (build warning + the Rooms tab's "Speed: …"); the
+> sheet warning counts different sprites. The demo: ≤ 3 NPCs a screen, one per row (SERVICE ROWS 1-4), and its script
+> stops on a warning about its rooms. Walk r3 **62 checks, 0 failed** (+ `speed`: every demo room ≥ 0.99 ticks a frame).
+> Test ROM **`DWM-S151r3-curio-test.gbc`** (`f1f30825…`, patched). Example pin unchanged; `EDITOR_REVISION` S151r3.
+> **Open (asked the user):** the S72 spec's "single-slot like BeastTail" — every bag slot holds one item already;
+> what rule is meant? Close ROADMAP E4 (gate network) with a note? **Next:** the user's test of the CURIO HALL; then
+> the next big ticket (gate looks of your own, the title / ending E5, new-game start E3 a2).
+
 > Last verified: 2026-10-17 (Session 150 — **ROADMAP P3.6 / PHASE F T-AUTHOR BUILT: THE GAME'S OWN TEXTS EDITABLE —
 > ANY OF THEM, ANY LENGTH, ANY BANK; ONE HOOK WHERE THE GAME FINDS EVERY TEXT (ROM0 SaveBankAndSwitch'S LEVEL 1 ->
 > BANK $60 ENTRY 14 -> THE TEXT HOME BANK); THE TEXT TAB (DIALOGUE / BATTLE / ITEMS / MENUS & FIELD / CREDITS /

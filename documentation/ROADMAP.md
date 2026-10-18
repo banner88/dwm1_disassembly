@@ -3256,7 +3256,23 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       gate-network DATA MODEL is the unknown). Owning doc: CROSSBANK_ROOMS / map docs; this
       item for the network-graph schema.*
 
-- [ ] **E5 — Title screen + ending / credits sequences.**
+- [x] **E5 — Title screen + ending / credits sequences. BUILT S153; USER-CONFIRMED 2026-10-18 20:51 ("Yep works great");
+      test ROM `DWM-S153-ending-test.gbc`.** User: "If intro has "Milayou's Journey" or
+      whatever text I want added to it that would be cool. The final cutscene before credits
+      also should be editable and you can send a given cutscene to credits." Bank $5F
+      decoded + labelled in full (intro stages, the title, the credits, TO BE CONTINUED);
+      `custom.title` (lines on the title: row / column / three colours, VRAM bank 1, GBC only),
+      `custom.credits` (pages = role / names / monster, 1-64; seconds; the credits and TBC
+      songs); cutscene steps **Story point** (the original story at any of its 42 points),
+      **Roll the credits** (then any room / tile), **TO BE CONTINUED** (the save; CONTINUE
+      runs no entry scene — measured); Cutscenes → Title & ending…; help 76; walk 18 / 18
+      (`tools/walk_ending.py`), negative 13 FAIL. PROJECT_COMPILER §2.61, DATA_STRUCTURES "The
+      title screen and the ending (S153)". Not done (not asked): new title ART (the logo),
+      the intro's logos / monster run, the special NIGHT Farm of the game's own ending.
+      **Struck by the user (S153):** gate looks of your own for the random gate floors ("it's
+      not necessary what's in the game is enough for me. Ill mostly make my own custom hand
+      authored gates").
+      *Before S153:*
       The opening cutscene is script-traced, but the title screen and the ending/credits
       sequences are not covered. **S125 notes (user + PyBoy):** after the Starry Night win the
       game goes to a special NIGHT Farm (NPCs everywhere, the King and Queen; the dark starry

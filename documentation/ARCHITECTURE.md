@@ -31,11 +31,11 @@ the 4-byte mode block for overlay modes. Mode rows (init entry / tick entry):
 
 | Mode | Bank:entries | Role |
 |------|--------------|------|
-| 0 | $15:0 / $15:1 | Title / new-game / link menus |
+| 0 | $15:0 / $15:1 | Title / new-game / link menus. **S153:** sub-mode 0 = bank $5F entries 2 / 3 — the intro by stage `[$C88C]` (0 the logos, 1-3 the monster run, 4 the logo drop, 5 the run's end) and stage 6 the TITLE (`TitleInit` $45C0 / `TitleTick` $49B3); DATA_STRUCTURES "The title screen and the ending (S153)" |
 | 1 | $01:0 / $01:1 | FIELD (script VM ticks here via bank $04) |
 | 2 | $50:0 / $50:1 | BATTLE (BattleInit / per-frame driver) |
 | 3 | $02:1 / $02:2 | the ENDING's night scenes (S125, PyBoy: after the Starry Night win — flag `$00E4` + `$D940` = 2 reach it — the special night Farm: the starry sky pan + the night palettes drawn by bank $02 over the ordinary blue-sky room data; ROADMAP E5) |
-| 4 | $5F:0 / $5F:1 | the ENDING's credits + "TO BE CONTINUED" (S144, PyBoy: set by the bedroom's step-on scripts 13 / 14 (`$C88A` := 4); its `$C0D8` machine asks after a button — YES = SaveGameState, the ending's only save; the old name "map-script/cutscene engine" was a guess) |
+| 4 | $5F:0 / $5F:1 | the ENDING's credits + "TO BE CONTINUED" (S144, PyBoy: set by the bedroom's step-on scripts 13 / 14 (`$C88A` := 4); its `$C0D8` machine asks after a button — YES = SaveGameState, the ending's only save; the old name "map-script/cutscene engine" was a guess). **S153 (decoded + labelled):** sub 0 = the credits (27 pages `$C0D9`, 5 s each, then `CreditsDone` → the bedroom by the warp mailbox), sub 1 = "…TO BE CONTINUED" (song $31; CONTINUE later runs no entry script); patched builds: a scene's Roll the credits / TO BE CONTINUED steps (PROJECT_COMPILER §2.61) |
 | 5 | $5F:8 / $5F:9 | map-script/cutscene engine (2nd) |
 | 6 | $18:0 / $18:1 | bank $18 mode (link teardown target) |
 | 7 | $55:$0D / $55:$0E | overlay (START saves mode block to $C8AD) |

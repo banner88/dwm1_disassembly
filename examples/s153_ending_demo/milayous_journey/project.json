@@ -1,0 +1,2068 @@
+{
+ "meta": {
+  "name": "Milayou's Journey (S153 ending demo)",
+  "schema_version": 1,
+  "notes": [
+   "Created by the DWM1 Editor (File > New project). Everything here is",
+   "authored in the editor; the compiler turns it into the patch overlay."
+  ]
+ },
+ "world": {
+  "_status": "NOT_IMPLEMENTED_V1"
+ },
+ "gamedata": {
+  "_status": "Layer A-lite (S103): sparse overrides of the vanilla data tables \u2014 monsters, enemies, encounters, skills, exp/growth curves, breeding, boss_joins (PROJECT_COMPILER \u00a72.20). Empty = the game's own tables."
+ },
+ "custom": {
+  "wram": {
+   "region_size": 640
+  },
+  "rooms": [
+   {
+    "id": "the_last_glade",
+    "name": "THE LAST GLADE",
+    "mapID": "0x6B",
+    "source_mapID": "0x01",
+    "record": {
+     "gfx_id": "0x08",
+     "gfx_bank": "0x2A",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x50"
+    },
+    "animation": "source",
+    "render": {
+     "attr": {
+      "id": "the_last_glade_s0"
+     },
+     "palette": "pal_the_last_glade"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "the_last_glade_s0"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 4,
+        "y": 3,
+        "sprite": "0x06",
+        "facing": "down",
+        "script": "none",
+        "actor": "ENDING SAGE"
+       }
+      ],
+      "exits": []
+     }
+    },
+    "cutscenes": [
+     {
+      "id": "the_tale_ends",
+      "name": "The tale ends",
+      "screen": 0,
+      "trigger": {
+       "on": "talk",
+       "actor": "ENDING SAGE"
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "THE LAST",
+           "GLADE. This is"
+          ],
+          [
+           "where MILAYOU'S",
+           "JOURNEY ends,"
+          ],
+          [
+           "{hero}."
+          ]
+         ],
+         "speaker": "SAGE"
+        }
+       },
+       {
+        "ask": {
+         "boxes": [
+          [
+           "Shall the",
+           "tale end and the"
+          ],
+          [
+           "credits roll?"
+          ]
+         ],
+         "speaker": "SAGE"
+        },
+        "yes": [
+         {
+          "story_point": {
+           "point": 41,
+           "arena": true
+          }
+         },
+         {
+          "set": [
+           "journey_over"
+          ]
+         },
+         {
+          "say": {
+           "boxes": [
+            [
+             "Then the",
+             "whole world is at"
+            ],
+            [
+             "peace. Farewell!"
+            ]
+           ],
+           "speaker": "SAGE"
+          }
+         },
+         {
+          "credits": {
+           "dest": "room:$6C",
+           "screen": 0,
+           "x": 4,
+           "y": 4
+          }
+         }
+        ],
+        "no": [
+         {
+          "say": {
+           "boxes": [
+            [
+             "Come back",
+             "when you are"
+            ],
+            [
+             "ready."
+            ]
+           ],
+           "speaker": "SAGE"
+          }
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "music": "0x0F"
+   },
+   {
+    "id": "the_after_room",
+    "name": "THE AFTER ROOM",
+    "mapID": "0x6C",
+    "source_mapID": "0x04",
+    "record": {
+     "gfx_id": "0x01",
+     "gfx_bank": "0x29",
+     "width_px": 160,
+     "height_px": 128,
+     "collision_threshold": "0x3A"
+    },
+    "animation": "source",
+    "render": {
+     "attr": {
+      "id": "the_after_room_s0"
+     },
+     "palette": "pal_the_after_room"
+    },
+    "screens": {
+     "0": {
+      "layout": {
+       "id": "the_after_room_s0"
+      },
+      "step_counter": "auto",
+      "npcs": [
+       {
+        "kind": "npc",
+        "x": 6,
+        "y": 3,
+        "sprite": "0x05",
+        "facing": "left",
+        "script": "the_after_room_after_keeper",
+        "actor": "AFTER KEEPER"
+       }
+      ],
+      "exits": []
+     }
+    },
+    "cutscenes": [
+     {
+      "id": "to_be_continued",
+      "name": "To be continued",
+      "screen": 0,
+      "trigger": {
+       "on": "entry",
+       "once": "tbc_shown"
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "THE AFTER",
+           "ROOM: the credits"
+          ],
+          [
+           "brought you here.",
+           "Your tale pauses"
+          ],
+          [
+           "now..."
+          ]
+         ],
+         "speaker": "KEEPER"
+        }
+       },
+       {
+        "to_be_continued": {}
+       }
+      ]
+     },
+     {
+      "id": "the_post_game",
+      "name": "The post-game",
+      "screen": 0,
+      "trigger": {
+       "on": "talk",
+       "actor": "AFTER KEEPER",
+       "when_on": [
+        "tbc_shown"
+       ],
+       "once": "post_game_seen"
+      },
+      "steps": [
+       {
+        "say": {
+         "boxes": [
+          [
+           "Welcome",
+           "back! The whole"
+          ],
+          [
+           "world is open now.",
+           "Off to the KING's"
+          ],
+          [
+           "castle!"
+          ]
+         ],
+         "speaker": "KEEPER"
+        }
+       },
+       {
+        "move": {
+         "dest": "vanilla:$00",
+         "screen": 1,
+         "x": 5,
+         "y": 6
+        }
+       }
+      ]
+     }
+    ],
+    "scripts": {
+     "0": "the_after_room_entry",
+     "1": "the_after_room_after_keeper"
+    },
+    "music": "0x12"
+   }
+  ],
+  "layouts": [
+   {
+    "id": "the_last_glade_s0",
+    "tiles": [
+     [
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42,
+      46,
+      42
+     ],
+     [
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41,
+      45,
+      41
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      72,
+      65,
+      30,
+      31,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      72,
+      75,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      74,
+      64,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      72,
+      65
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      82,
+      82,
+      80,
+      80,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      12,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      12,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      28,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      28,
+      31,
+      30,
+      31
+     ],
+     [
+      14,
+      15,
+      14,
+      15,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      82,
+      14,
+      15,
+      14,
+      15
+     ],
+     [
+      30,
+      31,
+      30,
+      31,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      30,
+      31,
+      30,
+      31
+     ],
+     [
+      12,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      12,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      14,
+      15,
+      12,
+      15
+     ],
+     [
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      28,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      30,
+      31,
+      28,
+      31
+     ]
+    ],
+    "attr": [
+     [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   },
+   {
+    "id": "the_after_room_s0",
+    "tiles": [
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      41,
+      41,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      30,
+      31,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      42,
+      42,
+      42,
+      42,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      43,
+      43,
+      43,
+      43,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      42,
+      42,
+      42,
+      42,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      43,
+      43,
+      43,
+      43,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      62,
+      63,
+      28,
+      29,
+      62,
+      63,
+      62,
+      63,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      78,
+      79,
+      16,
+      17,
+      78,
+      79,
+      78,
+      79,
+      25,
+      23
+     ],
+     [
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7,
+      6,
+      7
+     ],
+     [
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23,
+      25,
+      23
+     ]
+    ],
+    "attr": [
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      3,
+      3,
+      3,
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ]
+    ]
+   }
+  ],
+  "tilesets": [],
+  "palettes": [
+   {
+    "id": "pal_the_last_glade",
+    "label": "CustomPaletteColors_pal_the_last_glade",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x6952",
+      "0x6BFF",
+      "0x1A37",
+      "0x0000"
+     ],
+     [
+      "0x590E",
+      "0x6BFF",
+      "0x03F0",
+      "0x0000"
+     ],
+     [
+      "0x1720",
+      "0x6BFF",
+      "0x408A",
+      "0x0000"
+     ],
+     [
+      "0x1720",
+      "0x6BFF",
+      "0x7216",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "copied from vanilla $01 for editing (screen 0 state 0)"
+    ]
+   },
+   {
+    "id": "pal_the_after_room",
+    "label": "CustomPaletteColors_pal_the_after_room",
+    "placement": "b",
+    "colors_rgb555": [
+     [
+      "0x231F",
+      "0x6BFF",
+      "0x03F0",
+      "0x0000"
+     ],
+     [
+      "0x1A9E",
+      "0x6BFF",
+      "0x11F4",
+      "0x0000"
+     ],
+     [
+      "0x0051",
+      "0x6BFF",
+      "0x0175",
+      "0x0000"
+     ],
+     [
+      "0x7D00",
+      "0x6BFF",
+      "0x7F42",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ],
+     [
+      "0x318C",
+      "0x6BFF",
+      "0x5AD6",
+      "0x0000"
+     ]
+    ],
+    "comment": [
+     "copied from vanilla $04 for editing (screen 0 state 0)"
+    ]
+   }
+  ],
+  "dialogue": [
+   {
+    "id": "the_after_room_after_keeper_say1",
+    "boxes": [
+     [
+      "THE AFTER",
+      "ROOM is where a"
+     ],
+     [
+      "story waits after",
+      "its credits."
+     ]
+    ],
+    "speaker": "KEEPER",
+    "comment": "the_after_room_after_keeper say1 (2 boxes)"
+   }
+  ],
+  "scripts": [
+   {
+    "id": "the_after_room_after_keeper",
+    "talk": {
+     "steps": [
+      {
+       "say": "the_after_room_after_keeper_say1"
+      }
+     ]
+    }
+   },
+   {
+    "id": "the_after_room_entry",
+    "ops": [
+     [
+      "end"
+     ]
+    ]
+   }
+  ],
+  "species": [],
+  "music": {
+   "libraries": [
+    "extracted/dwm2_song_library.json",
+    "extracted/midi_song_library.json"
+   ],
+   "songs": [],
+   "room_defaults": {}
+  },
+  "_editor": {
+   "metatiles": {}
+  },
+  "title": {
+   "lines": [
+    {
+     "text": "Milayou's Journey",
+     "row": 13,
+     "colour": "orange",
+     "align": "center"
+    },
+    {
+     "text": "S153 ENDING DEMO",
+     "row": 2,
+     "colour": "red",
+     "align": "center"
+    }
+   ]
+  },
+  "credits": {
+   "pages": [
+    {
+     "role": "{ED}EXECUTIVE DIRECTOR",
+     "names": "{ED}YUJI\n  HORII",
+     "monster": 109
+    },
+    {
+     "role": "{ED}SCENARIO\n& GAME DESIGN",
+     "names": "{ED}ENIX\n\nTOSE\n\nYUJI\n HORII",
+     "monster": 19
+    },
+    {
+     "role": "{ED}CHARACTER\n& MONSTER DESIGN",
+     "names": "{ED}AKIRA\n  TORIYAMA",
+     "monster": 89
+    },
+    {
+     "role": "{ED}MUSIC COMPOSER",
+     "names": "{ED}KOICHI\n  SUGIYAMA",
+     "monster": 73
+    },
+    {
+     "role": "{ED}TOSE STAFF",
+     "names": "{ED}",
+     "monster": 66
+    },
+    {
+     "role": "{ED}PROGRAMMERS",
+     "names": "{ED}GAO\n  MATSUMOTO\nUMEZO\n\nHI!SPEED",
+     "monster": 10
+    },
+    {
+     "role": "{ED}GRAPHIC DESIGNERS",
+     "names": "{ED}WANTENYU\n\nYUKAPI\n\nOLD{$9B}ONES\n\nTACCHAN\n\nSIN",
+     "monster": 164
+    },
+    {
+     "role": "{ED}MUSIC COMPOSER\nASSISTANTS",
+     "names": "{ED}ASD{$9B}BAT\n\nKAZUKI\n KIKUTANI",
+     "monster": 27
+    },
+    {
+     "role": "{ED}GAME DESIGN\nASSISTANTS",
+     "names": "{ED}JIN\n\nUNK\n\nHISANE",
+     "monster": 129
+    },
+    {
+     "role": "{ED}EIDOS INTERACTIVE\nSTAFF",
+     "names": "{ED}",
+     "monster": 132
+    },
+    {
+     "role": "{ED}LOCALIZATION",
+     "names": "{ED}JIM CURRY\n\nYOTA WADA",
+     "monster": 199
+    },
+    {
+     "role": "{ED}PRODUCERS",
+     "names": "{ED}FRANK HOM\n (U.S.)\nYOTA WADA\n(U.K.)",
+     "monster": 149
+    },
+    {
+     "role": "{ED}QA MANAGERS",
+     "names": "{ED}TONY BOURNE\n (U.K.)\nMIKE MCHALE\n(U.S.)",
+     "monster": 150
+    },
+    {
+     "role": "{ED}MARKETING",
+     "names": "{ED}SUSAN\n BOSHKOFF\n (U.S.)\n\nJIM CURRY\n(U.S.)\n\nDAVID\n BURTON\n(U.K.)",
+     "monster": 151
+    },
+    {
+     "role": "{ED}MANUAL\nTRANSLATION",
+     "names": "{ED}PHOSPHORS",
+     "monster": 68
+    },
+    {
+     "role": "{ED}SPECIAL THANKS",
+     "names": "{ED}EIDOS-JAPAN\n\nSATOSHI\n HONDA\nTAKA\n YAMAGUCHI\nCRYSTAL\n\nDYNAMICS",
+     "monster": 127
+    },
+    {
+     "role": "{ED}ENIX STAFF",
+     "names": "{ED}",
+     "monster": 194
+    },
+    {
+     "role": "{ED}ARTWORK",
+     "names": "{ED}NAOKI\n  OISHI",
+     "monster": 145
+    },
+    {
+     "role": "{ED}TECHNICAL SUPPORT",
+     "names": "{ED}TERUHIKO\n  HANAWA\nKENJIRO\n KANO\nHIROSHI\n SATO\nHIDEKI\n  YONEYAMA",
+     "monster": 154
+    },
+    {
+     "role": "{ED}TESTERS",
+     "names": "{ED}SEIICHI\n  MORIUCHI\nKAN\n IKEDA\nTERUYO\n SAKUMA\nYASUO\n  HIROI\nKEN-ICHI\n MIYAMOTO",
+     "monster": 44
+    },
+    {
+     "role": "{ED}TESTERS",
+     "names": "MITO\n  YAMAGISHI\nJIRO\n KIMURA\nMIWAKO\n TOKUDA\nYUKI\n  NARA\nHIROKI\n MURAKOSHI",
+     "monster": 109
+    },
+    {
+     "role": "{ED}U.S.LIAISON",
+     "names": "{ED}PAUL\n  HANDELMAN",
+     "monster": 19
+    },
+    {
+     "role": "{ED}ASSISTANT\nPRODUCER",
+     "names": "{ED}JUN\n  MIYAMOTO",
+     "monster": 89
+    },
+    {
+     "role": "{ED}PRODUCERS",
+     "names": "{ED}HITOSHI\n  SUINOU\nKEIJI\n HONDA",
+     "monster": 73
+    },
+    {
+     "role": "{ED}EXECUTIVE\nPRODUCER",
+     "names": "{ED}YUKINOBU\n  CHIDA",
+     "monster": 66
+    },
+    {
+     "role": "{ED}PRESIDENT",
+     "names": "{ED}YASUHIRO\n  FUKUSHIMA",
+     "monster": 10
+    },
+    {
+     "role": "{ED}ROMHACK",
+     "names": "{ED}MILAYOU'S\n  JOURNEY",
+     "monster": 20
+    },
+    {
+     "role": "{ED}THANK YOU FOR",
+     "names": "{ED}PLAYING!",
+     "monster": 2
+    },
+    {
+     "role": "",
+     "names": "{ED}\u00a92000 ARMOR PROJECT\n\n\u00a92000 BIRD STUDIO\n\n\u00a92000 ENIX",
+     "monster": 8
+    }
+   ],
+   "seconds": 2
+  },
+  "flags": [
+   {
+    "name": "journey_over",
+    "index": "0x0159"
+   },
+   {
+    "name": "tbc_shown",
+    "index": "0x015A"
+   },
+   {
+    "name": "post_game_seen",
+    "index": "0x015B"
+   }
+  ],
+  "new_game": {
+   "start": "room",
+   "story": "opening_done",
+   "at": {
+    "room": "the_last_glade",
+    "screen": 0,
+    "x": 4,
+    "y": 4,
+    "face": "up"
+   }
+  }
+ },
+ "progression": {
+  "quests": [],
+  "enemies": []
+ },
+ "build": {}
+}

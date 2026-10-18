@@ -45,7 +45,8 @@ KIND_COLOUR = {
     'flash': '#ffc878', 'followers': '#ffc878', 'give_item': '#ffdc96',
     'give_monster': '#ffb4dc', 'tiles': '#ffc878', 'battle': '#ff7878', 'move': '#ffaa78',
     'end': '#cccccc', 'name_hero': '#f0e6a0', 'heal': '#9fe0c0',
-    'take_item': '#ffdc96', 'gold': '#ffdc96', 'refresh': '#ffaa78'}      # S129
+    'take_item': '#ffdc96', 'gold': '#ffdc96', 'refresh': '#ffaa78',      # S129
+    'story_point': '#c8aaff', 'credits': '#ff9ad0', 'to_be_continued': '#ff9ad0'}   # S153
 ADD_GROUPS = [
     ('Actors', ['walk', 'face', 'show', 'hide', 'anim', 'fly']),
     ('Text and choices', ['say', 'ask', 'if', 'name_hero']),
@@ -54,6 +55,7 @@ ADD_GROUPS = [
     ('Sound', ['music', 'sound']),
     ('Story', ['set', 'clear', 'give_item', 'give_monster', 'take_item', 'gold', 'heal',
                'battle', 'move', 'refresh', 'end']),
+    ('The ending', ['story_point', 'credits', 'to_be_continued']),       # S153 (ROADMAP E5)
 ]
 # S119b (user: "Can you not hover or explain what is e.g. 'wait until everyone
 # stops'?"): what each step does — under the form's title, on the Add step menu and
@@ -119,6 +121,20 @@ STEP_HELP = {
                '(a door unlocked by a flag this scene turned ON opens now). The scene ends.',
     'ram': 'Writes bytes of the game\'s memory (room states of the game\'s own rooms). Made '
            'by New game… "as after the original opening" — not offered in the menus (S152).',
+    'story_point': 'The ORIGINAL game\'s story jumps to a point of its own story (e.g. after '
+                   'Starry Night): every flag and room state the game\'s own scripts would have '
+                   'left by then, at once — so the game\'s rooms (GreatTree, the Castle, the arena, '
+                   'the gates) act as at that point. Your own flags are not touched.',
+    'credits': 'Rolls the credits (Cutscenes tab → Title & ending… sets their pages, seconds and '
+               'song). When they are over the game goes on in the room and tile you pick here '
+               '— its entry scenes play (e.g. "TO BE CONTINUED"). The scene ends here.',
+    'to_be_continued': 'The game\'s "…TO BE CONTINUED": a button, then "save?" — YES saves (the '
+                       'ending\'s save), then the game waits for the player to switch it off. '
+                       'CONTINUE puts the player back where the save was made — but the room\'s '
+                       'ENTRY scenes do not play on CONTINUE (the game\'s load runs no entry '
+                       'script: measured S153). Start the post-game with a talk / step-on / '
+                       'examine scene "when <your flag>" (or a door). The scene\'s own "plays '
+                       'once" flag is ON before the save. The scene ends here.',
     'name_hero': 'Opens the game\'s naming screen (the King\'s "What is your name?" one): the player types the hero\'s name, confirms it, and the '
                  'scene goes on. It offers the current name — MILLY with the Milly hook, '
                  'else TERRY. Text after it can use the name ({hero}).',
@@ -1020,6 +1036,55 @@ class StepForm(QWidget):
         lab.setWordWrap(True)
         self.form.addRow(lab)
 
+    # ---- S153 (ROADMAP E5): the ending's steps
+    def f_story_point(self, v):
+        from editor2.core import ending as EN
+        items = [(f'{n}. {EN.point_label(n)}', n) for n in range(EN.point_count())]
+        self._combo('Point', items, int((v or {}).get('point', 31)),
+                    lambda n: self._upd('story_point', 'point', n))
+        self._check('the arena classes too', (v or {}).get('arena', True),
+                    lambda on: self._upd('story_point', 'arena', bool(on)))
+        lab = QLabel('The game\'s own flags $0000-$017F / $0248-$0257, the room states '
+                     '$D92A-$D99A, the King\'s speech and (ticked) the arena classes won become '
+                     'what the original game\'s scripts leave at that point (played from the '
+                     'original opening). Your own flags, the party, gold and items stay.')
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
+
+    def f_credits(self, v):
+        def to_room(d):
+            mv = dict(self.step['credits'] or {})
+            mv['dest'] = d
+            mv.setdefault('x', 4)
+            mv.setdefault('y', 4)
+            scr = dest_screens(self.ed.s, d)
+            if scr and int(mv.get('screen', 0)) not in scr:
+                mv['screen'] = scr[0]
+            self._emit('credits', mv)
+        rooms = [e for e in self.ed.room_items() if getattr(e, 'value', None) != 'hub']
+        self._combo('Then in room', rooms, v.get('dest'), to_room)
+        scr = dest_screens(self.ed.s, v.get('dest'))
+        cur = int(v.get('screen', 0))
+        if scr:
+            items = [(screen_label(k), k) for k in scr]
+            if cur not in scr:
+                items.append((f'screen {cur} — NOT IN THIS ROOM (the build stops)', cur))
+            self._combo('Screen', items, cur, lambda n: self._upd('credits', 'screen', n))
+        else:
+            self._spin('Screen', 0, 15, cur, lambda n: self._upd('credits', 'screen', n))
+        self._spin('x', 0, 9, v.get('x', 4), lambda n: self._upd('credits', 'x', n))
+        self._spin('y', 0, 7, v.get('y', 4), lambda n: self._upd('credits', 'y', n))
+        lab = QLabel('The credits\' pages, seconds and song: Cutscenes tab → Title & ending…')
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
+
+    def f_to_be_continued(self, v):
+        lab = QLabel('"…TO BE CONTINUED" (its words: Text tab → Credits, row 0 of "TO BE '
+                     'CONTINUED"; the question and the answers: Dialogue $0256 / $0257 / $0258). '
+                     'Its song: Title & ending… → Credits.')
+        lab.setWordWrap(True)
+        self.form.addRow(lab)
+
     def f_end(self, v):
         self.form.addRow(QLabel('The scene stops here (an entry scene then runs the room\'s own '
                                 'arrival script).'))
@@ -1146,6 +1211,11 @@ def default_step(kind, ed):
         'take_item': {'take_item': {'item': 1, 'count': 1}},      # S129
         'gold': {'gold': {'give': 100}},
         'refresh': {'refresh': True},
+        'story_point': {'story_point': {'point': 31, 'arena': True}},      # S153
+        'credits': {'credits': {'dest': next((e.value for e in ed.room_items()
+                                              if str(getattr(e, 'value', '')).startswith('room:')),
+                                             'vanilla:$00'), 'screen': 0, 'x': 4, 'y': 4}},
+        'to_be_continued': {'to_be_continued': {}},
     }[kind]
 
 

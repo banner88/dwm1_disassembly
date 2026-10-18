@@ -130,6 +130,14 @@ editor writes them for you (init_dialog before every text after a yielding step 
 talk too —, close_text before anything else, exact `$10`/`$11` walks when the actor's
 place is unknown).
 
+**The ending (S153, ROADMAP E5):** three steps end a story — *Story point* (the original
+game's flags / room states as at one of its 42 points, at once), *Roll the credits* (game mode 4
+sub 0; then the field in the room / tile the step names, whose entry scenes play) and *TO BE
+CONTINUED* (mode 4 sub 1: the save; CONTINUE comes back without the room's entry scenes — a
+post-game starts from a talk / step-on scene or a door). Both mode-4 steps end the scene. The
+title's lines and the credits pages: Cutscenes → Title & ending…. PROJECT_COMPILER §2.61,
+DATA_STRUCTURES "The title screen and the ending (S153)", help 76.
+
 ## How to Add a Custom Cutscene
 
 ### Method 1: Modify Existing Script (Safest)

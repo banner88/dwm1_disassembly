@@ -203,3 +203,9 @@
   the choreography are the game's scripts in your copies. A copy of the Arena
   Battle room made before S128 has no night states — make a new one for Starry
   Night. See *Your arena*.
+- The title and the ending (S153): up to 8 title lines, 128 different letter
+  shapes, three colours (black, orange, red); the title text shows on the Game
+  Boy Color only. Up to 64 credits pages (the last = the closing page, with the
+  copyright), role 2 rows × 20, names 12 rows × 11; 1-60 seconds a page. Up to
+  32 different story points. After *TO BE CONTINUED* and the save, CONTINUE runs
+  no entry scene (the game's own load). See *Your title screen and your ending*.

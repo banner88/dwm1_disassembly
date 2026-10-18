@@ -264,15 +264,21 @@ def run_ending(mach, rom, castle_scr0=None):
         mach.run(castle_scr0, 0, screen=1, what='  the King opens the post-game')
 
 
-def state_at(step, repo=REPO, steps=None):
-    """The saved state of a game about to do VANILLA_STEPS[step]."""
+def state_at(step, repo=REPO, steps=None, start=None):
+    """The saved state of a game about to do VANILLA_STEPS[step]. start = (flags,
+    ram) to begin from (S153: ending.point_state passes the original opening's
+    measured state — newgame.py); default: only the starter flag ($0002), as
+    Play here and the census have always used."""
     from .balance import VANILLA_STEPS
     steps = steps or VANILLA_STEPS
     rom = _rom(repo)
     gates = {g['id']: g for g in _gates(repo)}
     castle = CS.decode_vanilla(rom, CASTLE, 0)
     lobby = CS.decode_vanilla(rom, ARENA_LOBBY, 0)
-    mach = Machine(flags={0x0002})           # the starter has been given
+    if start is not None:
+        mach = Machine(flags=set(start[0]), ram=dict(start[1]))
+    else:
+        mach = Machine(flags={0x0002})           # the starter has been given
     for kind, n in steps[:step]:
         if kind == 'gate':
             run_gate(mach, rom, gates[n])

@@ -54,6 +54,7 @@ from editor2.core.story_doc import StoryMixin             # S129 (P3.14b-d)
 from editor2.core.gametext_doc import GameTextMixin       # S150 (P3.6: the game's own texts)
 from editor2.core.items_doc import ItemsMixin             # S151 (E9: items)
 from editor2.core.newgame_doc import NewGameMixin         # S152 (E3 a2: the new game's start)
+from editor2.core.ending_doc import EndingMixin           # S153 (E5: the title + the credits)
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -231,7 +232,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
-               NewGameMixin):
+               NewGameMixin, EndingMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')

@@ -79,7 +79,9 @@ ITEM_MIN, ITEM_MAX = 1, 127   # S151: the game's 1-43 + the project's items 44-1
 PROTECTED_SPECIES = range(215, 221)  # Iron Rule 8: not monsters
 
 CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3,
-             'name_given': 4}   # S152: the monster just given gets a name (+ the naming screen)
+             'name_given': 4,   # S152: the monster just given gets a name (+ the naming screen)
+             'story_point': 5,  # S153: the original game's story as at a point (bank $79 entry 5)
+             'credits_after': 6}   # S153: where the field goes after the credits (wCreditsAfter)
 
 QUEST_KEYS = ('id', 'name', 'giver', 'requires', 'not_yet', 'offer', 'accept', 'decline',
               'objective', 'progress', 'take', 'reward', 'complete', 'done', 'bag_full',
@@ -340,6 +342,26 @@ def cmd_record(kind, params, ctx, prj=None):
         # naming screen's pre-fill); ask = 1 also points the naming screen at it (the
         # script opens it next: op $04 15)
         return (code, 1 if params.get('ask') else 0)
+    if kind == 'story_point':
+        # S153: [n] — the project's story point table row (ending.point_index allocates it)
+        from . import ending as _EN
+        if prj is None:
+            return (code, 0)
+        try:
+            return (code, _EN.point_index(prj, params.get('point'), params.get('arena', True)))
+        except _EN.EndingError as ex:
+            raise StoryError(f'{ctx}: {ex}')
+    if kind == 'credits_after':
+        # S153: [map, region + 1, X lo, X hi, Y lo, Y hi] (ending.credits_after_record)
+        from . import ending as _EN
+        if prj is None:
+            return (code, 0, 0, 0, 0, 0, 0)
+        try:
+            return tuple([code] + _EN.credits_after_record(prj, params.get('dest_move'), ctx))
+        except _EN.EndingError as ex:
+            raise StoryError(f'{ctx}: {ex}')
+        except Exception as ex:                          # noqa: BLE001 (ProjectError)
+            raise StoryError(str(ex))
     a = _int(params.get('amount'), ctx + '.amount', 1, GOLD_MAX)
     return (code, a & 0xFF, (a >> 8) & 0xFF, a >> 16)
 

@@ -1566,6 +1566,20 @@ def _newgame_entries():
 REGISTRY += _newgame_entries()
 
 
+def _ending_entries():
+    # S153 (ROADMAP E5): the title screen's lines + song, the credits' pages /
+    # seconds / songs, where the field goes after them — same-size regions in bank
+    # $5F (bank $79 entries 3-5 + their data come with hooks79) —
+    # editor2/core/ending.py. No custom.title / custom.credits / ending steps ==
+    # vanilla bytes.
+    from . import ending as EN
+    return [(name, "custom.title+custom.credits", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in EN.REGIONS]
+
+
+REGISTRY += _ending_entries()
+
+
 TEXT_SPRITE_VANILLA = """\
 jr_006_6893:
     ld a, [wInGateworld]

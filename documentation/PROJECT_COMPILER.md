@@ -593,6 +593,7 @@ registering an emitter; nothing existing changes.
 | `anims6f` `anims70` + `gd_anim_routine` `gd_anim_cmd` (S112) | `custom.animations` + `gamedata.skills.<id>.presentation` (§2.28; editor2/core/battle_anims.py) | `file:patches/bank_06f.asm` / `bank_070.asm` + `region:` in bank $5F | `$6F` `$70` $5F |
 | `hooks79` (S121) + regions `milly_bedroom_script` `milly_shape_04a` `milly_shape_04b` `milly_player_sheet` `milly_naming_icon` `milly_name_tiles` | `custom.milly_hook` (§2.34; editor2/core/milly.py) | `file:patches/bank_079.asm` + `region:` in banks $0E / $04 / $01 / $09 / $4F | `$79` |
 | region `newgame_start` (S152) + bank $79 entry 2 `NewGameStart` / `NewGameData` | `custom.new_game` (§2.60; editor2/core/newgame.py) | `region:patches/bank_015.asm#newgame_start` (+ `hooks79`) | `$15` `$79` |
+| bank $5F regions `title_text` `title_song` `title_song_again` `credits_song` `continue_song` `credits_seconds` `credits_last_a` `credits_last_b` `credits_monster_ptr` `credits_monsters` `credits_after` (S153) + bank $79 entries 3-5 `TitleText` / `CreditsAfter` / `StoryPointApply` | `custom.title` + `custom.credits` + the ending's steps (§2.61; editor2/core/ending.py) | `region:patches/bank_05f.asm#…` (+ `hooks79`) | `$5F` `$79` |
 | `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
@@ -4724,6 +4725,81 @@ the Give step's party / naming choices). Help `75_opening.md`.
   refusals, the hook's whirl words, `name_given`, the first monster's Document + ops, `--rom`:
   the region bytes / entry word / NewGameData); `test_app` `s152_opening`; the target list + the
   bank $15 file; `TEMPLATE_SIZE[$77]` 2200.
+
+## §2.61 S153 — THE TITLE SCREEN AND THE ENDING: title lines, credits pages, the ending's steps (ROADMAP E5)
+
+**Built S153; USER-CONFIRMED 2026-10-18 20:51 ("Yep works great")** (user: "If intro has "Milayou's Journey" or whatever text I
+want added to it that would be cool. The final cutscene before credits also should be editable
+and you can send a given cutscene to credits. Anything connected to this is also fine.").
+Engine (eleven bank $5F regions over the game's own bytes, bank $79 entries 3-5, bank $77 story
+commands 5 / 6, WRAM `wCreditsAfter`) + compiler (`editor2/core/ending.py`, `cutscene_build`
+steps) + editor (Cutscenes → Title & ending…, three steps). Help `76_ending.md`. The game's side
+(measured, annotated): DATA_STRUCTURES "The title screen and the ending (S153)".
+
+- **Schema:**
+  `custom.title = {lines: [{text, row 0-17, align: "center" | col 0-19, colour: black | orange |
+  red}], song}` — ≤ 8 lines, ≤ 20 letters each (textenc codes, no inserts), ≤ 128 different tile
+  shapes after dedupe, no two lines on one cell; warnings for rows 6-11 (the logo) / 15-16 (the
+  copyright). `custom.credits = {pages: [{role, names, monster}], seconds, song, continue_song}` —
+  `pages` absent = the game's 27; 1-64 pages, the last = the closing page; role ≤ 2 rows × 20
+  and names ≤ 12 rows × 11 (`$F1` = the line's start + one row; refused past the grid, a
+  warning when letters fall outside the picture); monster 0-214 / the project's 221-239 (215-220
+  refused, Iron Rule 8); seconds 1-60; songs = a number or a project song name. `custom.credits`
+  together with `gamedata.text` credits_role / credits_name edits is refused (the dialog moves
+  them into the pages).
+- **Steps** (cutscenes): `{"story_point": {"point": 0-41, "arena": bool}}` → story command 5
+  `[index]` (`ending.point_index` allocates the project's `(point, arena)` table; ≤ 32);
+  `{"credits": {"dest": "room:$xx" | "vanilla:$xx", "screen", "x", "y"}}` → story command 6
+  `[map, region + 1 (0 = region 0), X lo, X hi, Y lo, Y hi]` then `write_ram $C88A 4 / write_ram
+  $C88B 0 / op $3E`; `{"to_be_continued": {}}` → `write_ram $C88A 4 / write_ram $C88B 1 / op
+  $3E`. The last two end the scene (`ended`; a later step = the "never runs" warning); the
+  move's screen must exist (`move_screen_problem`).
+- **Emit (bank $5F regions, each the game's bytes when unused — the example):** `title_text` =
+  `ld hl, $7903 / rst $10 / ret` (TitleInitDone, 5 B); `title_song` / `title_song_again` = `ld a,
+  song`; `credits_song` / `continue_song` = `ld a, song`; `credits_seconds` = `cp seconds`;
+  `credits_last_a` / `credits_last_b` = `cp pages − 1`; `credits_monster_ptr` = `ld hl,
+  CreditsProjectMonsters` (the table in `credits_monsters`, 64 B from the bank's pad); 
+  `credits_after` = `ld hl, $7904 / rst $10 / jr CreditsDoneWarpEnd` + 32 `nop` (38 B, the
+  mailbox block) when the project has a Roll the credits step.
+- **Bank $79:** entry 3 `TitleText` (GBC only: VRAM bank 1; copies `TitleTextData`'s tiles to
+  $8800 (ids $80+), then each line `dw map address / db n / n ids`: the id to bank 0 and
+  attribute $0D (VRAM bank 1, palette 5) to bank 1; `dw 0` ends); entry 4 `CreditsAfter`
+  (`wCreditsAfter`+0 set → clear it, `wWarpGateId` / `wWarpRegion` / the spawn from +1..+6; else
+  the game's bedroom values; `wWarpFlag` 0, `wIsPlayerChangingMaps` 1); entry 5
+  `StoryPointApply` (E = index < `STORY_POINT_COUNT` → `StoryPointPtrs` → rows `dw addr / db
+  keep, value`: `[addr] = ([addr] & keep) | value`, `dw 0` ends). Bank $79 is active when the
+  Milly hook, a new game or `ending.active` (title lines / story points / credits steps).
+- **Bank $77** `StoryCommand`: kind 5 `story_point` (`ld e, [hl] / ld hl, $7905 / rst $10`),
+  kind 6 `credits_after` (6 params → `wCreditsAfter`+1.., +0 := 1). TEMPLATE_SIZE 2229 (was 2200).
+- **WRAM:** `wCreditsAfter` $D566-$D56C (+0 set, +1 map, +2 region + 1, +3..+6 X / Y px), carved
+  from `wCustomPool` (now $D56D-$D5E4).
+- **A story point's rows** (`ending.point_rows`): `story_state.state_at(n, start=opening)` from
+  the original opening's measured state (newgame.py) — the room bytes $D92A-$D99A (keep 0), the
+  flag bytes $D99B-$D9CA and $D9E4-$D9E5 (keep = the editor's pool flags $0159-$0167 only:
+  `$D9C6` keep $7F, `$D9C7` keep $FF), the King's speech $D9E3, (arena) `$CAB4` — 165 rows.
+  `census_story_state.py --opening` replays every step from that start: 40 played, all equal.
+- **Texts:** the pages' role / names are S150 text slots (`gametext.resolve` + `ending.text_slots`,
+  owner "Credits"): the rows that differ from the game's, and rows past 26 (slots past the
+  tables' ends, as S151's items).
+- **Editor:** NEW `ending_doc.py` (Document: `title_settings` / `set_title` / `title_problem`,
+  `credits_settings` / `set_credits` / `credits_pages_from_text` / `credits_problems`), NEW
+  `app/ending_dialog.py` (two tabs, pixel-exact pictures — `ending.title_picture` /
+  `page_picture` + `monster_art`: equal to PyBoy over all 27 game pages and the title, RGB555);
+  the cutscene editor's group "The ending" (forms, help); the Capacity tab's three rows.
+- **CONTINUE after TO BE CONTINUED runs no entry scene** (measured S153: the load path runs no
+  entry script); a post-game starts from a talk / step-on / examine scene or a door (the step's
+  help, help 76 §6).
+- **Acceptance (PyBoy, NEW `tools/walk_ending.py`):** a NEW project made through the window
+  (Title & ending… dialog, THE LAST GLADE / THE AFTER ROOM, the ENDING SAGE's talk scene: Ask →
+  story point 41 + a flag + Roll the credits; TBC entry scene; the AFTER KEEPER's post-game
+  talk scene → the game's Castle; New game… in the glade): **18 checks, 0 failed** (the title
+  == the model, the 165 rows, 29 pages, 2 s a page = 170 frames, the new pages + the closing
+  page == the model, the arrival, TBC, the save hook, CONTINUE, no entry scene, the Castle);
+  `--negative` (bank $5F = the original's bytes, StoryPointApply = `ret`) **13 FAIL**.
+- Tests: `test_compiler.test_s153` (29: the regions keep the game's bytes in the example, bank $79
+  empty there, title layout / refusals / warnings, the game's pages, page refusals, 28 pages'
+  slots and compares, the story points, the steps' ops, `--rom`: TitleInitDone, entries 3-5,
+  the monster table); `test_app` `s153_ending`; `TEMPLATE_SIZE[$77]` 2229.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -6971,3 +6971,33 @@ ended up. **The game:** GreatTree screen 0 has NO exits in the room state its wa
 state the scene can play in; the demo's door moved to a state picked after the walk; the walk
 counts room loads (one). **Rule:** when copying a game staging pattern, copy its room states too —
 check the game room's exits per state, not just its script.
+
+## S153 — the title and the ending (ROADMAP E5)
+
+### S153 — a monster's colours in the credits are not its palette row
+**Symptom:** the Title & ending dialog's page picture differed from PyBoy on credits page 7
+(species 164) — black in the game, dark red in the picture. **Root cause:** the engine loads the
+monster's battle palette into BG palette 4 and FORCES colour 1 = `$6BFF` and colour 3 = `$0000`
+(as for battle backgrounds, KEY_LESSONS S7 / S39); species 164's row ends in `$1800`. Also the
+sprite renderer's RGB888 rounding differs from the model's RGB555 → compare in RGB555 space.
+**Fix:** `ending.page_picture` draws from the raw tiles + the 4 palette words with colours 1 / 3
+forced; 0 pixels differ over all 27 game pages. **Rule:** a preview is "pixel-exact" only after it
+was compared against the emulator on EVERY vanilla case, in the hardware's colour space.
+
+### S153 — `--apply` rewrites comment-only regions it does not own
+**Symptom:** `test_compiler --apply` left `patches/bank_004.asm`, `bank_04d.asm` and
+`bank_056.asm` changed (comments only) although S153 touched none of their regions. **Root cause:**
+those files' region emitters regenerate the region text from the current emitter, whose comments
+had moved on since the files were last applied. **Fix:** restored with `git show HEAD:` (bytes
+identical either way). **Rule:** after `--apply`, `git diff --stat patches/` — keep only the files
+this session owns; a comment drift elsewhere is a separate, deliberate change.
+
+### S153 — CONTINUE runs no entry scene
+**Symptom:** the demo's post-game was an ENTRY scene of the room the "TO BE CONTINUED" save was
+made in; after CONTINUE nothing played (`walk_ending.py`: map right, flag `tbc_shown` ON,
+`post_game_seen` OFF). **Root cause:** the room-entry script runs on a warp / door arrival and on
+scroll reloads (KEY_LESSONS "two trigger paths"); loading a save is neither. The game's own ending
+works the same way (CONTINUE: the player stands where he saved). **Fix:** the post-game starts from
+a talk / step-on / examine scene or a door — the TO BE CONTINUED step's help, help 76 §6, the
+demo (the AFTER KEEPER's talk). **Rule:** a scene meant to follow a save + reset must be started
+by the player, not by the room load.

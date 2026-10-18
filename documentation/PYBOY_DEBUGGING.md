@@ -1098,3 +1098,23 @@ edge and the battle waits for input forever.
   after the fade = his standing tile; his rows on the door screen never above the hole. A frame
   dump every frame across a fade (`pathdbg`-style: `P.adv(1)` + `screen.image.save`) shows who
   appears during the fade-in.
+
+## S153 techniques — the title, the credits and the ending walked (tools/walk_ending.py)
+
+- **The title is reached by WAITING, not START:** START at frame 280 does not skip the intro (the
+  logos, the monster run, the logo drop take ~1,200 frames more). Poll every 30 frames until
+  `$C88A` = 0, `$C88B` = 0, `$C88C` = 6 (stage 6 = the title), then compare the screen.
+- **Pixel compares in RGB555:** PyBoy's RGB888 >> 3 against the model's `round(v * 31 / 255)`;
+  the title and every credits page: 0 pixels differ.
+- **Enter the credits directly** (no ending played): `$D8D7` := 0, `$C88A` := 4, `$C88B` := 0
+  (1 = "TO BE CONTINUED"), `$C88E` += 1 (the mode latch). The page = `$C0D9`, its state
+  `$C0D8` (0 = shown); grab a page at `$C0D8` ∈ {0, 4} with `$C0DB` = 1 and `$C0DA` = 0 (one
+  second in, the fade done). A page lasts seconds × 60 + 50 frames.
+- **The ending's save:** hook `$00:$2128` (SaveGameState) while tapping A on "TO BE CONTINUED"
+  (the "save?" cursor starts on YES there); dump SRAM `m[k // $2000, $A000 + k % $2000]` for
+  32 KB → `<rom>.ram`, boot again, CONTINUE (START, then A until `$C88A` = 1 and the map is
+  not 0 / $2F).
+- **YES / NO in a scene's Ask** starts on NO: `$C83C` = 1 once the menu shows — press up, then A
+  (S114 note). A scene's Ask answered NO by an A-masher replays the talk for ever.
+- **Talk after a NEW GAME room start:** wait ~240 frames after the first idle frame (the fade
+  in); an A before that is ignored.

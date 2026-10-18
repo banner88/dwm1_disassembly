@@ -383,6 +383,8 @@ class Project:
         # named like flags; the quests become their givers' conversations
         self._allocate_checks()
         self._story_cmds = []
+        self._story_points = []     # S153 (ending.py): [(story point, arena)] in use
+        self._credits_steps = 0     # S153: "Roll the credits" steps lowered
         self.quest_enemies = self._resolve_quest_enemies()
         self._lower_quests()
         self.story_error = None

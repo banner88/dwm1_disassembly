@@ -10,6 +10,65 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-18 (Session 153 — **ROADMAP E5 BUILT: THE TITLE SCREEN AND THE ENDING — YOUR WORDS ON THE
+> TITLE ("MILAYOU'S JOURNEY"), YOUR OWN CREDITS PAGES (TEXT, MONSTER, SECONDS, SONGS), THE FINAL SCENE OF ANY CUTSCENE
+> ROLLS THE CREDITS AND SENDS THE GAME ON TO A ROOM OF YOUR CHOICE; "…TO BE CONTINUED" (THE SAVE); THE ORIGINAL GAME'S
+> STORY AT ANY OF ITS 42 POINTS IN ONE STEP; BANK $5F (INTRO / TITLE / CREDITS / CONTINUE) FULLY LABELLED** (kickoff:
+> "Given a complete romhack, IS ANYTHING MISSING? … read [the greatlog handoff] FIRST" → the tiered gap audit + four
+> questions → user: "E5 + handover sounds good. If intro has "Milayou's Journey" or whatever text I want added to it
+> that would be cool. The final cutscene before credits also should be editable and you can send a given cutscene to
+> credits. Anything connected to this is also fine. Honestly strike the custom gate tiles in random gates it's not
+> necessary what's in the game is enough for me. Ill mostly make my own custom hand authored gates."). **Built S153;
+> USER-CONFIRMED 2026-10-18 20:51 ("Yep works great").** Test ROM **`DWM-S153-ending-test.gbc`** (`000f77dc…`, patched; a NEW project,
+> `examples/s153_ending_demo/milayous_journey/`). Example pin `d88d5436…` (patched; was `7e8cb031…`, patched): bank $77
+> only (A/B diff vs a HEAD worktree build: 1,172 B of bank $77 + 2 header bytes). ROADMAP: "gate looks of your own"
+> struck by the user.
+> **Measured + annotated (PyBoy, the original ROM; NEW `tools/annotate_ending_5f.py`, both trees, byte-perfect):** bank
+> $5F = game mode 4 (entries 0 / 1: sub 0 the CREDITS, sub 1 "TO BE CONTINUED") + mode 0 sub 0 (entries 2 / 3: intro
+> stages 0-5, stage 6 = the TITLE). The credits: 27 pages ($C0D9; the last-page compare `cp $1a` twice), each = a role
+> (text mode 5, $8000, 2 × 20), names (mode 6, $8260 = tile $26, 12 × 11; `$F1` = the line's start + one row, no wrap —
+> a long line spills) and a monster (`CreditsMonsterTable` $43F4, tiles $AA-$CD, BG palette 4 — the engine forces colour
+> 1 $6BFF / colour 3 $0000); tilemaps $66B3 (20 × 18) / $681B (the closing page, `CreditsCopyrightLayout` $440F); 5 s a
+> page + 50 frames of fades (`cp $05`); song $21; `CreditsDone` $4178 → the bedroom ($2F, X $38 Y $C8) by the warp
+> mailbox. TBC: song $31, credits_end row 0, A → text $0256 "save?", YES → $C8EA := 1 + SaveGameState ($00:$2128) +
+> $0257, NO $0258, then it waits for ever; CONTINUE = the room the save was made in, **its entry scripts NOT run** (the
+> load runs none). The title (`TitleInit` $45C0): $5B20 → $9000, $5B21 → $8800, `TitleTilemap` $6583 (DrawTilemapStream
+> $D8 / $D9), palette set 1 (bank $17 + 64), every attribute palette 5 ($0012 / $6BFF / $01DE / $0000), LCDC $83, VRAM
+> bank 1 unused, rows 0-5 / 12-14 / 17 empty; song $06 (also `TitleTick` $49B3 when it ends). DATA_STRUCTURES "The
+> title screen and the ending (S153)", ARCHITECTURE modes 0 / 4.
+> **Built (engine):** eleven bank $5F regions over the game's own bytes (credits_song / continue_song / credits_seconds /
+> credits_last_a / _b / credits_after (the 38-byte mailbox block) / credits_monster_ptr / title_song / title_song_again /
+> title_text (TitleInitDone's 5 bytes) / credits_monsters (64 B of the pad)); bank $79 entries 3 `TitleText` (VRAM bank 1:
+> the lines' tiles at $8800, ids $80+, attribute $0D; GBC only), 4 `CreditsAfter` (wCreditsAfter → the warp mailbox;
+> else the game's bedroom), 5 `StoryPointApply` (rows `dw addr / db keep, value`); bank $77 `StoryCommand` kinds 5
+> story_point / 6 credits_after (TEMPLATE_SIZE 2229, re-pinned); WRAM `wCreditsAfter` $D566-$D56C (wCustomPool − 7).
+> PROJECT_COMPILER §2.61.
+> **Built (compiler + editor):** NEW `editor2/core/ending.py` (`custom.title`, `custom.credits`, the pixel-exact title /
+> page pictures, the story points from the original opening's state — `story_state.state_at(start=)`), NEW
+> `ending_doc.py`, NEW `app/ending_dialog.py` (Cutscenes → **Title & ending…**: title lines + song + picture; credits
+> pages ＋ / remove / ▲ ▼ / the game's pages, role / names / monster + picture, seconds, credits + TBC songs); cutscene
+> steps **Story point**, **Roll the credits** (room / screen / tile after), **TO BE CONTINUED** (forms, help, a step
+> after an ending step warned); credits words as S150 text slots (rows past 26 past the tables' ends); Capacity rows
+> (title letters 128, credits pages 64, story points 32). Help `76_ending.md` (NEW) + 00 / 56 / 63 / 90;
+> `EDITOR_REVISION` S153.
+> **The acceptance (machine half):** NEW `tools/walk_ending.py`: `make` drives the window (Title & ending… dialog, New
+> room ×2, scenes, New game…), the window's Build; `walk` from the title: the title == the model (0 pixels differ),
+> NEW GAME → THE LAST GLADE, the sage's YES → mode 4 with all 165 StoryPointApply rows (point 41) + journey_over, 29
+> pages, 2 s a page (170 frames), the new pages + the closing page == the model (0 pixels), THE AFTER ROOM (4, 4), TBC,
+> the save, CONTINUE in THE AFTER ROOM with no entry scene, the keeper's talk → the game's Castle screen 1 (5, 6):
+> **18 checks, 0 failed**; `--negative` (bank $5F = the original's bytes, StoryPointApply = ret) **13 FAIL**.
+> `tools/census_story_state.py --opening`: 40 steps from the opening's state, all equal.
+> **Found on the way (not this item; the user asked after the sign-off: "why it calls me Terry0000?"):** a New
+> game… room start with no naming step prints "TERRY0000" where `{hero}` prints — measured: the game's NEW GAME leaves
+> `$CA42` = `$D3 $D4 $D5 $D6 $00 $00 $00 $00` (the original ROM too): `$D3-$D6` = the four glyphs that draw TERRY, `$00`
+> = the digit 0, and NO `$F0` end — the name copy ($F6) takes all 8 bytes. The game never prints it before the King's
+> naming screen writes a real name; a room start skips that scene. Help 76 §7.3: add Name the hero; the fix (a
+> room start writes a terminated name) = an E3 a2 follow-up. Two bank $0A SaveGameState breeding sites (bank_00a.asm lines 1852 / 3646) unlabelled.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1699 PASSED (+ `test_s153`, 29); test_app `--rom` PASS
+> (62 OK, + `s153_ending`; the GUI build == the pin; its exit after PASS now clean — the build thread / window freed
+> first, it aborted with "pure virtual method called") / test_canvas `--rom` PASS. **Next:** the user's test of the ROM (and opening the demo
+> project); then the next big ticket (E3 b2 story-variable headroom; the room-start hero name).
+
 > Last verified: 2026-10-18 (Session 152 — **ROADMAP E3 a2 BUILT: THE OPENING — CUTSCENES → NEW GAME… (WHERE A NEW
 > GAME STARTS: THE GAME'S INTRO OR ONE OF YOUR ROOMS; THE ORIGINAL OPENING AS PLAYED: ITS FLAGS + ROOM BYTES, MEASURED);
 > A FARM KEEPER WHO HANDS OVER THE FIRST MONSTER (PULIO'S WAY); GIVEN MONSTERS GET A NAME (WERE "0000"); A WHOLE NEW
@@ -95,75 +154,8 @@
 > PASS; example pin unchanged. Test ROMs **`DWM-S152r3-greatlog-room-test.gbc`** (`752927bb…`, patched) /
 > **`DWM-S152r3-greatlog-intro-test.gbc`** (`5575db54…`, patched). `EDITOR_REVISION` S152r3.
 
-> Last verified: 2026-10-17 (Session 151 — **ROADMAP E9 BUILT: ITEMS — EVERY FIELD OF THE GAME'S 43 ITEMS EDITABLE
-> (THE 12-BYTE RECORD DECODED IN FULL: USED-UP %, FIELD USE, THE WHO WINDOW, LINES, POWER, SELLABLE, KEPT ON A LOST
-> BATTLE) + THEIR BATTLE POWER; NEW ITEMS 44-127 THAT WORK LIKE ONE OF THE GAME'S (ITS BASE); THE ITEMS TAB; THE
-> WARPWING PERMANENT (THE S72 SPEC'S CONSUME HALF)** (user: "Lets do items. Lest also do it in 1 session").
-> **Built S151; USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3).** Test ROM `DWM-S151-curio-test.gbc` (`631b7b71…`, patched) = the user's project +
-> a permanent WarpWing, the Herb 40-50 (battle 45-55), five new items + THE CURIO HALL / YARD (way in: the CURIO GUIDE,
-> Cities_FOUNT (3, 4)). Example pin `046319ef…` (patched; was `96d05355…`, patched): banks $03 / $07 / $09 / $50 / $52 /
-> $54 / $77 (the hooks only — A/B diff). The user's project builds `ed3374c5…` (patched; vs S150 `22d857d9…`).
-> **The decode (ROM byte scan of every `$DA62-$DA6D` load + the code):** +3 = the used-up chance % (bank $03 entry 8:
-> RNG mod 100 < +3; **0 = never** — the permanent item), +4 field use (2 / 3 = "uses it as a tool. But nothing
-> happens"), +5 the WHO window, +7 / +8 the use / result lines (bank $41 mode 13), +9 the power, +11 bit 0 not
-> sellable; +0 / +6 / +10 read by nothing. What an item DOES = code chosen by its id: bank $03 entries 3 / 4 (two
-> 44-entry `rst $00` tables — mgbdis had decoded them as code; re-sectioned in patches/ with every handler named,
-> NEW `tools/resection_items_03.py`) + id tests in banks $07 / $09 / $12 / $19 / $50 / $52 / $54. DATA_STRUCTURES
-> "Items (S151)".
-> **Built (engine):** a new item names a BASE (1-43); bank $77 entry 16 `ItemRecordCopy` (bank $03's record copy,
-> same size) copies from `ItemTable` and sets `wItemBase` ($D564: itself / the base); bank $03's two dispatches, bank
-> $07's three id tests (`ItemStoreBase07` / `ItemBase07`), bank $09's staff sell price read it; the SELL / Vault count
-> lists cover 128 ids (`$D665`, 128 B inside staging slot 20); the battle menu's probe / pick → entries 17 / 18 (the
-> base's skill = base + $AF), `wItemInUse` ($D565) names the item in banks $52 / $54. Re-pinned bank $77 head
-> (TEMPLATE_SIZE 2074). PROJECT_COMPILER §2.59.
-> **Built (compiler + editor):** NEW `editor2/core/items.py` (`gamedata.items` sparse field edits, `custom.items`
-> new items, checks, `ITEM_COUNT` / `ItemTable` / `ItemBaseTable`, the new items' words as S150 text slots past the
-> tables' ends), NEW `items_doc.py`, NEW `app/items_tab.py` (the Items tab before Shops: words with the game-font
-> picture, Works like, power / used-up / field use / WHO / price / sellable / kept, the line combos + own lines, the
-> battle half, uses; New / Copy / Delete / Original); shops / story checks / give / take / cutscenes accept the new
-> ids. Help `74_items.md` (NEW) + `56_text.md` (re-created — the S150 file was missing in the repo; `56_dialogue.md`
-> deleted) + 00 / 62 / 90; `EDITOR_REVISION` S151.
-> **The acceptance (machine half):** NEW `tools/census_items.py` (`extracted/items_census.json`): 84 new items + edits —
-> every id 0-127 (+4 past the table) through the record copy, both field dispatches, the battle probe / pick, 342 text
-> slots, the sell price, the SELL / Vault lists: **1,607 / 1,607**; `--negative` 407 / 254 FAIL. NEW
-> `tools/walk_items.py` on the user's `.sav` (`examples/s151_items_demo/`): bought 4 new items (names, prices), the
-> MegaHerb +81 with its own line and used up, HeroSeed ATK +10, the Herb +40; the DOOR WARDEN's story check before /
-> after the OldKey; the OldKey "as a tool" and kept; the SELL list (SparkRod 200 G = a tenth, no OldKey); a battle:
-> MegaHerb +45, the name sites read 44; the WarpWing out of a gate and STILL in the bag; the Feather (works like the
-> WarpWing) out of a gate; a lost battle keeps the OldKey, loses the MegaHerb — **33 checks, 0 failed**; `--negative`
-> 20 FAIL.
-> **Annotation (Iron Rule 6):** bank $03 entries 2-8 renamed + commented (`ItemLoadRecord` … `ItemConsumeRoll`),
-> `ItemUsableTable` / `ItemEffectTable` + 72 named handlers (patches/), the record's fields (both trees); the item
-> sites in banks $07 / $09 / $50 / $52 / $54; ROM0 `SetupTilemapTransfer` / `SetupVRAMParams` misnomers (they show /
-> copy a text). Clean `1ca6579…` byte-perfect.
-> **Checks (r3):** verify_integrity PASS (+ `census_items.py` selftest); test_compiler `--rom` ALL 1653 PASSED (+ `test_s151`,
-> 28); test_app `--rom` PASS (60 OK, + `s151_items`; the GUI build == the pin) / test_canvas `--rom` PASS (58 OK).
-> **r2 (the user's test, 2026-10-17 22:34: "Vault: text box starts at top then jumped when vault menu appears. Should
-> always be on bottom. Make sure other services dont have this issue" / "Key: asked when inventory full. Then wouldnt
-> give because asked a second time. Your bad editing or editor issue?") — both, fixed in the editor:** (1) every
-> service's and every shopkeeper's boxes open at the BOTTOM (op `$3C` before each box a service / shop script opens —
-> `services._bottom_boxes`; was the egg appraiser / namer / librarian only): PyBoy, THE SERVICE ROW from below — the
-> r1 build FAILS 7 (stall, Vault ×2, farm, librarian's farewell, Medal Man, gate guide at the top), r2 every box
-> `$FFD3` = 2 and the next plain talk still opens at the top. (2) A Give with no room now STOPS the conversation /
-> cutscene (`on_full`: "stop" default, "continue" = S129's fall-through) — the demo set its "given" flag after the
-> Give, so a full bag set it without giving; the dialog / cutscene editor show the choice. Walk r2: **58 checks, 0
-> failed** (+ `keyfull`, `services`); `on_full: continue` FAILS the "room again" check. Test ROM
-> **`DWM-S151r2-curio-test.gbc`** (`fa9e2ebf…`, patched; + THE SERVICE ROW, ROW GUIDE in the hall at (8, 4), the gate
-> guide at (6, 5)). Example pin unchanged; the user's project builds `d495eb5f…` (patched). `EDITOR_REVISION` S151r2.
-> **r3 (the user, 2026-10-18 08:14: "You put so many NPCs in that room some of them are invisible and the whole thing
-> lags massively. Did the editor not make a warning about this kind of thing?"):** the build DID warn (rows hiding NPCs,
-> 6 of 8 drawn) — the session's demo build filtered its warnings out (`grep -v WARN`; KEY_LESSONS S151 r3). The lag had
-> no warning: measured each NPC on screen costs ≈13-14 of the 154 scan lines of a frame (the engine's own cost — the
-> Castle measures the same); with the party 3 are smooth, 4 drop frames (86-93 %), 5-8 run at HALF speed (the r2 hall /
-> service row 0.86 / 0.50 ticks a frame). NEW `formats.frame_budget` (build warning + the Rooms tab's "Speed: …"); the
-> sheet warning counts different sprites. The demo: ≤ 3 NPCs a screen, one per row (SERVICE ROWS 1-4), and its script
-> stops on a warning about its rooms. Walk r3 **62 checks, 0 failed** (+ `speed`: every demo room ≥ 0.99 ticks a frame).
-> Test ROM **`DWM-S151r3-curio-test.gbc`** (`f1f30825…`, patched). Example pin unchanged; `EDITOR_REVISION` S151r3.
-> **Open (asked the user):** the S72 spec's "single-slot like BeastTail" — every bag slot holds one item already;
-> what rule is meant? Close ROADMAP E4 (gate network) with a note? **Next:** the user's test of the CURIO HALL; then
-> the next big ticket (gate looks of your own, the title / ending E5, new-game start E3 a2).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S153** (2026-10-18): ROADMAP E5 built (engine + compiler + editor; pin moves once) — the title screen and the ending: bank $5F annotated in full (NEW `tools/annotate_ending_5f.py`: intro stages, the title, the credits, TO BE CONTINUED); `custom.title` (lines on the title, VRAM bank 1, bank $79 entry 3 `TitleText`, GBC only) + `custom.credits` (pages role / names / monster, seconds, songs; eleven bank $5F regions; words = S150 text slots); cutscene steps Story point (bank $79 entry 5 `StoryPointApply`, 42 points from the original opening's state; StoryCommand kind 5), Roll the credits (kind 6 → `wCreditsAfter` $D566 → entry 4 `CreditsAfter`), TO BE CONTINUED (mode 4 sub 1; CONTINUE runs no entry scene — measured); NEW `ending.py`, `ending_doc.py`, `app/ending_dialog.py` (Cutscenes → Title & ending…), help 76; NEW `tools/walk_ending.py` (18 / 18, negative 13 FAIL), census `--opening` (40 equal); `examples/s153_ending_demo/`. Test ROM `DWM-S153-ending-test.gbc`. Built; USER-CONFIRMED 2026-10-18 20:51 ("Yep works great"). Owning: ROADMAP E5, PROJECT_COMPILER §2.61, DATA_STRUCTURES "The title screen and the ending (S153)", ARCHITECTURE (modes 0 / 4), EVENT_FLAGS (S153), TEXT_SYSTEM (S153), known_RAM_map ($D566), KEY_LESSONS S153, PYBOY_DEBUGGING S153, DOC_AUDIT S153, TOOLS_AND_DATA S153, CUSTOM_CUTSCENES (S153), help 76 (+ 00 / 56 / 63 / 90).
 - **S152** (2026-10-18): ROADMAP E3 a2 built (engine + compiler + editor; pin moves once) — the opening: `custom.new_game` (start in the intro or a room; the original opening as played — flags `$0000-$0008` subset + 8 room bytes, measured) → bank $15 region `newgame_start` + bank $79 entry 2 `NewGameStart` (the warp mailbox; ClearAnimationState wipes $D92A-$D9E9 at the first load, so the story state goes into the first scene); bank $77 story command 4 `name_given` (given monsters were "0000"); a farm keeper's first monster (Pulio's way); Give to the party / named; flag slugs; the hook's whirl sets `$0000` / `$D974`; `DefaultSpawnTable` re-sectioned (96 rows, NEW `tools/resection_default_spawn_01.py`); NEW `newgame.py`, `newgame_doc.py`, `app/newgame_dialog.py`, help 75; NEW `tools/walk_opening.py` (a new project made through the editor, walked from the title: room 34 / 34, intro 36 / 36, controls FAIL); `examples/s152_opening_demo/`. Test ROMs `DWM-S152-greatlog-room-test.gbc` / `-intro-test.gbc`; r2 (user: "milly disappears … See how vanilla game does it") — the game's cross-screen walk (walk to the edge, Warp to the next screen; helper = an NPC of each screen; into the hole + `$51`), a player walk off the screen refused, the hidden player shown again after a warp; walk 38 / 38 and 40 / 40, `DWM-S152r2-greatlog-room-test.gbc` / `-intro-test.gbc`; r3 ("white screen AGAIN and room appears AGAIN") — the door fired under the scene's walk: a player walk onto an exit of a state the scene plays in refused, the door in a room state after the walk (as GreatTree); walk 39 / 39 and 41 / 41, `DWM-S152r3-greatlog-room-test.gbc` / `-intro-test.gbc`. Built; USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3); r4 = help 75 expanded (the user: "I assume it was all documented extensively? Step by step?"). Owning: ROADMAP E3, PROJECT_COMPILER §2.60 (+ §1 / §5), DATA_STRUCTURES "New game start (S152)", EVENT_FLAGS (S152), MONSTER_DATA "Creation" (S152), BANK04_SCRIPT_ENGINE (naming globals / order), known_RAM_map ($C8EA, $C96D), CROSSBANK_ROOMS (DefaultSpawnTable), EDITOR_DESIGN §5.1d (S152), KEY_LESSONS S152, PYBOY_DEBUGGING S152, DOC_AUDIT S152, TOOLS_AND_DATA S152, help 75 (+ 00 / 63 / 64 / 67 / 90).
 - **S151** (2026-10-17): ROADMAP E9 built (engine + compiler + editor; pin moves once) — items: the 12-byte record decoded in full (+3 used-up %, +4 field use, +5 the WHO window, +7 / +8 lines, +9 power, +11 bit 0 not sellable / bit 2 kept), every field of the 43 items editable (`gamedata.items`) + their battle power, NEW items 44-127 (`custom.items`) that work like a base item: bank $77 entries 16-18 (`ItemRecordCopy` + `wItemBase` $D564, the battle probe / pick, `wItemInUse` $D565), same-size hooks in banks $03 / $07 / $09 / $50 / $52 / $54, the SELL / Vault lists over 128 ids; NEW `items.py`, `items_doc.py`, `app/items_tab.py` (the Items tab); bank $03's item tables re-sectioned + every handler named (NEW `tools/resection_items_03.py`); NEW `tools/census_items.py` (1,607 / 1,607, negative 407 / 254 FAIL), `tools/walk_items.py` (THE CURIO HALL, 33 checks 0 failed, negative 20 FAIL); the WarpWing permanent (the S72 spec's consume half; "single-slot" asked). Test ROM `DWM-S151-curio-test.gbc`; r2 (user: the Vault's box jumped; the KEYKEEPER with a full bag) — every service / shop box at the bottom (op `$3C`), a Give with no room stops (`on_full`), walk 58 / 58, `DWM-S151r2-curio-test.gbc`; r3 (user: "so many NPCs … invisible … lags massively") — the build had warned (filtered by the session's script), the lag measured (≈13-14 of 154 lines per NPC on screen: 5+ = half speed) → NEW `formats.frame_budget` warnings, the demo ≤ 3 NPCs a screen, walk 62 / 62, `DWM-S151r3-curio-test.gbc`. Built; USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3). Owning: ROADMAP E9, DATA_STRUCTURES "Items (S151)", PROJECT_COMPILER §2.59 (+ §1 / §5), TEXT_SYSTEM (S151 note), known_RAM_map ($D564 / $D565 / $D665 / $DA5E), EDITOR_DESIGN §5.6d, KEY_LESSONS S151, PYBOY_DEBUGGING S151, DOC_AUDIT S151, TOOLS_AND_DATA S151, help 74 (+ 56 / 00 / 62 / 90).
 - **S150** (2026-10-17): ROADMAP P3.6 / Phase F T-author built (engine + compiler + editor; pin moves once) — the game's own texts editable, any length, any bank: ROM0 `TextLevel1Hook` / `SaveBankAndSwitchCopy` at $00F0 (S105's LoadModeBaseRedirect moved into bank $60 entry 14 `TextOverride`), the text home bank's `TextOvrFind` (pinned `text_home.asm` / `text_bank.asm`), text banks $80+ after the battle banks; `gamedata.text` keyed by text id / table row, stored by POINTER SLOT; NEW `textmark.py` (lossless markup), `gametext.py`, `gametext_doc.py`, `app/text_tab.py` (the Text tab, 6 sub-tabs; the Dialogue tab gone); `dump_dialogue.py` measures slots + 13 more tables (dialogue.json regenerated); NEW `tools/census_text_override.py` (3,850 slots x show / copy, 0 FAIL, negative 2 classes), `tools/walk_text.py` (the throne room / the bag / a use line / THE SCRIBE'S HALL / a battle, 17 checks 0 failed, negative 8 FAIL), `tools/annotate_text_slots.py` (3,249 lines). Test ROM `DWM-S150-scribe-test.gbc`. Built; USER-CONFIRMED 2026-10-17 08:46 ("I confirm everything works"). Owning: ROADMAP Phase F T-author + P3.6, TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58 (+ §1 / §4 / §5), ARCHITECTURE "ROM banks $80-$FF" (S150), known_RAM_map ($D561 / $D562), EDITOR_DESIGN §5 Text tab, KEY_LESSONS S150, PYBOY_DEBUGGING S150, DOC_AUDIT S150, TOOLS_AND_DATA S150, help 56_text (+ 00 / 52 / 53 / 54 / 66 / 90).
@@ -382,8 +374,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $74 | **S147 (ARC CAP5): the SONG HEAD — pinned `templates/bank_074_head.asm` (entry 0 `SongStart`, the 95 dummy records `SongRecords` $4003 = AudioMasterTableExt row 4, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (first fit; PROJECT_COMPILER §2.55).** Before S147: Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E; S116: songs keep their own 1-6 channels — no trio padding) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $75 | **S147: the second song bank = self-ID + streams only (the records are in bank $74's directory; no master-table row).** Before: Second custom song bank (S116, P3.13b): the songs past bank $74's 16,000 stream bytes, records indexed from the split id (AudioMasterTableExt row 5 = region `rom0_audio_master`); bank byte + zeros when nothing spills | compiler-generated `patches/bank_075.asm` (`music75`, editor2/core/music.py) |
 | $76 | Encounter lists (S114): entry 0 `EncResolve` (+ `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber`) + `EncRoomTable`, `GatePlanPtrs`, the variant lists / floor runs, `ProjectEncLists` (26 B each, numbers 128-255), the vanilla rule's byte copies; far-called by the bank $01 `LoadNextDungeonFloor` fork. S115 (NG1 new gates): entry 1 `NewGateRowCopy` (far-called by bank $16 `GateRowPtr`) + `NewGateRows` (8 B per gate 32+) / `NewGateSource`; template 296 B (S115); S117 (NG2): entry 2 `GateBossWin` (far-called by bank $50's boss-win tail) + `GateClearTable`; template 358 B S122: `GateClearTable` rows 6 B (+ `WinTail`) + `RunWinTail` (a re-bossed vanilla gate's win tail; template 460 B). S140 (ARC CAP3a): `EncResolve` indexes `EncRoomTable` by the place number (`PlaceNum76`); `GateBossWin` compares the boss room's region too (bank $71 entry 12); template 530 B. S149 (ARC CAP5): list numbers 16-bit (project lists 128-4095; the first 256 here, the rest in battle banks via `ListBankTable`); template 580 B. | compiler-generated `patches/bank_076.asm` (`enc76`, editor2/core/encounters.py) |
-| $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117); S126: entries 3-6 (service lines, closes, tile save); S127 (P3.14e2): entries 7 `BreedClose` (bank $0A's type 5/6/11 close tails), 8 `BreedSlotEID` + `BreedRoll` (bank $14 `LoadEnemyStatsExt` slot rows), 9 `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FFxx` via bank $60) + `BreedPoolPtrs` (`custom.breeding_pools`); S129 (P3.14b-d): entry 11 `StoryCheck` (the virtual flags `$18xx`) + `StoryCheckPtrs`, `StoryCommand` (op `$24 $FF01+`) + `StoryCmdPtrs`, `ShopSetPick` + `ShopSetTable`; S141: entries 12-15 `NpcSheetLoad0B` / `NpcSheetLoad06` / `NpcDrawPlain` / `NpcDrawMonster` (a custom room's NPC sprite sheets 3-5 in VRAM bank 1); S151 (E9): entries 16 `ItemRecordCopy` (every item record + `wItemBase`), 17 `BattleItemProbe`, 18 `BattleItemPick` + `ITEM_COUNT` / `ItemTable` / `ItemBaseTable`; S152 (E3 a2): `StoryCommand` kind 4 `name_given`; template 2200 B | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
-| $79 | Story hooks (S121, ROADMAP P3.16 + E7): the Milly hook — entry 0 `MillyShapeTable` (bank $04 entries 2 / 3, same-size regions `milly_shape_04a/b`), entry 1 `MillyPlayerSheet` (bank $01 `LoadFieldTilesDMA`, region `milly_player_sheet`) + Milayou's palette / sheet / frame-table image (copied to WRAM `wMillyLayout`); S152 (E3 a2): entry 2 `NewGameStart` + `NewGameData` (`custom.new_game`: bank $15 region `newgame_start` far-calls it — the start room / cell via the warp mailbox, extended flags); the empty vanilla bank when the hook is off and the new game is the game's own | compiler-generated `patches/bank_079.asm` (`hooks79`, template `bank_079_head.asm`, editor2/core/milly.py) |
+| $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117); S126: entries 3-6 (service lines, closes, tile save); S127 (P3.14e2): entries 7 `BreedClose` (bank $0A's type 5/6/11 close tails), 8 `BreedSlotEID` + `BreedRoll` (bank $14 `LoadEnemyStatsExt` slot rows), 9 `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FFxx` via bank $60) + `BreedPoolPtrs` (`custom.breeding_pools`); S129 (P3.14b-d): entry 11 `StoryCheck` (the virtual flags `$18xx`) + `StoryCheckPtrs`, `StoryCommand` (op `$24 $FF01+`) + `StoryCmdPtrs`, `ShopSetPick` + `ShopSetTable`; S141: entries 12-15 `NpcSheetLoad0B` / `NpcSheetLoad06` / `NpcDrawPlain` / `NpcDrawMonster` (a custom room's NPC sprite sheets 3-5 in VRAM bank 1); S151 (E9): entries 16 `ItemRecordCopy` (every item record + `wItemBase`), 17 `BattleItemProbe`, 18 `BattleItemPick` + `ITEM_COUNT` / `ItemTable` / `ItemBaseTable`; S152 (E3 a2): `StoryCommand` kind 4 `name_given`; S153 (E5): kinds 5 `story_point` (→ bank $79 entry 5) / 6 `credits_after` (→ `wCreditsAfter`); template 2229 B (was 2200 B) | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
+| $79 | Story hooks (S121, ROADMAP P3.16 + E7): the Milly hook — entry 0 `MillyShapeTable` (bank $04 entries 2 / 3, same-size regions `milly_shape_04a/b`), entry 1 `MillyPlayerSheet` (bank $01 `LoadFieldTilesDMA`, region `milly_player_sheet`) + Milayou's palette / sheet / frame-table image (copied to WRAM `wMillyLayout`); S152 (E3 a2): entry 2 `NewGameStart` + `NewGameData` (`custom.new_game`: bank $15 region `newgame_start` far-calls it — the start room / cell via the warp mailbox, extended flags); S153 (E5): entries 3 `TitleText` (bank $5F region `title_text`; `TitleTextData`), 4 `CreditsAfter` (region `credits_after`; `wCreditsAfter`), 5 `StoryPointApply` (`STORY_POINT_COUNT` / `StoryPointPtrs` / `StoryPoint_n` rows) + bank $5F's eleven regions (`custom.title` / `custom.credits`, editor2/core/ending.py); the empty vanilla bank when the hook is off, the new game is the game's own and there is no title / ending step | compiler-generated `patches/bank_079.asm` (`hooks79`, template `bank_079_head.asm`, editor2/core/milly.py) |
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **none** (S121: $79 = story hooks; S117: $77 = shops; S116: $75 = the second song bank; S114: $76 taken; S107: $7A / $7C are art banks) + reserved $7F. | — |

@@ -203,6 +203,10 @@
    C8F2     2    The name buffer the naming screen edits ($CA42 = the HERO's name,
                  printed by text code $F6 [HERO]) [S118f]
    CA42     8    The hero's name ($F0-terminated; new game: placeholder $D3-$D6) [S118f]
+                 S153 (measured, the original ROM too): NEW GAME leaves $D3 $D4 $D5 $D6
+                 $00 $00 $00 $00 — the four TERRY glyphs, four digit-0 glyphs and NO $F0;
+                 printed before the King's naming screen ($F6 copies 8 bytes) = "TERRY0000"
+                 (a project's room start that skips the naming)
    C8F4     1    Naming screen: species + $10 of the monster being named
                  (0 = placeholder name); set by the recruit (bank $51) and
                  script (bank $04) paths; read by bank $09 LoadFld9_688e [S104]
@@ -407,7 +411,12 @@
                  project item 44-127; banks $03 / $07 / $09 dispatch on it /
                  [S151] wItemInUse $D565 — the item the hero picked in battle (bank $77 entry
                  18); banks $52 / $54 name the item from it (DATA_STRUCTURES "Items (S151)") /
-                 wCustomPool $D566-$D5E4 (transient reserve; $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S153] wCreditsAfter $D566-$D56C — where the field goes on after a project's
+                 "Roll the credits" (bank $77 story command 6 writes it, bank $79 entry 4
+                 CreditsAfter reads + clears it at CreditsDone): +0 set, +1 map, +2 region + 1
+                 (0 = region 0), +3/+4 X px, +5/+6 Y px; 0 = the game's bedroom (PROJECT_COMPILER
+                 §2.61) /
+                 wCustomPool $D56D-$D5E4 (transient reserve; $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

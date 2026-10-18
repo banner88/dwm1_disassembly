@@ -1013,3 +1013,15 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | services_doc (S126): a first-visit flag "created when new" | ❌ BUG — fixed S152 | the typed name was stored as the flag ("Pulio met") while the flag list holds slugs; the build refused it | `test_s152` |
 | MONSTER_DATA "Creation": the nickname cases | ⚠ INCOMPLETE — added S152 | every other row's monster has NO nickname (+$01 zero, "0000") | the S152 demo's first build |
 | cutscene_build (S119): `CELL_MIN = -3` "walking off the screen is allowed" (any actor) | ⚠ WRONG for the player — fixed S152 r2 | an NPC may walk off; the player's walk past the edge starts the scroll mid-walk and leaves him off the new screen; refused, help 63 / 75 say to warp | `walk_opening.py` (r1 build: 3 FAIL) |
+
+## S153 addendum (2026-10-18; the title screen and the ending — ROADMAP E5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| disassembly bank $5F labels `DispatchEntry_5F_0`, `LoadFldUI_*`, `WriteFldUI_40eb`, `SaveFldUI_424a`, `LoadFldUI_4263` (auto-names: "field UI") | ❌ WRONG — renamed S153 (old names kept as aliases) | bank $5F = the ending (credits, TO BE CONTINUED) + the intro and the title: `EndingModeInit` … `TitleTick` (46 labels, both trees) | `tools/annotate_ending_5f.py`; clean `1ca6579…` byte-perfect |
+| ARCHITECTURE mode 4 row (S144): "its `$C0D8` machine asks after a button" | ⚠ INCOMPLETE — completed S153 | sub 0 the credits (27 pages, 5 s, then the bedroom by the warp mailbox), sub 1 TO BE CONTINUED (song $31; the save) | PyBoy on the original ROM |
+| ROADMAP E5 (S125): "likely special-cased rendering paths that must be located" | ✏️ answered S153 | the title is a plain BG tilemap + one palette, the credits are two text grids + one monster pose; nothing special-cased beyond bank $5F | DATA_STRUCTURES S153 |
+| cutscene editor TO BE CONTINUED help (S153 first draft): "CONTINUE comes back to this room: a scene "when <your flag>" can start the post-game" | ❌ WRONG — fixed S153 before delivery | CONTINUE runs no entry scene; a talk / step-on / examine scene or a door starts it | `walk_ending.py` (the first walk) |
+| `ending.py` docstring (S153 first draft): "CONTINUE comes back to the room the scene ran in" | ⚠ INCOMPLETE — fixed S153 | … and runs none of its entry scenes | same |
+| PYBOY_DEBUGGING (S152 recipe): START at frame 280 then A = NEW GAME | ⚠ INCOMPLETE — noted S153 | START does not skip the intro; the title arrives ~1,200 frames later (stage `$C88C` = 6) — A-tapping still reaches NEW GAME, a title screenshot needs the wait | `walk_ending.py` |
+

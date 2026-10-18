@@ -439,6 +439,53 @@ a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 - Gold, items and the party start empty; the first monster is Slib, waiting in the FARM
   (op `$29` = storage only) until Pulio's menu PICK UP.
 
+### The title screen and the ending (S153 — PyBoy-measured on the original ROM; bank $5F annotated in both trees, `tools/annotate_ending_5f.py`; patched builds: ROADMAP E5, PROJECT_COMPILER §2.61)
+
+- **Bank $5F = two game modes.** Mode 4 (the ending; entries 0 / 1 `EndingModeInit` $4017 /
+  `EndingModeTick` $40F7): sub-mode 0 = the CREDITS (`CreditsInit` $4039 / `CreditsTick` $4104),
+  sub 1 = "…TO BE CONTINUED" (`ContinueInit` $4095 / `ContinueTick` $4112). Mode 0 sub 0
+  (entries 2 / 3 `IntroStageInit` $441C / `IntroStageTick` $4619): one init + tick per stage
+  `[$C88C]` — 0 the three logo screens, 1-3 the monster run, 4 the logo drop, 5 the run's end,
+  6 the TITLE (`TitleInit` $45C0 / `TitleTick` $49B3). A stage ends with `[$C88C]` += 1 and the
+  mode latch $C88E += 1 (its init runs next). Entering the credits directly: `$C88A` := 4,
+  `$C88B` := 0, `$C88E` += 1 (PYBOY_DEBUGGING S153).
+- **The title** (stage 6): `TitleInit` loads gfx $5B20 → $9000 (ids $00-$7F) and $5B21 → $8800
+  (ids $80-$FF), draws `TitleTilemap` $5F:$6583 (DrawTilemapStream format: tile ids, $D8 =
+  the next row, $D9 = the end), palette set 1 (bank $17 `PaletteColorData` $69BD + 64), every
+  attribute = palette 5 (`$0012` dark red / `$6BFF` cream / `$01DE` orange / `$0000` black),
+  LCDC $83, the song $06 (TitleTick asks for it again when the channels are done). Rows 6-11 =
+  the logo, 15-16 = the copyright; rows 0-5, 12-14 and 17 are EMPTY; VRAM bank 1's tiles are
+  unused; nothing changes while it waits. `TitleInitDone` $4614 = `ld a, $00 / ldh [rVBK], a /
+  ret` (5 B — the patched builds' hook). The cartridge is dual-mode; the project's title text
+  needs VRAM bank 1 = GBC only.
+- **The credits:** 27 pages (`$C0D9` = the page, `$C0D8` = its state: 0 `CreditsWaitPage` the
+  page shows, 1 `CreditsNextPage`, 2 `CreditsPageFadeIn`, 3 `CreditsLoop`, 4 `CreditsDone`;
+  `$C0DA` frames, `$C0DB` seconds). The last page's number `cp $1a` appears TWICE (NextPage:
+  draw `CreditsCopyrightLayout` $440F first; Loop: → CreditsDone). A page = a ROLE (text mode 5
+  = credits_role, `CreditsDrawRole` $431F, at $8000 = tiles $00-$27, 2 rows × 20) + NAMES (mode
+  6 = credits_name, `CreditsDrawNames` $435E, at $8260 = tile $26 on, 12 rows × 11) + a MONSTER
+  (`CreditsDrawMonster` $43BA, `CreditsMonsterTable` $43F4 = 27 species bytes; its 6 × 6 battle
+  pose at $8AA0 = tiles $AA-$CD, BG palette 4 — the engine forces colour 1 = $6BFF and colour
+  3 = $0000 whatever the monster's palette says: species 164's $1800 shows black). Tilemaps
+  $66B3 (20 × 18, every page) / $681B (20 × 11 over rows 0-10, the closing page: the names
+  grid two rows to a line = the copyright lines). Texts: `$F1` = the start of the line + one
+  row, no wrap — a line longer than its row spills into the next row (the game's page 19:
+  "YONEYAMA"'s last letter falls under the monster, it shows "YONEYAM"). The tables: bank $4C
+  `$4263` roles / `$4299` names / `$42CF` the TBC row. A page shows `cp $05` seconds × 60
+  frames + 50 frames of fades (measured: 350 a page; 170 at 2 s). The song $21.
+  **`CreditsDone`** $4178: 5 s more, then the WARP MAILBOX (`CreditsDoneWarp` $418A-$41B0, 38
+  B): the intro bedroom $2F, X $38 / Y $C8 px (cell (3, 12)), `wIsPlayerChangingMaps` 1, HRAM
+  $90 / the script / the text box off, game mode 1.
+- **"…TO BE CONTINUED"** (sub 1): song $31; `ContinueShowText` $41DA (credits_end row 0, bank
+  $4C mode 7, in the box `ContinueBoxTilemap` $42CF), `ContinueReady`, `ContinueWaitButton`
+  $41F6 (any button → text $0256 "save?"), `ContinueSave` $4210 (YES: `$C8EA` := 1,
+  `SaveGameState` $00:$2128, text $0257 "Saved! Please turn off the power."; NO: $0258), then
+  `ContinueRest` $4244 for ever. **CONTINUE** loads the save in the room it was made in and
+  runs NO entry script there (measured S153 on a project build: the after room's entry scenes
+  did not play).
+- **The game's own way in** (the bedroom script after Starry Night's night farm): jingle $47,
+  op $65, `$C88A` := 4, `$C88B` := 0, op $3E. The patched builds' steps do the same.
+
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 
 The full chain from "player takes a step" to "wild battle starts". Every

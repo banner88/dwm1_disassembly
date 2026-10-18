@@ -105,7 +105,8 @@ STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'walk', 'face', 'show', 'hide'
               'followers', 'give_item', 'give_monster', 'tiles', 'battle', 'move', 'end',
               'name_hero', 'heal',
               'take_item', 'gold', 'refresh',     # S129 (ROADMAP P3.14b): story commands
-              'ram')         # S152: generated only (newgame.py) — game bytes, never in the editor's menus
+              'ram',         # S152: generated only (newgame.py) — game bytes, never in the editor's menus
+              'story_point', 'credits', 'to_be_continued')   # S153 (ROADMAP E5): ending.py
 STEP_NAMES = {
     'say': 'Say', 'ask': 'Ask YES / NO', 'if': 'If flags…', 'set': 'Turn flags ON',
     'clear': 'Turn flags OFF', 'walk': 'Walk to a tile', 'face': 'Turn to face',
@@ -117,7 +118,9 @@ STEP_NAMES = {
     'tiles': 'Change tiles of the room', 'battle': 'Battle', 'move': 'Warp the player',
     'end': 'Stop here', 'name_hero': 'Name the hero', 'heal': 'Heal the party',
     'take_item': 'Take an item', 'gold': 'Give / take gold', 'refresh': 'Refresh the room',
-    'ram': 'Set game bytes (generated: the original opening)'}
+    'ram': 'Set game bytes (generated: the original opening)',
+    'story_point': "The original game's story → a story point",
+    'credits': 'Roll the credits', 'to_be_continued': 'TO BE CONTINUED (the ending\'s save)'}
 TRIGGERS = ('entry', 'talk', 'examine', 'stepon')
 # S125 (ROADMAP P3.14d): why the player was sent to the hub — an entry scene with
 # trigger.arrival [reasons] plays only for those (wHubReason, patches/wram.asm;
@@ -340,6 +343,15 @@ class Env:
         k, x, y = int(mv.get('screen', 0)), int(mv.get('x', 0)), int(mv.get('y', 0))
         px, py = ((k % 4) * 10 + x) * 16 + 8, ((k // 4) * 8 + y) * 16 + 8
         return f'0x{mid:04X}', f'0x{px:04X}', f'0x{py:04X}'
+
+    def credits_after(self, dest, ctx):
+        """S153: story command 6 credits_after for a "Roll the credits" step."""
+        if self.prj is not None:
+            self.prj._credits_steps = getattr(self.prj, '_credits_steps', 0) + 1
+            return self.prj.story_command('credits_after', {'dest_move': dest}, ctx)
+        if not isinstance(dest, dict) or ':' not in str(dest.get('dest', '')):
+            raise CutsceneError(f'{ctx}: pick the room the game goes on in after the credits')
+        return 0xFF01
 
     def hub_ops(self, reason, ctx):
         """S125: the warp home (the hub ladder; the editor's preview: the Castle)."""
@@ -1267,6 +1279,60 @@ class Lowerer:
         rec['note'].append('the room loads again (state rules re-picked)')
         self.ended = True
 
+    # ---- S153 (ROADMAP E5; ending.py): the ending's steps
+    CREDITS_FRAMES = 27 * 330 + 300      # the preview's time for the game's credits
+    CONTINUE_FRAMES = 240
+
+    def s_story_point(self, st, ctx, rec, pth):
+        """The original game's saved story as at a story point (story command 5,
+        bank $79 entry 5 StoryPointApply): its flags, room states, the King's speech
+        and (arena) the classes won — at once."""
+        v = st['story_point'] or {}
+        from . import ending as _EN
+        n = v.get('point') if isinstance(v, dict) else v
+        arena = v.get('arena', True) if isinstance(v, dict) else True
+        try:
+            label = _EN.point_label(int(n))
+        except (TypeError, ValueError):
+            self.err(ctx, 'pick the story point')
+            return
+        self._story_op('story_point', {'point': n, 'arena': arena}, ctx, rec,
+                       f"the original game's story {label}"
+                       + ('' if arena else ' (the arena classes kept)'))
+
+    def _mode4(self, sub):
+        self.op('write_ram', f'0x{0xC88A:04X}', 4)
+        self.op('write_ram', f'0x{0xC88B:04X}', sub)
+        self.op('0x3E')
+        self.ended = True
+
+    def s_credits(self, st, ctx, rec, pth):
+        """Roll the credits (game mode 4 sub 0), then the field in the place the step
+        names (story command 6 → wCreditsAfter → bank $79 entry 4 CreditsAfter)."""
+        v = st['credits'] or {}
+        self.close()
+        if self.busy:
+            self.wait_all()
+        try:
+            w = self.env.credits_after(v, ctx)
+        except Exception as ex:                       # noqa: BLE001
+            self.err(ctx, str(ex))
+            return
+        self.op('0x24', f'0x{w:04X}')
+        self._mode4(0)
+        self.T += self.CREDITS_FRAMES
+        rec['note'].append('the credits, then the field in the room this step names')
+
+    def s_to_be_continued(self, st, ctx, rec, pth):
+        """The game's "…TO BE CONTINUED" (game mode 4 sub 1): a button → "save?" —
+        YES = the save; then the game waits for a reset (CONTINUE: this room)."""
+        self.close()
+        if self.busy:
+            self.wait_all()
+        self._mode4(1)
+        self.T += self.CONTINUE_FRAMES
+        rec['note'].append('"TO BE CONTINUED", the save, a reset (CONTINUE comes back here)')
+
     def s_tiles(self, st, ctx, rec, pth):
         t = st['tiles'] or {}
         c = self.cell([t.get('x'), t.get('y')], ctx)
@@ -1928,6 +1994,21 @@ def describe(st, names=None, place=None):
         return 'Stop here'
     if k == 'name_hero':
         return 'Name the hero (the naming screen)'
+    if k == 'story_point':
+        from . import ending as _EN
+        n = v.get('point') if isinstance(v, dict) else v
+        try:
+            lab = _EN.point_label(int(n))
+        except (TypeError, ValueError):
+            lab = '(no point picked)'
+        return ("The original game's story " + lab
+                + ('' if not isinstance(v, dict) or v.get('arena', True) else ' — arena classes kept'))
+    if k == 'credits':
+        d = (v or {}).get('dest') if isinstance(v, dict) else None
+        return (f'Roll the credits, then {place(d)} screen {v.get("screen", 0)} '
+                f'({v.get("x")}, {v.get("y")})' if d else 'Roll the credits')
+    if k == 'to_be_continued':
+        return '…TO BE CONTINUED — the ending\'s save (then a reset)'
     if k == 'ram':
         return 'The game\'s rooms as after the original opening (' + ', '.join(
             f'{a} := {b}' for a, b in (v or [])) + ')'

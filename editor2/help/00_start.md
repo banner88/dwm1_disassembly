@@ -18,7 +18,9 @@ built from it (the original ROM is never changed).
   itself, in tiles, with named NPCs and cast members, previewed instantly or
   played in the game; **New game…** (S152) says where a new game starts (the
   intro, or one of your rooms) and whether the original opening counts as played
-  — see *Your own opening*.
+  — see *Your own opening*. **Title & ending…** (S153) puts your words on the title
+  screen and sets the credits pages; the scene steps *Story point*, *Roll the credits* and
+  *TO BE CONTINUED* end your story — see *Your title screen and your ending*.
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms

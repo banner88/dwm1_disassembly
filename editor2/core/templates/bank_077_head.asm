@@ -1036,6 +1036,11 @@ ScriptCommand:
 ;     2 take_gold [lo, mid, hi]  ROM0 AddGold (subtracts; floor 0)
 ;     3 give_item [item, count]  room for all of them ($00 / $FF slots) ->
 ;        put them in, $D8E1 := 1; else nothing, $D8E1 := 0
+;     5 story_point [n]   (S153) the original game's saved story as at story point
+;        n — bank $79 entry 5 StoryPointApply (editor2/core/ending.py)
+;     6 credits_after [map, region + 1, X lo, X hi, Y lo, Y hi]  (S153) where the
+;        field goes after the credits the script rolls next (wCreditsAfter; bank
+;        $79 entry 4 CreditsAfter reads it when the credits are over)
 ;     4 name_given [ask]  (S152) the monster op $29 / $18 has just made (slot
 ;        [$DA14]): no nickname yet (+$01 = 0: every enemy row but the game's few
 ;        named ones — the constructor zero-fills it, "0000" on screen, measured
@@ -1456,9 +1461,35 @@ StoryCommand:
     dec a
     jp z, .takeGold
     dec a
-    jr z, .giveItem
+    jp z, .giveItem
+    dec a
+    jr z, .nameGiven
+    dec a
+    jr z, .storyPoint
     dec a
     ret nz
+    ; 6 credits_after [map, region + 1, X lo, X hi, Y lo, Y hi] (S153): where the field
+    ; goes when the credits the script starts next are over -> wCreditsAfter (+0 := 1)
+    ld de, wCreditsAfter
+    ld a, $01
+    ld [de], a
+    inc de
+    ld b, 6
+.creditsAfter:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .creditsAfter
+    ret
+.storyPoint:
+    ; 5 story_point [n] (S153): the original game's story as at story point n (bank
+    ; $79 entry 5 StoryPointApply, E = n)
+    ld e, [hl]
+    ld hl, $7905
+    rst $10
+    ret
+.nameGiven:
     ; 4 name_given [ask] (S152)
     ld a, [hl]
     push af                             ; ask

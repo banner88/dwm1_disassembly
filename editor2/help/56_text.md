@@ -9,7 +9,8 @@ can be **rewritten, any length**. One sub-tab per kind:
 - **Items** — item names, descriptions and the 48 item use lines (the Items
   tab edits the same names and descriptions, plus everything else of an item);
 - **Menus & field** — menu words, field messages, spell messages;
-- **Credits**;
+- **Credits** (once your project has its own credits pages — Cutscenes →
+  Title & ending… — their words are edited there; "TO BE CONTINUED" stays here);
 - **Other tabs** — the monster and skill descriptions (read only here: the
   Monsters and Skills tabs own them).
 
