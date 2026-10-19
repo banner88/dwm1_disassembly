@@ -1118,3 +1118,39 @@ edge and the battle waits for input forever.
   (S114 note). A scene's Ask answered NO by an A-masher replays the talk for ever.
 - **Talk after a NEW GAME room start:** wait ~240 frames after the first idle frame (the fade
   in); an A before that is ignored.
+
+## S154 techniques — the memorial walked on the user's save (tools/walk_memorial.py)
+
+- **A statue's picture = its 4 tiles in VRAM bank 0** (`$9000 + 16·id` for ids $00-$7F): read
+  each at an idle frame after the room's fade-in (`adv` 20-30 frames); the empty statue =
+  the sheet's bytes (kept per room as the "placeholder" on the first visit); a monster =
+  the placeholder with the species' 64-byte picture laid over (colour 0 transparent) — the
+  walk compares the ROM's `MemPics` + the Python model `memorial.pictures`, byte for byte.
+- **A service breeding without the INFO page:** face the BREEDER, `$C83C` (CHOICE) := 0, A;
+  then alternate "wait until the text is calm" and A through the words (an A while a box is
+  still printing opens INFO / skips the question), A = YES, A on the WHO list's first
+  monster, wait ~20 frames for "Are you okay…", down + A = OK; then a generic drive loop
+  (A / wait) until the ceremony room ($08) was seen AND the hall is back with the field calm
+  (the naming screen takes the default name).
+- **The field menu = A facing nothing** (START in the hall did not open it in this walk);
+  `$C8EB` bit 1 set while it is open; the menu loads its own tiles over the room sheet, so a
+  redraw check is "different while open, equal to before after B × 6".
+- **A stub-called battle census:** write `di / ld hl, $7907 / rst $10 / ld a, $A5 / ld
+  [$DEDC], a / jr @` at `$DEC0` (the `$DEBE-$DEDD` reserve, zeroed at boot only), set the
+  battle-kind bytes (`$DB55`, `$DA09`, `$DA03-$DA04`, `$D999`, `$D9CE`, `$D9CD`, map `$5D`
+  for the arena) and the entry's `wMemPartyN`, point PC at the stub, run ≤ 200 frames until
+  the marker: one case a fresh save state. Classifies 14 battle kinds without fighting
+  them — but NOT the hook itself (the `--negative` ROM still passes it: the stub calls the
+  engine directly). The real hook is covered by the CHAMPION battles.
+- **Save / reset in one session:** the JOURNAL save (the S134 recipe), then `p.stop(save=True)`
+  writes `<rom>.ram`; a new PyBoy on the same ROM + CONTINUE = the reset. A win after the
+  save then a new boot WITHOUT `save=True` of the later state = "a reset without saving".
+- **(r2) "Transparent" is checked on the SCREEN, not in VRAM:** crop the 16 × 16 of a room
+  cell from `p.screen.ndarray` at (cx · 16 − SCX, cy · 16 − SCY) (`$FF43` / `$FF42`; the room is
+  drawn from BG map (0, 0)) and compare the pixels the monster leaves empty with the same
+  pixels of an untouched floor cell — RGB equality covers both the tile bytes and the
+  palette slot. The BG map cell = `$9800 + (cy·2 + dr) · 32 + cx·2 + dc` (mod 32).
+- **(r2) Putting any species on a statue without fighting with it:** from a state with live
+  entries, write the species byte of a list entry (`p.memory[3, $A110 + 8 · ring + 1]`): no
+  record carries (that tag, that species), so it counts as gone; leave and re-enter the
+  room (a re-roll), then `shown()` matches VRAM against every species' picture.

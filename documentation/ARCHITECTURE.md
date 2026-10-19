@@ -509,6 +509,14 @@ checksum (bank 0 only), like banks 1-2. Free in bank 3: `$A002-$A00F`, `$A110-$B
 **S140 (ARC CAP3a, USER-CONFIRMED 2026-10-10):** magic "X2" (`$58,$32`) = "X1" + `$A002` =
 `wMapRegion` (the region the save stands in; "Regions (S140)" above); `ExtFlagsRestore` accepts
 both ("X1" → region 0). Free in bank 3 now: `$A003-$A00F`, `$A110-$BFFF`.
+**S154 (the memorial, built S154, NOT yet user-tested):** `$A003-$A004` = magic "M1" (`$4D,$31`),
+`$A005` = `wMemCount`, `$A006` = `wMemHead` — bank $73 `MemorialCommit` (after `ExtFlagsCommit`,
+the explicit save; always built, a project without statues saves 0 / 0) / `MemorialRestore`
+(after `ExtFlagsRestore`; no magic = a pre-S154 save = an empty memorial). `$A110` + 8 × ring
+index = the memorial's entries (`MEM_RING` = `MEM_CAP` + 9 ≤ 129 → up to `$A517`), written by
+bank $79 at a win, NOT at the save (DATA_STRUCTURES "The memorial (S154)"). Free in bank 3 now:
+`$A007-$A00F`, `$A110 + 8 × MEM_RING`-`$BFFF` (`$A518-$BFFF` at the largest memorial; all of
+`$A110-$BFFF` in a project without statues).
 
 **What remains open in E3** (see ROADMAP): (a2) new-game INIT data as an
 authorable object; (b2) story-variable headroom schema on top of the new

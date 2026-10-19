@@ -121,10 +121,12 @@ jr_00b_4037:
     push hl
     ld hl, $9000
     call WaitDMATransfer
+; @BUILD_PROJECT BEGIN memorial_tiles_0
     ld a, [wMapID]
     ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
                                     ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
     jr nz, jr_00b_4076
+; @BUILD_PROJECT END memorial_tiles_0
 
     ld de, $291d
     ld hl, $8800
@@ -189,10 +191,12 @@ jr_00b_4094:
     push hl
     ld hl, $9000
     call WaitDMATransfer
+; @BUILD_PROJECT BEGIN memorial_tiles_1
     ld a, [wMapID]
     ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
                                     ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
     jr nz, jr_00b_40c0
+; @BUILD_PROJECT END memorial_tiles_1
 
     ld de, $291d
     ld hl, $8800

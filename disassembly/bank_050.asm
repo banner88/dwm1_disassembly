@@ -5541,6 +5541,9 @@ BattlePhaseFreezeWait:
 ; count $CA8D: zero -> tilemap $0C00 + advance (wipe path); else announce
 ; setup LoadBtl_6974 + $DA33=5 frame delay.
 BattlePhase00_PartyAliveCheck:
+    ; [S154] patched builds: region memorial_battle_start — with memorial statues this
+    ; far call is bank $79 entry 6 MemBattleStart (the party count at the battle's start,
+    ; then this same $1702 call)
     ld hl, $1702
     rst $10
     ld hl, $1708
@@ -6418,6 +6421,9 @@ BattleExitHandler:
     or a
     ret nz
 
+    ; [S154] patched builds: region memorial_battle_end — with memorial statues this is
+    ; bank $79 entry 7 MemBattleEnd (this $0106 call, then a won boss / arena class /
+    ; Starry Night remembers the party: PROJECT_COMPILER §2.62)
     ld hl, $0106
     rst $10
     ld hl, $c8ea

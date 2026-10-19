@@ -594,6 +594,7 @@ registering an emitter; nothing existing changes.
 | `hooks79` (S121) + regions `milly_bedroom_script` `milly_shape_04a` `milly_shape_04b` `milly_player_sheet` `milly_naming_icon` `milly_name_tiles` | `custom.milly_hook` (§2.34; editor2/core/milly.py) | `file:patches/bank_079.asm` + `region:` in banks $0E / $04 / $01 / $09 / $4F | `$79` |
 | region `newgame_start` (S152) + bank $79 entry 2 `NewGameStart` / `NewGameData` | `custom.new_game` (§2.60; editor2/core/newgame.py) | `region:patches/bank_015.asm#newgame_start` (+ `hooks79`) | `$15` `$79` |
 | bank $5F regions `title_text` `title_song` `title_song_again` `credits_song` `continue_song` `credits_seconds` `credits_last_a` `credits_last_b` `credits_monster_ptr` `credits_monsters` `credits_after` (S153) + bank $79 entries 3-5 `TitleText` / `CreditsAfter` / `StoryPointApply` | `custom.title` + `custom.credits` + the ending's steps (§2.61; editor2/core/ending.py) | `region:patches/bank_05f.asm#…` (+ `hooks79`) | `$5F` `$79` |
+| regions `memorial_battle_start` `memorial_battle_end` (bank $50) `memorial_tiles_0` `memorial_tiles_1` (bank $0B) (S154) + bank $79 entries 6-9 + `mem_pics_ext` (the picture bank, an ext bank $80+) + bank $77 `MemorialRedraw77` | `custom.memorial` + `custom.rooms[].statues` + statue entries (§2.62; editor2/core/memorial.py) | `region:patches/bank_050.asm#…` / `bank_00b.asm#…` (+ `hooks79`, `shops77`, `ext_banks`) | `$50` `$0B` `$77` `$79` + one ext bank |
 | `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
@@ -674,6 +675,16 @@ user-confirmed hand-authored code:
   pinned `3d7cbdbe…ef95`; no TEMPLATE_SIZE (the bank holds a few hundred bytes). S152 re-pin
   (§2.60): + entry 2 `NewGameStart` (a 3-entry table); emitted with the hook on OR a custom
   new game (`custom.new_game` active); pinned `a045c49b…a8a9`.
+  **S154 re-pins (§2.62, the memorial):** `bank_079_head.asm` + entries 6-9 (`MemBattleStart` /
+  `MemBattleEnd` / `MemRoomTiles` / `MemSay` + the memorial engine, 1,255 B `$413B-$4621` in the
+  S154 demo game.sym); emitted also when a room has statues (`memorial.active`); pinned
+  `2b5e4857…8d2c`. `bank_077_head.asm` (`StoryCommand` kind 7 + `BreedClose`'s tail `jp
+  MemorialRedraw77`) pinned `51f0ec5c…b43b`, `TEMPLATE_SIZE[$77]` 2241 (`ShopPtrTable` `$48C1`).
+  S154 r2 re-pins (the shade map): `bank_079_head.asm` `e1092b6e…16d2` (5-byte statue rows),
+  `memorial_pics.asm` `002020d1…0838` (+ `MemShade`); `bank_077_head.asm` unchanged.
+  NEW pinned `memorial_pics.asm` (r1 `a3886f30…ae08`): the picture bank's entry 0 `MemPicDraw` +
+  `MemVramRead` / `MemVramWrite` (the generator writes the SECTION + bank byte before it, the
+  pictures after `MemPics:`). Current values: `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -4800,6 +4811,95 @@ steps) + editor (Cutscenes → Title & ending…, three steps). Help `76_ending.
   empty there, title layout / refusals / warnings, the game's pages, page refusals, 28 pages'
   slots and compares, the story points, the steps' ops, `--rom`: TitleInitDone, entries 3-5,
   the monster table); `test_app` `s153_ending`; `TEMPLATE_SIZE[$77]` 2229.
+
+## §2.62 S154 — THE MEMORIAL: statues of the monsters that won and have left (ROADMAP E10)
+
+**Built S154, NOT yet user-tested** (user: "A custom room, insertable into gates, where you can
+place objects that will take on sprites (non-moving) and interactables (text when examined) of
+any monsters the player beat a boss OR an arena level with … ONLY if monster is no longer with
+player"; then: "Just get them to roll from shared pool and make sure statue objects in same
+room roll different if possible otherwise stay blank"). Engine (bank $79 entries 6-9 + a
+picture bank, four same-size regions in banks $50 / $0B, bank $77 story command 7 + the
+`BreedClose` redraw, bank $73 save / load of the list's window, WRAM $D56D-$D597) + compiler
+(`editor2/core/memorial.py`) + editor (Rooms tab **＋ Statue (U)**, the statue panel, Memorial
+settings…, a statue's own words). Help `77_memorial.md`. The game's side: DATA_STRUCTURES "The
+memorial (S154)".
+
+- **Schema:** `custom.memorial = {cap 8-120 (default 120), text, empty}` (dialogue ids; absent =
+  the compiler adds `memorial_default_text` "In memory of {fallen}, / a level {fallen_level}
+  {fallen_species}." and `memorial_default_empty` "A blank statue, / quiet and cold.");
+  `custom.rooms[].statues = [{id, tiles: [TL, TR, BL, BR], shades?, pedestal?, palette?, text?,
+  empty?}]` in FILL ORDER (≤ 8 a room; tiles = 4 different ids $00-$7F of the room's own sheet,
+  not animated, not another statue's — the MONSTER CELL); a screen state's `npcs[]` entry
+  `{"kind": "statue", "x", "y", "statue": id}` = that statue's PEDESTAL stands on (x, y) in that
+  state and its monster cell on (x, y − 1) (the same id in several states = the same monster).
+  **S154 r2** (the user: "Pedestal should be its own tile I can edit … The whole thing then takes
+  up 2 tiles. Then monster sits on top"; "Monster should be grey but BACKGROUND should be
+  transparent"): `shades` = `[i1, i2, i3]`, the palette index the monster's colours 1 / 2 / 3
+  are drawn in (default `[1, 2, 3]`; 0-3 each); `pedestal` (4 tile ids) / `palette` (a slot) =
+  the editor's record of the room's Pedestal metatile and the statue palette slot — accepted,
+  not emitted. A statue in a game room, a statue entry naming no statue, a room with entries
+  but no list, a shade past 3: refused.
+- **Lowering** (`memorial.lower`, in `Project.__init__` before the talks; a `MemorialError` is
+  kept in `memorial_error`, reported by the validators, and the statues dropped): each statue
+  gets a script `_mem_<room>_<statue>` in its room's table (index 0 = an `end` entry script when
+  the table was empty) = a talk with one step `{"memorial": {"statue": n, "found": [say
+  text], "empty": [say empty]}}`, and each statue entry becomes an examine spot (`_statue`)
+  running it. The step → `op $24` story command 7 `[n]`, `check_and_branch $D8E1 0
+  @memptyN`, the found steps, `goto @mdoneN`, the empty steps (`project._lower_steps`;
+  `STEP_KINDS` + `memorial`, `story.CMD_KINDS` 7).
+- **Emit:** bank $79 head (emitted when `memorial.active` too) + `memorial.data_lines`: `MEM_CAP`
+  / `MEM_RING` (= cap + 9), `MemPicBank`, `MemBossEids` (`dw 127, 199, 343, $FFFF`),
+  `MemRoomTable` (rows `db region, map id, n, n × [4 tile ids, the shade map]`, `db $FF`; the
+  shade map = `i1 | i2 << 2 | i3 << 4`, `$39` = as drawn — `memorial.shade_map`; S154 r2). The picture bank =
+  one ext bank $80+ taken after the text banks (`plan` → `prj._take_ext_bank('memorial
+  pictures')`): the pinned `memorial_pics.asm` (`MemPicDraw` + S154 r2 `MemShade`: each picture
+  row's colours 1 / 2 / 3 into the shade map's indices, colour 0 = the tile's own pixel —
+  `memorial.composite` is the model) + `MemPics` (240 × 64 B: every species' standing
+  frame — its walking frame "facing down", 2 × 2 tiles, centred on the bottom row when the
+  layout is smaller; `memorial.pictures` == the ROM's bytes). Bank $77 `MemorialRedraw77` =
+  `ret`, or `ld hl, $7908 / rst $10 / ret` (`memorial.bank77_lines`). Regions (the game's bytes
+  without statues — the example): `memorial_battle_start` (`ld hl, $7906 / rst $10` for `ld hl,
+  $1702 / rst $10`), `memorial_battle_end` (`ld hl, $7907` for `ld hl, $0106`),
+  `memorial_tiles_0` / `_1` (`ld hl, $7908 / rst $10` + 3 `nop` over the dead 7 bytes).
+- **Bank $77 template** (`StoryCommand` kind 7: `ld e, [hl] / ld hl, $7909 / rst $10`;
+  `BreedClose` ends `call WaitDMATransfer / jp MemorialRedraw77`): `TEMPLATE_SIZE[$77]` 2241.
+- **Bank $73** (hand-kept): `MemorialCommit` / `MemorialRestore` beside the extended flags
+  (always built; ARCHITECTURE "SRAM bank 3").
+- **Text:** tokens `{fallen}` (`$F9 $00`, 4 cells), `{fallen_level}` (`$F9 $10`, 2),
+  `{fallen_species}` (`$F9 $20`, 9) — `textenc.MEMORIAL_TOKENS`; refused in any dialogue but a
+  statue's words (`memorial.problems`).
+- **Checks** (`memorial.problems`, validators): the settings; a species info row with
+  resistance 26 ≠ 0 ("the 27th slot" — it would hand new monsters a non-tag); the tokens outside
+  statue words. Capacity rows `statues_room` (8) and `memorial_cap` (120).
+- **Editor:** NEW `memorial_doc.py` (`MemorialMixin`: `add_statue` — **S154 r2: two cells.** The
+  monster cell (x, y − 1) gets 4 free slots of the room's sheet (the bottom-right one on the
+  wall side of the collision threshold) holding a COPY of what was drawn there; the pedestal
+  (x, y) gets the room's shared **Pedestal** metatile (made with the room's first statue: a
+  column drawn over the floor of its cell; ordinary, editable tiles). The statue palette
+  (`_statue_palette`): g = colour 0 or 2, whichever the monster cell's background uses least
+  (unused in a cell drawn in one slot); a slot whose colours equal the background's slot
+  with colour g = `GREY` `$4210` — an existing one, else a free slot 0-3 no cell of any room
+  drawing with that palette uses (set up), else the background's own slot (no grey; the
+  note says so); `shades` = `[1, g, 3]`; the background pixels re-indexed into that slot (the
+  same colour; a cell mixing two slots: the nearest, counted in the note);
+  `last_statue_note` for the status line. Was (S154 r1): one cell, a plinth picture with
+  colour 0 around the monster in the cell's own palette — a solid square on screen.
+  `VocabReleaseWouldHelp` when only unused vocabulary is free; `place_statue`,
+  `remove_statue_here`, `move_statue_order`, `set_statue_words`, `set_memorial`,
+  `statue_slots`); `tile_usage` status `statue`; NEW `app/rooms/memorial_dialog.py`;
+  `object_panels.StatuePanel`; the Rooms tab action, marker **M**, handlers.
+- **Acceptance (PyBoy, NEW `tools/walk_memorial.py`, the user's save + the S154 demo):** 56
+  checks, 0 failed (empty hall, the CHAMPION's win remembered with tag 8, the packed byte 0
+  bits 7-6 = 0 in battle, the breeding away → exactly one statue == the model's picture, the
+  words' inserts, the menu redraw, five statues all different and random over 10 visits, a
+  battle keeps the picks, the crypt in gate 2, the 14-case battle census, save / reset);
+  `--negative` (the regions' vanilla bytes) **19 FAIL**. **S154 r2:** + the screen checks
+  (the monster cell's empty pixels == a plain floor cell, pixel for pixel; the middle shade
+  one grey; the pedestal / monster cells in the BG map) and the `species` step (a re-arted
+  species — new art + its layout — and a new species on the statues, each == its new art's
+  picture in VRAM); see PROJECT_STATE S154 for the counts.
+- Tests: `test_compiler.test_s154` (21 in r1: the example keeps the game's bytes, the lowering, the pictures, seven refusals, `--rom`: bank $79 entries 6-9, `MemPics` == the model, the regions' far calls; r2 + 6: the shade map byte, a shade past 3 refused, `composite`, `_s154_doc` — add_statue's two cells, the grey slot, the background unchanged in colour, the shared Pedestal, the top row refused); `test_app` `s154_memorial` (+ the two cells, one Pedestal); `TEMPLATE_SIZE[$77]` 2241.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -348,7 +348,9 @@ def layout_image():
 def emit_bank_079(prj, warnings, head):
     from . import newgame as NG
     from . import ending as EN
-    if hook(prj.custom) is None and not NG.active(prj.custom) and not EN.active(prj):
+    from . import memorial as MM
+    if hook(prj.custom) is None and not NG.active(prj.custom) and not EN.active(prj) \
+            and not MM.active(prj.custom):
         return ('; BANK $79 — story hooks (S121, S152): EMPTY, the Milly hook and the new game\'s\n'
                 '; start are the game\'s own (vanilla zeros).\n'
                 'SECTION "ROM Bank $079", ROMX[$4000], BANK[$79]\n'
@@ -364,6 +366,7 @@ def emit_bank_079(prj, warnings, head):
     out += layout_image()
     out += [''] + NG.data_lines(prj)            # S152: entry 2 NewGameStart's data
     out += [''] + EN.data_lines(prj)            # S153: entries 3 / 5 — the title, story points
+    out += [''] + MM.data_lines(prj)            # S154: entries 6-9 — the memorial
     return '\n'.join(out) + '\n'
 
 

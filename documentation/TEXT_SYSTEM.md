@@ -85,6 +85,12 @@ hex bytes (`editor2/core/textenc.py`, PROJECT_COMPILER §2.3 "S120").
 - **`$F9 nn`** prints the name in slot `$C180 + nn` the same way; script op **`$3F`
   `load_lead_name`** fills slot 0 with the first party monster's SPECIES name (text mode 5,
   ≤ 9 cells) — the editor's `{lead}` (the compiler puts `$3F` before the text).
+  **S154 (the memorial, patched builds):** a statue's words use slots `$00` / `$10` / `$20`
+  as `{fallen}` (the nickname, 4 cells), `{fallen_level}` (the level as digit codes, 1-2
+  cells) and `{fallen_species}` (the species name, ≤ 9 cells), filled by bank $77 story
+  command 7 (bank $79 entry 9 `MemSay`) right before the words. The compiler refuses those
+  three tokens anywhere but a statue's words (the slots hold whatever was there last);
+  the editor previews them as "Slib" / "23" / "DrakSlime".
 - **Where the box opens:** at the bottom normally, at the TOP when the player stands low
   on the screen (the S120 sign NPC at row 5 of a 1-screen room).
 - **Nested YES/NO** (a question inside an answer) works as written: measured S120 YES→YES,

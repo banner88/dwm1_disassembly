@@ -986,6 +986,25 @@ user-tested):**
   `playhere` — a new game / the user's save / a story point into `$276` / `$76` / `$279`, 9 / 9.
 Not built: items / gold for a story point (the new game's); side quests the game leaves to
 the player (farm, library, medals) are not in the story state — flags ON covers them.
+- **Memorial statues (as built S154 — ROADMAP E10; built, NOT yet user-tested;
+  PROJECT_COMPILER §2.62, help 77):** a statue is an OBJECT of a screen state like an NPC or
+  a spot (`npcs[]` `kind: statue`, marker **M**), not a sprite: Select tool → cell → **＋
+  Statue (U)**. **S154 r2 (user: "Pedestal should be its own tile I can edit … Then monster
+  sits on top"; "BACKGROUND should be transparent"): two cells** — the clicked cell gets the
+  room's shared **Pedestal** metatile (ordinary tiles, editable in Draw), the cell above gets
+  4 free tiles of the room's own sheet (the bottom-right on the wall side → solid) holding a
+  copy of what was drawn there; both in the statue palette slot the editor sets up (the
+  background's colours + grey in an index the background does not use; the status line and
+  the panel say which). A full gate-theme sheet asks to release the unused vocabulary (one
+  undo step). The sheet's Tileset view marks the monster tiles **statue** (never offered to
+  anything else). In a state
+  where the room's statues do not stand, ＋ Statue asks "a new statue or one of the room's"
+  (the same monster in a later state). The *Memorial statue* panel: fill order (Earlier /
+  Later), the 4 tiles, the words (Its words… / Memorial settings… — cap 8-120 and the
+  words, `GameTextField` with the three inserts), in states (checkboxes), Remove from this
+  state. Every statue edit is one `SnapshotCommand` (sheet assets included) and re-selects
+  the statue afterwards (`_reselect_statue`: the push's re-show drops the selection).
+  Capacity rows: statues in one room (8), monsters remembered (120).
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 

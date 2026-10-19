@@ -5510,8 +5510,10 @@ BattlePhaseFreezeWait:
 ; count $CA8D: zero -> tilemap $0C00 + advance (wipe path); else announce
 ; setup LoadBtl_6974 + $DA33=5 frame delay.
 BattlePhase00_PartyAliveCheck:
+; @BUILD_PROJECT BEGIN memorial_battle_start
     ld hl, $1702
     rst $10
+; @BUILD_PROJECT END memorial_battle_start
     ld hl, $1708
     rst $10
     ld a, [$ca8d]
@@ -6394,8 +6396,10 @@ BattleExitHandler:
     or a
     ret nz
 
+; @BUILD_PROJECT BEGIN memorial_battle_end
     ld hl, $0106
     rst $10
+; @BUILD_PROJECT END memorial_battle_end
     ld hl, $c8ea
     set 7, [hl]
     ld a, $04

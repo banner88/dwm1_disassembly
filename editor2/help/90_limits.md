@@ -209,3 +209,10 @@
   copyright), role 2 rows × 20, names 12 rows × 11; 1-60 seconds a page. Up to
   32 different story points. After *TO BE CONTINUED* and the save, CONTINUE runs
   no entry scene (the game's own load). See *Your title screen and your ending*.
+- The memorial (S154): up to 8 statues a room; it remembers 8-120 monsters (its setting;
+  the oldest is forgotten when full); a monster can be told apart from another of its
+  species by 31 marks — at most 31 monsters of ONE species remembered or carrying a mark
+  at once (a 32nd winner of that species is not remembered). The inserts {fallen} /
+  {fallen_level} / {fallen_species} only in a statue's words. Every monster's 27th
+  resistance must stay 0 while the project has statues. A save made before the memorial
+  starts with an empty memorial. See *The memorial: statues of the monsters that left*.

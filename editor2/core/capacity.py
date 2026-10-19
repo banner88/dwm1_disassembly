@@ -400,6 +400,17 @@ def _project_rows(prj, data, rows):
         '(the "Story point" step)', lambda: len(getattr(prj, '_story_points', []) or []),
         END.MAX_POINTS, 'the build stops', 'Cutscenes',
         tech='bank $79 entry 5 StoryPointApply, StoryPointPtrs')
+    # S154: the memorial — statues a room, monsters remembered
+    from . import memorial as MM
+    add('statues_room', 'Rooms', 'Memorial statues in one room (the most)',
+        lambda: max([len(MM.room_statues(r)) for r in custom.get('rooms') or []] or [0]),
+        MM.STATUES_MAX, 'the editor refuses another', 'Rooms',
+        tech='bank $79 MEM_STATUES (wMemPicks), MemRoomTable')
+    add('memorial_cap', 'Text and story', 'Monsters the memorial remembers (its setting)',
+        lambda: MM.settings(custom)['cap'] if MM.active(custom) else 0, MM.CAP_MAX,
+        'the oldest is forgotten', 'Rooms',
+        tech='SRAM bank 3 $A110+, 8 B an entry, a ring of MEM_CAP + 9; wMemCount / wMemHead '
+             'saved at $A005 / $A006 (bank $73 MemorialCommit)')
     from . import services as SV
     add('line_sets', 'Text and story', 'Line sets of shop and service people',
         lambda: len(SV.resolve(prj)['numbers']), SV.MAX_SETS, 'the build stops',

@@ -1254,6 +1254,8 @@ def ext_bank_files(prj):
         out.update(GT.text_bank_files(prj))
     except GT.GameTextError:
         pass                                           # reported by the validator
+    from . import memorial as MM                       # S154: the memorial's picture bank
+    out.update(MM.bank_files(prj))
     return out
 
 
@@ -1578,6 +1580,22 @@ def _ending_entries():
 
 
 REGISTRY += _ending_entries()
+
+
+def _memorial_entries():
+    # S154: THE MEMORIAL — statues of the monsters that won and have left. The picture
+    # bank (an ext bank $80+, after the text banks; none without statues) and the
+    # same-size regions in banks $50 (the party count at a battle's start, the win at
+    # its end) and $0B (the statues over the room sheet) — bank $79 entries 6-9 + their
+    # data come with hooks79 — editor2/core/memorial.py. No statues == vanilla bytes.
+    from . import memorial as MM
+    return ([("mem_pics_ext", "custom.rooms.statues", "multi:memorial_pics",
+              MM.emit_pic_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1)))]
+            + [(name, "custom.rooms.statues", f"region:{path}#{name}", fn, [bank])
+               for name, path, fn, bank in MM.REGIONS])
+
+
+REGISTRY += _memorial_entries()
 
 
 TEXT_SPRITE_VANILLA = """\

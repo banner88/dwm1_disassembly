@@ -81,7 +81,8 @@ PROTECTED_SPECIES = range(215, 221)  # Iron Rule 8: not monsters
 CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3,
              'name_given': 4,   # S152: the monster just given gets a name (+ the naming screen)
              'story_point': 5,  # S153: the original game's story as at a point (bank $79 entry 5)
-             'credits_after': 6}   # S153: where the field goes after the credits (wCreditsAfter)
+             'credits_after': 6,   # S153: where the field goes after the credits (wCreditsAfter)
+             'memorial': 7}     # S154: a memorial statue's monster into the text inserts (bank $79 entry 9)
 
 QUEST_KEYS = ('id', 'name', 'giver', 'requires', 'not_yet', 'offer', 'accept', 'decline',
               'objective', 'progress', 'take', 'reward', 'complete', 'done', 'bag_full',
@@ -362,6 +363,10 @@ def cmd_record(kind, params, ctx, prj=None):
             raise StoryError(f'{ctx}: {ex}')
         except Exception as ex:                          # noqa: BLE001 (ProjectError)
             raise StoryError(str(ex))
+    if kind == 'memorial':
+        # S154: [statue] — the statue's index in its room (memorial.py; bank $79 MemSay)
+        from . import memorial as _MM
+        return (code, _int(params.get('statue'), ctx + '.statue', 0, _MM.STATUES_MAX - 1))
     a = _int(params.get('amount'), ctx + '.amount', 1, GOLD_MAX)
     return (code, a & 0xFF, (a >> 8) & 0xFF, a >> 16)
 

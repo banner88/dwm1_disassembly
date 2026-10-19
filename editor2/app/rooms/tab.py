@@ -95,13 +95,14 @@ class _ObjectPanels:
     def setVisible(self, on):
         t = self.tab
         if not on:
-            for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel):
+            for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel, t.statue_panel):
                 p.setVisible(False)
             t.npc_hint.setVisible(True)
 
     def isHidden(self):
         t = self.tab
-        return all(p.isHidden() for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel))
+        return all(p.isHidden() for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel,
+                                          t.statue_panel))
 
 
 class RoomsTab(QWidget):
@@ -240,6 +241,18 @@ class RoomsTab(QWidget):
                 self.act_add_examine.triggered.connect(
                     lambda: self._add_on_selected(lambda c: self._add_spot(c, 'examine')))
                 self.tools.addAction(self.act_add_examine)
+                # S154: a memorial statue (editor2/core/memorial.py, help 77)
+                self.act_add_statue = QAction('+ Statue (U)', self)
+                self.act_add_statue.setShortcut(QKeySequence('U'))
+                self.act_add_statue.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_statue.setToolTip(
+                    'Add a memorial statue: its pedestal on the selected cell, the monster on the '
+                    'cell above. It shows a monster that won a boss battle, an arena class or '
+                    'Starry Night with the player and has left since (bred, released, traded). '
+                    'Every statue of a room a different one.')
+                self.act_add_statue.triggered.connect(
+                    lambda: self._add_on_selected(self._add_statue))
+                self.tools.addAction(self.act_add_statue)
                 # S132: + NPC on the bar too (the "Add NPC here…" button now
                 # sits on the Object page, one click away)
                 self.act_add_npc = QAction('+ NPC (N)', self)
@@ -645,6 +658,10 @@ class RoomsTab(QWidget):
         self.spot_panel = SpotPanel()
         self.spot_panel.setVisible(False)
         nl.addWidget(self.spot_panel)
+        from editor2.app.rooms.object_panels import StatuePanel          # S154
+        self.statue_panel = StatuePanel()
+        self.statue_panel.setVisible(False)
+        nl.addWidget(self.statue_panel)
         nl.addStretch(1)
         self.inspector.npc = _ObjectPanels(self)
         npc.fieldsEdited.connect(self._npc_fields)
@@ -685,6 +702,12 @@ class RoomsTab(QWidget):
         sp.editTalkRequested.connect(self._npc_edit_talk)
         sp.presenceToggled.connect(self._npc_presence)
         sp.deleteRequested.connect(self._npc_delete)
+        stp = self.statue_panel                                          # S154
+        stp.wordsRequested.connect(self._statue_words)
+        stp.settingsRequested.connect(self._memorial_settings)
+        stp.orderRequested.connect(self._statue_order)
+        stp.presenceToggled.connect(self._statue_presence)
+        stp.deleteRequested.connect(self._statue_delete)
         self.sec_npc = self.rail.add_page(
             'object', 'Object', npcbox,
             tip='The selected cell, NPC, door, exit or spot — opens by itself when you '
@@ -1565,13 +1588,16 @@ class RoomsTab(QWidget):
                 self._show_npc_panel(ref[1], ref[2])
             elif sel['kind'] in ('examine', 'step', 'spawn') and ref and ref[0] == 'npc':
                 self._show_spot_panel(ref[1], ref[2])
+            elif sel['kind'] == 'statue' and ref and ref[0] == 'npc':     # S154
+                self._show_statue_panel(ref[1])
             elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
                 self._show_door_panel(ref)
             elif sel['kind'] in ('exit', 'stairs', 'portal') and ref and ref[0] == 'exit':
                 self._show_exit_panel(ref[1], ref[2])
 
     def _show_object(self, panel):
-        for p in (self.npc_panel, self.door_panel, self.tele_panel, self.spot_panel):
+        for p in (self.npc_panel, self.door_panel, self.tele_panel, self.spot_panel,
+                  self.statue_panel):
             p.setVisible(p is panel)
         self.npc_hint.setVisible(panel is None)
         if panel is not None:
@@ -3061,6 +3087,198 @@ class RoomsTab(QWidget):
             return
         label = 'Delete spot' if self._sel_is_spot() else 'Delete NPC'
         if self._npc_op(label, lambda doc, r, k, st: doc.remove_npc(r, k, st, idx)) is not None:
+            self._sel_npc = None
+            self._show()
+            self.inspector.show_selection(None)
+
+    # ------------------------------------------------- memorial statues (S154)
+    def _sel_statue(self):
+        """(room, statue id, npcs index) of the selected statue, or None."""
+        room = self.current_room()
+        idx = self._sel_npc
+        if room is None or idx is None:
+            return None
+        lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= idx < len(lst) or lst[idx].get('kind') != 'statue':
+            return None
+        return room, lst[idx].get('statue'), idx
+
+    def _show_statue_panel(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        doc = self.s.doc
+        lst = doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= index < len(lst):
+            return
+        e = lst[index]
+        sid = e.get('statue')
+        st = doc.statue(room, sid)
+        if st is None:
+            return
+        self._sel_npc = index
+        n = len(doc.statues(room))
+        pres = [any(x.get('kind') == 'statue' and x.get('statue') == sid
+                    for x in s2.get('npcs') or [])
+                for s2 in doc.states(room, self.key)]
+        sh = st.get('shades') or [1, 2, 3]
+        look = (f"palette slot {st['palette']}, the monster's middle shade in its colour "
+                f"{sh[1]}" if st.get('palette') is not None else '')
+        self.statue_panel.show_statue(doc.npc_view(room, e), doc.statue_number(room, sid), n,
+                                      [val(t) for t in st['tiles']],
+                                      doc.statue_words(room, sid), pres, editable=True,
+                                      look=look)
+        self._show_object(self.statue_panel)
+
+    def _add_statue(self, cell):
+        """S154: a statue on the selected cell — a new one, or (the room has statues
+        that do not stand in this state) one of those (the same monster in a later room
+        state). The cell keeps its palette; the room's sheet gives the new statue 4
+        free tiles (the empty-statue picture)."""
+        from PySide6.QtWidgets import QInputDialog
+        from editor2.core.document import VocabReleaseWouldHelp
+        room = self.current_room()
+        if room is None:
+            return
+        doc = self.s.doc
+        here = {x.get('statue') for x in doc.npc_entries(room, self.key, self.state_idx)
+                if x.get('kind') == 'statue'}
+        others = [s2 for s2 in doc.statues(room) if s2['id'] not in here]
+        which = None
+        if others:
+            items = ['A new statue'] + [f"Statue {doc.statue_number(room, s2['id'])} "
+                                        f"({s2['id']}) — the same one as in another state"
+                                        for s2 in others]
+            it, ok = QInputDialog.getItem(self, 'Add a statue', 'Which statue stands here?',
+                                          items, 0, False)
+            if not ok:
+                return
+            if items.index(it) > 0:
+                which = others[items.index(it) - 1]['id']
+        cx, cy = cell
+        release = [False]
+
+        def op(doc2, r, k, st):
+            if which is not None:
+                return doc2.place_statue(r, k, st, cx, cy, which)
+            if release[0]:
+                # the room's own sheet (a room still drawing with a game sheet gets its
+                # copy first — record.tileset is absent until then)
+                doc2.set_released(doc2._room_sheet(r, k, st, cx, cy)[0], True)
+            sid = doc2.add_statue(r, k, st, cx, cy)
+            return len(doc2.npc_entries(r, k, st)) - 1, sid
+        try:
+            cmd = self._npc_op_raw(f'Add statue ({cx},{cy})', op)
+        except VocabReleaseWouldHelp as ex:
+            if QMessageBox.question(self, 'Add a statue', str(ex)) != QMessageBox.Yes:
+                return
+            release[0] = True
+            cmd = self._npc_op(f'Add statue ({cx},{cy})', op)
+        if cmd is None:
+            return
+        self._show()
+        idx = cmd.result[0] if isinstance(cmd.result, tuple) else cmd.result
+        self._reselect_statue(idx)
+        note = getattr(self.s.doc, 'last_statue_note', '') if which is None else ''
+        self.status_line.setText(
+            f'Statue: its pedestal on ({cx},{cy}), the monster above it on ({cx},{cy - 1}) '
+            '(drawn over the floor that was there). The pedestal is the room\'s "Pedestal" '
+            'metatile — redraw it in the Draw tab. ' + (note[:1].upper() + note[1:] + '.'
+                                                       if note else ''))
+
+    def _npc_op_raw(self, label, fn):
+        """_npc_op that hands a VocabReleaseWouldHelp back to the caller (to ask)."""
+        from editor2.core.document import VocabReleaseWouldHelp
+        room = self.current_room()
+        if room is None:
+            return None
+        rid, key, st = self.room_id, self.key, self.state_idx
+        cmd = C.SnapshotCommand(self.s, label, lambda doc: fn(doc, doc.room(rid), key, st))
+        self.s.undo.push(cmd)
+        if isinstance(cmd.error, VocabReleaseWouldHelp):
+            raise cmd.error
+        if cmd.error is not None:
+            QMessageBox.warning(self, label, str(cmd.error))
+            return None
+        return cmd
+
+    def _statue_words(self):
+        sel = self._sel_statue()
+        if sel is None:
+            return
+        room, sid, idx = sel
+        from editor2.app.rooms.memorial_dialog import StatueWordsDialog
+        dlg = StatueWordsDialog(self.s.doc, room, sid, self.s.renderer.rom, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+        self._npc_op('Statue words', lambda doc, r, k, st: doc.set_statue_words(
+            r, sid, text=v['text'], empty=v['empty'], own=v['own']))
+        self._reselect_statue(idx)
+
+    def _memorial_settings(self):
+        from editor2.app.rooms.memorial_dialog import MemorialDialog
+        dlg = MemorialDialog(self.s.doc, self.s.renderer.rom, self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+        sel = self._sel_statue()          # before the edit: a re-show drops the selection
+        cmd = C.SnapshotCommand(self.s, 'Memorial settings',
+                                lambda doc: doc.set_memorial(cap=v['cap'], text=v['text'],
+                                                             empty=v['empty']))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Memorial settings', str(cmd.error))
+        if sel is not None:
+            self._reselect_statue(sel[2])
+
+    def _reselect_statue(self, index):
+        """After a statue edit: the canvas re-shows (every undo push does, and drops its
+        selection) — select the statue's marker again and re-open its panel."""
+        ref = self.canvas.select_npc(index)
+        if ref is not None:
+            m = next((m for m in self.canvas.markers if m[5] is ref), None)
+            if m is not None:
+                self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2],
+                                               'sprite': m[3], 'label': m[4], 'ref': ref},
+                                              editable=True)
+        self._show_statue_panel(index)
+
+    def _statue_order(self, delta):
+        sel = self._sel_statue()
+        if sel is None:
+            return
+        _room, sid, idx = sel
+        self._npc_op('Statue fill order', lambda doc, r, k, st: doc.move_statue_order(r, sid, delta))
+        self._reselect_statue(idx)
+
+    def _statue_presence(self, state, on):
+        sel = self._sel_statue()
+        if sel is None:
+            return
+        room, sid, idx = sel
+        x, y = (int(v) for v in (lambda e: (e['x'], e['y']))(
+            self.s.doc.npc_entries(room, self.key, self.state_idx)[idx]))
+
+        def op(doc, r, k, st):
+            lst = doc.npc_entries(r, k, state)
+            hit = [i for i, e in enumerate(lst) if e.get('kind') == 'statue'
+                   and e.get('statue') == sid]
+            if on and not hit:
+                doc.place_statue(r, k, state, x, y, sid)
+            elif not on and hit:
+                doc.remove_statue_here(r, k, state, hit[0])
+        self._npc_op(f"Statue {'in' if on else 'out of'} state {state}", op)
+        self._show()
+        self._reselect_statue(idx)
+
+    def _statue_delete(self):
+        sel = self._sel_statue()
+        if sel is None:
+            return
+        _room, _sid, idx = sel
+        if self._npc_op('Remove statue', lambda doc, r, k, st: doc.remove_statue_here(
+                r, k, st, idx)) is not None:
             self._sel_npc = None
             self._show()
             self.inspector.show_selection(None)

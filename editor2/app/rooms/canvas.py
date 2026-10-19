@@ -55,14 +55,16 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           # S123 r3: worlds — a portal into a world, where the world lands you
           'portal': QColor(90, 200, 255), 'world_land': QColor(90, 255, 120),
           # S125: where a hub rule brings the player home
-          'hub': QColor(255, 200, 40)}
+          'hub': QColor(255, 200, 40),
+          # S154: a memorial statue
+          'statue': QColor(200, 200, 220)}
 MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
                'door_dead': 'D!',
                'examine': 'X',
                'step': 'T',
                'stairs': 'S↓', 'gate_arrival': 'G',
-               'portal': 'P', 'world_land': 'W↓', 'hub': 'H'}
+               'portal': 'P', 'world_land': 'W↓', 'hub': 'H', 'statue': 'M'}
 SEL = QColor(255, 230, 0)
 
 
@@ -81,6 +83,9 @@ def classify_npc(entry):
     if k == 'step':
         return ('step', int(entry['x']), int(entry['y']), None,
                 f"step-on trigger → {entry.get('script')}")
+    if k == 'statue':                                   # S154: a memorial statue
+        return ('statue', int(entry['x']), int(entry['y']), None,
+                f"memorial statue '{entry.get('statue')}' (examine it in the game)")
     if k == 'npc':
         spr = val(entry.get('sprite', 0))
         beh = entry.get('behaviour', 'stand')

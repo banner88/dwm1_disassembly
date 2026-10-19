@@ -476,7 +476,30 @@ wItemInUse:: db ;d565 — the item the hero uses in battle (S151)
 ; far-calls bank $79 entry 4 CreditsAfter, which writes the warp mailbox from it (+0 = 0:
 ; the game's own intro bedroom) and clears +0. Transient (set and used in one ending).
 wCreditsAfter:: ds 7 ;d566-d56c
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 ;d56d-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter)
+; S154 — THE MEMORIAL (statues of the monsters that won a boss / an arena class / Starry
+; Night and are no longer with the player; PROJECT_COMPILER §2.62, DATA_STRUCTURES "The
+; memorial (S154)"). The list itself lives in SRAM bank 3 ($A110+, 8 B an entry, a ring of
+; MEM_RING entries — bank $79 entries 6-9); wMemCount / wMemHead say which entries are
+; live and ride the EXPLICIT save (bank $73 MemorialCommit / MemorialRestore, magic "M1"
+; at bank 3 $A003): this window is zeroed by a new game and at every load before the
+; restore, so a reset without saving forgets the victories since the save. The rest is
+; transient: wMemPartyN = the party count at the battle's start (bank $50 phase 0; a
+; monster that JOINS in that battle comes after it in the party list), wMemPlace = the
+; place of the last full room load (region, map id — a different one re-rolls the
+; statues), wMemPicks = the ring entry each statue of the room shows ($FF none),
+; wMemGone = the roll's bitmap (live entry i = bit i), wMemDraw = the picture bank's
+; input (species, the 4 tile ids, the shade map — S154 r2), wMemCur = one entry's fields (tag, species, level,
+; nickname 4), wMemTmp = loop scratch.
+wMemCount:: db ;d56d — live entries (saved)
+wMemHead:: db ;d56e — the ring index of the oldest live entry (saved)
+wMemPartyN:: db ;d56f — the party count when the battle started
+wMemPlace:: ds 2 ;d570 — region, map id of the last full room load
+wMemPicks:: ds 8 ;d572 — per statue of the room: the ring entry shown, $FF = none
+wMemGone:: ds 16 ;d57a — the roll: live entry i has left the player (bit i)
+wMemDraw:: ds 6 ;d58a — species, tile ids TL / TR / BL / BR, the shade map (the picture bank's input)
+wMemCur:: ds 7 ;d590 — tag, species, level, nickname (4)
+wMemTmp:: ds 2 ;d597 — scratch
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 ;d599-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

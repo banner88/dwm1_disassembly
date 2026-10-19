@@ -2227,6 +2227,9 @@ jr_057_4bfe:
 ; [S130 F10] every cat-1/2 skill: veto when EVERY live opponent has res level 3 at
 ; [S130 F10] the record's +5 element position (code-read; not in ai_rules.py — element
 ; [S130 F10] 0 = $80/$83, never vetoes, asserted over the F10 rules corpus).
+; [S154] element 0 reads packed POSITION 0 = resistance index 26 (bank $51 SaveBtlS_4404),
+; which is 0 for every species and every record (the memorial's tags are multiples of 8:
+; & 3 = 0) — that, not the code, is why element 0 never vetoes.
 AIRule_4c13:
     call LoadBtlAI_4532
 

@@ -279,7 +279,7 @@ The editor shows every field with this meaning (editor2/core/skills.py `FLAG_BIT
 | +2 | `target_mode` | bit0 single, bit1 group; bit4 foes, bit5 allies, bit6 self ($11 / $12 / $21 / $22 / $41). Drives the battle menu ($50, ask for a target), the group loop ($52), the dead-target redirect ($53), Imitate's side test; the ACTUAL pick is per-skill code (bank $58 `BtlSkillTargetDispatch_401d`) | PROVEN |
 | +3 | `ai_weight` | AI only (bank $57 sums it per category) | PROVEN |
 | +4 | `mp_byte` | **the BATTLE MP cost, 8-bit**: menu afford check ($50 `SaveBtl_4ba4`), act-time afford + the "not enough MP" verb ($53 `SetupSub_480e`), deduct (two sites in $53; Farewell then zeroes MP), AI veto ($57), what a TakeMagic target GAINS (corrected S130: min(cost, MaxMP − MP); the skill still lands — nothing is soaked, §15.11.F6). The FIELD SKIL menu shows / charges the `$07` `SkillMPCostTable` u16 instead. Vanilla differs only for Farewell / MegaMagic (999 "All MP" vs 1) and StepGuard / MapMagic (field-only, 0) | PROVEN |
-| +5 | `status_id` | **AI element**: a resistance slot 1-27 (1-based index into `gamedata.RESIST_NAMES`) the AI assumes; damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
+| +5 | `status_id` | **AI element**: a packed resistance POSITION the AI assumes — 1-26 = resistance index 0-25 (1-based into `gamedata.RESIST_NAMES`); **0** (134 skills) = position 0 = resistance index 26, always 0 in the game (S154, §15.3); 27 (position 27, never written) is used by no skill. Damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
 | +6 | `damage_class` | AI only: 0 none / 4 spell damage / 5 breath damage — nonzero = "deals damage" | PROVEN |
 | +7 | flags7 | b0 cut by Defence (½) / StrongD (1/10); b1 physical — Surround's miss rolls; b2 **NOT READ**; b3 keeps its committed target (no act-time re-resolve); b4 BREATH (MouthShut seal, TailWind reflect, SuckAll absorb, SuckAir ×2-2.5 for ids $5C-$63, the "spits" verb); b5 DANCE (DanceShut, "dances"); b6 SPELL (StopSpell, side +0 bit3 "spell was broken", "casts"); b7 physical CONTACT (airborne miss, BladeD halves, the shield grab, ×2 vs target +8 bit2; S130: also the Dodge-skill machine `$53:$5091` and the BladeD COUNTER — the attacker takes dmg>>1 about half the time, §15.11.F6). The AI copies it to `$dd6b` | PROVEN |
 | +8 | flags8 | b0 reflected by MagicBack / Bounce; b1 redirected by Cover / Guardian; b2 fails on an IRON target (Ironize); b3 **NOT READ**; b4 may land a critical hit (corrected S130: the "attacks with full force!" $67 message announces the `$DB42` bit0 SURE crit of the tension roll, not ChargeUP — ChargeUP lives in own +6 bits 0-1; §15.11.F4); b5 doubled by TwinHits (attacker +3 bit2); b6 ChargeUP ×2-2.5; b7 dodge-able (corrected S130: the 50 % is the SideStep +7 & $0C STATUS — RNG1 even dodges, odd falls to the AGL ladder; the Dodge SKILL $8C is a separate act-state-7 machine on flags7 b7, §15.11.F6) | PROVEN |
@@ -2041,8 +2041,17 @@ HealAll = 999 -> clamp to max).
 
 Species info +$0F..+$29 (27 levels 0-3) is packed 2-bit MSB-FIRST into 7
 bytes per combatant at `$DD28 + slot*7`; type t sits at packed position
-t+1 (byte (t+1)//4, bit-pair 3-((t+1)%4)); position 0 unused. Verified
+t+1 (byte (t+1)//4, bit-pair 3-((t+1)%4)) for t = 0-25. Verified
 15/15 element cores vs the FAQ table (§ resistance_types.json order).
+**S154 correction ("position 0 unused" was wrong):** the packer (bank $51
+`SaveBtlS_4404`, from the record's +$68..+$82) writes index **26** (the 27th,
+record +$82) FIRST, into position **0** (byte 0 bits 7-6); position 27 (byte 6
+bits 1-0) is the one never written (always 0). Index 26 is 0 in every species
+row, so position 0 reads 0 in the game — which is why element 0 (skill +5 = 0,
+134 of 222 skills) never vetoes in `AIRule_4c13`, and why the FireSlash target
+row (bank $58, masks byte 0 `$C0` = position 0, not Fire's `$30`: a vanilla
+off-by-one) only ever ties. The S154 memorial's tags there are multiples of 8
+(& 3 = 0): DATA_STRUCTURES "The memorial (S154)".
 
 Damage multiplier ladders, keyed on target status byte $DB05+slot*8 bits
 6/7 (`CheckTargetGuardA` family — the spell/GigaSlash path):

@@ -9,7 +9,10 @@
                     the player walks onto the cell) — PyBoy-measured S98,
                     ROOM_DATA_FORMAT "Interact entries". Both run a talk
                     script (text, question, flags, move).
-All three emit signals; the Rooms tab turns them into undoable Document ops.
+  * StatuePanel   — a MEMORIAL STATUE (S154, editor2/core/memorial.py): which
+                    statue it is (its fill order), its words, the memorial's
+                    settings, its states.
+All of them emit signals; the Rooms tab turns them into undoable Document ops.
 """
 
 from PySide6.QtCore import Qt, Signal
@@ -369,3 +372,84 @@ class SpotPanel(QGroupBox):
     def _emit(self, field, value):
         if not self._building:
             self.fieldsEdited.emit({field: value})
+
+
+class StatuePanel(QGroupBox):
+    """S154: a memorial statue (help 77_memorial.md)."""
+    wordsRequested = Signal()
+    settingsRequested = Signal()
+    orderRequested = Signal(int)
+    presenceToggled = Signal(int, bool)
+    deleteRequested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__('Memorial statue', parent)
+        f = QFormLayout(self)
+        f.setLabelAlignment(Qt.AlignRight)
+        self.form = f
+        self.what = _lbl('Shows a monster that won a boss battle, an arena class or Starry '
+                         'Night with the player and has LEFT since (bred, released, traded). '
+                         'Every statue of the room shows a different one, picked again each '
+                         'time the player comes in. Two cells: the pedestal here (the room\'s '
+                         '"Pedestal" metatile — redraw it in the Draw tab) and the monster '
+                         'above it, drawn grey over the floor that was there. Examining the '
+                         'pedestal says its words.')
+        self.what.setStyleSheet('color:#aaa;')
+        f.addRow(self.what)
+        self.pos = _lbl()
+        f.addRow('cell', self.pos)
+        self.order = _lbl()
+        row = QHBoxLayout()
+        row.addWidget(self.order, 1)
+        self.btn_up = QPushButton('Earlier')
+        self.btn_up.setToolTip('This statue gets a monster sooner (when fewer monsters than '
+                               'statues have left)')
+        self.btn_up.clicked.connect(lambda: self.orderRequested.emit(-1))
+        self.btn_down = QPushButton('Later')
+        self.btn_down.clicked.connect(lambda: self.orderRequested.emit(1))
+        row.addWidget(self.btn_up)
+        row.addWidget(self.btn_down)
+        f.addRow('fills', row)
+        self.tiles = _lbl()
+        self.tiles.setStyleSheet('color:#9fd0ff;')
+        f.addRow('its tiles', self.tiles)
+        self.words = _lbl()
+        self.words.setStyleSheet('color:#9fd0ff;')
+        f.addRow('says', self.words)
+        row2 = QHBoxLayout()
+        self.btn_words = QPushButton('Its words…')
+        self.btn_words.clicked.connect(self.wordsRequested.emit)
+        self.btn_settings = QPushButton('Memorial settings…')
+        self.btn_settings.setToolTip('How many monsters the memorial remembers and the words '
+                                     'every statue says (unless it has its own)')
+        self.btn_settings.clicked.connect(self.settingsRequested.emit)
+        row2.addWidget(self.btn_words)
+        row2.addWidget(self.btn_settings)
+        f.addRow('', row2)
+        self.states = _StatesRow()
+        self.states.toggled.connect(self.presenceToggled.emit)
+        f.addRow('in states', self.states)
+        self.btn_del = QPushButton('Remove from this state')
+        self.btn_del.clicked.connect(self.deleteRequested.emit)
+        f.addRow('', self.btn_del)
+
+    def show_statue(self, view, number, count, tiles, words, presence, editable=True,
+                    look=''):
+        self.pos.setText(f"pedestal ({view['x']},{view['y']}) — an examine spot; the monster "
+                         f"on ({view['x']},{view['y'] - 1})")
+        self.order.setText(f'statue {number} of {count} in this room'
+                           + (' (gets a monster first)' if number == 1 else ''))
+        self.tiles.setText('the monster cell ' + ', '.join(f'${t:02X}' for t in tiles)
+                           + ' — no other picture may use them' + (f'; {look}' if look else ''))
+        first = ' / '.join(' '.join(b) for b in (words.get('text') or [])[:2])
+        self.words.setText(('its own words: ' if words.get('own') else '') + first)
+        if presence and len(presence) > 1:
+            self.states.show_states(presence, 'standing in state {n} of this screen')
+            self.form.setRowVisible(self.states, True)
+        else:
+            self.form.setRowVisible(self.states, False)
+        for w in (self.btn_up, self.btn_down, self.btn_words, self.btn_settings, self.btn_del,
+                  self.states):
+            w.setEnabled(editable)
+        self.btn_up.setEnabled(editable and number > 1)
+        self.btn_down.setEnabled(editable and number < count)

@@ -21,6 +21,9 @@ built from it (the original ROM is never changed).
   — see *Your own opening*. **Title & ending…** (S153) puts your words on the title
   screen and sets the credits pages; the scene steps *Story point*, *Roll the credits* and
   *TO BE CONTINUED* end your story — see *Your title screen and your ending*.
+  (S154) **＋ Statue** on the Rooms tab's tool bar adds a **memorial statue**: it shows a
+  monster that won a boss battle, an arena class or Starry Night with you and has left
+  since — see *The memorial: statues of the monsters that left*.
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms

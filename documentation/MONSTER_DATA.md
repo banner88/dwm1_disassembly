@@ -251,7 +251,7 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $62 | 1 | Plus value |
 | $63 | 1 | **Egg flag** ($01 = egg; breeding sets it, the birth finalizer clears it) *(S130 row; see also "Record fields established")* |
 | $64 | 4 | **AI weights / personality** in order cat1/cat3/w3/cat2 ($CB25/26/27/28 views) — source of the battle category-base arrays $DC44/$DC54/$DC5C/$DC4C (bank $51 `LoadBtlS_44cb` → `jr_051_45f8`); adjusted by field item effects only (`Add/SubMonsterAIWeight*`), never mid-battle [S87, hook-verified] |
-| $68 | 27 | Resistances |
+| $68 | 27 | Resistances (species info +$0F..+$29 at creation; levels 0-3). **+$82 = index 26 (the 27th)**: 0 in every species row, packed into battle position 0 (BATTLE_SKILL_SYSTEM §15.3, S154 correction) — **patched builds with memorial statues (S154) keep the monster's memorial TAG there** (8, 16 … 248: & 3 = 0 in battle, (t1 + t2) & 7 = 0 in breeding; DATA_STRUCTURES "The memorial (S154)") |
 | $83 / $8C | 8 + 8 | The parents' **nicknames** (their +$01), read by `PedigreeForeignCount` as 9-byte names *(S130)* |
 | $8B / $94 | 1 + 1 | The parents' plus values (their +$62) — the 9th byte of the +$83 / +$8C names *(S130, code-read)* |
 

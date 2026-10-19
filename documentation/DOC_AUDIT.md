@@ -1025,3 +1025,17 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | `ending.py` docstring (S153 first draft): "CONTINUE comes back to the room the scene ran in" | ⚠ INCOMPLETE — fixed S153 | … and runs none of its entry scenes | same |
 | PYBOY_DEBUGGING (S152 recipe): START at frame 280 then A = NEW GAME | ⚠ INCOMPLETE — noted S153 | START does not skip the intro; the title arrives ~1,200 frames later (stage `$C88C` = 6) — A-tapping still reaches NEW GAME, a title screenshot needs the wait | `walk_ending.py` |
 
+
+## S154 addendum (2026-10-19; the memorial — ROADMAP E10)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §15.3: "type t sits at packed position t+1 …; position 0 unused" | ❌ WRONG — corrected S154 | position 0 = resistance index 26 (record +$82), written FIRST by bank $51 `SaveBtlS_4404`; position 27 is the one never written | code-read (bank $51 `SaveBtlS_4404`; PyBoy `walk_memorial.py again`: a tag-8 fighter's bits 7-6 = 0) |
+| BATTLE_SKILL_SYSTEM skill +5: "a resistance slot 1-27 (1-based index)" | ⚠ INCOMPLETE — completed S154 | +5 = a packed POSITION: 1-26 = index 0-25; **0** (134 of 222 skills) = index 26 (always 0); 27 used by no skill | `extracted/skill_records.json` count |
+| `simulator/pacing.py` `pack_res`: index 26 at position 27 | ❌ WRONG — fixed S154 | position 0 (no difference while index 26 = 0) | the packer's code |
+| disassembly bank $58 FireSlash target row (no comment) | ✏️ annotated S154 | masks byte 0 `$C0` = position 0 (index 26), not Fire (`$30`): a vanilla off-by-one — FireSlash's smart pick only ties | code-read |
+| BREEDING_SYSTEM resistance inheritance (S130): the per-type tables' index not described | ⚠ INCOMPLETE — completed S154 | indexed by (p1 + p2) & 7: a sum of 7 has no row (runs into code); never reached in the game | code-read |
+| disassembly bank $0B `RoomEntry0_TilesetLoader` / `RoomEntry1_GraphicsLoader`: `ld a, [wMapID] / ld a, $08 / jr nz` after the sheet load | ✏️ annotated S154 | 7 dead bytes (the first load is overwritten; the `jr nz` falls through) — the memorial's regions | code-read + the walk (statues drawn at every load) |
+| `examples/s154_memorial_demo/build_demo.py` docstring (S154 first draft): "The statue stands blank and quiet." | ❌ WRONG — fixed S154 before delivery | the default empty words are "A blank statue, quiet and cold." (16 cells a line) | `memorial.DEFAULT_EMPTY` |
+| `editor2/app/rooms/tab.py` `_add_statue` (S154 first draft): the vocabulary release read `room['record']['tileset']` | ❌ WRONG — fixed S154 before delivery | a room drawing with a game sheet has no `tileset` until `_room_sheet` localizes it | `test_app` hung (KEY_LESSONS S154) |
+| help `77_memorial.md` §3 / §4 (S154 r1): "the statue takes 4 free tiles … a plinth at the bottom, colour 0 above it"; "colour 0: around the monster (the niche, the shadow)" | ⚠ SUPERSEDED — rewritten S154 r2 | a statue = the pedestal cell + the monster cell above; the monster cell holds a copy of the floor; the statue slot = the floor's colours + grey in an unused index; the r1 colour-0 area showed as a solid square (the user: "Currently its a grey square") | the user's test; `walk_memorial.py` see-through checks |

@@ -394,6 +394,21 @@ class Project:
         except _ST.StoryError as ex:
             self.story_error = str(ex)
             self.quest_scripts = []
+        # S154: the memorial statues -> their talk scripts + examine spots (memorial.py);
+        # a bad statue is reported by validators.validate (memorial_error) and dropped
+        from . import memorial as _MM
+        self.memorial_error = None
+        try:
+            _MM.lower(self)
+        except _MM.MemorialError as ex:
+            self.memorial_error = str(ex)
+            for _r in self.custom.get('rooms') or []:
+                if isinstance(_r, dict):
+                    _r.pop('statues', None)
+                    for _scr in (_r.get('screens') or {}).values():
+                        for _st in _MM._states(_scr):
+                            _st['npcs'] = [n for n in (_st.get('npcs') or [])
+                                           if not (isinstance(n, dict) and n.get('kind') == 'statue')]
         self._lower_talk_scripts()
         self._lower_shop_scripts()
         # S126 (ROADMAP P3.14e1): service NPCs (+ shop line sets) — the vanilla
@@ -839,7 +854,9 @@ class Project:
     STEP_KINDS = ('say', 'ask', 'if', 'set', 'clear', 'battle', 'move', 'helper', 'vanish',
                   'heal', 'end',
                   # S129 (ROADMAP P3.14b / c): story commands + the story spine
-                  'give_item', 'give_monster', 'take_item', 'gold', 'refresh', 'by_progress')
+                  'give_item', 'give_monster', 'take_item', 'gold', 'refresh', 'by_progress',
+                  # S154: a memorial statue's words (memorial.py writes these scripts)
+                  'memorial')
     HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
                                         # romhack's helper; vanilla boss exits use $21 Watabou)
     HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
@@ -996,6 +1013,24 @@ class Project:
                 if _on_full(g, c) == 'stop':
                     ops.append(['end'])
                 ops.append(f'label:gdone{n}')
+            elif kind == 'memorial':
+                # S154 (memorial.py): {"statue": n, "found": [steps], "empty": [steps]} —
+                # story command 7 puts statue n's monster into the text inserts {fallen} /
+                # {fallen_level} / {fallen_species} and $D8E1 = 1 (no monster on it: 0);
+                # op $24 yields, so the words after it open their box (init_dialog)
+                g = st['memorial'] or {}
+                lab[0] += 1
+                n = lab[0]
+                w = self.story_command('memorial', {'statue': g.get('statue')}, c)
+                ops.append(['op', '0x24', f'0x{w:04X}'])
+                ops.append(['op', 'check_and_branch', '0xD8E1', '0x0000', f'@mempty{n}'])
+                f_ops, _ff = self._lower_steps(g.get('found') or [], c + '.found', lab, True,
+                                               helper_idx)
+                e_ops, _fe = self._lower_steps(g.get('empty') or [], c + '.empty', lab, True,
+                                               helper_idx)
+                ops += f_ops + [['op', 'goto', f'@mdone{n}'], f'label:mempty{n}'] + e_ops \
+                    + [f'label:mdone{n}']
+                field = True
             elif kind == 'take_item':
                 g = st['take_item'] or {}
                 w = self.story_command('take_item', {'item': g.get('item'),
@@ -2630,6 +2665,7 @@ class Project:
         self._song_ext = None          # S147: the song banks after the animations
         self._battle_plan = None       # S149: the battle banks after the songs
         self._text_plan = None         # S150: the text banks after the battles
+        self._mem_plan = None          # S154: the memorial's picture bank after the texts
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2695,6 +2731,8 @@ class Project:
             _GT.plan(self)                 # S150: the text banks (edited game text)
         except _GT.GameTextError:
             pass                           # reported by the validator
+        from . import memorial as _MM
+        _MM.plan(self)                     # S154: the memorial's picture bank
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):

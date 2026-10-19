@@ -55,6 +55,7 @@ from editor2.core.gametext_doc import GameTextMixin       # S150 (P3.6: the game
 from editor2.core.items_doc import ItemsMixin             # S151 (E9: items)
 from editor2.core.newgame_doc import NewGameMixin         # S152 (E3 a2: the new game's start)
 from editor2.core.ending_doc import EndingMixin           # S153 (E5: the title + the credits)
+from editor2.core.memorial_doc import MemorialMixin      # S154: the memorial statues
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -232,7 +233,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
-               NewGameMixin, EndingMixin):
+               NewGameMixin, EndingMixin, MemorialMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -2084,6 +2085,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             # S102: the room's OWN animated tiles (tile_anims) change at
             # runtime too — protected the same way
             out |= self.own_anim_slots(r)
+        # S154: a memorial statue's 4 tiles get a monster drawn into them at runtime —
+        # kept away from every tile search the same way
+        out |= self.statue_slots(tid)
         return out
 
     def room_animation(self, room):
@@ -2265,9 +2269,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         """128 dicts: placed [(room_id, screen, state)], mine [names],
         vocab bool, animated bool, changed bool (graphic differs from the
         origin sheet), status (animated/placed/mine/vocab/free)."""
-        anim = self.animated_slots(tid)
+        statue = self.statue_slots(tid)                  # S154: memorial statues
+        anim = self.animated_slots(tid) - statue
         out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in anim,
-                'changed': False} for i in range(128)]
+                'statue': i in statue, 'changed': False} for i in range(128)]
         seen = [set() for _ in range(128)]      # S142: `w not in list` was O(n^2) at scale
         for r in self.rooms_using_tileset(tid):
             for k, scr in (r.get('screens') or {}).items():
@@ -2303,7 +2308,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         rel = self.released(tid)
         for i, u in enumerate(out):
             u['released'] = rel and u['vocab']
-            u['status'] = ('animated' if u['animated'] else 'placed' if u['placed']
+            u['status'] = ('statue' if u['statue'] else
+                           'animated' if u['animated'] else 'placed' if u['placed']
                            else 'mine' if u['mine']
                            else 'vocab' if (u['vocab'] and not rel) else 'free')
         return out
@@ -3009,6 +3015,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     'swirl_of': entry.get('swirl_of'),
                     # S123: the NPC's colour (an OBJ palette 0-7, or {palette, when})
                     'colour': copy.deepcopy(entry.get('colour'))}
+        if k == 'statue':
+            # S154: a memorial statue (memorial_doc.py) — an examine spot in the game
+            return {'kind': 'statue', 'x': int(entry['x']), 'y': int(entry['y']),
+                    'statue': entry.get('statue'), 'facing': 'any', 'raw': False}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}

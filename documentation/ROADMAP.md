@@ -3381,6 +3381,35 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       items that work like the TinyMedal / BeastTail lack the Medal Man count / the gate-map
       compass (both test the real id); the gate-floor chests give the game's items only.
 
+- [x] **E10 — The memorial: statues of the monsters that won and have left (ADDED + BUILT
+      S154; built S154, NOT yet user-tested; test ROM `DWM-S154-memorial-test.gbc`).** User:
+      "A custom room, insertable into gates, where you can place objects that will take on
+      sprites (non-moving) and interactables (text when examined) of any monsters the player
+      beat a boss OR an arena level with … ONLY if monster is no longer with player (bred or
+      released …)"; decided in the scoping: the level when they won; every boss (new bosses in
+      existing gates too) + Starry Night; fainted fighters count; a SHARED POOL with a random
+      pick, statues of one room all different ("otherwise stay blank"); the oldest dropped when
+      full; any number of statues a room, more in later room states ("Maybe I want to have
+      more statues as game goes on"). Built: the monster's tag in record +$82 (resistance 26 —
+      read by no skill, packs to position 0, breeds mod 8: DATA_STRUCTURES "The memorial
+      (S154)"), the list in SRAM bank 3 (8 B a monster, 8-120, rides the save), bank $79
+      entries 6-9 (battle start / end, the room's statues, the words) + a picture bank (every
+      species' standing frame), regions in banks $50 / $0B, bank $77 story command 7 + the
+      BreedClose redraw; `custom.memorial` + `custom.rooms[].statues` + statue entries;
+      **+ Statue (U)** in the Rooms tab, the statue panel, Memorial settings…, a statue's own
+      words, the inserts `{fallen}` / `{fallen_level}` / `{fallen_species}`; help 77. Walk
+      `tools/walk_memorial.py` 56 / 56, negative 19 FAIL. PROJECT_COMPILER §2.62. Not built
+      (not asked): a statue's own picture per monster (it is the walking frame); a plaque
+      listing every remembered monster; the memorial in the game's own rooms.
+      **S154 r2 (the user on the r1 ROM: "Pedestal should be its own tile I can edit … Then
+      monster sits on top"; "Monster should be grey but BACKGROUND should be transparent.
+      Currently its a grey square"; "confirm this will work with a) monsters I swap sprites out
+      and b) new custom monsters"):** two cells (the room's shared, editable Pedestal + the
+      monster cell above holding a copy of the floor), the statue palette set up by the editor
+      (the floor's colours + grey in an unused index), a per-statue shade map in the engine;
+      walk 60 / 60 (see-through on screen, the grey, a new species on a statue), negative 20
+      FAIL; a re-arted species (new art + layout) shown with its new art (probe 19 / 19).
+
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work
 is **E2** (the authoring backbone, now unblocked: E1's authoring spec feeds straight into

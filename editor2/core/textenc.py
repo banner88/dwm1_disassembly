@@ -90,7 +90,22 @@ TOKENS = {
     '{hero}': ([0xF6], HERO_CELLS, [0xD3, 0xD4, 0xD5, 0xD6]),   # the new-game name tiles (TERRY; MILLY with the Milly hook, S121)
     '{lead}': ([0xF9, 0x00], LEAD_CELLS,
                [0x27, 0x4F, 0x3E, 0x48, 0x36, 0x49, 0x46, 0x4A, 0x42]),  # "DrakSlime"
+    # S154 (memorial.py): a memorial statue's monster — only in a statue's words (the
+    # statue's story command fills the slots right before; an unfilled slot prints
+    # on through RAM and crashes the game, KEY_LESSONS S118)
+    '{fallen}': ([0xF9, 0x00], 4, [0x36, 0x49, 0x46, 0x3F]),                     # "Slib"
+    '{fallen_level}': ([0xF9, 0x10], 2, [0x02, 0x03]),                            # "23"
+    '{fallen_species}': ([0xF9, 0x20], LEAD_CELLS,
+                         [0x27, 0x4F, 0x3E, 0x48, 0x36, 0x49, 0x46, 0x4A, 0x42]),  # "DrakSlime"
 }
+MEMORIAL_TOKENS = ('{fallen}', '{fallen_level}', '{fallen_species}')
+
+
+def uses_memorial(entry_or_text):
+    """S154: True when a dialogue entry / text uses a memorial insert."""
+    import json as _j
+    t = entry_or_text if isinstance(entry_or_text, str) else _j.dumps(entry_or_text)
+    return any(k in t for k in MEMORIAL_TOKENS)
 SPEAKER = [0x9F, 0xA3]             # the "*:" the $EA $9F $A3 opener prints
 VOICES = {'low': [0xEA], 'high': [0xEB], 'none': []}
 SPEAKER_MAX = 10                   # cells of a named speaker incl. the ":"

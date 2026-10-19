@@ -486,6 +486,77 @@ a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 - **The game's own way in** (the bedroom script after Starry Night's night farm): jingle $47,
   op $65, `$C88A` := 4, `$C88B` := 0, op $3E. The patched builds' steps do the same.
 
+### The memorial (S154 — code-read + PyBoy-measured on the user's save; patched builds: ROADMAP E10, PROJECT_COMPILER §2.62)
+
+A project room may hold MEMORIAL STATUES: each shows (as background tiles) a monster that
+won a boss battle, an arena class or Starry Night's final with the player and has since LEFT
+(bred away, released, traded); examining it says "In memory of {fallen}, a level
+{fallen_level} {fallen_species}." The game's side of what the feature rests on:
+
+- **Record byte +$82 = resistance index 26 (the 27th).** The monster record's resistances are
+  +$68..+$82 (27 bytes, species info +$0F..+$29 copied at creation). Index 26 is 0 in every
+  species row and **no skill reads it**: the battle packer (bank $51 `SaveBtlS_4404`) writes
+  index 26 & 3 FIRST, into packed byte 0 bits 7-6 = **position 0**, then indices 0-25 into
+  positions 1-26 (position 27 = byte 6 bits 1-0 is always 0). The only readers of position 0
+  are element 0 (skill record +5 = 0, 134 of 222 skills: bank $57 `AIRule_4c13`'s veto) and
+  the FireSlash target row (bank $58, an off-by-one: it masks byte 0 `$C0` instead of Fire's
+  `$30`). Breeding (bank $16 `BreedResistLowTable` / `BreedResistMidTable`) indexes 7 rows by
+  (parent 1 + parent 2) & 7 — **a sum of 7 has no row** (the table runs into
+  `BreedResistNone`'s code: never reached in the game, both parents 0-3). So a value that is a
+  **multiple of 8** in +$82 packs as 0 (no battle effect) and breeds to 0 mod 8 (the child
+  gets row 0, the game's own case). The memorial writes its **tag** there: 8, 16 … 248
+  (31 values); an entry's identity = (tag, species). For a child of tagged parents
+  (t1 + t2) & 7 = 0 picks row 0 — the game's own case of two parents at 0 (code-read).
+- **"Still with the player"** = any in-use record (+$00) of the 40 slots (ROM0
+  `GetMonsterDataPtr`, A = slot, keeps BC / DE) — the party and the farm — or of the bank-2
+  sleep pool when it is active ($CA41 bit 7 and magic "P1" at $A000; 40 records at
+  $A010 + c·$95) has that species (+$09) and that tag. Eggs (+$63 ≠ 0) are never tagged.
+- **Who fought:** `$CA8D` = the party count, `$CA8E..` = the party's slot numbers (fainted
+  members stay in the list). A monster that JOINS during the battle is appended, so the
+  fighters = the first MIN(the count when the battle started, the count at the end).
+- **The battle's kind** (read at bank $50 `BattleExitHandler`, before the state is cleared):
+  `wBattlePostFlag` ($DB55) = 0 a win; `$DA09` = 3 a boss battle (op `$5A` / `$5B`: every
+  gate boss and every project conversation battle), 1 a plain battle op; the first enemy's
+  EID `$DA03-$DA04`. Three bosses are fought with a plain op (extracted/arena_brackets.json
+  `gate_boss_triggers`): Digster (EID 127), Durran (199), Terry (343; the post-game rematch
+  uses the same row). The arena (map `$5D` or the project's arena map): `$D999` = 0 a class
+  (class `$D9CE` 0-7, match `$D9CD` 1-3: the class is won on match 3), 2 Starry Night's
+  final, else Starry Night's rounds / Monster Grandpa's match.
+- **Hook points (all same size):** bank $50 `BattlePhase00_PartyAliveCheck` `ld hl, $1702 /
+  rst $10` (the party count as the battle starts) and `BattleExitHandler` `ld hl, $0106 /
+  rst $10` (every battle's end); bank $0B `RoomEntry0_TilesetLoader` /
+  `RoomEntry1_GraphicsLoader` each hold a **dead 7-byte window** right after the room sheet
+  reached `$9000` (`ld a, [wMapID] / ld a, $08 / jr nz` — the first load is overwritten
+  before it is used, the `jr nz` always falls through on the flags of the call before it);
+  bank $77 `BreedClose` re-loads the sheet after the breeding screens (its tail).
+- **The list:** SRAM bank 3 from `$A110`, a ring of `MEM_RING` = `MEM_CAP` + 9 entries of 8
+  bytes: +0 tag, +1 species, +2 level (its latest win), +3..+6 nickname, +7 0. Live entries
+  = MIN(`wMemCount`, `MEM_CAP`) from ring index `wMemHead`; full = the oldest dropped. The
+  pair rides the explicit save: bank 3 `$A003-$A004` magic "M1", `$A005` count, `$A006` head
+  (bank $73 `MemorialCommit` / `MemorialRestore`, beside the extended flags at
+  `$A000-$A002` / `$A010-$A10F`). The 9 spare ring entries mean a save's window is never
+  overwritten by the next 9 wins before the next save — a reset without saving gets back
+  exactly the saved list (measured).
+- **A room's statues:** each = 4 tile ids of the room's own sheet (TL TR BL BR). At a full
+  room load the room (`wMapRegion`, `wMapID`) is looked up; a different place than the last
+  full load re-rolls (`wMemPlace`), so a battle in the room, the menu or the breeding
+  screens keep the picks. The roll: every live entry whose monster has left (bitset
+  `wMemGone`, 128 bits), a different one per statue in fill order, RNG16 mod the ones left;
+  none left = `$FF` (the statue keeps its own picture). The picture: the species' standing
+  frame (its walking frame "facing down", 16 × 16, 64 B a species in the picture bank) drawn
+  over the 4 tiles in VRAM with STAT-polled access, colour 0 transparent. **S154 r2:** each
+  statue row also carries a SHADE MAP (the palette index of the monster's colours 1 / 2 / 3).
+  A GBC background tile has no see-through colour — every pixel is one of its slot's 4
+  colours, 1 and 3 forced cream / black — so "a grey monster on the floor" is: the 4 tiles
+  hold a copy of the floor, the statue's slot = the floor's colours with the one index the
+  floor does not use set to grey, and the monster's middle shade drawn in that index
+  (measured on the demo: the monster cell's empty pixels == a plain floor cell on screen,
+  the middle shade one grey).
+- **The words:** text insert slots `$F9 $00` / `$F9 $10` / `$F9 $20` (`$C180` / `$C190` /
+  `$C1A0`, TEXT_SYSTEM) carry the nickname / the level / the species' name; bank $77 story
+  command 7 fills them for statue n and sets `$D8E1` (1 = a monster, 0 = empty) for the
+  statue's script to branch on.
+
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 
 The full chain from "player takes a step" to "wild battle starts". Every

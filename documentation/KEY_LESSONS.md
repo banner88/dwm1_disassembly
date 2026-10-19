@@ -7001,3 +7001,79 @@ works the same way (CONTINUE: the player stands where he saved). **Fix:** the po
 a talk / step-on / examine scene or a door — the TO BE CONTINUED step's help, help 76 §6, the
 demo (the AFTER KEEPER's talk). **Rule:** a scene meant to follow a save + reset must be started
 by the player, not by the room load.
+
+## S154 — the memorial (ROADMAP E10)
+
+### S154 — a "free" record byte is free only for the values every reader tolerates
+**Symptom (found in the design review, before any code):** resistance 26 (record +$82) looked
+free — 0 in every species row, "no skill uses it" (BATTLE_SKILL_SYSTEM §15.3 said "position 0
+unused"). A tag of 1-255 there would have changed battles and breeding. **Root cause:** the byte
+has three readers the docs did not list: the battle packer writes index 26 & 3 into packed
+POSITION 0 (bank $51 `SaveBtlS_4404`), which element 0 (134 skills: the AI veto `AIRule_4c13`)
+and the FireSlash target row read; breeding indexes a 7-row table by (p1 + p2) & 7 — a sum of 7
+runs into code. **Fix:** the tag is a multiple of 8 (8 … 248): & 3 = 0 in battle, (t1 + t2) & 7
+= 0 in breeding — every reader sees what it sees for the game's 0. **Rule:** before storing data
+in a byte "nobody uses", list EVERY instruction that reads it (ROM byte scan of its address
+forms, plus the block copies that move it) and choose values each reader maps to the vanilla
+case; write the readers into the owning doc.
+
+### S154 — data written outside the save must not overwrite what the save points at
+**Symptom (design):** the memorial's entries are written into SRAM at the win (bank 3), but which
+entries are live (`wMemCount` / `wMemHead`) is WRAM state that rides the explicit save. With a
+ring of exactly `MEM_CAP` entries, a win after a save (full list) writes over the oldest entry of
+the SAVED window: a reset without saving restores the old count / head and shows the new
+monster's bytes in an old entry. **Fix:** the ring is `MEM_CAP` + 9 — nine new entries after a
+save land outside the saved window (`walk_memorial.py save` measures a win after the save
+forgotten by a reset with the saved entries intact; the full-list wrap is the ring arithmetic,
+code-read). **Rule:** when a feature writes SRAM directly
+but commits its index at the save, size the storage so the writes between two saves cannot
+reach the committed window — or commit the data itself at the save.
+
+### S154 — an offscreen GUI test waits for ever on a message box
+**Symptom:** `test_app` ran > 10 min with no output after S153's line; `py-spy dump` showed the
+main thread inside `QMessageBox.warning` called from the new `_add_statue`. **Root cause:** the
+retry after the "release the vocabulary?" question read `room['record']['tileset']`, absent for a
+room still drawing with a game sheet (KeyError → the command's error → a warning box, modal,
+offscreen = nobody presses OK). **Fix:** the retry resolves the room's sheet as `add_statue`
+does (`_room_sheet`: the vanilla sheet is localized first); the S154 test replaces
+`QMessageBox.warning` with an AssertionError for its run. **Rule:** a GUI test that drives a
+handler able to warn patches the warning to FAIL; when a run goes quiet, `py-spy dump --pid`
+before guessing.
+
+### S154 — every undo push re-shows the Rooms canvas and drops the selection
+**Symptom:** after Memorial settings… the statue panel's next button (Its words…) did nothing —
+`_sel_statue()` was None. **Root cause:** the session's undo push re-shows the room (`_show`
+clears `_sel_npc` — S97 design); the handler read the selection AFTER the push. **Fix:** the
+statue handlers read the selection before the edit and call `_reselect_statue(index)` after it
+(the marker selected again + the panel). **Rule:** a Rooms-tab handler captures what is
+selected before pushing a command and re-selects after (as `_after_npc_edit` does for NPCs).
+
+### S154 — a ROM check's offset is the instruction bytes before the site, counted
+**Symptom:** `test_s154 --rom` FAILED "bank $50 far-calls entry 7 at BattleExitHandler" (found
+`$14240F`, expected `$14240E`) while the walk showed the hook working. **Root cause:** the test
+assumed the region starts 4 bytes into `BattleExitHandler`; the code before it is `ld a, [$c825]`
+(3) / `or a` (1) / `ret nz` (1) = 5. **Fix:** + 5, with the instructions named in the test.
+**Rule:** an offset in a ROM assertion is derived from the listed instructions (or a region
+label in the .sym), never estimated.
+
+### S154 r2 — "transparent" on a GBC background is a copied floor plus a free palette index
+**Symptom (the user, on the r1 ROM):** "Monster should be grey but BACKGROUND should be
+transparent. Currently its a grey square." **Root cause:** the r1 statue cell drew the monster
+over an author picture whose empty area was colour 0 of a separate "stone" slot (`$2D6B`) — a
+square of that colour on the floor. A background tile has no see-through colour: each 8 × 8
+tile is one palette slot of 4 colours, colours 1 / 3 forced to cream / black in custom rooms.
+**Fix:** the monster cell's tiles start as a COPY of the floor that was there; the statue slot
+= the floor's slot with the one index the floor does not use (colour 0 or 2) set to grey; the
+engine draws the monster's middle shade in that index (a per-statue shade map in
+`MemRoomTable`, `MemShade`). Measured on screen: the empty pixels of the monster cell == a
+plain floor cell, 72 / 72; the middle shade one grey. **Rule:** for anything drawn "over" the
+background in BG tiles, composite onto a copy of what is behind and spend palette indices the
+background leaves unused; check it on the SCREEN against an untouched neighbour, not in VRAM.
+
+### S154 r2 — a Document mixin helper name shadowed by another mixin
+**Symptom:** the r2 `add_statue` raised `TypeError: list indices must be integers` inside
+`state_layout_ref`. **Root cause:** `memorial_doc` defined `_paint_cell(tiles_grid, attr_grid,
+…)`; `gates.py` already has `_paint_cell(room, key, …)` and comes first in `Document`'s MRO, so
+the call went to the gates one. **Fix:** renamed `_statue_paint`. **Rule:** a mixin's private
+helpers carry the mixin's prefix (`_statue_…`, `_mem_…`); before adding one, `grep -rn "def
+<name>" editor2/core`.

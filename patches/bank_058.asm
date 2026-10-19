@@ -3379,6 +3379,10 @@ jr_058_531d:
     ret z
 
     call SetBtlFX_5e19
+    ; [S154] FireSlash's target row (dispatch [$44] $5339) masks byte 0 $C0 = packed
+    ; POSITION 0 = resistance index 26 (always 0), not Fire (position 1, byte 0 $30 —
+    ; BoltSlash / VacuSlash / IceSlash read their own types): a vanilla off-by-one, so
+    ; FireSlash's smart pick only ever ties (HP, then RNG).
     ld a, $00
     ld [$db4e], a
     ld a, $c0

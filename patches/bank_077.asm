@@ -703,7 +703,9 @@ BreedClose:
     inc hl
     ld d, [hl]                          ; DE = the room sheet's gfx id
     ld hl, $9000
-    jp WaitDMATransfer                  ; tiles $00-$7F = the room's own again
+    call WaitDMATransfer                ; tiles $00-$7F = the room's own again
+    jp MemorialRedraw77                 ; S154: the memorial's statues on them again (generated:
+                                        ;   a far call to bank $79 entry 8, or ret)
 
 BreedSlotEID:
     push de
@@ -1049,6 +1051,12 @@ ScriptCommand:
 ;        naming screen's globals for it as ScriptCmd3A sets them ($C8F2 the
 ;        nickname, $C8F4 species + $10, $C8F5 species, $C8F6 gender, $D7CA /
 ;        $D7CB) — the script opens the screen next (op $04 15)
+;     7 memorial [statue]  (S154) a memorial statue's monster (the one the room
+;        load put on statue n of this room, wMemPicks) into the text inserts —
+;        $C180 its nickname, $C190 its level, $C1A0 its species' name — and
+;        $D8E1 := 1; an empty statue: $D8E1 := 0 (bank $79 entry 9 MemSay;
+;        editor2/core/memorial.py). BreedClose's sheet reload ends in
+;        MemorialRedraw77 (generated: bank $79 entry 8, or ret)
 ;   Op $24 yields (BANK04_SCRIPT_ENGINE "Breeding"): a later text needs
 ;   init_dialog — the compiler adds it.
 ; SHOP ITEM SETS: ShopFill picks list a, then ShopSetPick walks ShopSetTable
@@ -1467,7 +1475,7 @@ StoryCommand:
     dec a
     jr z, .storyPoint
     dec a
-    ret nz
+    jr nz, .memorial
     ; 6 credits_after [map, region + 1, X lo, X hi, Y lo, Y hi] (S153): where the field
     ; goes when the credits the script starts next are over -> wCreditsAfter (+0 := 1)
     ld de, wCreditsAfter
@@ -1481,6 +1489,15 @@ StoryCommand:
     inc de
     dec b
     jr nz, .creditsAfter
+    ret
+.memorial:
+    ; 7 memorial [statue] (S154): the statue's monster into the text inserts $C180 /
+    ; $C190 / $C1A0, $D8E1 = 1 (none on it: 0) — bank $79 entry 9 MemSay, E = the statue
+    dec a
+    ret nz
+    ld e, [hl]
+    ld hl, $7909
+    rst $10
     ret
 .storyPoint:
     ; 5 story_point [n] (S153): the original game's story as at story point n (bank
@@ -2000,3 +2017,7 @@ ItemBaseTable:   ; the behaviour id of every item (the game's: itself)
     db $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f
     db $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $1a, $1b, $1c, $1d, $1e, $1f
     db $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $2a, $2b
+
+; S154 (memorial.py): no memorial statues in this project
+MemorialRedraw77:
+    ret

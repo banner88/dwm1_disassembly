@@ -1,5 +1,90 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-18 (Session 152 — **ROADMAP E3 a2 BUILT: THE OPENING — CUTSCENES → NEW GAME… (WHERE A NEW
+> GAME STARTS: THE GAME'S INTRO OR ONE OF YOUR ROOMS; THE ORIGINAL OPENING AS PLAYED: ITS FLAGS + ROOM BYTES, MEASURED);
+> A FARM KEEPER WHO HANDS OVER THE FIRST MONSTER (PULIO'S WAY); GIVEN MONSTERS GET A NAME (WERE "0000"); A WHOLE NEW
+> OPENING MADE THROUGH THE EDITOR AND WALKED FROM THE TITLE; HELP 75 = EVERY STEP** (kickoff: "Continue on the big
+> ticket items … Given a complete romhack, IS ANYTHING MISSING?" → the audit + questions → user: "I guess the one thing
+> we DONT have is the 'giving player new monster and setting up farm' as a simple button in editor - like with pulio in
+> original … Make a new project and set up an alternative where waroubou greets Milly (and asks name) in roots room …
+> two new screens … new king (GreatLog king) … a new farm area (totally redesigned) … first new (different monster). See
+> if there are any issues doing this purely via editor and make a new help detailing every step. Then unlock area and
+> let player enter new gate (custom gate) … editor probably SHOULD have that capability. New game -> where to start ->
+> etc."). **Built S152; USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3).** Test ROMs (a NEW project, `examples/s152_opening_demo/greatlog_opening/`):
+> **`DWM-S152-greatlog-room-test.gbc`** (`6942dfbd…`, patched; NEW GAME starts in the roots room as Milly) and
+> **`DWM-S152-greatlog-intro-test.gbc`** (`9e84a02f…`, patched; the game's bedroom intro, the Milly hook's dresser whirls
+> her to the roots room). Example pin `7e8cb031…` (patched; was `046319ef…`, patched): bank $77 only (A/B diff).
+> **Measured (PyBoy, the original ROM):** the title's NEW GAME (bank $15 `TitleNewGameInit` $462D, annotated) clears
+> $C8EA-$D9E9, sets map $2F at $15:$4652; the first field load is a NON-warp load: bank $01 `DefaultSpawnTable` (the
+> S66 "107-entry" `NPCWalkDataTable` = 96 rows, re-sectioned + renamed both trees, NEW
+> `tools/resection_default_spawn_01.py`) and `ClearAnimationState` zeroes $D92A-$D9E9 AGAIN. The opening's state at the
+> King's second audience: flags `$0000 $0001 $0002 $0005 $0007 $0008` + 8 room bytes (`$D92B` 1, `$D92C` 3 … `$D974` 1).
+> DATA_STRUCTURES "New game start (S152)", EVENT_FLAGS "The original opening's flags (S152)".
+> **Built (engine):** region `newgame_start` (bank $15, same size) → bank $79 entry 2 `NewGameStart` (the start room /
+> cell / region through the WHOLE warp mailbox — `wWarpGateId` left 0 loaded the Castle; extended flags only); the
+> opening's flags / bytes in the start room's first scene (or the hook's arrival scene); bank $77 `StoryCommand` kind 4
+> `name_given` (the species' default nickname + the naming screen's globals; TEMPLATE_SIZE 2200); the Milly hook's whirl
+> now sets `$0000` / `$D974` as the replaced bedroom tail did (measured OFF before). PROJECT_COMPILER §2.60.
+> **Built (compiler + editor):** NEW `newgame.py`, `newgame_doc.py`, `app/newgame_dialog.py` (Cutscenes → **New
+> game…**); `services[].first_monster` (the farm keeper: words, op `$29` into the farm, name, flag, the naming screen,
+> `init_dialog`, the farm menu → PICK UP) + the service dialog's box; Give a monster `to: party` (op `$18`) / `name:
+> ask`; flag names typed with spaces now slugged (a pre-existing first-visit bug). Help `75_opening.md` (NEW) + 00 / 63 /
+> 64 / 67 / 90; `EDITOR_REVISION` S152.
+> **"Purely via the editor" — what the walk found (all fixed this session):** a given monster was nameless ("0000");
+> the farm keeper's farewell hung after the naming screen (no `init_dialog`); flags typed with spaces were refused by the
+> build; the hook left `$0000` off; the intro + "as after the opening" without the hook is now refused. Remaining notes
+> in help 75 "Good to know" (one scene = one screen; NPCs near the top over the farm window; speaker names eat line
+> width; Duplicate state copies NPC names).
+> **The acceptance (machine half):** NEW `tools/walk_opening.py`: `make` drives the editor's window / dialogs / undo
+> commands (offscreen) to make the project, the window's Build builds it; `walk` from the title (no save): roots room +
+> naming (MILLY), the path's two scenes walk her up screens 4 → 0 with no control, the King's scene, the opening's
+> flags / bytes, the stairs walked, the LOG GUARD blocks, LOGGO's DragonKid (farm, named, PICK UP → party L1), the guard
+> steps aside (and after a reload), the glade's swirl, GREATLOG GATE (gate 32) floor 1, STUMP HOLLOW, the STUMP KING
+> beaten, Warubou → the glade, `$17C0` + the swirl gone, the game's Castle quiet (no opening, no Slib): room **34 checks,
+> 0 failed**, intro **36, 0 failed**; `--negative` (the region's vanilla bytes) FAILS the start; `make --story untouched`
+> FAILS 3 (flags, bytes, the Castle's opening plays — 134 text frames).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1666 PASSED (+ `test_s152`, 13); test_app `--rom` PASS
+> (61 OK, + `s152_opening`; the GUI build == the pin) / test_canvas `--rom` PASS (58 OK). **Next:** the user's test of the two ROMs (and opening the demo project
+> in the editor); then the next big ticket (gate looks of your own, the title / ending E5, E3 b2 story-variable headroom).
+> **r2 (the user's test, 2026-10-18 14:59: "In second screen, milly disappears. THen warubou is sitting inside the
+> entrance hall. Then he goes ABOVE the hole and then milly appears. Not ideal. See how vanilla game does it.")** —
+> measured (PyBoy, a frame log of the path): the r1 scene walked Milly off screen 4's top edge; the screen scrolled
+> while the scripted walk still ran and left her one row BELOW screen 0 (out of sight) until her next walk; Warubou (a
+> cast member) popped in mid-screen and walked onto the trunk above the hole (the door object sat on row 1, the hole is
+> row 2). **The game's way** (GreatTree, map $01 script 0 — the old man's walk): both walk to the edge, op `$0F`
+> map_transition to the next screen's bottom, whose entry script goes on; the old man is an NPC of each screen; into a
+> door: walk into the hole, sound `$51`, hidden, map_transition. **Fixed in the editor:** the builder refuses a PLAYER
+> walk off the screen (says to Warp to the next screen); the player's hidden bit (HRAM `$FF90` bit 6) SURVIVES a room
+> change (measured: invisible in the throne room) — a scene that hides the player before a warp now gives the
+> destination screen a first entry scene that shows him (`cutscene_build._show_after_hidden_warps`; a game room as the
+> destination is refused). The demo re-made the game's way (Warubou = an NPC of each screen shown by the walk's flags;
+> the door on the hole). Help 63 ("A walk over several screens") + 75 §5 rewritten. Walk + 4 checks (Milly on screen the
+> whole walk, Warubou there when each screen appears, into the hole not above it, shown in the throne room): room **38 /
+> 38**, intro **40 / 40**; the r1 build FAILS 3 of them. test_compiler `--rom` ALL 1669 PASSED (+3 r2); test_app /
+> test_canvas `--rom` PASS (61 / 58 OK); verify_integrity PASS; example pin unchanged. Test ROMs
+> **`DWM-S152r2-greatlog-room-test.gbc`** (`7c728775…`, patched) / **`DWM-S152r2-greatlog-intro-test.gbc`**
+> (`2e9277c9…`, patched). `EDITOR_REVISION` S152r2. Session slip, caught + repaired: two project builds run at once
+> staged their files over the same `disassembly/` and left 37 clean files patched (KEY_LESSONS S152 r2); restored
+> (HEAD + this session's two annotated files), clean `1ca6579…` byte-perfect, the ROMs rebuilt on the clean tree identical.
+> **USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3). r4 (the user: "I assume it was all documented
+> extensively? Step by step?"):** help `75_opening.md` rewritten as 10 numbered parts with every step of the demo
+> (the rooms, the doors, the roots room, New game, the walk with its exact steps and the door's room state, the throne
+> room's scene and conversations, LOGGO's service, the guard's state + talk scenes, the gate / boss / portal, build and
+> test) + the order of work + a table of the opening's flags; `EDITOR_REVISION` S152r4 (help only; no ROM change).
+> **r3 (the user, 2026-10-18 16:32: "Almost perfect BUT: They go in at top of tree, then room appears, then Milly's
+> sprite disappears, then white screen AGAIN and room appears AGAIN, then cut scene proceeds.")** — measured (frame log):
+> the door object on the hole FIRED under the scene's walk into it (a walk-on exit fires during a scripted walk); the
+> throne room loaded while the path scene went on THERE (its sound / Disappear hid Milly in the throne room, its Warp
+> loaded the room again). The game: GreatTree screen 0 has NO exits in state 0 (the old man's walk) and the door in
+> state 1. **Fixed:** the builder refuses a player walk onto an exit of a room state the scene can play in (state 0 +
+> every state a rule may pick that does not contradict the scene's once / when flags) and says how (a state without the
+> door, a rule on the scene's flag); the demo: path screen 0 state 1 (Duplicate) holds the door, rule state 1 when
+> `path_walk_2` is ON. Help 63 / 75 (§5 the door's states). Walk + 1 check (path → throne = ONE room load; the r2
+> build FAILS it with 2): room **39 / 39**, intro **41 / 41**; the throne room: Milly shown before the fade-in, one
+> load (frame log). test_compiler `--rom` ALL 1671 PASSED (+2 r3); test_app / test_canvas `--rom` PASS; verify_integrity
+> PASS; example pin unchanged. Test ROMs **`DWM-S152r3-greatlog-room-test.gbc`** (`752927bb…`, patched) /
+> **`DWM-S152r3-greatlog-intro-test.gbc`** (`5575db54…`, patched). `EDITOR_REVISION` S152r3.
+
 > Last verified: 2026-10-17 (Session 151 — **ROADMAP E9 BUILT: ITEMS — EVERY FIELD OF THE GAME'S 43 ITEMS EDITABLE
 > (THE 12-BYTE RECORD DECODED IN FULL: USED-UP %, FIELD USE, THE WHO WINDOW, LINES, POWER, SELLABLE, KEPT ON A LOST
 > BATTLE) + THEIR BATTLE POWER; NEW ITEMS 44-127 THAT WORK LIKE ONE OF THE GAME'S (ITS BASE); THE ITEMS TAB; THE

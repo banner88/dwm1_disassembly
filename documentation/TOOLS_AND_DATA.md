@@ -1960,3 +1960,29 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | help `76_ending.md` (NEW), 00 / 56 / 63 / 90, `_revision.md`; `EDITOR_REVISION` S153 | every step in the editor | `test_app` (help revision) |
 | `editor2/tests/test_compiler.py` (`test_s153`, `TEMPLATE_SIZE[$77]`, `REFERENCE_MD5` `d88d5436…`), `test_app.py` (`s153_ending`; the plain-text rule allows the credits page's role / names — the page picture beside them; `--rom`: the build thread + the window freed before exit — the process aborted AFTER `PASS`, "pure virtual method called", exit 134 / 139) | tests | test_compiler `--rom` ALL 1699 PASSED |
 
+
+## S154 rows (ROADMAP E10 — the memorial: statues of the monsters that won and have left)
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/memorial.py` (NEW) | `custom.memorial` + `custom.rooms[].statues` + statue entries: settings / checks, `lower` (talk scripts + examine spots), the standing pictures (`species_art`, `frame_pixels`, `pictures`), the picture bank (`plan`, `emit_pic_banks`), bank $79 data lines, bank $77 `MemorialRedraw77`, the four regions, `problems` | `test_s154`, walk_memorial.py |
+| `editor2/core/memorial_doc.py` (NEW; `Document` mixin) | `memorial_settings` / `set_memorial`, `statues` / `statue_slots` / `statue_places`, `add_statue` (4 free sheet slots + the empty-statue picture), `place_statue`, `remove_statue_here`, `move_statue_order`, `set_statue_words` / `statue_words` | `test_s154`, `s154_memorial` |
+| `editor2/app/rooms/memorial_dialog.py` (NEW), `object_panels.py` (`StatuePanel`), `tab.py` (＋ Statue (U), the handlers, `_reselect_statue`), `canvas.py` (marker M), `tileset_map.py` (status statue) | the editor half | `s154_memorial` (test_app) |
+| `editor2/core/templates/bank_079_head.asm` (entries 6-9 + the engine), `bank_077_head.asm` (story command 7, the BreedClose tail), `memorial_pics.asm` (NEW), `PINNED_SHA256`; `validators.py` (`TEMPLATE_SIZE[$77]` 2241, `memorial.problems`) | the engine half (PROJECT_COMPILER §2.62) | `test_s154 --rom`, walk_memorial.py |
+| `editor2/core/project.py` (`memorial` step, the lowering call, the picture bank in `ext_bank_owners`), `story.py` (kind 7), `textenc.py` (`{fallen}` / `{fallen_level}` / `{fallen_species}`), `emitters.py` (the regions + `mem_pics_ext`), `milly.py` (bank $79 also for statues), `shops.py`, `capacity.py` (two rows), `document.py` (`tile_usage` statue, `npc_view`) | the compiler half | `test_s154` |
+| `patches/bank_050.asm` / `bank_00b.asm` (the four regions), `bank_073.asm` (`MemorialCommit` / `MemorialRestore`), `wram.asm` (`wMemCount` … `wMemTmp` $D56D-$D597), `bank_077.asm` (`--apply`); comments in `patches/` + `disassembly/` banks $00B / $016 / $050 / $051 / $057 / $058 | the game's sites + the resistance-26 readers | clean `1ca6579…` byte-perfect |
+| `simulator/pacing.py` (`pack_res`) | index 26 → packed position 0 as the game (was 27; same result while it is 0) | — |
+| `tools/walk_memorial.py` (NEW) | the memorial walked on the user's save + the S154 demo build: `--build DIR --project P --sav S --keep K [--negative] [--only steps]`: empty, champion, again, breed, words, menu, save, grown, battle, crypt, census (14 battle kinds by stub calls) | 56 / 56; `--negative` 19 FAIL |
+| `examples/s154_memorial_demo/build_demo.py` (NEW) | the user's project + THE MEMORIAL HALL (3 statues / 5 in state 1, the CHAMPION, the MASON, the BREEDER, the FARM KEEPER) + THE MEMORIAL CRYPT (gate 2 floor 2) + the MEMORIAL GUIDE in Cities_FOUNT | builds `62c63043…` (patched) |
+| help `77_memorial.md` (NEW), 00 / 90, `_revision.md`; `EDITOR_REVISION` S154 | every step in the editor | `test_app` (help revision) |
+| `editor2/tests/test_compiler.py` (`test_s154`, `REFERENCE_MD5` `eb283a19…` (patched)), `test_app.py` (`s154_memorial`: a warning box fails the test instead of waiting) | tests | test_compiler `--rom` ALL 1720 PASSED; test_app `--rom` 63 OK |
+
+**S154 r2 rows (the user: the pedestal its own editable tile, the monster on top; a grey monster on a transparent background; new art / new species):**
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/memorial_doc.py` | `add_statue` = two cells (the room's shared Pedestal metatile on the clicked cell, the monster cell above = a copy of what was there), `_statue_palette` (the background's slot + grey in an unused index), `_remap_to`, `_cell_pixels`, `_pal_rows`, `_slots_in_use`, `_statue_paint`; `PEDESTAL_ART`, `GREY` | `test_s154` (`_s154_doc`), `s154_memorial` |
+| `editor2/core/memorial.py` | `shades` / `pedestal` / `palette` keys, `statue_shades`, `shade_map`, `composite` (the engine's model); 5-byte `MemRoomTable` rows | `test_s154` |
+| `editor2/core/templates/memorial_pics.asm` (`MemShade`), `bank_079_head.asm` (5-byte rows), `PINNED_SHA256`; `patches/wram.asm` (`wMemDraw` 6 B) | the shade map in the engine | walk_memorial.py |
+| `tools/walk_memorial.py` | + the screen checks after the breeding (`see_through`: the monster cell's empty pixels == the plain floor cell (4, 1); the middle shade one grey; the BG map's pedestal / monster cells), + step `species` (the project's first re-arted species and first new species put on the list: the statues show them == their new art; skipped when the project has neither) | 60 / 60 on the S154 r2 demo; `--negative` 20 FAIL; the re-art probe (TreeSlime with DarkCrab's art + layout, scratch build) 19 / 19 |
+| `examples/s154_memorial_demo/build_demo.py` | statues via the editor's automatic palette (the r1 stone slot removed) | builds `e77c006e…` (patched) |

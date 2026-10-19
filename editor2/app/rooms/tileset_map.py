@@ -36,6 +36,7 @@ COLOURS = {
     'vocab': QColor(80, 150, 255),
     'released': QColor(255, 150, 40),
     'animated': QColor(40, 170, 185),
+    'statue': QColor(205, 205, 225),        # S154: a memorial statue's tiles
     'free': QColor(60, 60, 66),
 }
 
@@ -301,6 +302,9 @@ class TilesetMap(QWidget):
         u = self.usage[i]
         side = 'WALL side' if i < self.threshold else 'walkable side'
         bits = [f'slot ${i:02X} ({i}) — {side}']
+        if u.get('statue'):
+            bits.append('a MEMORIAL STATUE\'s tile — the game draws a monster into it; '
+                        'imports and twins never use it (help: The memorial)')
         if u['animated']:
             bits.append('ANIMATED by the animation of a room on this sheet — '
                         + ('shown on screen; its graphic changes in game'

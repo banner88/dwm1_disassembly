@@ -1003,6 +1003,7 @@ CF3CopyToSRAM:
     ld a, [wGateDiveMask]
     ld [$bfcb], a
     call ExtFlagsCommit             ; S117: extended flags -> SRAM bank 3 (+ magic; S140 "X2" + the region)
+    call MemorialCommit             ; S154: the memorial's live window -> SRAM bank 3 (magic "M1")
     jp CF3SnapCommit
 
 ; -----------------------------------------------------------------------------
@@ -1088,6 +1089,7 @@ CF3CopyFromSRAM:
     ld a, [$bfcb]
     ld [wGateDiveMask], a
     call ExtFlagsRestore            ; S117: SRAM bank 3 -> wExtFlags (magic "X1" / S140 "X2" + the region; else zero)
+    call MemorialRestore            ; S154: SRAM bank 3 -> the memorial's live window (magic "M1"; else zero)
     ; S69v2: bank-1 roster snapshot — restore over the eager image if the
     ; magic is present, else SEED it (one-time migration of pre-v3 saves).
     jp CF3SnapRestore
@@ -2449,6 +2451,56 @@ ExtFlagsRestore:
     inc de
     dec b
     jr nz, .r
+.done:
+    xor a
+    ld [$4100], a
+    ret
+
+; -----------------------------------------------------------------------------
+; S154 — THE MEMORIAL's save half (PROJECT_COMPILER §2.62, DATA_STRUCTURES "The
+; memorial (S154)"). The memorial's entries live in SRAM bank 3 from $A110 (bank
+; $79 entries 7-9 write them when a battle is won); WHICH entries are live is
+; wMemCount / wMemHead, in the WRAM window this bank zeroes at every load and a new
+; game zeroes — so they ride the EXPLICIT save here, beside the extended flags:
+; bank 3 $A003-$A004 = magic "M1" ($4D, $31), $A005 = wMemCount, $A006 = wMemHead.
+; A reset without saving reloads the saved pair: the victories since the save are
+; forgotten exactly like the rest of the game. Always built (a project without
+; statues saves 0 / 0). Clobbers A, HL. RAMB = 0 on exit.
+; -----------------------------------------------------------------------------
+MemorialCommit:
+    ld a, 3
+    ld [$4100], a
+    ld hl, $a003
+    ld a, $4d                       ; "M1"
+    ld [hl+], a
+    ld a, $31
+    ld [hl+], a
+    ld a, [wMemCount]
+    ld [hl+], a
+    ld a, [wMemHead]
+    ld [hl], a
+    xor a
+    ld [$4100], a
+    ret
+
+; MemorialRestore — magic "M1" in bank 3 -> wMemCount / wMemHead; else leave them
+; at the zeros the caller just wrote (a save older than S154: no memorial yet).
+MemorialRestore:
+    ld a, $0a
+    ld [$0100], a
+    ld a, 3
+    ld [$4100], a
+    ld hl, $a003
+    ld a, [hl+]
+    cp $4d
+    jr nz, .done
+    ld a, [hl+]
+    cp $31
+    jr nz, .done
+    ld a, [hl+]
+    ld [wMemCount], a
+    ld a, [hl]
+    ld [wMemHead], a
 .done:
     xor a
     ld [$4100], a

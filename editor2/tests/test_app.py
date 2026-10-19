@@ -3427,6 +3427,155 @@ def s153_ending(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s154_memorial(app, w):
+    """S154 (the memorial; user: "objects that will take on sprites (non-moving) and
+    interactables (text when examined) of any monsters the player beat a boss OR an arena
+    level with ... ONLY if monster is no longer with player"): + Statue (U) on a selected
+    cell (the vocabulary release asked and answered), the canvas marker M, the statue
+    panel (fill order, its tiles, its words), a second statue, Earlier / Later, Memorial
+    settings… (cap), Its words… (own words), the project still compiles (the statue's
+    script + the picture bank), Remove from this state; undo restores project.json."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QDialog, QMessageBox
+    import editor2.app.rooms.tab as TABm
+    import editor2.app.rooms.memorial_dialog as MDm
+    from editor2.core import compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s154_memorial_')
+    k_w = TABm.QMessageBox.warning
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.rooms_tab
+        w.tabs.setCurrentWidget(rt)
+        from PySide6.QtCore import Qt
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(Qt.UserRole) == 'gate_island':
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.room_id == 'gate_island', rt.room_id
+        assert rt.act_add_statue.text() == '+ Statue (U)'
+        k_q = TABm.QMessageBox.question
+
+        def _no_warning(*a, **k):                # a warning box would wait for ever offscreen
+            raise AssertionError(f'unexpected warning box: {a[1:]!r}')
+        TABm.QMessageBox.warning = staticmethod(_no_warning)
+        TABm.QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+        try:
+            rt._add_statue((2, 2))
+            app.processEvents()
+            rt._add_statue((4, 2))
+            app.processEvents()
+        finally:
+            TABm.QMessageBox.question = k_q
+        room = doc.room('gate_island')
+        sts = room.get('statues') or []
+        assert len(sts) == 2 and [len(s['tiles']) for s in sts] == [4, 4], sts
+        ents = [e for e in doc.npc_entries(room, rt.key, rt.state_idx) if e.get('kind') == 'statue']
+        assert [(e['x'], e['y']) for e in ents] == [(2, 2), (4, 2)], ents
+        mk = [m for m in rt.canvas.markers if m[0] == 'statue']
+        assert len(mk) == 2, [m[0] for m in rt.canvas.markers]
+        assert not rt.statue_panel.isHidden(), 'the new statue opens its panel'
+        assert 'statue 2 of 2' in rt.statue_panel.order.text(), rt.statue_panel.order.text()
+        tid = room['record']['tileset']
+        slots = doc.statue_slots(tid)
+        usage = doc.tile_usage(tid)
+        assert all(usage[t]['status'] == 'statue' for t in slots) and len(slots) == 8, slots
+        thr = int(str(room['record']['collision_threshold']), 0)
+        assert all(int(str(s['tiles'][3]), 0) < thr for s in sts), 'the bottom-right is a wall'
+        # S154 r2: two cells — the room's shared Pedestal on the clicked cell, the monster's
+        # tiles on the cell above; both in the statue's palette slot
+        assert sts[0]['pedestal'] == sts[1]['pedestal'], 'one Pedestal for the room'
+        ref = doc.state_layout_ref(room, rt.key, rt.state_idx)
+        g = doc.layout(ref['id'])['tiles']
+        for s_, (cx, cy) in zip(sts, ((2, 2), (4, 2))):
+            ped = [g[cy * 2 + a][cx * 2 + c] for a in (0, 1) for c in (0, 1)]
+            mon = [g[(cy - 1) * 2 + a][cx * 2 + c] for a in (0, 1) for c in (0, 1)]
+            assert ped == [int(str(t), 0) for t in s_['pedestal']] and \
+                mon == [int(str(t), 0) for t in s_['tiles']], (ped, mon, s_)
+        assert any(m.get('name') == 'Pedestal' for m in doc.metatiles(tid)), 'the Pedestal metatile'
+        assert 'pedestal' in rt.status_line.text().lower(), rt.status_line.text()
+        _sel = rt._sel_statue()
+        _e = doc.npc_entries(doc.room('gate_island'), rt.key, rt.state_idx)[_sel[2]] if _sel else {}
+        assert (_e.get('x'), _e.get('y')) == (4, 2), 'the new statue stays selected'
+        rt._statue_order(-1)
+        app.processEvents()
+        assert rt._sel_statue() is not None, 'still selected after Earlier'
+        assert [s['id'] for s in doc.room('gate_island')['statues']] == ['statue_2', 'statue_1']
+        k_e, k_v = MDm.MemorialDialog.exec, MDm.MemorialDialog.values
+        MDm.MemorialDialog.exec = lambda self: QDialog.Accepted
+        MDm.MemorialDialog.values = lambda self: {'cap': 50, 'text': [['In memory of',
+                                                                       '{fallen}.']],
+                                                  'empty': [['Nobody yet.']]}
+        try:
+            rt._memorial_settings()
+        finally:
+            MDm.MemorialDialog.exec, MDm.MemorialDialog.values = k_e, k_v
+        app.processEvents()
+        assert doc.custom['memorial'] == {'cap': 50, 'text': 'memorial_text',
+                                          'empty': 'memorial_empty'}, doc.custom['memorial']
+        k_e, k_v = MDm.StatueWordsDialog.exec, MDm.StatueWordsDialog.values
+        MDm.StatueWordsDialog.exec = lambda self: QDialog.Accepted
+        MDm.StatueWordsDialog.values = lambda self: {'own': True,
+                                                     'text': [['Here stands', '{fallen}.']],
+                                                     'empty': None}
+        try:
+            rt._statue_words()
+        finally:
+            MDm.StatueWordsDialog.exec, MDm.StatueWordsDialog.values = k_e, k_v
+        app.processEvents()
+        sid = next(e['statue'] for e in doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                        rt.state_idx)
+                   if e.get('kind') == 'statue' and (e['x'], e['y']) == (4, 2))
+        assert doc.statue(doc.room('gate_island'), sid).get('text'), 'its own words'
+        out, prj, _w = C2.compile_project(pdir if False else _save_tmp(doc, tmp), REPO)
+        assert any('MemPicDraw:' in v for k, v in out.items() if k != 'patches/bank_079.asm')
+        assert 'MemRoomTable:' in out['patches/bank_079.asm']
+        rt._statue_delete()
+        app.processEvents()
+        n = [e for e in doc.npc_entries(doc.room('gate_island'), rt.key, rt.state_idx)
+             if e.get('kind') == 'statue']
+        assert len(n) == 1 and len(doc.room('gate_island')['statues']) == 1, n
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print('OK: S154 the memorial — + Statue (U) x2 (vocabulary released on the question; '
+              'r2: pedestal + the monster cell above, one shared Pedestal metatile), '
+              'markers M, the statue panel (statue 2 of 2), 8 statue tiles marked "statue" on '
+              'the sheet (bottom-right on the wall side), Earlier, Memorial settings (cap 50 + '
+              'words), its own words, the project compiles (picture bank, MemRoomTable), '
+              'Remove; undo restores project.json')
+    finally:
+        TABm.QMessageBox.warning = k_w
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))   # the later tests' project
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _save_tmp(doc, tmp):
+    """The document as it stands -> a project folder the compiler reads (assets beside)."""
+    import json as _json
+    q = os.path.join(tmp, 'q')
+    if os.path.isdir(q):
+        shutil_rm(q)
+    import shutil as _sh
+    _sh.copytree(doc.project_dir, q, ignore=_sh.ignore_patterns('build'))
+    with open(os.path.join(q, 'project.json'), 'w') as f:
+        _json.dump(doc.data, f)
+    return q
+
+
+def shutil_rm(p):
+    import shutil as _sh
+    _sh.rmtree(p, ignore_errors=True)
+
+
 def main():
     do_rom = '--rom' in sys.argv
     app = QApplication.instance() or QApplication(sys.argv)
@@ -4862,6 +5011,7 @@ def main():
     s151_items(app, w)
     s152_opening(app, w)
     s153_ending(app, w)
+    s154_memorial(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

@@ -306,6 +306,10 @@ def emit_bank_077(prj, warnings, head):
     out.append("")
     # S151 (ROADMAP E9): the item records + behaviour ids (entries 16-18)
     out.extend(IT.emit_lines(prj))
+    out.append("")
+    # S154: the memorial — BreedClose's tail (MemorialRedraw77)
+    from . import memorial as MM
+    out.extend(MM.bank77_lines(prj))
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

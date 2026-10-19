@@ -779,6 +779,14 @@ queue rebuilt (`BirthQueueRebuild`), egg flag := 0 — not "skill/stat inheritan
 residual (a), DOC_AUDIT S130). Its per-entry "keep by plus" roll is dead code (`jr $482B` skips the
 compare; 25 RNG steps only).
 
+**The resistance tables' missing row (S154, code-read):** `BreedResistLowTable` /
+`BreedResistMidTable` index 7 rows by (parent 1's + parent 2's resistance) **& 7** with `rst
+$00`; a sum of 7 has no row — the table runs into `BreedResistNone`'s code, so the jump would
+land on garbage. Never reached in the game (both parents' levels are 0-3, sum ≤ 6). The S154
+memorial stores its tag in resistance 26 (record +$82) as a multiple of 8, so that slot's sum is
+always 0 mod 8 → row 0, the game's case for two parents at 0 (DATA_STRUCTURES "The memorial
+(S154)"). Any other use of a resistance byte must keep (p1 + p2) & 7 ≠ 7.
+
 ## Auto-ordered special table (S113, PROJECT_COMPILER §2.29)
 
 With ANY special-table edit (`overrides`, `removes`, `appends` or a whole `table`) the

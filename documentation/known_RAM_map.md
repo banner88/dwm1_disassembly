@@ -416,7 +416,18 @@
                  CreditsAfter reads + clears it at CreditsDone): +0 set, +1 map, +2 region + 1
                  (0 = region 0), +3/+4 X px, +5/+6 Y px; 0 = the game's bedroom (PROJECT_COMPILER
                  §2.61) /
-                 wCustomPool $D56D-$D5E4 (transient reserve; $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S154] the memorial $D56D-$D597 (bank $79 entries 6-9; DATA_STRUCTURES
+                 "The memorial (S154)"): wMemCount $D56D / wMemHead $D56E — the live entries
+                 of the list in SRAM bank 3 ($A110 + 8 × ring index): zeroed by every load and
+                 a new game like the rest of this window, so they ride the EXPLICIT save
+                 (bank $73 MemorialCommit → bank 3 $A003 "M1" / $A005 / $A006,
+                 MemorialRestore at the load); transient: wMemPartyN $D56F (the party count
+                 at the battle's start), wMemPlace $D570-$D571 (region, map of the last full
+                 room load — a different place re-rolls), wMemPicks $D572-$D579 (per statue
+                 the ring entry shown, $FF none), wMemGone $D57A-$D589 (128-bit roll bitmap),
+                 wMemDraw $D58A-$D58F (species + 4 tile ids + the shade map, S154 r2, for the
+                 picture bank), wMemCur $D590-$D596 (one entry), wMemTmp $D597-$D598 /
+                 wCustomPool $D599-$D5E4 (transient reserve; $D598 in S154 r1, $D56D before S154, $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

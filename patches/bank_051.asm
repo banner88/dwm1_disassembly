@@ -593,6 +593,13 @@ jr_051_43e6:
     ld a, [$db4f]
     ld d, a
 
+; [S154] The 27 resistances (record +$68.., species info +$0F..) -> 7 packed bytes at DE
+; (battle $DD28 + 7k): FIRST index 26 (the 27th, "unused") & 3 -> byte 0 bits 7-6 =
+; packed POSITION 0, then indices 0-25 -> positions 1-26; position 27 (byte 6 bits 1-0)
+; is always 0. So a reader of "type t at position t+1" never sees index 26, but element
+; 0 (position 0) does (bank $57 AIRule_4c13, the bank $58 FireSlash target row). The
+; memorial's tag in record +$82 is a multiple of 8, so it packs as 0 (DATA_STRUCTURES
+; "The memorial (S154)"; the old docs' "position 0 unused" corrected, DOC_AUDIT S154).
 SaveBtlS_4404:
     push hl
     ld a, $1a

@@ -642,6 +642,10 @@ BreedResistOne:
 ; Was misassembled as code (b8 43 b8 43 b8 43 b9 43 c6 43 d3 43 ec 43);
 ; byte-identical dw list. "mod N < plus" = BreedPlusRoll (RNG16 mod N vs
 ; the offspring's plus $DA77); a success = ResistUpTo2 (+1, cap 2).
+; [S154] (p1 + p2) & 7 = 7 has NO row: the 7-entry table is followed by BreedResistNone's
+; bytes (C9 ..), so rst $00 would jump to $xxC9 garbage — never reached while both parents'
+; resistances are 0-3 (sum <= 6). BreedResistMidTable has the same 7 rows. The memorial's
+; tags (index 26 = record +$82, multiples of 8) keep every sum of that slot at 0 mod 8.
 BreedResistLowTable:
     dw BreedResistNone       ; sum 0: nothing
     dw BreedResistNone       ; sum 1: nothing
