@@ -1709,15 +1709,14 @@ jr_050_4945:
     call ClearSpriteBuffer
     call LoadBattleGraphics
     call UpdateBattleSprites
-    ld hl, $0202
-    ld a, $09
-    ld [$d9f7], a
-    ld a, l
-    ld [$c822], a
-    ld a, h
-    ld [$c823], a
-    ld hl, $4c00
-    rst $10
+    call NoSkillName50          ; [S155 r4] was `ld hl, $0202` (the message id, now
+    ld a, $09                   ;   written as A below): $C180 := the commanded
+    ld [$d9f7], a               ;   monster's name first. The original game prints
+    ld a, $02                   ;   "[INS 00] doesn't have any skill" with whatever
+    ld [$c822], a               ;   $C180 holds — after ATK's target list and B it is
+    ld [$c823], a               ;   the foe last pointed at ("BombCrag doesn't …").
+    ld hl, $4c00                ;   Same 16 bytes (was ld hl / ld a,$09 / ld [],a /
+    rst $10                     ;   ld a,l / ld [],a / ld a,h / ld [],a).
     ld de, $2e07
     call LoadPaletteFromDE
     call ClearTileBuffer
@@ -5279,16 +5278,14 @@ jr_050_5dc8:
     ld hl, wEventStateMachineIndex
     ld bc, $0008
     call FillNBytesWithRegA
-    xor a
-    ld [$d9ed], a
-    ld [$dd62], a
-    call ClearSTATMode
-    xor a
-    ld [$dd60], a
-    xor a
-    ld [$c8ec], a
-    xor a
+    xor a                       ; [S155 r5] the same 22 bytes, regrouped: the
+    ld [$d9ed], a               ;   three stores after ClearSTATMode (which only
+    ld [$dd62], a               ;   touches rSTAT) come before it with one
+    ld [$dd60], a               ;   `xor a`, which pays for wBlunted := 0 (no
+    ld [$c8ec], a               ;   slot is blunted when a battle starts)
     ld [$c87e], a
+    ld [wBlunted], a
+    call ClearSTATMode
     ld hl, $5100
     rst $10
     ret
@@ -11748,18 +11745,15 @@ CF2FarmShareDivert:
     ld a, $98
     ld [wPendingFarmExp+2], a
     ret
-AliasCommit:               ; b = skill id being committed to action queue $dcec
-    ld a, b
-    cp $DE                 ; one of our new ids ($DE/$DF)?
-    jr c, .normal
-    cp $E0
-    jr nc, .normal
-    ld [$db86], a          ; stash REAL id (read by effect dispatch when $db8a==0)
-    ld b, $00              ; queue + all presentation derivations get TEMPLATE (Blaze 0)
-    jp LoadBtl_4f86
-.normal:
+; [S155] AliasCommit — the S45 alias commit (ids $DE/$DF were queued as Blaze with
+; the real id stashed in $DB86 for FarSkillFork's `$db8a == 0` path) is RETIRED:
+; $DE / $DF are the S155 skills Repel / LoneWolf and run under their own id like
+; every custom skill. Kept as the call target of the menu commit (bank $50
+; jr_050_4a5e area: `call AliasCommit`): $DB86 := 0, then the commit as before.
+; 7 of the old 24 bytes; the rest pads (the bank keeps its size).
+AliasCommit:
     xor a
-    ld [$db86], a          ; clear: this commit is not a custom skill
+    ld [$db86], a
     jp LoadBtl_4f86
 
 ; =============================================================================
@@ -11767,8 +11761,8 @@ AliasCommit:               ; b = skill id being committed to action queue $dcec
 ; FIELD-ONLY and must be rejected in battle (menu message $0302 via
 ; jr_050_4a57, no turn consumed) and excluded from the usable-skill count.
 ; Vanilla set: $37 StepGuard, $38 MapMagic, $7e (Whistle/summon); S73 adds
-; $E4 Anchor. Called from the two rewritten sites above. A preserved enough
-; (callers only need flags); B/C/HL untouched.
+; $E4 Anchor, S155 $DE Repel. Called from the two rewritten sites above. A
+; preserved enough (callers only need flags); B/C/HL untouched.
 ; =============================================================================
 FieldOnlySkillA:
     cp $37
@@ -11777,5 +11771,18 @@ FieldOnlySkillA:
     ret z
     cp $7e
     ret z
+    cp $DE                      ; [S155] Repel
+    ret z
     cp $E4
     ret
+
+; [S155 r4] NoSkillName50 — "[INS 00] doesn't have any skill" (battle_command
+; #2, jr_050_4945): put the commanded monster's name ($C8DD's party slot) in
+; $C180, as the menu header does, instead of trusting the buffer (the target
+; list of ATK / a skill writes the foes' names there; B back keeps the last).
+NoSkillName50:
+    ld a, [$c8dd]
+    and $03
+    ld hl, $c180
+    jp CheckSlotUnder3
+    ds 3, $00                   ; [S155] the freed AliasCommit bytes (24 - 7 - 3 - 11)

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 census_skill_clone.py — S111 (ROADMAP P3.11d): which STOCK skills a NEW custom
-skill (ids $EA-$FE) may be based on — MEASURED in PyBoy, the data behind
-`gamedata.skills.<234-254>.base` (editor2/core/custom_skills.py clone_problem;
+skill (ids $EF-$FE since S155; $EA-$FE before) may be based on — MEASURED in PyBoy, the data behind
+`gamedata.skills.<239-254>.base` (editor2/core/custom_skills.py clone_problem;
 PROJECT_COMPILER §2.27; BATTLE_SKILL_SYSTEM §13.9).
 
 A new skill runs its base's effect code with ITS OWN id in $DB8A (bank $72
@@ -12,14 +12,14 @@ range) sees a different number. This census compares, for each base, the base
 itself with a clone of it on a real save.
 
 METHOD: one CONTINUE'd savestate of a real .sav on a build with the S111
-engine and no new skill; per base B, the clone id $EA is made B's twin by
+engine and no new skill; per base B, the clone id $EF (S155; $EA before) is made B's twin by
 writing ROM bytes in the loaded cartridge (exactly what a project with
-gamedata.skills.234 = {"base": B} compiles to): CustomBaseTable / the AI target
-row / looks / sounds / announce = B, CustomRecordPtrTable[$EA] = B's own record
-($54:$41CF + 19*B), CustomMPCostTable[$EA] = B's MP, the name pointer = B's
+gamedata.skills.239 = {"base": B} compiles to): CustomBaseTable / the AI target
+row / looks / sounds / announce = B, CustomRecordPtrTable[$EF] = B's own record
+($54:$41CF + 19*B), CustomMPCostTable[$EF] = B's MP, the name pointer = B's
 name. Then two rig battles from the same state (the S110 forcing,
 census_skill_present.run; wRNG1 / wRNG2 pinned each frame so the rolls repeat):
-B cast by party slot 0, then $EA. Logged per run: the acts, the battle
+B cast by party slot 0, then $EF. Logged per run: the acts, the battle
 messages ($4C:$42D1 hook: message id, subject), the HP / MP changes of all 8
 slots. result = 'same' when the clone acted as often as B (>= 1) and its
 message list and HP / MP changes are identical; else 'differs' (why) or
@@ -41,14 +41,14 @@ sys.path.insert(0, REPO)
 from tools.pyboy_harness import GAME_MODE  # noqa: E402
 from tools.census_skill_present import continue_game, parse_sym  # noqa: E402
 
-CLONE = 0xEA
+CLONE = 0xEF            # S155: the first NEW id ($EA is Plunder's, held)
 DCEC = 0xDCEC
 HP_A, MP_A, MAXHP_A = 0xDBA3, 0xDBC3, 0xDBB3
 FRAMES = 1800
 
 
 def poke_clone(p, S, base, van):
-    """Make id $EA = base's twin, in the loaded cartridge (ROM writes)."""
+    """Make id CLONE ($EF) = base's twin, in the loaded cartridge (ROM writes)."""
     i = CLONE - 0xDE
 
     def w(label, off, val):
@@ -167,7 +167,7 @@ def main():
 
     def save():
         out = {'_generator': (f"tools/census_skill_clone.py (S111) on {os.path.basename(a.rom)} + "
-                              "a real .sav; PyBoy, the stock skill vs its copy at id $EA, RNG "
+                              "a real .sav; PyBoy, the stock skill vs its copy at id $EF, RNG "
                               "pinned, party slot 0 casting"),
                'results': dict(sorted(results.items(), key=lambda kv: int(kv[0])))}
         json.dump(out, open(a.out, 'w'), indent=1)

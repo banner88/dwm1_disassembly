@@ -82,7 +82,11 @@ hex bytes (`editor2/core/textenc.py`, PROJECT_COMPILER §2.3 "S120").
   (`name_hero`) opens the Castle's naming screen anywhere (`write_ram $C8F4 0`,
   `write_ram2 $C8F2 $CA42`, op `$04` 15 0 — Castle script 0 pos 107-113); it offers the
   current name (PyBoy S121: "MILLY", then "Is MILLY okay?").
-- **`$F9 nn`** prints the name in slot `$C180 + nn` the same way; script op **`$3F`
+- **`$F9 nn`** prints the name in slot `$C180 + nn` (in battle the command menu fills slot 0
+  with the commanded monster's nickname, ATK's target list with each foe's name as the
+  cursor moves; the original's "[INS 00] doesn't have any skill" (battle_command #2, bank $50
+  `jr_050_4945`) fills nothing, so ATK → B → SKIL named the foe — S155 r4 bank $50
+  `NoSkillName50` refills it; PyBoy, the user's save) the same way; script op **`$3F`
   `load_lead_name`** fills slot 0 with the first party monster's SPECIES name (text mode 5,
   ≤ 9 cells) — the editor's `{lead}` (the compiler puts `$3F` before the text).
   **S154 (the memorial, patched builds):** a statue's words use slots `$00` / `$10` / `$20`
@@ -633,7 +637,10 @@ announce/result text cannot just claim a fresh id. Free **text bytes** are not t
 constraint — bank `$4c` has ~3290 free bytes at **`$7326`** (after the last message
 at `$7325`), the **custom message pool**. MagicBurn uses it: `CustomMsg_E0_MagicBurn`
 (56 B) at `$7326`, with `$FD`'s pointer (`$4c:$4213`) repointed there
-(patches/bank_04c.asm). A 2nd+ bespoke message needs either a verified-unused id, a
+(patches/bank_04c.asm) from S2d to S155 r2. **S155 r3: the row is the vanilla `$5F6C` again** —
+the game itself renders `$FD` through it after the poison tick (`$E1`, bank $4C
+`LoadB4c_Fork_stockfd` for a stock skill id), so the repoint printed "… burns half its MP!"
+under every poison tick; custom lines go through `CustomMsgPtrTable` (S2e). A 2nd+ bespoke message needs either a verified-unused id, a
 forked render-from-pointer path, or fixing the custom-id skill-name insert so
 name-inserting templates can be reused instead. Encoder/charset: this doc + the
 round-trip in the build. Full context: BATTLE_SKILL_SYSTEM.md §13.1.

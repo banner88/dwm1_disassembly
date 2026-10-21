@@ -65,6 +65,11 @@ asks for a target only for "one …"; an "all …" skill is applied to every mon
 on that side. Moving a skill to the OTHER side (a heal aimed at foes) rarely
 makes sense — its effect code was written for one side — so test it in battle.
 
+LoneWolf, Punish, Finish, Rupture and Blunt offer exactly two: **one foe** (the
+monster AI then picks the best foe for the skill — Rupture one with an ailment,
+Punish the most buffed, Finish the most hurt, Blunt the strongest) or **all
+foes** (each foe in turn). The other built-in custom skills keep their own.
+
 ## Monster AI
 
 Only the enemy / tactics AI reads these four; they never change what the skill
@@ -175,15 +180,57 @@ Built-in custom skills only — the data their code uses:
 - **Anchor**: the **share of the current MP charged on arrival** (original
   3/4), and the four dialogs (cast in a gate, cast in town with an anchor, cast
   in a special room, cast without an anchor).
+- **LoneWolf** (a hit): the damage **in a party of two** (original 200 % = ×2)
+  and **alone** (400 % = ×4). Every monster of the caster's party counts, alive
+  or fallen; a helper (CallHelp, the summons) does not; with three it is a
+  plain hit.
+- **Punish** (a hit): the **extra damage per buff** on the target (50 % each:
+  two buffs = ×2). A buff is any of TwinHits, ALLCHANGE, TakeMagic, Bounce,
+  Barrier, MagicBack, TailWind / StormWind, MagicWall, ChargeUP, SuckAir, Focus,
+  SideStep, a raised DEF / AGL (Upper, Increase, Speed, SpeedUp), Dodge, Imitate,
+  SuckAll, a Defence / StrongD / BladeD stance — never iron or a transformation.
+- **Finish** (a hit): the damage **when the target has full HP** (20 % = ×0.2)
+  and **when it is near 0 HP** (200 % = ×2); in between it follows the share of
+  HP the target has lost. A hit that lands does at least 1.
+- **Rupture** (a hit): the damage **when the ailments burst** (300 % = ×3).
+  Any ailment counts (poison, sleep, confusion, curse, paralysis, StopSpell,
+  Surround, DanceShut, MouthShut); all of them are cleared by the hit. A target
+  without one: "But nothing happens!" — the MP is spent.
+- **Blunt**: the **ATK lost** as a share of the target's base ATK — a
+  percentage, 1-100 (50 % = half, the original; 33 % ≈ a third, 25 % = a quarter);
+  at least 1; ATK never drops below 1. It does **not stack**: on a monster
+  already blunted it fails ("But nothing happens!", the MP spent), and the monster
+  AI does not pick it then. It resists like Sap (the DefDown resistance); DeMagic
+  and Surge put the ATK back (then it can be blunted again).
+- **Its line** (the five above). LoneWolf, Punish, Finish, Rupture: the line
+  that says what the skill tries to do — it replaces "… uses …!" BEFORE the
+  attack and stays on screen while the attack plays; then the hit shows the
+  game's own "… takes … damage pts!" with its damage sound and shake, as every
+  hit does. **Show it**: *every time it is used* (the default — without it the
+  skill looks like a normal attack) or *only when the bonus applies* (LoneWolf
+  with fewer than three, Punish on a buffed target, Finish above ×1, Rupture
+  when there is something to burst). One page of 2 lines; `{name}` = the user
+  (the target and the damage are not known yet). Blunt: its line IS the
+  result ("… loses … attack!"), up to 3 pages of 2 lines; `{target}` = the
+  target, `{amount}` = the ATK lost.
+- **Repel** (field only, no numbers): cast from the field menu where monsters
+  attack, it works like the Repellant — no random battles for the rest of the
+  gate floor, or in a room until the party leaves it. It fizzles (no MP spent)
+  where no battle can happen or while it is already on. In battle it does
+  nothing. (Plunder, id 234, comes in a later version.)
 
 The shares are fractions — type `1/3`, `2/5` or a whole number (top and bottom
 up to 255; MP shares at most 1, damage shares at most 4 — 2 for Quake's own
 side). Every result is rounded down and stops at 999. MagicBurn's and Anchor's
-MP box is off: they spend MP by these shares instead.
+MP box is off: they spend MP by these shares instead. The percentages (LoneWolf,
+Punish, Finish, Rupture) go from 0 to 2000 (×20); the label beside each box
+shows the multiplier.
 
 ## New skills
 
-**New skill…** adds a skill of your own (up to 21, ids 234-254). It runs the
+**New skill…** adds a skill of your own (up to 16, ids 239-254; 234-238 belong
+to the built-ins Plunder … Blunt since S155 — a project that had a new skill
+there must re-make it). It runs the
 effect of an original skill you pick — its **base** — and everything else is
 its own: name, SKIL text, MP, power, targets, monster AI, behaviour, look,
 sounds, element, announce line and learning. Only bases measured to behave
@@ -208,6 +255,9 @@ evolve chain — read-only (edit them on the Monsters tab).
   not built yet).
 - The custom skills' EFFECTS are their own code; a new skill reuses an
   original skill's effect. A new effect needs code (a session with Claude).
+- The built-in custom skill names share bank $41 with the new monsters' names:
+  since S155 19 new monsters with 8-letter names AND 4-letter nicknames are a
+  letter or two too many (the Capacity tab / the build says so).
 - New animations cannot be drawn; a skill can only borrow an existing look.
 - Custom skills are never learned "by stats alone" (the S75 crash fence): they
   evolve from a known skill or are a natural skill.

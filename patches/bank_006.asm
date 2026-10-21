@@ -9704,7 +9704,7 @@ LearnCode2Guard06:
 ; [S111] LearnLoopFork — natural-learn / skill-evolve for the CUSTOM skills. The
 ; scanner (bank $06 entry 5, $4f9a; caller = bank $51 level-up flow) loops ids
 ; 0..$D9 over SkillLearnReqTable; past $D9 it now continues with every custom
-; id $E0-$FE, whose 18-byte rows (same format: +0 level, +1..+12 six u16 stat
+; id $DE-$FE (S155: from $DE — Repel / LoneWolf; $E0 before), whose 18-byte rows (same format: +0 level, +1..+12 six u16 stat
 ; minimums, +13..+17 prerequisite ids $FF-padded; prereq = the vanilla EVOLVE
 ; path, code 1) live in bank $72 CustomLearnTable (compiler region
 ; gd_custom_learn, gamedata.skills.<224-254>.learn) and are copied ONE AT A
@@ -9720,7 +9720,7 @@ LearnLoopFork:
     cp $da
     jr c, .vanilla              ; vanilla rows $00-$D9: keep scanning in place
     jr nz, .custom
-    ld c, $e0                   ; past $D9: the custom ids $E0-$FE
+    ld c, $de                   ; past $D9: the custom ids $DE-$FE (S155; was $E0)
 .custom:
     push de
     ld e, c

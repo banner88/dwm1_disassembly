@@ -10857,6 +10857,13 @@ AIChainZeroCell_788b:
 ; Chain end: delta = $DD26 bonus - $DD27 penalty; borrow (net-negative)
 ; ALSO jumps to AIChainZeroCell_788b; else dce4[cell] += delta (8-bit add,
 ; no carry check). (S81)
+; [S155 romhack] patches/bank_057.asm: the first `ld a, [$c1fc]` here becomes
+; `call CustomAI57` (in the trailing nops at $7FD1): for an id >= $DE it runs
+; bank $72 entry 8 CustomAIRule72 first (the S155 skills' own bonus / penalty /
+; veto) — the chain end is the one spot every option of every category passes
+; with $DD26 / $DD27 still live (BATTLE_SKILL_SYSTEM §13.10).
+; NOTE (measured S155): an actor with $DD0B == 0 (an enemy of INT < $15) never
+; reaches the chains — bank $57 AILightweightPick picks at random.
 AIChainApplyDelta_78a2:
     ld a, [$c1fc]
     ld hl, $dce4

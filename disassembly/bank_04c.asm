@@ -276,7 +276,7 @@ Jump_04c_40c0:
     dw $5EFD                          ; Entry 262 — battle_message #250 "But cannot use [INS 00]!"
     dw $5F12                          ; Entry 263 — battle_message #251 "But cannot use this skill in this…"
     dw $5F41                          ; Entry 264 — battle_message #252 "Cannot give a command in this {F2…"
-    dw $5F6C                          ; Entry 265 = msg id $FD. [S2d] the one empty battle-message slot; patches/bank_04c.asm repoints it to CustomMsg_E0_MagicBurn in the custom message pool ($4c:$7326, ~3290 free bytes after the last message at $7325). The stock 256-id table is otherwise full. See TEXT_SYSTEM.md + BATTLE_SKILL_SYSTEM.md §13.1.
+    dw $5F6C                          ; Entry 265 = msg id $FD. [S2d] the one empty battle-message slot; patches/bank_04c.asm repointed it to CustomMsg_E0_MagicBurn ($4c:$7326) from S2d to S155 r2; S155 r3 keeps $5F6C — the game renders a stock $FD through this row after the poison tick ($E1), so the repoint showed MagicBurn's line there. The stock 256-id table is otherwise full. See TEXT_SYSTEM.md + BATTLE_SKILL_SYSTEM.md §13.1.
     dw $5F6D                          ; Entry 266 — [table $4215]; battle_effect #0 "{ED}[INS 00] gives [INS 10] to{FC…"
     dw $5F86                          ; Entry 267 — battle_effect #1 "[INS 00] gives [INS 10] to the{FC…"
     dw $5FA7                          ; Entry 268 — battle_effect #2 "{ED}[INS 00] gives [INS 10] to th…"

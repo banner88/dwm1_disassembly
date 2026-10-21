@@ -4050,7 +4050,7 @@ def main():
     st = w.skills_tab
     w.tabs.setCurrentWidget(st)
     app.processEvents()
-    assert st.list.count() == 232, st.list.count()     # S111: + the 10 custom skills
+    assert st.list.count() == 238, st.list.count()     # S111: + the 10 custom skills; S155: + 6
 
     def pick(sid):
         for i in range(st.list.count()):
@@ -4153,9 +4153,43 @@ def main():
     st.ratio_edits['per_fallen'].editingFinished.emit()
     app.processEvents()
     assert doc.data['gamedata']['skills']['233']['per_fallen'] == '1/2'
+    # S155: the S155 built-ins — LoneWolf's two percentages, Blunt's line, the
+    # one-foe / all-foes target choice (nothing else of the target section)
+    pick(223)                                          # LoneWolf
+    assert set(st.pct_spins) == {'duo', 'alone'}, st.pct_spins
+    assert len(st.result_edits) == 2           # S155 r2: one page, shown before the attack
+    assert st.result_edits[0].text() == "A lone wolf's", st.result_edits[0].text()
+    st.pct_spins['alone'].setValue(500)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['alone'] == 500
+    # S155 r3: "Show it" — every time (the default) / only when the bonus applies
+    assert st.line_shows is not None and st.line_shows.currentData() == 'always'
+    st.line_shows.setCurrentIndex(st.line_shows.findData('bonus'))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['line_shows'] == 'bonus'
+    st.line_shows.setCurrentIndex(st.line_shows.findData('always'))
+    app.processEvents()
+    assert 'line_shows' not in doc.data['gamedata']['skills']['223']
+    assert st.sec_target.content.isEnabled()
+    tv = [st.target.itemData(i) for i in range(st.target.count())]
+    assert tv == [0x11, 0x12], [hex(x) for x in tv]
+    st.target.setCurrentIndex(st.target.findData(0x12))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['record']['target_mode'] == 0x12
+    pick(238)                                          # Blunt (Rust until S155 r3)
+    assert 'Blunt' in st.title.text(), st.title.text()
+    assert set(st.pct_spins) == {'atk_loss'} and len(st.result_edits) == 6
+    assert st.line_shows is None                       # its line is the result: always
+    st.result_edits[1].setText('{amount} ATK!')
+    st.result_edits[1].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['238']['result_line'] == [['{target} loses', '{amount} ATK!']], \
+        doc.data['gamedata']['skills']['238']
+    pick(222)                                          # Repel: field only, no numbers
+    assert not st.pct_spins and not st.sec_target.content.isEnabled()
     nid = st.create_skill(16, 'Thunder')                # a NEW skill based on Zap
     app.processEvents()
-    assert nid == 234 and st.sid == 234 and 'Thunder' in st.title.text(), (nid, st.sid)
+    assert nid == 239 and st.sid == 239 and 'Thunder' in st.title.text(), (nid, st.sid)
     st.power['party'][0].setValue(60)
     st.power['party'][1].setValue(75)
     st.looks.setCurrentIndex(st.looks.findData(6))     # Bang's look
@@ -4166,13 +4200,13 @@ def main():
     st.prereqs.setText('Zap')
     st.prereqs.editingFinished.emit()
     app.processEvents()
-    e = doc.data['gamedata']['skills']['234']
+    e = doc.data['gamedata']['skills']['239']
     assert e['base'] == 16 and e['name'] == 'Thunder' and e['looks_like'] == 6 and \
         e['sounds_like'] == 15 and e['element'] == 'Explosion' and \
         e['record']['party_min'] == 60 and e['learn']['prereqs'] == [16], e
-    assert doc.skill_names_effective()[234] == 'Thunder'
+    assert doc.skill_names_effective()[239] == 'Thunder'
     w.monsters_tab.refresh()
-    assert any(c.findData(234) >= 0 for c in w.monsters_tab.w_skill)
+    assert any(c.findData(239) >= 0 for c in w.monsters_tab.w_skill)
     pick(30)                                           # Upper: no element to change
     assert not st.element.isEnabled()
     pick(0)                                            # Blaze -> Ice
@@ -4180,10 +4214,10 @@ def main():
     app.processEvents()
     assert doc.data['gamedata']['skills']['0']['element'] == 'Ice'
     assert doc.skill_detail(0)['record']['status_id'] == 6       # the AI element follows
-    pick(234)
+    pick(239)
     st._delete_skill()
     app.processEvents()
-    assert 234 not in doc.new_skill_ids()
+    assert 239 not in doc.new_skill_ids()
     STm.QMessageBox.warning = orig_warn
     assert not warned, warned
     while w.session.undo.index() > 0 and doc.dumps() != before:
@@ -4195,7 +4229,8 @@ def main():
         assert word in hlp, f'help 54_skills.md lacks "{word}"'
     print('OK: Skills tab (S111) — Quake MP 12 / Explosion / its own line; MagicBurn MP is '
           'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
-          'from Zap); Blaze -> Ice (AI element follows); delete; undo restores everything')
+          'from Zap); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; '
+          'undo restores everything')
 
     # S112 (P3.11e): the Animations tab (a mashup with the preview) and the
     # Skills tab's Animation section; delete refused while a skill shows it;

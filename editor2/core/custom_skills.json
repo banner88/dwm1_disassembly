@@ -1,43 +1,55 @@
 {
  "_doc": [
   "S111 (ROADMAP P3.11c; PROJECT_COMPILER \u00a72.27): the BUILT-IN data of the",
-  "custom skills $DE-$E9 \u2014 what every build gets when gamedata.skills.<id>",
-  "does not change it. Read once from the S110 pin by",
+  "custom skills \u2014 what every build gets when gamedata.skills.<id> does not",
+  "change it. $E0-$E9 read once from the S110 pin by",
   "tools/extract_custom_skills.py (until S111 these were hand bytes in banks",
-  "$41/$54/$56/$07/$06/$58/$4C/$5F/$72). Per skill: name / description (the",
-  "SKIL text, null = the empty string), mp (CustomMPCostTable; the battle copy",
-  "is record +4), record (19 B hex; null = the retired POCs' Blaze row $41CF),",
-  "learn (18 B hex; null = not naturally learnable), announce_template (the",
-  "battle announce message id, $FD = this skill's own `message`, $FF = none),",
-  "message (raw battle-text bytes, $F0-terminated), proxy (the stock skill",
-  "whose animation / flash / sounds it borrows). handler = the bank $72 code",
-  "that runs it (mechanism, not data). $DE/$DF are the retired S45 POCs."
+  "$41/$54/$56/$07/$06/$58/$4C/$5F/$72); S155 added Repel / LoneWolf ($DE/$DF,",
+  "the retired S45 POCs' ids) and Punish / Finish / Rupture / Blunt ($EB-$EE)",
+  "(\"_since\": \"S155\", authored \u2014 PROJECT_COMPILER \u00a72.63). Per skill: name /",
+  "description (the SKIL text, null = the empty string), mp (CustomMPCostTable;",
+  "the battle copy is record +4), record (19 B hex), learn (18 B hex; null = not",
+  "naturally learnable), announce_template (the battle announce message id, $FD =",
+  "this skill's own `message`, $FF = none), message (raw battle-text bytes,",
+  "$F0-terminated), proxy (the stock skill whose animation / flash / sounds it",
+  "borrows). handler = the bank $72 code that runs it (mechanism, not data).",
+  "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines)."
  ],
  "_generator": "tools/extract_custom_skills.py on the S110 pin 534bfb6245e825445f6d45764ed7305e (patched)",
  "skills": {
   "222": {
-   "label": "Scorch",
-   "handler": "retired",
-   "name": "Scorch",
-   "description": null,
-   "mp": null,
-   "record": null,
+   "label": "Repel",
+   "handler": "repel",
+   "name": "Repel",
+   "description": [
+    "Keeps monsters",
+    "away on this floor",
+    "or in this room"
+   ],
+   "mp": 4,
+   "record": "0013111404000083fe3e020000000000000000",
    "learn": null,
-   "announce_template": 103,
+   "announce_template": 255,
    "message": null,
-   "proxy": 9
+   "proxy": 9,
+   "_since": "S155"
   },
   "223": {
-   "label": "Smite",
-   "handler": "retired",
-   "name": "Smite",
-   "description": null,
-   "mp": null,
-   "record": null,
+   "label": "LoneWolf",
+   "handler": "lonewolf",
+   "name": "LoneWolf",
+   "description": [
+    "Hits harder with",
+    "fewer allies in",
+    "the party"
+   ],
+   "mp": 4,
+   "record": "0013111404000083ee3e020000000000000000",
    "learn": null,
-   "announce_template": 104,
+   "announce_template": 93,
    "message": null,
-   "proxy": 9
+   "proxy": 74,
+   "_since": "S155"
   },
   "224": {
    "label": "MagicBurn",
@@ -197,12 +209,84 @@
    "announce_template": 253,
    "message": "edf900625250424162304c524f4b63ecf0",
    "proxy": 64
+  },
+  "235": {
+   "label": "Punish",
+   "handler": "punish",
+   "name": "Punish",
+   "description": [
+    "Hits harder for",
+    "each of the foe's",
+    "buffs"
+   ],
+   "mp": 5,
+   "record": "0013111405000083ee3e020000000000000000",
+   "learn": null,
+   "announce_template": 93,
+   "message": null,
+   "proxy": 63,
+   "_since": "S155"
+  },
+  "236": {
+   "label": "Finish",
+   "handler": "finish",
+   "name": "Finish",
+   "description": [
+    "Weak on a fresh",
+    "foe, deadly on a",
+    "hurt one"
+   ],
+   "mp": 6,
+   "record": "0013111406000083ee3e020000000000000000",
+   "learn": null,
+   "announce_template": 93,
+   "message": null,
+   "proxy": 73,
+   "_since": "S155"
+  },
+  "237": {
+   "label": "Rupture",
+   "handler": "rupture",
+   "name": "Rupture",
+   "description": [
+    "Bursts the foe's",
+    "ailments for big",
+    "damage"
+   ],
+   "mp": 6,
+   "record": "0013111406000083ee3e020000000000000000",
+   "learn": null,
+   "announce_template": 93,
+   "message": null,
+   "proxy": 8,
+   "_since": "S155"
+  },
+  "238": {
+   "label": "Blunt",
+   "handler": "rust",
+   "name": "Blunt",
+   "description": [
+    "Lowers a foe's",
+    "attack power"
+   ],
+   "mp": 3,
+   "record": "0023110a030d00400757020000000000000000",
+   "learn": null,
+   "announce_template": 35,
+   "message": null,
+   "proxy": 28,
+   "_since": "S155"
   }
  },
  "banners": {
   "quake_allies": "244949464250623e4f4262403e52444551f1464b623e62504246504a464062543e534263ecf0",
   "quake_flew": "ed25525162f900f143494254623e3f4c534262465163ecf0",
-  "mourn_boost": "293e4949424b623e4949464250f149424b41624d4c54424f63ecf0"
+  "mourn_boost": "293e4949424b623e4949464250f149424b41624d4c54424f63ecf0",
+  "lonewolf_line": "ed2462494c4b4262544c494368f143524f5663ecf0",
+  "punish_line": "ed2c51624d524b465045425062514542f1434c4268623f5243435063ecf0",
+  "finish_line": "ed2c5162444c425062464b62434c4ff1514542624846494963ecf0",
+  "rupture_line": "ed374542623e46494a424b5150f13f524f505163ecf0",
+  "rust_line": "edf90062494c504250f1f910623e51513e404863ecf0"
  },
  "tame_meter": {
   "225": 10,

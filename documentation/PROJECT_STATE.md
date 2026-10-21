@@ -10,6 +10,120 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-10-19 (Session 155 — **ROADMAP E11 BUILT: SIX NEW BUILT-IN CUSTOM SKILLS — REPEL (THE REPELLANT AS A
+> FIELD SKILL: ONE GATE FLOOR, OR A ROOM UNTIL THE PARTY LEAVES), LONEWOLF (×2 IN A PAIR / ×4 ALONE), PUNISH (+50 % PER BUFF),
+> FINISH (×0.2 AT FULL HP → ×2 NEAR 0), RUPTURE (×3, BURSTS EVERY AILMENT; NONE → FAILS, MP SPENT), RUST (ATK − 50 % OF BASE,
+> FLOOR 1; DEMAGIC / SURGE RESTORE) — PERCENTAGES + RESULT LINES EDITABLE, ONE FOE / ALL FOES, THE ENEMY AI USES THEM (RULES +
+> A SKILL-AWARE TARGET PICK), THE BALANCE SIMULATOR MODELS THEM; PLUNDER HELD FOR S156** (kickoff: "New custom skill
+> functionality added and integrated with everything - editor, balance calculator for romhack (doesnt touch vanilla), AI,
+> etc." + Repel/RepelAll, LoneWolf, Plunder, Punish, Finish, Rupture, Rust → the scope + questions → user: "Why not custom
+> skills? … distinct separate custom skills with logic"; "repel as a one-level is fine, just mimics item"; "16 new slots is
+> entirely acceptable for me, more is a bonus … Exclude iron and transform … Once per buff … Finish … from 0.2x to 2x
+> (editable) … 300% … any debuff counts … consume all … Fail with mp spent … floor 1 … Yes patch … Offer both … Steal 1 at
+> random … Lasts once per gate floor"). **Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM).** Test ROM **`DWM-S155-skills-test.gbc`**
+> (`ce83780f…`, patched) = the user's project + THE WOLF DOJO / THE WOLF DEN (`examples/s155_dojo_demo/build_demo.py`; way
+> in: the DOJO GUIDE, Cities_FOUNT (3, 4); the user's save CONTINUEs in the dojo — it was made in the S154 hall, map $77).
+> Example pin `8ef5311a…` (patched; was `eb283a19…`, patched).
+> **Ids:** `$DE` Repel / `$DF` LoneWolf (the retired S45 POCs' ids; bank $50 `AliasCommit` neutralized), `$EA` Plunder
+> HELD (refused), `$EB-$EE` Punish / Finish / Rupture / Rust; NEW skills a project adds = 239-254 (`$EF-$FE`, 16; were
+> 234-254 — a project with one at 234-238 must re-make it). BATTLE_SKILL_SYSTEM §13.10, PROJECT_COMPILER §2.63.
+> **Built (engine):** bank $72 `NewDispatch72` (a bank-$52 address in WRAM `wCustomJump`, which `FarSkillFork` returns:
+> LoneWolf / Punish / Finish / Rupture → `MournDispatch52` = the ATK-vs-DEF roll; Rust / Repel / Plunder → the no-damage
+> path), the handlers + `DamagePct72` (min 999, ≥ 1 on a landed hit), `MulPct72` exact, `BuffTable` (17 buffs: the
+> game's DeMagic set minus iron / transform + the stances), `RustRoll72` (Sap's roll, resistance 12), the result lines
+> (bank $4C `LoadB4c_CustomLine`, `wCustomLine`; `{target}` / `{amount}`), entries 8 `CustomAIRule72` (bank $57 NEW patch
+> file: `CustomAI57` at the chain end) / 9 `CustomTargetPick72` (bank $58 row `$F0`) / 10 `RepelCommit72` (bank $73),
+> `RepelField72` + `EncountersHere72` (bank $07 `Repel07Post`, bank $14's tail; `$C93E` bit 1); bank $53 DeMagic / Surge
+> restore ATK; bank $06 learning from `$DE`; WRAM $DEBE-$DEC8. Region `gd_custom_pcts` NEW (21 regions).
+> **Built (compiler + editor + simulator):** `custom_skills.py` (`PCT_KEYS`, `RESULT_LINES`, `TARGET_CHOICE`, `PLANNED`,
+> the S155 rows in custom_skills.json); Skills tab: the percentage boxes (×N label), the result line (3 pages × 2), the
+> Target box with just one foe / all foes; NEW `simulator/skillfx/s155_custom.py` + `ai_rules.CUSTOM_RULES` + the picks;
+> `balance.py` passes the percentages / target rows to the board. **FIXED:** the Balance simulator never saw `quake_power`
+> edits (it read `extras['quake_power']`; `resolve` returns `'quake'`). Help `54_skills.md`; `EDITOR_REVISION` S155.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_skills.py` on the demo): 28 / 28 checks**; `--negative` (the five handlers +
+> `CustomAIRule72` = `ret`, Repel never matched) **15 FAIL** (every effect, the LONE WOLF / BURSTER casts, Repel; the
+> gifts, the battle starts, the RUST KNIGHT's casts pass). Numbers: LoneWolf pair 4 → 8, enemy alone 7 → 28 (line 1); Punish 0 buffs 4 → 4,
+> 2 buffs → 8 (line 2); Finish full HP → 1, 100 / 999 HP 4 → 7 (line 3); Rupture poison + StopSpell 4 → 12 (line 4), both
+> cleared, none → "But nothing happens!"; Rust −9, −9, then `$BB` at ATK 1; DeMagic 1 → 19, Surge 1 → 12; the gifts carry
+> the skills; the LONE WOLF casts LoneWolf alone, the BURSTER Rupture on a poisoned party monster, the RUST KNIGHT Rust;
+> Repel in the WOLF DEN: `$C93E` 2, MP −4, 0 battles in 150 steps, a 2nd cast fizzles, leaving clears it, battles return,
+> Cities_FOUNT fizzles (no MP). Earlier (scratch rigs): the all-foes LoneWolf hits 3 victims; the AI with INT 100 vetoes
+> Rupture without an ailment and targets the poisoned / buffed / strongest slot; Finish when the party is hurt.
+> **Found on the way + fixed before delivery:** the caster at a handler is `$DB88` (`$DB77` reads `$FF` there — LoneWolf
+> showed ×2 for a lone enemy); a low-INT enemy never runs the rule chains (`$DD0B` 0); `wRoomEncFlag` is stale until the
+> first step in a room (Repel accepted in Cities_FOUNT right after the den — `EncountersHere72` asks bank $71 entry 1);
+> the six names spill 27 B into the new-species name extents: 19 maxed species are now 1 B over (two names a letter
+> shorter fit; `species._pack` exact up to 48 strings with a step budget); the S111 FarSkillFork / learn tests moved to
+> 239 / `$DE`. KEY_LESSONS S155.
+> **Checks:** verify_integrity PASS (`audit_mapid_range` + the three S155 sites, CROSSBANK_ROOMS "S155 sites"; the balance anchor
+> re-tagged: its raising digest changed ONLY by the six S155 records — none learnable, in no original enemy row — proven
+> by recomputing without them = the old `879a8933…`; `build_balance_anchor --selftest` re-derived 3 fights + 1 dive + 2
+> player fights == the JSON); test_compiler `--rom` ALL 1743 PASSED (+ `test_s155_sim` 15, the S111 tests for
+> the new ids, the blank project's extents = the original but the S155 strings); test_app `--rom` PASS (63 OK; exit 139 after PASS — the known S153 teardown crash) (+ the S155
+> Skills-tab block; this container's QtMultimedia segfaults in `QMediaDevices`, so the song player's probe was stubbed by a
+> wrapper — not an editor change); test_canvas `--rom` PASS (58 OK, the same stub); the simulator validators f7 / f10 / rules / f10_rules
+> unchanged (0 mismatches). **Next:** the user's test of the ROM (the GIFT MASTER's monsters in battle and in the field,
+> the three sparring bosses, Repel in the WOLF DEN, the Skills tab's new boxes); then E12 Plunder (S156).
+> **r2 (the user on the S155 ROM, 2026-10-20 16:13: "'A lone wolf's fury!' Should NOT coincide with damage sound but
+> precede it. The damage sound and screen shake (when I am attacked) should coincide with 'X takes y damage'. This should
+> be the same for all custom skills, here and elsewhere. 'It goes in for the kill' also should PRECEDE the slash on enemy
+> not come after. It should be there WHILE slash is happening. Otherwise all seems fine"):** measured first (a frame log:
+> message renders, visuals, the damage sound, the hit reaction, SCY / hFFBB, screenshots every 4 frames): r1 put the line
+> on page 1 of the HIT message, which the engine renders on the frame of the damage sound and the hit reaction (slash
+> f+86-118, line + sound f+121, "takes 8 damage" f+186). **Built:** bank $72 `LineSlot72` (QuakeAnimHold72's head) renders
+> the bonus line on the first `$da82` gate poll of the announce slot (`SlashLine72`: the handler's own tests; `FinishPct72`
+> split out), the handlers no longer touch `$dd70`: announce → the line (it stays) → the attack animation under it → the
+> game's own "takes … damage pts!" with the sound and the shake on one frame (party LoneWolf: line f+46, animation f+107,
+> sound + text f+157; enemy LoneWolf: shake f+113-129 with "receives" f+109). `[INS 00]` at the slot = the USER (measured),
+> so the four lines are one page with `{name}`; `{target}` / `{amount}` refused (Rust keeps its result line). **The rule
+> applied to the older customs:** MagicBurn / Mourn / Tame / the first Quake victim measured compliant; FIXED the Quake
+> crossover — the ally's sound + the party's shake played under the "allies are caught" banner, 84 frames before "PX
+> receives …": bank $53 `QuakeHitLate53` / `QuakeLateFire53` hold them to the text's frame (banner f+136, sound + shake +
+> text f+220). WRAM `wLineShown` $DEC9 / `wQuakeHitLate` $DECA. Editor: the line box is one page for the four; help 54;
+> `EDITOR_REVISION` S155r2. Example pin `6904f81d…` (patched; r1 `8ef5311a…`, patched). **Walk:** `tools/walk_skills.py`
+> **29 / 29** (the `numbers` checks now test the beats: the line before the attack animation, the damage sound on the hit
+> message's frame; + the Tremor crossover), `--negative` (+ `SlashLine72` = ret) **16 FAIL**. **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1748 PASSED (+ 5 S155 r2 checks); test_app `--rom` PASS (63 OK, exit 0; + the one-page line box); test_canvas `--rom` PASS (58 OK) — both with the audio-probe stub of r1. Test ROM
+> **`DWM-S155r2-skills-test.gbc`** (`480612e6…`, patched).
+> **r3 (the user on the r2 ROM: "I would prefer it displayed the text regardless of whether threshold is reached or not -
+> so the user can see what the skill is trying to do. At least give me this option in the editor. Otherwise it just looks
+> like normal attack."; a WingSnake: "BURNS HALF OF ITS MP! A HUGE BURST OF … - NOTHING HAPPENS. Is this normal? Should it
+> know manaburn?"; "Also please call rust 'blunt'."):** **Built:** bank $72 `LineAlways72` at `SlashLine72`'s head reads
+> `CustomLineAlways` (1 B appended to region `gd_custom_pcts`; bits 0-3 LoneWolf / Punish / Finish / Rupture; default
+> `%00001111` = the line on EVERY cast); project key `line_shows` ("always" / "bonus" = the r2 behaviour), the Skills tab's
+> "Show it" combo, help 54. **The WingSnake:** it did not know MagicBurn — the battle-message table's `$FD` row
+> (`$4c:$4213`) had named MagicBurn's line since S2d ("dead since S2e" — not so: after the poison tick `$E1` the game renders
+> a stock `$FD` through `LoadB4c_Fork_stockfd`), so every poisoned monster "burned half its MP"; the row is the vanilla
+> `$5F6C` (empty) again (KEY_LESSONS S155 r3, DOC_AUDIT). **Blunt:** skill 238's name + label (custom_skills.json; the
+> code keeps the Rust labels); the S155 names now spill 28 B (the 19-species maximum 2 B over; the test shortens three
+> names); demo BLUNTER / BLUNT KNIGHT. `EDITOR_REVISION` S155r3. Example pin `35133b67…` (patched; r2 `6904f81d…`,
+> patched). **Walk:** `tools/walk_skills.py` **30 / 30** (Punish without a buff, Finish at full HP, a failing Rupture: the
+> line first; the poison tick's stock `$FD` reads `$F0` at `$5F6C`), `--line-bonus` (the byte 0 in the ROM copy) **30 / 30**
+> (the r2 expectations), `--negative` (+ the old `$FD` row) **18 FAIL**. **Checks:** test_compiler `--rom` ALL 1753 PASSED
+> (+ 5 line_shows / Blunt checks); test_app `--rom` PASS (63 OK; exit 139 after PASS — the known teardown crash; + the "Show it" combo); test_canvas `--rom` PASS (58 OK); verify_integrity PASS; `extract_custom_skills --check` OK. Test ROM **`DWM-S155r3-skills-test.gbc`** (`05a7c4d9…`, patched).
+> **r4 (the user on the r3 ROM, 2026-10-20 17:46: "Stop pushing I wont allow." — no more push attempts; "on save when
+> fighting viper and bombcrag I try to use skill on HL (heal slime). It says BombCrag (??) doesnt have any skills? Why
+> BombCrag? Seems like a bug."):** an ORIGINAL-GAME bug: battle_command #2 "[INS 00] doesn't have any skill" (bank $50
+> `jr_050_4945`) prints `$C180` without filling it; ATK's target list writes the foes' names there, so ATK → (cursor on
+> BombCrag) → B → SKIL named the foe (reproduced in PyBoy through the real menus on the user's save; the straight path showed
+> "HL"). **Built:** bank $50 `NoSkillName50` (11 B of the S155 freed AliasCommit bytes) refills `$C180` from `$C8DD`'s party
+> slot (`CheckSlotUnder3`); the site's 16 B rewritten in place. Example pin `bce1c883…` (patched; r3 `35133b67…`,
+> patched). **Walk:** `tools/walk_skills.py` + step `noskill` **32 / 32**, `--negative` (+ `NoSkillName50` = ret: "BombCrag")
+> **19 FAIL**. **Checks:** test_compiler `--rom` ALL 1753 PASSED; test_app `--rom` PASS (63 OK, the GUI build = the pin); test_canvas `--rom` PASS (58 OK); verify_integrity PASS. Test ROM **`DWM-S155r4-skills-test.gbc`**
+> (`641bca31…`, patched). The user's HL and PX have no skills on this save (the message itself is right).
+> **r5 (the user on the r4 ROM, 2026-10-20 18:22: "MadKnight cast blunt like 6 times in a row, only THEN used Upper.
+> Obviously punish was pointless at that point because it did 1 dmg. Blunt should NOT stack. Also can I set it to remove
+> half/remove third/etc in editor?"):** **Built:** WRAM `wBlunted` $DECB (bit = battle slot; 18 B left): bank $50
+> BattleInit zeroes it (its 22-B tail regrouped), bank $72 `SkillRust` fails a blunted slot (`$BB` before the roll, MP
+> spent) and sets the bit when it lands (`BluntBit72`), `ScoreRust72` scores a blunted one 0 (the AI vetoes Blunt when
+> every opponent is blunted; the pick skips them), bank $53 `RestoreATK53` (DeMagic / Surge) clears it; the simulator
+> mirrors it (`s155_custom.blunted`). The editor already sets the amount: `atk_loss` 1-100 % of the base ATK (50 = half,
+> 33 ≈ a third) — help 54 now says so and that Blunt does not stack; `EDITOR_REVISION` S155r5. Example pin `a7018025…`
+> (patched; r4 `bce1c883…`, patched). **Walk:** **33 / 33** (Blunt once, then `$BB`, ATK stays 10; DeMagic / Surge, then
+> Blunt lands again; the BLUNT KNIGHT blunts each party monster once, then no more), `--negative` **19 FAIL**.
+> **Checks:** test_compiler `--rom` ALL 1756 PASSED (+ 3 r5 sim checks); test_app `--rom` PASS (the GUI build = the pin;
+> re-run without `--rom` after the help edit: PASS); test_canvas `--rom` PASS; verify_integrity PASS. Test ROM
+> **`DWM-S155r5-skills-test.gbc`** (`e6ad2d26…`, patched).
+
 > Last verified: 2026-10-19 (Session 154 — **ROADMAP E10 BUILT: THE MEMORIAL — STATUES IN YOUR ROOMS THAT SHOW THE
 > MONSTERS WHO WON A BOSS BATTLE, AN ARENA CLASS OR STARRY NIGHT WITH THE PLAYER AND HAVE SINCE LEFT (BRED, RELEASED,
 > TRADED): A SHARED POOL, A RANDOM PICK AT EACH VISIT, EVERY STATUE OF A ROOM DIFFERENT (ELSE BLANK), MORE STATUES IN LATER
@@ -89,66 +203,8 @@
 > (`e77c006e…`, patched). **Checks:** test_compiler `--rom` ALL 1726 PASSED (+6 r2); test_app `--rom` PASS (63 OK,
 > exit 0); test_canvas `--rom` PASS (58 OK); verify_integrity PASS.
 
-> Last verified: 2026-10-18 (Session 153 — **ROADMAP E5 BUILT: THE TITLE SCREEN AND THE ENDING — YOUR WORDS ON THE
-> TITLE ("MILAYOU'S JOURNEY"), YOUR OWN CREDITS PAGES (TEXT, MONSTER, SECONDS, SONGS), THE FINAL SCENE OF ANY CUTSCENE
-> ROLLS THE CREDITS AND SENDS THE GAME ON TO A ROOM OF YOUR CHOICE; "…TO BE CONTINUED" (THE SAVE); THE ORIGINAL GAME'S
-> STORY AT ANY OF ITS 42 POINTS IN ONE STEP; BANK $5F (INTRO / TITLE / CREDITS / CONTINUE) FULLY LABELLED** (kickoff:
-> "Given a complete romhack, IS ANYTHING MISSING? … read [the greatlog handoff] FIRST" → the tiered gap audit + four
-> questions → user: "E5 + handover sounds good. If intro has "Milayou's Journey" or whatever text I want added to it
-> that would be cool. The final cutscene before credits also should be editable and you can send a given cutscene to
-> credits. Anything connected to this is also fine. Honestly strike the custom gate tiles in random gates it's not
-> necessary what's in the game is enough for me. Ill mostly make my own custom hand authored gates."). **Built S153;
-> USER-CONFIRMED 2026-10-18 20:51 ("Yep works great").** Test ROM **`DWM-S153-ending-test.gbc`** (`000f77dc…`, patched; a NEW project,
-> `examples/s153_ending_demo/milayous_journey/`). Example pin `d88d5436…` (patched; was `7e8cb031…`, patched): bank $77
-> only (A/B diff vs a HEAD worktree build: 1,172 B of bank $77 + 2 header bytes). ROADMAP: "gate looks of your own"
-> struck by the user.
-> **Measured + annotated (PyBoy, the original ROM; NEW `tools/annotate_ending_5f.py`, both trees, byte-perfect):** bank
-> $5F = game mode 4 (entries 0 / 1: sub 0 the CREDITS, sub 1 "TO BE CONTINUED") + mode 0 sub 0 (entries 2 / 3: intro
-> stages 0-5, stage 6 = the TITLE). The credits: 27 pages ($C0D9; the last-page compare `cp $1a` twice), each = a role
-> (text mode 5, $8000, 2 × 20), names (mode 6, $8260 = tile $26, 12 × 11; `$F1` = the line's start + one row, no wrap —
-> a long line spills) and a monster (`CreditsMonsterTable` $43F4, tiles $AA-$CD, BG palette 4 — the engine forces colour
-> 1 $6BFF / colour 3 $0000); tilemaps $66B3 (20 × 18) / $681B (the closing page, `CreditsCopyrightLayout` $440F); 5 s a
-> page + 50 frames of fades (`cp $05`); song $21; `CreditsDone` $4178 → the bedroom ($2F, X $38 Y $C8) by the warp
-> mailbox. TBC: song $31, credits_end row 0, A → text $0256 "save?", YES → $C8EA := 1 + SaveGameState ($00:$2128) +
-> $0257, NO $0258, then it waits for ever; CONTINUE = the room the save was made in, **its entry scripts NOT run** (the
-> load runs none). The title (`TitleInit` $45C0): $5B20 → $9000, $5B21 → $8800, `TitleTilemap` $6583 (DrawTilemapStream
-> $D8 / $D9), palette set 1 (bank $17 + 64), every attribute palette 5 ($0012 / $6BFF / $01DE / $0000), LCDC $83, VRAM
-> bank 1 unused, rows 0-5 / 12-14 / 17 empty; song $06 (also `TitleTick` $49B3 when it ends). DATA_STRUCTURES "The
-> title screen and the ending (S153)", ARCHITECTURE modes 0 / 4.
-> **Built (engine):** eleven bank $5F regions over the game's own bytes (credits_song / continue_song / credits_seconds /
-> credits_last_a / _b / credits_after (the 38-byte mailbox block) / credits_monster_ptr / title_song / title_song_again /
-> title_text (TitleInitDone's 5 bytes) / credits_monsters (64 B of the pad)); bank $79 entries 3 `TitleText` (VRAM bank 1:
-> the lines' tiles at $8800, ids $80+, attribute $0D; GBC only), 4 `CreditsAfter` (wCreditsAfter → the warp mailbox;
-> else the game's bedroom), 5 `StoryPointApply` (rows `dw addr / db keep, value`); bank $77 `StoryCommand` kinds 5
-> story_point / 6 credits_after (TEMPLATE_SIZE 2229, re-pinned); WRAM `wCreditsAfter` $D566-$D56C (wCustomPool − 7).
-> PROJECT_COMPILER §2.61.
-> **Built (compiler + editor):** NEW `editor2/core/ending.py` (`custom.title`, `custom.credits`, the pixel-exact title /
-> page pictures, the story points from the original opening's state — `story_state.state_at(start=)`), NEW
-> `ending_doc.py`, NEW `app/ending_dialog.py` (Cutscenes → **Title & ending…**: title lines + song + picture; credits
-> pages ＋ / remove / ▲ ▼ / the game's pages, role / names / monster + picture, seconds, credits + TBC songs); cutscene
-> steps **Story point**, **Roll the credits** (room / screen / tile after), **TO BE CONTINUED** (forms, help, a step
-> after an ending step warned); credits words as S150 text slots (rows past 26 past the tables' ends); Capacity rows
-> (title letters 128, credits pages 64, story points 32). Help `76_ending.md` (NEW) + 00 / 56 / 63 / 90;
-> `EDITOR_REVISION` S153.
-> **The acceptance (machine half):** NEW `tools/walk_ending.py`: `make` drives the window (Title & ending… dialog, New
-> room ×2, scenes, New game…), the window's Build; `walk` from the title: the title == the model (0 pixels differ),
-> NEW GAME → THE LAST GLADE, the sage's YES → mode 4 with all 165 StoryPointApply rows (point 41) + journey_over, 29
-> pages, 2 s a page (170 frames), the new pages + the closing page == the model (0 pixels), THE AFTER ROOM (4, 4), TBC,
-> the save, CONTINUE in THE AFTER ROOM with no entry scene, the keeper's talk → the game's Castle screen 1 (5, 6):
-> **18 checks, 0 failed**; `--negative` (bank $5F = the original's bytes, StoryPointApply = ret) **13 FAIL**.
-> `tools/census_story_state.py --opening`: 40 steps from the opening's state, all equal.
-> **Found on the way (not this item; the user asked after the sign-off: "why it calls me Terry0000?"):** a New
-> game… room start with no naming step prints "TERRY0000" where `{hero}` prints — measured: the game's NEW GAME leaves
-> `$CA42` = `$D3 $D4 $D5 $D6 $00 $00 $00 $00` (the original ROM too): `$D3-$D6` = the four glyphs that draw TERRY, `$00`
-> = the digit 0, and NO `$F0` end — the name copy ($F6) takes all 8 bytes. The game never prints it before the King's
-> naming screen writes a real name; a room start skips that scene. Help 76 §7.3: add Name the hero; the fix (a
-> room start writes a terminated name) = an E3 a2 follow-up. Two bank $0A SaveGameState breeding sites (bank_00a.asm lines 1852 / 3646) unlabelled.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1699 PASSED (+ `test_s153`, 29); test_app `--rom` PASS
-> (62 OK, + `s153_ending`; the GUI build == the pin; its exit after PASS now clean — the build thread / window freed
-> first, it aborted with "pure virtual method called") / test_canvas `--rom` PASS. **Next:** the user's test of the ROM (and opening the demo
-> project); then the next big ticket (E3 b2 story-variable headroom; the room-start hero name).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S155** (2026-10-19): ROADMAP E11 added + built (engine + compiler + editor + simulator; pin moves once) — six new built-in custom skills: Repel `$DE` (field: the Repellant flag `$C93E` bit 1 for a gate floor / a room until the party leaves; `RepelField72` / `EncountersHere72` / `RepelCommit72`), LoneWolf `$DF`, Punish `$EB`, Finish `$EC`, Rupture `$ED`, Rust `$EE` (bank $72 handlers via `wCustomJump`, `DamagePct72`, `BuffTable`, `RustRoll72`; DeMagic / Surge restore ATK in bank $53); per-skill percentages (`gd_custom_pcts`) + result lines (bank $4C `wCustomLine`); one foe / all foes with a skill-aware AI pick (bank $58 row `$F0` → entry 9); the AI rules at the bank $57 chain end (NEW `patches/bank_057.asm` `CustomAI57` → entry 8); NEW skills 239-254, Plunder 234 held (E12, S156); NEW `simulator/skillfx/s155_custom.py` + `ai_rules.CUSTOM_RULES`; FIX Balance `quake_power` key; `species._pack` exact up to 48 strings with a step budget (the names spill 27 B: 19 maxed species 1 B over); NEW `tools/walk_skills.py` 28 / 28, negative 15 FAIL; test ROM `DWM-S155-skills-test.gbc` (`ce83780f…`, patched); pin `8ef5311a…` (patched). Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM). **r2** (user: the bonus line before the attack, the damage sound + shake with "takes … damage", for all custom skills): bank $72 `LineSlot72` / `SlashLine72` (the line in the announce slot), bank $53 `QuakeHitLate53` / `QuakeLateFire53` (the Quake crossover's ally hit), the four lines one page with `{name}`; walk 29 / 29, negative 16 FAIL; test ROM `DWM-S155r2-skills-test.gbc` (`480612e6…`, patched); pin `6904f81d…` (patched). **r3** (user: the line on every cast — option in the editor; a poisoned WingSnake "burns half its MP"; "call rust 'blunt'"): bank $72 `LineAlways72` + `CustomLineAlways` (`line_shows` "always" default / "bonus"; the Skills tab's "Show it"), bank $4C the `$4019[$FD]` row back to the vanilla `$5F6C` (wrong since S2d: the poison tick renders a stock `$FD` through it), skill 238 named Blunt; walk 30 / 30, `--line-bonus` 30 / 30, negative 18 FAIL; test ROM `DWM-S155r3-skills-test.gbc` (`05a7c4d9…`, patched); pin `35133b67…` (patched). **r4** (user: "BombCrag doesn't have any skills" for HL): an original-game bug — battle_command #2 printed `$C180` left by ATK's target list; bank $50 `NoSkillName50` refills it; walk + `noskill` 32 / 32, negative 19 FAIL; test ROM `DWM-S155r4-skills-test.gbc` (`641bca31…`, patched); pin `bce1c883…` (patched). **r5** (user: Blunt should NOT stack — a boss cast it 6 times): WRAM `wBlunted` (banks $50 / $53 / $72), a blunted slot fails Blunt and scores 0 for the AI; walk 33 / 33, negative 19 FAIL; test ROM `DWM-S155r5-skills-test.gbc` (`e6ad2d26…`, patched); pin `a7018025…` (patched).
 - **S154** (2026-10-19): ROADMAP E10 added + built (engine + compiler + editor; pin moves once) — the memorial: statues in the project's rooms show the monsters that won a boss battle / an arena class / Starry Night and have left the player (bred, released, traded); the tag in record +$82 (resistance 26: packed position 0, breeding & 7 — multiples of 8; the docs' "position 0 unused" corrected; FireSlash's off-by-one and the breeding tables' missing row 7 annotated); the list in SRAM bank 3 ($A003-$A006 "M1", $A110+ a ring of cap + 9); bank $79 entries 6-9 + a picture bank $80+; regions in banks $50 / $0B; bank $77 story command 7 + the BreedClose redraw; bank $73 MemorialCommit / Restore; NEW `memorial.py`, `memorial_doc.py`, `app/rooms/memorial_dialog.py`, Rooms tab ＋ Statue (U) + the statue panel, help 77; NEW `tools/walk_memorial.py` (56 / 56, negative 19 FAIL), `examples/s154_memorial_demo/build_demo.py`. Test ROM `DWM-S154-memorial-test.gbc`; r2 (user: "Pedestal should be its own tile … BACKGROUND should be transparent … confirm … swap sprites … new custom monsters") — two cells (the room's shared Pedestal + the monster cell above = a copy of the floor), the statue palette (floor colours + grey in an unused index), a per-statue shade map (`MemShade`), walk 60 / 60 (see-through on screen), negative 20 FAIL, re-art probe 19 / 19, `DWM-S154r2-memorial-test.gbc`. Built; NOT yet user-tested. Owning: ROADMAP E10, PROJECT_COMPILER §2.62 (+ §4 / §5), DATA_STRUCTURES "The memorial (S154)", MONSTER_DATA (+$82), BATTLE_SKILL_SYSTEM §15.3 + skill +5, BREEDING_SYSTEM (the missing row), TEXT_SYSTEM (the inserts), ARCHITECTURE (SRAM bank 3), known_RAM_map ($D56D-$D597), EDITOR_DESIGN §5.1 (statues), KEY_LESSONS S154, PYBOY_DEBUGGING S154, DOC_AUDIT S154, TOOLS_AND_DATA S154, help 77 (+ 00 / 90).
 - **S153** (2026-10-18): ROADMAP E5 built (engine + compiler + editor; pin moves once) — the title screen and the ending: bank $5F annotated in full (NEW `tools/annotate_ending_5f.py`: intro stages, the title, the credits, TO BE CONTINUED); `custom.title` (lines on the title, VRAM bank 1, bank $79 entry 3 `TitleText`, GBC only) + `custom.credits` (pages role / names / monster, seconds, songs; eleven bank $5F regions; words = S150 text slots); cutscene steps Story point (bank $79 entry 5 `StoryPointApply`, 42 points from the original opening's state; StoryCommand kind 5), Roll the credits (kind 6 → `wCreditsAfter` $D566 → entry 4 `CreditsAfter`), TO BE CONTINUED (mode 4 sub 1; CONTINUE runs no entry scene — measured); NEW `ending.py`, `ending_doc.py`, `app/ending_dialog.py` (Cutscenes → Title & ending…), help 76; NEW `tools/walk_ending.py` (18 / 18, negative 13 FAIL), census `--opening` (40 equal); `examples/s153_ending_demo/`. Test ROM `DWM-S153-ending-test.gbc`. Built; USER-CONFIRMED 2026-10-18 20:51 ("Yep works great"). Owning: ROADMAP E5, PROJECT_COMPILER §2.61, DATA_STRUCTURES "The title screen and the ending (S153)", ARCHITECTURE (modes 0 / 4), EVENT_FLAGS (S153), TEXT_SYSTEM (S153), known_RAM_map ($D566), KEY_LESSONS S153, PYBOY_DEBUGGING S153, DOC_AUDIT S153, TOOLS_AND_DATA S153, CUSTOM_CUTSCENES (S153), help 76 (+ 00 / 56 / 63 / 90).
 - **S152** (2026-10-18): ROADMAP E3 a2 built (engine + compiler + editor; pin moves once) — the opening: `custom.new_game` (start in the intro or a room; the original opening as played — flags `$0000-$0008` subset + 8 room bytes, measured) → bank $15 region `newgame_start` + bank $79 entry 2 `NewGameStart` (the warp mailbox; ClearAnimationState wipes $D92A-$D9E9 at the first load, so the story state goes into the first scene); bank $77 story command 4 `name_given` (given monsters were "0000"); a farm keeper's first monster (Pulio's way); Give to the party / named; flag slugs; the hook's whirl sets `$0000` / `$D974`; `DefaultSpawnTable` re-sectioned (96 rows, NEW `tools/resection_default_spawn_01.py`); NEW `newgame.py`, `newgame_doc.py`, `app/newgame_dialog.py`, help 75; NEW `tools/walk_opening.py` (a new project made through the editor, walked from the title: room 34 / 34, intro 36 / 36, controls FAIL); `examples/s152_opening_demo/`. Test ROMs `DWM-S152-greatlog-room-test.gbc` / `-intro-test.gbc`; r2 (user: "milly disappears … See how vanilla game does it") — the game's cross-screen walk (walk to the edge, Warp to the next screen; helper = an NPC of each screen; into the hole + `$51`), a player walk off the screen refused, the hidden player shown again after a warp; walk 38 / 38 and 40 / 40, `DWM-S152r2-greatlog-room-test.gbc` / `-intro-test.gbc`; r3 ("white screen AGAIN and room appears AGAIN") — the door fired under the scene's walk: a player walk onto an exit of a state the scene plays in refused, the door in a room state after the walk (as GreatTree); walk 39 / 39 and 41 / 41, `DWM-S152r3-greatlog-room-test.gbc` / `-intro-test.gbc`. Built; USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3); r4 = help 75 expanded (the user: "I assume it was all documented extensively? Step by step?"). Owning: ROADMAP E3, PROJECT_COMPILER §2.60 (+ §1 / §5), DATA_STRUCTURES "New game start (S152)", EVENT_FLAGS (S152), MONSTER_DATA "Creation" (S152), BANK04_SCRIPT_ENGINE (naming globals / order), known_RAM_map ($C8EA, $C96D), CROSSBANK_ROOMS (DefaultSpawnTable), EDITOR_DESIGN §5.1d (S152), KEY_LESSONS S152, PYBOY_DEBUGGING S152, DOC_AUDIT S152, TOOLS_AND_DATA S152, help 75 (+ 00 / 63 / 64 / 67 / 90).
@@ -364,7 +420,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $6F | NEW battle animations (S112): engine entries 0-3 `CustomAnimTick` / `CustomAnimInit` / `CustomAnimLoad` / `CustomAnimStep` (template `bank_06f_head.asm`, 391 B) + per animation its frames, timeline, palettes, gfx id (`custom.animations`, ≤ 32) | compiler-generated `patches/bank_06f.asm` (`anims6f`, editor2/core/battle_anims.py) |
 | $70 | NEW battle animations' tile sheets (S112; one per animation, the bank $50 stream format) | compiler-generated `patches/bank_070.asm` (`anims70`) |
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100; S116: entry 6 `CustomBGMStart` + `CustomBGMChanTable`, entry 7 `BattleBGMResolve` + the battle tables, entry 2 + `CustomGateBGMTable`; S127: `CustomGateInsert` `GATE_ANY` rows + `ScaledChance` / `ScaledChanceTable` — the chance by the party's level; S129: `MusicRulePick` + `MusicRuleTable` — music by flag; S138: entry 10 `ContinueCheck` + `StalePlace` — a save in a place the build lacks goes home, entry 0 bounded; `CustomRoomBGMTable` / `CustomRoomBattleBGMTable` 256 rows; S140 (ARC CAP3a): every per-place table indexed by the place number (`PlaceNum71` + `RegionTable71` / `GlobalPlaceIds71`), the song tables = 107 vanilla rows + `CustomPlaceBGMTable` / `CustomPlaceBattleBGMTable` one row per place, `MusicRuleTable` word keys, `HubTable` / `GateInsertTable` rows carry a region, entries 11 `BossRegionEnter` / 12 `BossRegionOf` + `GateBossRegionTable`); S147 (ARC CAP5): entry 6 `CustomBGMStart` = a forwarder to bank $74 `SongStart`, `CustomBGMChanTable` gone | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
-| $72 | Custom-skill system (de-aliased S2d/S2e code + tables; S111: `FarSkillFork` → `CustomBaseTable` (new skills run a stock handler), entries 5 `ElemLevel72` / 6 `CustomLearnRow72`) | hand-authored `patches/bank_072.asm` + compiler regions `gd_tame_meter`, `gd_quake_power`, `gd_custom_base`, `gd_skill_elements`, `gd_custom_learn` (editor2/core/custom_skills.py, S111) |
+| $72 | Custom-skill system (de-aliased S2d/S2e code + tables; S111: `FarSkillFork` → `CustomBaseTable` (new skills run a stock handler), entries 5 `ElemLevel72` / 6 `CustomLearnRow72`; **S155: the S155 built-ins' handlers (`NewDispatch72` → `wCustomJump`), entries 8 `CustomAIRule72` (from bank $57 `CustomAI57`) / 9 `CustomTargetPick72` (bank $58 row `$F0`) / 10 `RepelCommit72` (bank $73), `RepelField72`, region `gd_custom_pcts`**) | hand-authored `patches/bank_072.asm` + compiler regions `gd_tame_meter`, `gd_quake_power`, `gd_custom_base`, `gd_skill_elements`, `gd_custom_learn` (editor2/core/custom_skills.py, S111) |
 | $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1; … S117: entry 21 `FlagAddr` (the extended flags) + `ExtFlagsCommit` / `ExtFlagsRestore` in entries 5 / 6; S129: `FlagAddr` sends `$18xx` to bank $77 entry 11 — the story checks; S140 (ARC CAP3a): entry 0 calls `RegionCommit` (link ids / `wWarpRegion` → `RegionEnter`), entry 22 `RegionEnterE`, `ExtFlagsCommit` / `ExtFlagsRestore` magic "X2" + the region; S154: `MemorialCommit` / `MemorialRestore` after them — the memorial's `wMemCount` / `wMemHead` at bank 3 $A003-$A006, magic "M1") | hand-authored `patches/bank_073.asm` |
 | $74 | **S147 (ARC CAP5): the SONG HEAD — pinned `templates/bank_074_head.asm` (entry 0 `SongStart`, the 95 dummy records `SongRecords` $4003 = AudioMasterTableExt row 4, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (first fit; PROJECT_COMPILER §2.55).** Before S147: Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E; S116: songs keep their own 1-6 channels — no trio padding) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $75 | **S147: the second song bank = self-ID + streams only (the records are in bank $74's directory; no master-table row).** Before: Second custom song bank (S116, P3.13b): the songs past bank $74's 16,000 stream bytes, records indexed from the split id (AudioMasterTableExt row 5 = region `rom0_audio_master`); bank byte + zeros when nothing spills | compiler-generated `patches/bank_075.asm` (`music75`, editor2/core/music.py) |
@@ -486,7 +542,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Script compiler/decompiler | ✅ working | tools/compile_script.py / decompile_script.py |
 | Random encounters in custom rooms | ✅ generalized per-room (S42 `RoomEncTable`, bank $71). **S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): a room may use a list of its OWN (no gate pin, inside or outside dives) with flag variants and its own battle rate; gates get per-floor lists + flag variants; the project's own lists 128-255 — the Encounters tab (next row).** | CROSSBANK_ROOMS; KEY_LESSONS S11 (S114 correction); DATA_STRUCTURES "Encounter list choice (S114)" |
 | Custom breeding | ✅ **S113 (P3.12, test ROM `DWM_S113_breeding_test.gbc` USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")): the Breeding tab (depth per monster, recipes, Try a cross, Problems, special / family tables, whole-table form, tree generator), the special table auto-ordered when edited (+ `removes` / `table`), the FX1 egg-plus bug fixed (every egg was +1 and no + recipe fired since S71)** — PROJECT_COMPILER §2.29, EDITOR_DESIGN §5.4. Earlier: full authoring stack B1–B7: round-trip encoder; bank $69 owns the special table (overrides+appends+shadow validator); family-defaults rewrite; family reassignment; production library grouping (zero lag). **Spirit = a first-class 11th family (S104, USER-CONFIRMED 2026-09-30):** bank $6D family systems, `$FA` = Spirit, ghost-wisp icon, ??? restored, shown before ???, editor Families tab. | BREEDING_SYSTEM; ROADMAP Phase 2B |
-| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed; S105: its dialogs are built into every build — no custom room needed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. **S111 (test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")): their DATA is project data** (`gamedata.skills.<224-233>`, 19 compiler regions, baseline `editor2/core/custom_skills.json`; $DE/$DF retired) (S111b: their fixed ratios too — MagicBurn burn, Tame damage, Anchor charge, Quake allies' share, Mourn bonus — test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")) **+ NEW custom skills 234-254** on a stock skill's effect (`base`; 114 measured bases; own name / text / MP / learning / power / targets / looks / sounds / element / announce) — Skills tab. | BATTLE_SKILL_SYSTEM §12–§13.9, §14; PROJECT_COMPILER §2.27; ROADMAP Arc 2, P3.11c/d |
+| Custom battle skills (net-new ids) | 🟢 NINE custom skills live: MagicBurn $E0 (S49), Tame $E1 (S50), TameMore $E2 + TameMost $E3 (S52), Anchor $E4 field-cast (S73, user-confirmed; S105: its dialogs are built into every build — no custom room needed), Earthquake chain $E5-$E8 (S74; **S84: AI-commit of $E6-$E8 was CRASH-CAPABLE on all pre-S84 builds** — dispatch-table overrun, fixed by DispatchBoundsStub; PyBoy re-verified S84, awaiting user test), **Mourn $E9 (S75: ATK-vs-DEF × (dead allies+1), 2nd dispatch trampoline = per-skill vanilla damage machine; **S84: AI-commit was CRASH-CAPABLE (wild jump to WRAM) on all pre-S84 builds** — fixed S84; AI-commit activation USER-CONFIRMED on the real save (Charge tactics))** — all on the full de-aliased stack incl. natural-learn, real MP, announce, descriptions. **S111 (test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")): their DATA is project data** (`gamedata.skills.<224-233>`, 19 compiler regions, baseline `editor2/core/custom_skills.json`; $DE/$DF retired) (S111b: their fixed ratios too — MagicBurn burn, Tame damage, Anchor charge, Quake allies' share, Mourn bonus — test ROM USER-CONFIRMED 2026-10-03 00:19 ("Tested, works")) **+ NEW custom skills 234-254** on a stock skill's effect (`base`; 114 measured bases; own name / text / MP / learning / power / targets / looks / sounds / element / announce) — Skills tab. **S155 (built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)): + six built-ins — Repel $DE (field: the Repellant's effect for a gate floor / until the party leaves the room), LoneWolf $DF (×2 in a pair / ×4 alone), Punish $EB (+50 % per buff), Finish $EC (×0.2 at full HP → ×2 near 0), Rupture $ED (×3, bursts every ailment; none → fails, MP spent), Blunt $EE ("Rust" until S155 r3; ATK − 50 % of base, floor 1; DeMagic / Surge restore) — percentages + result lines editable (r3: the line on every cast, or only with the bonus), one foe / all foes, AI rules + a skill-aware target pick, the simulator model; NEW skills now 239-254; Plunder $EA held (S156).** | BATTLE_SKILL_SYSTEM §12–§13.10, §14; PROJECT_COMPILER §2.27, §2.63; ROADMAP Arc 2, P3.11c/d, E11 / E12 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; NOT yet user-tested)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual); S117: bank 3 = the extended flags "X1" | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66. S140: `wMapRegion` $D536 (SAVED via SRAM bank 3 "X2"), `wWarpRegion` $D537, `wExitLinks` $D538-$D55F carved from wCustomPool (now $D560-$D5E4) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 

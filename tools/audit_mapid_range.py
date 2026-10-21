@@ -223,6 +223,10 @@ V = {
     # mapID - $6B (its custom path far-calls bank $60 entry 13); the new load is the
     # entry-13 forwarder's, through PlaceOf. Reasoning: CROSSBANK_ROOMS "S137 sites".
     ("bank_060.asm", "PlaceFwdRender", 0): "BOUNDED",            # S137: -> PlaceOf; no place -> HL = 0
+    # S155: the Repel field skill (bank $72). Reasoning: CROSSBANK_ROOMS "S155 sites".
+    ("bank_072.asm", "RepelField72", 0): "COPY",                 # S155: wMapID -> wRepelPlace+1 (compared whole by RepelCommit72)
+    ("bank_072.asm", "EncountersHere72", 0): "CP_UNSIGNED",      # S155: cp $53 / $5A / $61 / $65 / $6B (unsigned ranges)
+    ("bank_072.asm", "RepelCommit72", 0): "CP_UNSIGNED",         # S155: cp [hl] = wRepelPlace+1 (equality)
 }
 
 # Site-count pins (S66). A mismatch = the tree changed; re-adjudicate.

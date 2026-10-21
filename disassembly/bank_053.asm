@@ -5721,6 +5721,9 @@ LoadBtlC_5ffa:
 ; [S130 F7] $53 entry 10 ($601C), one Surge victim: +2 := 0 (sleep/confusion -> skip
 ; [S130 F7] turn), +3 &= $3C, +5 bit7 off, +7 &= $FC; iff $DB08+8t bit7: clear it and
 ; [S130 F7] raise AGL then DEF back to base (bank $57 e8/e7) when below base.
+; [S155 romhack] patches/bank_053.asm: the `ld a, [wBattleTargetIdx]` after `res 7`
+; -> `call SurgeRestoreATK53`: ATK back to base too (the Rust skill $EE; nothing in
+; the original game lowers ATK).
 SurgeCureTarget_601c:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
@@ -6431,6 +6434,8 @@ DispelRevertFromRow_63c7_jp:
 
 ; [S130 F10] no revert: DEF and AGL := source (record, or the row via
 ; [S130 F10] DispelBaseFromRow_64ba) — raised or lowered alike; slot 3/7 untouched.
+; [S155 romhack] patches/bank_053.asm: the first `ld a, [$c86c]` -> `call
+; RustRestoreATK53`: a lowered ATK (the Rust skill $EE) goes back to base first.
 DispelBaseDefAgl_647c:
     ld a, [$c86c]
     or a

@@ -277,6 +277,7 @@ class ChainRules:
                                  lambda s, e: (_res[s*7 + (e >> 2)]
                                                >> ((3 - (e & 3)) * 2)) & 3,
                                  skills=_ol, dd0b=list(b.dd0b) if _ol else None)
+        self.view.board = b                 # S155: ai_rules.CUSTOM_RULES read the Board
         self.actor = actor
         self.records = records
 

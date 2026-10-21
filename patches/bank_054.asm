@@ -1436,8 +1436,8 @@ Fork54_RecordIndex:
 ; CustomMPCostTable, bank $07).
 CustomRecordPtrTable:
 ; @BUILD_PROJECT BEGIN gd_custom_records
-    dw $41CF               ; [$DE] retired
-    dw $41CF               ; [$DF] retired
+    dw CustomRecord_DE     ; [$DE] Repel
+    dw CustomRecord_DF     ; [$DF] LoneWolf
     dw CustomRecord_E0     ; [$E0] MagicBurn
     dw CustomRecord_E1     ; [$E1] Tame
     dw CustomRecord_E2     ; [$E2] TameMore
@@ -1449,10 +1449,10 @@ CustomRecordPtrTable:
     dw CustomRecord_E8     ; [$E8] QuakeMost
     dw CustomRecord_E9     ; [$E9] Mourn
     dw $41CF               ; [$EA] -
-    dw $41CF               ; [$EB] -
-    dw $41CF               ; [$EC] -
-    dw $41CF               ; [$ED] -
-    dw $41CF               ; [$EE] -
+    dw CustomRecord_EB     ; [$EB] Punish
+    dw CustomRecord_EC     ; [$EC] Finish
+    dw CustomRecord_ED     ; [$ED] Rupture
+    dw CustomRecord_EE     ; [$EE] Blunt
     dw $41CF               ; [$EF] -
     dw $41CF               ; [$F0] -
     dw $41CF               ; [$F1] -
@@ -1469,6 +1469,10 @@ CustomRecordPtrTable:
     dw $41CF               ; [$FC] -
     dw $41CF               ; [$FD] -
     dw $41CF               ; [$FE] -
+CustomRecord_DE:  ; [222] Repel — Repel (field: no random encounters on this floor / in this room)
+    db $00, $13, $11, $14, $04, $00, $00, $83, $FE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_DF:  ; [223] LoneWolf — LoneWolf (ATK-vs-DEF x more in a party of two / alone)
+    db $00, $13, $11, $14, $04, $00, $00, $83, $EE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_E0:  ; [224] MagicBurn — MagicBurn (a share of the MP as damage to all foes)
     db $46, $12, $12, $00, $00, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_E1:  ; [225] Tame — Tame (meat-meter recruit + a share of ATK as damage)
@@ -1489,6 +1493,14 @@ CustomRecord_E8:  ; [232] QuakeMost — Quake (all foes, then a share to allies,
     db $46, $12, $12, $00, $18, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_E9:  ; [233] Mourn — Mourn (ATK-vs-DEF + a bonus per fallen ally)
     db $00, $13, $11, $14, $0A, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_EB:  ; [235] Punish — Punish (ATK-vs-DEF + a share per buff on the target)
+    db $00, $13, $11, $14, $05, $00, $00, $83, $EE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_EC:  ; [236] Finish — Finish (ATK-vs-DEF x more the more HP the target has lost)
+    db $00, $13, $11, $14, $06, $00, $00, $83, $EE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_ED:  ; [237] Rupture — Rupture (bursts the target's ailments for big ATK-vs-DEF damage)
+    db $00, $13, $11, $14, $06, $00, $00, $83, $EE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_EE:  ; [238] Blunt — Blunt (lowers the target's ATK; Sap's roll)
+    db $00, $23, $11, $0A, $03, $0D, $00, $40, $07, $57, $02, $00, $00, $00, $00, $00, $00, $00, $00
 ; @BUILD_PROJECT END gd_custom_records
 
 ; pad the rest of the bank back out to $8000 (keeps bank $54 layout intact)

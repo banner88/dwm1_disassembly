@@ -54,8 +54,13 @@ Where the data goes (all id-indexed, index = id - 221):
     Budget: 16384 - 77 B of streams (19 near-raw species = 15,922 B fit).
   * names / nicknames: bank $41 has no room for fixed slots, so the strings are
     PACKED into seven free extents (TEXT_EXTENTS, 292 B, identical strings and
-    suffixes shared). 19 eight-letter names + 19 four-letter nicknames fit;
-    19 nine-letter names + 19 distinct four-letter nicknames do not (error).
+    suffixes shared). 19 eight-letter names + 19 four-letter nicknames fit
+    (266 B) — S155: the built-in custom skill names overflow their own 94-B
+    block by 27 B (28 B since S155 r3's "Blunt"; custom_skills NAME_REGION),
+    which these extents hold too, so that maximum is now 2 B over (three names a
+    letter shorter fit: 291 B in 42 strings, the exact search under its step
+    budget, `_pack`); 19
+    nine-letter names + 19 distinct four-letter nicknames do not (error).
 
 Walking layout (S105 fix): a new species borrows a bank-$11 species' layout.
 The pre-S105 patch WROTE the layout pointer at $11:$407f + (224-128)*2 =
@@ -310,21 +315,35 @@ def _gfx_ids(sid):
     return (OVERFLOW_BANK << 8) | (2 * k), (OVERFLOW_BANK << 8) | (2 * k + 1)
 
 
-def _pack(sizes, caps):
-    """Exact bin packing (small: <= 38 items, 5 bins): -> [bin index per
+class _PackBudget(Exception):
+    pass
+
+
+PACK_STEPS = 200000          # S155: the exact search gives up after this many states
+
+
+def _pack(sizes, caps, steps=PACK_STEPS):
+    """Exact bin packing (small: <= 48 items, 7 bins): -> [bin index per
     item] or None. Items in the given order (largest first); bins with the
     same remaining capacity are interchangeable at each step (symmetry cut);
-    failed states are memoised. Deterministic."""
+    failed states are memoised. Deterministic. S155: at most `steps` states
+    are visited (then None, as if it did not fit) — a near-full adversarial
+    input could otherwise search for minutes; the S155 skill names' spill
+    took the maxed 19-species fixture from 38 to 42 strings."""
     n = len(sizes)
     suffix = [0] * (n + 1)
     for k in range(n - 1, -1, -1):
         suffix[k] = suffix[k + 1] + sizes[k]
     dead = set()
     where = [None] * n
+    left = [steps]
 
     def go(k, rem):
         if k == n:
             return True
+        left[0] -= 1
+        if left[0] < 0:
+            raise _PackBudget()
         key = (k, rem)
         if key in dead or sum(rem) < suffix[k]:
             return False
@@ -337,7 +356,10 @@ def _pack(sizes, caps):
                     return True
         dead.add(key)
         return False
-    return list(where) if go(0, tuple(caps)) else None
+    try:
+        return list(where) if go(0, tuple(caps)) else None
+    except _PackBudget:
+        return None
 
 
 def _ffd(sizes, caps):
@@ -392,14 +414,14 @@ def text_layout(lst, extra=()):
             ref[(sid, kind)] = label
     sizes, caps = [len(b) for _l, b in prim], [e[2] for e in TEXT_EXTENTS]
     where = _ffd(sizes, caps)
-    if where is None and len(sizes) <= 40:
+    if where is None and len(sizes) <= 48:      # S155: was 40 (+ the step budget)
         where = _pack(sizes, caps)
     if where is None:
         need = sum(len(b) for _l, b in prim)
         raise SpeciesError(
             f"monster names: the new species' names + nicknames"
-            + (f" and {len(extra)} renamed original name(s) / nickname(s) that no longer "
-               "fit their own blocks" if extra else "")
+            + (f" and {len(extra)} other string(s) that no longer fit their own blocks "
+               "(renamed original names / nicknames, custom skill names)" if extra else "")
             + f" need {need} bytes of bank $41 text ({len(prim)} strings incl. $F0 ends; "
             f"equal ones are shared); the free extents hold {TEXT_BUDGET} "
             f"({', '.join(str(e[2]) for e in TEXT_EXTENTS)}) and these do not pack into "

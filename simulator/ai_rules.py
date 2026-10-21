@@ -67,6 +67,13 @@ UTIL_VETO_UNTRACED = {128, 131}     # DeMagic/ThickFog: veto measured
                                       # when the view carries skills/dd0b.
 
 
+# S155: CUSTOM_RULES[id](skill, actor, view) -> (veto, bonus, penalty) = bank $57
+# CustomAI57 -> bank $72 CustomAIRule72 at the chain end ($78A2), for the
+# romhack's built-in custom ids (simulator/skillfx/s155_custom.py registers;
+# view.board = the Board when the adapter has one). Empty = the original game.
+CUSTOM_RULES = {}
+
+
 class BattleView:
     def __init__(self, hp, maxhp, mp, maxmp, status, dd1b, traits,
                  families, resist_score, skills=None, dd0b=None, db40=(0, 0)):
@@ -249,6 +256,12 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     # $6C8C enemy-side-only +20 [measured; side gate byte-verified]
     if skill in R_6C8C and actor >= 4 and actor != 7:
         bonus += 20
+
+    if skill in CUSTOM_RULES:                             # S155: CustomAI57
+        v, b_, p_ = CUSTOM_RULES[skill](skill, actor, view)
+        if v:
+            return 0, True
+        bonus += b_; penalty += p_
 
     bonus = min(bonus, 0xFF)
     penalty = min(penalty, 0xFF)

@@ -4287,7 +4287,7 @@ AnnounceTemplateTable:
     ; SaveBtl_5ad2); ids $E2+ are CustomAnnounceTable below) ---
 AnnounceTpl_DE:
 ; @BUILD_PROJECT BEGIN gd_custom_announce_lo
-    db $67, $68, $FD, $FD   ; ids $DE-$E1
+    db $FF, $5D, $FD, $FD   ; ids $DE-$E1
 ; @BUILD_PROJECT END gd_custom_announce_lo
 
 Jump_058_58e8:
@@ -7450,10 +7450,10 @@ CustomAnnounceTable:        ; indexed (id - $E2), ids $E2-$FE [S111: compiler re
     db $FD   ; [$E8] QuakeMost
     db $FD   ; [$E9] Mourn
     db $FF   ; [$EA] -
-    db $FF   ; [$EB] -
-    db $FF   ; [$EC] -
-    db $FF   ; [$ED] -
-    db $FF   ; [$EE] -
+    db $5D   ; [$EB] Punish
+    db $5D   ; [$EC] Finish
+    db $5D   ; [$ED] Rupture
+    db $23   ; [$EE] Blunt
     db $FF   ; [$EF] -
     db $FF   ; [$F0] -
     db $FF   ; [$F1] -
@@ -7503,12 +7503,15 @@ DispatchBoundsStub:
     jr z, .anchor
     cp $de
     jr c, .row              ; stock ids: their own row (vanilla)
+    jr z, .anchor           ; [S155] $DE Repel is field-only too: Attack, like $E4
     sub $de                 ; [S111] custom ids $DE-$FE: CustomTargetBaseTable
     ld c, a                 ;   [id-$DE] = the stock id whose row (target service)
     ld b, $00               ;   this skill uses — a NEW custom skill = its base
     ld hl, CustomTargetBaseTable ; skill's; Tremor-QuakeMost = Firebal's
     add hl, bc              ;   (Jump_058_62bf, opposite side first live slot);
     ld a, [hl]              ;   Mourn = Attack's ($41E9); MagicBurn = Firebal's,
+    cp $f0                  ; [S155] $F0 = the skill's OWN pick (bank $72 entry 9
+    jr nc, .pick            ;   CustomTargetPick72: Rupture a foe with an ailment …)
 .row:                       ;   Tame x3 = Blaze's (S111 fix: S84-S110 they used the
     ld hl, $401d            ;   self row $6367 and the act-time AI cast them at its
                             ;   own side, measured); unused = $E5 ($6367). Rows <= $E5.
@@ -7522,11 +7525,23 @@ DispatchBoundsStub:
     ld [hl], a              ;   with StepGuard/MapMagic under AI (measured: the AI
     ld [$db8a], a           ;   queues $37 and it runs the shared Attack handler).
     jr .row                 ;   HL = the queue skill byte at BOTH call paths.
+.pick:                      ; [S155] the custom pick -> the actor's queue target
+    ld hl, $7209            ;   byte $DCED + 2 * wBattleAttackerIdx (as the vanilla
+    rst $10                 ;   services do, LoadBtlFX_62d9); E = the slot
+    ld a, [wBattleAttackerIdx]
+    add a
+    add LOW($dced)
+    ld l, a
+    ld a, $00
+    adc HIGH($dced)
+    ld h, a
+    ld [hl], e
+    ret
 ; [S111] compiler region gd_custom_target (editor2/core/custom_skills.py).
 CustomTargetBaseTable:
 ; @BUILD_PROJECT BEGIN gd_custom_target
-    db $E5   ; [$DE] retired: the vanilla slack row $E5 = $6367 (a harmless target write)
-    db $E5   ; [$DF] retired: the vanilla slack row $E5 = $6367 (a harmless target write)
+    db $E5   ; [$DE] Repel: Repel: field-only (DispatchBoundsStub makes an AI commit an Attack)
+    db $F0   ; [$DF] LoneWolf: its own pick (bank $72 CustomTargetPick72)
     db $03   ; [$E0] MagicBurn: Firebal's row (all foes; S111 fix: the AI aimed it at its own side)
     db $00   ; [$E1] Tame: Blaze's row (one foe; S111 fix: the AI aimed it at its own side)
     db $00   ; [$E2] TameMore: Blaze's row (one foe; S111 fix: the AI aimed it at its own side)
@@ -7538,10 +7553,10 @@ CustomTargetBaseTable:
     db $03   ; [$E8] QuakeMost: Firebal's row = Jump_058_62bf (opposite side, first live slot)
     db $3A   ; [$E9] Mourn: Attack's row = $41E9
     db $E5   ; [$EA] -: the vanilla slack row $E5 = $6367 (a harmless target write)
-    db $E5   ; [$EB] -: the vanilla slack row $E5 = $6367 (a harmless target write)
-    db $E5   ; [$EC] -: the vanilla slack row $E5 = $6367 (a harmless target write)
-    db $E5   ; [$ED] -: the vanilla slack row $E5 = $6367 (a harmless target write)
-    db $E5   ; [$EE] -: the vanilla slack row $E5 = $6367 (a harmless target write)
+    db $F0   ; [$EB] Punish: its own pick (bank $72 CustomTargetPick72)
+    db $F0   ; [$EC] Finish: its own pick (bank $72 CustomTargetPick72)
+    db $F0   ; [$ED] Rupture: its own pick (bank $72 CustomTargetPick72)
+    db $F0   ; [$EE] Blunt: its own pick (bank $72 CustomTargetPick72)
     db $E5   ; [$EF] -: the vanilla slack row $E5 = $6367 (a harmless target write)
     db $E5   ; [$F0] -: the vanilla slack row $E5 = $6367 (a harmless target write)
     db $E5   ; [$F1] -: the vanilla slack row $E5 = $6367 (a harmless target write)

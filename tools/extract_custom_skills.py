@@ -9,10 +9,11 @@ Until S111 these bytes were hand data in patches/bank_041/054/056/007/006/058/
 04c/05f/072.asm; the compiler now emits them from custom_skills.json +
 gamedata.skills.<224-254> overrides. This tool was run ONCE on the S110 pin
 (534bfb62…, patched) to write the baseline; `--check` re-reads a built ROM and
-compares it with the JSON (the byte-identity proof of the move). Reads both
-layouts: the S110 pin's hand tables and the S111 engine's (CustomLearnTable
-$E0-$FE, CustomMPCostTable from $DE) — test_compiler --rom runs extract() on
-the example build.
+compares it with the JSON (the byte-identity proof of the move). Reads three
+layouts: the S110 pin's hand tables, the S111 engine's (CustomLearnTable
+$E0-$FE, CustomMPCostTable from $DE) and the S155 engine's (CustomLearnTable
+from $DE; + Repel / LoneWolf $DE/$DF, Punish..Rust $EB-$EE and their result
+lines) — test_compiler --rom runs extract() on the example build.
 
 USAGE
   python3 tools/extract_custom_skills.py --rom <build>/rom.gbc --sym <build>/game.sym [--write]
@@ -32,6 +33,15 @@ IDS = range(0xDE, 0xEA)
 HANDLER = {0xDE: 'retired', 0xDF: 'retired', 0xE0: 'magicburn', 0xE1: 'tame',
            0xE2: 'tame', 0xE3: 'tame', 0xE4: 'anchor', 0xE5: 'quake', 0xE6: 'quake',
            0xE7: 'quake', 0xE8: 'quake', 0xE9: 'mourn'}
+# S155: the built-ins of S155 (Repel / LoneWolf on the retired POCs' ids $DE /
+# $DF, Punish / Finish / Rupture / Rust $EB-$EE; Plunder $EA held) — read when
+# the build has the S155 engine (CustomPctTable in the .sym)
+S155_IDS = (0xDE, 0xDF, 0xEB, 0xEC, 0xED, 0xEE)
+S155_HANDLER = {0xDE: 'repel', 0xDF: 'lonewolf', 0xEB: 'punish', 0xEC: 'finish',
+                0xED: 'rupture', 0xEE: 'rust'}
+S155_LINES = (('lonewolf_line', 'CustomLine_LoneWolf'), ('punish_line', 'CustomLine_Punish'),
+              ('finish_line', 'CustomLine_Finish'), ('rupture_line', 'CustomLine_Rupture'),
+              ('rust_line', 'CustomLine_Rust'))
 
 
 def parse_sym(path):
@@ -84,10 +94,15 @@ def extract(r):
     b5f, prox = r.s['CustomProxyTable']
     learn = {}
     s111 = 'CustomLearnTable' in r.s          # the S111 engine (one table, $E0-$FE)
+    s155 = 'CustomPctTable' in r.s            # the S155 engine (the table from $DE)
+    ids = sorted(set(IDS) | set(S155_IDS)) if s155 else list(IDS)
     if s111:
         t = r.s['CustomLearnTable']
-        for sid in range(0xE0, 0xEA):
-            row = r.at(t[0], t[1] + 18 * (sid - 0xE0), 18)
+        first = 0xDE if s155 else 0xE0
+        for sid in ids:
+            if sid < first:
+                continue
+            row = r.at(t[0], t[1] + 18 * (sid - first), 18)
             if row[0] != 0xFF:                 # level $FF = not learnable
                 learn[sid] = row
         mp_first = 0xDE
@@ -99,17 +114,18 @@ def extract(r):
         for k, sid in enumerate((0xE5, 0xE6, 0xE7, 0xE8, 0xE9)):
             learn[sid] = r.at(t2[0], t2[1] + 18 * k, 18)
         mp_first = 0xE0
-    for sid in IDS:
+    for sid in ids:
         name = r.string(b41, r.word(b41, ptr41 + 2 * sid))[:-1]
         dp = r.word(b56, ptr56 + 2 * sid)
         desc = None if dp == none56 else r.string(b56, dp)[:-1]
         rp = r.word(b54, rptr + 2 * (sid - 0xDE))
         record = None if rp == 0x41CF else r.at(b54, rp, 19)
-        mp = None if sid < 0xE0 else r.word(b07, mpt + 2 * (sid - mp_first))
+        mp = None if sid < 0xE0 and not s155 else r.word(b07, mpt + 2 * (sid - mp_first))
         tpl = r.at(b58, ann + sid, 1)[0] if sid < 0xE2 else r.at(b58, cann + sid - 0xE2, 1)[0]
         mp_ = r.word(b4c, mptr + 2 * (sid - 0xDE))
         msg = None if mp_ == dummy else r.string(b4c, mp_)
-        e = {'label': MT.decode(name), 'handler': HANDLER[sid],
+        hd = S155_HANDLER[sid] if s155 and sid in S155_HANDLER else HANDLER[sid]
+        e = {'label': MT.decode(name), 'handler': hd,
              'name': MT.decode(name),
              'description': MT.desc_lines(desc) if desc else None,
              'mp': mp,
@@ -118,11 +134,14 @@ def extract(r):
              'announce_template': tpl,
              'message': msg.hex() if msg else None,
              'proxy': r.at(b5f, prox + sid - 0xDE, 1)[0]}
+        if s155 and sid in S155_HANDLER:
+            e['_since'] = 'S155'
         sk[str(sid)] = e
     banners = {k: r.string(b4c, r.s[lab][1]).hex()
                for k, lab in (('quake_allies', 'CustomMsg_QuakeAllies'),
                               ('quake_flew', 'CustomMsg_QuakeFlew'),
-                              ('mourn_boost', 'CustomMsg_MournBoost'))}
+                              ('mourn_boost', 'CustomMsg_MournBoost'))
+               + (S155_LINES if s155 else ())}
     b72, tm = r.s['TameMeterTable']
     tame = {str(sid): r.word(b72, tm + 2 * k) for k, sid in enumerate((0xE1, 0xE2, 0xE3))}
     _, qp = r.s['QuakePowerTable']
@@ -144,17 +163,19 @@ def same_as_json(got, base):
 
 DOC = [
     "S111 (ROADMAP P3.11c; PROJECT_COMPILER §2.27): the BUILT-IN data of the",
-    "custom skills $DE-$E9 — what every build gets when gamedata.skills.<id>",
-    "does not change it. Read once from the S110 pin by",
+    "custom skills — what every build gets when gamedata.skills.<id> does not",
+    "change it. $E0-$E9 read once from the S110 pin by",
     "tools/extract_custom_skills.py (until S111 these were hand bytes in banks",
-    "$41/$54/$56/$07/$06/$58/$4C/$5F/$72). Per skill: name / description (the",
-    "SKIL text, null = the empty string), mp (CustomMPCostTable; the battle copy",
-    "is record +4), record (19 B hex; null = the retired POCs' Blaze row $41CF),",
-    "learn (18 B hex; null = not naturally learnable), announce_template (the",
-    "battle announce message id, $FD = this skill's own `message`, $FF = none),",
-    "message (raw battle-text bytes, $F0-terminated), proxy (the stock skill",
-    "whose animation / flash / sounds it borrows). handler = the bank $72 code",
-    "that runs it (mechanism, not data). $DE/$DF are the retired S45 POCs.",
+    "$41/$54/$56/$07/$06/$58/$4C/$5F/$72); S155 added Repel / LoneWolf ($DE/$DF,",
+    "the retired S45 POCs' ids) and Punish / Finish / Rupture / Blunt ($EB-$EE)",
+    "(\"_since\": \"S155\", authored — PROJECT_COMPILER §2.63). Per skill: name /",
+    "description (the SKIL text, null = the empty string), mp (CustomMPCostTable;",
+    "the battle copy is record +4), record (19 B hex), learn (18 B hex; null = not",
+    "naturally learnable), announce_template (the battle announce message id, $FD =",
+    "this skill's own `message`, $FF = none), message (raw battle-text bytes,",
+    "$F0-terminated), proxy (the stock skill whose animation / flash / sounds it",
+    "borrows). handler = the bank $72 code that runs it (mechanism, not data).",
+    "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines).",
 ]
 
 

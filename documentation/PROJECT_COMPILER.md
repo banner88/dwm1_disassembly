@@ -1822,7 +1822,14 @@ so banks $09/$0B/$18/$59 are no longer compiler-touched.
 seven extents above (292 B) by an exact bin-packer; equal strings and
 suffixes share bytes. 19 eight-letter names + 19 four-letter nicknames
 (266 B) fit; 19 nine-letter names each with its own nickname (285 B) do not
-(the extents waste ≥ 12 B for 10/5-byte strings) → validation error. The
+(the extents waste ≥ 12 B for 10/5-byte strings) → validation error.
+**S155:** the built-in custom skill names (121 B with Repel / LoneWolf / Punish
+/ Finish / Rupture / Rust) overflow their 94-B block `gd_custom_skill_names` by
+27 B, and that spill lives in these extents too — 19 eight-letter names + 19
+four-letter nicknames now need 293 B of 292 (refused; two names a letter
+shorter fit — 291 B; the exact packer `species._pack` now runs up to 48 strings
+under a 200,000-state budget, was ≤ 40 unbounded; test_compiler `--rom` "19
+species"). Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM). The
 nickname lookup: `LoadModeBaseRedirect` (ROM0 `$00F0`) sends mode base
 `$4739` with id ≥ 221 to `$7D39`.
 
@@ -2238,7 +2245,8 @@ of any build — the --rom test does, on the example build). Editor: `skills_doc
 "custom" / "new", **New skill…**, **Delete**, Element, Sounds like, Announce, "Its own numbers
 and lines"), help `54_skills.md`.
 
-**Ids** (BATTLE_SKILL_SYSTEM §13.9): 222-223 ($DE/$DF) = the retired S45 POCs — refused;
+**Ids** (BATTLE_SKILL_SYSTEM §13.9; **S155: 222-223 and 235-238 are built-ins now, 234 is
+held for Plunder, NEW = 239-254 — §2.63**): 222-223 ($DE/$DF) = the retired S45 POCs — refused;
 224-233 ($E0-$E9) = the BUILT-IN custom skills (MagicBurn, Tame / TameMore / TameMost,
 Anchor, Tremor / Quake / QuakeMore / QuakeMost, Mourn) — every build has them, a project
 edits their DATA; 234-254 ($EA-$FE) = NEW custom skills a project adds (21 slots): each
@@ -4900,6 +4908,86 @@ memorial (S154)".
   species — new art + its layout — and a new species on the statues, each == its new art's
   picture in VRAM); see PROJECT_STATE S154 for the counts.
 - Tests: `test_compiler.test_s154` (21 in r1: the example keeps the game's bytes, the lowering, the pictures, seven refusals, `--rom`: bank $79 entries 6-9, `MemPics` == the model, the regions' far calls; r2 + 6: the shade map byte, a shade past 3 refused, `composite`, `_s154_doc` — add_statue's two cells, the grey slot, the background unchanged in colour, the shared Pedestal, the top row refused); `test_app` `s154_memorial` (+ the two cells, one Pedestal); `TEMPLATE_SIZE[$77]` 2241.
+
+## §2.63 S155 — NEW BUILT-IN CUSTOM SKILLS: Repel, LoneWolf, Punish, Finish, Rupture, Blunt (Rust until S155 r3) (`gamedata.skills.<222-223, 235-238>`)
+
+**Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)** (user: "New custom skill functionality added and
+integrated with everything - editor, balance calculator for romhack (doesnt touch vanilla),
+AI, etc."; "repel as a one-level is fine, just mimics item"; "16 new slots is entirely
+acceptable"). Engine (BATTLE_SKILL_SYSTEM §13.10) + compiler (`custom_skills.py`) + editor
+(Skills tab) + simulator (`simulator/skillfx/s155_custom.py`, `ai_rules.CUSTOM_RULES`) + help
+`54_skills.md`. Plunder (234, `$EA`) is HELD for S156: `CS.PLANNED`, any entry refused
+("held for Plunder").
+
+- **Ids:** 222 Repel (`$DE`, field), 223 LoneWolf (`$DF`), 235 Punish, 236 Finish, 237
+  Rupture, 238 Rust (`$EB-$EE`) join the built-ins (`CS.BUILTIN`; custom_skills.json rows
+  with `"_since": "S155"`); NEW skills = 239-254 (`CS.NEW = range($EF, $FF)`, 16 ids; were
+  234-254). A project that had a NEW skill at 234-238 must move it (the ids are refused /
+  built-in now). `tools/census_skill_clone.py` clones at `$EF`.
+- **Keys (on top of §2.27's):** the percentages (`CS.PCT_KEYS`, 100 = ×1; one word each in
+  bank $72 `CustomPctTable`, region **`gd_custom_pcts`** NEW, 14 B): 223 `duo` (200) /
+  `alone` (400); 235 `per_buff` (50); 236 `at_full_hp` (20) / `near_zero_hp` (200); 237
+  `burst` (300) — each 0-2000; 238 `atk_loss` (50, 1-100 % of the target's base ATK).
+  `result_line` (223 / 235-238): the skill's own battle line, the banners `lonewolf_line`
+  … `rust_line` → bank $4C `CustomLine_*` in `gd_custom_msgs` (`CustomLinePtrs` order =
+  LINE_*). **S155 r2:** 223 / 235-237 = ONE page of 1-2 lines × 18 cells shown BEFORE the
+  attack (it replaces the announce and stays while the animation plays; the hit keeps the
+  game's own "takes … damage" message with its sound and shake), `{name}` = the user —
+  `{target}` / `{amount}` refused (the hit has not happened); 238 Rust (`CS.RESULT_AFTER`)
+  = the RESULT in place of the hit message, 1-3 pages, `{target}` = the target,
+  `{amount}` = the ATK lost (3 cells); no `{skill}` anywhere. **S155 r3:** `line_shows`
+  (223 / 235-237, `CS.LINE_SHOWS`): `"always"` (the default — the line on every cast) or
+  `"bonus"` (only when the bonus applies, the r2 behaviour) → bank $72 `CustomLineAlways`,
+  1 B appended to `gd_custom_pcts` (bits 0-3 = LoneWolf / Punish / Finish / Rupture, `%00001111`
+  unedited); other values refused, 238 refuses the key. Skill 238's name is **Blunt** (the
+  user, S155 r3; custom_skills.json name + label — the ROM's name 1 B longer, the S155 names
+  now spill 28 B into the `ns_text_*` extents). `record.target_mode` on the five
+  battle ones: `$11` one foe (the default) or `$12` all foes, nothing else
+  (`CS.TARGET_CHOICE`); one-foe → `CustomTargetBaseTable` row `$F0` (`CS.TARGET_PICK`, the
+  skill's own AI pick), all-foes → row 3 (Firebal's). Power words, `base`, `element` on
+  them: refused as for every built-in (Repel: no target, no element, no line).
+- **Regions:** §2.27's 20 + `gd_custom_pcts` = 21 (`CS.REGIONS`). Bytes changed in the
+  existing ones: the S155 rows (records, MP, names, SKIL texts, announce, proxies, the
+  target rows, the learn table now from `$DE` — 33 rows). The S155 names overflow the 94-B
+  name block by 27 B (S155 r3 "Blunt": 28 B, 2 B over — three names a letter shorter fit) into the `ns_text_*` extents (§2.21: the 19-species maximum is now 1 B
+  over; `species._pack` exact up to 48 strings with a step budget); the descriptions spill
+  into `gd_skill_desc_extra`.
+- **Engine patches** (hand, BATTLE_SKILL_SYSTEM §13.10): bank $72 (`NewDispatch72` + the
+  handlers, entries 8 `CustomAIRule72` / 9 `CustomTargetPick72` / 10 `RepelCommit72`,
+  `RepelField72`, `EncountersHere72`), bank $57 NEW patch file (`CustomAI57` at the chain end;
+  `tools/verify_integrity.py` PATCH_FILES), bank $58 `DispatchBoundsStub` (`$DE` row,
+  `.pick` for row ≥ `$F0`), bank $4C (`LoadB4c_CustomLine`, `CustomLinePtrs`; `ASSERT @ ==
+  $7452` before `CustomMsgPtrTable`, `CS.MSG_PTRS_AT`), bank $53 (`RustRestoreATK53` /
+  `SurgeRestoreATK53`), bank $50 (`AliasCommit` neutralized, `FieldOnlySkillA` + `$DE`),
+  bank $07 (`Repel07Post`, the whitelist ladder), bank $06 (`LearnLoopFork` from `$DE`),
+  bank $73 (`RepelCommit72` after `RegionCommit`), WRAM `wCustomJump` … `wCustomTmp`
+  ($DEBE-$DEC8, from the $DEBE-$DEDD reserve). **S155 r2:** bank $72 `LineSlot72` /
+  `SlashLine72` / `FinishPct72` (the bonus line in the announce slot; the handlers no
+  longer touch `$dd70`), bank $53 `QuakeHitLate53` / `QuakeLateFire53` (the Quake
+  crossover's ally hit), WRAM `wLineShown` $DEC9 / `wQuakeHitLate` $DECA (19 B left). Pin
+  `6904f81d…` (patched; S155 r1 `8ef5311a…`, patched). **S155 r3:** bank $72 `LineAlways72`
+  (`SlashLine72`'s head), bank $4C the `$4019[$FD]` row back to the vanilla `$5F6C` (the
+  poison tick renders a stock `$FD` through it — it showed MagicBurn's line); pin
+  `35133b67…` (patched). **S155 r4:** bank $50 `NoSkillName50` (an original-game bug: "[INS 00]
+  doesn't have any skill" named a foe after ATK → B → SKIL); pin `bce1c883…` (patched).
+  **S155 r5:** Blunt does not stack (WRAM `wBlunted`; banks $50 / $53 / $72; the simulator
+  mirrors it: `s155_custom.blunted`); pin `a7018025…` (patched).
+- **Editor:** Skills tab — the percentage spin boxes (`pct_spins`, "%" + "×N"), the result
+  line (3 pages × 2 lines, `result_edits`), the Target box enabled for the five with the
+  two choices only; `skills_doc` params `pct:<key>` / `result_line` / `target_choice`.
+  S155 r3: "Show it" (`line_shows`, the combo `line_shows`: every time / only with the
+  bonus) above the four bonus lines; param `line_shows` = (current, `"always"`).
+- **Simulator / Balance:** `BattleData.custom_pcts` / `custom_rows` → `Board.custom_pcts` /
+  `custom_rows` (planner `_SHARED`, the raising digest hashes the percentages). FIX: the
+  Quake numbers were read from `extras['quake_power']`, but `resolve` returns `'quake'`
+  ({id: [min, range]}) — `quake_power` edits never reached the simulator before S155.
+- **Acceptance:** `tools/walk_skills.py` (PyBoy, the user's save + `examples/s155_dojo_demo`)
+  28 / 28; `--negative` (the handlers + the AI rule = `ret`, Repel never matched) 15 FAIL; test_compiler (`test_s155_sim` + the S111 tests
+  updated: 239-254, 33 learn rows, `$F0` rows, the pcts, 21 regions, the Plunder refusal),
+  `test_app` (LoneWolf ×5 alone / all foes, Rust's line). Pin `8ef5311a…` (patched; S155 r2: `6904f81d…`, patched).
+  S155 r3: the walk 30 / 30 (the lines on every cast, the poison tick's stock `$FD` empty),
+  `--line-bonus` (CustomLineAlways 0 in the ROM copy) 30 / 30, `--negative` 18 FAIL;
+  test_compiler + 5 line_shows / Blunt checks (`35133b67…`, patched); test_app the combo.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

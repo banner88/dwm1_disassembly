@@ -7077,3 +7077,129 @@ background leaves unused; check it on the SCREEN against an untouched neighbour,
 the call went to the gates one. **Fix:** renamed `_statue_paint`. **Rule:** a mixin's private
 helpers carry the mixin's prefix (`_statue_…`, `_mem_…`); before adding one, `grep -rn "def
 <name>" editor2/core`.
+
+## S155 — the new built-in custom skills (Repel, LoneWolf, Punish, Finish, Rupture, Rust)
+
+### S155 — at a skill handler the caster is `$DB88`, not `$DB77`
+**Symptom:** LoneWolf cast by an enemy alone gave ×2 (the party's count) instead of ×4, and
+earlier readings of the S155 handlers were inconsistent. **Root cause:** `GetCaster72` read
+`$DB77` (the pending-action actor); measured at the bank $72 handlers it already reads `$FF`
+("consumed"), so the side test fell to the party's side. **Fix:** `wBattleAttackerIdx`
+(`$DB88`) — measured = the caster for a one-foe cast and on every victim of an all-foes sweep.
+**Rule:** a per-action WRAM byte is read where it is measured to hold, at the very instruction
+that uses it (a hook there), never by its name from another phase.
+
+### S155 — a low-INT enemy never runs the AI rule chains
+**Symptom:** the S155 AI rules (bank $72 `CustomAIRule72`) never fired in the first PyBoy
+runs: the rig's enemy (EID 3, INT 5) picked its skills at random. **Root cause:** `$DD0B` (the
+AI mode from INT: an enemy's low byte < `$15` → 0) sends the actor to bank $57
+`AILightweightPick`, which skips every rule chain. **Fix:** the measurements and the demo's
+bosses use INT 100-200; the bonuses were sized against the cat-1 plain-attack score (bank $58
+entry 11 = 20 + 10 per threshold). **Rule:** an AI rule is tested on an actor whose `$DD0B` is
+1 or 2, and checked to OUT-SCORE plain Attack, or it is dead code that looks fine.
+
+### S155 — `wRoomEncFlag` describes the room of the last STEP, not the room you are in
+**Symptom:** `tools/walk_skills.py`: Repel cast in Cities_FOUNT (no battles) right after
+arriving from the WOLF DEN was accepted and spent 4 MP. **Root cause:** bank $0B
+`CustomRoomEncCheck` refreshes `wRoomEncFlag` only at each step; until the first step in the
+new room it still says "encounters on". **Fix:** `EncountersHere72` asks bank $71 entry 1
+(`CustomEncResolve`) itself. **Rule:** a per-step cache is not a per-room fact; at an arrival
+ask the source table.
+
+### S155 — the farm's monster records 3-19 live in SRAM, not at `$CAC1 + 149·k`
+**Symptom:** the walk could not find the GIFT MASTER's monster: party list `[0, 1, $0B]`, but
+`$CAC1 + 149·11` held zeros. **Root cause:** S60 CF3 moved slots 3-19 to SRAM bank 0 `$A3BA +
+149·(k−3)` (known_RAM_map); the WRAM window is reused. **Rule:** read a monster slot k ≥ 3
+from SRAM (`p.memory[0, $A3BA + 149·(k−3) + off]`); search all of WRAM AND SRAM before
+concluding a record is missing.
+
+### S155 — the built-in skill names share bank $41's last bytes with the new species
+The six S155 names (42 B) overflow `gd_custom_skill_names` (94 B) by 27 B into the
+`ns_text_*` extents the new-species names use: the `--rom` "19 species" fixture (8-letter
+names + 4-letter nicknames) went 1 B over — and, at 42 strings, past the exact packer's
+40-string limit, so even 292 B "did not pack" (first fit wastes bytes in the 10-B extents).
+`species._pack` now runs up to 48 strings under a 200,000-state budget (worst 0.43 s on 200
+random near-full inputs; unbounded, one ran for minutes); two names a letter shorter fit.
+**Rule:** every new
+built-in string in a full bank is a capacity cost for some other feature — run the max
+fixtures of every feature sharing the space (test_compiler `--rom`), and document the new
+limit where the old one was promised (species.py, PROJECT_COMPILER §2.21 / §2.63).
+
+### S155 — two builds at once, again
+A `test_compiler --rom` run and `verify_integrity` were started together (the S130 / S153 rule:
+the builder stages `patches/` INTO `disassembly/` and restores it). Killed within seconds;
+verify's tree-restore step and `git status` showed only the session's comment edits. The rule
+stands: ONE build at a time; PyBoy walks on finished ROMs may run beside it.
+
+### S155 — a negative control must remove the EFFECT, not one road to it
+**Symptom:** the first `walk_skills.py --negative` (bank $72 `NewDispatch72` = `ret`) PASSED
+the multiplier checks, then hung in the boss battles. **Root cause:** `CustomBattleRun` still
+dispatches the S155 handlers on the S111 path, so they ran — on a different `$DB56` — and both
+sides of "roll × k == message" moved together. **Fix:** the negative ROM makes the five
+handlers and `CustomAIRule72` return at once: 15 of 28 FAIL (every effect, the AI casts,
+Repel). A check's "only `$BB`" also had to be filtered by `$DB8A` (other actors print `$BB`).
+**Rule:** the negative control patches the code that produces the measured effect; every check
+reads values attributable to the skill under test.
+
+### S155 — the balance anchor's raising digest moves with any baseline record
+`build_balance_anchor --selftest` failed "raising digest differs" after the six S155 records
+joined `BattleData(None)`. The digest hashes every record; none of the six is learnable or in
+an original enemy row, so no anchor number can change. Proven, not assumed: the new code's
+digest without those six records = the old `879a8933…`; the anchor's tag was re-set to
+`fecea30b…` and the selftest re-derived 3 fights + 1 dive + 2 player fights == the JSON. The
+percentages enter the digest only when edited (vanilla = the defaults). **Rule:** before
+re-tagging a cached result, show the input change cannot reach it AND re-derive a sample.
+
+### S155 r2 — a battle line goes where its beat is: flavour before the attack, the hit with its sound
+**Symptom (the user on the S155 ROM):** "'A lone wolf's fury!' should NOT coincide with
+damage sound but precede it. The damage sound and screen shake (when I am attacked) should
+coincide with 'X takes y damage'"; "'It goes in for the kill' … should be there WHILE slash
+is happening". **Root cause:** r1 put the bonus line in the HIT message (page 1 of `$FD`).
+The effect machine fires the damage sound (bank $55 entry 2) and the hit reaction (bank $5F
+entry 4: the blink / the party's shake) on the frame the hit message renders — so page 1
+got the sound, and "takes … damage" came a page later, after the slash. The same shape hid
+in Quake's crossover banner (rendered in the message gate after the ally's sound + shake).
+**Fix:** the bonus line renders in the announce slot (first poll of the `$da82` gate, d9ed
+1 / d9ee 3), the animation plays under it, the hit keeps the game's own message; the Quake
+ally hit holds its sound + reaction until the banner's hold ends. **Rule:** a battle
+presentation is beats on frames — announce → flavour → animation → hit (sound + reaction +
+damage text on ONE frame). Measure the beats with a frame log (message renders `$4C:$42D1`,
+visuals `$5F:$52F0`, sounds `$55:$4035`, the reaction `HitReactionArm`, SCY / hFFBB for the
+shake) before and after, for party AND enemy casters, for every custom skill.
+
+### S155 r3 — a repointed "dead" table row was live: the poison tick rendered MagicBurn's line
+**Symptom (the user on the S155 r2 ROM):** "WINGSNAKE BURNS HALF OF ITS MP! A HUGE BURST OF …
+— NOTHING HAPPENS. Is this normal? Should it know manaburn?" The WingSnake did not know
+MagicBurn. **Root cause:** S2d repointed the battle-message table's `$FD` row (`$4c:$4213`,
+vanilla `$5F6C` = an empty string) to MagicBurn's text; S2e moved custom lines to
+`CustomMsgPtrTable` and the row was called "dead". It is not: after the poison tick (`$E1`)
+the game renders a stock `$FD` (an empty follow-up) through `LoadB4c_Fork_stockfd` → that
+row — so every poisoned monster "burned half its MP" since S2d (rarely seen: it needs a
+poison tick). Found with a hook on `LoadB4c_Fork_stockfd` (actor, `$db8a`, the message
+before it). **Fix:** the row is `$5F6C` again. **Rule:** a vanilla table slot is "unused"
+only when a measurement says so (a hook on its reader over real play), not because a newer
+path stopped reading it; a stock-id `$FD` IS rendered by the game. Walk check: the poison
+tick's stock `$FD` reads `$F0`.
+
+### S155 r4 — an original-game bug in a shared insert buffer: "BombCrag doesn't have any skills"
+**Symptom (the user on the r3 ROM, the VIPER + BURSTER battle):** SKIL on HL (no skills) said
+"BombCrag doesn't have any skill". **Root cause (the original game's, PyBoy + code):** the
+message (battle_command #2, bank $50 `jr_050_4945`) prints `[INS 00]` = `$C180` without filling
+it; the command menu fills it with the commanded monster's name, but ATK's target list
+overwrites it with each foe's name as the cursor moves — ATK → (cursor on BombCrag) → B → SKIL
+printed the foe. Found by logging `$C180` every frame with the command state. **Fix:** bank $50
+`NoSkillName50` (11 B of the S155 freed AliasCommit bytes; the site's 16 B rewritten in place)
+refills `$C180` from `$C8DD`'s party slot (`CheckSlotUnder3`, the game's own name copy).
+**Rule:** an `[INS nn]` message must fill its slot itself; a report of the wrong name is a
+buffer-lifetime question — reproduce the exact menu path (incl. B / cancel), not just the
+straight one (the straight path showed "HL" correctly three times).
+
+### S155 r5 — a debuff the AI can score must know it already landed
+**Symptom (the user on the r4 ROM):** "MadKnight cast blunt like 6 times in a row, only THEN
+used Upper" — Blunt stacked (−50 % of base each time down to 1), and the AI's scorer
+(`ScoreRust72`: 1 + ATK / 4) kept the highest-ATK monster attractive after each hit. **Fix:**
+a per-battle per-slot "already blunted" bit (WRAM, zeroed at BattleInit, cleared where the
+stat is restored) checked by the handler AND the scorer. **Rule:** a new debuff needs its own
+"already applied" state when its stat has no other trace (the shared `+8 bit 7` lowered mark
+also covers Sap); give the AI the same test as the handler, and walk a boss fight to the end
+to see the AI's choice after the first success.

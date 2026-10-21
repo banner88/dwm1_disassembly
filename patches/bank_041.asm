@@ -953,8 +953,8 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
 ; [S111] rows 222-255 (the custom ids) = compiler region gd_custom_skill_name_ptrs
 ; (editor2/core/custom_skills.py): a custom skill's name, else the empty string.
 ; @BUILD_PROJECT BEGIN gd_custom_skill_name_ptrs
-    dw SkillName_222_Unused_222  ; [222]
-    dw SkillName_222_Unused_222  ; [223]
+    dw SkillName_222_Repel  ; [222]
+    dw SkillName_223_LoneWolf  ; [223]
     dw SkillName_224_MagicBurn  ; [224]
     dw SkillName_225_Tame  ; [225]
     dw SkillName_226_TameMore  ; [226]
@@ -966,10 +966,10 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_232_QuakeMost  ; [232]
     dw SkillName_233_Mourn  ; [233]
     dw SkillName_222_Unused_222  ; [234]
-    dw SkillName_222_Unused_222  ; [235]
-    dw SkillName_222_Unused_222  ; [236]
-    dw SkillName_222_Unused_222  ; [237]
-    dw SkillName_222_Unused_222  ; [238]
+    dw SkillName_235_Punish  ; [235]
+    dw SkillName_236_Finish  ; [236]
+    dw SkillName_237_Rupture  ; [237]
+    dw SkillName_238_Blunt  ; [238]
     dw SkillName_222_Unused_222  ; [239]
     dw SkillName_222_Unused_222  ; [240]
     dw SkillName_222_Unused_222  ; [241]
@@ -3733,9 +3733,10 @@ FamilyIconStrTable:  ; $7E18 — mode 4 (B9 S28 relocation of the dead $4323 tab
 ; @BUILD_PROJECT BEGIN ns_text_a
 NsName_224:
     db $2A, $4C, $4F, $3F, $52, $4B, $4C, $48, $F0
-NsShort_224:
-    db $2A, $4C, $4F, $3F, $F0
-    ds 9, $00
+SkillName_237_Rupture:
+    db $35, $52, $4D, $51, $52, $4F, $42, $F0
+SkillName_238_Blunt:
+    db $25, $49, $52, $4B, $51, $F0
 ; @BUILD_PROJECT END ns_text_a
     ASSERT @ == $7E4F
 ; S104: Spirit (family 10) DEFAULT-NAME pool = mode-3 ids $A0-$A7 via the dead $4323 words
@@ -3770,7 +3771,13 @@ SpiritName_7:  ; "NOVA"
 ; @BUILD_PROJECT END ns_text_f
     ASSERT @ == $7E86
 ; @BUILD_PROJECT BEGIN ns_text_b
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; unused: the original bytes
+SkillName_235_Punish:
+    db $33, $52, $4B, $46, $50, $45, $F0
+SkillName_236_Finish:
+    db $29, $46, $4B, $46, $50, $45, $F0
+NsShort_224:
+    db $2A, $4C, $4F, $3F, $F0
+    ds 90, $00
 ; @BUILD_PROJECT END ns_text_b
 ; NewSpeciesShortPtrs: the default-nickname pointer table of ids 221-239. The
 ; bank $60 entry 14 TextOverride (S150; S105-S149 the bank-$00 LoadModeBaseRedirect) sends the mode-7 lookup ($4739, family codes /
@@ -3818,6 +3825,7 @@ MiscText_03_Paged:
 ; $DE-$FE, first-fit; a name that does not fit goes to the shared ns_text_*
 ; extents). The retired POCs $DE Scorch / $DF Smite no longer carry a name.
 ; @BUILD_PROJECT BEGIN gd_custom_skill_names
+; (4 name(s) placed in the ns_text_* extents: SkillName_235_Punish, SkillName_236_Finish, SkillName_237_Rupture, SkillName_238_Blunt)
 SkillName_224_MagicBurn:  ; "MagicBurn"
     db $30, $3E, $44, $46, $40, $25, $52, $4F, $4B, $F0
 SkillName_225_Tame:  ; "Tame"
@@ -3838,7 +3846,10 @@ SkillName_232_QuakeMost:  ; "QuakeMost"
     db $34, $52, $3E, $48, $42, $30, $4C, $50, $51, $F0
 SkillName_233_Mourn:  ; "Mourn"
     db $30, $4C, $52, $4F, $4B, $F0
-    ds 15, $00   ; free (15 B)
+SkillName_222_Repel:  ; "Repel"
+    db $35, $42, $4D, $42, $49, $F0
+SkillName_223_LoneWolf:  ; "LoneWolf"
+    db $2F, $4C, $4B, $42, $3A, $4C, $49, $43, $F0
 ; @BUILD_PROJECT END gd_custom_skill_names
     ASSERT @ == $7FF6
 ; @BUILD_PROJECT BEGIN ns_text_d

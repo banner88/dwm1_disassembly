@@ -1705,6 +1705,10 @@ jr_050_4937:
     ret
 
 
+; The "[INS 00] doesn't have any skill" message (battle_command #2): it does
+; not fill $C180 — it trusts the buffer, which ATK's target list overwrites with
+; the foes' names (ATK -> B -> SKIL shows a foe's name: an original-game bug;
+; patches/bank_050.asm NoSkillName50 fixes it, S155 r4).
 jr_050_4945:
     call ClearSpriteBuffer
     call LoadBattleGraphics

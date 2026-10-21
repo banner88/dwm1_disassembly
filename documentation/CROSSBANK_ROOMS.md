@@ -728,6 +728,14 @@ Moved: the page choice of the two NPC-sheet loaders (patched bank $0B `jr_00b_49
 3-5) → **CP_UNSIGNED** (no table index; PROJECT_COMPILER §2.40 "S141"). Selftest PASS (clean 58 /
 patched 89); `extracted/mapid_range_audit.json` regenerated.
 
+### S155 sites (the Repel field skill, ROADMAP E11)
+
+Three new loads in bank $72: `RepelField72` (**COPY**: `wMapID` → `wRepelPlace + 1`, the
+place Repel was cast in), `RepelCommit72` (**CP_UNSIGNED**: `cp [hl]` against that copy —
+equality; a region byte is compared first), `EncountersHere72` (**CP_UNSIGNED**: `cp $53 /
+$5A / $61 / $65 / $6B` ranges, then bank $71 entry 1 for a custom room). Nothing indexes a
+table with the id. Selftest PASS (clean 58 / patched 92).
+
 ### Re-running the audit
 
 `python3 tools/audit_mapid_range.py` after any engine-adjacent session. A

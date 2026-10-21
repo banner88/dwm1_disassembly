@@ -105,6 +105,12 @@
                  (vanilla 3 / 8 / 15) [S103, static]
                  S122: 3-15 only — 1-2 can carve an empty floor (freeze,
                  measured), 0 / 16+ overrun the grid (GATE_GENERATION §4.2)
+   C93E     1    bit 1 = the Repellant is active: bank $16 EncounterStep
+                 (label16_6f05) returns at once (no encounter roll); cleared at
+                 the next gate floor (bank $16 label16_5b4e) and by
+                 ClearAnimationState. [S155] the field skill Repel $DE sets it
+                 too (bank $72 RepelField72; outside a gate floor bank $72
+                 RepelCommit72 clears it on arrival in another place).
    C93F     1    Floor shape mode ([$16:$6056 + RNG%5]; 0 carved, 1 plain, 2 pattern)
    C940    16    Floor screen GRID (4×4): byte = (piece<<4)|variant; $Fx = empty
                  (piece = MazePieceTable row, variant 0-11, 12 = plain) [S122]
@@ -904,7 +910,8 @@
                  can't see each other); $DEB2-$DEBB anchor/quake/mourn (S73-S75);
                  $DEBC-$DEBD wGateDiveGate/wGateDiveMask (S100: gate dive state
                  for once-per-dive custom gate rooms — transient here, saved via
-                 SRAM $BFCA/$BFCB by bank $73 entries 5/6); $DEBE-$DEDD reserved.
+                 SRAM $BFCA/$BFCB by bank $73 entries 5/6); $DEBE-$DEC8 the S155
+                 custom skills (wCustomJump … wQuakeHitLate, rows below); $DECB-$DEDD reserved.
                  Vetted: no real claimant above the audio ceiling $DE2B
                  (full-corpus scan; $DE30-$DEFF literals are all data-as-code
                  junk); SVBK windows touch $DB00+ only; NOT in save range.
@@ -997,6 +1004,23 @@
 ;                reset by bank $71 entry 4 on floor 0 / another gate. [S100]
 ;   DEBD    1    wGateDiveMask — once-per-dive rule bits served this dive
 ;                (GATE_GENERATION §7.6). Both ride the save via SRAM $BFCA/B. [S100]
+;   DEBE    2    wCustomJump — the bank-$52 address the dispatcher jumps to for an
+;                S155 battle skill (FarSkillFork returns HL = this cell). [S155]
+;   DEC0    1    wCustomLine — the S155 extra battle line pending (bank $4C
+;                CustomLinePtrs, 1-based; 0 = none). [S155]
+;   DEC1    1    wCustomLineSkill — the id that set wCustomLine (guard). [S155]
+;   DEC2    1    wRepelArmed — 1 = Repel set $C93E bit 1 outside a gate floor;
+;                bank $72 RepelCommit72 (from bank $73's commit) clears both on
+;                arrival in another place. [S155]
+;   DEC3    2    wRepelPlace — (wMapRegion, wMapID) Repel was cast in. [S155]
+;   DEC5    4    wCustomTmp — MulPct72 scratch. All transient (not saved). [S155]
+;   DEC9    1    wLineShown — 1 = this action's S155 bonus line was decided in its
+;                announce slot (bank $72 LineSlot72). [S155 r2]
+;   DECA    1    wQuakeHitLate — 1 = the Quake crossover's ally hit has its damage
+;                sound + hit reaction held for the banner (bank $53). [S155 r2]
+;   DECB    1    wBlunted — bit s = battle slot s is blunted (Blunt does not stack):
+;                zeroed by bank $50 BattleInit, set by bank $72 SkillRust, cleared
+;                per slot by bank $53 RestoreATK53 (DeMagic / Surge). [S155 r5]
 
 ## [S87] Obedience / WLD / party personality
 

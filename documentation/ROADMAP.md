@@ -3410,6 +3410,50 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       walk 60 / 60 (see-through on screen, the grey, a new species on a statue), negative 20
       FAIL; a re-arted species (new art + layout) shown with its new art (probe 19 / 19).
 
+- [x] **E11 — New built-in custom skills: Repel, LoneWolf, Punish, Finish, Rupture, Rust (ADDED
+      + BUILT S155; built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM); test ROM `DWM-S155-skills-test.gbc`).**
+      User: "New custom skill functionality added and integrated with everything - editor,
+      balance calculator for romhack (doesnt touch vanilla), AI, etc." + the per-skill
+      answers ("repel as a one-level is fine, just mimics item … Lasts once per gate floor";
+      LoneWolf "dead count as party"; Punish "exclude iron and transform … once per buff";
+      Finish "from 0.2x to 2x (editable)"; Rupture 300 %, "any debuff counts … consume all …
+      fail with mp spent"; Rust "fold under DefDown … floor 1 … patch [DeMagic / Surge]";
+      targets "offer both"; "16 new slots is entirely acceptable"). Built: ids `$DE` / `$DF` /
+      `$EB-$EE` as built-ins (NEW skills now `$EF-$FE`), bank $72 handlers + the `wCustomJump`
+      dispatch, per-skill percentages (`gd_custom_pcts`) and result lines, one-foe / all-foes
+      with a skill-aware AI target pick, the AI rules at bank $57's chain end, Repel's field
+      effect (the Repellant flag; a room until the party leaves), DeMagic / Surge restoring a
+      rusted ATK; the Skills tab's boxes; the simulator / Balance tab model; help 54. Walk
+      `tools/walk_skills.py` on the user's save + `examples/s155_dojo_demo`. BATTLE_SKILL_SYSTEM
+      §13.10, PROJECT_COMPILER §2.63. FIXED on the way: Balance never simulated `quake_power`
+      edits (read the wrong key). Cost: the six names spill 27 B into the new-species name
+      extents (19 maxed species now 2 letters over).
+      **S155 r2 (the user on the ROM: "'A lone wolf's fury!' Should NOT coincide with damage
+      sound but precede it … should be the same for all custom skills"):** the bonus line now
+      replaces the announce before the attack and stays while it plays; every hit's damage sound
+      and shake land with its "takes … damage" text (Quake's crossover banner fixed the same way);
+      test ROM `DWM-S155r2-skills-test.gbc`.
+      **S155 r3 (the user on the r2 ROM):** the line shows on every cast by default ("so the
+      user can see what the skill is trying to do"; the editor's "Show it" offers "only when
+      the bonus applies"); FIXED a poisoned monster "burning half its MP" (the `$FD` row,
+      wrong since S2d); skill 238 renamed Blunt. Test ROM `DWM-S155r3-skills-test.gbc`.
+      **S155 r4:** FIXED an original-game bug the user hit — "BombCrag doesn't have any skills"
+      for HL after ATK → B → SKIL (bank $50 `NoSkillName50`). Test ROM `DWM-S155r4-skills-test.gbc`.
+      **S155 r5:** Blunt does not stack (a second one on a blunted monster fails; the AI stops
+      casting it). Test ROM `DWM-S155r5-skills-test.gbc`.
+- [ ] **E12 — Plunder (`$EA`, id 234 HELD by S155; NEXT, S156).** User: "steal a foe's buff onto
+      yourself as if you cast it that round on yourself … Requires enemy to have a buff.
+      Requires to select enemy … Steal 1 at random … Exclude iron." Plan: a one-foe skill; the
+      buff picked uniformly from the target's `BuffTable` bits (bank $72) minus iron; moved
+      bit-for-bit to the caster's block (the stances with their round counters), a raised
+      DEF / AGL as the amount over base; "But nothing happens!" without one (MP spent?
+      — ask); AI: veto without a buffed foe, + per buff; the simulator twin. The compiler
+      already refuses 234 ("held for Plunder").
+- [ ] **E13 — more custom skill ids (not asked; the user: "more is a bonus").** 16 NEW ids
+      (`$EF-$FE`) is the limit of the `$DE-$FE` tables; more = re-using stock ids the game
+      never shows (the item-effect / internal rows 155-221 that no record, shop or drop
+      reaches — to be measured) or a second id byte. Scope only when asked.
+
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work
 is **E2** (the authoring backbone, now unblocked: E1's authoring spec feeds straight into
@@ -3493,7 +3537,8 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
       archive: SESSION_HISTORY Part 3.
 - [~] **S2 — Custom skills (ARC, not a single item).** S45 marked this "done" off a
       narrow POC; corrected (S46). The arc:
-  - [x] **S2a — Alias EFFECTS POC** (S45, SameBoy-confirmed): net-new ids $DE Scorch /
+  - [x] **S2a — Alias EFFECTS POC** (S45, SameBoy-confirmed; S155: the ids $DE / $DF are
+        Repel / LoneWolf now, the alias commit neutralized — E11): net-new ids $DE Scorch /
         $DF Smite via commit-time templatize-to-Blaze + $db86 stash + FarSkillFork.
         Narrow (single caster, Blaze-shaped). → §1–§6; KEY_LESSONS S45; archive: SESSION_HISTORY.
   - [x] **S2b — Record-table round-trip + presentation foundation** (S46,

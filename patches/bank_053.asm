@@ -5620,8 +5620,8 @@ SurgeCureTarget_601c:
     ret z
 
     res 7, [hl]
-    ld a, [wBattleTargetIdx]
-    ld [$dd72], a
+    call SurgeRestoreATK53      ; [S155] was `ld a, [wBattleTargetIdx]` (3 -> 3): ATK
+    ld [$dd72], a               ;   (Rust) back to base too; returns A = the target
     ld hl, $5708
     rst $10
     ld a, [wBattleTargetIdx]
@@ -6307,8 +6307,8 @@ DispelRevertFromRow_63c7_jp:
 ; [S130 F10] no revert: DEF and AGL := source (record, or the row via
 ; [S130 F10] DispelBaseFromRow_64ba) — raised or lowered alike; slot 3/7 untouched.
 DispelBaseDefAgl_647c:
-    ld a, [$c86c]
-    or a
+    call RustRestoreATK53       ; [S155] was `ld a, [$c86c]` (3 -> 3): a lowered ATK
+    or a                        ;   (Rust) back to base first; returns A = [$c86c]
     jr nz, jr_053_648d
 
     ld a, [wBattleTargetIdx]
@@ -7730,9 +7730,11 @@ TameSound1Hook:              ; [S2e] early $5501 suppressed for Tame ($E1-$E3) A
     jr c, .play
     cp $e5                              ; [v4] was $e9: only Tame $E1-$E4 stays
     jr c, TameSound1_skip               ;   suppressed. Quake beats play the
-.play:                                  ;   vanilla per-beat damage sound again
-    ld hl, $5501                        ;   (the rumble no longer loops here).
-    rst $10
+    call QuakeHitLate53                 ;   vanilla per-beat damage sound again
+    jr nz, TameSound1_skip              ;   (the rumble no longer loops here).
+.play:                                  ; [S155 r2] except the first ally hit after
+    ld hl, $5501                        ;   the crossover: its sound waits for the
+    rst $10                             ;   banner (QuakeHitLate53)
 TameSound1_skip:
     jp $5ae1
 TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame ($E1-$E3) AND
@@ -7746,6 +7748,9 @@ TameSound2Hook:              ; [S2e] early $5502 suppressed for Tame ($E1-$E3) A
     jr c, .play
     cp $e5                              ; [v4] was $e9 — see TameSound1Hook
     jr c, TameSound2_skip
+    call QuakeHitLate53                 ; [S155 r2] the crossover's ally hit: no sound
+    jr z, .play                         ;   and no hit reaction (the shake / blink,
+    jp $5b02                            ;   bank $5F entry 4) yet — the banner first
 .play:
     ld hl, $5502
     rst $10
@@ -7779,7 +7784,7 @@ QuakeGate_delay:
 .tick:
     ld a, [wTameDelay]
     or a
-    jr z, TameGate_go                   ; hold elapsed -> resume the pipeline
+    jr z, .go                           ; hold elapsed -> resume the pipeline
     cp $08
     jr nz, .dec
     nop                                 ; [v4] the delay==8 damage-sound refire
@@ -7794,6 +7799,37 @@ QuakeGate_delay:
     ld a, [wTameDelay]
     dec a
     ld [wTameDelay], a
+    ret
+.go:
+    call QuakeLateFire53                ; [S155 r2] the held ally hit: its sound + hit
+    jp TameGate_go                      ;   reaction now, with its "takes damage" text
+
+; [S155 r2] QuakeHitLate53 — NZ = this hit is the first ally hit after the
+; Quake crossover (wQuakeAllyMsg still set: QuakeGate_delay renders the "allies
+; are caught" banner next): its damage sound and hit reaction (the party's
+; screen shake / the blink) are held (wQuakeHitLate := 1) and fired by
+; QuakeLateFire53 at the end of the banner's hold, with the damage text (user
+; S155 r2: "The damage sound and screen shake … should coincide with 'X takes y
+; damage' … the same for all custom skills"). Measured before: the shake played
+; under the banner, the text came 84 frames later. Clobbers A.
+QuakeHitLate53:
+    ld a, [wQuakeAllyMsg]
+    or a
+    ret z
+    ld [wQuakeHitLate], a
+    ret
+QuakeLateFire53:
+    ld a, [wQuakeHitLate]
+    or a
+    ret z
+    xor a
+    ld [wQuakeHitLate], a
+    ld hl, $5501                        ; the damage sound (both parts)
+    rst $10
+    ld hl, $5502
+    rst $10
+    ld hl, $5f04                        ; the hit reaction (shake / blink)
+    rst $10
     ret
 
 ; ----------------------------------------------------------------------------
@@ -7865,147 +7901,75 @@ QuakeFirstTgt53:
     pop bc
     scf                                 ; CF set = skip this slot
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; ----------------------------------------------------------------------------
+; [S155] Rust lowers ATK (the game itself never does — BATTLE_SKILL_SYSTEM
+; §15.11.F7); these two give it back where the game gives DEF / AGL back:
+;  * RustRestoreATK53 — DeMagic's no-revert path (DispelBaseDefAgl_647c, which
+;    returns DEF and AGL to their source): ATK below its base -> the base.
+;    Out: A = [$c86c] (the displaced instruction; the caller's `or a` follows).
+;  * SurgeRestoreATK53 — Surge on a "lowered" target (+8 bit 7, already
+;    cleared by the caller), before its AGL / DEF: ATK below base -> base.
+;    Out: A = [wBattleTargetIdx] (the displaced instruction).
+; The base = bank $57 entry 6 (the party record +$58 / the enemy row), as
+; Surge reads AGL / DEF; a helper (slot 3 / 7) is left alone (both callers skip
+; it). Raising ATK never happens in battle, so ATK above base stays.
+; ----------------------------------------------------------------------------
+RustRestoreATK53:
+    call RestoreATK53
+    ld a, [$c86c]
+    ret
+SurgeRestoreATK53:
+    call RestoreATK53
+    ld a, [wBattleTargetIdx]
+    ret
+RestoreATK53:
+    ld a, [wBattleTargetIdx]
+    and $03
+    cp $03
+    ret z
+    ld a, [wBattleTargetIdx]            ; [S155 r5] the ATK comes back: the slot
+    and $07                             ;   is no longer blunted (wBlunted bit off)
+    ld b, a
+    inc b
+    ld a, $80
+.sh:
+    rlca
+    dec b
+    jr nz, .sh
+    cpl
+    ld hl, wBlunted
+    and [hl]
+    ld [hl], a
+    ld a, [wBattleTargetIdx]
+    and $07
+    ld [$dd72], a
+    ld hl, $5706
+    rst $10                             ; [$dd72 / $dd73] = the base ATK
+    ld a, [wBattleTargetIdx]
+    and $07
+    add a
+    add LOW(wBattleATK)
+    ld l, a
+    ld a, $00
+    adc HIGH(wBattleATK)
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a                             ; BC = ATK
+    ld a, [$dd72]                       ; base - ATK
+    sub c
+    ld e, a
+    ld a, [$dd73]
+    sbc b
+    ret c                               ; ATK above base: keep
+    or e
+    ret z                               ; equal: nothing to do
+    ld a, [$dd73]
+    ld [hl-], a
+    ld a, [$dd72]
+    ld [hl], a
+    ret
     nop
     nop
     nop

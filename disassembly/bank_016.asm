@@ -5252,9 +5252,9 @@ label16_6f05:  ; original label
     or a
     ret nz
 
-    ld a, [$c93e]
-    bit 1, a
-    ret nz
+    ld a, [$c93e]               ; bit 1 = the Repellant is active (the item; [S155
+    bit 1, a                    ;   romhack] the field skill Repel $DE sets it too —
+    ret nz                      ;   bank $72 RepelField72): no encounter roll at all
 
     ld a, [wInGateworld]
     or a

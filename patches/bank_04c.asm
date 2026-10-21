@@ -276,7 +276,7 @@ Jump_04c_40c0:
     dw $5EFD                          ; Entry 262 — battle_message #250 "But cannot use [INS 00]!"
     dw $5F12                          ; Entry 263 — battle_message #251 "But cannot use this skill in this…"
     dw $5F41                          ; Entry 264 — battle_message #252 "Cannot give a command in this {F2…"
-    dw CustomMsg_E0_MagicBurn                          ; Entry 265
+    dw $5F6C                          ; Entry 265 = msg id $FD: the vanilla empty string. [S155 r3] back from CustomMsg_E0_MagicBurn (S2d-S155 r2): the game renders $FD through this row after the poison tick ($E1, stock $db8a) — it showed "burns half its MP!" (BATTLE_SKILL_SYSTEM §13.1)
     dw $5F6D                          ; Entry 266 — [table $4215]; battle_effect #0 "{ED}[INS 00] gives [INS 10] to{FC…"
     dw $5F86                          ; Entry 267 — battle_effect #1 "[INS 00] gives [INS 10] to the{FC…"
     dw $5FA7                          ; Entry 268 — battle_effect #2 "{ED}[INS 00] gives [INS 10] to th…"
@@ -11742,11 +11742,13 @@ jr_04c_72b9:
     ld [bc], a
 ; [S111] $7326-$735D: 56 bytes of custom-skill battle lines (compiler region
 ; gd_custom_msg_a; MagicBurn's announce "burns half its MP!" when unedited).
-; Entry 265 above (the $4019 table's $FD row) still names CustomMsg_E0_MagicBurn
-; — dead since S2e (the $FD fork reads CustomMsgPtrTable) — so the label is
-; always emitted, wherever MagicBurn's line lands.
+; The label CustomMsg_E0_MagicBurn is always emitted (wherever MagicBurn's line
+; lands). [S155 r3] Entry 265 above (the $4019 table's $FD row) named it from S2d
+; to S155 r2 and was called "dead" — it is NOT: LoadB4c_Fork_stockfd renders a
+; stock $FD through it (the poison tick's follow-up), so it is the vanilla $5F6C
+; (empty) again.
 ; @BUILD_PROJECT BEGIN gd_custom_msg_a
-CustomMsg_E0_MagicBurn::   ; (the dead $4019[$FD] row names this address)
+CustomMsg_E0_MagicBurn::   ; (kept; S155 r3: the $4019[$FD] row is the vanilla $5F6C again)
 CustomMsgLine_224:  ; "[['{name} burns half its MP!'], ['A huge burst of', 'magic energy!']]"
     db $F9, $00, $62, $3F, $52, $4F, $4B, $50, $62, $45, $3E, $49, $43, $62, $46, $51, $50, $62, $30, $33, $63, $FC, $10, $EC, $F2, $24, $62, $45, $52, $44, $42, $62, $3F, $52, $4F, $50, $51, $62, $4C, $43, $F1, $4A, $3E, $44, $46, $40, $62, $42, $4B, $42, $4F, $44, $56, $63, $EC, $F0
 ; @BUILD_PROJECT END gd_custom_msg_a
@@ -11812,6 +11814,10 @@ QuakeFlewModeTable:
 QuakeFlewPtrTable:
     dw CustomMsg_QuakeFlew
 LoadB4c_Fork_custom:
+    ld a, [wCustomLine]              ; [S155] an S155 skill's extra line pending?
+    or a                             ;   (its handler made the hit message $FD)
+    jr nz, LoadB4c_CustomLine
+.mourn:
     ld a, [wMournBoosted]            ; [MOURN S75] boost banner pending?
     or a
     jr nz, LoadB4c_MournBoost
@@ -11863,6 +11869,39 @@ MournBoostModeTable:
 MournBoostPtrTable:
     dw CustomMsg_MournBoost
 
+; [S155] LoadB4c_CustomLine — render extra line A (1-based, CustomLinePtrs) of the
+; skill that set it (wCustomLineSkill == $DB8A; another skill's $FD drops it and
+; goes on as before). One-shot: wCustomLine := 0. The lines are battle text in
+; the gd_custom_msgs region (CustomLine_*; $F9 $00 = the target, $F9 $10 = the
+; number of the hit — the damage / the ATK lost). BATTLE_SKILL_SYSTEM §13.10.
+LoadB4c_CustomLine:
+    ld b, a
+    xor a
+    ld [wCustomLine], a
+    ld a, [wCustomLineSkill]
+    ld c, a
+    ld a, [$db8a]
+    cp c
+    jr nz, LoadB4c_Fork_custom.mourn
+    ld a, b
+    dec a
+    ld [$c823], a                    ; index
+    xor a
+    ld [$c822], a                    ; mode 0
+    ld de, CustomLineModeTable
+    call CallTextEngine
+    ld a, $ff
+    ld [$c823], a
+    ret
+CustomLineModeTable:
+    dw CustomLinePtrs                ; [S155] mode 0 -> the extra lines
+CustomLinePtrs:                      ; [S155] LINE_* (bank $72), from 1
+    dw CustomLine_LoneWolf           ; 1 LoneWolf: the bonus applied
+    dw CustomLine_Punish             ; 2 Punish: the target had buffs
+    dw CustomLine_Finish             ; 3 Finish: more than x1
+    dw CustomLine_Rupture            ; 4 Rupture: the ailments burst
+    dw CustomLine_Rust               ; 5 Rust: the ATK lost
+
 CustomMsgModeTable:
     dw CustomMsgPtrTable             ; mode 0 -> the custom pointer table
 QuakeAlliesModeTable:
@@ -11877,10 +11916,11 @@ QuakeAlliesPtrTable:
 ; and gd_custom_msgs (up to $7A9D). The line bytes are battle text: $ED (a box
 ; opener), $F9 $00 = the subject's name (the caster in an announce, the target
 ; in a hit line), $F1 = next line, $FC $10 $EC $F2 = next page, $EC $F0 = end.
+    ASSERT @ == $7452                ; [S155] editor2/core/custom_skills.py MSG_PTRS_AT
 CustomMsgPtrTable:
 ; @BUILD_PROJECT BEGIN gd_custom_msg_ptrs
-    dw CustomMsg_dummy         ; [$DE] retired
-    dw CustomMsg_dummy         ; [$DF] retired
+    dw CustomMsg_dummy         ; [$DE] Repel
+    dw CustomMsg_dummy         ; [$DF] LoneWolf
     dw CustomMsgLine_224       ; [$E0] MagicBurn
     dw CustomMsgLine_225       ; [$E1] Tame
     dw CustomMsgLine_226       ; [$E2] TameMore
@@ -11892,10 +11932,10 @@ CustomMsgPtrTable:
     dw CustomMsgLine_229       ; [$E8] QuakeMost
     dw CustomMsgLine_233       ; [$E9] Mourn
     dw CustomMsg_dummy         ; [$EA] -
-    dw CustomMsg_dummy         ; [$EB] -
-    dw CustomMsg_dummy         ; [$EC] -
-    dw CustomMsg_dummy         ; [$ED] -
-    dw CustomMsg_dummy         ; [$EE] -
+    dw CustomMsg_dummy         ; [$EB] Punish
+    dw CustomMsg_dummy         ; [$EC] Finish
+    dw CustomMsg_dummy         ; [$ED] Rupture
+    dw CustomMsg_dummy         ; [$EE] Blunt
     dw CustomMsg_dummy         ; [$EF] -
     dw CustomMsg_dummy         ; [$F0] -
     dw CustomMsg_dummy         ; [$F1] -
@@ -11932,6 +11972,16 @@ CustomMsg_QuakeFlew:  ; "['But {name}', 'flew above it!']"
     db $ED, $25, $52, $51, $62, $F9, $00, $F1, $43, $49, $42, $54, $62, $3E, $3F, $4C, $53, $42, $62, $46, $51, $63, $EC, $F0
 CustomMsg_MournBoost:  ; "['Fallen allies', 'lend power!']"
     db $29, $3E, $49, $49, $42, $4B, $62, $3E, $49, $49, $46, $42, $50, $F1, $49, $42, $4B, $41, $62, $4D, $4C, $54, $42, $4F, $63, $EC, $F0
+CustomLine_LoneWolf:  ; "["A lone wolf's", 'fury!']"
+    db $ED, $24, $62, $49, $4C, $4B, $42, $62, $54, $4C, $49, $43, $68, $F1, $43, $52, $4F, $56, $63, $EC, $F0
+CustomLine_Punish:  ; "['It punishes the', "foe's buffs!"]"
+    db $ED, $2C, $51, $62, $4D, $52, $4B, $46, $50, $45, $42, $50, $62, $51, $45, $42, $F1, $43, $4C, $42, $68, $62, $3F, $52, $43, $43, $50, $63, $EC, $F0
+CustomLine_Finish:  ; "['It goes in for', 'the kill!']"
+    db $ED, $2C, $51, $62, $44, $4C, $42, $50, $62, $46, $4B, $62, $43, $4C, $4F, $F1, $51, $45, $42, $62, $48, $46, $49, $49, $63, $EC, $F0
+CustomLine_Rupture:  ; "['The ailments', 'burst!']"
+    db $ED, $37, $45, $42, $62, $3E, $46, $49, $4A, $42, $4B, $51, $50, $F1, $3F, $52, $4F, $50, $51, $63, $EC, $F0
+CustomLine_Rust:  ; "['{target} loses', '{amount} attack!']"
+    db $ED, $F9, $00, $62, $49, $4C, $50, $42, $50, $F1, $F9, $10, $62, $3E, $51, $51, $3E, $40, $48, $63, $EC, $F0
 ; @BUILD_PROJECT END gd_custom_msgs
 ; --- end S2e custom-message infrastructure ---
     ds $7a9d - @, $00       ; the bank's free run (was a counted nop pad)

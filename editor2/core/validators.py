@@ -305,7 +305,7 @@ def validate(prj, generated=None):
         except SK.SkillError as e:
             errors.append(str(e))
         # S111 (P3.11c/d, PROJECT_COMPILER §2.27): the custom skills (built-in
-        # $E0-$E9 + new $EA-$FE) and the stock skills' element override
+        # $DE-$EE + new $EF-$FE since S155) and the stock skills' element override
         from . import custom_skills as CS
         try:
             warnings += [w for w in CS.check(prj) if w not in warnings]

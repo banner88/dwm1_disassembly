@@ -767,4 +767,24 @@ wMournSlashes:: db ;debb — double-slash replay counter (starts at 2; decrement
 ; Reserve now 32 B, growth starts $DEBE.
 wGateDiveGate:: db ;debc — wGateID+1 of the dive in progress (0 = none)
 wGateDiveMask:: db ;debd — once-per-dive rule bits served this dive (per gate, max 8)
+; [S155] the S155 custom skills (BATTLE_SKILL_SYSTEM §13.10). Transient (outside the
+; save image), boot-zeroed by ClearAllWRAM. Reserve now 18 B, growth starts $DECC (S155 r5).
+wCustomJump:: dw ;debe — the bank-$52 address the dispatcher jumps to for an S155
+                ;   battle skill (FarSkillFork returns HL = this cell; RST_08 reads it)
+wCustomLine:: db ;dec0 — the extra battle line pending (bank $4C CustomLinePtrs,
+                ;   1-based; 0 = none): the hit message $FD renders it, then clears it
+wCustomLineSkill:: db ;dec1 — the skill id that set wCustomLine (a $FD of any other
+                ;   skill ignores + clears it); also cleared in every action's cast slot
+wRepelArmed:: db ;dec2 — 1 = Repel set $C93E bit 1 OUTSIDE a gate floor: the bank $73
+                ;   commit clears both when the party arrives in another place
+wRepelPlace:: ds 2 ;dec3 — the place Repel was cast in (wMapRegion, wMapID)
+wCustomTmp:: ds 4 ;dec5 — MulPct72 scratch (bank $72)
+wLineShown:: db ;dec9 — [S155 r2] 1 = this action's bonus line was decided in its
+                ;   announce slot (bank $72 LineSlot72; cleared outside the slot)
+wQuakeHitLate:: db ;deca — [S155 r2] 1 = the Quake crossover's ally hit has its damage
+                ;   sound + hit reaction held for the banner (bank $53 QuakeLateFire53)
+wBlunted:: db ;decb — [S155 r5] bit s = battle slot s is BLUNTED (its ATK lowered by
+                ;   Blunt; Blunt does not stack: another one fails, the AI skips it).
+                ;   Zeroed by bank $50 BattleInit; cleared per slot when DeMagic /
+                ;   Surge give the ATK back (bank $53 RestoreATK53). 18 B left, $DECC.
 

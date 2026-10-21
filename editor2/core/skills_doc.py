@@ -5,7 +5,8 @@ looks_like / sounds_like) + editor2/core/custom_skills.py (the custom skills
 222-254 and every skill's element), PROJECT_COMPILER §2.26 / §2.27).
 
 Reads and writes `gamedata.skills.<id>`: the 222 stock skills, the ten
-built-in custom skills (224-233) and the project's NEW skills (234-254). The
+built-in custom skills (222-223, 224-233, 235-238 since S155) and the project's
+NEW skills (239-254; 234-254 until S155). The
 project stores only differences: a field set back to its original value (for
 a new skill: the value its base skill gives it) removes its key, and the
 skill's object when it empties (a new skill keeps `base` + `name`). Every
@@ -209,6 +210,16 @@ class SkillsMixin:
             if sid in owners:
                 o_ = off + 2 * owners.index(sid)
                 params['ratio:' + key] = (ex['ratios'][o_], dflt, most, what)
+        for key, (owner, _off, dflt, lo, hi, what) in CS.PCT_KEYS.items():   # [S155]
+            if owner == sid:
+                params['pct:' + key] = (ex['pcts'][key], dflt, lo, hi, what)
+        if sid in CS.RESULT_LINES:                                             # [S155]
+            bk = CS.RESULT_LINES[sid][1]
+            ra = sid in CS.RESULT_AFTER                                        # [S155 r2]
+            params['result_line'] = (CS.decode_line(ex['banners'][bk], result=ra),
+                                     CS.decode_line(oex['banners'][bk], result=ra))
+        if sid in CS.LINE_SHOWS:                                               # [S155 r3]
+            params['line_shows'] = ('always' if ex['line_always'][sid] else 'bonus', 'always')
         if handler == 'anchor':
             base_d = {d['id']: d['lines'] for d in json.load(open(os.path.join(
                 REPO, 'editor2', 'core', 'skill_scripts.json')))['dialogue']}
@@ -241,6 +252,7 @@ class SkillsMixin:
             'announce_lines': CS.decode_line(v['message']) if v['message'] else None,
             'announce_text': msgs.get(tpl, '') if tpl not in (0xFD, 0xFF) else '',
             'params': params,
+            'target_choice': handler in CS.TARGET_CHOICE,                     # [S155]
             'handler_shared_with': [],
             'natural': [(s, mnames.get(s, f'#{s}')) for s in natural],
             'enemies': enemies,
@@ -498,7 +510,9 @@ class SkillsMixin:
 
     def set_skill_param(self, sid, key, value):
         """tame_meter / quake_power / allies_line / flew_line / boost_line /
-        dialogs / the ratio keys (custom_skills.RATIO_KEYS) (None = the original)."""
+        dialogs / the ratio keys (custom_skills.RATIO_KEYS) / S155 the percentages
+        (custom_skills.PCT_KEYS), result_line and line_shows ("always"/"bonus";
+        None = the original)."""
         def mut(e):
             if value is None:
                 e.pop(key, None)
@@ -507,12 +521,12 @@ class SkillsMixin:
         self._skill_write(sid, mut)
 
     def new_custom_skill(self, base, name):
-        """Add a NEW custom skill (the first free id 234-254) running stock
+        """Add a NEW custom skill (the first free id 239-254) running stock
         skill `base`'s effect. Returns its id."""
         used = set(self.new_skill_ids())
         free = [i for i in CS.NEW if i not in used]
         if not free:
-            raise CS.CustomSkillError(f"all {len(CS.NEW)} new skill ids (234-254) are used")
+            raise CS.CustomSkillError(f"all {len(CS.NEW)} new skill ids (239-254) are used")
         sid = free[0]
         data = copy.deepcopy(self.data)
         sk = data.setdefault('gamedata', {}).setdefault('skills', {})
@@ -524,7 +538,7 @@ class SkillsMixin:
         """Remove a NEW skill (refused while a monster, enemy row or another
         skill's learn row still uses it)."""
         if sid not in CS.NEW:
-            raise CS.CustomSkillError("only new skills (234-254) can be deleted")
+            raise CS.CustomSkillError("only new skills (239-254) can be deleted")
         d = self.skill_detail(sid)
         users = []
         if d['natural']:

@@ -159,6 +159,8 @@ class BattleData:
                         for sid, r in enumerate(g.record)}
         self.core_alias = {}
         self.quake_range = dict(B.QUAKE_RANGE)
+        self.custom_pcts = {}       # S155: gd_custom_pcts (skillfx/s155_custom.py)
+        self.custom_rows = {}       # S155: the bank $58 target rows of the custom ids
         self.custom = {}
         if project is not None:
             self._custom_skills(project)
@@ -187,15 +189,21 @@ class BattleData:
             self.records[sid] = record_dict(sid, e['record'], self.skill_names.get(sid, ''))
             if e.get('base') is not None:
                 self.core_alias[sid] = int(e['base'])
-        q = (extras or {}).get('quake_power') or {}
+            if e.get('target_row') is not None:
+                self.custom_rows[sid] = int(e['target_row'])
+        # S155 fix: resolve() returns Quake's numbers under 'quake' as
+        # {sid: [min, range]} (the old 'quake_power' key never matched, so
+        # quake_power edits were not simulated); QUAKE_RANGE is (min, max)
+        q = (extras or {}).get('quake') or {}
         for k, v in q.items():
             try:
                 sid = int(k)
-                lo, hi = int(v[0]), int(v[1])
+                lo, hi = int(v[0]), int(v[0]) + int(v[1])
             except Exception:                               # noqa: BLE001
                 continue
             if sid in self.quake_range:
                 self.quake_range[sid] = (lo, hi)
+        self.custom_pcts = dict((extras or {}).get('pcts') or {})
 
     # -- enemies ----------------------------------------------------------
     def enemy_rec(self, eid):
@@ -793,6 +801,8 @@ def _board(data, party, enemies, db73):
             b.res[i * 7:(i + 1) * 7] = P.pack_res(m['res'])
     b.core_alias = data.core_alias
     b.quake_range = data.quake_range
+    b.custom_pcts = data.custom_pcts          # S155
+    b.custom_rows = data.custom_rows
     return b
 
 
@@ -1226,6 +1236,10 @@ def raising_digest(data):
         h.update(data.records[sid]['battle_record']['raw'].encode())
     h.update(json.dumps(sorted(data.core_alias.items())).encode())
     h.update(json.dumps(sorted((k, list(v)) for k, v in data.quake_range.items())).encode())
+    from . import custom_skills as _CS                      # S155: the percentages, when edited
+    _pc = getattr(data, 'custom_pcts', {}) or {}
+    if any(_pc.get(k, v[2]) != v[2] for k, v in _CS.PCT_KEYS.items()):
+        h.update(json.dumps(sorted(_pc.items())).encode())
     br = _breeder(data)
     if br is not None:
         h.update(repr((br.family, br.special,

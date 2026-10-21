@@ -3394,28 +3394,28 @@ jr_007_5635:
     jr z, jr_007_56a3
 
     cp $2c
-    jr z, jr_007_56a3
+    ret z                       ; [S155] was jr z, jr_007_56a3 (a bare ret)
 
     cp $2d
-    jr z, jr_007_56a3
+    ret z                       ; [S155] was jr z, jr_007_56a3 (a bare ret)
 
     cp $2e
-    jr z, jr_007_56a3
+    ret z                       ; [S155] was jr z, jr_007_56a3 (a bare ret)
 
     cp $2f
-    jr z, jr_007_56a3
+    ret z                       ; [S155] was jr z, jr_007_56a3 (a bare ret)
 
     cp $30
     jr z, jr_007_56a3
 
     cp $31
-    jr z, jr_007_56a3
+    ret z
 
-    cp $33
-    jr z, jr_007_56a3
-
+    cp $33                      ; [S155] `jr z, jr_007_56a3` -> `ret z` (56a3 IS a
+    ret z                       ;   bare ret: the same flow) on these two rows and
+                                ;   on $31 above: 3 bytes for the $DE (Repel) row
     cp $36
-    jr z, jr_007_56a3
+    ret z
 
     cp $37                      ; [ANCHOR S73] tail rewritten IN PLACE, byte-exact
     ret z                       ;   (24 bytes -> 24): the last three `jr z,
@@ -3425,12 +3425,21 @@ jr_007_5635:
     ret z                       ;   still hit the vanilla "Can't use here" reject
     cp $E4                      ;   verbatim below. Context validation happens in
     ret z                       ;   bank $14 entry 4 -> bank $72 AnchorField14Tail.
+    cp $DE                      ; [S155] Repel (validated + applied in bank $72
+    ret z                       ;   RepelField72 via the same entry-4 tail)
     ld hl, $0e0a
     call SetupTilemapTransfer
     ld a, $0a
     ld [$c90e], a
     ret
 
+; [S155] Repel07Post — jp'd from Anchor07Post for $DE (Repel): drop its return
+; and take StepGuard's result path (jr_007_5afe: state + 1, SetFld_5b1e = bank
+; $14 entry 5 + the MP deduct; no message). Funded by four more `jr z ->
+; ret z` rows of the ladder above (the label below keeps its address).
+Repel07Post:
+    pop hl
+    jp jr_007_5afe
 
 Jump_007_56a3:
 jr_007_56a3:
@@ -10763,8 +10772,8 @@ DispFld_7f58:
     rst $38
 CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE) * 2 — ids $DE-$FE
 ; @BUILD_PROJECT BEGIN gd_custom_skill_mp
-    dw 0    ; [$DE] retired
-    dw 0    ; [$DF] retired
+    dw 4    ; [$DE] Repel
+    dw 4    ; [$DF] LoneWolf
     dw 0    ; [$E0] MagicBurn
     dw 10   ; [$E1] Tame
     dw 30   ; [$E2] TameMore
@@ -10776,10 +10785,10 @@ CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE) * 2 — ids
     dw 24   ; [$E8] QuakeMost
     dw 10   ; [$E9] Mourn
     dw 0    ; [$EA] -
-    dw 0    ; [$EB] -
-    dw 0    ; [$EC] -
-    dw 0    ; [$ED] -
-    dw 0    ; [$EE] -
+    dw 5    ; [$EB] Punish
+    dw 6    ; [$EC] Finish
+    dw 6    ; [$ED] Rupture
+    dw 3    ; [$EE] Blunt
     dw 0    ; [$EF] -
     dw 0    ; [$F0] -
     dw 0    ; [$F1] -
@@ -10882,6 +10891,8 @@ Anchor07Post:
     ld a, [$da5e]
     cp $E4
     jr z, .anchor
+    cp $DE                      ; [S155] Repel -> StepGuard's way (no message,
+    jp z, Repel07Post           ;   the MP deducted; Repel07Post above)
     inc a                       ; [S74] Z iff A==$FF — same Z the replaced
     ret                         ;   `cp $ff` produced (caller tests Z only and
                                 ;   reloads A right after); 1 byte shorter to

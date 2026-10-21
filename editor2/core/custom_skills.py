@@ -3,7 +3,8 @@ S111; PROJECT_COMPILER §2.27; BATTLE_SKILL_SYSTEM §13-§14, §15.3).
 
 Custom skill ids are $DE-$FE (222-254; $FF = "no skill" in every skill list):
 
-  222-223  $DE/$DF   the retired S45 POCs (Scorch / Smite) — not editable
+  222-223  $DE/$DF   S155 built-ins Repel (field) / LoneWolf (the retired S45
+                     POCs Scorch / Smite until S155)
   224-233  $E0-$E9   the BUILT-IN custom skills: MagicBurn, Tame, TameMore,
                      TameMost, Anchor, Tremor, Quake, QuakeMore, QuakeMost,
                      Mourn. Their effect is bespoke code in bank $72 (mechanism);
@@ -14,7 +15,11 @@ Custom skill ids are $DE-$FE (222-254; $FF = "no skill" in every skill list):
                      the Quake / Mourn extra lines, Anchor's four dialogs.
                      Their built-in values = editor2/core/custom_skills.json
                      (read from the S110 pin by tools/extract_custom_skills.py).
-  234-254  $EA-$FE   NEW custom skills a project adds (P3.11d): each runs the
+  234      $EA       Plunder — held for a later session (S156): not editable yet
+  235-238  $EB-$EE   S155 built-ins Punish, Finish, Rupture, Blunt (the user's
+                     S155 list; BATTLE_SKILL_SYSTEM §13.10)
+  239-254  $EF-$FE   NEW custom skills a project adds (P3.11d; 234-254 until
+                     S155): each runs the
                      effect code of a STOCK skill (`base`) with its own record
                      (power, targets, MP, AI fields), name, text, learn row,
                      announce, look, sounds and element. The working id stays
@@ -59,9 +64,23 @@ Keys (all optional except `base` + `name` for a new skill):
   ally_damage                 229-232: the allies' share of Quake's damage ("1/3")
   per_fallen                  233: Mourn's bonus per fallen ally, x the base
                               damage ("1/1")
+  duo / alone                 223 LoneWolf: the damage in a party of two / alone
+  per_buff                    235 Punish: + this per buff on the target
+  at_full_hp / near_zero_hp   236 Finish: the damage at full HP / near 0 HP
+  burst                       237 Rupture: the damage when the ailments burst
+  atk_loss                    238 Blunt: the ATK lost, a share of the base ATK
+                              (the PERCENTAGES: 200, "200%", "x2" or 2.0 — 100 =
+                              x1; bank $72 CustomPctTable, region gd_custom_pcts)
+  result_line                 223 / 235-238: the skill's own battle line when the
+                              bonus applies — 223 / 235-237 (S155 r2): ONE page
+                              shown before the attack and while it plays,
+                              {name} = the user; 238 Blunt (always): the result,
+                              1-3 pages, {target}, {amount} (the ATK lost)
+  record.target_mode          223 / 235-238: $11 one foe (the AI picks the foe
+                              that suits the skill) or $12 all foes
                               (the RATIOS: "n/d", [n, d] or an integer; n 0-255,
                               d 1-255; bank $72 CustomRatioTable; results <= 999)
-  base                        234-254 only: the stock skill whose effect runs
+  base                        239-254 only: the stock skill whose effect runs
 
 No edits = the built-in data (the S110 behaviour, plus the S111 fixes: custom
 skills' sounds read CustomSfxTable instead of past the stock tables).
@@ -75,17 +94,20 @@ from . import monster_text as MT
 
 FIRST, LAST = 0xDE, 0xFE              # custom ids (222-254)
 N = LAST - FIRST + 1                  # 33
-RETIRED = (0xDE, 0xDF)
-BUILTIN = range(0xE0, 0xEA)           # 224-233
-NEW = range(0xEA, 0xFF)               # 234-254
-LEARN_FIRST = 0xE0                    # CustomLearnTable starts here (31 rows)
-LEARN_ROWS = LAST - LEARN_FIRST + 1   # 31
+RETIRED = ()                          # S155: $DE / $DF are Repel / LoneWolf now
+PLANNED = (0xEA,)                     # S155: Plunder's id, held for S156 (not built)
+S155 = (0xDE, 0xDF, 0xEB, 0xEC, 0xED, 0xEE)
+BUILTIN = (0xDE, 0xDF) + tuple(range(0xE0, 0xEA)) + (0xEB, 0xEC, 0xED, 0xEE)
+NEW = range(0xEF, 0xFF)               # 239-254 (S155; 234-254 before)
+LEARN_FIRST = 0xDE                    # CustomLearnTable starts here (33 rows; S155, $E0 before)
+LEARN_ROWS = LAST - LEARN_FIRST + 1   # 33
 ANNOUNCE_SPLIT = 0xE2                 # $DE-$E1 in AnnounceTemplateTable, $E2+ CustomAnnounceTable
 STOCK = 222
 NAME_REGION = 0x7FF6 - 0x7F98         # bank $41 gd_custom_skill_names (94 B)
 DESC_REGION = 0x8000 - 0x7E42         # bank $56 gd_custom_skill_desc (446 B)
 MSG_A = 56                            # bank $4C gd_custom_msg_a ($7326)
-MSG_POOL = 0x7A9D - (0x741C + 2 * N)  # bank $4C gd_custom_msgs (to $7A9D)
+MSG_PTRS_AT = 0x7452                  # bank $4C CustomMsgPtrTable (S155: + LoadB4c_CustomLine; ASSERT there)
+MSG_POOL = 0x7A9D - (MSG_PTRS_AT + 2 * N)  # bank $4C gd_custom_msgs (to $7A9D)
 NO_ELEMENT, ELEMENT_NONE = 0xFF, 0xFE
 FIELD_ONLY = (0x37, 0x38)           # StepGuard, MapMagic (bank $50 FieldOnlySkillA)
 TARGET_ROW_FOR_MODE = {0x11: 0x00, 0x12: 0x03, 0x21: 0x2B, 0x22: 0x2D, 0x41: 0x41}
@@ -93,8 +115,78 @@ HANDLER_LABEL = {'magicburn': 'MagicBurn (a share of the MP as damage to all foe
                  'tame': 'Tame (meat-meter recruit + a share of ATK as damage)',
                  'anchor': 'Anchor (field: warp to GreatTree and back)',
                  'quake': 'Quake (all foes, then a share to allies, not flyers)',
-                 'mourn': 'Mourn (ATK-vs-DEF + a bonus per fallen ally)'}
-DAMAGE_HANDLERS = ('magicburn', 'tame', 'quake', 'mourn')
+                 'mourn': 'Mourn (ATK-vs-DEF + a bonus per fallen ally)',
+                 'repel': 'Repel (field: no random encounters on this floor / in this room)',
+                 'lonewolf': 'LoneWolf (ATK-vs-DEF x more in a party of two / alone)',
+                 'punish': 'Punish (ATK-vs-DEF + a share per buff on the target)',
+                 'finish': 'Finish (ATK-vs-DEF x more the more HP the target has lost)',
+                 'rupture': "Rupture (bursts the target's ailments for big ATK-vs-DEF damage)",
+                 'rust': "Blunt (lowers the target's ATK; Sap's roll)"}
+DAMAGE_HANDLERS = ('magicburn', 'tame', 'quake', 'mourn', 'lonewolf', 'punish', 'finish',
+                   'rupture')
+# [S155] the handlers whose target mode a project may choose: one foe ($11, the
+# AI's own pick — CustomTargetBaseTable $F0) or all foes ($12, Firebal's row)
+TARGET_CHOICE = ('lonewolf', 'punish', 'finish', 'rupture', 'rust')
+TARGET_PICK = 0xF0
+# [S155] the S155 skills' percentages (bank $72 CustomPctTable, region
+# gd_custom_pcts): key -> (owner id, word offset, default %, lowest, highest, what)
+PCT_KEYS = {
+    'duo': (0xDF, 0, 200, 0, 2000, "the damage in a party of two"),
+    'alone': (0xDF, 2, 400, 0, 2000, "the damage alone"),
+    'per_buff': (0xEB, 4, 50, 0, 2000, "the extra damage per buff on the target"),
+    'at_full_hp': (0xEC, 6, 20, 0, 2000, "the damage when the target has full HP"),
+    'near_zero_hp': (0xEC, 8, 200, 0, 2000, "the damage when the target is near 0 HP"),
+    'burst': (0xED, 10, 300, 0, 2000, "the damage when the ailments burst"),
+    'atk_loss': (0xEE, 12, 50, 1, 100, "the ATK lost, a share of the target's base ATK"),
+}
+PCT_TABLE = 14
+# [S155] the extra battle line of each S155 battle skill (bank $4C CustomLinePtrs,
+# LINE_* in bank $72): owner -> (label, banner key). [S155 r2] LoneWolf / Punish /
+# Finish / Rupture show theirs BEFORE the attack (bank $72 LineSlot72: it replaces
+# the announce, stays while the slash plays; the hit keeps the game's own "takes
+# damage" message with its sound and shake) — one page, {name} = the user (the
+# slot's insert, measured); Blunt's is the RESULT (1-3 pages, {target}, {amount}).
+RESULT_LINES = {0xDF: ('CustomLine_LoneWolf', 'lonewolf_line'),
+                0xEB: ('CustomLine_Punish', 'punish_line'),
+                0xEC: ('CustomLine_Finish', 'finish_line'),
+                0xED: ('CustomLine_Rupture', 'rupture_line'),
+                0xEE: ('CustomLine_Rust', 'rust_line')}
+RESULT_AFTER = (0xEE,)          # [S155 r2] the line that IS the hit's result (Blunt)
+# [S155 r3] line_shows: "always" (the default — the user: "displayed the text regardless
+# of whether threshold is reached or not") | "bonus" (only when the bonus applies, the
+# S155 r1/r2 behaviour); bank $72 CustomLineAlways bit per skill
+LINE_SHOWS = {0xDF: 0, 0xEB: 1, 0xEC: 2, 0xED: 3}
+LINE_SHOWS_VALUES = ('always', 'bonus')
+
+
+def pct_value(v, what, lo=0, hi=2000):
+    """200 | "200%" | "x2" | "2x" | 2.0 -> 200 (percent, 100 = x1)."""
+    if isinstance(v, bool):
+        raise CustomSkillError(f"{what}: a percentage like 200 (= x2)")
+    x = None
+    if isinstance(v, int):
+        x = v
+    elif isinstance(v, float):
+        x = round(v * 100)
+    elif isinstance(v, str):
+        t = v.strip().lower().replace(' ', '')
+        m = re.fullmatch(r'(\d+(?:\.\d+)?)%', t)
+        mx = re.fullmatch(r'x(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)x', t)
+        if m:
+            x = round(float(m.group(1)))
+        elif mx:
+            x = round(float(mx.group(1) or mx.group(2)) * 100)
+        elif re.fullmatch(r'\d+', t):
+            x = int(t)
+    if x is None:
+        raise CustomSkillError(f"{what}: a percentage like 200, \"200%\" or \"x2\"")
+    if not lo <= x <= hi:
+        raise CustomSkillError(f"{what} = {x}%: {lo}-{hi}% (x{lo / 100:g} to x{hi / 100:g})")
+    return x
+
+
+def pct_text(x):
+    return f"x{x / 100:g}"
 KEYS_COMMON = ('name', 'description', 'mp', 'learn', 'record', 'looks_like',
                'sounds_like', 'element', 'announce', 'announce_as', 'presentation', 'comment')
 LINE_KEYS = {'allies_line': (0xE5, 'quake_allies', False),   # (owner id, banner, $ED prefix)
@@ -218,7 +310,8 @@ def native_element(sid, repo=None):
 
 LINE_CELLS = 18
 TOKENS = {'{name}': bytes([0xF9, 0x00]), '{user}': bytes([0xF9, 0x00]),
-          '{target}': bytes([0xF9, 0x00]), '{skill}': bytes([0xF9, 0x10])}
+          '{target}': bytes([0xF9, 0x00]), '{skill}': bytes([0xF9, 0x10]),
+          '{amount}': bytes([0xF9, 0x10])}   # S155: a hit line's number (result_line)
 TOKEN_CELLS = 9
 PAGE = bytes([0xFC, 0x10, 0xEC, 0xF2])
 END = bytes([0xEC, 0xF0])
@@ -237,7 +330,7 @@ def _pages(v, what):
     return v
 
 
-def encode_line(v, what, ed, allow_skill=True):
+def encode_line(v, what, ed, allow_skill=True, allow_amount=False):
     """Battle text -> bytes ($F0-terminated) + warnings. `ed` = start with $ED
     (the shape the original line had)."""
     warns = []
@@ -255,8 +348,11 @@ def encode_line(v, what, ed, allow_skill=True):
                     if tok == '{skill}' and not allow_skill:
                         raise CustomSkillError(f"{what}: {{skill}} works in the announce "
                                                "line only")
+                    if tok == '{amount}' and not allow_amount:
+                        raise CustomSkillError(f"{what}: {{amount}} works in a result line "
+                                               "only (the number of the hit)")
                     out += TOKENS[tok]
-                    cells += TOKEN_CELLS
+                    cells += 3 if tok == '{amount}' else TOKEN_CELLS   # a number: up to 999
                     i += len(tok)
                     continue
                 two = line[i:i + 2]
@@ -283,9 +379,11 @@ _DEC = {v: k for k, v in MT._DESC_CHARS.items()}
 _DEC.update({v: k for k, v in MT._DESC_MULTI.items()})
 
 
-def decode_line(bs):
+def decode_line(bs, result=False):
     """Battle-text bytes -> a list of pages of lines (best effort; shows the
-    built-in lines in the editor)."""
+    built-in lines in the editor). result = a hit's result line ({target} /
+    {amount} for the $F9 slots, S155)."""
+    name_tok, amount_tok = ('{target}', '{amount}') if result else ('{name}', '{skill}')
     pages, lines, cur = [], [], ''
     i = 0
     bs = bytes(bs)
@@ -294,7 +392,7 @@ def decode_line(bs):
         if b == 0xED:
             i += 1
         elif b == 0xF9 and i + 1 < len(bs):
-            cur += '{skill}' if bs[i + 1] == 0x10 else '{name}'
+            cur += (amount_tok if bs[i + 1] == 0x10 else name_tok)
             i += 2
         elif bs[i:i + 4] == PAGE:
             lines.append(cur); pages.append(lines); lines, cur = [], ''
@@ -429,8 +527,10 @@ def resolve(prj_or_data, repo_root=None):
         if not FIRST <= sid <= LAST:
             raise CustomSkillError(f"{what}: custom skill ids are 222-254 ($FF = no skill)")
         if sid in RETIRED:
-            raise CustomSkillError(f"{what}: ids 222-223 are the retired S45 test skills "
-                                   "(Scorch / Smite) — use 234-254 for a new skill")
+            raise CustomSkillError(f"{what}: a retired id")
+        if sid in PLANNED:
+            raise CustomSkillError(f"{what}: id 234 is held for Plunder (a built-in custom "
+                                   "skill of a later session) — new skills are 239-254")
         if not isinstance(e, dict):
             raise CustomSkillError(f"{what}: must be an object")
         edits[sid] = e
@@ -446,9 +546,14 @@ def resolve(prj_or_data, repo_root=None):
             allowed += {'tame': ('tame_meter',), 'quake': ('quake_power',),
                         'anchor': ('dialogs',)}.get(handler, ())
             allowed += tuple(k for k, r in RATIO_KEYS.items() if sid in r[0])
+            allowed += tuple(k for k, r in PCT_KEYS.items() if r[0] == sid)
+            if sid in RESULT_LINES:
+                allowed += ('result_line',)
+            if sid in LINE_SHOWS:
+                allowed += ('line_shows',)
             if 'base' in e:
                 raise CustomSkillError(f"{what}.base: the built-in custom skills run their "
-                                       "own code; `base` is for new skills (234-254)")
+                                       "own code; `base` is for new skills (239-254)")
             base = None
             name = MT.encode_name(b['name'], what) if b['name'] else b''
             desc = MT.encode_desc(b['description'], what) if b['description'] else None
@@ -516,8 +621,12 @@ def resolve(prj_or_data, repo_root=None):
                         + (" (quake_power holds Quake's numbers)" if handler == 'quake' else "")
                         + "; S74: nonzero power words looped the presentation")
                 if 'target_mode' in R and _int(R['target_mode'], what) != rec[2]:
-                    raise CustomSkillError(f"{what}.record.target_mode: this skill's code is "
-                                           "written for its own targets")
+                    if handler not in TARGET_CHOICE:
+                        raise CustomSkillError(f"{what}.record.target_mode: this skill's code is "
+                                               "written for its own targets")
+                    if _int(R['target_mode'], what) not in (0x11, 0x12):
+                        raise CustomSkillError(f"{what}.record.target_mode: $11 one foe or "
+                                               "$12 all foes")
             rec = _record_from(rec, R, what + '.record')
             if sid in NEW and rec[2] not in G.TARGET_MODES_OK:
                 raise CustomSkillError(f"{what}.record.target_mode ${rec[2]:02X}: one of $11 one "
@@ -580,6 +689,8 @@ def resolve(prj_or_data, repo_root=None):
         if sid in NEW:
             target_row = base if rec[2] == van['records'][base][2] else \
                 TARGET_ROW_FOR_MODE.get(rec[2], base)
+        elif handler in TARGET_CHOICE:      # [S155] one foe: the skill's own AI pick
+            target_row = TARGET_PICK if rec[2] == 0x11 else 0x03
         out[sid] = {'id': sid, 'handler': handler, 'base': base, 'name': name, 'desc': desc,
                     'mp': mp, 'record': bytes(rec), 'learn': bytes(learn) if learn else None,
                     'template': tpl, 'message': msg, 'proxy': proxy, 'sfx': sfx,
@@ -593,12 +704,39 @@ def resolve(prj_or_data, repo_root=None):
     ratios = {}
     for off, key, sid in ratio_slots():
         ratios[off] = RATIO_KEYS[key][2]
+    pcts = {k: v[2] for k, v in PCT_KEYS.items()}
+    line_always = {sid: True for sid in LINE_SHOWS}      # [S155 r3]
     for sid, e in edits.items():
         what = f"gamedata.skills.{sid}"
         for key, (owners, off, _d, most, _w) in RATIO_KEYS.items():
             if key in e and sid in owners:
                 if e[key] is not None:
                     ratios[off + 2 * owners.index(sid)] = ratio_value(e[key], f"{what}.{key}", most)
+        for key, (owner, _o, _d, lo, hi, _w) in PCT_KEYS.items():
+            if key in e and sid == owner and e[key] is not None:
+                pcts[key] = pct_value(e[key], f"{what}.{key}", lo, hi)
+        if 'line_shows' in e and sid in LINE_SHOWS:                 # [S155 r3]
+            if e['line_shows'] not in LINE_SHOWS_VALUES + (None,):
+                raise CustomSkillError(f"{what}.line_shows: \"always\" or \"bonus\"")
+            line_always[sid] = e['line_shows'] != 'bonus'
+        if 'result_line' in e and sid in RESULT_LINES:
+            if not e['result_line']:
+                raise CustomSkillError(f"{what}.result_line: the line cannot be empty")
+            if sid in RESULT_AFTER:
+                bs, w = encode_line(e['result_line'], f"{what}.result_line", True,
+                                    allow_skill=False, allow_amount=True)
+            else:                           # [S155 r2] shown before the attack
+                if len(_pages(e['result_line'], f"{what}.result_line")) > 1:
+                    raise CustomSkillError(f"{what}.result_line: one page (1-2 lines) — it "
+                                           "is on screen while the attack plays")
+                if any('{target}' in x for pg in _pages(e['result_line'], what) for x in pg):
+                    raise CustomSkillError(f"{what}.result_line: {{target}} does not work "
+                                           "here (the line comes before the hit; {name} = "
+                                           "the user)")
+                bs, w = encode_line(e['result_line'], f"{what}.result_line", True,
+                                    allow_skill=False, allow_amount=False)
+            banners[RESULT_LINES[sid][1]] = bs
+            warns += w
         if 'tame_meter' in e:
             tame[sid] = _int(e['tame_meter'], what + '.tame_meter', 0, 1600)
         if 'quake_power' in e:
@@ -628,7 +766,7 @@ def resolve(prj_or_data, repo_root=None):
                                            "characters (the dialog box)")
                 dialogs[DIALOG_IDS[k]] = list(lines)
     return out, {'tame': tame, 'quake': quake, 'banners': banners, 'dialogs': dialogs,
-                 'ratios': ratios}, warns
+                 'ratios': ratios, 'pcts': pcts, 'line_always': line_always}, warns
 
 
 # ---------------------------------------------------------------------------
@@ -721,8 +859,11 @@ def _fill(items, size):
 
 def layout(prj_or_data, repo_root=None):
     sk, ex, _w = resolve(prj_or_data, repo_root)
-    nm = [(name_label(s, v['name']), v['name'] + b'\xf0') for s, v in sorted(sk.items())]
-    ds = [(desc_label(s), v['desc'] + b'\xf0') for s, v in sorted(sk.items()) if v['desc']]
+    # S155: the S155 built-ins come last, so the S111 skills keep their places
+    # (and bytes) in the bank $41 / $56 regions; theirs fill what is left first-fit
+    order = sorted(sk.items(), key=lambda kv: (kv[0] in S155, kv[0]))
+    nm = [(name_label(s, v['name']), v['name'] + b'\xf0') for s, v in order]
+    ds = [(desc_label(s), v['desc'] + b'\xf0') for s, v in order if v['desc']]
     # battle lines: MagicBurn's first (it owned $7326), identical lines shared
     lines, owner = [], {}
     order = sorted(sk, key=lambda s: (s != 0xE0, s))
@@ -736,6 +877,8 @@ def layout(prj_or_data, repo_root=None):
         lines.append((msg_label(s), m))
     for lab, key in (('CustomMsg_QuakeAllies', 'quake_allies'), ('CustomMsg_QuakeFlew', 'quake_flew'),
                      ('CustomMsg_MournBoost', 'mourn_boost')):
+        lines.append((lab, ex['banners'][key]))
+    for sid, (lab, key) in sorted(RESULT_LINES.items()):        # [S155]
         lines.append((lab, ex['banners'][key]))
     a_placed, rest, a_used = _fill(lines, MSG_A)
     return {'names': _fill(nm, NAME_REGION), 'descs': _fill(ds, DESC_REGION),
@@ -903,7 +1046,11 @@ def emit_target(prj, warnings):
     out = []
     for s in range(FIRST, LAST + 1):
         v = sk.get(s)
-        if v and v['target_row'] is not None:
+        if v and v['target_row'] == TARGET_PICK:
+            r, why = TARGET_PICK, "its own pick (bank $72 CustomTargetPick72)"
+        elif v and v['handler'] in TARGET_CHOICE and v['target_row'] is not None:
+            r, why = v['target_row'], "Firebal's row = Jump_058_62bf (all foes, first live slot)"
+        elif v and v['target_row'] is not None:
             r, why = v['target_row'], f"stock skill {v['target_row']}'s row"
         elif s in (0xE5, 0xE6, 0xE7, 0xE8):
             r, why = 0x03, "Firebal's row = Jump_058_62bf (opposite side, first live slot)"
@@ -913,6 +1060,8 @@ def emit_target(prj, warnings):
             r, why = 0x00, "Blaze's row (one foe; S111 fix: the AI aimed it at its own side)"
         elif s == 0xE9:
             r, why = 0x3A, "Attack's row = $41E9"
+        elif s == 0xDE:
+            r, why = 0xE5, "Repel: field-only (DispatchBoundsStub makes an AI commit an Attack)"
         else:
             r, why = 0xE5, "the vanilla slack row $E5 = $6367 (a harmless target write)"
         out.append(f"    db ${r:02X}   ; [${s:02X}] {_cname(sk, s)}: {why}")
@@ -933,14 +1082,14 @@ def emit_msg_ptrs(prj, warnings):
 def _lines(items):
     out = []
     for lab, b in items:
-        out.append(f"{lab}:  ; \"{decode_line(b)}\"")
+        out.append(f"{lab}:  ; \"{decode_line(b, result=lab == 'CustomLine_Rust')}\"")
         out.append(_db(b))
     return out
 
 
 def emit_msg_a(prj, warnings):
     placed, used = layout(prj)['msg_a']
-    out = ["CustomMsg_E0_MagicBurn::   ; (the dead $4019[$FD] row names this address)"]
+    out = ["CustomMsg_E0_MagicBurn::   ; (kept; S155 r3: the $4019[$FD] row is the vanilla $5F6C again)"]
     out += _lines(placed)
     if used < MSG_A:
         out.append(f"    ds {MSG_A - used}, $00")
@@ -1029,6 +1178,23 @@ def emit_quake(prj, warnings):
                      f"{q[s][0]}-{q[s][0] + q[s][1]}" for s in (0xE5, 0xE6, 0xE7, 0xE8)) + "\n"
 
 
+def emit_pcts(prj, warnings):
+    """[S155] bank $72 CustomPctTable (gd_custom_pcts)."""
+    pc = layout(prj)['extra']['pcts']
+    B = baseline()['skills']
+    out = []
+    for key, (owner, off, _d, _lo, _hi, what) in sorted(PCT_KEYS.items(), key=lambda kv: kv[1][1]):
+        out.append(f"    dw {pc[key]:<5}".ljust(13) + f"; [${owner:02X}] {B[owner]['label']}: "
+                   f"{pct_text(pc[key])} — {what} ({key})")
+    la = layout(prj)['extra'].get('line_always') or {s: True for s in LINE_SHOWS}   # [S155 r3]
+    bits = sum(1 << b for s, b in LINE_SHOWS.items() if la.get(s, True))
+    out.append("CustomLineAlways:")
+    out.append(f"    db %{bits:08b}   ; [S155 r3] the line every time (line_shows \"always\"): "
+               + " ".join(B[s]['label'] for s, b in sorted(LINE_SHOWS.items(), key=lambda kv: kv[1])
+                          if la.get(s, True)))
+    return "\n".join(out) + "\n"
+
+
 def emit_ratios(prj, warnings):
     r = layout(prj)['extra']['ratios']
     B = baseline()['skills']
@@ -1054,6 +1220,7 @@ REGIONS = [
     ('gd_tame_meter', 'patches/bank_072.asm', emit_tame, 0x72),
     ('gd_quake_power', 'patches/bank_072.asm', emit_quake, 0x72),
     ('gd_custom_ratios', 'patches/bank_072.asm', emit_ratios, 0x72),
+    ('gd_custom_pcts', 'patches/bank_072.asm', emit_pcts, 0x72),
     ('gd_custom_announce_lo', 'patches/bank_058.asm', emit_announce_lo, 0x58),
     ('gd_custom_announce', 'patches/bank_058.asm', emit_announce, 0x58),
     ('gd_custom_target', 'patches/bank_058.asm', emit_target, 0x58),

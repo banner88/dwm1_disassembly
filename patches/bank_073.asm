@@ -103,6 +103,11 @@ CF2WarpCommitDrain:
     ; is entered; else the region stays.
     call RegionCommit
 
+    ; [S155] a Repel cast outside a gate floor ends here when the party arrives
+    ; in another place (bank $72 entry 10 RepelCommit72; BATTLE_SKILL_SYSTEM §13.10)
+    ld hl, $720A
+    rst $10
+
     ; [S127, ROADMAP P3.14e2] a new appearance of a room: the random
     ; breeders' slots (wBreedSlots) roll again — every state := 0. Kept on
     ; the way into the breeding ceremony (wMapID = the destination, $08) and

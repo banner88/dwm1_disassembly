@@ -1,0 +1,12357 @@
+; Disassembly of "baserom.gbc"
+; This file was created with:
+; mgbdis v1.5 - Game Boy ROM disassembler by Matt Currie and contributors.
+; https://github.com/mattcurrie/mgbdis
+
+SECTION "ROM Bank $057", ROMX[$4000], BANK[$57]
+
+    db $57 ; Bank number
+
+    ; Cross-bank dispatch table (9 entries)
+    ; Called via: ld hl, $57XX / rst $10
+    dw $6E0E                          ; Entry 0
+    dw $7C44                          ; Entry 1
+    dw $4013                          ; Entry 2
+    dw $408A                          ; Entry 3
+    dw $4136                          ; Entry 4
+    dw $4192                          ; Entry 5
+    dw $41EE                          ; Entry 6
+    dw $424A                          ; Entry 7
+    dw $42A6                          ; Entry 8
+
+; --- Dispatch entry 0 ($6E0E) ---
+DispatchEntry_57_0:
+    ld a, [wBattleAttackerIdx]
+    ld b, a
+    ld a, [wBattleTargetIdx]
+    ld c, a
+    push bc
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld d, a
+    ld [$db4d], a
+    ld bc, $0400
+
+jr_057_402a:
+    ld a, d
+    call CheckMonsterSlot
+    jr c, jr_057_4031
+
+    inc c
+
+jr_057_4031:
+    inc d
+    dec b
+    jr nz, jr_057_402a
+
+    ld a, c
+    add a
+    ld d, a
+    add a
+    add a
+    add d
+    ld [$db4e], a
+    ld a, [$db4c]
+    ld [wBattleAttackerIdx], a
+    ld b, $04
+
+jr_057_4046:
+    push bc
+    ld a, [$db4d]
+    ld [wBattleTargetIdx], a
+    ld hl, $5205
+    rst $10
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    ld a, [$db4e]
+    call Mul16x8To24
+    push hl
+    ld a, [$db4c]
+    call GetCombatantHP
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    jr nc, jr_057_407b
+
+    ld hl, $db4d
+    inc [hl]
+    dec b
+    jr nz, jr_057_4046
+
+    ld a, $00
+    ld [$db4e], a
+    jr jr_057_4080
+
+jr_057_407b:
+    ld a, $01
+    ld [$db4e], a
+
+jr_057_4080:
+    pop bc
+    ld a, b
+    ld [wBattleAttackerIdx], a
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    ld b, a
+    ld a, [wBattleTargetIdx]
+    ld c, a
+    push bc
+    ld a, [$db4c]
+    and $03
+    ld hl, $db58
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db4f], a
+    ld a, h
+    ld [$db50], a
+    ld a, $00
+    ld [hl+], a
+    ld a, $00
+    ld [hl], a
+    ld a, [$db4c]
+    ld [wBattleTargetIdx], a
+    ld a, [$db4c]
+    and $04
+    xor $04
+    ld [wBattleAttackerIdx], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $04
+    ld [$db4e], a
+
+jr_057_40ca:
+    ld a, [wBattleAttackerIdx]
+    call CheckMonsterSlot
+    jr c, jr_057_40fb
+
+    ld hl, $db4d
+    inc [hl]
+    ld hl, $5205
+    rst $10
+    ld a, [$db4f]
+    ld l, a
+    ld a, [$db50]
+    ld h, a
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    add hl, bc
+    ld a, [$db4f]
+    ld c, a
+    ld a, [$db50]
+    ld b, a
+    ld a, l
+    ld [bc], a
+    inc bc
+    ld a, h
+    ld [bc], a
+
+jr_057_40fb:
+    ld hl, wBattleAttackerIdx
+    inc [hl]
+    ld a, [$db4e]
+    dec a
+    ld [$db4e], a
+    jr nz, jr_057_40ca
+
+    ld a, [$db4c]
+    call GetCombatantMaxHP
+    push hl
+    ld a, [$db4f]
+    ld l, a
+    ld a, [$db50]
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    pop hl
+    call Div16x16To16
+    push hl
+    ld a, [$db4f]
+    ld l, a
+    ld a, [$db50]
+    ld h, a
+    pop bc
+    ld a, c
+    ld [hl+], a
+    ld a, b
+    ld [hl], a
+    pop bc
+    ld a, b
+    ld [wBattleAttackerIdx], a
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ret
+
+
+; [S130 F7] entry 4: [$DD72] = slot in, $DD72/73 = its base MaxHP out. Link or slot<3:
+; [S130 F7] record $CB13 (+$52) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA1D).
+BaseStatMaxHP_4136:
+    ld a, [$dd72]
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_416a
+
+    ld a, b
+    cp $03
+    jr c, jr_057_416a
+
+    and $03
+    cp $03
+    jr z, jr_057_417a
+
+LoadBtlAI_414b:
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call CalcBtlAI_4567
+
+jr_057_4154:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da1d]
+    ld c, a
+    ld a, [$da1e]
+    ld b, a
+    jr jr_057_4189
+
+jr_057_416a:
+    ld a, b
+    and $03
+    cp $03
+    jr z, jr_057_417a
+
+    ld a, b
+    ld hl, $cb13
+    call ReadMonsterWord
+    jr jr_057_4189
+
+jr_057_417a:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_4154
+
+jr_057_4189:
+    ld a, c
+    ld [$dd72], a
+    ld a, b
+    ld [$dd73], a
+    ret
+
+
+; [S130 F7] entry 5: [$DD72] = slot in, $DD72/73 = its base MaxMP out. Link or slot<3:
+; [S130 F7] record $CB17 (+$56) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA1F).
+BaseStatMaxMP_4192:
+    ld a, [$dd72]
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_41c6
+
+    ld a, b
+    cp $03
+    jr c, jr_057_41c6
+
+    and $03
+    cp $03
+    jr z, jr_057_41d6
+
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call CalcBtlAI_4567
+
+jr_057_41b0:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da1f]
+    ld c, a
+    ld a, [$da20]
+    ld b, a
+    jr jr_057_41e5
+
+jr_057_41c6:
+    ld a, b
+    and $03
+    cp $03
+    jr z, jr_057_41d6
+
+    ld a, b
+    ld hl, $cb17
+    call ReadMonsterWord
+    jr jr_057_41e5
+
+jr_057_41d6:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_41b0
+
+jr_057_41e5:
+    ld a, c
+    ld [$dd72], a
+    ld a, b
+    ld [$dd73], a
+    ret
+
+
+; [S130 F7] entry 6: [$DD72] = slot in, $DD72/73 = its base ATK out. Link or slot<3:
+; [S130 F7] record $CB19 (+$58) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA21).
+BaseStatATK_41ee:
+    ld a, [$dd72]
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_4222
+
+    ld a, b
+    cp $03
+    jr c, jr_057_4222
+
+    and $03
+    cp $03
+    jr z, jr_057_4232
+
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call CalcBtlAI_4567
+
+jr_057_420c:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da21]
+    ld c, a
+    ld a, [$da22]
+    ld b, a
+    jr jr_057_4241
+
+jr_057_4222:
+    ld a, b
+    and $03
+    cp $03
+    jr z, jr_057_4232
+
+    ld a, b
+    ld hl, $cb19
+    call ReadMonsterWord
+    jr jr_057_4241
+
+jr_057_4232:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_420c
+
+jr_057_4241:
+    ld a, c
+    ld [$dd72], a
+    ld a, b
+    ld [$dd73], a
+    ret
+
+
+; [S130 F7] entry 7: [$DD72] = slot in, $DD72/73 = its base DEF out. Link or slot<3:
+; [S130 F7] record $CB1B (+$5A) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA23).
+BaseStatDEF_424a:
+    ld a, [$dd72]
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_427e
+
+    ld a, b
+    cp $03
+    jr c, jr_057_427e
+
+    and $03
+    cp $03
+    jr z, jr_057_428e
+
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call CalcBtlAI_4567
+
+jr_057_4268:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da23]
+    ld c, a
+    ld a, [$da24]
+    ld b, a
+    jr jr_057_429d
+
+jr_057_427e:
+    ld a, b
+    and $03
+    cp $03
+    jr z, jr_057_428e
+
+    ld a, b
+    ld hl, $cb1b
+    call ReadMonsterWord
+    jr jr_057_429d
+
+jr_057_428e:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_4268
+
+jr_057_429d:
+    ld a, c
+    ld [$dd72], a
+    ld a, b
+    ld [$dd73], a
+    ret
+
+
+; [S130 F7] entry 8: [$DD72] = slot in, $DD72/73 = its base AGL out. Link or slot<3:
+; [S130 F7] record $CB1D (+$5C) via ReadMonsterWord; slot 3/7: species row ($DC3C+$100);
+; [S130 F7] enemy 4-6: enemy_stats row (wTempEnemyId[slot-4], bank $14 e1 -> $DA25).
+BaseStatAGL_42a6:
+    ld a, [$dd72]
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_42da
+
+    ld a, b
+    cp $03
+    jr c, jr_057_42da
+
+    and $03
+    cp $03
+    jr z, jr_057_42ea
+
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call CalcBtlAI_4567
+
+jr_057_42c4:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da25]
+    ld c, a
+    ld a, [$da26]
+    ld b, a
+    jr jr_057_42f9
+
+jr_057_42da:
+    ld a, b
+    and $03
+    cp $03
+    jr z, jr_057_42ea
+
+    ld a, b
+    ld hl, $cb1d
+    call ReadMonsterWord
+    jr jr_057_42f9
+
+jr_057_42ea:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_42c4
+
+jr_057_42f9:
+    ld a, c
+    ld [$dd72], a
+    ld a, b
+    ld [$dd73], a
+    ret
+
+
+; ============== AI EVALUATOR RULE CHAINS (S81, byte-verified) ==============
+; Level-1 index: 3 dw chain bases, one per skill CATEGORY (1 dmg / 2 status /
+; 3 heal), fetched via AIIndexWordTable_45ea from AIState4FilterEval_7439.
+; The WHOLE category chain runs for every tag-matched skill; rules
+; self-select on skill id $DB8A + board state. Walker: AIState7ChainWalker_7865.
+; Accumulators: $DD26 bonus / $DD27 penalty (AISatAdd_455f; veto =
+; ClearBattleAction). 131 unique rules, 27 shared between chains.
+; (S81 falsified the S80 "indexed by effect_class" hypothesis; the S81
+;  write-up's "61 rules" for cat2 was a miscount — 85, byte-verified S82.)
+AIRuleChainIndex_4302:
+    dw AIRuleChainCat1_4308, AIRuleChainCat2_4358, AIRuleChainCat3_4404
+
+; Category 1 (DAMAGE) rule chain — 39 rules, $0000-terminated dw list.
+AIRuleChainCat1_4308:
+    dw AIRuleIronizePriority_6784
+    dw AIRuleVetoUsability_45f2
+    dw AIRuleVetoHeavyDotRedundant_4702
+    dw AIRuleVetoPoisonRedundant_4725
+    dw AIRuleVetoSleepRedundant_4745
+    dw AIRule_4785
+    dw AIRule_4af6
+    dw AIRule_4b3d
+    dw AIRule_4c13
+    dw AIRuleVetoSupportNeedsAlly_5d4d
+    dw AIRule_5ee5
+    dw AIRule_5f1f
+    dw AIRule_5f91
+    dw AIRuleVetoIncapRedundant_6267
+    dw AIRule_6444
+    dw AIRule_64fb
+    dw AIRuleVetoFamilyCutNoTarget_6848
+    dw AIRule_6a0d
+    dw AIRule_6a67
+    dw AIRule_6c62
+    dw AIRuleAoeLoneTargetMalus_5d8e
+    dw AIRule_4b8c
+    dw AIRule_6596
+    dw AIRule_6619
+    dw AIRuleElementBonus_4bcc
+    dw AIRuleFamilyCutBonus_4c41
+    dw AIRulePhysSpecialBonus_4d56
+    dw AIRulePsycheUpCond_4df9
+    dw AIRuleCasterProfile_4e18
+    dw AIRuleAoeBonusBugged_4e36
+    dw AIRule_4e76
+    dw AIRule_5454
+    dw AIRule_5bae
+    dw AIRuleIncapBonus_5ffd
+    dw AIRulePoisonBonus_6180
+    dw AIRule_66fb
+    dw AIRule_6810
+    dw AIRule_6b89
+    dw AIRuleEnemySideBroad_6c8c
+    dw $0000 ; end of chain
+
+; Category 2 (STATUS) rule chain — 85 rules, $0000-terminated dw list.
+AIRuleChainCat2_4358:
+    dw AIRuleIronizePriority_6784
+    dw AIRuleVetoUsability_45f2
+    dw AIRule_4685
+    dw AIRuleVetoHeavyDotRedundant_4702
+    dw AIRuleVetoPoisonRedundant_4725
+    dw AIRuleVetoSleepRedundant_4745
+    dw AIRule_4785
+    dw AIRule_47d9
+    dw AIRule_47f5
+    dw AIRule_4821
+    dw AIRule_4843
+    dw AIRule_4865
+    dw AIRule_4890
+    dw AIRule_4902
+    dw AIRule_4a94
+    dw AIRuleSuckAir_4acc
+    dw AIRule_4af6
+    dw AIRule_4b3d
+    dw AIRule_4c13
+    dw AIRule_5493
+    dw AIRule_5b34
+    dw AIRule_5b4a
+    dw AIRule_5bcd
+    dw AIRule_5bf5
+    dw AIRule_5c25
+    dw AIRule_5c5d
+    dw AIRule_5cc8
+    dw AIRuleVetoSupportNeedsAlly_5d4d
+    dw AIRule_5de0
+    dw AIRule_5dfa
+    dw AIRule_5e10
+    dw AIRule_5e3e
+    dw AIRule_5e7e
+    dw AIRule_5ea4
+    dw AIRule_5ebb
+    dw AIRule_5ee5
+    dw AIRule_5f1f
+    dw AIRule_5f91
+    dw AIRuleVetoIncapRedundant_6267
+    dw AIRule_62a8
+    dw AIRule_6382
+    dw AIRule_63b0
+    dw AIRule_63e3
+    dw AIRule_6414
+    dw AIRule_6444
+    dw AIRule_6474
+    dw AIRule_649d
+    dw AIRule_64cc
+    dw AIRule_667b
+    dw AIRule_6757
+    dw AIRule_695e
+    dw AIRule_6975
+    dw AIRule_6a0d
+    dw AIRuleVetoRobMpFull_6ab4
+    dw AIRuleThickFogVetoNoBigSpell_6af5
+    dw AIRuleDeMagicVetoNoBuff_6bcb
+    dw AIRule_6c0f
+    dw AIRule_55c4
+    dw AIRule_55d6
+    dw AIRule_6c62
+    dw AIRule_6cc0
+    dw AIRule_6596
+    dw AIRule_6619
+    dw AIRuleDeMagicDebuffMalus_69cb
+    dw AIRuleElementBonus_4bcc
+    dw AIRule_54be
+    dw AIRule_54e4
+    dw AIRule_551b
+    dw AIRule_55f6
+    dw AIRule_5660
+    dw AIRule_5739
+    dw AIRule_57fc
+    dw AIRuleDeMagicBuffCount_5842
+    dw AIRuleThickFogBonus_593d
+    dw AIRule_59f7
+    dw AIRuleIncapBonus_5ffd
+    dw AIRule_604a
+    dw AIRule_608e
+    dw AIRule_60c8
+    dw AIRule_6107
+    dw AIRule_6144
+    dw AIRulePoisonBonus_6180
+    dw AIRuleCurseBonus_61bc
+    dw AIRule_61f1
+    dw AIRule_622c
+    dw $0000 ; end of chain
+
+; Category 3 (HEAL) rule chain — 40 rules, $0000-terminated dw list.
+AIRuleChainCat3_4404:
+    dw AIRuleIronizePriority_6784
+    dw AIRuleVetoUsability_45f2
+    dw AIRule_4969
+    dw AIRule_4983
+    dw AIRule_499d
+    dw AIRuleVetoHealUnhurt_49b7
+    dw AIRule_4a5c
+    dw AIRule_4a94
+    dw AIRule_5c25
+    dw AIRuleSurgeCleanseA_5d16
+    dw AIRuleVetoSupportNeedsAlly_5d4d
+    dw AIRule_5f1f
+    dw AIRule_5f91
+    dw AIRule_64fb
+    dw AIRule_667b
+    dw AIRule_66d4
+    dw AIRuleVetoReviveNeedsDead_67b1
+    dw AIRule_4785
+    dw AIRule_4eb9
+    dw AIRule_4ee4
+    dw AIRuleCureAntidote_4f2e
+    dw AIRuleCureNumbOff_4f61
+    dw AIRuleCureDeChaos_4f94
+    dw AIRuleCureCurseOff_4fb3
+    dw AIRuleHealSelfBonus_4fd2
+    dw AIRuleHealBroadBonusA_502c
+    dw AIRule_50bc
+    dw AIRule_5113
+    dw AIRuleHealAllyBonus_5149
+    dw AIRuleHealBroadBonusB_51da
+    dw AIRule_52dc
+    dw AIRule_536a
+    dw AIRule_53b6
+    dw AIRule_53dd
+    dw AIRule_5411
+    dw AIRule_5434
+    dw AIRule_55f6
+    dw AIRuleCoverDownedAlly_5a4c
+    dw AIRule_5aef
+    dw AIRuleSurgeCleanseB_67d5
+    dw $0000 ; end of chain
+
+; Slot-scan family head: walk slots via CheckMonsterSlot ($00:$2FA5 —
+; CF SET means NOT a live monster; see the ROM0 contract comment),
+; testing [slot rec] & e. $DD1B+slot: 0 alive / 1 processed-dead /
+; $FF invalid. (S81)
+AIScanSlots_4456:
+jr_057_4456:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_445f
+
+    ld a, [hl]
+    and e
+    ret z
+
+jr_057_445f:
+    inc c
+    ld a, $08
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    dec b
+    jr nz, jr_057_4456
+
+    ld a, $ff
+    ld [$dd27], a
+    ret
+
+
+LoadBtlAI_4471:
+jr_057_4471:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4489
+
+    ld a, [hl+]
+    ld e, [hl]
+    ld d, a
+    dec de
+    ld a, d
+    or e
+    ret nz
+
+jr_057_447e:
+    inc hl
+    inc c
+    dec b
+    jr nz, jr_057_4471
+
+    ld a, $ff
+    ld [$dd27], a
+    ret
+
+
+jr_057_4489:
+    inc hl
+    jr jr_057_447e
+
+LoadBtlAI_448c:
+jr_057_448c:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4495
+
+    ld a, [hl]
+    and e
+    ret nz
+
+jr_057_4495:
+    inc c
+    ld a, $08
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    dec b
+    jr nz, jr_057_448c
+
+    ld a, $ff
+    ld [$dd27], a
+    ret
+
+
+LoadBtlAI_44a7:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_44ca
+
+    ld a, c
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld [wTempSpeciesId], a
+    push bc
+    ld hl, $0301
+    rst $10
+    pop bc
+    ld a, [$da33]
+    ld hl, $db4c
+    cp [hl]
+    jr z, jr_057_44cf
+
+jr_057_44ca:
+    inc c
+    dec b
+    jr nz, jr_057_44ca
+
+    ret
+
+
+jr_057_44cf:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+LoadBtlAI_44d8:
+jr_057_44d8:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_44e2
+
+    ld a, [hl]
+    and d
+    jr nz, jr_057_44ef
+
+jr_057_44e2:
+    inc c
+    ld a, $08
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    dec b
+    jr nz, jr_057_44d8
+
+    ret
+
+
+jr_057_44ef:
+    ld hl, $dd26
+    ld b, e
+    call AISatAdd_455f
+    ret
+
+
+ClrBtlAI_44f7:
+    xor a
+    ld [$db56], a
+    xor a
+    ld [$db57], a
+    xor a
+    ld [$db4c], a
+
+jr_057_4503:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_452b
+
+    ld a, [$db4c]
+    inc a
+    ld [$db4c], a
+    push hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, [$db56]
+    ld e, a
+    ld a, [$db57]
+    ld d, a
+    ld a, e
+    add l
+    ld e, a
+    ld a, d
+    adc h
+    ld d, a
+    ld a, e
+    ld [$db56], a
+    ld a, d
+    ld [$db57], a
+    pop hl
+
+jr_057_452b:
+    inc hl
+    inc hl
+    inc c
+    dec b
+    jr nz, jr_057_4503
+
+    ret
+
+
+LoadBtlAI_4532:
+    ld a, [$db8a]
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $05
+    ld [$db4e], a
+    ; [S110 rec] record +5 = AI ELEMENT: a resistance slot (1-27) the AI assumes; damage itself takes the element from the handler
+    ld hl, $5400
+    rst $10
+    ld a, [$db4c]
+    and $03
+    ld e, a
+    ld a, [$db4c]
+    rrca
+    rrca
+    and $0f
+    ld d, a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ret
+
+
+; Saturating [hl] += b, cap $FF. ALL rule bonus/penalty writes to the
+; $DD26/$DD27 accumulator pair go through here (64 call sites). The old
+; auto-name AddBToHL16 was misleading — this is an 8-bit add. (S81)
+AISatAdd_455f:
+    ld a, [hl]
+    add b
+    ld [hl], a
+    ret nc
+
+    ld a, $ff
+    ld [hl], a
+    ret
+
+
+CalcBtlAI_4567:
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ret
+
+
+LoadBtlAI_4572:
+    ld a, c
+    ld hl, $db08
+    call HL_AddA_x8
+    ld a, [hl]
+    and $08
+    ret
+
+
+SaveBtlAI_457d:
+    push hl
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_45b2
+
+    ld a, b
+    cp $03
+    jr c, jr_057_45b8
+
+    and $03
+    cp $03
+    jr z, jr_057_45c0
+
+    ld a, b
+    sub $04
+    ld hl, wTempEnemyId1
+    call AIIndexWordTable_45ea
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+
+jr_057_459c:
+    ld a, l
+    ld [wTempEnemyStatsId], a
+    ld a, h
+    ld [$da13], a
+    ld hl, $1401
+    rst $10
+    ld a, [$da25]
+    ld c, a
+    ld a, [$da26]
+    ld b, a
+    jr jr_057_45cf
+
+jr_057_45b2:
+    and $03
+    cp $03
+    jr z, jr_057_45c0
+
+jr_057_45b8:
+    ld hl, $cb1d
+    call ReadMonsterWord
+    jr jr_057_45cf
+
+jr_057_45c0:
+    ld a, b
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $01
+    jr jr_057_459c
+
+jr_057_45cf:
+    pop hl
+    ret
+
+
+LoadBtlAI_45d1:
+    ld a, h
+    or a
+    jr nz, jr_057_45df
+
+    ld a, l
+    or a
+    jr z, jr_057_45dd
+
+    cp $01
+    jr nz, jr_057_45df
+
+jr_057_45dd:
+    scf
+    ret
+
+
+jr_057_45df:
+    ld a, $02
+    cp $01
+    ret
+
+
+; AI rule VETO: $DD27 := $FF. The walker aborts at the next rule boundary
+; and zeroes the option cell (AIChainZeroCell_788b). (S81)
+ClearBattleAction:
+    ld a, $ff
+    ld [$dd27], a
+    ret
+
+
+; hl += a*2 word-table indexer (used to fetch the chain base from
+; AIRuleChainIndex_4302). The S81 wrong-bank sm83dis trap produced garbage
+; for THIS routine — KEY_LESSONS S81.
+AIIndexWordTable_45ea:
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ret
+
+
+; Universal usability veto: MP cost > CurMP, or record flags7 bit6/5/4
+; vs caster status+3 seal bits $01/$40/$80. (S81 sweep)
+AIRuleVetoUsability_45f2:
+    ld a, [$db8a]
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $04
+    ld [$db4e], a
+    ; [S110 rec] record +4 = battle MP cost: AI veto when the caster cannot pay
+    ld hl, $5400
+    rst $10
+    ld a, [$db4c]
+    or a
+    jr z, jr_057_461d
+
+    ld c, a
+    ld b, $00
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantMP
+    call CmpHLvsBC
+    jr nc, jr_057_461d
+
+    call ClearBattleAction
+
+jr_057_461d:
+    ld a, [$dd6b]
+    bit 6, a
+    jr z, jr_057_4634
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 0, [hl]
+    jr z, jr_057_4634
+
+    call ClearBattleAction
+
+jr_057_4634:
+    ld a, [$dd6b]
+    bit 5, a
+    jr z, jr_057_464b
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 6, [hl]
+    jr z, jr_057_464b
+
+    call ClearBattleAction
+
+jr_057_464b:
+    ld a, [$dd6b]
+    bit 4, a
+    jr z, jr_057_4662
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 7, [hl]
+    jr z, jr_057_4662
+
+    call ClearBattleAction
+
+jr_057_4662:
+    ; [S130 F10] ThickFog $83, or flags7 bit6 ($DD6B), with the caster's OWN side
+    ; [S130 F10] sealed ($DB00/$DB01 bit3) -> veto (measured 23 ThickFog runs).
+    ld a, [$db8a]
+    cp $83
+    jr z, jr_057_466f
+
+    ld a, [$dd6b]
+    bit 6, a
+    ret z
+
+jr_057_466f:
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr c, jr_057_467b
+
+    ld hl, $db01
+    jr jr_057_467e
+
+jr_057_467b:
+    ld hl, $db00
+
+jr_057_467e:
+    bit 3, [hl]
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_4685:
+    ld a, [$db8a]
+    cp $41
+    jr nz, jr_057_469d
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $03
+    jr z, jr_057_469d
+
+    call ClearBattleAction
+
+jr_057_469d:
+    ld a, [$db8a]
+    cp $54
+    jr nz, jr_057_46b5
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $c0
+    jr z, jr_057_46b5
+
+    call ClearBattleAction
+
+jr_057_46b5:
+    ld a, [$db8a]
+    cp $8f
+    jr nz, jr_057_46cc
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db08
+    call HL_AddA_x8
+    bit 1, [hl]
+    jr z, jr_057_46cc
+
+    call ClearBattleAction
+
+jr_057_46cc:
+    ld a, [$db8a]
+    cp $27
+    jr z, jr_057_46d7
+
+    cp $28
+    jr nz, jr_057_46e8
+
+jr_057_46d7:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db04
+    call HL_AddA_x8
+    ld a, [hl]
+    and $22
+    jr z, jr_057_46e8
+
+    call ClearBattleAction
+
+jr_057_46e8:
+    ld a, [$db8a]
+    cp $24
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db04
+    call HL_AddA_x8
+    ld e, $04
+    call AIScanSlots_4456
+    ret
+
+
+; Veto when ALL live opposing targets already have status+2 & $02 —
+; heavy-DoT trio PoisonHit/PoisonGas/PoisonAir $67/$6C/$6D. (S81 sweep)
+AIRuleVetoHeavyDotRedundant_4702:
+    ld a, [$db8a]
+    cp $6e
+    ret nc
+
+    cp $67
+    jr z, jr_057_470f
+
+    cp $6c
+    ret c
+
+jr_057_470f:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld e, $02
+    call AIScanSlots_4456
+    ret
+
+
+; Veto when all live opposing targets have status+2 & $03 — PoisonHit $67 /
+; PoisonGas $6C (self-selects, S82 bytes). (S81 sweep)
+AIRuleVetoPoisonRedundant_4725:
+    ld a, [$db8a]
+    cp $67
+    jr z, jr_057_472f
+
+    cp $6c
+    ret nz
+
+jr_057_472f:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld e, $03
+    call AIScanSlots_4456
+    ret
+
+
+; Veto when all live opposing targets have status+2 & $8C — the sleep/
+; incap class (Sleep/SleepAll/Ironize/NapAttack/dances/...). (S81 sweep)
+AIRuleVetoSleepRedundant_4745:
+    ld a, [$db8a]
+    cp $15
+    ret c
+
+    cp $17
+    jr c, jr_057_476f
+
+    cp $2a
+    jr z, jr_057_476f
+
+    cp $68
+    jr z, jr_057_476f
+
+    cp $6a
+    jr z, jr_057_476f
+
+    cp $70
+    ret c
+
+    cp $71
+    ret z
+
+    cp $74
+    jr c, jr_057_476f
+
+    cp $78
+    ret c
+
+    cp $7e
+    jr c, jr_057_476f
+
+    cp $dc
+    ret nz
+
+jr_057_476f:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld e, $8c
+    call AIScanSlots_4456
+    ret
+
+
+AIRule_4785:
+    ld a, [$db8a]
+    cp $15
+    ret c
+
+    cp $1a
+    jr c, jr_057_47c3
+
+    cp $1c
+    ret c
+
+    cp $29
+    ret z
+
+    cp $2b
+    jr c, jr_057_47c3
+
+    cp $68
+    ret c
+
+    cp $6c
+    jr c, jr_057_47c3
+
+    cp $6e
+    jr z, jr_057_47c3
+
+    cp $70
+    ret c
+
+    cp $71
+    ret z
+
+    cp $74
+    jr c, jr_057_47c3
+
+    cp $77
+    ret c
+
+    cp $81
+    jr c, jr_057_47c3
+
+    cp $88
+    ret c
+
+    cp $93
+    jr c, jr_057_47c3
+
+    cp $da
+    jr c, jr_057_47c3
+
+    cp $dc
+    ret nz
+
+jr_057_47c3:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld e, $40
+    call AIScanSlots_4456
+    ret
+
+
+AIRule_47d9:
+    ld a, [$db8a]
+    cp $18
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db03
+    call HL_AddA_x8
+    ld e, $02
+    call AIScanSlots_4456
+    ret
+
+
+AIRule_47f5:
+    ld a, [$db8a]
+    cp $19
+    jr z, jr_057_480b
+
+    cp $2a
+    jr z, jr_057_480b
+
+    cp $6e
+    jr z, jr_057_480b
+
+    cp $da
+    jr z, jr_057_480b
+
+    cp $dc
+    ret nz
+
+jr_057_480b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld e, $10
+    call AIScanSlots_4456
+    ret
+
+
+AIRule_4821:
+    ld a, [$db8a]
+    cp $1c
+    jr z, jr_057_482b
+
+    cp $1d
+    ret nz
+
+jr_057_482b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, wBattleDEF
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call LoadBtlAI_4471
+    ret
+
+
+AIRule_4843:
+    ld a, [$db8a]
+    cp $20
+    jr z, jr_057_484d
+
+    cp $21
+    ret nz
+
+jr_057_484d:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call LoadBtlAI_4471
+    ret
+
+
+AIRule_4865:
+    ld a, [$db8a]
+    cp $2a
+    jr z, jr_057_487a
+
+    cp $70
+    jr z, jr_057_487a
+
+    cp $78
+    ret c
+
+    cp $7e
+    jr c, jr_057_487a
+
+    cp $dc
+    ret nz
+
+jr_057_487a:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db05
+    call HL_AddA_x8
+    ld e, $3f
+    call AIScanSlots_4456
+    ret
+
+
+AIRule_4890:
+    ld a, [$db8a]
+    cp $1e
+    jr z, jr_057_489a
+
+    cp $1f
+    ret nz
+
+jr_057_489a:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld [$db4c], a
+    ld b, $03
+
+jr_057_48a4:
+    push bc
+    ld a, [$db4c]
+    call CheckMonsterSlot
+    jr c, jr_057_48f6
+
+    ld a, [$db4c]
+    push hl
+    ld [$dd72], a
+    ld hl, $5707
+    rst $10
+    ld a, [$dd72]
+    ld c, a
+    ld a, [$dd73]
+    ld b, a
+    pop hl
+    ld a, [$db4c]
+    call GetCombatantDEF
+    ld a, [$c86c]
+    or a
+    jr z, jr_057_48d8
+
+    ld a, [$db4c]
+    and $03
+    cp $03
+    jr z, jr_057_48e3
+
+    jr jr_057_48df
+
+jr_057_48d8:
+    ld a, [$db4c]
+    cp $03
+    jr nc, jr_057_48e3
+
+jr_057_48df:
+    sla c
+    rl b
+
+jr_057_48e3:
+    sla c
+    rl b
+    call CmpHLvsBC
+    jr nc, jr_057_48f6
+
+    ld bc, $03e7
+    call CmpHLvsBC
+    jr nc, jr_057_48f6
+
+    pop bc
+    ret
+
+
+jr_057_48f6:
+    ld hl, $db4c
+    inc [hl]
+    pop bc
+    dec b
+    jr nz, jr_057_48a4
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_4902:
+    ld a, [$db8a]
+    cp $22
+    jr z, jr_057_490c
+
+    cp $23
+    ret nz
+
+jr_057_490c:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld [$db4c], a
+    ld b, $03
+
+jr_057_4916:
+    push bc
+    ld a, [$db4c]
+    call CheckMonsterSlot
+    jr c, jr_057_495d
+
+    ld a, [$db4c]
+    call SaveBtlAI_457d
+    ld a, [$db4c]
+    ld hl, wBattleAGL
+    call CalcBtlAI_4567
+    ld a, [$c86c]
+    or a
+    jr z, jr_057_493f
+
+    ld a, [$db4c]
+    and $03
+    cp $03
+    jr z, jr_057_494a
+
+    jr jr_057_4946
+
+jr_057_493f:
+    ld a, [$db4c]
+    cp $03
+    jr nc, jr_057_494a
+
+jr_057_4946:
+    sla c
+    rl b
+
+jr_057_494a:
+    sla c
+    rl b
+    call CmpHLvsBC
+    jr nc, jr_057_495d
+
+    ld bc, $01ff
+    call CmpHLvsBC
+    jr nc, jr_057_495d
+
+    pop bc
+    ret
+
+
+jr_057_495d:
+    ld hl, $db4c
+    inc [hl]
+    pop bc
+    dec b
+    jr nz, jr_057_4916
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_4969:
+    ld a, [$db8a]
+    cp $34
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld hl, $db02
+    call HL_AddA_x8
+    ld b, $03
+    ld e, $c0
+    call LoadBtlAI_448c
+    ret
+
+
+AIRule_4983:
+    ld a, [$db8a]
+    cp $35
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld hl, $db02
+    call HL_AddA_x8
+    ld b, $03
+    ld e, $10
+    call LoadBtlAI_448c
+    ret
+
+
+AIRule_499d:
+    ld a, [$db8a]
+    cp $36
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld hl, $db02
+    call HL_AddA_x8
+    ld b, $03
+    ld e, $20
+    call LoadBtlAI_448c
+    ret
+
+
+; Heal class: veto when no live own-side member has CurHP < MaxHP. (S81 sweep)
+AIRuleVetoHealUnhurt_49b7:
+    ld a, [$db8a]
+    cp $2b
+    ret c
+
+    cp $93
+    jr z, jr_057_4a2b
+
+    cp $94
+    jr z, jr_057_49c8
+
+    cp $30
+    ret nc
+
+jr_057_49c8:
+    ld b, $03
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+
+jr_057_49f5:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_49ff
+
+    call SaveBtlAI_7ac4
+    ret nc
+
+jr_057_49ff:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    inc c
+    dec b
+    jr nz, jr_057_49f5
+
+jr_057_4a27:
+    call ClearBattleAction
+    ret
+
+
+jr_057_4a2b:
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7ac4
+    jr c, jr_057_4a27
+
+    ret
+
+
+    ret
+
+
+AIRule_4a5c:
+    ld a, [$db8a]
+    cp $14
+    jr z, jr_057_4a6a
+
+    cp $32
+    jr z, jr_057_4a6a
+
+    cp $96
+    ret nz
+
+jr_057_4a6a:
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld b, $03
+    ld e, $00
+
+jr_057_4a75:
+    ld a, c
+    cp d
+    jr z, jr_057_4a89
+
+    call CheckMonsterSlot
+    jr c, jr_057_4a89
+
+    inc e
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    bit 6, [hl]
+    ret z
+
+jr_057_4a89:
+    inc c
+    dec b
+    jr nz, jr_057_4a75
+
+    ld a, e
+    or a
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_4a94:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $24
+    jr z, jr_057_4aae
+
+    cp $8a
+    jr z, jr_057_4aae
+
+    cp $8b
+    jr z, jr_057_4aae
+
+    cp $8f
+    jr z, jr_057_4aae
+
+    cp $92
+    ret nz
+
+jr_057_4aae:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld d, $10
+
+jr_057_4aba:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4ac4
+
+    call LoadBtlAI_7b7d
+    ret z
+
+jr_057_4ac4:
+    inc c
+    dec b
+    jr nz, jr_057_4aba
+
+    call ClearBattleAction
+    ret
+
+
+; SuckAir $43 rule — clean-board veto measured in aggregate; semantics
+; presumed to follow the Rob class (§15.9 residual). (S81)
+AIRuleSuckAir_4acc:
+    ld a, [$db8a]
+    cp $43
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, $08
+
+jr_057_4ae2:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_4af2
+
+    cp $5c
+    jr c, jr_057_4aee
+
+    cp $64
+    ret c
+
+jr_057_4aee:
+    inc hl
+    dec b
+    jr nz, jr_057_4ae2
+
+jr_057_4af2:
+    call ClearBattleAction
+    ret
+
+
+AIRule_4af6:
+    ld a, [$db8a]
+    cp $03
+    ret c
+
+    cp $12
+    ret z
+
+    cp $15
+    ret z
+
+    cp $1d
+    jr z, jr_057_4b11
+
+    cp $21
+    jr z, jr_057_4b11
+
+    cp $da
+    jr z, jr_057_4b11
+
+    cp $1a
+    ret nc
+
+jr_057_4b11:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db04
+    call HL_AddA_x8
+
+jr_057_4b21:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4b2c
+
+    ld a, [hl]
+    and $22
+    jr nz, jr_057_4b39
+
+jr_057_4b2c:
+    inc c
+    ld a, $08
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    dec b
+    jr nz, jr_057_4b21
+
+    ret
+
+
+jr_057_4b39:
+    call ClearBattleAction
+    ret
+
+
+AIRule_4b3d:
+    ld a, [$db8a]
+    cp $5c
+    ret c
+
+    cp $64
+    jr c, jr_057_4b4d
+
+    cp $6e
+    ret nc
+
+    cp $6a
+    ret c
+
+jr_057_4b4d:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, c
+    srl a
+    srl a
+    ld hl, $db00
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    and $60
+    jr nz, jr_057_4b88
+
+jr_057_4b6a:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4b83
+
+    ld a, c
+    ld hl, $db04
+    call HL_AddA_x8
+    ld a, [hl+]
+    inc hl
+    inc hl
+    inc hl
+    and $48
+    jr nz, jr_057_4b88
+
+    bit 1, [hl]
+    jr nz, jr_057_4b88
+
+jr_057_4b83:
+    inc c
+    dec b
+    jr nz, jr_057_4b6a
+
+    ret
+
+
+jr_057_4b88:
+    call ClearBattleAction
+    ret
+
+
+AIRule_4b8c:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$dd6b]
+    bit 7, a
+    ret z
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db08
+    call HL_AddA_x8
+
+jr_057_4ba6:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4bb6
+
+    bit 5, [hl]
+    jr nz, jr_057_4bc3
+
+    inc hl
+    ld a, [hl]
+    and $05
+    jr nz, jr_057_4bc3
+
+jr_057_4bb6:
+    inc c
+    ld a, $07
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    dec b
+    jr nz, jr_057_4ba6
+
+    ret
+
+
+jr_057_4bc3:
+    ld hl, $dd27
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+; Element-aware +20: record field +5 element vs each live opposing
+; target's 2-bit resistance (far-call bank $52 entry 6 via rst $10);
+; withheld iff the resist sum > live target count. (S81 sweep)
+AIRuleElementBonus_4bcc:
+    call LoadBtlAI_4532
+    ld a, [$db4c]
+    or a
+    ret z
+
+    xor a
+    ld hl, $db54
+    ld [hl+], a
+    ld [hl], a
+
+jr_057_4bda:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4bfe
+
+    ld hl, wBattlePostFlag
+    inc [hl]
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, d
+    ld [$db4c], a
+    push de
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    pop de
+    call LoadBtlAI_7aa6
+    and $03
+    ld hl, $db54
+    add [hl]
+    ld [hl], a
+
+jr_057_4bfe:
+    inc c
+    dec b
+    jr nz, jr_057_4bda
+
+    ld a, [wBattlePostFlag]
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+; [S130 F10] every cat-1/2 skill: veto when EVERY live opponent has res level 3 at
+; [S130 F10] the record's +5 element position (code-read; not in ai_rules.py — element
+; [S130 F10] 0 = $80/$83, never vetoes, asserted over the F10 rules corpus).
+; [S154] element 0 reads packed POSITION 0 = resistance index 26 (bank $51 SaveBtlS_4404),
+; which is 0 for every species and every record (the memorial's tags are multiples of 8:
+; & 3 = 0) — that, not the code, is why element 0 never vetoes.
+AIRule_4c13:
+    call LoadBtlAI_4532
+
+jr_057_4c16:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4c34
+
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, d
+    ld [$db4c], a
+    push de
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    pop de
+    call LoadBtlAI_7aa6
+    and $03
+    cp $03
+    ret nz
+
+jr_057_4c34:
+    inc c
+    dec b
+    jr nz, jr_057_4c16
+
+    ld hl, $db54
+    add [hl]
+    ld [hl], a
+    call ClearBattleAction
+    ret
+
+
+; +20 when a live opposing target matches the cut's family (DrakSlash 1,
+; BeastCut 2, BirdBlow 3, DevilCut 6, ZombieCut 7, CleanCut 8=MATERIAL,
+; Smashlime 0=Slime, Sheldodge 5, Branching 4; MetalCut $DB8B bit0).
+; Also routes skills $3F/$40 to a $4D29 sub-branch (untraced, S82 bytes).
+; Inline rst $00 handler table. (S81 sweep)
+AIRuleFamilyCutBonus_4c41:
+    ld a, [$db8a]
+    cp $3f
+    ret c
+
+    cp $41
+    jp c, Jump_057_4d29
+
+    cp $48
+    ret c
+
+    cp $50
+    jr c, jr_057_4c62
+
+; S48: enemy-AI high-id sub-dispatch ($57:$4C50). The `cp $d9; ret nc` below is the
+; guard that makes EVERY custom id (>= $DE, hence >= $d9) RETURN before reaching the
+; rst-$00 jump table at $4C67 -- so a custom skill can never be misrouted into this
+; AI special-case. The table serves only $d6/$d7/$d8. (Exhaustive $57 audit: of 148
+; $db8a reads, ZERO mishandle a custom id; see BATTLE_SKILL_SYSTEM.md §12.)
+    cp $d6
+    ret c
+
+    cp $d9
+    ret nc
+
+    ld a, [$db8a]
+    sub $d6
+    add $08
+    jr jr_057_4c67
+
+jr_057_4c62:
+    ld a, [$db8a]
+    sub $48
+
+jr_057_4c67:
+    rst $00
+    add hl, hl
+    ld c, l
+    sub c
+    ld c, h
+    and h
+    ld c, h
+    or a
+    ld c, h
+    ldh a, [$4c]
+    inc bc
+    ld c, l
+    ld d, $4d
+    inc bc
+    ld c, l
+    ld a, [hl]
+    ld c, h
+    jp z, $dd4c
+
+    ld c, h
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $00
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $01
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $02
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $03
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $05
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $04
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $06
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $07
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $08
+    ld [$db4c], a
+    call LoadBtlAI_44a7
+    ret
+
+
+Jump_057_4d29:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_4d33:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4d47
+
+    ld a, c
+    ld hl, $db8b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 0, [hl]
+    jr nz, jr_057_4d4c
+
+jr_057_4d47:
+    inc c
+    dec b
+    jr nz, jr_057_4d33
+
+    ret
+
+
+jr_057_4d4c:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+    ret
+
+
+; +15 physical-special class (TwinSlash/Beserker/HighJump/elemental
+; slashes/BiAttack/QuadHits/SquallHit/...); no off-condition observed on
+; any swept board. (S81 sweep)
+AIRulePhysSpecialBonus_4d56:
+    call LoadBtlAI_7c7e
+    ret nc
+
+    call LoadBtlAI_7dbe
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantATK
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    jr c, jr_057_4d78
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+
+jr_057_4d78:
+    ld a, $ff
+    ld hl, $db56
+    ld [hl+], a
+    ld [hl], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4d99
+
+    ld a, c
+    call GetCombatantDEF
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+
+jr_057_4d99:
+    inc c
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4dbb
+
+    ld a, c
+    call GetCombatantDEF
+    push bc
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    pop bc
+    jr nc, jr_057_4dbb
+
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+
+jr_057_4dbb:
+    inc c
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_4ddd
+
+    ld a, c
+    call GetCombatantDEF
+    push bc
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    pop bc
+    jr nc, jr_057_4ddd
+
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+
+jr_057_4ddd:
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantATK
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    ret c
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+    ret
+
+
+; +5 PsycheUp — fired for FloraMan (EID 35) but not forced-Gremlin;
+; condition untraced (§15.9 residual). (S81)
+AIRulePsycheUpCond_4df9:
+    call LoadBtlAI_7cb5
+    ret nc
+
+    call LoadBtlAI_7cff
+    jr c, jr_057_4e0a
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+
+jr_057_4e0a:
+    call LoadBtlAI_7d37
+    ret nc
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+    ret
+
+
+; Spell bonus from caster profile: +10 iff CurMP < MaxMP/2, +10 iff
+; MaxMP >= MaxHP — pinned by the S81 4-point MP matrix.
+; (The S81 wrong-bank sm83dis trap was caught decoding THIS rule's
+;  helper — KEY_LESSONS S81.)
+AIRuleCasterProfile_4e18:
+    call LoadBtlAI_7ce0
+    ret nc
+
+    call LoadBtlAI_7d1d
+    jr nc, jr_057_4e29
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+
+jr_057_4e29:
+    call LoadBtlAI_7d37
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; VANILLA BUG (S81, instruction-trace verified; entry hook fires, scan
+; cursor provably static): intended "+20 AoE bonus when facing 2+ live
+; targets" but the slot-scan cursor is NEVER incremented — it tests the
+; FIRST opposing slot three times, i.e. effectively "+20 iff first
+; opposing slot alive" (~always). Correct twin: AIRuleAoeLoneTargetMalus_5d8e.
+; Net effect: on lone-target boards AoE spells score +0 instead of the
+; intended ~-40 discouragement. Romhack enemy-AI fix candidate
+; (user-flagged S81) — any fix is a PATCH decision; bytes here stay vanilla.
+AIRuleAoeBonusBugged_4e36:
+    ld a, [$db8a]
+    cp $03
+    ret c
+
+    cp $12
+    jr z, jr_057_4e51
+
+    cp $14
+    jr c, jr_057_4e51
+
+    cp $4f
+    jr z, jr_057_4e51
+
+    cp $57
+    ret c
+
+    cp $58
+    ret z
+
+    cp $67
+    ret nc
+
+jr_057_4e51:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld e, $00
+
+jr_057_4e5d:
+    push de
+    ld a, c
+    call CheckMonsterSlot
+    pop de
+    jr c, jr_057_4e66
+
+    inc e
+
+jr_057_4e66:
+    dec b
+    jr nz, jr_057_4e5d
+
+    ld a, e
+    cp $02
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_4e76:
+    ld a, [$db8a]
+    cp $3f
+    jr z, jr_057_4e80
+
+    cp $40
+    ret nz
+
+jr_057_4e80:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld e, a
+    ld d, $03
+    call GetCombatantATK
+    add hl, hl
+    ld c, l
+    ld b, h
+
+jr_057_4e90:
+    ld a, e
+    call CheckMonsterSlot
+    jr c, jr_057_4eab
+
+    ld a, e
+    ld hl, wBattleDEF
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    call CmpHLvsBC
+    jr c, jr_057_4eab
+
+    jr nc, jr_057_4eb0
+
+jr_057_4eab:
+    inc e
+    dec d
+    jr nz, jr_057_4e90
+
+    ret
+
+
+jr_057_4eb0:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_4eb9:
+    ld a, [$db8a]
+    cp $95
+    jr z, jr_057_4ec6
+
+    cp $30
+    ret c
+
+    cp $32
+    ret nc
+
+jr_057_4ec6:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_4ece:
+    ld a, c
+    call CheckMonsterSlot
+    jr z, jr_057_4ed6
+
+    jr c, jr_057_4edb
+
+jr_057_4ed6:
+    inc c
+    dec b
+    jr nz, jr_057_4ece
+
+    ret
+
+
+jr_057_4edb:
+    ld hl, $dd26
+    ld b, $2d
+    call AISatAdd_455f
+    ret
+
+
+AIRule_4ee4:
+    ld a, [$db8a]
+    cp $32
+    jr z, jr_057_4eee
+
+    cp $96
+    ret nz
+
+jr_057_4eee:
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    jr z, jr_057_4efc
+
+    ld a, [$db75]
+    jr jr_057_4eff
+
+jr_057_4efc:
+    ld a, [$db74]
+
+jr_057_4eff:
+    cp $01
+    ret z
+
+    ld b, a
+
+jr_057_4f03:
+    ld a, c
+    cp d
+    jr z, jr_057_4f0b
+
+    call CheckMonsterSlot
+    ret nc
+
+jr_057_4f0b:
+    inc c
+    dec b
+    jr nz, jr_057_4f03
+
+    ld a, d
+    call GetCombatantHP
+    push hl
+    ld a, d
+    ld hl, wBattleMaxHP
+    call CalcBtlAI_4567
+    ld a, $05
+    call Div16x8To16
+    pop bc
+    call CmpHLvsBC
+    ret c
+
+    ld hl, $dd26
+    ld b, $64
+    call AISatAdd_455f
+    ret
+
+
+; Antidote $33: +15 if any live own-side status+2 & $01, veto otherwise.
+; Symmetric cure rule family (S81 sweep; skill select S82 bytes).
+AIRuleCureAntidote_4f2e:
+    ld a, [$db8a]
+    cp $33
+    jr z, jr_057_4f38
+
+    cp $81
+    ret nz
+
+jr_057_4f38:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, $010f
+    call LoadBtlAI_44d8
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, $020f
+    call LoadBtlAI_44d8
+    ret
+
+
+; NumbOff $34: +15 if any live own-side status+2 & $40, veto otherwise. (S81 sweep)
+AIRuleCureNumbOff_4f61:
+    ld a, [$db8a]
+    cp $34
+    jr z, jr_057_4f6b
+
+    cp $81
+    ret nz
+
+jr_057_4f6b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, $400f
+    call LoadBtlAI_44d8
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, $8c0f
+    call LoadBtlAI_44d8
+    ret
+
+
+; DeChaos $35: +15 if any live own-side status+2 & $10, veto otherwise. (S81 sweep)
+AIRuleCureDeChaos_4f94:
+    ld a, [$db8a]
+    cp $35
+    jr z, jr_057_4f9e
+
+    cp $81
+    ret nz
+
+jr_057_4f9e:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, $100f
+    call LoadBtlAI_44d8
+    ret
+
+
+; CurseOff $36: +15 if any live own-side status+2 & $20, veto otherwise. (S81 sweep)
+AIRuleCureCurseOff_4fb3:
+    ld a, [$db8a]
+    cp $36
+    jr z, jr_057_4fbd
+
+    cp $81
+    ret nz
+
+jr_057_4fbd:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, $db02
+    call HL_AddA_x8
+    ld de, JumpToPrintLoop
+    call LoadBtlAI_44d8
+    ret
+
+
+; +5 single-target self heal. Heal incentives cap at +20 total = the
+; cat3 weak-heal threshold $14 (§15.10.6). (S81 sweep)
+AIRuleHealSelfBonus_4fd2:
+    ld a, [$db8a]
+    cp $93
+    jr z, jr_057_4fe3
+
+    cp $94
+    jr z, jr_057_4fe3
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_4fe3:
+    xor a
+    ld [$db61], a
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7ac4
+    ret c
+
+    ld a, $01
+    ld [$db61], a
+    ld a, [$db8a]
+    cp $2d
+    ret z
+
+    cp $2f
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+; +15 broad heal. (S81 sweep)
+AIRuleHealBroadBonusA_502c:
+    ld a, [$db8a]
+    cp $93
+    jr z, jr_057_503d
+
+    cp $94
+    jr z, jr_057_503d
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_503d:
+    xor a
+    ld [$db63], a
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7b01
+    ret c
+
+    ld a, $01
+    ld [$db63], a
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    xor a
+    ld [$db65], a
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7b35
+    ret c
+
+    ld a, $01
+    ld [$db65], a
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_50bc:
+    ld a, [$db8a]
+    cp $93
+    jr z, jr_057_50cd
+
+    cp $94
+    jr z, jr_057_50cd
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_50cd:
+    xor a
+    ld [$db67], a
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7b59
+    ret c
+
+    ld a, $01
+    ld [$db67], a
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5113:
+    ld a, [$db8a]
+    cp $93
+    jr z, jr_057_5124
+
+    cp $94
+    jr z, jr_057_5124
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_5124:
+    xor a
+    ld [$db69], a
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    call GetCombatantHP
+    cp $01
+    ret nz
+
+    ld a, h
+    or a
+    ret nz
+
+    ld a, $01
+    ld [$db69], a
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+; +5 single-target ally heal. (S81 sweep)
+AIRuleHealAllyBonus_5149:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_5156
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_5156:
+    call LoadBtlAI_6371
+    xor a
+    ld [$db62], a
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+
+jr_057_5189:
+    ld a, c
+    cp d
+    jr z, jr_057_519b
+
+    call CheckMonsterSlot
+    jr c, jr_057_519b
+
+    call SaveBtlAI_7ac4
+    jr c, jr_057_519b
+
+    ld hl, $db62
+    inc [hl]
+
+jr_057_519b:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    inc c
+    dec b
+    jr nz, jr_057_5189
+
+    ld a, [$db8a]
+    cp $2d
+    ret z
+
+    cp $2f
+    ret z
+
+    ld a, [$db62]
+    or a
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+; +15 broad heal. (S81 sweep)
+AIRuleHealBroadBonusB_51da:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_51e7
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_51e7:
+    call LoadBtlAI_6371
+    xor a
+    ld [$db64], a
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+
+jr_057_521a:
+    ld a, c
+    cp d
+    jr z, jr_057_522c
+
+    call CheckMonsterSlot
+    jr c, jr_057_522c
+
+    call SaveBtlAI_7b01
+    jr c, jr_057_522c
+
+    ld hl, $db64
+    inc [hl]
+
+jr_057_522c:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    inc c
+    dec b
+    jr nz, jr_057_521a
+
+    ld a, [$db64]
+    or a
+    ret z
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    call LoadBtlAI_6371
+    xor a
+    ld [$db66], a
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+
+jr_057_5294:
+    ld a, c
+    cp d
+    jr z, jr_057_52a6
+
+    call CheckMonsterSlot
+    jr c, jr_057_52a6
+
+    call SaveBtlAI_7b35
+    jr c, jr_057_52a6
+
+    ld hl, $db66
+    inc [hl]
+
+jr_057_52a6:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    inc c
+    dec b
+    jr nz, jr_057_5294
+
+    ld a, [$db66]
+    or a
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_52dc:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_52e9
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_52e9:
+    call LoadBtlAI_6371
+    xor a
+    ld [$db68], a
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+
+jr_057_531c:
+    ld a, c
+    cp d
+    jr z, jr_057_532e
+
+    call CheckMonsterSlot
+    jr c, jr_057_532e
+
+    call SaveBtlAI_7b59
+    jr c, jr_057_532e
+
+    ld hl, $db68
+    inc [hl]
+
+jr_057_532e:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    inc c
+    dec b
+    jr nz, jr_057_531c
+
+    ld a, [$db68]
+    or a
+    ret z
+
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_536a:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_5377
+
+    cp $2b
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_5377:
+    call LoadBtlAI_6371
+    xor a
+    ld [$db6a], a
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+
+jr_057_5385:
+    ld a, c
+    cp d
+    jr z, jr_057_539e
+
+    call CheckMonsterSlot
+    jr c, jr_057_539e
+
+    ld a, c
+    call GetCombatantHP
+    cp $01
+    jr nz, jr_057_539e
+
+    ld a, h
+    or a
+    jr nz, jr_057_539e
+
+    ld hl, $db6a
+    inc [hl]
+
+jr_057_539e:
+    inc c
+    dec b
+    jr nz, jr_057_5385
+
+    ld a, [$db6a]
+    or a
+    ret z
+
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_53b6:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_53c3
+
+    cp $2e
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_53c3:
+    ld a, [$db61]
+    ld b, a
+    ld a, [$db62]
+    add b
+    cp $02
+    ret c
+
+    ld a, [$db8a]
+    cp $2f
+    ret z
+
+    ld hl, $dd26
+    ld b, $05
+    call AISatAdd_455f
+    ret
+
+
+AIRule_53dd:
+    ld a, [$db8a]
+    cp $94
+    jr z, jr_057_53ea
+
+    cp $2e
+    ret c
+
+    cp $30
+    ret nc
+
+jr_057_53ea:
+    ld a, [$db63]
+    ld b, a
+    ld a, [$db64]
+    add b
+    cp $02
+    ret c
+
+    ld hl, $dd26
+    ld b, $0f
+    call AISatAdd_455f
+    ld a, [$db65]
+    ld b, a
+    ld a, [$db66]
+    add b
+    cp $02
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5411:
+    ld a, [$db8a]
+    cp $2e
+    ret c
+
+    cp $30
+    ret nc
+
+    ld a, [$db67]
+    ld b, a
+    ld a, [$db68]
+    add b
+    cp $02
+    ret c
+
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5434:
+    ld a, [$db8a]
+    cp $2f
+    ret nz
+
+    ld a, [$db69]
+    ld b, a
+    ld a, [$db6a]
+    add b
+    cp $02
+    ret c
+
+    ld a, [$db8a]
+    cp $2e
+    ret z
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5454:
+    ld a, [$db8a]
+    cp $4f
+    ret z
+
+    cp $44
+    ret c
+
+    cp $52
+    jr c, jr_057_5476
+
+    cp $d9
+    ret nc
+
+    cp $d6
+    jr nc, jr_057_5476
+
+    cp $6a
+    ret nc
+
+    cp $67
+    jr nc, jr_057_5476
+
+    cp $55
+    jr z, jr_057_5476
+
+    cp $57
+    ret nz
+
+jr_057_5476:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl-]
+    and $03
+    jr nz, jr_057_548a
+
+    dec hl
+    dec hl
+    ld a, [hl]
+    and $0c
+    ret z
+
+jr_057_548a:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5493:
+    ld a, [$db8a]
+    cp $25
+    jr z, jr_057_549d
+
+    cp $41
+    ret nz
+
+jr_057_549d:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_54a5:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_54b6
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl]
+    and $0c
+    ret z
+
+jr_057_54b6:
+    inc c
+    dec b
+    jr nz, jr_057_54a5
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_54be:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $25
+    jr z, jr_057_54d0
+
+    cp $7a
+    jr z, jr_057_54d0
+
+    cp $41
+    ret nz
+
+jr_057_54d0:
+    ld a, [wBattleAttackerIdx]
+    ld e, a
+    call LoadBtlAI_62e0
+    call LoadBtlAI_6321
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_54e4:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $7a
+    jr z, jr_057_54fd
+
+    cp $82
+    jr z, jr_057_54fd
+
+    cp $25
+    jr z, jr_057_54fd
+
+    cp $1c
+    ret c
+
+    cp $1e
+    ret nc
+
+jr_057_54fd:
+    call LoadBtlAI_62e0
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld e, a
+    ld d, $03
+
+jr_057_5508:
+    call LoadBtlAI_6321
+    jr nc, jr_057_5512
+
+    inc e
+    dec d
+    jr nz, jr_057_5508
+
+    ret
+
+
+jr_057_5512:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_551b:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $18
+    jr z, jr_057_5537
+
+    cp $1e
+    ret c
+
+    cp $20
+    jr c, jr_057_5537
+
+    cp $72
+    ret c
+
+    cp $74
+    jr c, jr_057_5537
+
+    cp $77
+    ret nz
+
+jr_057_5537:
+    xor a
+    ld [$db6c], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    xor a
+    ld [$db56], a
+    ld [$db57], a
+
+jr_057_554c:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_557f
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 1, [hl]
+    jr nz, jr_057_5566
+
+    inc hl
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $03
+    jr z, jr_057_557f
+
+jr_057_5566:
+    ld a, [$db56]
+    ld e, a
+    ld a, [$db57]
+    ld d, a
+    ld a, c
+    call GetCombatantATK
+    add hl, de
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld hl, $db6c
+    inc [hl]
+
+jr_057_557f:
+    inc c
+    dec b
+    jr nz, jr_057_554c
+
+    ld a, [$db6c]
+    or a
+    ret z
+
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    call Div16x8To16
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    call FuncBtlAI_7dc5
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    sla l
+    rl h
+    ld a, [$db58]
+    ld c, a
+    ld a, [$db59]
+    ld b, a
+    call CmpHLvsBC
+    ret nc
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_55c4:
+    ld a, [$db8a]
+    cp $24
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    call LoadBtlAI_634c
+    ret
+
+
+AIRule_55d6:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $26
+    jr z, jr_057_55e8
+
+    cp $7f
+    jr z, jr_057_55e8
+
+    cp $43
+    ret nz
+
+jr_057_55e8:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    call LoadBtlAI_634c
+    ret
+
+
+AIRule_55f6:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $17
+    jr z, jr_057_560b
+
+    cp $26
+    ret c
+
+    cp $7f
+    jr z, jr_057_560b
+
+    cp $29
+    ret nc
+
+jr_057_560b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5615:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5652
+
+    ld a, c
+    ld hl, $dc64
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_5629:
+    ld a, [hl+]
+    or a
+    jr z, jr_057_5652
+
+    cp $01
+    jr nz, jr_057_564e
+
+    ld a, [hl]
+    cp $02
+    jr z, jr_057_5657
+
+    cp $05
+    jr z, jr_057_5657
+
+    cp $08
+    jr z, jr_057_5657
+
+    cp $0b
+    jr z, jr_057_5657
+
+    cp $0e
+    jr z, jr_057_5657
+
+    cp $11
+    jr c, jr_057_564e
+
+    cp $14
+    jr c, jr_057_5657
+
+jr_057_564e:
+    inc hl
+    dec d
+    jr nz, jr_057_5629
+
+jr_057_5652:
+    inc c
+    dec b
+    jr nz, jr_057_5615
+
+    ret
+
+
+jr_057_5657:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5660:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $20
+    ret c
+
+    cp $24
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call ClrBtlAI_44f7
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [$db4c]
+    call Div16x8To16
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld e, a
+    ld d, $03
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+
+jr_057_56b4:
+    ld a, e
+    call CheckMonsterSlot
+    jr c, jr_057_56c4
+
+    push hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    call CmpHLvsBC
+    pop hl
+    jr c, jr_057_56cc
+
+jr_057_56c4:
+    inc hl
+    inc hl
+    inc e
+    dec d
+    jr nz, jr_057_56b4
+
+    jr jr_057_56d4
+
+jr_057_56cc:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+
+jr_057_56d4:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call ClrBtlAI_44f7
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [$db4c]
+    call Div16x8To16
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    call ClrBtlAI_44f7
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [$db4c]
+    call Div16x8To16
+    ld a, [$db58]
+    ld c, a
+    ld a, [$db59]
+    ld b, a
+    call CmpHLvsBC
+    ret nc
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5739:
+    ld a, [$db8a]
+    cp $29
+    ret nz
+
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
+    add a
+    ld e, a
+    call CalcBtlAI_4567
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, e
+    call GetCombatantMaxMP
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, e
+    call GetCombatantATK
+    ld a, l
+    ld [$db5a], a
+    ld a, h
+    ld [$db5b], a
+    ld a, e
+    call GetCombatantDEF
+    ld a, l
+    ld [$db5c], a
+    ld a, h
+    ld [$db5d], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld e, a
+    ld d, $03
+    xor a
+    ld [$db4c], a
+
+Jump_057_5788:
+    ld a, e
+    call CheckMonsterSlot
+    jp c, Jump_057_57ed
+
+    ld a, e
+    ld hl, wBattleMaxHP
+    call CalcBtlAI_4567
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    jr c, jr_057_57a7
+
+    ld hl, $db4c
+    inc [hl]
+
+jr_057_57a7:
+    ld a, e
+    call GetCombatantMaxMP
+    ld a, [$db58]
+    ld c, a
+    ld a, [$db59]
+    ld b, a
+    call CmpHLvsBC
+    jr jr_057_57bc
+
+    ld hl, $db4c
+    inc [hl]
+
+jr_057_57bc:
+    ld a, e
+    call GetCombatantATK
+    ld a, [$db5a]
+    ld c, a
+    ld a, [$db5b]
+    ld b, a
+    call CmpHLvsBC
+    jr c, jr_057_57d1
+
+    ld hl, $db4c
+    inc [hl]
+
+jr_057_57d1:
+    ld a, e
+    call GetCombatantDEF
+    ld a, [$db5c]
+    ld c, a
+    ld a, [$db5d]
+    ld b, a
+    call CmpHLvsBC
+    jr c, jr_057_57e6
+
+    ld hl, $db4c
+    inc [hl]
+
+jr_057_57e6:
+    ld a, [$db4c]
+    cp $03
+    jr nc, jr_057_57f3
+
+Jump_057_57ed:
+    inc e
+    dec d
+    jp nz, Jump_057_5788
+
+    ret
+
+
+jr_057_57f3:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_57fc:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $76
+    jr z, jr_057_580d
+
+    cp $1a
+    ret c
+
+    cp $1c
+    ret nc
+
+jr_057_580d:
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld d, a
+    ld hl, wBattleMP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, d
+    ld hl, wBattleMaxMP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    call SaveBtlAI_7b59
+    ret nc
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; [S130 F10] DeMagic $80, $DD0B==2 only: +20 once a count reaches 3 — per valid
+; [S130 F10] opponent its +3&$3F bits, +4&$7F bits, +5 bits 6/7, +7&$C0, +7&$0C, +8 bit6,
+; [S130 F10] plus the caster's OWN side byte bits 2/3/5 (recounted per opponent).
+AIRuleDeMagicBuffCount_5842:
+    ld a, [$db8a]
+    cp $80
+    ret nz
+
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    xor a
+    ld [$db4c], a
+
+Jump_057_5868:
+    ld a, c
+    call CheckMonsterSlot
+    jp c, Jump_057_590e
+
+    ld a, [hl]
+    and $3f
+    jr z, jr_057_5892
+
+    bit 0, [hl]
+    call nz, LoadBtlAI_592c
+    bit 1, [hl]
+    call nz, LoadBtlAI_592c
+    bit 2, [hl]
+    call nz, LoadBtlAI_592c
+    bit 3, [hl]
+    call nz, LoadBtlAI_592c
+    bit 4, [hl]
+    call nz, LoadBtlAI_592c
+    bit 5, [hl]
+    call nz, LoadBtlAI_592c
+
+jr_057_5892:
+    inc hl
+    ld a, [hl]
+    and $7f
+    jr z, jr_057_58bb
+
+    bit 0, [hl]
+    call nz, LoadBtlAI_592c
+    bit 1, [hl]
+    call nz, LoadBtlAI_592c
+    bit 2, [hl]
+    call nz, LoadBtlAI_592c
+    bit 3, [hl]
+    call nz, LoadBtlAI_592c
+    bit 4, [hl]
+    call nz, LoadBtlAI_592c
+    bit 5, [hl]
+    call nz, LoadBtlAI_592c
+    bit 6, [hl]
+    call nz, LoadBtlAI_592c
+
+jr_057_58bb:
+    inc hl
+    ld a, [hl]
+    and $c0
+    jr z, jr_057_58cb
+
+    bit 6, [hl]
+    call nz, LoadBtlAI_592c
+    bit 7, [hl]
+    call nz, LoadBtlAI_592c
+
+jr_057_58cb:
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $cc
+    jr z, jr_057_58dd
+
+    and $c0
+    call nz, LoadBtlAI_592c
+    ld a, [hl]
+    and $0c
+    call nz, LoadBtlAI_592c
+
+jr_057_58dd:
+    inc hl
+    bit 6, [hl]
+    call nz, LoadBtlAI_592c
+    ld a, [wBattleAttackerIdx]
+    rrca
+    rrca
+    and $01
+    ld hl, $db00
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    and $2c
+    jr z, jr_057_5907
+
+    bit 2, [hl]
+    call nz, LoadBtlAI_592c
+    bit 3, [hl]
+    call nz, LoadBtlAI_592c
+    bit 5, [hl]
+    call nz, LoadBtlAI_592c
+
+jr_057_5907:
+    ld a, [$db4c]
+    cp $03
+    jr nc, jr_057_5934
+
+Jump_057_590e:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, $08
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    inc c
+    dec b
+    jp nz, Jump_057_5868
+
+    ret
+
+
+LoadBtlAI_592c:
+    ld a, [$db4c]
+    inc a
+    ld [$db4c], a
+    ret
+
+
+jr_057_5934:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+; [S130 F10] ThickFog $83, $DD0B==2 only: n = own valid slots, k = own list skills
+; [S130 F10] < $3A or $D5/$DA/$DC; if n >= k: +20 when the valid opponents' lists hold
+; [S130 F10] >= 2 of the $6AF5 big spells (tags ignored). Measured.
+AIRuleThickFogBonus_593d:
+    ld a, [$db8a]
+    cp $83
+    ret nz
+
+    call LoadBtlAI_7c6e
+    ret nz
+
+    xor a
+    ld [$db4c], a
+    ld [$db4d], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_5956:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5991
+
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [$db4d]
+    inc a
+    ld [$db4d], a
+    ld d, $08
+
+jr_057_5971:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5991
+
+    cp $3a
+    jr c, jr_057_5986
+
+    cp $d5
+    jr z, jr_057_5986
+
+    cp $da
+    jr z, jr_057_5986
+
+    cp $dc
+    jr nz, jr_057_598d
+
+jr_057_5986:
+    ld a, [$db4c]
+    inc a
+    ld [$db4c], a
+
+jr_057_598d:
+    inc hl
+    dec d
+    jr nz, jr_057_5971
+
+jr_057_5991:
+    inc c
+    dec b
+    jr nz, jr_057_5956
+
+    ld a, [$db4c]
+    ld c, a
+    ld a, [$db4d]
+    cp c
+    ret c
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld d, $00
+
+jr_057_59aa:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_59e9
+
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld e, $08
+
+jr_057_59be:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_59e5
+
+    cp $02
+    jr z, jr_057_59df
+
+    cp $05
+    jr z, jr_057_59df
+
+    cp $08
+    jr z, jr_057_59df
+
+    cp $0b
+    jr z, jr_057_59df
+
+    cp $0e
+    jr z, jr_057_59df
+
+    cp $11
+    jr c, jr_057_59e5
+
+    cp $14
+    jr nc, jr_057_59e5
+
+jr_057_59df:
+    inc d
+    ld a, d
+    cp $02
+    jr nc, jr_057_59ee
+
+jr_057_59e5:
+    inc hl
+    dec e
+    jr nz, jr_057_59be
+
+jr_057_59e9:
+    inc c
+    dec b
+    jr nz, jr_057_59aa
+
+    ret
+
+
+jr_057_59ee:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_59f7:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $26
+    jr z, jr_057_5a05
+
+    cp $7f
+    ret nz
+
+jr_057_5a05:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5a0f:
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld e, $08
+
+jr_057_5a1d:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5a43
+
+    cp $4f
+    jr z, jr_057_5a43
+
+    cp $59
+    jr z, jr_057_5a43
+
+    cp $5b
+    jr z, jr_057_5a43
+
+    cp $64
+    jr z, jr_057_5a43
+
+    cp $65
+    jr z, jr_057_5a43
+
+    cp $d9
+    jr z, jr_057_5a43
+
+    inc hl
+    dec e
+    jr nz, jr_057_5a1d
+
+    inc c
+    dec b
+    jr nz, jr_057_5a0f
+
+    ret
+
+
+jr_057_5a43:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; Cover/Guardian +20 when an own-side ally is down (HP 0 or processed-
+; dead $DD1B==1). (S81 sweep)
+AIRuleCoverDownedAlly_5a4c:
+    ld a, [$db8a]
+    cp $8f
+    jr z, jr_057_5a59
+
+    cp $88
+    ret c
+
+    cp $8a
+    ret nc
+
+jr_057_5a59:
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    ld a, d
+    call GetCombatantHP
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, d
+    ld hl, wBattleMaxHP
+    call CalcBtlAI_4567
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, $0a
+    call Div16x8To16
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    add hl, bc
+    ld a, [$db58]
+    ld c, a
+    ld a, [$db59]
+    ld b, a
+    call CmpHLvsBC
+    ret c
+
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    and $04
+    ld c, a
+    ld b, $03
+    xor a
+    ld [$db4c], a
+
+jr_057_5a9f:
+    ld a, c
+    cp d
+    jr z, jr_057_5abd
+
+    call CheckMonsterSlot
+    jr c, jr_057_5abd
+
+    ld a, c
+    call GetCombatantHP
+    call SaveBtlAI_5acf
+    push bc
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    pop bc
+    ret nc
+
+jr_057_5abd:
+    inc c
+    dec b
+    jr nz, jr_057_5a9f
+
+    ld a, [$db4c]
+    or a
+    ret z
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+SaveBtlAI_5acf:
+    push de
+    push bc
+    push hl
+    ld a, c
+    call GetCombatantMaxHP
+    ld a, $0a
+    call Div16x8To16
+    ld a, l
+    or h
+    jr nz, jr_057_5ae0
+
+    inc hl
+
+jr_057_5ae0:
+    pop bc
+    push bc
+    call CmpHLvsBC
+    jr c, jr_057_5aeb
+
+    ld hl, $db4c
+    inc [hl]
+
+jr_057_5aeb:
+    pop hl
+    pop bc
+    pop de
+    ret
+
+
+AIRule_5aef:
+    ld a, [$db8a]
+    cp $8d
+    ret z
+
+    cp $8f
+    ret z
+
+    cp $8c
+    ret c
+
+    cp $91
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
+    add a
+    ld c, a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, c
+    call SaveBtlAI_7b59
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5b34:
+    ld a, [$db8a]
+    cp $41
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 2, [hl]
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5b4a:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $27
+    ret c
+
+    cp $29
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+Jump_057_5b61:
+    ld a, c
+    call CheckMonsterSlot
+    jp c, Jump_057_5ba3
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 0, [hl]
+    jr nz, jr_057_5ba3
+
+    ld d, $08
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+
+jr_057_5b81:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5ba3
+
+    cp $1b
+    jr c, jr_057_5b9e
+
+    cp $1c
+    jr z, jr_057_5b9e
+
+    cp $1d
+    jr z, jr_057_5b9e
+
+    cp $20
+    jr z, jr_057_5b9e
+
+    cp $21
+    jr z, jr_057_5b9e
+
+    cp $da
+    jr nz, jr_057_5b9f
+
+jr_057_5b9e:
+    ret
+
+
+jr_057_5b9f:
+    inc hl
+    dec d
+    jr nz, jr_057_5b81
+
+Jump_057_5ba3:
+jr_057_5ba3:
+    inc c
+    dec b
+    jp nz, Jump_057_5b61
+
+    call ClearBattleAction
+    ret
+
+
+    ret
+
+
+    ret
+
+
+AIRule_5bae:
+    ld a, [$db8a]
+    cp $5c
+    ret c
+
+    cp $64
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $30
+    ret z
+
+    ld hl, $dd26
+    ld b, $1e
+    call AISatAdd_455f
+    ret
+
+
+AIRule_5bcd:
+    ld a, [$db8a]
+    cp $6f
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5bdd:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5bed
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    bit 5, [hl]
+    ret z
+
+jr_057_5bed:
+    inc c
+    dec b
+    jr nz, jr_057_5bdd
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5bf5:
+    ld a, [$db8a]
+    cp $17
+    jr z, jr_057_5c03
+
+    cp $27
+    jr z, jr_057_5c03
+
+    cp $28
+    ret nz
+
+jr_057_5c03:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5c0d:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5c1d
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 0, [hl]
+    ret z
+
+jr_057_5c1d:
+    inc c
+    dec b
+    jr nz, jr_057_5c0d
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5c25:
+    ld a, [$db8a]
+    cp $24
+    jr z, jr_057_5c3b
+
+    cp $8a
+    jr z, jr_057_5c3b
+
+    cp $8b
+    jr z, jr_057_5c3b
+
+    cp $8f
+    jr z, jr_057_5c3b
+
+    cp $92
+    ret nz
+
+jr_057_5c3b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5c45:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5c55
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 7, [hl]
+    ret z
+
+jr_057_5c55:
+    inc c
+    dec b
+    jr nz, jr_057_5c45
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5c5d:
+    ld a, [$db8a]
+    cp $91
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    push bc
+
+jr_057_5c6e:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5c7f
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 6, [hl]
+    jr z, jr_057_5c86
+
+jr_057_5c7f:
+    inc c
+    dec b
+    jr nz, jr_057_5c6e
+
+    pop bc
+    jr jr_057_5cc4
+
+jr_057_5c86:
+    pop bc
+    call LoadBtlAI_7c6e
+    ret nz
+
+jr_057_5c8b:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5cc0
+
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_5c9f:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5cc0
+
+    cp $6e
+    ret z
+
+    cp $71
+    ret z
+
+    cp $75
+    jr c, jr_057_5cc0
+
+    cp $79
+    ret c
+
+    cp $91
+    ret z
+
+    cp $94
+    ret z
+
+    cp $96
+    ret z
+
+    inc hl
+    dec d
+    jr nz, jr_057_5c9f
+
+    jr jr_057_5cc4
+
+jr_057_5cc0:
+    inc c
+    dec b
+    jr nz, jr_057_5c8b
+
+jr_057_5cc4:
+    call ClearBattleAction
+    ret
+
+
+AIRule_5cc8:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $17
+    jr z, jr_057_5cda
+
+    cp $27
+    jr z, jr_057_5cda
+
+    cp $28
+    ret nz
+
+jr_057_5cda:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5ce4:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5d0d
+
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_5cf8:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5d0d
+
+    cp $3a
+    ret c
+
+    cp $d5
+    ret z
+
+    cp $da
+    ret z
+
+    cp $dc
+    ret z
+
+    inc hl
+    dec d
+    jr nz, jr_057_5cf8
+
+jr_057_5d0d:
+    inc c
+    dec b
+    jr nz, jr_057_5ce4
+
+    call ClearBattleAction
+    ret
+
+
+    ret
+
+
+; Surge $81: veto unless own side carries any status (+2 nonzero or
+; +3 & $C3); +15 otherwise (veto measured; +15 presumed, §15.9).
+; Near-identical twin: AIRuleSurgeCleanseB_67d5. (S81)
+AIRuleSurgeCleanseA_5d16:
+    ld a, [$db8a]
+    cp $81
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_5d24:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5d45
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl+]
+    or a
+    ret nz
+
+    ld a, [hl+]
+    and $c3
+    ret nz
+
+    inc hl
+    ld a, [hl+]
+    and $80
+    ret nz
+
+    inc hl
+    ld a, [hl+]
+    and $03
+    ret nz
+
+    bit 7, [hl]
+    ret nz
+
+jr_057_5d45:
+    inc c
+    dec b
+    jr nz, jr_057_5d24
+
+    call ClearBattleAction
+    ret
+
+
+; Support class (Sacrifice/Vivify/Revive/Farewell/NumbOff/DeChaos/Cover/
+; Guardian/LifeSong/LifeDance): veto when own valid slots ($DD1B != $FF)
+; < 2 — the whole class is dead for a solo actor. (S81 sweep)
+AIRuleVetoSupportNeedsAlly_5d4d:
+    ld a, [$db8a]
+    cp $14
+    jr z, jr_057_5d6b
+
+    cp $30
+    ret c
+
+    cp $33
+    ret z
+
+    cp $36
+    jr c, jr_057_5d6b
+
+    cp $88
+    ret c
+
+    cp $8a
+    jr c, jr_057_5d6b
+
+    cp $95
+    ret c
+
+    cp $97
+    ret nc
+
+jr_057_5d6b:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld hl, $dd1b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, $03
+    ld d, $00
+
+jr_057_5d7d:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_5d83
+
+    inc d
+
+jr_057_5d83:
+    dec b
+    jr nz, jr_057_5d7d
+
+    ld a, d
+    cp $02
+    ret nc
+
+    call ClearBattleAction
+    ret
+
+
+; Correct twin of AIRuleAoeBonusBugged_4e36: -20 when exactly 1 live
+; opposing target; RainSlash $57 hard-vetoes instead. (S81 sweep)
+AIRuleAoeLoneTargetMalus_5d8e:
+    ld a, [$db8a]
+    cp $03
+    ret c
+
+    cp $12
+    jr c, jr_057_5db1
+
+    cp $13
+    jr z, jr_057_5db1
+
+    cp $14
+    jr z, jr_057_5db1
+
+    cp $4f
+    jr z, jr_057_5db1
+
+    cp $58
+    ret z
+
+    cp $57
+    ret c
+
+    cp $67
+    jr c, jr_057_5db1
+
+    cp $71
+    ret nz
+
+jr_057_5db1:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld d, $00
+
+jr_057_5dbd:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5dc4
+
+    inc d
+
+jr_057_5dc4:
+    inc c
+    dec b
+    jr nz, jr_057_5dbd
+
+    ld a, d
+    cp $01
+    ret nz
+
+    ld a, [$db8a]
+    cp $57
+    jr z, jr_057_5ddc
+
+    ld hl, $dd27
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+jr_057_5ddc:
+    call ClearBattleAction
+    ret
+
+
+AIRule_5de0:
+    ld a, [$db8a]
+    cp $8a
+    ret c
+
+    cp $8c
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db04
+    call HL_AddA_x8
+    ld a, [hl]
+    and $48
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5dfa:
+    ld a, [$db8a]
+    cp $1b
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db04
+    call HL_AddA_x8
+    bit 0, [hl]
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5e10:
+    ld a, [$db8a]
+    cp $7b
+    ret c
+
+    cp $7d
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5e23:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5e36
+
+    ld a, c
+    ld hl, $db8b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 4, [hl]
+    ret z
+
+jr_057_5e36:
+    inc c
+    dec b
+    jr nz, jr_057_5e23
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5e3e:
+    ld a, [$db8a]
+    cp $74
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5e4e:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5e76
+
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, $02
+    ld [$db4c], a
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    ld a, [$db4c]
+    and $30
+    cp $30
+    jr z, jr_057_5e76
+
+    ld a, c
+    ld hl, $db05
+    call HL_AddA_x8
+    bit 7, [hl]
+    ret z
+
+jr_057_5e76:
+    inc c
+    dec b
+    jr nz, jr_057_5e4e
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5e7e:
+    ld a, [$db8a]
+    cp $26
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_5e8c:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5e9c
+
+    ld a, c
+    ld hl, $db05
+    call HL_AddA_x8
+    bit 6, [hl]
+    ret z
+
+jr_057_5e9c:
+    inc c
+    dec b
+    jr nz, jr_057_5e8c
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5ea4:
+    ld a, [$db8a]
+    cp $77
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db07
+    call HL_AddA_x8
+    ld a, [hl]
+    and $0c
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5ebb:
+    ld a, [$db8a]
+    cp $72
+    ret c
+
+    cp $74
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_5ecc:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5edd
+
+    ld a, c
+    ld hl, $db07
+    call HL_AddA_x8
+    ld a, [hl]
+    and $03
+    ret z
+
+jr_057_5edd:
+    inc c
+    dec b
+    jr nz, jr_057_5ecc
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5ee5:
+    ld a, [$db8a]
+    cp $1a
+    jr c, jr_057_5efc
+
+    cp $1c
+    ret c
+
+    cp $1e
+    ret z
+
+    cp $1f
+    ret z
+
+    cp $da
+    jr z, jr_057_5efc
+
+    cp $22
+    ret nc
+
+jr_057_5efc:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5f06:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5f17
+
+    ld a, c
+    ld hl, $db04
+    call HL_AddA_x8
+    ld a, [hl]
+    and $22
+    ret z
+
+jr_057_5f17:
+    inc c
+    dec b
+    jr nz, jr_057_5f06
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_5f1f:
+    ld a, [$db8a]
+    cp $1a
+    jr c, jr_057_5f6e
+
+    cp $1c
+    ret c
+
+    cp $1e
+    jr c, jr_057_5f6e
+
+    cp $20
+    ret c
+
+    cp $22
+    jr c, jr_057_5f6e
+
+    cp $2a
+    jr z, jr_057_5f6e
+
+    cp $3b
+    ret c
+
+    cp $41
+    jr c, jr_057_5f6e
+
+    cp $44
+    jr z, jr_057_5f6e
+
+    cp $53
+    jr z, jr_057_5f6e
+
+    cp $55
+    ret c
+
+    cp $80
+    jr c, jr_057_5f6e
+
+    cp $82
+    jr z, jr_057_5f6e
+
+    cp $88
+    ret c
+
+    cp $8a
+    jr c, jr_057_5f6e
+
+    cp $8c
+    ret c
+
+    cp $93
+    jr c, jr_057_5f6e
+
+    cp $d6
+    ret c
+
+    cp $db
+    jr c, jr_057_5f6e
+
+    cp $dc
+    jr c, jr_057_5f6e
+
+    cp $dd
+    ret nz
+
+jr_057_5f6e:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5f78:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_5f89
+
+    ld a, c
+    ld hl, $db07
+    call HL_AddA_x8
+    ld a, [hl]
+    and $c0
+    ret z
+
+jr_057_5f89:
+    inc c
+    dec b
+    jr nz, jr_057_5f78
+
+    call ClearBattleAction
+    ret
+
+
+; [S130 F10] (also DeMagic $80): veto when every opponent is invalid or incapacitated
+; [S130 F10] (GetMonsterSlotInfo carry: +2&$D0, +5&$3F, +7&$C0). Measured for $80.
+AIRule_5f91:
+    ld a, [$db8a]
+    cp $15
+    ret c
+
+    cp $17
+    jr c, jr_057_5fe6
+
+    cp $19
+    jr z, jr_057_5fe6
+
+    cp $2a
+    jr z, jr_057_5fe6
+
+    cp $6a
+    ret c
+
+    cp $6c
+    jr c, jr_057_5fe6
+
+    cp $6e
+    jr z, jr_057_5fe6
+
+    cp $70
+    jr z, jr_057_5fe6
+
+    cp $72
+    ret c
+
+    cp $74
+    jr c, jr_057_5fe6
+
+    cp $77
+    ret c
+
+    cp $79
+    jr c, jr_057_5fe6
+
+    cp $7a
+    ret c
+
+    cp $7e
+    jr c, jr_057_5fe6
+
+    cp $80
+    ret c
+
+    cp $83
+    jr c, jr_057_5fe6
+
+    cp $88
+    ret c
+
+    cp $8a
+    jr c, jr_057_5fe6
+
+    cp $8c
+    ret c
+
+    cp $8d
+    ret z
+
+    cp $da
+    jr z, jr_057_5fe6
+
+    cp $dc
+    jr z, jr_057_5fe6
+
+    cp $91
+    ret nc
+
+jr_057_5fe6:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_5ff0:
+    ld a, c
+    call GetMonsterSlotInfo
+    ret nc
+
+    inc c
+    dec b
+    jr nz, jr_057_5ff0
+
+    call ClearBattleAction
+    ret
+
+
+; +20 incapacitate class (Paralyze/Ahhh/LureDance/LushLicks/LegSweep/
+; BigTrip/WarCry/...). (S81 sweep)
+AIRuleIncapBonus_5ffd:
+    ld a, [$db8a]
+    cp $15
+    ret c
+
+    cp $17
+    jr c, jr_057_6027
+
+    cp $19
+    jr z, jr_057_6027
+
+    cp $68
+    ret c
+
+    cp $6c
+    jr c, jr_057_6027
+
+    cp $6e
+    jr z, jr_057_6027
+
+    cp $70
+    jr z, jr_057_6027
+
+    cp $78
+    ret c
+
+    cp $7a
+    ret z
+
+    cp $7e
+    jr c, jr_057_6027
+
+    cp $da
+    ret nz
+
+jr_057_6027:
+    call CallBtlAI_7d4d
+
+jr_057_602a:
+    ld a, c
+    call GetMonsterSlotInfo
+    jr c, jr_057_6033
+
+    call SetBtlAI_7d54
+
+jr_057_6033:
+    inc c
+    dec b
+    jr nz, jr_057_602a
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_604a:
+    ld a, [$db8a]
+    cp $18
+    jr z, jr_057_6057
+
+    cp $72
+    ret c
+
+    cp $74
+    ret nc
+
+jr_057_6057:
+    call CallBtlAI_7d4d
+
+jr_057_605a:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6077
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 1, [hl]
+    jr nz, jr_057_6077
+
+    inc hl
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $03
+    jr nz, jr_057_6077
+
+    call SetBtlAI_7d54
+
+jr_057_6077:
+    inc c
+    dec b
+    jr nz, jr_057_605a
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_608e:
+    ld a, [$db8a]
+    cp $17
+    ret nz
+
+    call CallBtlAI_7d4d
+
+jr_057_6097:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_60b1
+
+    ld a, c
+    call SaveBtlAI_7e94
+    jr c, jr_057_60b1
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 0, [hl]
+    jr nz, jr_057_60b1
+
+    call SetBtlAI_7d54
+
+jr_057_60b1:
+    inc c
+    dec b
+    jr nz, jr_057_6097
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $1e
+    call AISatAdd_455f
+    ret
+
+
+AIRule_60c8:
+    ld a, [$db8a]
+    cp $17
+    jr z, jr_057_60d5
+
+    cp $75
+    ret c
+
+    cp $77
+    ret nc
+
+jr_057_60d5:
+    call CallBtlAI_7d4d
+
+jr_057_60d8:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_60f0
+
+    ld a, c
+    ld hl, wBattleMP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    or [hl]
+    jr z, jr_057_60f0
+
+    call SetBtlAI_7d54
+
+jr_057_60f0:
+    inc c
+    dec b
+    jr nz, jr_057_60d8
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_6107:
+    ld a, [$db8a]
+    cp $7a
+    jr z, jr_057_6114
+
+    cp $1c
+    ret c
+
+    cp $1e
+    ret nc
+
+jr_057_6114:
+    call CallBtlAI_7d4d
+
+jr_057_6117:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_612d
+
+    ld a, c
+    call GetCombatantDEF
+    ld a, l
+    cp $02
+    jr nc, jr_057_612a
+
+    ld a, h
+    or a
+    jr z, jr_057_612d
+
+jr_057_612a:
+    call SetBtlAI_7d54
+
+jr_057_612d:
+    inc c
+    dec b
+    jr nz, jr_057_6117
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_6144:
+    ld a, [$db8a]
+    cp $20
+    ret c
+
+    cp $22
+    ret nc
+
+    call CallBtlAI_7d4d
+
+jr_057_6150:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6169
+
+    ld a, c
+    ld hl, wBattleAGL
+    call CalcBtlAI_4567
+    ld a, l
+    cp $02
+    jr nc, jr_057_6166
+
+    ld a, h
+    or a
+    jr z, jr_057_6169
+
+jr_057_6166:
+    call SetBtlAI_7d54
+
+jr_057_6169:
+    inc c
+    dec b
+    jr nz, jr_057_6150
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; +10 poison class PoisonHit/PoisonGas/PoisonAir. (S81 sweep)
+AIRulePoisonBonus_6180:
+    ld a, [$db8a]
+    cp $67
+    jr z, jr_057_618d
+
+    cp $6c
+    ret c
+
+    cp $6e
+    ret nc
+
+jr_057_618d:
+    call CallBtlAI_7d4d
+
+jr_057_6190:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_61a5
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $03
+    jr nz, jr_057_61a5
+
+    call SetBtlAI_7d54
+
+jr_057_61a5:
+    inc c
+    dec b
+    jr nz, jr_057_6190
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; +10 Curse $6F. (S81 sweep)
+AIRuleCurseBonus_61bc:
+    ld a, [$db8a]
+    cp $6f
+    ret nz
+
+    call CallBtlAI_7d4d
+
+jr_057_61c5:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_61da
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $20
+    jr nz, jr_057_61da
+
+    call SetBtlAI_7d54
+
+jr_057_61da:
+    inc c
+    dec b
+    jr nz, jr_057_61c5
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_61f1:
+    ld a, [$db8a]
+    cp $91
+    ret nz
+
+    call CallBtlAI_7d4d
+
+jr_057_61fa:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6215
+
+    ld a, c
+    call SaveBtlAI_7ef4
+    jr c, jr_057_6215
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl]
+    and $40
+    jr nz, jr_057_6215
+
+    call SetBtlAI_7d54
+
+jr_057_6215:
+    inc c
+    dec b
+    jr nz, jr_057_61fa
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+AIRule_622c:
+    ld a, [$db8a]
+    cp $92
+    ret nz
+
+    call CallBtlAI_7d4d
+
+jr_057_6235:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6250
+
+    ld a, c
+    call SaveBtlAI_7ec0
+    jr c, jr_057_6250
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl]
+    and $80
+    jr nz, jr_057_6250
+
+    call SetBtlAI_7d54
+
+jr_057_6250:
+    inc c
+    dec b
+    jr nz, jr_057_6235
+
+    ld a, [wBattlePostFlag]
+    or a
+    ret z
+
+    ld hl, $db54
+    cp [hl]
+    ret c
+
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; Veto when all live opposing targets have status+2 & $CC — don't
+; incapacitate the incapacitated. (S81 sweep)
+AIRuleVetoIncapRedundant_6267:
+    ld a, [$db8a]
+    cp $15
+    ret c
+
+    cp $17
+    jr c, jr_057_6291
+
+    cp $19
+    jr z, jr_057_6291
+
+    cp $68
+    ret c
+
+    cp $6c
+    jr c, jr_057_6291
+
+    cp $6e
+    jr z, jr_057_6291
+
+    cp $70
+    jr z, jr_057_6291
+
+    cp $78
+    ret c
+
+    cp $7a
+    ret z
+
+    cp $7e
+    jr c, jr_057_6291
+
+    cp $da
+    ret nz
+
+jr_057_6291:
+    call LoadBtlAI_7d73
+
+jr_057_6294:
+    ld a, c
+    call GetMonsterSlotInfo
+    jr c, jr_057_62a0
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_62a0:
+    inc c
+    dec b
+    jr nz, jr_057_6294
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_62a8:
+    ld a, [$db8a]
+    cp $18
+    jr z, jr_057_62b5
+
+    cp $72
+    ret c
+
+    cp $74
+    ret nc
+
+jr_057_62b5:
+    call LoadBtlAI_7d73
+
+jr_057_62b8:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_62d8
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 1, [hl]
+    jr nz, jr_057_62d8
+
+    inc hl
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $03
+    jr nz, jr_057_62d8
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_62d8:
+    inc c
+    dec b
+    jr nz, jr_057_62b8
+
+    call ClearBattleAction
+    ret
+
+
+LoadBtlAI_62e0:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld e, a
+    ld hl, $0000
+    call CheckMonsterSlot
+    jr c, jr_057_62f3
+
+    call GetCombatantDEF
+
+jr_057_62f3:
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    inc e
+    ld d, $02
+
+jr_057_62fe:
+    ld a, e
+    call CheckMonsterSlot
+    jr c, jr_057_631c
+
+    call GetCombatantDEF
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    call CmpHLvsBC
+    jr nc, jr_057_631c
+
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+
+jr_057_631c:
+    inc e
+    dec d
+    jr nz, jr_057_62fe
+
+    ret
+
+
+LoadBtlAI_6321:
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    srl b
+    rr c
+    ld a, e
+    call GetCombatantATK
+    call CmpHLvsBC
+    jr c, jr_057_634a
+
+    ld a, [$db56]
+    ld c, a
+    ld a, [$db57]
+    ld b, a
+    srl h
+    rr l
+    call CmpHLvsBC
+    jr nc, jr_057_634a
+
+    xor a
+    or a
+    ret
+
+
+jr_057_634a:
+    scf
+    ret
+
+
+LoadBtlAI_634c:
+jr_057_634c:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6369
+
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, $04
+    ld [$db4c], a
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    ld a, [$db4c]
+    and $3c
+    cp $3c
+    ret nz
+
+jr_057_6369:
+    inc c
+    dec b
+    jr nz, jr_057_634c
+
+    call ClearBattleAction
+    ret
+
+
+LoadBtlAI_6371:
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr nc, jr_057_637d
+
+    ld a, [$db74]
+    jr jr_057_6380
+
+jr_057_637d:
+    ld a, [$db75]
+
+jr_057_6380:
+    ld b, a
+    ret
+
+
+AIRule_6382:
+    ld a, [$db8a]
+    cp $17
+    ret nz
+
+    call LoadBtlAI_7d73
+
+jr_057_638b:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_63a8
+
+    ld a, c
+    call SaveBtlAI_7e94
+    jr c, jr_057_63a8
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 0, [hl]
+    jr nz, jr_057_63a8
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_63a8:
+    inc c
+    dec b
+    jr nz, jr_057_638b
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_63b0:
+    ld a, [$db8a]
+    cp $1a
+    jr z, jr_057_63bd
+
+    cp $75
+    ret c
+
+    cp $77
+    ret nc
+
+jr_057_63bd:
+    call LoadBtlAI_7d73
+
+jr_057_63c0:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_63db
+
+    ld a, c
+    ld hl, wBattleMP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    or [hl]
+    jr z, jr_057_63db
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_63db:
+    inc c
+    dec b
+    jr nz, jr_057_63c0
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_63e3:
+    ld a, [$db8a]
+    cp $1c
+    ret c
+
+    cp $1e
+    jr c, jr_057_63f0
+
+    cp $7a
+    ret nz
+
+jr_057_63f0:
+    call LoadBtlAI_7d73
+
+jr_057_63f3:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_640c
+
+    ld a, c
+    call GetCombatantDEF
+    ld a, l
+    cp $02
+    jr nc, jr_057_6406
+
+    ld a, h
+    or a
+    jr z, jr_057_640c
+
+jr_057_6406:
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_640c:
+    inc c
+    dec b
+    jr nz, jr_057_63f3
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6414:
+    ld a, [$db8a]
+    cp $20
+    ret c
+
+    cp $22
+    ret nc
+
+    call LoadBtlAI_7d73
+
+jr_057_6420:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_643c
+
+    ld a, c
+    ld hl, wBattleAGL
+    call CalcBtlAI_4567
+    ld a, l
+    cp $02
+    jr nc, jr_057_6436
+
+    ld a, h
+    or a
+    jr z, jr_057_643c
+
+jr_057_6436:
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_643c:
+    inc c
+    dec b
+    jr nz, jr_057_6420
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6444:
+    ld a, [$db8a]
+    cp $67
+    jr z, jr_057_6451
+
+    cp $6c
+    ret c
+
+    cp $6e
+    ret nc
+
+jr_057_6451:
+    call LoadBtlAI_7d73
+
+jr_057_6454:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_646c
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $03
+    jr nz, jr_057_646c
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_646c:
+    inc c
+    dec b
+    jr nz, jr_057_6454
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6474:
+    ld a, [$db8a]
+    cp $6f
+    ret nz
+
+    call LoadBtlAI_7d73
+
+jr_057_647d:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6495
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $20
+    jr nz, jr_057_6495
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_6495:
+    inc c
+    dec b
+    jr nz, jr_057_647d
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_649d:
+    ld a, [$db8a]
+    cp $91
+    ret nz
+
+    call LoadBtlAI_7d73
+
+jr_057_64a6:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_64c4
+
+    ld a, c
+    call SaveBtlAI_7ef4
+    jr c, jr_057_64c4
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl]
+    and $40
+    jr nz, jr_057_64c4
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_64c4:
+    inc c
+    dec b
+    jr nz, jr_057_64a6
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_64cc:
+    ld a, [$db8a]
+    cp $92
+    ret nz
+
+    call LoadBtlAI_7d73
+
+jr_057_64d5:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_64f3
+
+    ld a, c
+    call SaveBtlAI_7ec0
+    jr c, jr_057_64f3
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl]
+    and $80
+    jr nz, jr_057_64f3
+
+    call SetBtlAI_7da4
+    cp $03
+    ret nz
+
+jr_057_64f3:
+    inc c
+    dec b
+    jr nz, jr_057_64d5
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_64fb:
+    ld a, [$db8a]
+    cp $14
+    jr z, jr_057_6509
+
+    cp $32
+    jr z, jr_057_6509
+
+    cp $96
+    ret nz
+
+jr_057_6509:
+    xor a
+    ld [$db66], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_6515:
+    push bc
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6594
+
+    ld a, c
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, c
+    ld hl, wBattleMaxHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    push hl
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, h
+    or a
+    jr nz, jr_057_6574
+
+    ld a, e
+    rrca
+    rrca
+    and $3f
+    or a
+    jr z, jr_057_6570
+
+    ld e, a
+    jr jr_057_657c
+
+jr_057_6570:
+    ld e, $01
+    jr jr_057_657c
+
+jr_057_6574:
+    sra h
+    rr l
+    sra h
+    rr l
+
+jr_057_657c:
+    pop bc
+    call CmpHLvsBC
+    jr c, jr_057_6594
+
+    ld hl, $db66
+    inc [hl]
+    pop bc
+    inc c
+    dec b
+    jr nz, jr_057_6515
+
+    ld a, [$db66]
+    or a
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+jr_057_6594:
+    pop bc
+    ret
+
+
+AIRule_6596:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $03
+    ret c
+
+    cp $12
+    ret z
+
+    cp $15
+    ret z
+
+    cp $1a
+    jr c, jr_057_65f6
+
+    cp $1d
+    jr z, jr_057_65f6
+
+    cp $21
+    jr z, jr_057_65f6
+
+    cp $3c
+    ret c
+
+    cp $3d
+    ret z
+
+    cp $3f
+    jr c, jr_057_65f6
+
+    cp $4f
+    ret c
+
+    jr z, jr_057_65f6
+
+    cp $52
+    ret c
+
+    jr z, jr_057_65f6
+
+    cp $53
+    jr z, jr_057_65f6
+
+    cp $57
+    ret c
+
+    jr z, jr_057_65f6
+
+    cp $59
+    ret c
+
+    cp $67
+    jr c, jr_057_65f6
+
+    cp $6a
+    ret c
+
+    cp $70
+    ret z
+
+    cp $72
+    jr c, jr_057_65f6
+
+    cp $7c
+    ret c
+
+    cp $7e
+    jr c, jr_057_65f6
+
+    cp $d5
+    jr z, jr_057_65f6
+
+    cp $d9
+    jr z, jr_057_65f6
+
+    cp $da
+    jr z, jr_057_65f6
+
+    cp $dc
+    ret nz
+
+jr_057_65f6:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6600:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_660b
+
+    call LoadBtlAI_4572
+    jr nz, jr_057_6610
+
+jr_057_660b:
+    inc c
+    dec b
+    jr nz, jr_057_6600
+
+    ret
+
+
+jr_057_6610:
+    ld hl, $dd27
+    ld b, $1e
+    call AISatAdd_455f
+    ret
+
+
+AIRule_6619:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $1b
+    ret z
+
+    cp $1e
+    jr c, jr_057_665a
+
+    cp $20
+    ret c
+
+    cp $22
+    jr c, jr_057_665a
+
+    cp $3b
+    ret c
+
+    cp $41
+    ret z
+
+    cp $43
+    ret z
+
+    cp $54
+    ret z
+
+    cp $77
+    ret z
+
+    cp $7e
+    jr c, jr_057_665a
+
+    cp $82
+    jr z, jr_057_665a
+
+    cp $91
+    ret c
+
+    cp $93
+    jr c, jr_057_665a
+
+    cp $d5
+    ret c
+
+    cp $da
+    jr z, jr_057_665a
+
+    cp $dc
+    jr z, jr_057_665a
+
+    cp $da
+    ret nc
+
+jr_057_665a:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6664:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_666e
+
+    call LoadBtlAI_4572
+    ret z
+
+jr_057_666e:
+    inc c
+    dec b
+    jr nz, jr_057_6664
+
+    ld hl, $dd27
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_667b:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $17
+    jr z, jr_057_66ae
+
+    cp $1a
+    jr z, jr_057_66ae
+
+    cp $1b
+    jr z, jr_057_66ae
+
+    cp $24
+    jr z, jr_057_66ae
+
+    cp $26
+    ret c
+
+    cp $29
+    jr c, jr_057_66ae
+
+    cp $75
+    ret c
+
+    cp $77
+    jr c, jr_057_66ae
+
+    cp $8a
+    ret c
+
+    cp $8c
+    jr c, jr_057_66ae
+
+    cp $8f
+    jr z, jr_057_66ae
+
+    cp $92
+    ret nz
+
+jr_057_66ae:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_66b8:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_66cc
+
+    ld a, c
+    ld hl, wBattleMP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    or [hl]
+    ret nz
+
+jr_057_66cc:
+    inc c
+    dec b
+    jr nz, jr_057_66b8
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_66d4:
+    ld a, [$db8a]
+    cp $33
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_66e2:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_66f3
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $03
+    ret nz
+
+jr_057_66f3:
+    inc c
+    dec b
+    jr nz, jr_057_66e2
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_66fb:
+    ld a, [$db8a]
+    cp $3c
+    jr z, jr_057_6705
+
+    cp $3e
+    ret nz
+
+jr_057_6705:
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantHP
+    ld b, h
+    ld c, l
+    srl b
+    rr c
+    add hl, bc
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6724:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6749
+
+    push bc
+    ld a, c
+    ld hl, wBattleHP
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    call CmpHLvsBC
+    pop bc
+    jr z, jr_057_6749
+
+    jr c, jr_057_674e
+
+jr_057_6749:
+    inc c
+    dec b
+    jr nz, jr_057_6724
+
+    ret
+
+
+jr_057_674e:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+; [S130 F9] AIRuleVetoSummonActive_6757 (cat-2 chain): $84-$87 vetoed while the
+; side's summon bit2 is set and its helper slot is live (simulator/ai_rules.py).
+AIRuleVetoSummonActive_6757:
+AIRule_6757:
+    ld a, [$db8a]
+    cp $84
+    ret c
+
+    cp $88
+    ret nc
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    srl a
+    srl a
+    ld hl, $db00
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 2, [hl]
+    ret z
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    add $03
+    call CheckMonsterSlot
+    ret c
+
+    call ClearBattleAction
+    ret
+
+
+; First rule in all three chains; self-selects Ironize $2A / SquallHit $55 /
+; PsycheUp $56 (S82 bytes); per-rule effect not individually pinned (§15.9).
+AIRuleIronizePriority_6784:
+    ld a, [$db8a]
+    cp $2a
+    jr z, jr_057_67a7
+
+    cp $55
+    ret c
+
+    cp $57
+    jr c, jr_057_67a7
+
+    cp $7f
+    jr z, jr_057_67a7
+
+    cp $88
+    ret c
+
+    cp $8a
+    jr c, jr_057_67a7
+
+    cp $8c
+    ret c
+
+    cp $91
+    jr c, jr_057_67a7
+
+    cp $dc
+    ret nz
+
+jr_057_67a7:
+    ld a, [$d9ed]
+    cp $15
+    ret c
+
+    call ClearBattleAction
+    ret
+
+
+; Vivify/Revive/LifeSong: veto unless an own-side PROCESSED-dead ally
+; exists ($DD1B==1; silent HP=0 pokes don't count). (S81 sweep)
+AIRuleVetoReviveNeedsDead_67b1:
+    ld a, [$db8a]
+    cp $95
+    jr z, jr_057_67be
+
+    cp $30
+    ret c
+
+    cp $32
+    ret nc
+
+jr_057_67be:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_67c6:
+    ld a, c
+    call CheckMonsterSlot
+    jr z, jr_057_67cd
+
+    ret c
+
+jr_057_67cd:
+    inc c
+    dec b
+    jr nz, jr_057_67c6
+
+    call ClearBattleAction
+    ret
+
+
+; Surge $81 twin of AIRuleSurgeCleanseA_5d16 (identical prologue,
+; S82 bytes) — one per chain placement. (S81)
+AIRuleSurgeCleanseB_67d5:
+    ld a, [$db8a]
+    cp $81
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+
+jr_057_67e3:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6802
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl+]
+    and $c3
+    jr nz, jr_057_6807
+
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl+]
+    and $03
+    jr nz, jr_057_6807
+
+    ld a, [hl]
+    and $80
+    jr nz, jr_057_6807
+
+jr_057_6802:
+    inc c
+    dec b
+    jr nz, jr_057_67e3
+
+    ret
+
+
+jr_057_6807:
+    ld hl, $dd26
+    ld b, $0f
+    call AISatAdd_455f
+    ret
+
+
+AIRule_6810:
+    ld a, [$db8a]
+    cp $14
+    jr c, jr_057_6821
+
+    cp $4f
+    jr z, jr_057_6821
+
+    cp $58
+    ret c
+
+    cp $67
+    ret nc
+
+jr_057_6821:
+    ld a, [wBattleAttackerIdx]
+    call CheckMonsterSlot
+    ret c
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl+]
+    and $02
+    jr nz, jr_057_683f
+
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $03
+    jr nz, jr_057_683f
+
+    ret
+
+
+jr_057_683f:
+    ld hl, $dd26
+    ld b, $0a
+    call AISatAdd_455f
+    ret
+
+
+; Family cuts (MetalCut..CleanCut $48-$4E, Smashlime/Sheldodge/Branching
+; $D6-$D8): veto when no live opposing target of the matching family;
+; MetalCut keys on $DB8B bit0 (metal body). Per-skill handlers via an
+; inline rst $00 table (decode trap: KEY_LESSONS S81 off-by-one).
+; Bonus twin: AIRuleFamilyCutBonus_4c41. (S81 sweep)
+AIRuleVetoFamilyCutNoTarget_6848:
+    ld a, [$db8a]
+    cp $48
+    ret c
+
+    cp $4f
+    jr c, jr_057_685c
+
+    cp $d6
+    ret c
+
+    cp $d9
+    ret nc
+
+    sub $cf
+    jr jr_057_685e
+
+jr_057_685c:
+    sub $48
+
+jr_057_685e:
+    rst $00
+    ld [hl], e
+    ld l, b
+    sub a
+    ld l, b
+    rst $08
+    ld l, b
+    ldh [rBCPS], a
+    pop af
+    ld l, b
+    ld [bc], a
+    ld l, c
+    inc de
+    ld l, c
+    inc h
+    ld l, c
+    ld [hl], $69
+    ld c, b
+    ld l, c
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_687d:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6890
+
+    ld a, c
+    ld hl, $db8b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 0, [hl]
+    ret nz
+
+jr_057_6890:
+    inc c
+    dec b
+    jr nz, jr_057_687d
+
+    jp Jump_057_695a
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $01
+    ld [$db4c], a
+
+Jump_057_68a6:
+jr_057_68a6:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_68c8
+
+    ld a, c
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld [wTempSpeciesId], a
+    push bc
+    ld hl, $0301
+    rst $10
+    pop bc
+    ld a, [$da33]
+    ld hl, $db4c
+    cp [hl]
+    ret z
+
+jr_057_68c8:
+    inc c
+    dec b
+    jr nz, jr_057_68a6
+
+    jp Jump_057_695a
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $02
+    ld [$db4c], a
+    jr jr_057_68a6
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $03
+    ld [$db4c], a
+    jr jr_057_68a6
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $06
+    ld [$db4c], a
+    jr jr_057_68a6
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $07
+    ld [$db4c], a
+    jr jr_057_68a6
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $08
+    ld [$db4c], a
+    jr jr_057_68a6
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $00
+    ld [$db4c], a
+    jp Jump_057_68a6
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $05
+    ld [$db4c], a
+    jp Jump_057_68a6
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld a, $04
+    ld [$db4c], a
+    jp Jump_057_68a6
+
+
+Jump_057_695a:
+    call ClearBattleAction
+    ret
+
+
+AIRule_695e:
+    ld a, [$db8a]
+    cp $43
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $30
+    ret z
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6975:
+    ld a, [$db8a]
+    cp $82
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6985:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_69c3
+
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, $02
+    ld [$db4c], a
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    ld a, [$db4c]
+    and $30
+    cp $30
+    jr z, jr_057_69c3
+
+    ld a, c
+    ld hl, wBattleAGL
+    call CalcBtlAI_4567
+    call LoadBtlAI_45d1
+    ret nc
+
+    ld a, c
+    ld hl, wBattleDEF
+    call CalcBtlAI_4567
+    call LoadBtlAI_45d1
+    ret nc
+
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    bit 1, [hl]
+    ret z
+
+jr_057_69c3:
+    inc c
+    dec b
+    jr nz, jr_057_6985
+
+    call ClearBattleAction
+    ret
+
+
+; [S130 F10] DeMagic $80: -20 once when a valid opponent has +3&$C2, +4&$10, +7&$03
+; [S130 F10] or shifted +8 bit7 (debuffs/seals the dispel would lift).
+AIRuleDeMagicDebuffMalus_69cb:
+    ld a, [$db8a]
+    cp $80
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_69db:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6a08
+
+    ld a, c
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl+]
+    ld a, [hl+]
+    and $c2
+    jr nz, jr_057_69ff
+
+    ld a, [hl+]
+    and $10
+    jr nz, jr_057_69ff
+
+    ld a, [hl+]
+    inc hl
+    ld a, [hl+]
+    and $03
+    jr nz, jr_057_69ff
+
+    ld a, [hl]
+    and $80
+    jr z, jr_057_6a08
+
+jr_057_69ff:
+    ld hl, $dd27
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+jr_057_6a08:
+    inc c
+    dec b
+    jr nz, jr_057_69db
+
+    ret
+
+
+AIRule_6a0d:
+    ld a, [$db8a]
+    cp $3b
+    ret c
+
+    cp $41
+    jr c, jr_057_6a44
+
+    cp $44
+    ret c
+
+    cp $4f
+    jr c, jr_057_6a44
+
+    cp $50
+    ret c
+
+    cp $54
+    jr c, jr_057_6a44
+
+    cp $55
+    ret c
+
+    cp $58
+    jr c, jr_057_6a44
+
+    cp $67
+    ret c
+
+    cp $6a
+    jr c, jr_057_6a44
+
+    cp $70
+    jr z, jr_057_6a44
+
+    cp $79
+    ret c
+
+    cp $7d
+    jr c, jr_057_6a44
+
+    cp $d6
+    ret c
+
+    cp $da
+    ret nc
+
+jr_057_6a44:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6a4e:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6a5f
+
+    ld a, c
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $0c
+    ret z
+
+jr_057_6a5f:
+    inc c
+    dec b
+    jr nz, jr_057_6a4e
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6a67:
+    ld a, [$db8a]
+    cp $55
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld b, h
+    ld c, l
+    add hl, bc
+    add hl, bc
+    ld a, $0a
+    call Div16x8To16
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6a90:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6aac
+
+    push bc
+    push hl
+    ld a, c
+    ld hl, wBattleAGL
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    pop hl
+    call CmpHLvsBC
+    pop bc
+    ret c
+
+jr_057_6aac:
+    inc c
+    dec b
+    jr nz, jr_057_6a90
+
+    call ClearBattleAction
+    ret
+
+
+; Rob class (RobMagic/TakeMagic/RobDance): veto when caster MP full. (S81 sweep)
+AIRuleVetoRobMpFull_6ab4:
+    ld a, [$db8a]
+    cp $1a
+    jr z, jr_057_6ac2
+
+    cp $1b
+    jr z, jr_057_6ac2
+
+    cp $76
+    ret nz
+
+jr_057_6ac2:
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld hl, wBattleMP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld hl, wBattleMaxMP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    srl h
+    rr l
+    ld d, h
+    ld e, l
+    srl h
+    rr l
+    add hl, de
+    call CmpHLvsBC
+    ret nc
+
+    call ClearBattleAction
+    ret
+
+
+; [S130 F10] ThickFog $83: veto unless a valid opponent's $DC64 list has a tag-1 entry
+; [S130 F10] with skill $02/$05/$08/$0B/$0E/$11-$13. The own-side 2nd loop compares
+; [S130 F10] the TAG (1) with $2B: dead code, it never vetoes. Measured.
+AIRuleThickFogVetoNoBigSpell_6af5:
+    ld a, [$db8a]
+    cp $83
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6b05:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6b42
+
+    ld a, c
+    ld hl, $dc64
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_6b19:
+    ld a, [hl+]
+    or a
+    jr z, jr_057_6b42
+
+    cp $01
+    jr nz, jr_057_6b3e
+
+    ld a, [hl]
+    cp $02
+    jr z, jr_057_6b48
+
+    cp $05
+    jr z, jr_057_6b48
+
+    cp $08
+    jr z, jr_057_6b48
+
+    cp $0b
+    jr z, jr_057_6b48
+
+    cp $0e
+    jr z, jr_057_6b48
+
+    cp $11
+    jr c, jr_057_6b3e
+
+    cp $14
+    jr c, jr_057_6b48
+
+jr_057_6b3e:
+    inc hl
+    dec d
+    jr nz, jr_057_6b19
+
+jr_057_6b42:
+    inc c
+    dec b
+    jr nz, jr_057_6b05
+
+    jr jr_057_6b85
+
+jr_057_6b48:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+    ld b, $03
+    ld e, $00
+
+jr_057_6b52:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6b7a
+
+    ld a, c
+    ld hl, $dc64
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_6b66:
+    ld a, [hl+]
+    or a
+    jr z, jr_057_6b7a
+
+    cp $01
+    jr nz, jr_057_6b76
+
+    cp $2b
+    jr c, jr_057_6b76
+
+    cp $33
+    jr c, jr_057_6b7f
+
+jr_057_6b76:
+    inc hl
+    dec d
+    jr nz, jr_057_6b66
+
+jr_057_6b7a:
+    inc c
+    dec b
+    jr nz, jr_057_6b52
+
+    ret
+
+
+jr_057_6b7f:
+    inc e
+    ld e, a
+    cp $02
+    jr c, jr_057_6b76
+
+jr_057_6b85:
+    call ClearBattleAction
+    ret
+
+
+AIRule_6b89:
+    ld a, [$db8a]
+    cp $3b
+    jr z, jr_057_6b93
+
+    cp $3d
+    ret nz
+
+jr_057_6b93:
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld hl, wBattleHP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld hl, wBattleMaxHP
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    srl h
+    rr l
+    ld d, h
+    ld e, l
+    srl h
+    rr l
+    add hl, de
+    call CmpHLvsBC
+    ret c
+
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+; [S130 F10] DeMagic $80: veto unless the opponents' side byte & $2C, or the opposing
+; [S130 F10] side's FIRST slot (c is never advanced: that slot is tested 3 times, valid
+; [S130 F10] or not) has +3&$3C/+4&$6F/+5&$40/+7&$CC/shifted +8&$40. Measured 332 runs.
+AIRuleDeMagicVetoNoBuff_6bcb:
+    ld a, [$db8a]
+    cp $80
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    srl a
+    srl a
+    ld hl, $db00
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    and $2c
+    ret nz
+
+    ld b, $03
+
+jr_057_6bec:
+    ld a, c
+    ld hl, $db03
+    call HL_AddA_x8
+    ld a, [hl+]
+    and $3c
+    ret nz
+
+    ld a, [hl+]
+    and $6f
+    ret nz
+
+    ld a, [hl+]
+    and $40
+    ret nz
+
+    inc hl
+    ld a, [hl+]
+    and $cc
+    ret nz
+
+    ld a, [hl+]
+    and $40
+    ret nz
+
+    dec b
+    jr nz, jr_057_6bec
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6c0f:
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [$db8a]
+    cp $26
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6c23:
+    ld e, $08
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+
+jr_057_6c31:
+    ld a, [hl]
+    cp $ff
+    jr z, jr_057_6c5a
+
+    ld a, [hl+]
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $06
+    ld [$db4e], a
+    push af
+    push bc
+    push de
+    push hl
+    ; [S110 rec] record +6 = AI damage class (0 none / 4 spell / 5 breath): nonzero = "deals damage"
+    ld hl, $5400
+    rst $10
+    pop hl
+    pop de
+    pop bc
+    pop af
+    ld a, [$db4c]
+    cp $00
+    ret nz
+
+    inc hl
+    dec e
+    jr nz, jr_057_6c31
+
+jr_057_6c5a:
+    inc c
+    dec b
+    jr nz, jr_057_6c23
+
+    call ClearBattleAction
+    ret
+
+
+AIRule_6c62:
+    ld a, [$c86c]
+    or a
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    ret nc
+
+    ld a, [$db73]
+    cp $01
+    ret nz
+
+    ld a, [$db8a]
+    cp $12
+    ret c
+
+    cp $15
+    jr c, jr_057_6c88
+
+    cp $69
+    jr z, jr_057_6c88
+
+    cp $6b
+    jr z, jr_057_6c88
+
+    cp $71
+    ret nz
+
+jr_057_6c88:
+    call ClearBattleAction
+    ret
+
+
+; ENEMY-SIDE-ONLY +20 on a broad damage/status skill set — party slots
+; (<4) and the hero slot never receive it (side gate byte-verified). (S81 sweep)
+AIRuleEnemySideBroad_6c8c:
+    ld a, [$c86c]
+    or a
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    ret c
+
+    cp $07
+    ret z
+
+    ld a, [$db8a]
+    cp $15
+    jr c, jr_057_6cb7
+
+    cp $3b
+    ret c
+
+    cp $41
+    ret z
+
+    cp $43
+    ret z
+
+    cp $54
+    ret z
+
+    cp $6a
+    jr c, jr_057_6cb7
+
+    cp $d6
+    ret c
+
+    cp $da
+    ret nc
+
+jr_057_6cb7:
+    ld hl, $dd26
+    ld b, $14
+    call AISatAdd_455f
+    ret
+
+
+AIRule_6cc0:
+    ld a, [$db8a]
+    cp $24
+    ret nz
+
+    call LoadBtlAI_7c6e
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+
+jr_057_6cd4:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_6cdf
+
+    call SetBtlAI_6ce8
+    jr c, jr_057_6ce7
+
+jr_057_6cdf:
+    inc c
+    dec b
+    jr nz, jr_057_6cd4
+
+    call ClearBattleAction
+    ret
+
+
+jr_057_6ce7:
+    ret
+
+
+SetBtlAI_6ce8:
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_6cf5:
+    ld a, [hl+]
+    call CmpBtlAI_6d00
+    ret c
+
+    inc hl
+    dec d
+    jr nz, jr_057_6cf5
+
+    or a
+    ret
+
+
+CmpBtlAI_6d00:
+    cp $5c
+    jr c, jr_057_6d07
+
+    cp $64
+    ret c
+
+jr_057_6d07:
+    or a
+    ret
+
+
+CmpBtlAI_6d09:
+    cp $03
+    jr nc, jr_057_6d27
+
+SaveBtlAI_6d0d:
+jr_057_6d0d:
+    push hl
+    ld hl, $cac2
+    call GetCurrentMonsterPtr
+    ld e, l
+    ld d, h
+    pop hl
+    push hl
+    call Copy4Bytes
+    pop hl
+
+jr_057_6d1c:
+    ld a, [hl]
+    cp $f0
+    ret z
+
+    inc hl
+    jr jr_057_6d1c
+
+jr_057_6d23:
+    ld a, b
+    pop bc
+    jr jr_057_6d0d
+
+jr_057_6d27:
+    push bc
+    ld b, a
+    and $03
+    cp $03
+    ld a, b
+    pop bc
+    jr z, jr_057_6d50
+
+    push bc
+    ld b, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_6d23
+
+    push hl
+    ld a, b
+    and $03
+    ld hl, $c1ca
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    pop hl
+    cp $ff
+    jr nz, jr_057_6d4d
+
+    ld a, b
+
+jr_057_6d4d:
+    pop bc
+    jr nz, jr_057_6d78
+
+jr_057_6d50:
+    push af
+    call FuncBtlAI_6d5a
+    pop af
+    ld hl, $5104
+    rst $10
+    ret
+
+
+FuncBtlAI_6d5a:
+    ld [$db60], a
+    push hl
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld l, a
+    ld h, $05
+    pop de
+    ld a, e
+    ld [$db5e], a
+    ld a, d
+    ld [$db5f], a
+    call SetupVRAMParams
+    ret
+
+
+jr_057_6d78:
+    call SaveBtlAI_6d0d
+    ld a, $2f
+    ld [hl+], a
+    ld a, $46
+    ld [hl+], a
+    ld a, $48
+    ld [hl+], a
+    ld a, $42
+    ld [hl+], a
+    ld [hl], $f0
+    push hl
+    ld hl, $c1ca
+    ld a, [$db50]
+    and $03
+    cp $01
+    jr z, jr_057_6da4
+
+    cp $02
+    jr z, jr_057_6dae
+
+    ld a, [hl+]
+    cp [hl]
+    jr z, jr_057_6dca
+
+    inc hl
+    cp [hl]
+    jr z, jr_057_6dca
+
+    jr jr_057_6dd9
+
+jr_057_6da4:
+    ld a, [hl+]
+    cp [hl]
+    jr z, jr_057_6dcf
+
+    ld a, [hl+]
+    cp [hl]
+    jr z, jr_057_6dca
+
+    jr jr_057_6dd9
+
+jr_057_6dae:
+    ld d, $00
+    inc hl
+    inc hl
+    ld a, [hl-]
+    dec hl
+    cp [hl]
+    jr nz, jr_057_6db8
+
+    inc d
+
+jr_057_6db8:
+    inc hl
+    cp [hl]
+    jr nz, jr_057_6dbd
+
+    inc d
+
+jr_057_6dbd:
+    ld a, d
+    or a
+    jr z, jr_057_6dd9
+
+    cp $01
+    jr z, jr_057_6dcf
+
+    pop hl
+    ld a, $03
+    jr jr_057_6dd2
+
+jr_057_6dca:
+    pop hl
+    ld a, $01
+    jr jr_057_6dd2
+
+jr_057_6dcf:
+    pop hl
+    ld a, $02
+
+jr_057_6dd2:
+    ld [$db4d], a
+    ld [hl+], a
+    ld [hl], $f0
+    ret
+
+
+jr_057_6dd9:
+    pop hl
+    xor a
+    ld [$db4d], a
+    ret
+
+
+    ld hl, $c1a0
+    jr jr_057_6de7
+
+    ld hl, $c180
+
+jr_057_6de7:
+    ld a, l
+    ld [$db4e], a
+    ld a, h
+    ld [$db4f], a
+    ld a, [wBattleTargetIdx]
+    ld [$db50], a
+    call CmpBtlAI_6d09
+    ret
+
+
+    ld hl, $c180
+    ld a, l
+    ld [$db4e], a
+    ld a, h
+    ld [$db4f], a
+    ld a, [wBattleAttackerIdx]
+    ld [$db50], a
+    call CmpBtlAI_6d09
+    ret
+
+
+; ================= ENEMY/TACTICS AI DECISION MACHINE (bank $57) =================
+; Phase 5 ($d9ed==1) runs this per actor: dispatch on sub-state $D9EE via the
+; inline rst $00 table below. Traced+validated S80 (26/26, simulator/ai.py) and
+; S81 (rule chains 240/240, simulator/ai_rules.py). BATTLE_SKILL_SYSTEM §15.10.
+AIDecisionStateDispatch_6e0e:
+    ld a, [$d9ee]
+    rst $00
+AIStateDispatchTable_6e12:
+; Inline rst $00 jump table on sub-state $D9EE (states 0-7). §15.10 (S80).
+    dw AIState0Preamble_6e2a ; state 0
+    dw AIState1CategoryScores_7129 ; state 1
+    dw AIState2CategorySelect_73b9 ; state 2
+    dw AIState3SkillSums_7529 ; state 3
+    dw AIState4FilterEval_7439 ; state 4
+    dw AIState5Pick_75a2 ; state 5
+    dw AIState6Post_7859 ; state 6
+    dw AIState7ChainWalker_7865 ; state 7
+
+jr_057_6e22:
+    ld a, $06
+    ld [$d9ee], a
+    jp AIState6Post_7859
+
+
+; State 0: act/flee preamble — plan read -> $DD72, w[3]-derived $db4d +
+; threshold ladders (AIPreambleW3_7905 / AIPreambleLadder_791a /
+; AIPreambleDecide_7a5d); carry -> clear $DCEC pair + run the machine,
+; no-carry -> AIState0AltOutcome_6f8c (flee/loaf, untraced). §15.10.7.
+; [S130 P3.15b] order of tests (measured): $DD13 != 1 -> post; GetMonsterSlotInfo
+; carry or +2 bit4 (confused) -> state 1 directly (NO gate, no drift); $DD03
+; bit6 set -> party $6F1F direct path (no gate); else the plan byte -> $DD72
+; and the gate (one RNG step in LoadBtlAI_7a16). Carry with plan $81 (PLAN
+; round) -> the direct pick for ANY tactic (orders included). §15.10.7b.
+AIState0Preamble_6e2a:
+    ld a, [$d9ed]
+    cp $16
+    jr c, jr_057_6e50
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, $ff
+    ld [hl+], a
+    ld [hl], a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd13
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], $01
+
+jr_057_6e50:
+    ld hl, $dce4
+    ld bc, $0008
+    xor a
+    call FillNBytesWithRegA
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd13
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $01
+    jr nz, jr_057_6e22
+
+    ld hl, $dcfc
+    ld bc, $0007
+    xor a
+    call FillNBytesWithRegA
+    xor a
+    ld [$db50], a
+    ld [$db51], a
+    ld [$db52], a
+    ld a, [wBattleAttackerIdx]
+    call GetMonsterSlotInfo
+    jr c, jr_057_6eb9
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db02
+    call HL_AddA_x8
+    bit 4, [hl]
+    jr nz, jr_057_6eb9
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    bit 6, [hl]
+    jr z, jr_057_6ec1
+
+    ld a, [wBattleAttackerIdx]
+    cp $03
+    jr c, jr_057_6f1f
+
+    jr z, jr_057_6eb9
+
+    cp $07
+    jr z, jr_057_6eb9
+
+    ld a, [$c86c]
+    or a
+    jr z, jr_057_6eb9
+
+    jr jr_057_6f1f
+
+jr_057_6eb9:
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState1CategoryScores_7129
+
+
+    ret
+
+
+jr_057_6ec1:
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_6ecc
+
+    ld a, [wMenu_selection]
+    jr jr_057_6edb
+
+jr_057_6ecc:
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr nc, jr_057_6ed8
+
+    ld a, [$c1d5]
+    jr jr_057_6edb
+
+jr_057_6ed8:
+    ld a, [$c1d6]
+
+jr_057_6edb:
+    ld [$dd72], a
+    ld a, [hl]
+    call CmpBtlAI_78d4
+    call AIPreambleW3_7905
+    call AIPreambleLadder_791a
+    call LoadBtlAI_7a03
+    call LoadBtlAI_7a16
+    call AIPreambleDecide_7a5d
+    jp nc, AIState0AltOutcome_6f8c
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, $ff
+    ld [hl+], a
+    ld [hl], a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    set 6, [hl]
+    ld a, [$dd72]
+    cp $81
+    jp nz, AIState1CategoryScores_7129
+
+; [S87] Plan $81 (Command) + obedience CARRY -> the DIRECT-PICK divert:
+; d9ee++ then jr_057_6f1f. This is the TRUE-loaf writer path — the action
+; is auto-picked by SetBtlAI_7f5f ($98 loaf / $3A attack / $8D defence)
+; and queued at jr_057_6f64, bypassing the category machine. Runtime-
+; sighted S87: all three codes reproduced live by forcing wMenu_selection
+; =$81 + WLD>=$F0 + base sets. §15.10.7a.
+    ld hl, $d9ee
+    inc [hl]
+
+; [S130 P3.15b] phase-5 commit (d9ed == 1): an actor with +2&$DC, +5&$1F, +6
+; bit2 or +7&$D0 runs the category machine instead (unbiased); else message $B4
+; ('<name> ignores the order', SetBtlAI_7e82 copies the name) and the pick.
+; The act-time re-decide ($53:$46A8, d9ed $18) re-enters here without the
+; message. The queue target stays $FF: the commit sub-state ($58:$545B) runs
+; the target service for it (party Attack: the $41E9 estimate pick).
+jr_057_6f1f:
+    ld a, [$d9ed]
+    cp $01
+    jr nz, jr_057_6f64
+
+    ld a, [wBattleAttackerIdx]
+    call CheckMonsterSlot
+    jp c, AIState1CategoryScores_7129
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db02
+    call HL_AddA_x8
+    ld a, [hl]
+    and $dc
+    jp nz, AIState1CategoryScores_7129
+
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $1f
+    jp nz, AIState1CategoryScores_7129
+
+    inc hl
+    bit 2, [hl]
+    jp nz, AIState1CategoryScores_7129
+
+    inc hl
+    ld a, [hl]
+    and $d0
+    jp nz, AIState1CategoryScores_7129
+
+    call SetBtlAI_7e82
+    ld a, $b4
+    ld [$c823], a
+    xor a
+    ld [$c822], a
+    ld hl, $4c00
+    rst $10
+
+; [S87] Queue the 7f5f pick into $DCEC[idx] (b = $98/$3A/$8D), d9ee=6.
+jr_057_6f64:
+    ld a, $06
+    ld [$d9ee], a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db06
+    call HL_AddA_x8
+    ld a, [hl]
+    and $0c
+    ld [hl+], a
+    ld a, [hl]
+    and $cf
+    ld [hl], a
+    call SetBtlAI_7f5f
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], b
+    ret
+
+
+; State-0 no-carry outcome (flee/loaf class) — untraced (§15.10.7).
+; [S84] NOT flee/loaf — the TACTIC-BIAS path (reached when the obedience
+; gate 7a5d returns no-carry, incl. ALWAYS for party level < 21).
+; Tactic 3 (Command) with $DD72 != $81: queue plain Attack $3A, d9ee=6.
+; Tactics 0/1/2: $db50+tactic := $14 ($2D when $DD72 == $81) — a +20/+45
+; category-score bias (cat1 attack / cat2 support / cat3 heal, consumed
+; in AICategoryScoreCalc_71b9 for player/link slots) — then falls into
+; the category machine. Measured S84. §15.10.7a.
+AIState0AltOutcome_6f8c:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld b, a
+    cp $03
+    jr nz, jr_057_6fbc
+
+    ld a, [$dd72]
+    cp $81
+    jr z, jr_057_6fd2
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], $3a
+    ld a, $06
+    ld [$d9ee], a
+    jp AIState6Post_7859
+
+
+jr_057_6fbc:
+    ld hl, $db50
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [$dd72]
+    cp $81
+    jr z, jr_057_6fd0
+
+    ld [hl], $14
+    jr jr_057_6fd2
+
+jr_057_6fd0:
+    ld [hl], $2d
+
+jr_057_6fd2:
+    ld a, [$d9ec]
+    cp $05
+    jr z, jr_057_6fe0
+
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState1CategoryScores_7129
+
+
+; [S130 P3.15b] PERSONALITY DRIFT (measured 464/464): in a PLAN round ($DD72 ==
+; $81, phase 5, not link) every NO-CARRY commit adds its tactic's row of the
+; Personality tables (row = w3 >= $97 ? 4 : 0 + level band <10/<20/<30/else) to
+; the four battle bases $DC44/$DC4C/$DC54/$DC5C (saturating 0..$FF). Command
+; = w3 -1/-2 per obeyed order: a lower w3 lowers $db4d = w3/10 in the gate, so
+; orders make a monster LESS obedient over time; bank $51 LoadBtlS_4b96 writes
+; the bases back to the record after the battle (live monsters only).
+jr_057_6fe0:
+    ld a, [$c86c]
+    or a
+    jp nz, AIState1CategoryScores_7129
+
+    ld a, [$dd72]
+    cp $81
+    jp nz, AIState1CategoryScores_7129
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $03
+    jr z, jr_057_7017
+
+    cp $02
+    jr z, jr_057_7012
+
+    cp $01
+    jr z, jr_057_700d
+
+    ld hl, PersonalityChargeTable
+    jr jr_057_701a
+
+jr_057_700d:
+    ld hl, PersonalityMixedTable
+    jr jr_057_701a
+
+jr_057_7012:
+    ld hl, PersonalityCautiousTable
+    jr jr_057_701a
+
+jr_057_7017:
+    ld hl, PersonalityCommandTable
+
+jr_057_701a:
+    ld de, $0000
+    ld a, [wBattleAttackerIdx]
+    ld bc, $dc5c
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    ld a, [bc]
+    cp $97
+    jr c, jr_057_7030
+
+    ld d, $10
+
+jr_057_7030:
+    ld a, [wBattleAttackerIdx]
+    ld bc, $db9b
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    ld a, [bc]
+    cp $0a
+    jr c, jr_057_7050
+
+    cp $14
+    jr c, jr_057_704b
+
+    cp $1e
+    jr c, jr_057_704a
+
+    inc e
+
+jr_057_704a:
+    inc e
+
+jr_057_704b:
+    inc e
+    ld a, e
+    add a
+    add a
+    ld e, a
+
+jr_057_7050:
+    ld a, d
+    add e
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [wBattleAttackerIdx]
+    ld bc, $dc44
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    call BitBtlAI_7092
+    inc hl
+    ld a, $08
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    call BitBtlAI_7092
+    inc hl
+    ld a, $08
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    call BitBtlAI_7092
+    inc hl
+    ld a, $08
+    add c
+    ld c, a
+    ld a, $00
+    adc b
+    ld b, a
+    call BitBtlAI_7092
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState1CategoryScores_7129
+
+
+BitBtlAI_7092:
+    bit 7, [hl]
+    jr nz, jr_057_709e
+
+    ld a, [bc]
+    add [hl]
+    jr nc, jr_057_70a7
+
+    ld a, $ff
+    jr jr_057_70a7
+
+jr_057_709e:
+    ld a, [hl]
+    cpl
+    inc a
+    ld d, a
+    ld a, [bc]
+    sub d
+    jr nc, jr_057_70a7
+
+    xor a
+
+jr_057_70a7:
+    ld [bc], a
+    ret
+
+; ---------------------------------------------------------------
+; PersonalityChargeTable — 8 rows × 4 bytes (signed)
+; Adjustments when player selects "Charge" plan in battle.
+; Rows 0-3: motivation < 151; rows 4-7: motivation >= 151
+; Within each half: level <10, 10-19, 20-29, >=30
+; Format: [charge_adj, mixed_adj, cautious_adj, motivation_adj]
+; ---------------------------------------------------------------
+PersonalityChargeTable:
+    db $07, $ff, $00, $03 ; motiv<151, lv< 10: charge +7, mixed -1, motiv +3
+    db $05, $ff, $00, $02 ; motiv<151, lv 10-19: charge +5, mixed -1, motiv +2
+    db $03, $ff, $00, $01 ; motiv<151, lv 20-29: charge +3, mixed -1, motiv +1
+    db $02, $ff, $00, $01 ; motiv<151, lv>=30: charge +2, mixed -1, motiv +1
+    db $0a, $ff, $00, $04 ; motiv>=151, lv< 10: charge +10, mixed -1, motiv +4
+    db $07, $ff, $00, $03 ; motiv>=151, lv 10-19: charge +7, mixed -1, motiv +3
+    db $05, $ff, $00, $02 ; motiv>=151, lv 20-29: charge +5, mixed -1, motiv +2
+    db $05, $00, $00, $01 ; motiv>=151, lv>=30: charge +5, motiv +1
+
+; ---------------------------------------------------------------
+; PersonalityMixedTable — 8 rows × 4 bytes (signed)
+; Adjustments when player selects "Mixed" plan in battle.
+; Rows 0-3: motivation < 151; rows 4-7: motivation >= 151
+; Within each half: level <10, 10-19, 20-29, >=30
+; Format: [charge_adj, mixed_adj, cautious_adj, motivation_adj]
+; ---------------------------------------------------------------
+PersonalityMixedTable:
+    db $00, $07, $fe, $03 ; motiv<151, lv< 10: mixed +7, cautious -2, motiv +3
+    db $00, $05, $fe, $02 ; motiv<151, lv 10-19: mixed +5, cautious -2, motiv +2
+    db $00, $04, $ff, $01 ; motiv<151, lv 20-29: mixed +4, cautious -1, motiv +1
+    db $00, $03, $ff, $01 ; motiv<151, lv>=30: mixed +3, cautious -1, motiv +1
+    db $00, $0a, $fd, $04 ; motiv>=151, lv< 10: mixed +10, cautious -3, motiv +4
+    db $00, $07, $fe, $03 ; motiv>=151, lv 10-19: mixed +7, cautious -2, motiv +3
+    db $00, $05, $ff, $02 ; motiv>=151, lv 20-29: mixed +5, cautious -1, motiv +2
+    db $00, $05, $00, $01 ; motiv>=151, lv>=30: mixed +5, motiv +1
+
+; ---------------------------------------------------------------
+; PersonalityCautiousTable — 8 rows × 4 bytes (signed)
+; Adjustments when player selects "Cautious" plan in battle.
+; Rows 0-3: motivation < 151; rows 4-7: motivation >= 151
+; Within each half: level <10, 10-19, 20-29, >=30
+; Format: [charge_adj, mixed_adj, cautious_adj, motivation_adj]
+; ---------------------------------------------------------------
+PersonalityCautiousTable:
+    db $fe, $00, $07, $03 ; motiv<151, lv< 10: charge -2, cautious +7, motiv +3
+    db $fe, $00, $05, $02 ; motiv<151, lv 10-19: charge -2, cautious +5, motiv +2
+    db $ff, $00, $04, $01 ; motiv<151, lv 20-29: charge -1, cautious +4, motiv +1
+    db $ff, $00, $03, $01 ; motiv<151, lv>=30: charge -1, cautious +3, motiv +1
+    db $fe, $00, $0a, $04 ; motiv>=151, lv< 10: charge -2, cautious +10, motiv +4
+    db $fe, $00, $07, $03 ; motiv>=151, lv 10-19: charge -2, cautious +7, motiv +3
+    db $ff, $00, $05, $02 ; motiv>=151, lv 20-29: charge -1, cautious +5, motiv +2
+    db $00, $00, $05, $01 ; motiv>=151, lv>=30: cautious +5, motiv +1
+
+; ---------------------------------------------------------------
+; PersonalityCommandTable — 8 rows × 4 bytes (signed)
+; Adjustments when player selects "Command" plan in battle.
+; Rows 0-3: motivation < 151; rows 4-7: motivation >= 151
+; Within each half: level <10, 10-19, 20-29, >=30
+; Format: [charge_adj, mixed_adj, cautious_adj, motivation_adj]
+; ---------------------------------------------------------------
+PersonalityCommandTable:
+    db $00, $00, $00, $ff ; motiv<151, lv< 10: motiv -1
+    db $00, $00, $00, $fe ; motiv<151, lv 10-19: motiv -2
+    db $00, $00, $00, $fe ; motiv<151, lv 20-29: motiv -2
+    db $00, $00, $00, $ff ; motiv<151, lv>=30: motiv -1
+    db $00, $00, $00, $ff ; motiv>=151, lv< 10: motiv -1
+    db $00, $00, $00, $fe ; motiv>=151, lv 10-19: motiv -2
+    db $00, $00, $00, $fe ; motiv>=151, lv 20-29: motiv -2
+    db $00, $00, $00, $ff ; motiv>=151, lv>=30: motiv -1
+
+; State 1: category scores — score[c] = base[c]//10 + plan_adj[c] +
+; swapped-r16 % ladder-mod (AICategoryScoreCalc_71b9 -> AICategoryScoreStore_72ce,
+; one GenerateRNG step each), then ranking AICategoryRank_7322. §15.10.2-3 (S80).
+AIState1CategoryScores_7129:
+    ld a, [$c86c]
+    or a
+    jr z, jr_057_7140
+
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr nc, jr_057_713b
+
+    ld a, [$c1d5]
+    jr jr_057_7143
+
+jr_057_713b:
+    ld a, [$c1d6]
+    jr jr_057_7143
+
+jr_057_7140:
+    ld a, [wMenu_selection]
+
+jr_057_7143:
+    cp $81
+    jr nz, jr_057_7160
+
+    ld a, [wBattleAttackerIdx]
+    cp $03
+    jr z, jr_057_7160
+
+; Plan $81 "Command": $DD03[idx]==3 diverts to the direct-command path
+; (S81 behavior anchor: post-command GO = physical only).
+; [S130 P3.15b] 'plan $81' = the top-menu PLAN (wMenu_selection; FIGHT = $80),
+; not a separate Command menu. With $DD03 == 3 (the menu's order mark,
+; GetBattleModeData) this jumps to jr_057_718c = post: the ORDER the menu
+; queued stands untouched (measured 469 obeyed orders, validate_command.py).
+AIPlanCommandDivert_714e:
+    cp $07
+    jr z, jr_057_7160
+
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $03
+    jr z, jr_057_718c
+
+jr_057_7160:
+    call AICategoryScoreCalc_71b9
+    ld a, [$db76]
+    or a
+    call z, AIHealCatNerf_719b
+    call AICategoryRank_7322
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd0b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    or a
+    jr z, jr_057_7184
+
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState2CategorySelect_73b9
+
+
+jr_057_7184:
+    ld a, $05
+    ld [$d9ee], a
+    jp AIState5Pick_75a2
+
+
+jr_057_718c:
+    ld a, $06
+    ld [$d9ee], a
+    jp AIState6Post_7859
+
+
+    call SaveBtlAI_7f2c
+    ld a, [wRNG1]
+    ret
+
+
+; $dcfe -= $1E floor 0 when $db76==0 — heal-category nerf. (S80)
+AIHealCatNerf_719b:
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr nc, jr_057_71a8
+
+    ld a, [wMenu_selection]
+    cp $81
+    ret z
+
+jr_057_71a8:
+    ld a, [$dcfe]
+    cp $1e
+    jr nc, jr_057_71b3
+
+    ld a, $00
+    jr jr_057_71b5
+
+jr_057_71b3:
+    sub $1e
+
+jr_057_71b5:
+    ld [$dcfe], a
+    ret
+
+
+; One category score roll: GenerateRNG step, byte-swapped 16-bit r16 %
+; ladder-mod (mod=10 for player slots <3 and link; else base ladder
+; <50->30 <100->25 <150->20 else 10). §15.10.2 (S80).
+AICategoryScoreCalc_71b9:
+    ld c, $00
+    ld d, c
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_71c9
+
+    ld a, [wBattleAttackerIdx]
+    cp $03
+    jr nc, jr_057_71cf
+
+jr_057_71c9:
+    ld d, $01
+    ld a, [$db50]
+    ld c, a
+
+jr_057_71cf:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc44
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+    ld hl, $dcfc
+    call AICategoryScoreStore_72ce
+    ld a, d
+    or a
+    jr nz, jr_057_71e8
+
+    jr jr_057_7206
+
+jr_057_71e8:
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_71f3
+
+    ld a, [wMenu_selection]
+    jr jr_057_7202
+
+jr_057_71f3:
+    ld a, [$c863]
+    bit 1, a
+    jr nz, jr_057_71ff
+
+    ld a, [$c1d5]
+    jr jr_057_7202
+
+jr_057_71ff:
+    ld a, [$c1d6]
+
+jr_057_7202:
+    cp $81
+    jr z, jr_057_7228
+
+jr_057_7206:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db03
+    add a
+    add a
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    and $0c
+    jr nz, jr_057_7221
+
+    inc hl
+    inc hl
+    ld a, [hl]
+    and $33
+    jr z, jr_057_7228
+
+jr_057_7221:
+    ld a, $1e
+    ld hl, $dcfc
+    add [hl]
+    ld [hl], a
+
+jr_057_7228:
+    ld a, [$db51]
+    ld c, a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc4c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+    ld hl, $dcfd
+    call AICategoryScoreStore_72ce
+    ld a, [$db52]
+    ld c, a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc54
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+    ld hl, $dcfe
+    call AICategoryScoreStore_72ce
+    ld a, [wBattleAttackerIdx]
+    ld d, a
+    ld hl, $dd0b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $02
+    ret nz
+
+    ld a, [wBattleAttackerIdx]
+    cp $04
+    jr c, jr_057_7273
+
+    ld a, [$db75]
+    jr jr_057_7276
+
+jr_057_7273:
+    ld a, [$db74]
+
+jr_057_7276:
+    ld b, a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    ld c, a
+
+jr_057_727d:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_7298
+
+    push bc
+    call GetCombatantMaxHP
+    push hl
+    ld a, c
+    call GetCombatantHP
+    add hl, hl
+    ld b, h
+    ld c, l
+    add hl, bc
+    add hl, bc
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    jr c, jr_057_729d
+
+jr_057_7298:
+    inc c
+    dec b
+    jr nz, jr_057_727d
+
+    ret
+
+
+jr_057_729d:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, $08
+
+jr_057_72ad:
+    ld a, [hl+]
+    cp $ff
+    ret z
+
+    cp $2b
+    jr c, jr_057_72c1
+
+    cp $30
+    jr c, jr_057_72c6
+
+    cp $93
+    jr z, jr_057_72c6
+
+    cp $94
+    jr z, jr_057_72c6
+
+jr_057_72c1:
+    inc hl
+    dec b
+    jr nz, jr_057_72ad
+
+    ret
+
+
+jr_057_72c6:
+    ld a, $1e
+    ld hl, $dcfe
+    add [hl]
+    ld [hl], a
+    ret
+
+
+; Store the rolled category score. §15.10.2 (S80).
+; [S84] score(cat) = adjust($db50/51/52, in c) + base/10 + RNG16 mod div;
+; div = 10 for player slots (<3) and link, else the enemy base ladder
+; <$32→30 / <$64→25 / <$96→20 / else 10. NOTE: $dd72 briefly holds the
+; BASE here (overload — not the plan). Byte-exact S84. §15.10.7a.
+AICategoryScoreStore_72ce:
+    push hl
+    push de
+    ld a, b
+    ld [$dd72], a
+    call LoadBtlAI_78ce
+    ld a, c
+    add b
+    ld b, a
+    call SaveBtlAI_7f2c
+    push bc
+    ld a, [wRNG1]
+    ld l, a
+    ld a, [wRNG2]
+    ld h, a
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_7316
+
+    ld a, [wBattleAttackerIdx]
+    cp $03
+    jr c, jr_057_7316
+
+    ld a, [$dd72]
+    cp $32
+    jr c, jr_057_730a
+
+    cp $64
+    jr c, jr_057_730e
+
+    cp $96
+    jr c, jr_057_7312
+
+    cp $c8
+    jr c, jr_057_7316
+
+    ld a, $0a
+    jr jr_057_7318
+
+jr_057_730a:
+    ld a, $1e
+    jr jr_057_7318
+
+jr_057_730e:
+    ld a, $19
+    jr jr_057_7318
+
+jr_057_7312:
+    ld a, $14
+    jr jr_057_7318
+
+jr_057_7316:
+    ld a, $0a
+
+jr_057_7318:
+    call Div16x8To16
+    pop bc
+    pop de
+    add b
+    ld b, a
+    pop hl
+    ld [hl], b
+    ret
+
+
+; Quirky partial sort of cells $DCFC/D/E with ids $DCFF-$DD01 (seeded
+; 1,2,3): cat1-vs-cat2 swap; winner-vs-cat3 rank1<->rank3 ONLY (rank2
+; untouched — ranking can be non-sorted); runner-up bump; rank2-vs-rank3.
+; $DD02=3 on exit (cursor at rank1). §15.10.3 (S80).
+AICategoryRank_7322:
+    ld a, $01
+    ld [$dcff], a
+    ld a, $02
+    ld [$dd00], a
+    ld a, $03
+    ld [$dd01], a
+    ld a, [$dcfc]
+    ld l, a
+    ld a, [$dcfd]
+    ld c, a
+    xor a
+    ld h, a
+    ld b, a
+    call CmpHLvsBC
+    jr nc, jr_057_734d
+
+    ld l, c
+    ld h, b
+    ld a, $02
+    ld [$dcff], a
+    ld a, $01
+    ld [$dd00], a
+
+jr_057_734d:
+    ld a, [$dcfe]
+    ld c, a
+    ld b, $00
+    call CmpHLvsBC
+    jr nc, jr_057_7366
+
+    ld a, [$dcff]
+    ld b, a
+    ld a, [$dd01]
+    ld [$dcff], a
+    ld a, b
+    ld [$dd01], a
+
+jr_057_7366:
+    call AICat1RunnerUpCheck_73a5
+    call z, AICat1RunnerUpBump_73b1
+    ld a, [$dd01]
+    dec a
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld c, [hl]
+    ld b, $00
+    ld a, [$dd00]
+    dec a
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld l, [hl]
+    ld h, $00
+    call CmpHLvsBC
+    jr nc, jr_057_739f
+
+    ld a, [$dd00]
+    ld b, a
+    ld a, [$dd01]
+    ld [$dd00], a
+    ld a, b
+    ld [$dd01], a
+
+jr_057_739f:
+    ld a, $03
+    ld [$dd02], a
+    ret
+
+
+; iff cat1 is NOT rank1: +$1E to cat1's CELL ("attack as perennial
+; runner-up"). NOTE the second check at $73AB after the blank line — the
+; S80 sed trap (KEY_LESSONS S80). §15.10.3.
+AICat1RunnerUpCheck_73a5:
+    ld a, [$dd00]
+    cp $01
+    ret z
+
+    ld a, [$dd01]
+    cp $01
+    ret
+
+
+; Apply the +$1E runner-up bump to cat1's cell. (S80)
+AICat1RunnerUpBump_73b1:
+    ld hl, $dcfc
+    ld a, $1e
+    add [hl]
+    ld [hl], a
+    ret
+
+
+; State 2: category-attempt stage between ranking and the per-skill sums
+; ($DD6A = [$DCFC + $DD02]); re-entry point for AIRetryAllZero_76a9. (S80)
+AIState2CategorySelect_73b9:
+    ld a, [$dd02]
+    cp $06
+    jr z, jr_057_73ed
+
+    cp $04
+    jr z, jr_057_73f1
+
+    cp $03
+    jr z, jr_057_73d9
+
+    ld b, a
+    dec a
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $01
+    jr z, jr_057_73ed
+
+    ld a, b
+
+jr_057_73d9:
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld [$dd6a], a
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState3SkillSums_7529
+
+
+jr_057_73ed:
+    ld c, $3a
+    jr jr_057_7418
+
+jr_057_73f1:
+    ld a, [$dcff]
+    cp $01
+    jr z, jr_057_73ed
+
+    cp $03
+    ld a, [$dd02]
+    jr nz, jr_057_73d9
+
+    ld a, [$d9ed]
+    cp $15
+    ld a, [$dd02]
+    jr nc, jr_057_73ed
+
+    call AICat3WeakHealCheckA_77a4
+    ld a, [$dd02]
+    jr nz, jr_057_73d9
+
+    call AICat3WeakHealCheckB_77b4
+    jr nc, jr_057_73ed
+
+    ld c, $8d
+
+jr_057_7418:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], c
+    ld hl, $d9ee
+    inc [hl]
+    ld hl, $d9ee
+    inc [hl]
+    ld hl, $d9ee
+    inc [hl]
+    ld hl, $d9ee
+    inc [hl]
+    jp AIState6Post_7859
+
+
+; State 4: zero $DCE4 entries whose tag != $DD6A; each surviving skill
+; loads record flags7 -> $DD6B + its CATEGORY chain pointer
+; (AIRuleChainIndex_4302) and switches to state 7. §15.10.5 (S80/S81).
+AIState4FilterEval_7439:
+    ld a, [$c1fe]
+    ld l, a
+    ld a, [$c1ff]
+    ld h, a
+
+Jump_057_7441:
+    ld a, [hl]
+    or a
+    jp z, Jump_057_74ca
+
+    ld a, [$dd6a]
+    cp [hl]
+    jr nz, jr_057_7487
+
+    xor a
+    ld [$dd26], a
+    ld [$dd27], a
+    inc hl
+    ld a, [hl]
+    ld [$db8a], a
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $07
+    ld [$db4e], a
+    ; [S110 rec] record +7 flags7 -> $dd6b for the AI rules (bits 4/5/6 seal veto, bit7 rule $4B8C)
+    ld hl, $5400
+    rst $10
+    ld a, [$db4c]
+    ld [$dd6b], a
+    ld a, [$dd6a]
+    dec a
+    ld hl, $4302
+    call CalcBtlAI_4567
+    ld a, l
+    ld [$c1fa], a
+    ld a, h
+    ld [$c1fb], a
+    ld a, $07
+    ld [$d9ee], a
+    ret
+
+
+jr_057_7487:
+    ld a, [$c1fc]
+    ld hl, $dce4
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    xor a
+    ld [hl], a
+    ld [$dd26], a
+    ld [$dd27], a
+
+Jump_057_749b:
+    ld a, [$c1fe]
+    ld l, a
+    ld a, [$c1ff]
+    ld h, a
+    inc hl
+    inc hl
+    ld a, l
+    ld [$c1fe], a
+    ld a, h
+    ld [$c1ff], a
+    ld a, [$c1fc]
+    ld c, a
+    ld a, [$c1fd]
+    ld b, a
+    inc c
+    dec b
+    ld a, c
+    ld [$c1fc], a
+    ld a, b
+    ld [$c1fd], a
+    jp nz, Jump_057_7441
+
+jr_057_74c2:
+    ld a, $05
+    ld [$d9ee], a
+    jp AIState5Pick_75a2
+
+
+Jump_057_74ca:
+    ld a, [$c1fc]
+    ld hl, $dce4
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    xor a
+
+jr_057_74d7:
+    ld [hl+], a
+    dec b
+    jr nz, jr_057_74d7
+
+    jr jr_057_74c2
+
+    push hl
+    push de
+    push bc
+    ld a, [hl]
+    ld [$db8a], a
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $07
+    ld [$db4e], a
+    ; [S110 rec] record +7 flags7 -> $dd6b for the AI rules
+    ld hl, $5400
+    rst $10
+    ld a, [$db4c]
+    ld [$dd6b], a
+    ld a, [$dd6a]
+    dec a
+    ld hl, $4302
+    call CalcBtlAI_4567
+    call ReadBtlAI_750c
+    pop bc
+    pop de
+    pop hl
+    ret
+
+
+; Apparently-DEAD inline chain-walk path — the live walker is state 7
+; (AIState7ChainWalker_7865). §15.10.5 (S81).
+ReadBtlAI_750c:
+jr_057_750c:
+    ld a, [hl+]
+    ld d, a
+    ld a, [hl-]
+    or d
+    jr z, jr_057_7524
+
+    push hl
+    call ReadBtlAI_7525
+    pop hl
+    ld a, [$dd27]
+    cp $ff
+    jr z, jr_057_7524
+
+    inc hl
+    inc hl
+    push hl
+    pop hl
+    jr jr_057_750c
+
+jr_057_7524:
+    ret
+
+
+ReadBtlAI_7525:
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jp hl
+
+
+; State 3: per-skill sums — for EVERY option-list pair {tag, skill} at
+; $DC64+idx*16: $DCE4[i] = record ai_weight + r16'%16, saturating $FF;
+; one RNG step per skill. §15.10.4 (S80).
+AIState3SkillSums_7529:
+    ld bc, $0800
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+
+jr_057_753a:
+    ld a, [hl]
+    cp $ff
+    jr z, jr_057_7574
+
+    push hl
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $03
+    ld [$db4e], a
+    push bc
+    ; [S110 rec] record +3 = the AI weight summed per category
+    ld hl, $5400
+    rst $10
+    pop bc
+    ld a, c
+    ld hl, $dce4
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [$db4c]
+    add [hl]
+    ld [hl], a
+    jr nc, jr_057_7566
+
+    ld [hl], $ff
+
+jr_057_7566:
+    push hl
+    ld a, $10
+    call SaveBtlAI_7a93
+    pop hl
+    add [hl]
+    ld [hl], a
+    jr nc, jr_057_7573
+
+    ld [hl], $ff
+
+jr_057_7573:
+    pop hl
+
+jr_057_7574:
+    inc hl
+    inc hl
+    inc c
+    dec b
+    jr nz, jr_057_753a
+
+    ld hl, $d9ee
+    inc [hl]
+    ld bc, $0800
+    ld a, c
+    ld [$c1fc], a
+    ld a, b
+    ld [$c1fd], a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc64
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, l
+    ld [$c1fe], a
+    ld a, h
+    ld [$c1ff], a
+    jp AIState4FilterEval_7439
+
+
+; State 5: pick — status overrides first (confusion -> $3A, +6 bit2 -> $42,
+; +7 bit4 -> $95); $dd0b==0 -> AILightweightPick_76df; else argmax over
+; $DCE4 with RNG-bit0 ties; all-zero -> AIRetryAllZero_76a9. Epilogues:
+; cat1 far-calls bank $58 entry 11 (plain-attack compare -> $3A if >= best);
+; cat3 best<$14 -> AICat3WeakHealCheckA/B. §15.10.6 (S80).
+AIState5Pick_75a2:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db02
+    call HL_AddA_x8
+    bit 4, [hl]
+    jp nz, Jump_057_76bd
+
+    inc hl
+    inc hl
+    inc hl
+    inc hl
+    bit 2, [hl]
+    jp nz, Jump_057_76b5
+
+    inc hl
+    bit 4, [hl]
+    jp nz, Jump_057_76c5
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd0b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    or a
+    jp z, AILightweightPick_76df
+
+    ld hl, $dce4
+    ld bc, $0701
+    ld d, [hl]
+    inc hl
+    ld e, $00
+
+jr_057_75da:
+    ld a, d
+    or a
+    jr nz, jr_057_75ec
+
+    ld a, [hl+]
+    ld d, a
+    inc e
+    inc c
+    dec b
+    jr nz, jr_057_75da
+
+    ld a, d
+    or a
+    jp z, AIRetryAllZero_76a9
+
+    jr jr_057_75fa
+
+jr_057_75ec:
+    ld a, [hl]
+    cp d
+    jp z, Jump_057_769b
+
+    jr c, jr_057_75f5
+
+Jump_057_75f3:
+    ld d, [hl]
+    ld e, c
+
+Jump_057_75f5:
+jr_057_75f5:
+    inc hl
+    inc c
+    dec b
+    jr nz, jr_057_75ec
+
+jr_057_75fa:
+    ld a, [$dd02]
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $01
+    jr z, jr_057_7650
+
+    cp $02
+    jr z, jr_057_762e
+
+    ld a, d
+    cp $14
+    jr nc, jr_057_7632
+
+    ld a, [$d9ed]
+    cp $15
+    jp nc, AIRetryAllZero_76a9
+
+    call AICat3WeakHealCheckA_77a4
+    jp nz, AIRetryAllZero_76a9
+
+    call AICat3WeakHealCheckB_77b4
+    jp nc, Jump_057_7686
+
+    call SetBtlAI_76cd
+    ld [hl], $8d
+    ret
+
+
+jr_057_762e:
+    ld a, d
+    or a
+    jr z, jr_057_76a9
+
+jr_057_7632:
+    call SetBtlAI_76cd
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, e
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    pop hl
+    ld [hl], a
+    ret
+
+
+jr_057_7650:
+    push de
+    ld hl, $580b
+    rst $10
+    ld a, [$dd26]
+    pop de
+    cp d
+    jr nc, jr_057_7686
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, e
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    pop hl
+    cp $ff
+    jr nz, jr_057_7695
+
+Jump_057_7686:
+jr_057_7686:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, $3a
+
+jr_057_7695:
+    ld [hl], a
+    ld hl, $d9ee
+    inc [hl]
+    ret
+
+
+Jump_057_769b:
+    call SaveBtlAI_7f2c
+    ld a, [wRNG1]
+    bit 0, a
+    jp z, Jump_057_75f5
+
+    jp Jump_057_75f3
+
+
+; All-options-zero retry: $dd02++ UNBOUNDED, rerun from the category stage
+; — ROOT CAUSE of the S79 AI stall (KEY_LESSONS S80). Romhack fix candidate.
+AIRetryAllZero_76a9:
+jr_057_76a9:
+    ld hl, $dd02
+    inc [hl]
+    ld a, $02
+    ld [$d9ee], a
+    jp AIState2CategorySelect_73b9
+
+
+Jump_057_76b5:
+    call SetBtlAI_76cd
+    ld [hl], $42
+    jp AIState6Post_7859
+
+
+Jump_057_76bd:
+    call SetBtlAI_76cd
+    ld [hl], $3a
+    jp AIState6Post_7859
+
+
+Jump_057_76c5:
+    call SetBtlAI_76cd
+    ld [hl], $95
+    jp AIState6Post_7859
+
+
+SetBtlAI_76cd:
+    ld hl, $d9ee
+    inc [hl]
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dcec
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ret
+
+
+; $dd0b==0 lightweight picker — no per-skill RNG; observed choosing by
+; top-category tag match (EID 37); tail untraced (§15.9).
+; [S84] FULL DECODE (supersedes "tail untraced"): weights $db61+ =
+; (RNG1&7)+1 per option whose tag == chosen category d; for d != 2 an
+; implicit extra candidate ($db69 if d==1 else $db6a) = (RNG2&7)+1.
+; e==0 & d==2 → $dd02++ and re-read next rank cell (SELF-HEALING —
+; measured; NOT a stall); e==0 & d==3 → Cautious check → $8D else $3A;
+; e==0 otherwise → $3A. Else argmax (ties: later wins); winner index 8 →
+; $3A, 9 → weak-heal path, else skill id from the option list. Commit
+; via SetBtlAI_76cd, then FALLS THROUGH into 77a4 (its ret ends the
+; picker — intentional tail). §15.10.10.
+AILightweightPick_76df:
+    ld b, $0a
+    ld hl, $db61
+    xor a
+
+jr_057_76e5:
+    ld [hl+], a
+    dec b
+    jr nz, jr_057_76e5
+
+jr_057_76e9:
+    ld a, [$dd02]
+    ld hl, $dcfc
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, [hl]
+    ld e, $00
+    ld hl, $dc64
+    ld a, [wBattleAttackerIdx]
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld bc, $0800
+
+jr_057_7709:
+    ld a, [hl+]
+    cp d
+    jr nz, jr_057_7724
+
+    push hl
+    call SaveBtlAI_7f2c
+    ld hl, $db61
+    ld a, c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [wRNG1]
+    and $07
+    inc a
+    ld [hl], a
+    pop hl
+    inc e
+
+jr_057_7724:
+    inc hl
+    inc c
+    dec b
+    jr nz, jr_057_7709
+
+    call SaveBtlAI_7f2c
+    ld a, d
+    cp $02
+    jr z, jr_057_7741
+
+    ld hl, $db69
+    cp $01
+    jr z, jr_057_7739
+
+    inc hl
+
+jr_057_7739:
+    ld a, [wRNG2]
+    and $07
+    inc a
+    ld [hl], a
+    inc e
+
+jr_057_7741:
+    ld a, e
+    or a
+    jr nz, jr_057_7761
+
+    ld a, d
+    cp $02
+    jr nz, jr_057_7750
+
+    ld hl, $dd02
+    inc [hl]
+    jr jr_057_76e9
+
+jr_057_7750:
+    cp $03
+    jr z, jr_057_7758
+
+jr_057_7754:
+    ld b, $3a
+    jr jr_057_77a0
+
+jr_057_7758:
+    call AICat3WeakHealCheckA_77a4
+    jr nz, jr_057_7754
+
+    ld b, $8d
+    jr jr_057_77a0
+
+jr_057_7761:
+    ld bc, $0a00
+    ld hl, $db61
+
+jr_057_7767:
+    ld a, [hl+]
+    or a
+    jr nz, jr_057_7773
+
+    inc c
+    dec b
+    jr nz, jr_057_7767
+
+    ld b, $3a
+    jr jr_057_77a0
+
+jr_057_7773:
+    ld d, a
+    ld e, c
+    inc c
+
+jr_057_7776:
+    ld a, [hl+]
+    cp d
+    jr c, jr_057_777c
+
+    ld d, a
+    ld e, c
+
+jr_057_777c:
+    inc c
+    dec b
+    jr nz, jr_057_7776
+
+    ld a, e
+    cp $09
+    jr nc, jr_057_7758
+
+    cp $08
+    jr z, jr_057_7754
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, e
+    add a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+
+jr_057_77a0:
+    call SetBtlAI_76cd
+    ld [hl], b
+
+; cat3 epilogue when best skill score < $14: extra checks (internals
+; untraced) that can retry, fall back to Attack $3A, or queue Defence $8D. (S80)
+; [S84] Decoded: simply "$DD03[idx] == 2" — i.e. IS THE TACTIC CAUTIOUS.
+; Z = Cautious. §15.10.9/§15.10.10.
+AICat3WeakHealCheckA_77a4:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $02
+    ret
+
+
+; Second cat3 weak-heal check — see AICat3WeakHealCheckA_77a4. (S80)
+AICat3WeakHealCheckB_77b4:
+    ld a, [wBattleAttackerIdx]
+    ld c, a
+    and $03
+    cp $03
+    jr z, jr_057_77f2
+
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_77c8
+
+    bit 2, c
+    jr nz, jr_057_77f2
+
+jr_057_77c8:
+    ld a, c
+    xor $04
+    and $04
+    ld c, a
+    call LoadBtlAI_77f5
+    jr nc, jr_057_77f0
+
+    inc c
+    call LoadBtlAI_77f5
+    jr nc, jr_057_77f0
+
+    inc c
+    call LoadBtlAI_77f5
+    jr nc, jr_057_77f0
+
+    call LoadBtlAI_7828
+    jr nc, jr_057_77f2
+
+    dec c
+    call LoadBtlAI_7828
+    jr nc, jr_057_77f2
+
+    dec c
+    call LoadBtlAI_7828
+    jr nc, jr_057_77f2
+
+jr_057_77f0:
+    scf
+    ret
+
+
+jr_057_77f2:
+    scf
+    ccf
+    ret
+
+
+LoadBtlAI_77f5:
+    ld a, c
+    call CheckMonsterSlot
+    ret c
+
+    push bc
+    ld a, c
+    ld hl, wBattleATK
+    call CalcBtlAI_4567
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
+    call CalcBtlAI_4567
+    srl h
+    rr l
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleDEF
+    call CalcBtlAI_4567
+    srl h
+    rr l
+    pop bc
+    add hl, bc
+    ld b, h
+    ld c, l
+    pop hl
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+LoadBtlAI_7828:
+    ld a, c
+    call CheckMonsterSlot
+    ret c
+
+    push bc
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleATK
+    call CalcBtlAI_4567
+    push hl
+    ld a, c
+    ld hl, wBattleMaxHP
+    call CalcBtlAI_4567
+    srl h
+    rr l
+    push hl
+    ld a, c
+    ld hl, wBattleDEF
+    call CalcBtlAI_4567
+    srl h
+    rr l
+    pop bc
+    add hl, bc
+    ld b, h
+    ld c, l
+    pop hl
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+; State 6: post/commit — winning skill id -> $DCEC+idx*2; the target byte
+; stays $FF (resolved at ACT time by bank $58 entry 4, the RNG-slot fishing
+; resolver — §15.10.6 target-resolution note, S81). §15.10.6 (S80).
+AIState6Post_7859:
+    ld a, [wBattleAttackerIdx]
+    xor a
+    ld [$d9ee], a
+    ld hl, $d9ed
+    inc [hl]
+    ret
+
+
+; State 7: LIVE rule-chain walker — cursor $C1FA/B walks the dw chain; per
+; rule: AICallRuleAtHL_78ca, then $DD27==$FF -> AIChainZeroCell_788b (veto
+; abort). dw $0000 terminator -> AIChainApplyDelta_78a2. (S81; the inline
+; walker path at ReadBtlAI_750c appears dead — §15.10.5)
+AIState7ChainWalker_7865:
+    ld a, [$c1fa]
+    ld l, a
+    ld a, [$c1fb]
+    ld h, a
+
+jr_057_786d:
+    ld a, [hl+]
+    ld d, a
+    ld a, [hl-]
+    or d
+    jr z, AIChainApplyDelta_78a2
+
+    push hl
+    call AICallRuleAtHL_78ca
+    pop hl
+    ld a, [$dd27]
+    cp $ff
+    jr z, AIChainZeroCell_788b
+
+    inc hl
+    inc hl
+    ld a, l
+    ld [$c1fa], a
+    ld a, h
+    ld [$c1fb], a
+    jr jr_057_786d
+
+; Veto exit: zero the option's $DCE4 cell. Entered from BOTH the mid-chain
+; $DD27==$FF check and the end-of-chain borrow (KEY_LESSONS S81). (S81)
+AIChainZeroCell_788b:
+    xor a
+    ld [$dd26], a
+    ld [$dd27], a
+    ld a, [$c1fc]
+    ld hl, $dce4
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld [hl], $00
+    jr jr_057_78c1
+
+; Chain end: delta = $DD26 bonus - $DD27 penalty; borrow (net-negative)
+; ALSO jumps to AIChainZeroCell_788b; else dce4[cell] += delta (8-bit add,
+; no carry check). (S81)
+AIChainApplyDelta_78a2:
+    call CustomAI57             ; [S155] was `ld a, [$c1fc]` (3 bytes -> 3): a custom
+                                ;   skill's own AI condition first (bank $72 entry 8),
+                                ;   then A = [$c1fc] as before
+    ld hl, $dce4
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [$dd27]
+    cp $ff
+    jr z, AIChainZeroCell_788b
+
+    ld e, a
+    ld a, [$dd26]
+    sub e
+    jr c, AIChainZeroCell_788b
+
+    ld [$dd26], a
+    add [hl]
+    ld [hl], a
+
+jr_057_78c1:
+    ld a, $04
+    ld [$d9ee], a
+    jp Jump_057_749b
+
+
+    ret
+
+
+; Trampoline: jump to the rule routine pointed to by [hl] (the walker's
+; call makes the rule's ret return into the walk loop). (S81)
+AICallRuleAtHL_78ca:
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    jp hl
+
+
+LoadBtlAI_78ce:
+    ld a, $0a
+    call Div8x8
+    ret
+
+
+; [S84] a = $DD03[idx] (low bits = TACTIC 0-3): seeds $db4c for the
+; obedience decide from the tactic's category base — 0→$DC44, 1→$DC4C,
+; 2→$DC54, 3 (Command)→0. Scaled /10 via LoadBtlAI_78ce. §15.10.7a.
+CmpBtlAI_78d4:
+    cp $03
+    jr z, jr_057_78e5
+
+    cp $02
+    jr z, jr_057_78f0
+
+    cp $01
+    jr z, jr_057_78eb
+
+    ld hl, $dc44
+    jr jr_057_78f3
+
+jr_057_78e5:
+    ld a, $00
+    ld [$db4c], a
+    ret
+
+
+jr_057_78eb:
+    ld hl, $dc4c
+    jr jr_057_78f3
+
+jr_057_78f0:
+    ld hl, $dc54
+
+jr_057_78f3:
+    ld a, [wBattleAttackerIdx]
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+    call LoadBtlAI_78ce
+    ld a, b
+    ld [$db4c], a
+    ret
+
+
+; State-0: $db4d = w[3]/10 (the $DC5C weight, consumed here — not by the
+; category machine). §15.10.7 (S80).
+AIPreambleW3_7905:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc5c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld b, [hl]
+    call LoadBtlAI_78ce
+    ld a, b
+    ld [$db4d], a
+    ret
+
+
+; State-0 threshold ladders on the category bases (b=0/9/18 rows — the
+; personality-table row-group offsets). §15.10.7 (S80).
+AIPreambleLadder_791a:
+    ld b, $00
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc44
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $c0
+    jr nc, jr_057_7937
+
+    cp $40
+    jr nc, jr_057_7935
+
+    ld b, $12
+    jr jr_057_7937
+
+jr_057_7935:
+    ld b, $09
+
+jr_057_7937:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc54
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $c0
+    jr nc, jr_057_7954
+
+    cp $40
+    jr nc, jr_057_7950
+
+    ld a, $06
+    jr jr_057_7952
+
+jr_057_7950:
+    ld a, $03
+
+jr_057_7952:
+    add b
+    ld b, a
+
+jr_057_7954:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc4c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $c0
+    jr nc, jr_057_7970
+
+    cp $40
+    jr nc, jr_057_796f
+
+    inc b
+    inc b
+    ld a, $02
+    jr jr_057_7970
+
+jr_057_796f:
+    inc b
+
+jr_057_7970:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd03
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld c, [hl]
+
+jr_057_797d:
+    ld a, c
+    or a
+    jr z, jr_057_7988
+
+    ld a, $1b
+    add b
+    ld b, a
+    dec c
+    jr jr_057_797d
+
+jr_057_7988:
+    add b
+    ld hl, ObedienceThreshTable_7997
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld [$db53], a
+    ret
+
+
+; [S87] Act/loaf threshold table (4 tactics x 27 bytes; values 5..25),
+; consumed by AIPreambleLadder_791a -> $db53 = a DIRECT ADDEND in the
+; obedience inequality (AIPreambleDecide_7a5d) — the S86 "consumption
+; point still to pin" is closed: this table IS an obedience threshold.
+; Index = 27*tactic + cat1row(>=$C0:0 / >=$40:9 / else 18)
+;         + cat3row(0/3/6) + cat2row(0/1/2).  (Was misassembled as code.)
+ObedienceThreshTable_7997:
+; tactic 0 Charge
+    db $19, $19, $19, $14, $14, $19, $19, $19, $19
+    db $14, $0f, $0a, $14, $14, $14, $14, $0f, $14
+    db $05, $0f, $0a, $14, $0a, $0a, $14, $05, $05
+; tactic 1 Mixed
+    db $14, $0a, $05, $14, $05, $0a, $0f, $0a, $05
+    db $19, $14, $19, $19, $0f, $14, $14, $14, $0a
+    db $19, $0f, $0a, $14, $0a, $14, $19, $0f, $05
+; tactic 2 Cautious
+    db $14, $05, $05, $14, $05, $0a, $05, $0f, $05
+    db $19, $14, $19, $19, $14, $14, $14, $0a, $0a
+    db $19, $14, $0a, $0f, $0a, $0a, $0f, $19, $05
+; tactic 3 Command
+    db $14, $05, $05, $05, $05, $0a, $05, $05, $05
+    db $19, $0f, $0a, $19, $14, $0a, $05, $05, $05
+    db $19, $14, $0f, $14, $14, $19, $14, $19, $05
+
+
+; [S87] $db4e = wBattleLVL[idx] >> 2 — the WLD (wildness) term:
+; wBattleLVL is a MISNOMER, it holds the record's WLD stat slot+$60
+; (5*level - 10*arenaTier at creation; 0 for hatchlings).
+LoadBtlAI_7a03:
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleLVL
+    call AIIndexWordTable_45ea
+    ld b, [hl]
+    srl b
+    srl b
+    ld a, b
+    ld [$db4e], a
+    ret
+
+
+; [S87] $db4f = the obedience BANDED RNG: band b from WLD (<$20:5 <$40:7
+; <$60:9 <$90:11 <$C0:13 else 15); one live-RNG step; a = RNG1 & $3F;
+; the tail loop is a MOD b with a quirk — nonzero exact multiples of b
+; return b itself (the `jr nz` fallthrough loads b), 0 stays 0.
+; Differentially validated S87 (validate_obedience.py, incl. the LCG
+; step replay). §15.10.7a.
+LoadBtlAI_7a16:
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleLVL
+    call AIIndexWordTable_45ea
+    ld a, [hl]
+    cp $20
+    jr c, jr_057_7a38
+
+    cp $40
+    jr c, jr_057_7a3c
+
+    cp $60
+    jr c, jr_057_7a40
+
+    cp $90
+    jr c, jr_057_7a44
+
+    cp $c0
+    jr c, jr_057_7a48
+
+    ld b, $0f
+    jr jr_057_7a4a
+
+jr_057_7a38:
+    ld b, $05
+    jr jr_057_7a4a
+
+jr_057_7a3c:
+    ld b, $07
+    jr jr_057_7a4a
+
+jr_057_7a40:
+    ld b, $09
+    jr jr_057_7a4a
+
+jr_057_7a44:
+    ld b, $0b
+    jr jr_057_7a4a
+
+jr_057_7a48:
+    ld b, $0d
+
+jr_057_7a4a:
+    call SaveBtlAI_7f2c
+    ld a, [wRNG1]
+    and $3f
+
+jr_057_7a52:
+    cp b
+    jr c, jr_057_7a59
+
+    sub b
+    jr nz, jr_057_7a52
+
+    ld a, b
+
+jr_057_7a59:
+    ld [$db4f], a
+    ret
+
+
+; State-0 decision: carry -> clear the $DCEC pair to $FFFF, set bit6 of
+; $DD03[idx], run the machine (plan $81 diverts at AIPlanCommandDivert_714e);
+; no-carry -> AIState0AltOutcome_6f8c. §15.10.7 (S80).
+; [S84] The OBEDIENCE GATE, on the wBattleLVL low byte — [S87] which
+; is the WLD stat, NOT the level: 0 or < $15 (21) →
+; no-carry (the $6F8C tactic-bias path — low-level party monsters ALWAYS
+; take it); >= $F0 → carry (act unbiased; enemy init forces LVL=$00FF so
+; enemies always act).
+; [S87] Mid-band inequality COMPLETED (the S84 note dropped two terms):
+; carry iff $db4e + $db4f  >  $db4c + $db4d + $db53   (STRICT)
+; ($db4e = WLD/4, $db4f = banded RNG [7a16], $db4c = 78d4 tactic-category
+; seed /10, $db4d = w3/10 [7905], $db53 = ObedienceThreshTable_7997 value
+; [791a] — the table's consumption point, closing the S86 residual).
+; 889/889 differential checks (validate_obedience.py). §15.10.7a.
+AIPreambleDecide_7a5d:
+    ld a, [wBattleAttackerIdx]
+    add a
+    ld hl, wBattleLVL
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    or a
+    jr z, jr_057_7a8e
+
+    cp $15
+    jr c, jr_057_7a8e
+
+    cp $f0
+    jr nc, jr_057_7a91
+
+    ld a, [$db4e]
+    ld b, a
+    ld a, [$db4f]
+    add b
+    ld b, a
+    ld a, [$db4c]
+    ld c, a
+    ld a, [$db4d]
+    add c
+    ld c, a
+    ld a, [$db53]
+    add c
+    sub b
+    ret
+
+
+jr_057_7a8e:
+    scf
+    ccf
+    ret
+
+
+jr_057_7a91:
+    scf
+    ret
+
+
+SaveBtlAI_7a93:
+    push bc
+    push af
+    call SaveBtlAI_7f2c
+    ld a, [wRNG1]
+    ld l, a
+    ld a, [wRNG2]
+    ld h, a
+    pop af
+    call Div16x8To16
+    pop bc
+    ret
+
+
+LoadBtlAI_7aa6:
+    ld a, [$db4c]
+    ld h, a
+    ld a, e
+    or a
+    jr z, jr_057_7ab8
+
+    cp $01
+    jr z, jr_057_7abc
+
+    cp $02
+    jr z, jr_057_7ac0
+
+    ld a, h
+    ret
+
+
+jr_057_7ab8:
+    ld a, h
+    rlca
+    rlca
+    ret
+
+
+jr_057_7abc:
+    ld a, h
+    swap a
+    ret
+
+
+jr_057_7ac0:
+    ld a, h
+    rrca
+    rrca
+    ret
+
+
+SaveBtlAI_7ac4:
+    push bc
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    push hl
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, h
+    or a
+    jr nz, jr_057_7aef
+
+    ld a, l
+    rrca
+    rrca
+    and $3f
+    or a
+    jr z, jr_057_7aeb
+
+    ld l, a
+    jr jr_057_7af7
+
+jr_057_7aeb:
+    ld l, $01
+    jr jr_057_7afb
+
+jr_057_7aef:
+    sra h
+    rr l
+    sra h
+    rr l
+
+jr_057_7af7:
+    ld b, h
+    ld c, l
+    add hl, hl
+    add hl, bc
+
+jr_057_7afb:
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+SaveBtlAI_7b01:
+    push bc
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    push hl
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, h
+    or a
+    jr nz, jr_057_7b2b
+
+    ld a, l
+    rrca
+    and $7f
+    or a
+    jr z, jr_057_7b27
+
+    ld l, a
+    jr jr_057_7b2f
+
+jr_057_7b27:
+    ld l, $01
+    jr jr_057_7b2f
+
+jr_057_7b2b:
+    sra h
+    rr l
+
+jr_057_7b2f:
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+SaveBtlAI_7b35:
+    push bc
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    push bc
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld bc, $0004
+    call Div16x16To16
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+SaveBtlAI_7b59:
+    push bc
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    ld a, [hl+]
+    ld b, [hl]
+
+FuncBtlAI_7b64:
+    ld c, a
+    push bc
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld bc, $000a
+    call Div16x16To16
+    pop bc
+    call CmpHLvsBC
+    pop bc
+    ret
+
+
+LoadBtlAI_7b7d:
+    ld a, c
+    ld hl, $dc65
+    swap a
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld d, $08
+
+jr_057_7b8b:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_7ba4
+
+    cp $5c
+    jr c, jr_057_7ba0
+
+    cp $64
+    jr c, jr_057_7ba8
+
+    cp $6a
+    jr c, jr_057_7ba0
+
+    cp $6e
+    jr c, jr_057_7ba8
+
+jr_057_7ba0:
+    inc hl
+    dec d
+    jr nz, jr_057_7b8b
+
+jr_057_7ba4:
+    ld a, $01
+    or a
+    ret
+
+
+jr_057_7ba8:
+    xor a
+    ret
+
+
+    cp $03
+    jr nc, jr_057_7bbc
+
+    push hl
+    ld hl, $cac2
+    call GetCurrentMonsterPtr
+    ld e, l
+    ld d, h
+    pop hl
+    call Copy4Bytes
+    ret
+
+
+jr_057_7bbc:
+    push af
+    ld [$db60], a
+    push hl
+    ld hl, $dc3c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ld l, a
+    ld h, $05
+    pop de
+    ld a, e
+    ld [$db5e], a
+    ld a, d
+    ld [$db5f], a
+    call SetupVRAMParams
+    pop af
+    ld hl, $5104
+    rst $10
+    ret
+
+
+    push af
+    push bc
+    push de
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db05
+    call HL_AddA_x8
+    ld a, [hl]
+    and $c0
+    ld [hl], a
+    pop hl
+    pop de
+    pop bc
+    pop af
+    ret
+
+
+    ld a, [hl]
+    and $0c
+    jr z, jr_057_7c0f
+
+    cp $04
+    jr z, jr_057_7c0b
+
+    cp $08
+    jr z, jr_057_7c07
+
+    ld b, $60
+    jr jr_057_7c11
+
+jr_057_7c07:
+    ld b, $a0
+    jr jr_057_7c11
+
+jr_057_7c0b:
+    ld b, $e0
+    jr jr_057_7c11
+
+jr_057_7c0f:
+    ld b, $ff
+
+jr_057_7c11:
+    ld a, [wRNG1]
+    cp b
+    jr z, jr_057_7c33
+
+    jr c, jr_057_7c33
+
+    ld a, [hl]
+    and $f3
+    ld b, a
+    ld a, [hl]
+    and $0c
+    dec a
+    push bc
+    push af
+    pop bc
+    bit 5, c
+    pop bc
+    jr nz, jr_057_7c2d
+
+    and $0c
+    jr jr_057_7c2e
+
+jr_057_7c2d:
+    xor a
+
+jr_057_7c2e:
+    or b
+    ld [hl], a
+    ld a, $0f
+    ret
+
+
+jr_057_7c33:
+    ld a, [hl]
+    and $73
+    ld [hl], a
+    ld a, [wBattleAttackerIdx]
+    ld [wBattleTargetIdx], a
+    ld hl, $5004
+    rst $10
+    ld a, $db
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    ld hl, $db08
+    call HL_AddA_x8
+    bit 0, [hl]
+    jr nz, jr_057_7c52
+
+    ret
+
+
+jr_057_7c52:
+    ld a, [$db8a]
+    cp $52
+    jr z, jr_057_7c62
+
+    cp $53
+    jr z, jr_057_7c62
+
+    cp $ab
+    jr z, jr_057_7c66
+
+    ret
+
+
+jr_057_7c62:
+    ld a, $03
+    jr jr_057_7c68
+
+jr_057_7c66:
+    ld a, $08
+
+jr_057_7c68:
+    ld [$dd6d], a
+    res 0, [hl]
+    ret
+
+
+LoadBtlAI_7c6e:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dd0b
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $02
+    ret
+
+
+LoadBtlAI_7c7e:
+    ld a, [$db8a]
+    cp $3b
+    jr z, jr_057_7cb3
+
+    cp $3d
+    jr z, jr_057_7cb3
+
+    cp $42
+    jr z, jr_057_7cb3
+
+    cp $44
+    jr c, jr_057_7cb1
+
+    cp $4f
+    jr z, jr_057_7cb1
+
+    cp $52
+    jr c, jr_057_7cb3
+
+    cp $55
+    jr c, jr_057_7cb1
+
+    cp $58
+    jr c, jr_057_7cb3
+
+    cp $67
+    jr c, jr_057_7cb1
+
+    cp $6a
+    jr c, jr_057_7cb3
+
+    cp $d6
+    jr c, jr_057_7cb1
+
+    cp $d9
+    jr c, jr_057_7cb3
+
+jr_057_7cb1:
+    xor a
+    ret
+
+
+jr_057_7cb3:
+    scf
+    ret
+
+
+LoadBtlAI_7cb5:
+    ld a, [$db8a]
+    cp $3b
+    jr z, jr_057_7cde
+
+    cp $3d
+    jr z, jr_057_7cde
+
+    cp $3f
+    jr z, jr_057_7cde
+
+    cp $40
+    jr z, jr_057_7cde
+
+    cp $42
+    jr z, jr_057_7cde
+
+    cp $50
+    jr z, jr_057_7cde
+
+    cp $51
+    jr z, jr_057_7cde
+
+    cp $55
+    jr c, jr_057_7cdc
+
+    cp $58
+    jr c, jr_057_7cde
+
+jr_057_7cdc:
+    xor a
+    ret
+
+
+jr_057_7cde:
+    scf
+    ret
+
+
+LoadBtlAI_7ce0:
+    ld a, [$db8a]
+    cp $14
+    jr c, jr_057_7cfd
+
+    cp $4f
+    jr z, jr_057_7cfd
+
+    cp $52
+    jr z, jr_057_7cfd
+
+    cp $53
+    jr z, jr_057_7cfd
+
+    cp $58
+    jr c, jr_057_7cfb
+
+    cp $66
+    jr c, jr_057_7cfd
+
+jr_057_7cfb:
+    xor a
+    ret
+
+
+jr_057_7cfd:
+    scf
+    ret
+
+
+LoadBtlAI_7cff:
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleHP
+    call CalcBtlAI_4567
+    ld b, h
+    ld c, l
+    add hl, bc
+    add hl, bc
+    push hl
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
+    call CalcBtlAI_4567
+    add hl, hl
+    pop bc
+    call CmpHLvsBC
+    ret
+
+
+    ret
+
+
+LoadBtlAI_7d1d:
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxMP
+    call AIIndexWordTable_45ea
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    srl b
+    rr c
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantMP
+    call CmpHLvsBC
+    ret
+
+
+LoadBtlAI_7d37:
+    ld a, [wBattleAttackerIdx]
+    ld hl, wBattleMaxHP
+    call AIIndexWordTable_45ea
+    ld a, [hl+]
+    ld b, [hl]
+    ld c, a
+    ld a, [wBattleAttackerIdx]
+    call GetCombatantMaxMP
+    call CmpHLvsBC
+    ret
+
+
+CallBtlAI_7d4d:
+    call LoadBtlAI_7d73
+    xor a
+    ld [$db54], a
+
+SetBtlAI_7d54:
+    ld hl, wBattlePostFlag
+    inc [hl]
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, d
+    ld [$db4c], a
+    push de
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    pop de
+    call LoadBtlAI_7aa6
+    and $03
+    ld hl, $db54
+    add [hl]
+    ld [hl], a
+    ret
+
+
+LoadBtlAI_7d73:
+    ld a, [$db8a]
+    ld [$db4c], a
+    ld a, $00
+    ld [$db4d], a
+    ld a, $05
+    ld [$db4e], a
+    ; [S110 rec] record +5 = AI element (resistance slot)
+    ld hl, $5400
+    rst $10
+    ld a, [$db4c]
+    and $03
+    ld e, a
+    ld a, [$db4c]
+    rrca
+    rrca
+    and $0f
+    ld d, a
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    xor a
+    ld [wBattlePostFlag], a
+    ret
+
+
+SetBtlAI_7da4:
+    ld hl, wBattlePostFlag
+    inc [hl]
+    ld a, c
+    ld [wBattleTargetIdx], a
+    ld a, d
+    ld [$db4c], a
+    push de
+    push bc
+    ld hl, $5206
+    rst $10
+    pop bc
+    pop de
+    call LoadBtlAI_7aa6
+    and $03
+    ret
+
+
+LoadBtlAI_7dbe:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+
+FuncBtlAI_7dc5:
+    ld c, a
+    ld b, $03
+    ld de, $0000
+    ld a, e
+    ld [$db56], a
+    ld a, d
+    ld [$db57], a
+
+jr_057_7dd3:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_7deb
+
+    ld a, c
+    ld hl, wBattleDEF
+    call AIIndexWordTable_45ea
+    ld a, [$db56]
+    add [hl]
+    ld [hl+], a
+    ld a, [$db57]
+    adc [hl]
+    ld [hl], a
+    inc d
+
+jr_057_7deb:
+    inc c
+    dec b
+    jr nz, jr_057_7dd3
+
+    ld a, d
+    cp $01
+    ret z
+
+    cp $02
+    jr z, jr_057_7e0b
+
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    call Div16x8To16
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ret
+
+
+jr_057_7e0b:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    sra h
+    rr l
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ret
+
+
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld c, a
+    ld b, $03
+    ld de, $0000
+    ld a, e
+    ld [$db58], a
+    ld a, d
+    ld [$db59], a
+
+jr_057_7e35:
+    ld a, c
+    call CheckMonsterSlot
+    jr c, jr_057_7e4d
+
+    ld a, c
+    ld hl, wBattleDEF
+    call AIIndexWordTable_45ea
+    ld a, [$db58]
+    add [hl]
+    ld [hl+], a
+    ld a, [$db59]
+    adc [hl]
+    ld [hl], a
+    inc d
+
+jr_057_7e4d:
+    inc c
+    dec b
+    jr nz, jr_057_7e35
+
+    ld a, d
+    cp $01
+    ret z
+
+    cp $02
+    jr z, jr_057_7e6d
+
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    call Div16x8To16
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ret
+
+
+jr_057_7e6d:
+    ld a, [$db58]
+    ld l, a
+    ld a, [$db59]
+    ld h, a
+    sra h
+    rr l
+    ld a, l
+    ld [$db58], a
+    ld a, h
+    ld [$db59], a
+    ret
+
+
+SetBtlAI_7e82:
+    ld hl, $c180
+    ld a, l
+    ld [$db4e], a
+    ld a, h
+    ld [$db4f], a
+    ld a, [wBattleAttackerIdx]
+    call CmpBtlAI_6d09
+    ret
+
+
+SaveBtlAI_7e94:
+    push bc
+    push hl
+    ld hl, $dc65
+    call CalcBtlAI_7fca
+    ld b, $08
+
+jr_057_7e9e:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_7eb7
+
+    cp $3a
+    jr c, jr_057_7ebb
+
+    cp $d5
+    jr z, jr_057_7ebb
+
+    cp $da
+    jr z, jr_057_7ebb
+
+    cp $dc
+    jr z, jr_057_7ebb
+
+    inc hl
+    dec b
+    jr nz, jr_057_7e9e
+
+jr_057_7eb7:
+    pop hl
+    pop bc
+    scf
+    ret
+
+
+jr_057_7ebb:
+    pop hl
+    pop bc
+    xor a
+    or a
+    ret
+
+
+SaveBtlAI_7ec0:
+    push bc
+    push hl
+    ld hl, $dc65
+    call CalcBtlAI_7fca
+    ld b, $08
+
+jr_057_7eca:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_7eeb
+
+    cp $43
+    jr z, jr_057_7eef
+
+    cp $5c
+    jr c, jr_057_7ee7
+
+    cp $64
+    jr c, jr_057_7eef
+
+    cp $6a
+    jr c, jr_057_7ee7
+
+    cp $6e
+    jr c, jr_057_7eef
+
+    cp $8f
+    jr z, jr_057_7eef
+
+jr_057_7ee7:
+    inc hl
+    dec b
+    jr nz, jr_057_7eca
+
+jr_057_7eeb:
+    pop hl
+    pop bc
+    scf
+    ret
+
+
+jr_057_7eef:
+    pop hl
+    pop bc
+    xor a
+    or a
+    ret
+
+
+SaveBtlAI_7ef4:
+    push bc
+    push hl
+    ld hl, $dc65
+    call CalcBtlAI_7fca
+    ld b, $08
+
+jr_057_7efe:
+    ld a, [hl+]
+    cp $ff
+    jr z, jr_057_7f23
+
+    cp $6e
+    jr z, jr_057_7f27
+
+    cp $71
+    jr z, jr_057_7f27
+
+    cp $75
+    jr c, jr_057_7f1f
+
+    cp $79
+    jr c, jr_057_7f27
+
+    cp $91
+    jr z, jr_057_7f27
+
+    cp $94
+    jr z, jr_057_7f27
+
+    cp $96
+    jr z, jr_057_7f27
+
+jr_057_7f1f:
+    inc hl
+    dec b
+    jr nz, jr_057_7efe
+
+jr_057_7f23:
+    pop hl
+    pop bc
+    scf
+    ret
+
+
+jr_057_7f27:
+    pop hl
+    pop bc
+    xor a
+    or a
+    ret
+
+
+SaveBtlAI_7f2c:
+    push bc
+    ld a, [$c86c]
+    or a
+    jr nz, jr_057_7f38
+
+    call GenerateRNG
+    jr jr_057_7f5d
+
+jr_057_7f38:
+    push hl
+    ld a, [$c1ed]
+    ld l, a
+    ld a, [$c1ee]
+    ld h, a
+    ld a, l
+    ld [wRNG1], a
+    ld a, h
+    ld [wRNG2], a
+    call GenerateRNG
+    ld a, [wRNG1]
+    ld l, a
+    ld a, [wRNG2]
+    ld h, a
+    ld a, l
+    ld [$c1ed], a
+    ld a, h
+    ld [$c1ee], a
+    pop hl
+
+jr_057_7f5d:
+    pop bc
+    ret
+
+
+; [S87] Command-divert DIRECT PICK: reads the actor's raw category bases
+; ($DC44/$DC4C/$DC54); each >= $3F sets a bit in $db4c. Returns b = $98
+; (loaf) if all three < $3F; else $3A (Attack) iff cat1 >= $3F AND
+; cat1 >= cat2 AND cat1 >= cat3; else $8D (Defence). Byte-read + runtime-
+; sighted S87 (all three codes). §15.10.7a.
+; [S130 P3.15b] measured on real orders: $3A 193x, $8D 43x, $98 Daze 14x;
+; ties (all three bases equal and >= $3F) -> Attack.
+SetBtlAI_7f5f:
+    ld hl, $db4c
+    xor a
+    ld [hl+], a
+    ld [hl+], a
+    ld [hl+], a
+    ld [hl], a
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc44
+    call CalcBtlAI_7fc2
+    ld [$db4d], a
+    cp $3f
+    jr c, jr_057_7f7c
+
+    ld a, $01
+    ld [$db4c], a
+
+jr_057_7f7c:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc4c
+    call CalcBtlAI_7fc2
+    ld [$db4e], a
+    cp $3f
+    jr c, jr_057_7f91
+
+    ld hl, $db4c
+    set 1, [hl]
+
+jr_057_7f91:
+    ld a, [wBattleAttackerIdx]
+    ld hl, $dc54
+    call CalcBtlAI_7fc2
+    ld [$db4f], a
+    cp $3f
+    jr c, jr_057_7fa6
+
+    ld hl, $db4c
+    set 2, [hl]
+
+jr_057_7fa6:
+    ld b, $98
+    ld a, [$db4c]
+    or a
+    ret z
+
+    ld b, $3a
+    bit 0, a
+    jr z, jr_057_7fbf
+
+    ld a, [$db4d]
+    ld hl, $db4e
+    cp [hl]
+    jr c, jr_057_7fbf
+
+    inc hl
+    cp [hl]
+    ret nc
+
+jr_057_7fbf:
+    ld b, $8d
+    ret
+
+
+CalcBtlAI_7fc2:
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ret
+
+
+CalcBtlAI_7fca:
+    add a
+    add a
+    add a
+    call AIIndexWordTable_45ea
+    ret
+
+; =============================================================================
+; [S155] CustomAI57 — the chain end (AIChainApplyDelta_78a2) of the AI's per-skill
+; rule walk, for a CUSTOM skill ($DB8A >= $DE): bank $72 entry 8 (CustomAIRule72)
+; adds its own bonus ($DD26) / penalty ($DD27; $FF = veto) — the vanilla rules
+; select on stock ids and never fire for these (BATTLE_SKILL_SYSTEM §15.10.5,
+; §13.10). Then the displaced `ld a, [$c1fc]`. 15 of the bank's 47 trailing
+; free bytes.
+; =============================================================================
+CustomAI57:
+    ld a, [$db8a]
+    cp $de
+    jr c, .done
+    ld hl, $7208
+    rst $10
+.done:
+    ld a, [$c1fc]
+    ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop

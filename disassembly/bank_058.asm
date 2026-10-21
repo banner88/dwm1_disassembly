@@ -7474,6 +7474,9 @@ jr_058_67ac:
 ; returns a plain-attack score via $DD26 — if >= the best skill score,
 ; the AI queues plain Attack $3A. (S79's "bank $58" attribution for the
 ; whole AI machine was imprecise — only THIS service lives here.)
+; Score = $14 (20) + 10 per damage threshold the plain attack meets (measured
+; S155: the S155 skills' AI bonuses are sized against it, bank $72
+; CustomAIRule72 — a skill must out-score plain Attack to be used).
 AICat1AttackScore_67ba:
     ld a, $14
     ld [$dd26], a

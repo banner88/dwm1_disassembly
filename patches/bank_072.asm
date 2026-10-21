@@ -31,6 +31,31 @@ DEF RATIO_ANCHOR     EQU 10             ; Anchor: share of current MP charged on
 DEF RATIO_QUAKE_ALLY EQU 12             ; Tremor..QuakeMost: allies' share of the damage (+2 per tier)
 DEF RATIO_MOURN      EQU 20             ; Mourn: bonus per fallen ally, x the base damage
 
+; [S155] the seven custom skills of S155 (BATTLE_SKILL_SYSTEM §13.10; ids reused:
+; $DE / $DF were the retired S45 POCs Scorch / Smite)
+DEF ID_REPEL         EQU $DE            ; field: no random encounters (the Repellant's flag)
+DEF ID_LONEWOLF      EQU $DF            ; ATK-vs-DEF x more in a party of two / alone
+DEF ID_PLUNDER       EQU $EA            ; (reserved: S156 — inert until built)
+DEF ID_PUNISH        EQU $EB            ; ATK-vs-DEF + a share per buff on the target
+DEF ID_FINISH        EQU $EC            ; ATK-vs-DEF x (low .. high) by the target's missing HP
+DEF ID_RUPTURE       EQU $ED            ; consumes the target's ailments for ATK-vs-DEF x big
+DEF ID_RUST          EQU $EE            ; lowers the target's ATK (Sap's roll: resistance 12)
+; [S155] word offsets into CustomPctTable (gd_custom_pcts): percentages, 100 = x1
+DEF PCT_LW_DUO       EQU 0              ; LoneWolf: the damage in a party of two
+DEF PCT_LW_ALONE     EQU 2              ; LoneWolf: the damage alone
+DEF PCT_PUNISH       EQU 4              ; Punish: + this per buff on the target
+DEF PCT_FIN_LOW      EQU 6              ; Finish: the damage at full HP
+DEF PCT_FIN_HIGH     EQU 8              ; Finish: the damage near 0 HP
+DEF PCT_RUPTURE      EQU 10             ; Rupture: the damage when ailments burst
+DEF PCT_RUST         EQU 12             ; Rust: the ATK lost, a share of the target's base ATK
+DEF PCT_MAX          EQU 2000           ; MulPct72's range (x20)
+; [S155] extra battle lines (bank $4C CustomLinePtrs, 1-based; 0 = none)
+DEF LINE_LONEWOLF    EQU 1
+DEF LINE_PUNISH      EQU 2
+DEF LINE_FINISH      EQU 3
+DEF LINE_RUPTURE     EQU 4
+DEF LINE_RUST        EQU 5
+
 SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
 
     db $72                              ; bank number (entry-table header)
@@ -42,6 +67,9 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     dw ElemLevel72                      ; entry 5  ($7205 -> $400B) [S111] element override (bank $52 ElemLevel52)
     dw CustomLearnRow72                 ; entry 6  ($7206 -> $400D) [S111] custom learn row -> wLearnRowBuf (bank $06 LearnLoopFork)
     dw AnchorKeepMP72                   ; entry 7  ($7207 -> $400F) [S111] Anchor's MP charge (bank $73 arrival commit)
+    dw CustomAIRule72                   ; entry 8  ($7208 -> $4011) [S155] AI bonus / veto for custom ids (bank $57 CustomAI57)
+    dw CustomTargetPick72               ; entry 9  ($7209 -> $4013) [S155] AI act-time target of a custom id (bank $58 DispatchBoundsStub)
+    dw RepelCommit72                    ; entry 10 ($720A -> $4015) [S155] Repel ends when the party leaves its room (bank $73 commit)
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -72,6 +100,8 @@ FarSkillFork:
     ld a, c
     cp $E9
     jr z, .mourn                        ; [MOURN S75] defense-calc dispatch path
+    call NewDispatch72                  ; [S155] Z: HL = wCustomJump (the S155 skills)
+    ret z
     ld hl, $7FED                        ; CustomSkillPtr (bank $52)
     ret
 .mourn:
@@ -94,6 +124,10 @@ FarSkillFork:
 ; -----------------------------------------------------------------------------
 CustomBattleExec:
     call CustomBattleRun
+    ld e, $FF
+    ld a, [$dd6f]                       ; [S155] a handler that applies no damage
+    bit 5, a                            ;   (descriptor bit 5 clear: Rust, a Rupture
+    jr z, .status                       ;   with nothing to burst, the inert ids) tests no element
     ld a, [$db8a]
     sub $DE
     ld e, a
@@ -188,7 +222,7 @@ ElemLevelOfA:
     ret
 
 ; [S111] CustomLearnRow72 (entry 6) — bank $06 LearnLoopFork scans the custom
-; ids $E0-$FE after the vanilla rows: their 18-byte learn rows live here
+; ids $DE-$FE (S155; $E0-$FE before) after the vanilla rows: their 18-byte learn rows live here
 ; (CustomLearnTable, compiler region gd_custom_learn) and are copied one at a
 ; time into wLearnRowBuf, where the scanner reads them. In: E = the next id to
 ; try. Out: E = the id whose row is now in wLearnRowBuf, skipping rows with
@@ -198,7 +232,7 @@ CustomLearnRow72:
     ld a, e
     cp $FF
     ret z
-    sub $E0
+    sub $DE                             ; [S155] the table starts at $DE (was $E0)
     ld l, a
     ld h, $00
     ld c, l
@@ -235,6 +269,20 @@ CustomLearnRow72:
 ; -----------------------------------------------------------------------------
 CustomBattleRun:
     ld a, [$db8a]
+    cp ID_LONEWOLF                      ; [S155] the S155 battle skills
+    jp z, SkillLoneWolf
+    cp ID_PUNISH
+    jp z, SkillPunish
+    cp ID_FINISH
+    jp z, SkillFinish
+    cp ID_RUPTURE
+    jp z, SkillRupture
+    cp ID_RUST
+    jp z, SkillRust
+    cp ID_REPEL                         ; field-only (the menu refuses it in battle,
+    jr z, .inert                        ;   the AI turns it into Attack) and Plunder
+    cp ID_PLUNDER                       ;   (not built yet): no effect if ever run
+    jr z, .inert
     cp $E0
     jp z, SkillMagicBurn
     cp $E1
@@ -261,6 +309,7 @@ CustomBattleRun:
     ; AI-side exclusion is a ROADMAP item).
     cp $E4
     ret nz
+.inert:
     xor a
     ld [$db56], a
     ld [$db57], a
@@ -658,6 +707,8 @@ QuakeSweep72:
 ; step-2 window and ROM0 remain fully vanilla.
 ; -----------------------------------------------------------------------------
 QuakeAnimHold72:
+    call LineSlot72                     ; [S155] a new action: no stale line; [S155 r2]
+                                        ;   the bonus line, before the slash
     ld a, [$db8a]
     cp $E9
     jp z, .mourn                        ; [MOURN S75] double-slash replay (block at end)
@@ -976,6 +1027,8 @@ AnchorField14Tail:
     ld a, [$da5e]
     cp $E4
     jr z, .anchor
+    cp ID_REPEL                         ; [S155] Repel: the field effect is set here
+    jp z, RepelField72                  ;   (validated, then applied — see there)
     ld a, $ff                           ; vanilla default: unknown id -> fizzle
     ld [$da5e], a
     ret
@@ -1141,6 +1194,1200 @@ CustomRatioTable:
 ; @BUILD_PROJECT END gd_custom_ratios
 
 ; =============================================================================
+; [S155] THE S155 CUSTOM SKILLS — Repel, LoneWolf, Punish, Finish, Rupture, Rust
+; (+ Plunder reserved). BATTLE_SKILL_SYSTEM §13.10; PROJECT_COMPILER §2.63.
+; Their numbers are project data: CustomPctTable (gd_custom_pcts, percentages);
+; their extra battle lines are bank $4C CustomLinePtrs (gd_custom_lines).
+; =============================================================================
+
+; NewDispatch72 — FarSkillFork's choice of the bank-$52 damage machine for the
+; S155 battle skills. In: A = the id. Out: Z = one of them: wCustomJump := the
+; machine, HL = wCustomJump (the dispatcher's RST_08 reads the address there —
+; WRAM, so any bank-$52 address is reachable without a pointer in full bank $52);
+; NZ = not one of them (HL clobbered).
+;   LoneWolf / Punish / Finish / Rupture -> MournDispatch52 (CalcDefenseWrapper:
+;       the ATK-vs-DEF roll in $DB56, then the shared descriptor + handler tail)
+;   Rust / Repel / Plunder -> CustomDispatch52_shared (no damage machine: the
+;       handler writes everything; the MegaMagic setup would step the RNG)
+NewDispatch72:
+    ld hl, MournDispatch52
+    cp ID_LONEWOLF
+    jr z, .set
+    cp ID_PUNISH
+    jr z, .set
+    cp ID_FINISH
+    jr z, .set
+    cp ID_RUPTURE
+    jr z, .set
+    ld hl, CustomDispatch52_shared
+    cp ID_RUST
+    jr z, .set
+    cp ID_REPEL
+    jr z, .set
+    cp ID_PLUNDER
+    ret nz
+.set:
+    ld a, l
+    ld [wCustomJump], a
+    ld a, h
+    ld [wCustomJump + 1], a
+    ld hl, wCustomJump
+    xor a                               ; Z
+    ret
+
+; LineSlot72 — called by QuakeAnimHold72 (the $da82 animation gate) every time the
+; gate is polled. In an action's announce slot (d9ed 1, d9ee 3: the announce has
+; printed, the attack animation has not started) its FIRST poll drops any line
+; left over from an earlier action (a miss renders the miss message instead of
+; $FD, leaving Rust's pending) and runs SlashLine72 (the S155 bonus line, S155
+; r2); every poll outside the slot clears wLineShown, so the next action (or the
+; next victim of a sweep) decides again. Clobbers all.
+LineSlot72:
+    ld a, [$d9ed]
+    dec a
+    jr nz, .out
+    ld a, [$d9ee]
+    cp $03
+    jr nz, .out
+    ld a, [wLineShown]
+    or a
+    ret nz
+    inc a
+    ld [wLineShown], a
+    xor a
+    ld [wCustomLine], a
+    jp SlashLine72
+.out:
+    xor a
+    ld [wLineShown], a
+    ret
+
+; SetLine72 — A = an extra line (LINE_*): the hit message becomes $FD (bank $4C
+; LoadB4c_Fork_custom renders the line, the miss message is unchanged). Rust only
+; since S155 r2 (its line IS the result: the ATK lost).
+SetLine72:
+    ld [wCustomLine], a
+    ld a, [$db8a]
+    ld [wCustomLineSkill], a
+    ld a, $FD
+    ld [$dd70], a
+    ret
+
+; SlashLine72 — [S155 r2] from LineSlot72, once per action (per victim of a
+; sweep) in the announce slot, before the attack animation. For LoneWolf /
+; Punish / Finish / Rupture whose bonus applies to this target (the SAME tests
+; the handler makes later: SideCount72, CountBuffs72, FinishPct72 > 100, an
+; ailment), the skill's line is rendered NOW ($FD, wCustomLine): it replaces the
+; announce, appears before the slash and stays while it plays (measured: about
+; 20 frames before), and the hit itself keeps the game's own
+; message — "X takes Y damage pts!" lands with the damage sound and the shake /
+; blink, as for every hit (user S155 r2: "'A lone wolf's fury!' should NOT
+; coincide with damage sound but precede it … 'It goes in for the kill' … should
+; be there WHILE slash is happening"). The line shows even if the hit then misses
+; (the miss is rolled after the animation). Clobbers all.
+SlashLine72:
+    call LineAlways72                   ; [S155 r3] "every time" for this skill?
+    jr nz, .show                        ;   A = its line (CustomLineAlways)
+    ld a, [$db8a]
+    cp ID_LONEWOLF
+    jr z, .lonewolf
+    cp ID_PUNISH
+    jr z, .punish
+    cp ID_FINISH
+    jr z, .finish
+    cp ID_RUPTURE
+    ret nz
+    ld a, [wBattleTargetIdx]
+    call ScoreAilment72
+    or a
+    ret z
+    ld a, LINE_RUPTURE
+    jr .show
+.lonewolf:
+    call GetCaster72
+    call SideCount72
+    ld a, b
+    cp $03
+    ret nc
+    ld a, LINE_LONEWOLF
+    jr .show
+.punish:
+    ld a, [wBattleTargetIdx]
+    call CountBuffs72
+    ld a, b
+    or a
+    ret z
+    ld a, LINE_PUNISH
+    jr .show
+.finish:
+    call FinishPct72                    ; HL = P
+    ld a, h
+    or a
+    jr nz, .fin
+    ld a, l
+    cp 101
+    ret c
+.fin:
+    ld a, LINE_FINISH
+.show:
+    ld [wCustomLine], a
+    ld a, [$db8a]
+    ld [wCustomLineSkill], a
+    xor a
+    ld [$c822], a                       ; mode 0
+    ld a, $FD
+    ld [$c823], a
+    ld hl, $4c00                        ; the battle-message renderer (bank $4C fork:
+    rst $10                             ;   wCustomLine -> CustomLinePtrs, then cleared)
+    ret
+
+; GetCaster72 — A = the acting combatant = wBattleAttackerIdx ($DB88). MEASURED
+; S155 (PyBoy, tools/walk_skills.py): at the handler $DB88 = the caster for a
+; one-foe cast AND on every victim of an all-foes sweep (3 victims), while
+; $DB77 (the pending-action actor) already reads $FF ("consumed"). (S74 saw
+; $DB88 rewritten mid-sweep in Quake's own two-sided sweep fork; an Imitate
+; re-cast's attacker is the imitator — the right side to count then.)
+GetCaster72:
+    ld a, [wBattleAttackerIdx]
+    and $07
+    ret
+
+; PctOf72 — A = a PCT_* offset -> DE = the percentage (clamped to PCT_MAX).
+PctOf72:
+    ld e, a
+    ld d, $00
+    ld hl, CustomPctTable
+    add hl, de
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    ; fall through
+ClampPctDE72:                           ; DE := min(DE, PCT_MAX)
+    ld a, d
+    cp HIGH(PCT_MAX)
+    jr c, .ok
+    jr nz, .cap
+    ld a, e
+    cp LOW(PCT_MAX) + 1
+    ret c
+.cap:
+    ld de, PCT_MAX
+.ok:
+    ret
+
+; DamagePct72 — DE = a percentage: $DB56 := min(999, $DB56 * DE / 100), at least 1
+; when $DB56 was not 0.
+DamagePct72:
+    ld a, [$db56]
+    ld l, a
+    ld a, [$db57]
+    ld h, a
+    push hl
+    call MulPct72
+    call Cap999HL72
+    pop de
+    ld a, h                             ; a hit that landed keeps at least 1
+    or l                                ;   (Finish x0.2 on 1-4 damage): 0 only
+    jr nz, .store                       ;   when the roll itself was 0
+    ld a, d
+    or e
+    jr z, .store
+    inc l
+.store:
+    ld a, l
+    ld [$db56], a
+    ld a, h
+    ld [$db57], a
+    ret
+
+; MulPct72 — HL := floor(HL * DE / 100), exact while HL * DE / 100 < 60000
+; (damage 0-999 x a percentage 0-2000; Finish's span 0-2000 x 0-100). With
+; HL = 100a + b, DE = 100q + r: a*q*100 + a*r + b*q + floor(b*r / 100).
+; Clobbers A, BC, DE; wCustomTmp = b, a, r, q.
+MulPct72:
+    push de
+    ld c, 100
+    call Div16by8_72                    ; HL = a, A = b
+    ld [wCustomTmp], a
+    ld a, l
+    ld [wCustomTmp + 1], a
+    pop hl
+    ld c, 100
+    call Div16by8_72                    ; HL = q, A = r
+    ld [wCustomTmp + 2], a
+    ld a, l
+    ld [wCustomTmp + 3], a
+    ld a, [wCustomTmp + 1]              ; a * q * 100
+    ld e, a
+    ld d, $00
+    ld a, [wCustomTmp + 3]
+    ld b, a
+    call Mul16by8_72
+    ld d, h
+    ld e, l
+    ld b, 100
+    call Mul16by8_72
+    push hl
+    ld a, [wCustomTmp + 1]              ; + a * r
+    ld e, a
+    ld d, $00
+    ld a, [wCustomTmp + 2]
+    ld b, a
+    call Mul16by8_72
+    pop de
+    add hl, de
+    push hl
+    ld a, [wCustomTmp]                  ; + b * q
+    ld e, a
+    ld d, $00
+    ld a, [wCustomTmp + 3]
+    ld b, a
+    call Mul16by8_72
+    pop de
+    add hl, de
+    push hl
+    ld a, [wCustomTmp]                  ; + b * r / 100
+    ld e, a
+    ld d, $00
+    ld a, [wCustomTmp + 2]
+    ld b, a
+    call Mul16by8_72
+    ld c, 100
+    call Div16by8_72
+    pop de
+    add hl, de
+    ret
+
+; Cap999HL72 — HL := min(HL, 999). Clobbers A.
+Cap999HL72:
+    ld a, h
+    cp HIGH(1000)
+    ret c
+    jr nz, .cap
+    ld a, l
+    cp LOW(1000)
+    ret c
+.cap:
+    ld hl, 999
+    ret
+
+; SlotPtr72 — A = combatant slot, HL = a battle word array -> HL = &array[slot].
+SlotPtr72:
+    and $07
+    add a
+    add l
+    ld l, a
+    ret nc
+    inc h
+    ret
+
+; BlockPtr72 — A = slot -> HL = $DB00 + 8 * slot (the slot's status block: +2
+; ailments, +3 … +7; +8 / +9 = the next block's +0 / +1 = this slot's shifted
+; pair, $DB40 / $DB41 for slot 7 — BATTLE_SKILL_SYSTEM §15.8 / §15.11.F6).
+BlockPtr72:
+    and $07
+    add a
+    add a
+    add a
+    ld l, a
+    ld h, HIGH($db00)
+    ret
+
+; -----------------------------------------------------------------------------
+; LoneWolf ($DF) — the ATK-vs-DEF roll (CalcDefenseWrapper) x PCT_LW_ALONE when
+; the caster's side has ONE monster, x PCT_LW_DUO with two, x1 with three. A
+; monster counts while it is in the battle at all ($DD1B != $FF: alive or
+; fallen — user S155 "dead count as party"); the helper slot (3 / 7: CallHelp,
+; the summons) is not counted. Its line LINE_LONEWOLF (fewer than three) is shown as
+; the slash starts (SlashLine72, S155 r2).
+; -----------------------------------------------------------------------------
+SkillLoneWolf:
+    call GetCaster72
+    call SideCount72                    ; B = monsters on the caster's side
+    ld a, b
+    cp $02
+    jr z, .duo
+    ret nc                              ; three: x1
+    ld a, PCT_LW_ALONE
+    jr .apply
+.duo:
+    ld a, PCT_LW_DUO
+.apply:
+    call PctOf72
+    jp DamagePct72                      ; [S155 r2] the line came before (SlashLine72)
+
+; SideCount72 — A = a slot -> B = slots 0-2 of its side with $DD1B != $FF.
+SideCount72:
+    and $04
+    add LOW($dd1b)
+    ld l, a
+    ld h, HIGH($dd1b)
+    ld b, $00
+    ld c, $03
+.lp:
+    ld a, [hl+]
+    inc a
+    jr z, .no
+    inc b
+.no:
+    dec c
+    jr nz, .lp
+    ret
+
+; -----------------------------------------------------------------------------
+; Punish ($EB) — the ATK-vs-DEF roll x (100 + n x PCT_PUNISH) %, n = the buffs
+; on the target (CountBuffs72, BuffTable). Its line LINE_PUNISH (n > 0) is shown as the
+; slash starts (SlashLine72, S155 r2).
+; -----------------------------------------------------------------------------
+SkillPunish:
+    ld a, [wBattleTargetIdx]
+    call CountBuffs72                   ; B = n
+    ld a, b
+    or a
+    ret z
+    push bc
+    ld a, PCT_PUNISH
+    call PctOf72                        ; DE = the share per buff
+    pop bc
+    ld hl, 100
+.add:
+    add hl, de
+    dec b
+    jr nz, .add
+    ld d, h
+    ld e, l
+    call ClampPctDE72
+    jp DamagePct72                      ; [S155 r2] the line came before (SlashLine72)
+
+; CountBuffs72 — A = a slot -> B = how many of the BuffTable states it has.
+CountBuffs72:
+    call BlockPtr72
+    ld e, l
+    ld d, h                             ; DE = the slot's block
+    ld hl, BuffTable
+    ld b, $00
+    ld c, BUFF_COUNT
+.lp:
+    ld a, [hl+]                         ; the byte's offset in the block
+    push hl
+    add e
+    ld l, a
+    ld h, d
+    ld a, [hl]
+    pop hl
+    and [hl]                            ; its mask
+    inc hl
+    jr z, .no
+    inc b
+.no:
+    dec c
+    jr nz, .lp
+    ret
+
+; BuffTable — what counts as a BUFF (user S155: "any positive buff counts …
+; exclude iron and transform"): the game's own DeMagic "has a buff" test
+; (AIRuleDeMagicVetoNoBuff_6bcb: +3 & $3C, +4 & $6F, +5 & $40, +7 & $CC,
+; +8 & $40) without iron (+7 & $C0) and the transformed bits (+3 & $30), plus
+; the one-round stances DeMagic does not test. One entry = one buff:
+;   [offset in the slot's block, mask]   (BATTLE_SKILL_SYSTEM §15.11.F4/F6/F7)
+BuffTable:
+    db 3, $04                           ; TwinHits armed
+    db 3, $08                           ; ALLCHANGE (sure crits)
+    db 4, $01                           ; TakeMagic
+    db 4, $02                           ; Bounce
+    db 4, $04                           ; Barrier
+    db 4, $20                           ; MagicBack
+    db 4, $40                           ; TailWind / StormWind
+    db 5, $40                           ; MagicWall
+    db 6, $03                           ; ChargeUP
+    db 6, $30                           ; SuckAir
+    db 6, $C0                           ; Focus
+    db 7, $0C                           ; SideStep
+    db 8, $40                           ; a stat RAISED (Upper / Increase / Speed / SpeedUp)
+    db 8, $20                           ; Dodge
+    db 8, $08                           ; Imitate
+    db 8, $02                           ; SuckAll
+    db 9, $07                           ; Defence / StrongD / BladeD stance
+DEF BUFF_COUNT EQU (@ - BuffTable) / 2
+
+; -----------------------------------------------------------------------------
+; Finish ($EC) — the ATK-vs-DEF roll x P %, P = low + (high - low) x the share
+; of the target's HP that is missing (PCT_FIN_LOW at full HP, PCT_FIN_HIGH near
+; 0; high < low works the other way). The share is in whole percent of the
+; target's MaxHP (both shifted below 256 first). Its line (LINE_FINISH, when
+; P > 100) is shown as the slash starts (SlashLine72, S155 r2).
+; -----------------------------------------------------------------------------
+SkillFinish:
+    call FinishPct72
+    ld d, h
+    ld e, l
+    jp DamagePct72
+
+; LineAlways72 — [S155 r3] NZ + A = the acting skill's line when the project shows
+; it EVERY time (CustomLineAlways bit: 0 LoneWolf, 1 Punish, 2 Finish, 3 Rupture —
+; `line_shows: "always"`, the default since S155 r3: the user, "I would prefer it
+; displayed the text regardless of whether threshold is reached or not - so the
+; user can see what the skill is trying to do"); Z = test the bonus as before.
+LineAlways72:
+    ld a, [$db8a]
+    ld b, LINE_LONEWOLF
+    ld c, $01
+    cp ID_LONEWOLF
+    jr z, .test
+    inc b
+    sla c
+    cp ID_PUNISH
+    jr z, .test
+    inc b
+    sla c
+    cp ID_FINISH
+    jr z, .test
+    inc b
+    sla c
+    cp ID_RUPTURE
+    jr z, .test
+    xor a                               ; Z: not one of the four
+    ret
+.test:
+    ld a, [CustomLineAlways]
+    and c
+    ret z
+    ld a, b
+    or a                                ; NZ
+    ret
+
+; FinishPct72 — HL = Finish's P (%) for the target wBattleTargetIdx. Clobbers all.
+FinishPct72:
+    ld a, [wBattleTargetIdx]
+    call MissingShare72                 ; HL = the share of its HP it has lost (%)
+.share:
+    push hl                             ; the share
+    ld a, PCT_FIN_HIGH
+    call PctOf72
+    push de                             ; high
+    ld a, PCT_FIN_LOW
+    call PctOf72                        ; DE = low
+    pop hl                              ; HL = high
+    ld a, l                             ; HL = high - low
+    sub e
+    ld l, a
+    ld a, h
+    sbc d
+    ld h, a
+    jr c, .down
+    push de                             ; low
+    pop bc
+    pop de                              ; DE = the share
+    push bc
+    call MulPct72                       ; HL = (high - low) * share / 100
+    pop de
+    add hl, de                          ; + low
+    ret
+.down:
+    ld a, l                             ; HL = low - high
+    cpl
+    ld l, a
+    ld a, h
+    cpl
+    ld h, a
+    inc hl
+    push de                             ; low
+    pop bc
+    pop de                              ; DE = the share
+    push bc
+    call MulPct72                       ; HL = (low - high) * share / 100
+    pop de
+    ld a, e                             ; low - that
+    sub l
+    ld l, a
+    ld a, d
+    sbc h
+    ld h, a
+.apply:
+    ret
+
+; -----------------------------------------------------------------------------
+; Rupture ($ED) — the target's AILMENTS burst: when it has any of +2 (poison,
+; the heavy poison, sleep, confusion, curse, paralysis — every bit) or +3 & $C3
+; (StopSpell, Surround, DanceShut, MouthShut), they are all cleared and the
+; ATK-vs-DEF roll x PCT_RUPTURE hits (its line LINE_RUPTURE was shown as the slash
+; started, SlashLine72, S155 r2); without one the
+; skill fails: "But nothing happens!" ($BB, descriptor $84 — Sap's failure
+; shape; the MP is spent). (User S155: "any debuff counts … consume all … fail
+; with mp spent.")
+; -----------------------------------------------------------------------------
+SkillRupture:
+    ld a, [wBattleTargetIdx]
+    call BlockPtr72
+    inc hl
+    inc hl                              ; +2
+    ld b, [hl]
+    inc hl                              ; +3
+    ld a, [hl]
+    and $C3
+    or b
+    jp z, RustFail72
+    ld a, [hl]
+    and $3C
+    ld [hl-], a                         ; +3: only the twin-hit / ALLCHANGE / form bits stay
+    ld [hl], $00                        ; +2: every ailment gone
+    ld a, PCT_RUPTURE
+    call PctOf72
+    jp DamagePct72                      ; [S155 r2] the line came before (SlashLine72)
+
+; -----------------------------------------------------------------------------
+; Rust ($EE) — lowers the target's ATK, the way Sap lowers DEF (bank $52
+; SkillSap: SapHitRoll_5dcc then StatDefDown_5dfc; BATTLE_SKILL_SYSTEM
+; §15.11.F7): the same roll — resistance 12 (DefDown, user S155 "fold under
+; DefDown"), $DB42 bit 2 = sure, else ladder B (RustRoll72); a miss -> "Has no
+; effect" ($B8, descriptor $80); ATK <= 1 or [S155 r5] already blunted
+; (wBlunted bit: Blunt does NOT stack — the user: "MadKnight cast blunt like 6
+; times in a row … Blunt should NOT stack") -> "But nothing happens!" ($BB,
+; $84; MP spent); else ATK -= base ATK x PCT_RUST % (at least 1), ATK never below 1
+; (user S155: "floor 1"; Sap's DEF floor is 0); $DB56 = the ATK lost (the
+; line's number); the slot's "lowered" mark (+8 bit 7: Surge / DeMagic put it
+; back — bank $53 RustRestoreATK53); descriptor $98 (no HP damage) with hit
+; message $FD = LINE_RUST.
+; -----------------------------------------------------------------------------
+SkillRust:
+    xor a
+    ld [$db56], a
+    ld [$db57], a
+    ld a, [wBattleTargetIdx]            ; [S155 r5] already blunted: fails
+    call BluntBit72
+    jp nz, RustFail72
+    call RustRoll72
+    jr c, .lands
+    ld a, $b8                           ; resisted: Sap's miss shape
+    ld [$dd70], a
+    ld [$dd71], a
+    ld a, $80
+    ld [$dd6f], a
+    ret
+.lands:
+    ld a, [wBattleTargetIdx]
+    ld hl, wBattleATK
+    call SlotPtr72
+    push hl
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = ATK
+    ld a, h
+    or a
+    jr nz, .some
+    ld a, l
+    cp $02
+    jr c, .failPop                      ; ATK 0 / 1: nothing to lower
+.some:
+    push hl                             ; ATK
+    ld a, [wBattleTargetIdx]
+    and $07
+    ld [$dd72], a
+    ld hl, $5706                        ; bank $57 entry 6 = the base ATK of slot [$dd72]
+    rst $10                             ;   (party record +$58 / the enemy row)
+    ld a, [$dd72]
+    ld l, a
+    ld a, [$dd73]
+    ld h, a
+    ld a, PCT_RUST
+    push hl
+    call PctOf72
+    pop hl
+    call MulPct72                       ; HL = the amount
+    ld a, h
+    or l
+    jr nz, .amt
+    inc l                               ; at least 1
+.amt:
+    ld d, h
+    ld e, l                             ; DE = amount
+    pop hl                              ; HL = ATK (>= 2)
+    ld a, l                             ; new = ATK - amount, at least 1
+    sub e
+    ld c, a
+    ld a, h
+    sbc d
+    ld b, a                             ; BC = new
+    jr c, .floor
+    or c
+    jr nz, .ok
+.floor:
+    ld bc, $0001
+.ok:
+    ld a, l                             ; the ATK lost = ATK - new
+    sub c
+    ld [$db56], a
+    ld a, h
+    sbc b
+    ld [$db57], a
+    pop hl                              ; &ATK
+    ld a, c
+    ld [hl+], a
+    ld [hl], b
+    ld a, [wBattleTargetIdx]
+    call BlockPtr72
+    ld a, l
+    add 8
+    ld l, a
+    set 7, [hl]                         ; +8 bit 7: a stat LOWERED
+    ld a, [wBattleTargetIdx]            ; [S155 r5] the slot is blunted
+    call BluntBit72
+    ld a, [hl]
+    or b
+    ld [hl], a
+    ld a, $98                           ; Sap's success descriptor (no HP damage)
+    ld [$dd6f], a
+    ld a, $b8
+    ld [$dd71], a
+    ld a, LINE_RUST
+    jp SetLine72
+.failPop:
+    pop hl
+RustFail72:                             ; "But nothing happens!" (no HP damage)
+    xor a
+    ld [$db56], a
+    ld [$db57], a
+    ld a, $bb
+    ld [$dd70], a
+    ld [$dd71], a
+    ld a, $84
+    ld [$dd6f], a
+    ret
+
+; BluntBit72 — [S155 r5] A = a slot -> B = its wBlunted bit, HL = wBlunted,
+; A = [wBlunted] & B (NZ = blunted). Clobbers C.
+BluntBit72:
+    and $07
+    inc a
+    ld c, a
+    ld b, $80
+.sh:
+    rlc b
+    dec c
+    jr nz, .sh
+    ld hl, wBlunted
+    ld a, [hl]
+    and b
+    ret
+
+; RustRoll72 — carry = the ATK-down lands. A port of bank $52 SapHitRoll_5dcc
+; with the ladder CheckTargetGuardB (bank $52 is not callable from here): the
+; target's resistance 12 level ($DD2B + 7t bits 5:4) -> $DB4E; $DB5A/$DB5B := 0
+; (as the original); level 3 -> never (no RNG); the attacker's $DB42 bit 2 ->
+; sure (no RNG); else by the target's +5 byte: bit 6 (MagicWall's guard row)
+; [always, $BF, $66, never], bit 7 [always, always, $BF, never], else
+; [always, $D8, $7F, never] — one BattleRNG step, hit iff wRNG1 < the value.
+RustRoll72:
+    xor a
+    ld [$db5a], a
+    ld [$db5b], a
+    ld a, [wBattleTargetIdx]
+    and $07
+    ld b, a
+    add a
+    add b
+    add a
+    add b                               ; 7t
+    add LOW($dd2b)
+    ld l, a
+    ld a, $00
+    adc HIGH($dd2b)
+    ld h, a
+    ld a, [hl]
+    swap a
+    and $03
+    ld [$db4e], a
+    cp $03
+    jr z, .never
+    ld c, a                             ; C = level 0-2
+    ld a, [wBattleAttackerIdx]
+    and $07
+    add LOW($db42)
+    ld l, a
+    ld h, HIGH($db42)
+    bit 2, [hl]
+    jr nz, .sure
+    ld a, [wBattleTargetIdx]
+    call BlockPtr72
+    ld a, l
+    add 5
+    ld l, a
+    ld a, [hl]                          ; +5
+    ld hl, RustLadderPlain
+    bit 6, a
+    jr z, .nog
+    ld hl, RustLadderGuard
+    jr .pick
+.nog:
+    bit 7, a
+    jr z, .pick
+    ld hl, RustLadderAmp
+.pick:
+    ld b, $00
+    add hl, bc
+    ld a, [hl]
+    or a
+    jr z, .sure                         ; 0 = always, no RNG
+    inc a
+    jr z, .never                        ; $FF = never
+    dec a
+    push af
+    call BattleRNG72
+    pop af
+    ld b, a
+    ld a, [wRNG1]
+    cp b                                ; carry iff wRNG1 < the value
+    ret
+.sure:
+    scf
+    ret
+.never:
+    and a                               ; carry clear
+    ret
+RustLadderPlain:
+    db $00, $D8, $7F                    ; BattleFunc_67ec (level 3 never: handled above)
+RustLadderGuard:
+    db $00, $BF, $66                    ; BattleFunc_680f
+RustLadderAmp:
+    db $00, $00, $BF                    ; Compare_6802 (levels 0 / 1 always)
+
+; BattleRNG72 — bank $52 BattleRNG: the link battle's private RNG ($C1ED/$C1EE)
+; or GenerateRNG.
+BattleRNG72:
+    ld a, [$c86c]
+    or a
+    jp z, GenerateRNG
+    push hl
+    ld a, [$c1ed]
+    ld [wRNG1], a
+    ld a, [$c1ee]
+    ld [wRNG2], a
+    call GenerateRNG
+    ld a, [wRNG1]
+    ld [$c1ed], a
+    ld a, [wRNG2]
+    ld [$c1ee], a
+    pop hl
+    ret
+
+; -----------------------------------------------------------------------------
+; Repel ($DE) — FIELD only: the Repellant's own effect ($C93E bit 1: bank $16
+; label16_6f05, the per-step encounter roll, does nothing while it is set).
+; Reached from AnchorField14Tail (bank $14 entry 4, the field skill's
+; validation, run after the MP check and before the deduct): refused ($DA5E :=
+; $FF, the field menu's "fizzle") when already active or where no random
+; encounter can happen (EncountersHere72); else set at once. On a gate floor it
+; ends at the next floor like the item (bank $16 label16_5b4e clears $C93E);
+; elsewhere wRepelArmed / wRepelPlace end it when the party arrives in another
+; place (RepelCommit72, bank $73's commit). Bank $07 Anchor07Post then takes
+; StepGuard's way: no message, the MP deducted.
+; -----------------------------------------------------------------------------
+RepelField72:
+    ld a, [$c93e]
+    bit 1, a
+    jr nz, .fizzle
+    call EncountersHere72
+    jr nc, .fizzle
+    ld hl, $c93e
+    set 1, [hl]
+    ld a, [wInGateworld]
+    or a
+    ld a, $00
+    jr nz, .arm                         ; a gate floor: its next floor clears it
+    ld a, [wMapRegion]
+    ld [wRepelPlace], a
+    ld a, [wMapID]
+    ld [wRepelPlace + 1], a
+    ld a, $01
+.arm:
+    ld [wRepelArmed], a
+    ret
+.fizzle:
+    ld a, $ff
+    ld [$da5e], a
+    ret
+
+; EncountersHere72 — carry = random encounters can happen here: a gate floor
+; (wInGateworld != 0), the special floors bank $0B Jump_00b_4674 runs the
+; per-step roll in ($53-$59 forest / conveyor / mazes, $61-$64 the forest
+; rooms), or a custom room ($6B+) with encounters on (wRoomEncFlag of bank $71
+; entry 1 CustomEncResolve — asked again here: bank $0B refreshes it only at
+; each step, so right after an arrival it still describes the room before;
+; measured S155 tools/walk_skills.py: a cast in Cities_FOUNT just after the
+; den was accepted). Clobbers all.
+EncountersHere72:
+    ld a, [wInGateworld]
+    or a
+    jr nz, .yes
+    ld a, [wMapID]
+    cp $53
+    jr c, .no
+    cp $5A
+    jr c, .yes
+    cp $61
+    jr c, .no
+    cp $65
+    jr c, .yes
+    cp $6B
+    jr c, .no
+    ld hl, $7101                        ; bank $71 entry 1: this room's RoomEncTable row
+    rst $10                             ;   -> wRoomEncFlag (and the gate / floor it pins,
+    ld a, [wRoomEncFlag]                ;   as every step there does)
+    or a
+    jr nz, .yes
+.no:
+    and a
+    ret
+.yes:
+    scf
+    ret
+
+; RepelCommit72 (entry 10) — bank $73 CF2WarpCommitDrain, after RegionCommit
+; (wMapRegion / wMapID = the destination): a Repel cast outside a gate floor
+; ends when the party arrives anywhere else (a battle's return to the same
+; room keeps it). Clobbers A.
+RepelCommit72:
+    ld a, [wRepelArmed]
+    or a
+    ret z
+    ld a, [wMapRegion]
+    ld hl, wRepelPlace
+    cp [hl]
+    jr nz, .end
+    inc hl
+    ld a, [wMapID]
+    cp [hl]
+    ret z
+.end:
+    xor a
+    ld [wRepelArmed], a
+    ld hl, $c93e
+    res 1, [hl]
+    ret
+
+; -----------------------------------------------------------------------------
+; CustomAIRule72 (entry 8) — bank $57 CustomAI57, at the end of the AI's rule
+; walk for one option of a custom id (the vanilla rules self-select on stock
+; ids). Adjusts the BONUS $DD26 (saturating) / PENALTY $DD27 ($FF = veto); the
+; actor = wBattleAttackerIdx (as the vanilla rules read it). The numbers are
+; the vanilla rules' own sizes (+20 / +30, BATTLE_SKILL_SYSTEM §15.10.5):
+;   Repel, Plunder (not built) -> veto (field-only / nothing to do)
+;   Rupture   -> veto unless a live opponent has an ailment; else +50
+;   Punish    -> +20 per buff on the most-buffed live opponent (at most +60)
+;   Finish    -> +40 when a live opponent has lost half its HP or more;
+;                penalty 20 when every live opponent has lost under a quarter
+;   Rust      -> veto unless a live opponent has ATK > 1
+;   LoneWolf  -> +40 alone, +20 in a party of two
+; (sized against the cat-1 plain-attack score, bank $58 entry 11 $67BA: 20 +
+; 10 per damage threshold met — a skill must out-score it to be used; measured
+; S155 tools/walk_skills.py.)
+; The built-ins of S49-S75 keep no rule (unchanged). Clobbers all.
+; -----------------------------------------------------------------------------
+CustomAIRule72:
+    ld a, [$db8a]
+    cp ID_REPEL
+    jr z, .veto
+    cp ID_PLUNDER
+    jr z, .veto
+    cp ID_RUPTURE
+    jr z, .rupture
+    cp ID_PUNISH
+    jr z, .punish
+    cp ID_FINISH
+    jr z, .finish
+    cp ID_RUST
+    jr z, .rust
+    cp ID_LONEWOLF
+    ret nz
+    ld a, [wBattleAttackerIdx]
+    call SideCount72
+    ld a, b
+    cp $02
+    ld a, 20
+    jr z, AIBonus72
+    ret nc
+    ld a, 40
+    jr AIBonus72
+.veto:
+    ld a, $ff
+    ld [$dd27], a
+    ret
+.rupture:
+    ld hl, ScoreAilment72
+    call OppScan72
+    ld a, b
+    or a
+    jr z, .veto
+    ld a, 50
+    jr AIBonus72
+.rust:
+    ld hl, ScoreRust72
+    call OppScan72
+    ld a, b
+    or a
+    jr z, .veto
+    ret
+.punish:
+    ld hl, ScoreBuffs72
+    call OppScan72
+    ld a, b
+    or a
+    ret z
+    cp $03
+    jr c, .p
+    ld a, $03
+.p:
+    add a                               ; x20
+    add a
+    ld b, a
+    add a
+    add a
+    add b
+    jr AIBonus72
+.finish:
+    ld hl, ScoreHurt72
+    call OppScan72                      ; B = 1 + the largest missing share %
+    ld a, b
+    or a
+    ret z
+    cp 51
+    ld a, 40
+    jr nc, AIBonus72
+    ld a, b
+    cp 26
+    ret nc
+    ld a, [$dd27]                       ; penalty 20 (saturating; $FF stays a veto)
+    add 20
+    jr nc, .pen
+    ld a, $fe
+.pen:
+    ld [$dd27], a
+    ret
+
+AIBonus72:                              ; $DD26 += A, saturating at $FF (AISatAdd_455f)
+    ld hl, $dd26
+    add [hl]
+    jr nc, .ok
+    ld a, $ff
+.ok:
+    ld [hl], a
+    ret
+
+; OppScan72 — HL = a scorer (A = a slot -> A = its score, 0 = unsuitable).
+; Walks the live opponents of wBattleAttackerIdx (slots 0-2 of the other side,
+; $DD1B == 0). Out: B = the best score (0 = none suitable), C = its slot ($FF),
+; D = the first live opponent ($FF = none). Ties keep the first.
+OppScan72:
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld e, a
+    ld bc, $00ff
+    ld d, $ff
+.lp:
+    push hl
+    ld a, e
+    add LOW($dd1b)
+    ld l, a
+    ld h, HIGH($dd1b)
+    ld a, [hl]
+    pop hl
+    or a
+    jr nz, .next
+    ld a, d
+    inc a
+    jr nz, .first
+    ld d, e
+.first:
+    push bc
+    push de
+    push hl
+    ld a, e
+    call .callhl
+    pop hl
+    pop de
+    pop bc
+    or a
+    jr z, .next
+    cp b
+    jr c, .next
+    jr z, .next
+    ld b, a
+    ld c, e
+.next:
+    inc e
+    ld a, e
+    and $03
+    cp $03
+    jr nz, .lp
+    ret
+.callhl:
+    jp hl
+
+ScoreAilment72:                         ; 1 = an ailment Rupture bursts
+    call BlockPtr72
+    inc hl
+    inc hl
+    ld b, [hl]
+    inc hl
+    ld a, [hl]
+    and $C3
+    or b
+    ret z
+    ld a, $01
+    ret
+
+ScoreBuffs72:                           ; the buff count
+    call CountBuffs72
+    ld a, b
+    ret
+
+ScoreRust72:                            ; ATK > 1 -> 1 + ATK / 4 (the strongest first)
+    push af                             ; [S155 r5] a blunted one scores 0 (no
+    push bc                             ;   stacking: the AI vetoes Blunt when every
+    call BluntBit72                     ;   opponent is blunted, the pick skips them)
+    pop bc
+    jr z, .fresh
+    pop af
+    xor a
+    ret
+.fresh:
+    pop af
+    ld hl, wBattleATK
+    call SlotPtr72
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a
+    ld a, h
+    or a
+    jr nz, .big
+    ld a, l
+    cp $02
+    jr nc, .big
+    xor a
+    ret
+.big:
+    srl h
+    rr l
+    srl h
+    rr l
+    ld a, l
+    inc a
+    ret
+
+ScoreHurt72:                            ; 1 + the share of its MaxHP it has lost (%)
+    call MissingShare72
+    ld a, l
+    inc a
+    ret
+
+; -----------------------------------------------------------------------------
+; CustomTargetPick72 (entry 9) — bank $58 DispatchBoundsStub, for a custom id
+; whose CustomTargetBaseTable row is $F0 (the act-time AI's target of a one-foe
+; S155 skill — the vanilla rows pick blindly). Out: E = the slot: the best
+; opponent by the skill's own scorer (Rupture: one with an ailment; Punish: the
+; most buffs; Finish: the most HP lost; Rust: the highest ATK; others: the
+; first), else the first live opponent, else the opposing side's base.
+; -----------------------------------------------------------------------------
+CustomTargetPick72:
+    ld a, [$db8a]
+    ld hl, ScoreAilment72
+    cp ID_RUPTURE
+    jr z, .scan
+    ld hl, ScoreBuffs72
+    cp ID_PUNISH
+    jr z, .scan
+    cp ID_PLUNDER
+    jr z, .scan
+    ld hl, ScoreHurt72
+    cp ID_FINISH
+    jr z, .scan
+    ld hl, ScoreRust72
+    cp ID_RUST
+    jr z, .scan
+    ld hl, ScoreFirst72
+.scan:
+    call OppScan72
+    ld e, c
+    ld a, c
+    inc a
+    ret nz                              ; a suitable one
+    ld e, d
+    ld a, d
+    inc a
+    ret nz                              ; the first live one
+    ld a, [wBattleAttackerIdx]
+    and $04
+    xor $04
+    ld e, a
+    ret
+
+ScoreFirst72:
+    ld a, $01
+    ret
+
+; MissingShare72 — A = a slot -> HL = the share of its MaxHP it has lost, in
+; whole percent (0-100; MaxHP and the loss shifted below 256 first; MaxHP 0 ->
+; 0). Clobbers A, BC, DE.
+MissingShare72:
+    push af
+    ld hl, $dbb3                        ; MaxHP
+    call SlotPtr72
+    ld c, [hl]
+    inc hl
+    ld b, [hl]
+    pop af
+    ld hl, $dba3                        ; HP
+    call SlotPtr72
+    ld a, [hl+]
+    ld h, [hl]
+    ld l, a                             ; HL = HP, BC = MaxHP
+    ld a, c                             ; DE = MaxHP - HP (0 if HP >= MaxHP)
+    sub l
+    ld e, a
+    ld a, b
+    sbc h
+    ld d, a
+    jr nc, .scale
+    ld de, $0000
+.scale:
+    ld a, b
+    or a
+    jr z, .div
+    srl b
+    rr c
+    srl d
+    rr e
+    jr .scale
+.div:
+    ld a, c
+    or a
+    ld hl, $0000
+    ret z
+    push bc
+    ld b, 100
+    call Mul16by8_72                    ; HL = loss * 100 (< 25600)
+    pop bc
+    jp Div16by8_72                      ; HL = the share
+
+; [S155] CustomPctTable — the S155 skills' numbers as project data (compiler
+; region gd_custom_pcts, gamedata.skills.<223 / 235-238> `duo` / `alone`,
+; `per_buff`, `at_full_hp` / `near_zero_hp`, `burst`, `atk_loss`; PROJECT_COMPILER
+; §2.63): percentages, 100 = x1, at most PCT_MAX. Offsets: the PCT_* constants.
+CustomPctTable:
+; @BUILD_PROJECT BEGIN gd_custom_pcts
+    dw 200   ; [$DF] LoneWolf: x2 — the damage in a party of two (duo)
+    dw 400   ; [$DF] LoneWolf: x4 — the damage alone (alone)
+    dw 50    ; [$EB] Punish: x0.5 — the extra damage per buff on the target (per_buff)
+    dw 20    ; [$EC] Finish: x0.2 — the damage when the target has full HP (at_full_hp)
+    dw 200   ; [$EC] Finish: x2 — the damage when the target is near 0 HP (near_zero_hp)
+    dw 300   ; [$ED] Rupture: x3 — the damage when the ailments burst (burst)
+    dw 50    ; [$EE] Blunt: x0.5 — the ATK lost, a share of the target's base ATK (atk_loss)
+CustomLineAlways:
+    db %00001111   ; [S155 r3] the line every time (line_shows "always"): LoneWolf Punish Finish Rupture
+; @BUILD_PROJECT END gd_custom_pcts
+
+; =============================================================================
 ; [S111] SKILL TABLES the compiler owns (PROJECT_COMPILER §2.27; editor2/core/
 ; custom_skills.py). No edits = the S110 behaviour.
 ; =============================================================================
@@ -1149,8 +2396,8 @@ CustomRatioTable:
 ; runs (FarSkillFork). Ids $DE-$FE.
 CustomBaseTable:
 ; @BUILD_PROJECT BEGIN gd_custom_base
-    db $FF   ; [$DE] retired
-    db $FF   ; [$DF] retired
+    db $FF   ; [$DE] Repel
+    db $FF   ; [$DF] LoneWolf
     db $FF   ; [$E0] MagicBurn
     db $FF   ; [$E1] Tame
     db $FF   ; [$E2] TameMore
@@ -1162,10 +2409,10 @@ CustomBaseTable:
     db $FF   ; [$E8] QuakeMost
     db $FF   ; [$E9] Mourn
     db $FF   ; [$EA] -
-    db $FF   ; [$EB] -
-    db $FF   ; [$EC] -
-    db $FF   ; [$ED] -
-    db $FF   ; [$EE] -
+    db $FF   ; [$EB] Punish
+    db $FF   ; [$EC] Finish
+    db $FF   ; [$ED] Rupture
+    db $FF   ; [$EE] Blunt
     db $FF   ; [$EF] -
     db $FF   ; [$F0] -
     db $FF   ; [$F1] -
@@ -1208,11 +2455,13 @@ CustomElemTable:
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$EE-$FD]
     db $FF   ; [$FE-$FE]
 ; @BUILD_PROJECT END gd_skill_elements
-; CustomLearnTable [id-$E0] — the 18-byte learn rows of ids $E0-$FE (the
+; CustomLearnTable [id-$DE] — the 18-byte learn rows of ids $DE-$FE (S155; $E0-$FE before) (the
 ; SkillLearnReqTable format: level, six u16 stat minimums, five prerequisite
 ; ids $FF-padded); level $FF = not learnable. Read by CustomLearnRow72.
 CustomLearnTable:
 ; @BUILD_PROJECT BEGIN gd_custom_learn
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$DE] Repel: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$DF] LoneWolf: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E0] MagicBurn: not learnable
     db $02, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E1] Tame: level 2
     db $03, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E1, $FF, $FF, $FF, $FF   ; [$E2] TameMore: level 3
@@ -1224,10 +2473,10 @@ CustomLearnTable:
     db $08, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E7, $FF, $FF, $FF, $FF   ; [$E8] QuakeMost: level 8
     db $03, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E9] Mourn: level 3
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EA] -: not learnable
-    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EB] -: not learnable
-    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EC] -: not learnable
-    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$ED] -: not learnable
-    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EE] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EB] Punish: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EC] Finish: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$ED] Rupture: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EE] Blunt: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EF] -: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F0] -: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$F1] -: not learnable

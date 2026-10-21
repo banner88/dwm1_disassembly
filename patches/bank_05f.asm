@@ -12881,8 +12881,8 @@ CustomProxyTable:      ; [skill_id-$DE] -> presentation proxy id, ids $DE-$FE
 ; Mourn = $40 EvilSlash (BATTLE_SKILL_SYSTEM §13). S74: as a CUSTOM skill's
 ; proxy, HealMore $2C stalled the $52:$6c4d done-spin on the offense side.
 ; @BUILD_PROJECT BEGIN gd_custom_present
-    db $09, $09, $09, $C2, $C2, $C2, $09, $09, $09, $09, $09   ; [$DE-$E8]
-    db $40, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09   ; [$E9-$F3]
+    db $09, $4A, $09, $C2, $C2, $C2, $09, $09, $09, $09, $09   ; [$DE-$E8]
+    db $40, $09, $3F, $49, $08, $1C, $09, $09, $09, $09, $09   ; [$E9-$F3]
     db $09, $09, $09, $09, $09, $09, $09, $09, $09, $09, $09   ; [$F4-$FE]
 ; @BUILD_PROJECT END gd_custom_present
 ; [QUAKE S74] anim-index-site variant of GetPresentId (12 B, funded from the

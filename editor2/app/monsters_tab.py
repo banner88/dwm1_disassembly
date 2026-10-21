@@ -493,7 +493,7 @@ class MonstersTab(QWidget):
             for c in self.w_skill:
                 have = [c.itemData(i) for i in range(c.count())]
                 if sorted(x for x in have if x is not None) != sorted(self.skills):
-                    # S111: the project's new skills (234-254) come and go
+                    # S111: the project's new skills (239-254 since S155) come and go
                     cur = c.currentData()
                     c.blockSignals(True)
                     c.clear()

@@ -1,5 +1,64 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-18 (Session 153 — **ROADMAP E5 BUILT: THE TITLE SCREEN AND THE ENDING — YOUR WORDS ON THE
+> TITLE ("MILAYOU'S JOURNEY"), YOUR OWN CREDITS PAGES (TEXT, MONSTER, SECONDS, SONGS), THE FINAL SCENE OF ANY CUTSCENE
+> ROLLS THE CREDITS AND SENDS THE GAME ON TO A ROOM OF YOUR CHOICE; "…TO BE CONTINUED" (THE SAVE); THE ORIGINAL GAME'S
+> STORY AT ANY OF ITS 42 POINTS IN ONE STEP; BANK $5F (INTRO / TITLE / CREDITS / CONTINUE) FULLY LABELLED** (kickoff:
+> "Given a complete romhack, IS ANYTHING MISSING? … read [the greatlog handoff] FIRST" → the tiered gap audit + four
+> questions → user: "E5 + handover sounds good. If intro has "Milayou's Journey" or whatever text I want added to it
+> that would be cool. The final cutscene before credits also should be editable and you can send a given cutscene to
+> credits. Anything connected to this is also fine. Honestly strike the custom gate tiles in random gates it's not
+> necessary what's in the game is enough for me. Ill mostly make my own custom hand authored gates."). **Built S153;
+> USER-CONFIRMED 2026-10-18 20:51 ("Yep works great").** Test ROM **`DWM-S153-ending-test.gbc`** (`000f77dc…`, patched; a NEW project,
+> `examples/s153_ending_demo/milayous_journey/`). Example pin `d88d5436…` (patched; was `7e8cb031…`, patched): bank $77
+> only (A/B diff vs a HEAD worktree build: 1,172 B of bank $77 + 2 header bytes). ROADMAP: "gate looks of your own"
+> struck by the user.
+> **Measured + annotated (PyBoy, the original ROM; NEW `tools/annotate_ending_5f.py`, both trees, byte-perfect):** bank
+> $5F = game mode 4 (entries 0 / 1: sub 0 the CREDITS, sub 1 "TO BE CONTINUED") + mode 0 sub 0 (entries 2 / 3: intro
+> stages 0-5, stage 6 = the TITLE). The credits: 27 pages ($C0D9; the last-page compare `cp $1a` twice), each = a role
+> (text mode 5, $8000, 2 × 20), names (mode 6, $8260 = tile $26, 12 × 11; `$F1` = the line's start + one row, no wrap —
+> a long line spills) and a monster (`CreditsMonsterTable` $43F4, tiles $AA-$CD, BG palette 4 — the engine forces colour
+> 1 $6BFF / colour 3 $0000); tilemaps $66B3 (20 × 18) / $681B (the closing page, `CreditsCopyrightLayout` $440F); 5 s a
+> page + 50 frames of fades (`cp $05`); song $21; `CreditsDone` $4178 → the bedroom ($2F, X $38 Y $C8) by the warp
+> mailbox. TBC: song $31, credits_end row 0, A → text $0256 "save?", YES → $C8EA := 1 + SaveGameState ($00:$2128) +
+> $0257, NO $0258, then it waits for ever; CONTINUE = the room the save was made in, **its entry scripts NOT run** (the
+> load runs none). The title (`TitleInit` $45C0): $5B20 → $9000, $5B21 → $8800, `TitleTilemap` $6583 (DrawTilemapStream
+> $D8 / $D9), palette set 1 (bank $17 + 64), every attribute palette 5 ($0012 / $6BFF / $01DE / $0000), LCDC $83, VRAM
+> bank 1 unused, rows 0-5 / 12-14 / 17 empty; song $06 (also `TitleTick` $49B3 when it ends). DATA_STRUCTURES "The
+> title screen and the ending (S153)", ARCHITECTURE modes 0 / 4.
+> **Built (engine):** eleven bank $5F regions over the game's own bytes (credits_song / continue_song / credits_seconds /
+> credits_last_a / _b / credits_after (the 38-byte mailbox block) / credits_monster_ptr / title_song / title_song_again /
+> title_text (TitleInitDone's 5 bytes) / credits_monsters (64 B of the pad)); bank $79 entries 3 `TitleText` (VRAM bank 1:
+> the lines' tiles at $8800, ids $80+, attribute $0D; GBC only), 4 `CreditsAfter` (wCreditsAfter → the warp mailbox;
+> else the game's bedroom), 5 `StoryPointApply` (rows `dw addr / db keep, value`); bank $77 `StoryCommand` kinds 5
+> story_point / 6 credits_after (TEMPLATE_SIZE 2229, re-pinned); WRAM `wCreditsAfter` $D566-$D56C (wCustomPool − 7).
+> PROJECT_COMPILER §2.61.
+> **Built (compiler + editor):** NEW `editor2/core/ending.py` (`custom.title`, `custom.credits`, the pixel-exact title /
+> page pictures, the story points from the original opening's state — `story_state.state_at(start=)`), NEW
+> `ending_doc.py`, NEW `app/ending_dialog.py` (Cutscenes → **Title & ending…**: title lines + song + picture; credits
+> pages ＋ / remove / ▲ ▼ / the game's pages, role / names / monster + picture, seconds, credits + TBC songs); cutscene
+> steps **Story point**, **Roll the credits** (room / screen / tile after), **TO BE CONTINUED** (forms, help, a step
+> after an ending step warned); credits words as S150 text slots (rows past 26 past the tables' ends); Capacity rows
+> (title letters 128, credits pages 64, story points 32). Help `76_ending.md` (NEW) + 00 / 56 / 63 / 90;
+> `EDITOR_REVISION` S153.
+> **The acceptance (machine half):** NEW `tools/walk_ending.py`: `make` drives the window (Title & ending… dialog, New
+> room ×2, scenes, New game…), the window's Build; `walk` from the title: the title == the model (0 pixels differ),
+> NEW GAME → THE LAST GLADE, the sage's YES → mode 4 with all 165 StoryPointApply rows (point 41) + journey_over, 29
+> pages, 2 s a page (170 frames), the new pages + the closing page == the model (0 pixels), THE AFTER ROOM (4, 4), TBC,
+> the save, CONTINUE in THE AFTER ROOM with no entry scene, the keeper's talk → the game's Castle screen 1 (5, 6):
+> **18 checks, 0 failed**; `--negative` (bank $5F = the original's bytes, StoryPointApply = ret) **13 FAIL**.
+> `tools/census_story_state.py --opening`: 40 steps from the opening's state, all equal.
+> **Found on the way (not this item; the user asked after the sign-off: "why it calls me Terry0000?"):** a New
+> game… room start with no naming step prints "TERRY0000" where `{hero}` prints — measured: the game's NEW GAME leaves
+> `$CA42` = `$D3 $D4 $D5 $D6 $00 $00 $00 $00` (the original ROM too): `$D3-$D6` = the four glyphs that draw TERRY, `$00`
+> = the digit 0, and NO `$F0` end — the name copy ($F6) takes all 8 bytes. The game never prints it before the King's
+> naming screen writes a real name; a room start skips that scene. Help 76 §7.3: add Name the hero; the fix (a
+> room start writes a terminated name) = an E3 a2 follow-up. Two bank $0A SaveGameState breeding sites (bank_00a.asm lines 1852 / 3646) unlabelled.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1699 PASSED (+ `test_s153`, 29); test_app `--rom` PASS
+> (62 OK, + `s153_ending`; the GUI build == the pin; its exit after PASS now clean — the build thread / window freed
+> first, it aborted with "pure virtual method called") / test_canvas `--rom` PASS. **Next:** the user's test of the ROM (and opening the demo
+> project); then the next big ticket (E3 b2 story-variable headroom; the room-start hero name).
+
 > Last verified: 2026-10-18 (Session 152 — **ROADMAP E3 a2 BUILT: THE OPENING — CUTSCENES → NEW GAME… (WHERE A NEW
 > GAME STARTS: THE GAME'S INTRO OR ONE OF YOUR ROOMS; THE ORIGINAL OPENING AS PLAYED: ITS FLAGS + ROOM BYTES, MEASURED);
 > A FARM KEEPER WHO HANDS OVER THE FIRST MONSTER (PULIO'S WAY); GIVEN MONSTERS GET A NAME (WERE "0000"); A WHOLE NEW

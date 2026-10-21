@@ -947,7 +947,11 @@ groundwork doc (folded here). Empirically located via SameBoy (probe ROM, bp
   bytes in bank `$4c` (charset/codes in TEXT_SYSTEM.md). **The 256-id space is
   full**; the only empty slot was `$FD`. Custom announce text therefore lives in
   a **custom message pool** at `$4c:$7326` (~3290 free bytes after the last
-  message at `$7325`); `$FD`'s pointer (`$4c:$4213`) is repointed there. MagicBurn's
+  message at `$7325`); `$FD`'s pointer (`$4c:$4213`) was repointed there S2d-S155 r2 —
+**not dead**: `LoadB4c_Fork_stockfd` renders a stock `$FD` through it right after the poison
+tick (`$E1`), so a poisoned monster "burned half its MP" (the user, S155 r2: a WingSnake);
+S155 r3 put it back to the vanilla `$5F6C` (empty) — MagicBurn's own line goes through
+`CustomMsgPtrTable` (S2e). MagicBurn's
   message (`CustomMsg_E0_MagicBurn`, 56 B) decodes to `{name} burns half its MP!
   {name}<slime>A huge burst of magic energy!` (`{name}`=caster, no skill-name
   insert — the custom-id name path is unfilled, so name-inserting templates like
@@ -989,7 +993,7 @@ groundwork doc (folded here). Empirically located via SameBoy (probe ROM, bp
 - `patches/bank_052.asm` — `CustomDispatch52` (runs `$52`-context result setup, far-calls `$72`).
 - `patches/bank_041.asm` — `SkillName_224_MagicBurn` (menu name).
 - `patches/bank_058.asm` — `AnnounceTemplateTable` clean db + `$E0`→`$FD`.
-- `patches/bank_04c.asm` — `CustomMsg_E0_MagicBurn` in the pool + `$FD` repoint.
+- `patches/bank_04c.asm` — `CustomMsg_E0_MagicBurn` in the pool (+ the `$FD` repoint S2d-S155 r2; S155 r3 = `$5F6C` again).
 - `patches/bank_05f.asm` — `GetPresentId` + `CustomProxyTable`, 12 forked reads.
 - `patches/bank_014.asm` — test-monster skill assignment (line 1468; currently `$E0`+`$09` Infernos for regression compare).
 - All registered in `tools/verify_integrity.py` `PATCH_FILES`/`PATCH_NEW_FILES`. Integrity PASS 4/4, clean build byte-perfect `1ca6579…`.
@@ -1312,6 +1316,11 @@ menu rejects, AI rewrites). Patched md5 `a17bff8e…` (S85b), USER-CONFIRMED
 S86 (works, no orphan-line recurrence; user-reported).
 
 ### 13.7 Custom skill #4 — Earthquake 4-tier chain (`$E5`-`$E8`): the SWEEP FORK, screen shake, and the looping-SE deadlock  [S74, 2026-08-01; v2 feedback round 2026-08-02, PyBoy-verified]
+
+> **S155 r2:** the first ally hit after the crossover now holds its damage sound and hit
+> reaction (the party's screen shake) until the "allies are caught" banner's hold ends, so they
+> land with its "receives … damage" text — §13.10 "The older customs" (`QuakeHitLate53` /
+> `QuakeLateFire53`, bank $53).
 
 **Tremor/Quake/QuakeMore/QuakeMost** (`$E5`-`$E8`): all-foes earth damage
 (40-60/90-120/150-190/240-270, top = 1.5x WhiteAir; editor tunes
@@ -1727,7 +1736,8 @@ BUILD ERROR.
 **Ids.** `$DE/$DF` = the retired S45 POCs (Scorch / Smite; records point at Blaze's
 `$41CF`, names dropped S111); `$E0-$E9` = the built-ins (MagicBurn, Tame ×3, Anchor,
 Tremor / Quake / QuakeMore / QuakeMost, Mourn), their bespoke handlers in bank $72 /
-`MournDispatch52`; `$EA-$FE` = NEW skills a project adds; `$FF` = no skill. Every
+`MournDispatch52`; `$EA-$FE` = NEW skills a project adds (S155: `$DE/$DF` and `$EA-$EE` became
+built-ins, NEW = `$EF-$FE` — §13.10); `$FF` = no skill. Every
 per-id table now covers `$DE-$FE` (33 rows): `CustomRecordPtrTable` ($54),
 `CustomMPCostTable` ($07, moved to `$7F59`, index `id-$DE`), `AnnounceTemplateTable`
 slots `$DE-$E1` + `CustomAnnounceTable` ($58), `CustomTargetBaseTable` ($58),
@@ -1803,6 +1813,158 @@ lines, acts, MP; damage = RNG drift); a Blaze copy = Blaze (lines + damage); Thu
 base, own power), FrostBite (Scorching base, IceStorm look, IceBreath element) cast by
 the party AND by enemies (they hit the party); the SKIL menu shows the new names / MP /
 texts ("Cannot use now." in the field, as stock battle skills).
+
+### 13.10 The S155 built-ins — Repel, LoneWolf, Punish, Finish, Rupture, Rust  [S155, 2026-10-19; PyBoy-verified, built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)]
+
+**Ids.** `$DE` Repel and `$DF` LoneWolf (the retired S45 POCs' ids; the bank $50
+`AliasCommit` that queued them as Blaze is now `xor a / ld [$db86],a`), `$EA` Plunder
+(HELD — refused by the compiler, PLANNED for S156), `$EB` Punish, `$EC` Finish, `$ED`
+Rupture, `$EE` Rust. NEW skills a project adds: `$EF-$FE` (239-254; 16 ids, was
+`$EA-$FE`). Learning starts at `$DE` (bank $06 `LearnLoopFork` `ld c,$de`;
+`CustomLearnRow72` `sub $DE`; `CustomLearnTable` 33 rows). Data: custom_skills.json
+(`"_since": "S155"`), the per-skill percentages `CustomPctTable` (region
+`gd_custom_pcts`, 7 words, 100 = ×1, at most 2000) and the result lines
+`CustomLine_*` (bank $4C, `gd_custom_msgs`) — PROJECT_COMPILER §2.63.
+
+**Dispatch.** `FarSkillFork` calls `NewDispatch72` first: for these ids it writes a
+bank-$52 address into WRAM `wCustomJump` ($DEBE) and returns HL = `wCustomJump`, which
+the bank $52 dispatcher's `rst $08` dereferences in bank-$52 context — so any bank-$52
+entry is reachable without a pointer slot in the full bank $52. LoneWolf / Punish /
+Finish / Rupture → `MournDispatch52` (CalcDefenseWrapper: the ATK-vs-DEF roll in
+`$DB56`, then the shared descriptor tail, Mourn's path §13.8); Rust / Repel / Plunder →
+`CustomDispatch52_shared` (no damage machine: the handler writes `$DB56` and the
+descriptor). `CustomBattleExec` skips the element tail when the descriptor's bit 5 (apply
+HP damage) is clear. The handlers (`CustomBattleRun` → `SkillLoneWolf` …) scale `$DB56`
+with `DamagePct72` = min(999, ⌊dmg·P/100⌋), at least 1 when the roll was not 0
+(`MulPct72` exact: HL = 100a+b, DE = 100q+r → a·q·100 + a·r + b·q + ⌊b·r/100⌋). The bank
+$53 post-calc stage (crit — which skips the handler —, `$DB42` ×1.5, defence levels) runs
+after, as for Mourn. **The caster at the handler = `wBattleAttackerIdx` ($DB88)** —
+measured for one-foe casts and on every victim of an all-foes sweep; `$DB77` (the pending
+actor) already reads `$FF` there (KEY_LESSONS S155).
+
+| Skill | Rule (bank $72) | Line |
+|---|---|---|
+| LoneWolf `$DF` | slots 0-2 of the caster's side with `$DD1B != $FF` (alive OR fallen; the helper slot 3/7 never counts): 1 → ×`alone` (400), 2 → ×`duo` (200), 3 → ×1 | 1 when ≠ ×1 |
+| Punish `$EB` | ×(100 + n·`per_buff`) %, n = the target's buffs from `BuffTable` (17 bits: the game's DeMagic "has a buff" set `AIRuleDeMagicVetoNoBuff_6bcb` minus iron `+7 & $C0` and the transformed bits `+3 & $30`, plus the one-round stances: TwinHits, ALLCHANGE, TakeMagic, Bounce, Barrier, MagicBack, TailWind, MagicWall, ChargeUP, SuckAir, Focus, SideStep, a raised stat `+8 bit6`, Dodge, Imitate, SuckAll, the Defence stances `+9 & 7`) | 2 when n > 0 |
+| Finish `$EC` | ×P, P = low + (high − low)·share/100 (`at_full_hp` 20 → `near_zero_hp` 200), share = whole % of MaxHP lost (`MissingShare72`, both shifted below 256) | 3 when P > 100 |
+| Rupture `$ED` | the target has any of `+2` (all bits) or `+3 & $C3` (StopSpell, Surround, DanceShut, MouthShut): all cleared (`+2 := 0`, `+3 &= $3C`), ×`burst` (300); none → "But nothing happens!" (`$BB`, descriptor `$84`), MP spent | 4 |
+| Rust `$EE` | `RustRoll72` = Sap's roll (resistance 12 `$DD2B+7t` bits 5:4, `$DB42` bit 2 sure, ladder B by `+5`); miss → `$B8`; ATK ≤ 1 or **already blunted** (S155 r5: WRAM `wBlunted` bit — checked before the roll) → `$BB` (MP spent); else ATK −= max(1, base·`atk_loss`/100) (base = bank $57 entry 6), floor 1, `$DB56` = the ATK lost, `+8 bit7` (lowered) set, descriptor `$98` | 5 (always) |
+
+Stat-lowered ATK is restored by DeMagic (`DispelBaseDefAgl_647c` head → `RustRestoreATK53`)
+and Surge (`SurgeCureTarget_601c` lowered branch → `SurgeRestoreATK53`): ATK := base when
+below it, the helper slot skipped (bank $53, 72 B taken from the nops after
+`QuakeFirstTgt53`).
+
+**Result lines.** Bank $4C `LoadB4c_Fork_custom` checks WRAM `wCustomLine` ($DEC0, a
+1-based index into `CustomLinePtrs`, guarded by `wCustomLineSkill` = the acting id) before
+the Mourn branch and renders that line for a `$FD`. **S155 r2 (the user on the S155 ROM:
+"'A lone wolf's fury!' should NOT coincide with damage sound but precede it. The damage
+sound and screen shake (when I am attacked) should coincide with 'X takes y damage' … the
+same for all custom skills"; "'It goes in for the kill' … should be there WHILE slash is
+happening"):** LoneWolf / Punish / Finish / Rupture show their line BEFORE the attack —
+`QuakeAnimHold72`'s head (`LineSlot72`) on the first poll of the `$da82` gate in the
+announce slot (d9ed 1, d9ee 3: the announce has printed, the attack animation has not
+started; once per action / victim, `wLineShown` $DEC9) runs `SlashLine72`: the same tests
+the handler makes later (`SideCount72`, `CountBuffs72`, `FinishPct72` > 100, an ailment)
+→ `$FD` rendered at once. The gate then holds until the line has printed, the animation
+plays under it, and the hit keeps the game's own message (`$82` "takes … damage pts!" /
+`$83` "receives") with its damage sound (bank $55 entry 2) and hit reaction (bank $5F
+entry 4: the blink / the party's screen shake) on the same frame. Measured (party LoneWolf,
+PyBoy): announce f+3, line f+46 (on screen f+48), attack animation f+107 (visible ~f+128),
+sound + hit message f+157, shake f+161-176 for an enemy cast. The line shows even when the
+hit then misses (the miss is rolled after the animation); `[INS 00]` at that moment = the
+USER (measured: "HL faces …" / "Anteater faces …"), so the lines take `{name}`, no
+`{target}` / `{amount}`. Only Rust keeps the result line in place of the hit message
+(`SetLine72`, `[INS 00]` = the target, `[INS 10]` = the ATK lost): "Anteater loses 9
+attack!". (S155 r1 rendered the four as a 2-page hit message — page 1 under the damage
+sound, measured: the slash f+86-118, "A lone wolf's fury!" with the sound at f+121,
+"takes 8 damage" f+186.)
+
+**S155 r3 — the line on every cast (the user: "I would prefer it displayed the text
+regardless of whether threshold is reached or not - so the user can see what the skill is
+trying to do. At least give me this option in the editor. Otherwise it just looks like
+normal attack").** `SlashLine72` first calls `LineAlways72`: bank $72 `CustomLineAlways`
+(1 B at the end of region `gd_custom_pcts`; bit 0 LoneWolf, 1 Punish, 2 Finish, 3 Rupture;
+default `%00001111`) — a set bit shows the skill's line on every cast (also a Rupture that
+then fails with `$BB`, a Punish on an unbuffed foe, a Finish at full HP); a clear bit = the
+r2 test (only when the bonus applies). Project key `line_shows` ("always" / "bonus") per
+skill, the Skills tab's "Show it" combo. Measured (walk_skills, 30 / 30): Punish with no buff
+— line 2 at f+0, the slash f+61, the hit + sound f+113; with `--line-bonus` (the byte 0)
+the r2 behaviour, 30 / 30.
+**S155 r5 — Blunt does not stack (the user: "MadKnight cast blunt like 6 times in a row, only
+THEN used Upper … Blunt should NOT stack").** WRAM `wBlunted` ($DECB, bit = battle slot):
+bank $50 BattleInit zeroes it (its 22-B tail regrouped: the stores after `ClearSTATMode`,
+which only touches rSTAT, moved before it with one `xor a`); `SkillRust` fails a blunted
+target with `$BB` before the roll (MP spent) and sets the bit when it lands; bank $53
+`RestoreATK53` (DeMagic / Surge) clears it; `ScoreRust72` scores a blunted opponent 0, so
+`CustomAIRule72` vetoes Blunt when every opponent is blunted and the one-foe pick skips
+them. Measured (walk_skills): the second Blunt on the foe `$BB`, ATK stays 10 (base 19);
+DeMagic / Surge, then Blunt lands again (10 → 19 → 10); the BLUNT KNIGHT casts it once on
+each party monster, then no more. A helper slot (3 / 7) keeps its bit for the battle.
+**Skill 238 is "Blunt" since S155 r3** (the user: "please call rust 'blunt'"); the code
+keeps the Rust labels (`SkillRust`, `ID_RUST`, `RustRoll72`, `CustomLine_Rust`, handler
+`rust`).
+
+**Targets.** One-foe (`$11`) or all-foes (`$12`) per skill (gamedata `record.target_mode`;
+the Skills tab offers just these two). One-foe: `CustomTargetBaseTable` row `$F0` →
+bank $58 `DispatchBoundsStub` `.pick` → bank $72 entry 9 `CustomTargetPick72`: the best
+live opponent by the skill's own scorer (Rupture: an ailment; Punish: most buffs; Finish:
+most HP lost; Rust: highest ATK; LoneWolf: the first), else the first live one; the slot
+goes to `$DCED + 2·attacker`. All-foes: Firebal's row 3 (the first live slot; the sweep
+goes forward from it).
+
+**AI (bank $57).** `AIChainApplyDelta_78a2`'s first `ld a,[$c1fc]` → `call CustomAI57`
+(15 B in the bank's trailing nops at `$7FD1`): for an id ≥ `$DE` it far-calls bank $72
+entry 8 `CustomAIRule72` with `$DD26` (bonus) / `$DD27` (penalty, `$FF` = veto) live —
+Repel / Plunder veto; Rupture veto unless a live opponent has an ailment, else +50;
+Punish +20 per buff on the most-buffed opponent (max +60); Finish +40 when an opponent
+lost ≥ 50 %, penalty 20 when every one lost < 25 %; Rust veto unless an opponent has
+ATK > 1; LoneWolf +40 alone / +20 in a pair. Sized against the cat-1 plain-attack score
+(bank $58 entry 11 `AICat1AttackScore_67ba` = 20 + 10 per damage threshold met). NOTE:
+an enemy with INT < $15 (`$DD0B == 0`) never runs the chains (`AILightweightPick` picks
+at random) — measured; the demo's bosses have INT 200.
+
+**Repel `$DE` (field).** Bank $07's whitelist ladder takes `$DE` (7 `jr z,jr_007_56a3` →
+`ret z` freed the bytes for `Repel07Post`; `Anchor07Post` routes `$DE` there = StepGuard's
+tail: no message, MP deducted). Bank $14 entry 4's default tail → bank $72
+`AnchorField14Tail` → `RepelField72`: fizzle (`$DA5E := $FF`, no MP) when the Repellant
+flag (`$C93E` bit 1 — the item's own, bank $16 `EncounterStep` returns at once while set)
+is already on or `EncountersHere72` says no battles can happen here (gate floor;
+`$53-$59` / `$61-$64`; a custom room ≥ `$6B` whose RoomEncTable row is on — asked afresh
+through bank $71 entry 1, because `wRoomEncFlag` is refreshed only per step: measured,
+a cast right after arriving in Cities_FOUNT from the den was accepted before the fix).
+Else the flag is set. A gate floor clears it at the next floor (bank $16 `label16_5b4e`,
+as the item); elsewhere `wRepelArmed` / `wRepelPlace` (region, map) arm bank $72 entry 10
+`RepelCommit72`, called by bank $73's warp commit after `RegionCommit`: arriving in any
+other place clears the flag (a battle's return to the same room keeps it). In battle Repel
+and Plunder do nothing ("But nothing happens!", `.inert`); bank $50 `FieldOnlySkillA`
+treats `$DE` as field-only.
+
+**The older customs, re-measured S155 r2 (the same rule):** MagicBurn, Mourn (its boost
+banner already comes after the announce and stays through the slashes, S75 v2) and the
+first Quake victim: sound + hit reaction + damage text on one frame; Tame: the damage sound
+re-fired 8 frames before its text (S50), no hit reaction for its heart proxy. **Fixed:** the
+Quake sweep turning on its own side — the "allies are caught" banner rendered in the
+message gate AFTER the ally's sound + hit reaction (the party's screen shake played under
+the banner, "PX receives 15 damage" came 84 frames later). Now `TameSound1Hook` /
+`TameSound2Hook` hold both sounds and the hit reaction for that one hit
+(`QuakeHitLate53` → `wQuakeHitLate` $DECA; the `$5f04` call skipped by `jp $5b02`) and
+`QuakeGate_delay` fires them (`QuakeLateFire53`) as its hold ends, on the frame the
+"receives" text renders (measured: banner f+136, sounds + reaction + text f+220, shake
+f+224-240).
+
+**Verified in PyBoy** (the user's save; `tools/walk_skills.py` on the S155 demo
+`examples/s155_dojo_demo`, 28 / 28 — r2: 29 / 29 with the beats, negative 16 FAIL; r3: 30 / 30 (+ the poison tick's stock `$FD` = the empty string; the lines on every cast), `--line-bonus` 30 / 30, negative 18 FAIL (+ the `$FD` row back on MagicBurn's line); `--negative` = the five handlers and `CustomAIRule72`
+returning at once, Repel never matched: 15 FAIL — every effect, the LONE WOLF / BURSTER casts
+(the AI rule is what makes them out-score Attack), Repel): LoneWolf duo 4 → 8, enemy alone 7 → 28 + line 1;
+Punish 0 buffs 4 → 4 (no line), 2 buffs → 8 + line 2; Finish full HP → 1, 100 / 999 HP
+4 → 7 + line 3; Rupture poison + StopSpell 4 → 12 + line 4, both cleared, no ailment →
+`$BB`; Rust −9, −9 then `$BB` at ATK 1; DeMagic 1 → 19, Surge 1 → 12; the gifts carry the
+skills; the three sparring bosses cast LoneWolf (alone) / Rupture (on a poisoned party
+monster) / Rust; Repel in the WOLF DEN: `$C93E` = 2, MP −4, 0 battles in 150 steps, a
+second cast fizzles, leaving clears it, battles return; Cities_FOUNT fizzles (no MP).
+The simulator models all of it (`simulator/skillfx/s155_custom.py`, `ai_rules.CUSTOM_RULES`;
+test_compiler `test_s155_sim`).
 
 ---
 

@@ -452,7 +452,7 @@ def _project_rows(prj, data, rows):
         sk = ((data.get('gamedata') or {}).get('skills') or {})
         return sum(1 for k in sk if str(k).isdigit() and int(k) in CS.NEW)
     add('skills', 'Gates, battles and monsters', 'New skills', new_skills, len(CS.NEW),
-        'the Skills tab offers no more numbers', 'Skills', tech='skill ids 234-254')
+        'the Skills tab offers no more numbers', 'Skills', tech='skill ids 239-254')
     from . import battle_anims as BA
     add('anims', 'Gates, battles and monsters', 'New battle animations',
         lambda: len(BA.custom_list(data)), BA.MAX_CUSTOM, 'the editor refuses another',

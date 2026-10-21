@@ -1986,3 +1986,59 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/core/templates/memorial_pics.asm` (`MemShade`), `bank_079_head.asm` (5-byte rows), `PINNED_SHA256`; `patches/wram.asm` (`wMemDraw` 6 B) | the shade map in the engine | walk_memorial.py |
 | `tools/walk_memorial.py` | + the screen checks after the breeding (`see_through`: the monster cell's empty pixels == the plain floor cell (4, 1); the middle shade one grey; the BG map's pedestal / monster cells), + step `species` (the project's first re-arted species and first new species put on the list: the statues show them == their new art; skipped when the project has neither) | 60 / 60 on the S154 r2 demo; `--negative` 20 FAIL; the re-art probe (TreeSlime with DarkCrab's art + layout, scratch build) 19 / 19 |
 | `examples/s154_memorial_demo/build_demo.py` | statues via the editor's automatic palette (the r1 stone slot removed) | builds `e77c006e…` (patched) |
+
+## S155 rows (ROADMAP E11 — the new built-in custom skills: Repel, LoneWolf, Punish, Finish, Rupture, Rust)
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_072.asm` | `NewDispatch72` (→ `wCustomJump`), `SkillLoneWolf` / `SkillPunish` / `SkillFinish` / `SkillRupture` / `SkillRust` (+ `DamagePct72`, `MulPct72`, `RustRoll72`, `BuffTable`), `RepelField72` / `EncountersHere72` / `RepelCommit72` (entry 10), `CustomAIRule72` (entry 8), `CustomTargetPick72` (entry 9), `CustomPctTable` (region `gd_custom_pcts`), `LineReset72` / `SetLine72`; `CustomLearnRow72` from `$DE` | walk_skills.py |
+| `patches/bank_057.asm` (NEW patch file; `verify_integrity.py` PATCH_FILES) | `CustomAI57` at the AI chain end (`AIChainApplyDelta_78a2`) | walk_skills.py `bosses` |
+| `patches/bank_058.asm` / `bank_04c.asm` / `bank_053.asm` / `bank_050.asm` / `bank_007.asm` / `bank_006.asm` / `bank_073.asm` / `wram.asm` | the target row `$F0` pick; the result lines (`LoadB4c_CustomLine`, `CustomLinePtrs`); `RustRestoreATK53` / `SurgeRestoreATK53`; `AliasCommit` neutralized + `FieldOnlySkillA`; `Repel07Post` + the whitelist; `LearnLoopFork` from `$DE`; the `RepelCommit72` call; `wCustomJump` … `wCustomTmp` $DEBE-$DEC8 | walk_skills.py; test_compiler `--rom` |
+| `editor2/core/custom_skills.py` + `custom_skills.json` | `BUILTIN` / `PLANNED` (234) / `NEW` 239-254, `PCT_KEYS`, `RESULT_LINES`, `TARGET_CHOICE` / `TARGET_PICK`, `emit_pcts`, the S155 rows (`"_since": "S155"`) | test_compiler (S111 / S155 tests) |
+| `editor2/core/skills_doc.py`, `editor2/app/skills_tab.py` | params `pct:<key>` / `result_line` / `target_choice`; the percentage boxes, the result line (3 × 2), the two target choices | test_app (S155 block in the Skills tab test) |
+| `simulator/skillfx/s155_custom.py` (NEW), `simulator/ai_rules.py` (`CUSTOM_RULES`), `pacing.py` (`view.board`), `planner.py` (`_SHARED`) | the five battle skills, Repel / Plunder inert, DeMagic / Surge restoring ATK, the AI rules and the target picks | `test_s155_sim` (15) |
+| `editor2/core/balance.py` | `custom_pcts` / `custom_rows` on the board, the raising digest; FIX: the Quake numbers key (`'quake'`, [min, range]) | `test_s155_sim` |
+| `editor2/core/species.py` | `_pack` exact up to 48 strings under a 200,000-state budget (`PACK_STEPS`); the error names "custom skill names" among the other strings | test_compiler `--rom` "19 species" |
+| `tools/extract_custom_skills.py` | reads the S155 layout (CustomLearnTable from `$DE`, the six S155 ids + their result-line banners) | `--check` OK on the S155 example build |
+| `tools/census_skill_clone.py` | the clone id `$EF` (was `$EA`, Plunder's now) | — (not re-run) |
+| `tools/walk_skills.py` (NEW) | PyBoy on the user's save + the S155 demo: `gift`, `numbers` (forced battles, the RNG pinned), `bosses` (the three sparring battles), `repel` (the WOLF DEN, Cities_FOUNT); `--negative` (NewDispatch72 = ret; Repel never matched) | see PROJECT_STATE S155 |
+| `examples/s155_dojo_demo/build_demo.py` (NEW) | the user's project + THE WOLF DOJO (GIFT MASTER: LONEWOLF / RUSTER, FARM KEEPER, the LONE WOLF / VIPER + BURSTER / RUST KNIGHT, DEN GUIDE) + THE WOLF DEN (battles, Repel) + the DOJO GUIDE in Cities_FOUNT (3, 4) | builds `ce83780f…` (patched) |
+| help `54_skills.md`, `_revision.md`; `EDITOR_REVISION` S155 | the S155 skills' numbers, lines, targets, Repel, the id change | test_app (help revision) |
+| `tools/audit_mapid_range.py` → `extracted/mapid_range_audit.json` | + the three S155 `wMapID` sites (`RepelField72` COPY, `EncountersHere72` / `RepelCommit72` CP_UNSIGNED) | selftest PASS (clean 58 / patched 92) |
+| `extracted/balance_vanilla.json` | `raising_digest` re-tagged `fecea30b…` (the six S155 records; proof in KEY_LESSONS S155) — the numbers unchanged | `build_balance_anchor --selftest` OK (re-derived 3 fights + 1 dive + 2 player fights) |
+
+**S155 r2 rows (the user on the S155 ROM: the bonus line before the attack, the damage sound + shake with "takes … damage"):**
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_072.asm` | `LineSlot72` (QuakeAnimHold72's head, was `LineReset72`), `SlashLine72`, `FinishPct72`; the four handlers no longer touch `$dd70` | walk_skills.py `numbers` (the beats) |
+| `patches/bank_053.asm` | `TameSound1Hook` / `TameSound2Hook` + `QuakeHitLate53` / `QuakeLateFire53`, `QuakeGate_delay .go` (the Quake crossover's ally hit) | walk_skills.py `numbers` (Tremor) |
+| `patches/wram.asm` | `wLineShown` $DEC9, `wQuakeHitLate` $DECA | — |
+| `editor2/core/custom_skills.py` (+ `custom_skills.json` banners, `skills_doc.py`, `app/skills_tab.py`) | `RESULT_AFTER` (Rust); the four bonus lines one page, `{name}`, `{target}` / `{amount}` refused; the editor's line box one page for them | test_compiler (5 S155 r2 checks), test_app |
+| `tools/walk_skills.py` | `beats()` / `order_ok()`: the line before the attack animation, the damage sound on the hit message's frame; + the Tremor crossover check; `--negative` also returns `SlashLine72` | 29 / 29; negative 16 FAIL |
+
+**S155 r3 rows (the user on the r2 ROM: the line on every cast, option in the editor; a poisoned WingSnake "burns half its MP"; "call rust 'blunt'"):**
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_072.asm` | `LineAlways72` (`SlashLine72`'s head) + `CustomLineAlways` (1 B at the end of `gd_custom_pcts`) | walk_skills.py `numbers` (30 / 30; `--line-bonus` 30 / 30) |
+| `patches/bank_04c.asm` | the `$4019[$FD]` row back to the vanilla `$5F6C` (was MagicBurn's line: shown after every poison tick) | walk_skills.py `numbers` (the poison tick) |
+| `editor2/core/custom_skills.py` (+ `custom_skills.json`, `skills_doc.py`, `app/skills_tab.py`, help 54) | `line_shows` ("always" default / "bonus", `CS.LINE_SHOWS`); skill 238 named Blunt; the "Show it" combo | test_compiler (+ 5 checks), test_app |
+| `tools/walk_skills.py` | `--line-bonus` (CustomLineAlways 0 in the ROM copy); the no-bonus checks follow the byte; the poison tick check; `--negative` also puts the old `$FD` row back | 30 / 30; `--line-bonus` 30 / 30; negative 18 FAIL |
+| `examples/s155_dojo_demo/build_demo.py` | BLUNTER / BLUNT KNIGHT (were RUSTER / RUST KNIGHT) | the walk |
+
+**S155 r4 rows (the user on the r3 ROM: "BombCrag doesn't have any skills" for HL):**
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_050.asm` | `NoSkillName50` (`$C180` := the commanded monster's name before battle_command #2; an original-game bug: ATK's target list left a foe's name there) | walk_skills.py `noskill` |
+| `tools/walk_skills.py` | step `noskill` (the real menus: PX DEF, HL ATK → cursor on the BURSTER → B, HL SKIL); `--negative` also `ret`s `NoSkillName50` | 32 / 32; negative FAILs it ("BombCrag") |
+
+**S155 r5 rows (the user: "MadKnight cast blunt like 6 times in a row … Blunt should NOT stack"):**
+
+| File | What | Verified |
+|---|---|---|
+| `patches/wram.asm` | `wBlunted` $DECB (18 B left) | — |
+| `patches/bank_072.asm` / `bank_053.asm` / `bank_050.asm` | `SkillRust` fails a blunted slot + sets the bit, `BluntBit72`, `ScoreRust72` 0 for a blunted one; `RestoreATK53` clears it (19 trailing nops spent); BattleInit zeroes it (same 22 B) | walk_skills.py `numbers` + `bosses` |
+| `simulator/skillfx/s155_custom.py` | `blunted(b)`: `rust_one` fails, `restore_atk` clears, `_score` 0 | test_compiler `test_s155_sim` (+ 3 r5 checks) |
+| `tools/walk_skills.py` | Blunt once then `$BB`; DeMagic / Surge then Blunt lands again; the BLUNT KNIGHT never re-targets a blunted monster | 33 / 33; negative 19 FAIL |

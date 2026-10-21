@@ -131,7 +131,7 @@ class SkillsTab(QWidget):
         lv.addWidget(self.list, 1)
         bh = QHBoxLayout()
         self.new_btn = QPushButton('New skill…')
-        self.new_btn.setToolTip('A new skill (ids 234-254) that runs the effect of an original '
+        self.new_btn.setToolTip('A new skill (ids 239-254) that runs the effect of an original '
                                 'skill you pick, with its own name, text, power, look, '
                                 'element and learning')
         self.new_btn.clicked.connect(self._new_skill)
@@ -594,7 +594,7 @@ class SkillsTab(QWidget):
                       self.sec_ai, self.sec_flags, self.sec_looks, self.sec_anim):
                 w.content.setEnabled(not item)
             self.sec_params.setVisible(builtin)
-            self.sec_target.content.setEnabled(not item and not builtin)
+            self.sec_target.content.setEnabled(not item and (not builtin or d.get('target_choice')))
             self.sec_flags.content.setEnabled(not item and not builtin)
             for side in ('party', 'enemy'):
                 for sp in self.power[side]:
@@ -690,13 +690,18 @@ class SkillsTab(QWidget):
             # target
             self.target.clear()
             for v, lab in SK.TARGET_MODES:
+                if builtin and d.get('target_choice') and v not in (0x11, 0x12):
+                    continue                    # [S155] its code: one foe or all foes
                 self.target.addItem(lab, v)
             if self.target.findData(R['target_mode']) < 0:
                 self.target.addItem(f"original (${R['target_mode']:02X})", R['target_mode'])
             self.target.setCurrentIndex(self.target.findData(R['target_mode']))
             _bold(self.target, R['target_mode'] != VR['target_mode'])
             self.target_note.setText(
-                '' if SK.side(R['target_mode']) == SK.side(VR['target_mode']) else
+                ('One foe: the AI aims it at the foe it suits best (an ailment to burst, the '
+                 'most buffs, the most HP lost, the highest ATK). All foes: every foe in turn.'
+                 if builtin and d.get('target_choice') else '')
+                if SK.side(R['target_mode']) == SK.side(VR['target_mode']) else
                 'The SIDE changed from the original — its effect code was written for the '
                 'other side (test it in battle).')
             # AI
@@ -1050,6 +1055,102 @@ class SkillsTab(QWidget):
             h.addWidget(e)
             h.addWidget(QLabel(f"(original {CS.ratio_text(dflt)})"))
             h.addStretch(1)
+            row(w)
+        self.pct_spins = {}                     # [S155] test hook: key -> QSpinBox
+        self.line_shows = None                  # [S155 r3] test hook: the "Show it" combo
+        plabels = {'duo': 'Damage in a party of two',
+                   'alone': 'Damage alone (the only one of its side)',
+                   'per_buff': 'Extra damage per buff on the target',
+                   'at_full_hp': 'Damage when the target has full HP',
+                   'near_zero_hp': 'Damage when the target is near 0 HP',
+                   'burst': 'Damage when the ailments burst',
+                   'atk_loss': "ATK lost, a share of the target's base ATK"}
+        for key in CS.PCT_KEYS:
+            if 'pct:' + key not in P:
+                continue
+            cur, dflt, lo, hi, what = P['pct:' + key]
+            w = QWidget()
+            h = QHBoxLayout(w)
+            h.addWidget(QLabel(plabels[key] + ':'))
+            sp = _spin(lo, hi, f"Percent of the normal hit (100 = x1); {lo}-{hi}. "
+                               f"Original: {dflt}% ({CS.pct_text(dflt)}). Results stop at 999."
+                       if key != 'atk_loss' else
+                       f"Percent of the target's base ATK; {lo}-{hi}. Original: {dflt}%. "
+                       "ATK never drops below 1.")
+            sp.setSuffix('%')
+            sp.setValue(cur)
+            _bold(sp, cur != dflt)
+            xl = QLabel(CS.pct_text(cur) if key != 'atk_loss' else '')
+
+            def changed(v, key=key, dflt=dflt, xl=xl):
+                if key != 'atk_loss':
+                    xl.setText(CS.pct_text(v))
+                self._param(key, None if v == dflt else v)
+            sp.valueChanged.connect(changed)
+            self.pct_spins[key] = sp
+            h.addWidget(sp)
+            h.addWidget(xl)
+            h.addWidget(QLabel(f"(original {dflt}%)"))
+            h.addStretch(1)
+            row(w)
+        if 'result_line' in P:
+            cur, orig = P['result_line']
+            norm = (lambda v: v if v and isinstance(v[0], list) else [v])
+            cur, orig = norm(cur), norm(orig)
+            w = QWidget()
+            g = QGridLayout(w)
+            after = self.sid in CS.RESULT_AFTER            # [S155 r2] Blunt: the result
+            npg = 3 if after else 1
+            g.addWidget(QLabel('Its line — the result of the hit: {target} = the target, '
+                               '{amount} = the ATK lost. Up to 3 pages of 2 lines:' if after else
+                               'Its line — shown before the attack and while it plays (the hit '
+                               'then shows "takes … damage" with its sound). {name} = the user. '
+                               'One page of 2 lines:'), 0, 0, 1, 2)
+            top = 1
+            if 'line_shows' in P:
+                lcur, lorig = P['line_shows']
+                g.addWidget(QLabel('Show it:'), 1, 0)
+                cb = QComboBox()
+                cb.addItem('Every time it is used', 'always')
+                cb.addItem('Only when the bonus applies', 'bonus')
+                cb.setToolTip('Every time (the default): the player always sees what the '
+                              'skill tries to do. Only when the bonus applies: a hit without '
+                              'the bonus looks like a normal attack.')
+                cb.setCurrentIndex(0 if lcur == 'always' else 1)
+                _bold(cb, lcur != lorig)
+
+                def ls_changed(_i, cb=cb, lorig=lorig):
+                    v = cb.currentData()
+                    _bold(cb, v != lorig)
+                    self._param('line_shows', None if v == lorig else v)
+                cb.currentIndexChanged.connect(ls_changed)
+                g.addWidget(cb, 1, 1)
+                self.line_shows = cb
+                top = 2
+            self.result_edits = []
+            for pg in range(npg):
+                for k in range(2):
+                    txt = cur[pg][k] if pg < len(cur) and k < len(cur[pg]) else ''
+                    e = QLineEdit(txt)
+                    e.setToolTip(f'Page {pg + 1}, line {k + 1}: battle text, 18 cells')
+                    g.addWidget(e, top + 2 * pg + k, 0, 1, 2)
+                    _bold(e, cur != orig)
+                    self.result_edits.append(e)
+
+            def fin(orig=orig):
+                pages = []
+                for pg in range(len(self.result_edits) // 2):
+                    lines = [self.result_edits[2 * pg + k].text() for k in range(2)]
+                    while lines and not lines[-1].strip():
+                        lines.pop()
+                    if lines:
+                        pages.append(lines)
+                if pages == orig or not pages:
+                    self._param('result_line', None)
+                else:
+                    self._param('result_line', pages)
+            for e in self.result_edits:
+                e.editingFinished.connect(fin)
             row(w)
         labels = {'allies_line': 'Line when the wave turns on its own side',
                   'flew_line': 'Line for an ally that flies over it ({name} = the flyer)',

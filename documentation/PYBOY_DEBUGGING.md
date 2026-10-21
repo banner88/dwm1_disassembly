@@ -1154,3 +1154,35 @@ edge and the battle waits for input forever.
   entries, write the species byte of a list entry (`p.memory[3, $A110 + 8 · ring + 1]`): no
   record carries (that tag, that species), so it counts as gone; leave and re-enter the
   room (a re-roll), then `shown()` matches VRAM against every species' picture.
+
+## S155 techniques — battle skills and a field skill walked (tools/walk_skills.py)
+
+- **Forced battles (the S110 rig, `SkillWalk.rig`):** the wild battle of EID 3 by RAM
+  (`$DA03/04` EID, `$DA02` count − 1, `$DA09` 1, `$C905` 0, `$C8EB |= $40`); every frame in
+  battle the skill bytes of all eight queue cells (`$DCEC + 2·slot`), in phases 4-6 the target
+  bytes, the foes' HP (999) and the caster's MP; `$C899/$C89A` pinned for repeatable rolls.
+  A `sched` list changes the caster's skill per round (Rust, Rust, DeMagic).
+- **Reading a handler's input and output:** hook the handler's label (`SkillLoneWolf` …) for
+  `$DB56` before, and the bank $4C message hook `$4C:$42D1` for (message id `$C823`,
+  `wCustomLine`, `$DB8A`, `$DB89`, `$DB56`) — the hit message's number is the handler's result
+  after the post-calc stage. A 0 roll renders the miss message, not `$FD`.
+- **The caster at a handler is `$DB88`** (measured: `$DB77` reads `$FF` there).
+- **An AI rule needs INT ≥ $15 on the enemy** (`$DD0B` ≠ 0) — the rig pokes the enemy row's
+  INT / MP / weights in the cartridge (`p.memory[bank, row + 15]`), the demo's bosses have INT
+  200. Hook `$57:$78A5` (the chain end, after `CustomAI57`) for `$DD26` / `$DD27` per option.
+- **A conversation boss battle:** `Walk.talk([True])` returns `'battle'`; then A every 8
+  frames, the party's HP held at 400 and the bosses' kept ≥ 150 in phases 4-6, handler hooks
+  log who casts what on whom; `battle_won()` ends it. Talk from ABOVE when the row below the
+  NPC is the wall.
+- **A field skill from the menu:** party monster 0's first skill byte (`$CAC1 + 149·[$CA8E]
+  + $29`) poked to the id, MP ≥ 20; A (menu), Down, A (SKILL), A (the monster), A (the skill),
+  then B ×5. Battles counted while stepping (`GAME_MODE` 2), each won at once.
+- **Monster records 3-19 are in SRAM** bank 0 `$A3BA + 149·(k − 3)` (a gift to a full party
+  lands there; the party list holds the slot index).
+- **(r2) A battle action's beats, frame by frame:** hooks on `$4C:$42D1` (message: `$C823`
+  id, `wCustomLine`, `$D9EE`), `$5F:$52F0` (a visual: d9ee 5 = the attack animation, 14 =
+  the hit visual), `$55:$4026` / `$55:$4035` (the damage sound's two parts), `HitReactionArm`
+  (bank $5F entry 4); per frame `$D9ED/$D9EE`, the HP words, SCY `$FF42` + hFFBB (the
+  party's hit shake: SCY 2 ↔ 0 for ~16 frames) and a screenshot every 4 frames, sheeted
+  7 across with the frame offset. The vanilla hit: sound part 2 + reaction + message on
+  one frame (d9ee 15 → 16), the shake 4 frames later.
