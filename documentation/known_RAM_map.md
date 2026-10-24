@@ -911,7 +911,8 @@
                  $DEBC-$DEBD wGateDiveGate/wGateDiveMask (S100: gate dive state
                  for once-per-dive custom gate rooms — transient here, saved via
                  SRAM $BFCA/$BFCB by bank $73 entries 5/6); $DEBE-$DEC8 the S155
-                 custom skills (wCustomJump … wQuakeHitLate, rows below); $DECB-$DEDD reserved.
+                 custom skills (wCustomJump … wQuakeHitLate, rows below); $DECB wBlunted (S155 r5); $DECC-$DED1
+                 wSteal (S156 Plunder); $DED2-$DEDD reserved.
                  Vetted: no real claimant above the audio ceiling $DE2B
                  (full-corpus scan; $DE30-$DEFF literals are all data-as-code
                  junk); SVBK windows touch $DB00+ only; NOT in save range.
@@ -1021,6 +1022,10 @@
 ;   DECB    1    wBlunted — bit s = battle slot s is blunted (Blunt does not stack):
 ;                zeroed by bank $50 BattleInit, set by bank $72 SkillRust, cleared
 ;                per slot by bank $53 RestoreATK53 (DeMagic / Surge). [S155 r5]
+;   DECC    6    wSteal — bank $72 SkillPlunder / ScoreSteal72: +0 the caster, +1 the
+;                target (the slot tested), +2 1 = only the buffs the caster lacks, +3 the
+;                pick (counts down), +4 the StealTable row, +5 the name's skill id.
+;                Transient. BATTLE_SKILL_SYSTEM §13.11. [S156]
 
 ## [S87] Obedience / WLD / party personality
 

@@ -15,7 +15,8 @@ Custom skill ids are $DE-$FE (222-254; $FF = "no skill" in every skill list):
                      the Quake / Mourn extra lines, Anchor's four dialogs.
                      Their built-in values = editor2/core/custom_skills.json
                      (read from the S110 pin by tools/extract_custom_skills.py).
-  234      $EA       Plunder — held for a later session (S156): not editable yet
+  234      $EA       S156 built-in Plunder: steals one of a foe's buffs onto the
+                     user (BATTLE_SKILL_SYSTEM §13.11; PROJECT_COMPILER §2.64)
   235-238  $EB-$EE   S155 built-ins Punish, Finish, Rupture, Blunt (the user's
                      S155 list; BATTLE_SKILL_SYSTEM §13.10)
   239-254  $EF-$FE   NEW custom skills a project adds (P3.11d; 234-254 until
@@ -71,11 +72,17 @@ Keys (all optional except `base` + `name` for a new skill):
   atk_loss                    238 Blunt: the ATK lost, a share of the base ATK
                               (the PERCENTAGES: 200, "200%", "x2" or 2.0 — 100 =
                               x1; bank $72 CustomPctTable, region gd_custom_pcts)
-  result_line                 223 / 235-238: the skill's own battle line when the
+  result_line                 223 / 234-238: the skill's own battle line when the
                               bonus applies — 223 / 235-237 (S155 r2): ONE page
                               shown before the attack and while it plays,
                               {name} = the user; 238 Blunt (always): the result,
-                              1-3 pages, {target}, {amount} (the ATK lost)
+                              1-3 pages, {target}, {amount} (the ATK lost);
+                              234 Plunder (S156, always): the result, 1-3 pages,
+                              {name} = the user, {target}, {buff} = the name of
+                              the stock skill whose buff it stole
+  def_rise / agl_rise         234 Plunder (S156 r2): the page after the result line
+                              when it stole a raised DEF / AGL that rose on the
+                              user — one page, {amount} = the rise, + its tokens
   record.target_mode          223 / 235-238: $11 one foe (the AI picks the foe
                               that suits the skill) or $12 all foes
                               (the RATIOS: "n/d", [n, d] or an integer; n 0-255,
@@ -95,9 +102,10 @@ from . import monster_text as MT
 FIRST, LAST = 0xDE, 0xFE              # custom ids (222-254)
 N = LAST - FIRST + 1                  # 33
 RETIRED = ()                          # S155: $DE / $DF are Repel / LoneWolf now
-PLANNED = (0xEA,)                     # S155: Plunder's id, held for S156 (not built)
+PLANNED = ()                          # S155 held 234 for Plunder; S156 built it
 S155 = (0xDE, 0xDF, 0xEB, 0xEC, 0xED, 0xEE)
-BUILTIN = (0xDE, 0xDF) + tuple(range(0xE0, 0xEA)) + (0xEB, 0xEC, 0xED, 0xEE)
+S156 = (0xEA,)                        # Plunder (BATTLE_SKILL_SYSTEM §13.11)
+BUILTIN = (0xDE, 0xDF) + tuple(range(0xE0, 0xEA)) + (0xEA, 0xEB, 0xEC, 0xED, 0xEE)
 NEW = range(0xEF, 0xFF)               # 239-254 (S155; 234-254 before)
 LEARN_FIRST = 0xDE                    # CustomLearnTable starts here (33 rows; S155, $E0 before)
 LEARN_ROWS = LAST - LEARN_FIRST + 1   # 33
@@ -106,7 +114,7 @@ STOCK = 222
 NAME_REGION = 0x7FF6 - 0x7F98         # bank $41 gd_custom_skill_names (94 B)
 DESC_REGION = 0x8000 - 0x7E42         # bank $56 gd_custom_skill_desc (446 B)
 MSG_A = 56                            # bank $4C gd_custom_msg_a ($7326)
-MSG_PTRS_AT = 0x7452                  # bank $4C CustomMsgPtrTable (S155: + LoadB4c_CustomLine; ASSERT there)
+MSG_PTRS_AT = 0x7458                  # bank $4C CustomMsgPtrTable (S155: + LoadB4c_CustomLine; ASSERT there; S156 +2, r2 +4)
 MSG_POOL = 0x7A9D - (MSG_PTRS_AT + 2 * N)  # bank $4C gd_custom_msgs (to $7A9D)
 NO_ELEMENT, ELEMENT_NONE = 0xFF, 0xFE
 FIELD_ONLY = (0x37, 0x38)           # StepGuard, MapMagic (bank $50 FieldOnlySkillA)
@@ -121,7 +129,8 @@ HANDLER_LABEL = {'magicburn': 'MagicBurn (a share of the MP as damage to all foe
                  'punish': 'Punish (ATK-vs-DEF + a share per buff on the target)',
                  'finish': 'Finish (ATK-vs-DEF x more the more HP the target has lost)',
                  'rupture': "Rupture (bursts the target's ailments for big ATK-vs-DEF damage)",
-                 'rust': "Blunt (lowers the target's ATK; Sap's roll)"}
+                 'rust': "Blunt (lowers the target's ATK; Sap's roll)",
+                 'plunder': "Plunder (steals one of the target's buffs onto the user)"}
 DAMAGE_HANDLERS = ('magicburn', 'tame', 'quake', 'mourn', 'lonewolf', 'punish', 'finish',
                    'rupture')
 # [S155] the handlers whose target mode a project may choose: one foe ($11, the
@@ -150,8 +159,29 @@ RESULT_LINES = {0xDF: ('CustomLine_LoneWolf', 'lonewolf_line'),
                 0xEB: ('CustomLine_Punish', 'punish_line'),
                 0xEC: ('CustomLine_Finish', 'finish_line'),
                 0xED: ('CustomLine_Rupture', 'rupture_line'),
-                0xEE: ('CustomLine_Rust', 'rust_line')}
-RESULT_AFTER = (0xEE,)          # [S155 r2] the line that IS the hit's result (Blunt)
+                0xEE: ('CustomLine_Rust', 'rust_line'),
+                0xEA: ('CustomLine_Plunder', 'plunder_line')}     # [S156]
+RESULT_AFTER = (0xEE, 0xEA)     # [S155 r2] the lines that ARE the hit's result (Blunt, Plunder)
+# [S156] the tokens of a result line, per skill: at the $FD render the game has
+# filled [INS 00] = the target, [INS 10] = the hit's number, [INS 20] = the user
+# (measured S156: so Blunt's line may name the user too — until S156 its {name}
+# was read as the target); Plunder's handler puts the stolen buff's name in [INS 30]
+RESULT_TOKENS = {0xEE: {'{target}': bytes([0xF9, 0x00]), '{amount}': bytes([0xF9, 0x10]),
+                        '{name}': bytes([0xF9, 0x20]), '{user}': bytes([0xF9, 0x20])},
+                 0xEA: {'{target}': bytes([0xF9, 0x00]), '{name}': bytes([0xF9, 0x20]),
+                        '{user}': bytes([0xF9, 0x20]), '{buff}': bytes([0xF9, 0x30])}}
+# [S156 r2] Plunder's rise pages (the user: "the next textbox should report by how much the
+# effect affects new monster. Same with enemies"): when the stolen buff is a raised DEF /
+# AGL that rose on the caster, bank $72 shows line 7 / 8 = the result line + this page;
+# {amount} = the rise ($DB56 -> [INS 10]). key -> (banner, line label, what)
+RISE_KEYS = {'def_rise': ('plunder_def_rise', 'CustomLine_PlunderDEF', 'a raised DEF'),
+             'agl_rise': ('plunder_agl_rise', 'CustomLine_PlunderAGL', 'a raised AGL')}
+RISE_TOKENS = dict(RESULT_TOKENS[0xEA], **{'{amount}': bytes([0xF9, 0x10])})
+
+
+def rise_line(main, page):
+    """Line 7 / 8: the result line's bytes + a new page = the rise page (its $ED dropped)."""
+    return bytes(main[:-2]) + PAGE + bytes(page[1:])
 # [S155 r3] line_shows: "always" (the default — the user: "displayed the text regardless
 # of whether threshold is reached or not") | "bonus" (only when the bonus applies, the
 # S155 r1/r2 behaviour); bank $72 CustomLineAlways bit per skill
@@ -330,10 +360,18 @@ def _pages(v, what):
     return v
 
 
-def encode_line(v, what, ed, allow_skill=True, allow_amount=False):
+def encode_line(v, what, ed, allow_skill=True, allow_amount=False, tokens=None):
     """Battle text -> bytes ($F0-terminated) + warnings. `ed` = start with $ED
-    (the shape the original line had)."""
+    (the shape the original line had). [S156] tokens = this line's own token map
+    (RESULT_TOKENS); any other {…} is refused."""
     warns = []
+    if tokens is not None:
+        for page in _pages(v, what):
+            for line in page:
+                for t in re.findall(r'\{[a-z]+\}', line):
+                    if t not in tokens:
+                        raise CustomSkillError(f"{what}: {t} does not work in this line "
+                                               f"(use {', '.join(sorted(set(tokens)))})")
     out = bytearray([0xED] if ed else [])
     for pi, page in enumerate(_pages(v, what)):
         if pi:
@@ -343,7 +381,8 @@ def encode_line(v, what, ed, allow_skill=True, allow_amount=False):
                 out.append(0xF1)
             cells, i, fixed = 0, 0, 0
             while i < len(line):
-                tok = next((t for t in TOKENS if line.startswith(t, i)), None)
+                tmap = tokens if tokens is not None else TOKENS
+                tok = next((t for t in tmap if line.startswith(t, i)), None)
                 if tok:
                     if tok == '{skill}' and not allow_skill:
                         raise CustomSkillError(f"{what}: {{skill}} works in the announce "
@@ -351,7 +390,7 @@ def encode_line(v, what, ed, allow_skill=True, allow_amount=False):
                     if tok == '{amount}' and not allow_amount:
                         raise CustomSkillError(f"{what}: {{amount}} works in a result line "
                                                "only (the number of the hit)")
-                    out += TOKENS[tok]
+                    out += tmap[tok]
                     cells += 3 if tok == '{amount}' else TOKEN_CELLS   # a number: up to 999
                     i += len(tok)
                     continue
@@ -379,11 +418,15 @@ _DEC = {v: k for k, v in MT._DESC_CHARS.items()}
 _DEC.update({v: k for k, v in MT._DESC_MULTI.items()})
 
 
-def decode_line(bs, result=False):
+def decode_line(bs, result=False, tokens=None):
     """Battle-text bytes -> a list of pages of lines (best effort; shows the
     built-in lines in the editor). result = a hit's result line ({target} /
-    {amount} for the $F9 slots, S155)."""
+    {amount} for the $F9 slots, S155); [S156] tokens = a RESULT_TOKENS map."""
     name_tok, amount_tok = ('{target}', '{amount}') if result else ('{name}', '{skill}')
+    back = {}
+    if tokens:
+        for t, b in tokens.items():
+            back.setdefault(b[1], t)
     pages, lines, cur = [], [], ''
     i = 0
     bs = bytes(bs)
@@ -392,7 +435,10 @@ def decode_line(bs, result=False):
         if b == 0xED:
             i += 1
         elif b == 0xF9 and i + 1 < len(bs):
-            cur += (amount_tok if bs[i + 1] == 0x10 else name_tok)
+            if back:
+                cur += back.get(bs[i + 1], '{?}')
+            else:
+                cur += (amount_tok if bs[i + 1] == 0x10 else name_tok)
             i += 2
         elif bs[i:i + 4] == PAGE:
             lines.append(cur); pages.append(lines); lines, cur = [], ''
@@ -551,6 +597,8 @@ def resolve(prj_or_data, repo_root=None):
                 allowed += ('result_line',)
             if sid in LINE_SHOWS:
                 allowed += ('line_shows',)
+            if handler == 'plunder':                    # [S156 r2]
+                allowed += tuple(RISE_KEYS)
             if 'base' in e:
                 raise CustomSkillError(f"{what}.base: the built-in custom skills run their "
                                        "own code; `base` is for new skills (239-254)")
@@ -691,6 +739,8 @@ def resolve(prj_or_data, repo_root=None):
                 TARGET_ROW_FOR_MODE.get(rec[2], base)
         elif handler in TARGET_CHOICE:      # [S155] one foe: the skill's own AI pick
             target_row = TARGET_PICK if rec[2] == 0x11 else 0x03
+        elif handler == 'plunder':          # [S156] one foe only: its own pick
+            target_row = TARGET_PICK
         out[sid] = {'id': sid, 'handler': handler, 'base': base, 'name': name, 'desc': desc,
                     'mp': mp, 'record': bytes(rec), 'learn': bytes(learn) if learn else None,
                     'template': tpl, 'message': msg, 'proxy': proxy, 'sfx': sfx,
@@ -724,7 +774,8 @@ def resolve(prj_or_data, repo_root=None):
                 raise CustomSkillError(f"{what}.result_line: the line cannot be empty")
             if sid in RESULT_AFTER:
                 bs, w = encode_line(e['result_line'], f"{what}.result_line", True,
-                                    allow_skill=False, allow_amount=True)
+                                    allow_skill=False, allow_amount=True,
+                                    tokens=RESULT_TOKENS[sid])
             else:                           # [S155 r2] shown before the attack
                 if len(_pages(e['result_line'], f"{what}.result_line")) > 1:
                     raise CustomSkillError(f"{what}.result_line: one page (1-2 lines) — it "
@@ -737,6 +788,17 @@ def resolve(prj_or_data, repo_root=None):
                                     allow_skill=False, allow_amount=False)
             banners[RESULT_LINES[sid][1]] = bs
             warns += w
+        for key, (banner, _lab, _what) in RISE_KEYS.items():        # [S156 r2]
+            if key in e and sid == 0xEA:
+                if not e[key]:
+                    raise CustomSkillError(f"{what}.{key}: the page cannot be empty")
+                if len(_pages(e[key], f"{what}.{key}")) > 1:
+                    raise CustomSkillError(f"{what}.{key}: one page (1-2 lines) — it follows "
+                                           "the result line")
+                bs, w = encode_line(e[key], f"{what}.{key}", True, allow_skill=False,
+                                    allow_amount=True, tokens=RISE_TOKENS)
+                banners[banner] = bs
+                warns += w
         if 'tame_meter' in e:
             tame[sid] = _int(e['tame_meter'], what + '.tame_meter', 0, 1600)
         if 'quake_power' in e:
@@ -861,7 +923,7 @@ def layout(prj_or_data, repo_root=None):
     sk, ex, _w = resolve(prj_or_data, repo_root)
     # S155: the S155 built-ins come last, so the S111 skills keep their places
     # (and bytes) in the bank $41 / $56 regions; theirs fill what is left first-fit
-    order = sorted(sk.items(), key=lambda kv: (kv[0] in S155, kv[0]))
+    order = sorted(sk.items(), key=lambda kv: (2 if kv[0] in S156 else kv[0] in S155, kv[0]))
     nm = [(name_label(s, v['name']), v['name'] + b'\xf0') for s, v in order]
     ds = [(desc_label(s), v['desc'] + b'\xf0') for s, v in order if v['desc']]
     # battle lines: MagicBurn's first (it owned $7326), identical lines shared
@@ -880,6 +942,8 @@ def layout(prj_or_data, repo_root=None):
         lines.append((lab, ex['banners'][key]))
     for sid, (lab, key) in sorted(RESULT_LINES.items()):        # [S155]
         lines.append((lab, ex['banners'][key]))
+    for key, (banner, lab, _w) in RISE_KEYS.items():             # [S156 r2]
+        lines.append((lab, rise_line(ex['banners']['plunder_line'], ex['banners'][banner])))
     a_placed, rest, a_used = _fill(lines, MSG_A)
     return {'names': _fill(nm, NAME_REGION), 'descs': _fill(ds, DESC_REGION),
             'msg_a': (a_placed, a_used), 'msg_pool': rest, 'msg_owner': owner,
@@ -1081,8 +1145,10 @@ def emit_msg_ptrs(prj, warnings):
 
 def _lines(items):
     out = []
+    tok = {RESULT_LINES[s][0]: RESULT_TOKENS[s] for s in RESULT_TOKENS}
+    tok.update({lab: RISE_TOKENS for _b, lab, _w in RISE_KEYS.values()})
     for lab, b in items:
-        out.append(f"{lab}:  ; \"{decode_line(b, result=lab == 'CustomLine_Rust')}\"")
+        out.append(f"{lab}:  ; \"{decode_line(b, result=lab in tok, tokens=tok.get(lab))}\"")
         out.append(_db(b))
     return out
 

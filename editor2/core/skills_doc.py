@@ -5,7 +5,7 @@ looks_like / sounds_like) + editor2/core/custom_skills.py (the custom skills
 222-254 and every skill's element), PROJECT_COMPILER §2.26 / §2.27).
 
 Reads and writes `gamedata.skills.<id>`: the 222 stock skills, the ten
-built-in custom skills (222-223, 224-233, 235-238 since S155) and the project's
+built-in custom skills (222-223, 224-233, 235-238 since S155, 234 since S156) and the project's
 NEW skills (239-254; 234-254 until S155). The
 project stores only differences: a field set back to its original value (for
 a new skill: the value its base skill gives it) removes its key, and the
@@ -216,8 +216,13 @@ class SkillsMixin:
         if sid in CS.RESULT_LINES:                                             # [S155]
             bk = CS.RESULT_LINES[sid][1]
             ra = sid in CS.RESULT_AFTER                                        # [S155 r2]
-            params['result_line'] = (CS.decode_line(ex['banners'][bk], result=ra),
-                                     CS.decode_line(oex['banners'][bk], result=ra))
+            tk = CS.RESULT_TOKENS.get(sid)                                    # [S156]
+            params['result_line'] = (CS.decode_line(ex['banners'][bk], result=ra, tokens=tk),
+                                     CS.decode_line(oex['banners'][bk], result=ra, tokens=tk))
+        if handler == 'plunder':                                               # [S156 r2]
+            for key, (bk, _lab, _w) in CS.RISE_KEYS.items():
+                params[key] = (CS.decode_line(ex['banners'][bk], result=True, tokens=CS.RISE_TOKENS),
+                               CS.decode_line(oex['banners'][bk], result=True, tokens=CS.RISE_TOKENS))
         if sid in CS.LINE_SHOWS:                                               # [S155 r3]
             params['line_shows'] = ('always' if ex['line_always'][sid] else 'bonus', 'always')
         if handler == 'anchor':
@@ -510,7 +515,7 @@ class SkillsMixin:
 
     def set_skill_param(self, sid, key, value):
         """tame_meter / quake_power / allies_line / flew_line / boost_line /
-        dialogs / the ratio keys (custom_skills.RATIO_KEYS) / S155 the percentages
+        dialogs / the ratio keys (custom_skills.RATIO_KEYS) / S156 r2 def_rise / agl_rise / S155 the percentages
         (custom_skills.PCT_KEYS), result_line and line_shows ("always"/"bonus";
         None = the original)."""
         def mut(e):

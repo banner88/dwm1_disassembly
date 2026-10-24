@@ -965,7 +965,7 @@ SkillNamePtrTable:  ; $4539 — 256 entries, indexed by skill ID
     dw SkillName_231_QuakeMore  ; [231]
     dw SkillName_232_QuakeMost  ; [232]
     dw SkillName_233_Mourn  ; [233]
-    dw SkillName_222_Unused_222  ; [234]
+    dw SkillName_234_Plunder  ; [234]
     dw SkillName_235_Punish  ; [235]
     dw SkillName_236_Finish  ; [236]
     dw SkillName_237_Rupture  ; [237]
@@ -3771,13 +3771,15 @@ SpiritName_7:  ; "NOVA"
 ; @BUILD_PROJECT END ns_text_f
     ASSERT @ == $7E86
 ; @BUILD_PROJECT BEGIN ns_text_b
+SkillName_234_Plunder:
+    db $33, $49, $52, $4B, $41, $42, $4F, $F0
 SkillName_235_Punish:
     db $33, $52, $4B, $46, $50, $45, $F0
 SkillName_236_Finish:
     db $29, $46, $4B, $46, $50, $45, $F0
 NsShort_224:
     db $2A, $4C, $4F, $3F, $F0
-    ds 90, $00
+    ds 82, $00
 ; @BUILD_PROJECT END ns_text_b
 ; NewSpeciesShortPtrs: the default-nickname pointer table of ids 221-239. The
 ; bank $60 entry 14 TextOverride (S150; S105-S149 the bank-$00 LoadModeBaseRedirect) sends the mode-7 lookup ($4739, family codes /
@@ -3825,7 +3827,7 @@ MiscText_03_Paged:
 ; $DE-$FE, first-fit; a name that does not fit goes to the shared ns_text_*
 ; extents). The retired POCs $DE Scorch / $DF Smite no longer carry a name.
 ; @BUILD_PROJECT BEGIN gd_custom_skill_names
-; (4 name(s) placed in the ns_text_* extents: SkillName_235_Punish, SkillName_236_Finish, SkillName_237_Rupture, SkillName_238_Blunt)
+; (5 name(s) placed in the ns_text_* extents: SkillName_235_Punish, SkillName_236_Finish, SkillName_237_Rupture, SkillName_238_Blunt, SkillName_234_Plunder)
 SkillName_224_MagicBurn:  ; "MagicBurn"
     db $30, $3E, $44, $46, $40, $25, $52, $4F, $4B, $F0
 SkillName_225_Tame:  ; "Tame"

@@ -1818,7 +1818,7 @@ texts ("Cannot use now." in the field, as stock battle skills).
 
 **Ids.** `$DE` Repel and `$DF` LoneWolf (the retired S45 POCs' ids; the bank $50
 `AliasCommit` that queued them as Blaze is now `xor a / ld [$db86],a`), `$EA` Plunder
-(HELD — refused by the compiler, PLANNED for S156), `$EB` Punish, `$EC` Finish, `$ED`
+(held by S155; BUILT S156 — §13.11), `$EB` Punish, `$EC` Finish, `$ED`
 Rupture, `$EE` Rust. NEW skills a project adds: `$EF-$FE` (239-254; 16 ids, was
 `$EA-$FE`). Learning starts at `$DE` (bank $06 `LearnLoopFork` `ld c,$de`;
 `CustomLearnRow72` `sub $DE`; `CustomLearnTable` 33 rows). Data: custom_skills.json
@@ -1916,7 +1916,7 @@ goes forward from it).
 **AI (bank $57).** `AIChainApplyDelta_78a2`'s first `ld a,[$c1fc]` → `call CustomAI57`
 (15 B in the bank's trailing nops at `$7FD1`): for an id ≥ `$DE` it far-calls bank $72
 entry 8 `CustomAIRule72` with `$DD26` (bonus) / `$DD27` (penalty, `$FF` = veto) live —
-Repel / Plunder veto; Rupture veto unless a live opponent has an ailment, else +50;
+Repel veto (S156: Plunder — §13.11); Rupture veto unless a live opponent has an ailment, else +50;
 Punish +20 per buff on the most-buffed opponent (max +60); Finish +40 when an opponent
 lost ≥ 50 %, penalty 20 when every one lost < 25 %; Rust veto unless an opponent has
 ATK > 1; LoneWolf +40 alone / +20 in a pair. Sized against the cat-1 plain-attack score
@@ -1937,7 +1937,7 @@ Else the flag is set. A gate floor clears it at the next floor (bank $16 `label1
 as the item); elsewhere `wRepelArmed` / `wRepelPlace` (region, map) arm bank $72 entry 10
 `RepelCommit72`, called by bank $73's warp commit after `RegionCommit`: arriving in any
 other place clears the flag (a battle's return to the same room keeps it). In battle Repel
-and Plunder do nothing ("But nothing happens!", `.inert`); bank $50 `FieldOnlySkillA`
+does nothing ("But nothing happens!", `.inert`; S156: Plunder has its handler, §13.11); bank $50 `FieldOnlySkillA`
 treats `$DE` as field-only.
 
 **The older customs, re-measured S155 r2 (the same rule):** MagicBurn, Mourn (its boost
@@ -1965,6 +1965,123 @@ monster) / Rust; Repel in the WOLF DEN: `$C93E` = 2, MP −4, 0 battles in 150 s
 second cast fizzles, leaving clears it, battles return; Cities_FOUNT fizzles (no MP).
 The simulator models all of it (`simulator/skillfx/s155_custom.py`, `ai_rules.CUSTOM_RULES`;
 test_compiler `test_s155_sim`).
+
+### 13.11 Plunder (`$EA`, S156) — steal one buff, wear it as if cast this round  [S156, 2026-10-21; PyBoy-verified, built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.")]
+
+**The rules (the user).** S155: "steal a foe's buff onto yourself as if you cast it that
+round on yourself. Requires enemy to have a buff. Requires to select enemy"; "Steal 1 at
+random. Yes [the foe drops back to base and you get one Upper's worth on yourself, within the
+usual caps]. Exclude iron". S156: no buff → "But nothing happens!" with the MP spent; the
+random pick among the buffs the caster LACKS (falling back to any); timed buffs FRESH; a
+side-wide buff moves only to the caster; ALWAYS lands; iron ignored (never taken, never a
+block); one foe only; the AI as Punish's rule; the line "{name} steals {target}'s {buff}!".
+
+**Dispatch.** `NewDispatch72` → `CustomDispatch52_shared` (no damage machine, S155);
+`CustomBattleRun` → bank $72 `SkillPlunder`. Record (custom_skills.json row 234):
+DeMagic's shape with flags7 = flags8 = flags9 = 0 — the MISS machine never misses it; no
+MagicBack / Bounce reflection (flags8 b0), no Cover (b1), no iron block (b2), no Dodge (flags7
+b7); category `$23` (AI tag 2), target `$11`, MP 6, ai_weight 10; the look = RobMagic (`$1A`),
+the announce `$23` "… casts Plunder!". MEASURED (tools/walk_plunder.py): an iron foe's
+Barrier is taken, the iron stays.
+
+**StealTable** (bank $72, 18 rows of 6 B: offset in the slot's 8-B block (+8 / +9 = the
+shifted pair `$DB08+8t` / `$DB09+8t`), mask, the caster's bits cleared, the value set (`$FF`
+= the target's bits copied), kind, the stock skill whose NAME the line prints) — BuffTable's
+17 (§13.10, = Punish's) with "a stat raised" split into DEF and AGL:
+
+| Row | Buff | Target bits | On the caster | Name |
+|---|---|---|---|---|
+| 0 | TwinHits (armed) | +3 & $04 | the bit (persistent) | `$25` |
+| 1 | ALLCHANGE | +3 & $08 | the bit (persistent) | `$A6` |
+| 2 | TakeMagic | +4 & $01 | the bit | `$1B` |
+| 3 | Bounce | +4 & $02 | +4 := (+4 & $DD) \| $02 — replaces MagicBack, as SkillMagicBack | `$28` |
+| 4 | Barrier | +4 & $04 | the bit (only the target's copy) | `$24` |
+| 5 | MagicBack | +4 & $20 | +4 := (+4 & $DD) \| $20 — replaces Bounce | `$27` |
+| 6 | TailWind / StormWind | +4 & $40 | the bit | `$8A` |
+| 7 | MagicWall | +5 & $40 | the bit (only the target's copy) | `$26` |
+| 8 | ChargeUP | +6 & $03 | +6 \|= $03 — FRESH (powers the caster's next round) | `$41` |
+| 9 | SuckAir | +6 & $30 | +6 \|= $30 — fresh | `$43` |
+| 10 | Focus | +6 & $C0 | +6 := (+6 & $3F) \| $80 — fresh (the follow-up next round) | `$54` |
+| 11 | SideStep | +7 & $0C | copied (persistent) | `$77` |
+| 12 | DEF raised | +8 bit 6, not transformed (+3 & $30), DEF > base | the target's DEF := base; ONE Upper on the caster | `$1E` Upper |
+| 13 | AGL raised | as row 12 for AGL | the target's AGL := base; ONE Speed on the caster | `$22` Speed |
+| 14 | Dodge | +8 & $20 | the bit (this round) | `$8C` |
+| 15 | Imitate | +8 & $08 | the bit (this round) | `$7F` |
+| 16 | SuckAll | +8 & $02 | + its side mark: the target side's `$DB00/$DB01` bit 6 off and `$DB4A/B` &= 3; the caster's +8 bit 1, its side's bit 6, `$DB4A + side` \|= (slot & 3) << 2 — unless that side already has one (SkillSuckAll) | `$8F` |
+| 17 | Defence / StrongD / BladeD | +9 & $07 | +9 := (+9 & $F0) \| the level (this round) | `$8D` / `$8E` / `$90` by the level 1 / 2 / 4 |
+
+Never iron (+7 & $C0) or the transformed bits (+3 & $30); a transformed target's raised mark
+is not a buff (its stats are copies).
+
+**The pick.** `StealCount72` counts the rows the target HAS (`StealHas72`) and the caster
+does NOT (`StealCasterHas72`: its own bits; DEF / AGL: its stat cannot rise any more — at
+the limit or the cap; SuckAll: its side already has a user); none → the rows the target has.
+n = 0 → `RustFail72` ($BB "But nothing happens!", descriptor $84, no RNG; the MP was spent at
+the act's afford step — measured 200 → 194 at the handler). Else ONE `BattleRNG72` step and
+row = the k-th eligible one, k = (wRNG1 × n) >> 8 (`Mul16by8_72`, `StealFind72`).
+
+**DEF / AGL** (`StatLoad72` / `StatRoom72` / `StatRise72`, bases through bank $57 entries 7 /
+8 with `$DD72/$DD73` kept for the AI's plan byte — `BaseStat72`): the caster's stat may rise
+when below the limit (999 DEF / 511 AGL) and below the cap (base ×4 for a slot < 4 or a link
+battle, ×2 an enemy — UpperStatCapCheck_6a13 / StatCapMul_6af5); + base / 2; a sum at / over
+the limit → the limit, else over the cap → the cap (StatDefUp_5e3e / StatAglUp_5f08); the
+raised mark set. The target's raised mark stays only while its OTHER stat is still above base.
+
+**The line** (LINE_PLUNDER = 6, `CustomLine_Plunder`, project data `plunder_line`): the hit
+message becomes `$FD` (`SetLine72`, Rust's shape: descriptor $98, `$dd71` $B8) and renders
+in the effect slot WITH the cast's look (the RobMagic sparks play under page 1 — the vanilla
+shape of a no-damage skill: Barrier's visual call, sound and "defence up" text land within a
+frame, measured). The inserts at that render (MEASURED S156, both directions): `[INS 00]`
+($C180) = the target, `[INS 10]` ($C190) = the hit's number, `[INS 20]` ($C1A0) = the CASTER
+(the game's own fills), `[INS 30]` ($C1B0) = untouched zeros in battle — `StealName72` copies
+the row's stock-skill name there through SetupVRAMParams (bank $41 entry 1, mode 6: a renamed
+stock skill shows its new name). Default: "{name} steals / {target}'s" + a page "{buff}!" —
+measured: one line "{target}'s {buff}!" with an 8-letter foe and a 9-letter buff ("Anteater's
+MagicBack!", 20 cells) overflows the 18-cell box and garbles the next page (KEY_LESSONS S156).
+
+**AI.** `CustomAIRule72` `.plunder`: veto unless a live opponent has a StealTable buff
+(`ScoreSteal72` = the handler's own `StealHas72`), else +20 per buff on the richest (at most
++60, Punish's sizes). `CustomTargetPick72`: the opponent with the most (`ScoreSteal72`).
+MEASURED: the BANDIT (INT 200) never casts it at an unbuffed party, and with Barrier +
+TailWind on party slot 1 it plunders slot 1 every time.
+
+**WRAM** `wSteal` ($DECC, 6 B: caster, target, mode, pick, row, name id); the stat scratch
+reuses `wCustomTmp`.
+
+**Verified in PyBoy** (the user's save; `tools/walk_plunder.py` on `examples/s156_plunder_demo`,
+41 / 41): each of the 18 rows alone on the foe — the ROM's board ($DB00-$DB4B, DEF / AGL) at
+the line == the simulator twin's (`s155_custom.plunder_one` on the board read at the handler's
+entry, with the handler's RNG), the line 6 with the stock name in [INS 30]; no buff → $BB;
+the lacking-first rule (4 seeds); 3 buffs over 8 seeds (rows 0 / 2 / 4 seen, each = the twin);
+DEF + AGL raised; the caster at its DEF cap; Bounce over MagicBack; the stance at levels 2 / 4
+(StrongD / BladeD); Focus $40 → $80; a transformed foe ($BB); an iron foe; an enemy caster on
+party slot 0; the MP; the gifts; the BANDIT's veto and target; the BUFF KNIGHT's buffs.
+`--negative` (SkillPlunder = `ret`, ScoreSteal72 = 0): 31 FAIL.
+
+**S156 r2 — the rise page (the user on the S156 ROM: "if you say \"X steal's Y's Upper\" or
+something, then the next textbox should report by how much the effect affects new monster.
+Same with enemies").** `StatRise72` writes the caster's rise (new − old) to `$DB56`; at the
+`$FD` render the game turns `$DB56` into `[INS 10]` (as Rust's "loses … attack"). When the
+stolen row is the raised DEF / AGL (`STEAL_ROW_DEF` = 12, ASSERTed at the table) and the rise
+is not 0, `SkillPlunder` shows LINE_PLUNDER_DEF (7) / LINE_PLUNDER_AGL (8) = the result line +
+one page (compiler-made, PROJECT_COMPILER §2.64); a caster that cannot rise (at the limit /
+cap) gets the plain line 6. The defaults follow the game's own Upper / Speed result messages
+($92 "{target}'s / defense goes up" + "by {amount}!", $97 "{target}'s speed / goes up by
+{amount}!" — measured): "{name}'s defense / goes up by {amount}!", "{name}'s speed / goes up by
+{amount}!". Measured (walk_plunder 45 / 45): PX steals a raised DEF → "PX's defense / goes up by
+2!" (on screen); a foe steals party slot 0's raised AGL → line 8 with its own rise; at the DEF
+cap → line 6. `--negative` 33 FAIL.
+
+**Repeated steals (the user, S156: "what if I keep stealing and he keeps upping?").** Each
+steal of a raised stat resets the foe to its base (all its stacked casts at once) and adds ONE
+Upper / Speed worth of the THIEF's own base (base / 2), which persists all battle (nothing
+decays; DeMagic, Surge for a lowered stat, a KO undo it). A loop therefore climbs exactly like
+repeated Upper casts and stops at the same bound (×4 base party / link, ×2 an enemy; 999 DEF,
+511 AGL). At the bound the raised stat is no longer "lacking": another buff of the foe is
+preferred, and with that one alone it is still taken — pure denial, the foe back to base, line
+6 (measured: the at-cap case). The AI (`ScoreSteal72`) tests only what the target has, not the
+caster's room, so a capped enemy thief keeps stripping a party monster's raised stat. Left as
+is by the user's sign-off (not built: a cap on Plunder's own gain; a room-aware AI score).
 
 ---
 

@@ -2,7 +2,7 @@
  "_generator": "tools/build_balance_anchor.py (S130) from the original game data (disassembly of data/DWM-original.gbc 1ca6579359f21d8e27b446f865bf6b83) through editor2/core/balance.py + simulator/ (raising.py, pacing.py, battle.py)",
  "version": 1,
  "sim_version": "S131.2",
- "raising_digest": "fecea30bf7d65dc1ccff",
+ "raising_digest": "92d31c445cfca3a0bac0",
  "targets": [
   0.9,
   0.5

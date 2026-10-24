@@ -7449,7 +7449,7 @@ CustomAnnounceTable:        ; indexed (id - $E2), ids $E2-$FE [S111: compiler re
     db $FD   ; [$E7] QuakeMore
     db $FD   ; [$E8] QuakeMost
     db $FD   ; [$E9] Mourn
-    db $FF   ; [$EA] -
+    db $23   ; [$EA] Plunder
     db $5D   ; [$EB] Punish
     db $5D   ; [$EC] Finish
     db $5D   ; [$ED] Rupture
@@ -7552,7 +7552,7 @@ CustomTargetBaseTable:
     db $03   ; [$E7] QuakeMore: Firebal's row = Jump_058_62bf (opposite side, first live slot)
     db $03   ; [$E8] QuakeMost: Firebal's row = Jump_058_62bf (opposite side, first live slot)
     db $3A   ; [$E9] Mourn: Attack's row = $41E9
-    db $E5   ; [$EA] -: the vanilla slack row $E5 = $6367 (a harmless target write)
+    db $F0   ; [$EA] Plunder: its own pick (bank $72 CustomTargetPick72)
     db $F0   ; [$EB] Punish: its own pick (bank $72 CustomTargetPick72)
     db $F0   ; [$EC] Finish: its own pick (bank $72 CustomTargetPick72)
     db $F0   ; [$ED] Rupture: its own pick (bank $72 CustomTargetPick72)

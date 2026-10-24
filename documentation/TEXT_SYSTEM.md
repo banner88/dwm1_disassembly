@@ -302,7 +302,11 @@ sound effect — not "NUM"; 7 uses in the ids, all `$E9 $60`), `$F9` 1 byte (ins
 the name is read from **`$C180 + nn`** (16-byte slots, `$F0`-terminated; bank $56
 `jr_056_4806`; in game mode `$0B` from `$0D8A` "MSGBUF" instead) — filled by the
 caller's code right before the text: a slot left unfilled prints on through RAM and
-crashes the game, KEY_LESSONS S118),
+crashes the game, KEY_LESSONS S118) — **S156, measured in battle (party and enemy caster):** at a skill
+handler $C180 = the caster, $C190 = the skill's name, $C1A0 = the target (the announce's
+fills); at the hit / result message ($FD render) $C180 = the target, $C190 = the hit's
+number, $C1A0 = the caster; $C1B0 (`$F9 $30`) is left untouched in battle (zeros) — Plunder's
+handler fills it with the stolen buff's name (BATTLE_SKILL_SYSTEM §13.11),
 `$F3` none (a box opener like `$EA` / `$EB`, 20 uses before the speaker). The Control
 Codes table above carries these corrections.
 Battle messages (bank $4C) use their own codes (`$ED`, `$FC xx`, `$EC`, `$F2` — not

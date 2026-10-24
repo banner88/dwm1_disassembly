@@ -2042,3 +2042,31 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `patches/bank_072.asm` / `bank_053.asm` / `bank_050.asm` | `SkillRust` fails a blunted slot + sets the bit, `BluntBit72`, `ScoreRust72` 0 for a blunted one; `RestoreATK53` clears it (19 trailing nops spent); BattleInit zeroes it (same 22 B) | walk_skills.py `numbers` + `bosses` |
 | `simulator/skillfx/s155_custom.py` | `blunted(b)`: `rust_one` fails, `restore_atk` clears, `_score` 0 | test_compiler `test_s155_sim` (+ 3 r5 checks) |
 | `tools/walk_skills.py` | Blunt once then `$BB`; DeMagic / Surge then Blunt lands again; the BLUNT KNIGHT never re-targets a blunted monster | 33 / 33; negative 19 FAIL |
+
+## S156 rows (ROADMAP E12 — Plunder, the buff thief)
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_072.asm` | `SkillPlunder` (via `CustomBattleRun`), `StealTable` (18 rows), `StealCount72` / `StealFind72` / `StealOK72` / `StealHas72` / `StealCasterHas72` / `StealApply72` / `StealName72`, `StatLoad72` / `StatRoom72` / `StatRise72` / `StatToBase72` / `StatAboveBase72`, `BaseStat72` (bank $57 entries 6-8, `$DD72/73` kept), `ScoreSteal72` (`CustomAIRule72 .plunder`, `CustomTargetPick72`), `LINE_PLUNDER` | walk_plunder.py |
+| `patches/bank_04c.asm` / `wram.asm` | `CustomLinePtrs` line 6 (`ASSERT @ == $7454`); `wSteal` ($DECC, 6 B) | walk_plunder.py; test_compiler |
+| `editor2/core/custom_skills.py` + `custom_skills.json` | 234 in `BUILTIN` (`S156`), `PLANNED` = (), `RESULT_TOKENS` + `encode_line(tokens=)` / `decode_line(tokens=)` (`{buff}` `$F9 $30`, `{name}` `$F9 $20` in the result lines), `MSG_PTRS_AT` `$7454`, the names' layout order S111 → S155 → S156; row 234 (`"_since": "S156"`) + `plunder_line` | test_compiler (`test_s156_sim`, the S111 / S155 tests updated) |
+| `editor2/core/skills_doc.py`, `editor2/app/skills_tab.py` | the result line decoded with its tokens; the line label per skill (Plunder / Blunt), the Target note for Plunder | test_app |
+| `simulator/skillfx/s155_custom.py` | the Plunder twin: `STEAL_TABLE`, `steal_has` / `caster_has` / `steal_choices` / `steal_apply` / `stat_room` / `stat_rise`, `plunder_one` / `plunder_handler`, the AI rule (veto / +20 per buff) and the pick (`steal_count`) | `test_s156_sim` (11); walk_plunder.py (ROM == twin, 30 boards) |
+| `tools/extract_custom_skills.py` | reads the S156 engine (StealTable in the .sym): row 234 + `plunder_line` | test_compiler `--rom` (extract on the example build) |
+| `tools/walk_plunder.py` (NEW) | PyBoy on the user's save + the S156 demo: `gift`, `numbers` (forced Plunder casts; the ROM's board at the result line == the simulator twin fed the board + RNG at the handler; the 18 rows, the fail, the lacking-first rule, seeds, the stat / stance / SuckAll / Focus / iron / transformed / enemy-caster cases, the MP), `bosses` (the BANDIT's veto and target, the BUFF KNIGHT's buffs); `--negative` (SkillPlunder = ret, ScoreSteal72 = 0) | 41 / 41; negative 31 FAIL |
+| `examples/s156_plunder_demo/build_demo.py` (NEW) | the user's project + THE ROGUE HALL (HALL GUIDE, GIFT MASTER: PLUNDERER / SHIELDER, the BUFF KNIGHT and the BANDIT) + the HALL GUIDE in Cities_FOUNT (3, 4) | see PROJECT_STATE S156 |
+| help `54_skills.md`, `_revision.md`; `EDITOR_REVISION` S156 | Plunder's rules, its line and tokens, Blunt's `{name}`, the name-space limit | test_app (help revision) |
+| `extracted/balance_vanilla.json` | `raising_digest` re-tagged `92d31c44…` (the Plunder record; the new code without it = the stored `fecea30b…` — proven) — the numbers unchanged | `build_balance_anchor --selftest` OK (re-derived 3 fights + 1 dive + 2 player fights) |
+
+**S156 r2 rows (the user: the next textbox says by how much the stolen buff raised the thief's stat):**
+
+| File | What | Verified |
+|---|---|---|
+| `patches/bank_072.asm` / `bank_04c.asm` | `StatRise72` → `$DB56` = the rise; `SkillPlunder` LINE_PLUNDER_DEF / _AGL (`STEAL_ROW_DEF`, ASSERT); `CustomLinePtrs` lines 7 / 8 (ASSERT `$7458`) | walk_plunder.py |
+| `editor2/core/custom_skills.py` + `custom_skills.json` | `RISE_KEYS` / `RISE_TOKENS` / `rise_line`, keys `def_rise` / `agl_rise`, `MSG_PTRS_AT` `$7458`; banners `plunder_def_rise` / `plunder_agl_rise` | test_compiler (r2 checks) |
+| `editor2/core/skills_doc.py`, `editor2/app/skills_tab.py` | params `def_rise` / `agl_rise`; two line boxes (`rise_edits`) | test_app |
+| `simulator/skillfx/s155_custom.py` | `steal_apply` → (name, rise), `plunder_line`, `plunder_one` → (row, name, rise, line) | `test_s156_sim`; walk_plunder.py |
+| `tools/extract_custom_skills.py` | the rise pages read back from `CustomLine_PlunderDEF` / `_AGL` | `--check` OK on the demo build |
+| `tools/walk_plunder.py` | + the rise page / `[INS 10]` checks (the DEF / AGL rows, a foe on party slot 0's AGL, a caster at its cap → line 6) | 45 / 45; negative 33 FAIL |
+| help `54_skills.md`, `_revision.md`; `EDITOR_REVISION` S156r2 | the rise pages | test_app (help revision) |
+

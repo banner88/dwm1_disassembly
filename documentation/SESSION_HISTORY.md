@@ -1,5 +1,84 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-19 (Session 154 — **ROADMAP E10 BUILT: THE MEMORIAL — STATUES IN YOUR ROOMS THAT SHOW THE
+> MONSTERS WHO WON A BOSS BATTLE, AN ARENA CLASS OR STARRY NIGHT WITH THE PLAYER AND HAVE SINCE LEFT (BRED, RELEASED,
+> TRADED): A SHARED POOL, A RANDOM PICK AT EACH VISIT, EVERY STATUE OF A ROOM DIFFERENT (ELSE BLANK), MORE STATUES IN LATER
+> ROOM STATES; "IN MEMORY OF {fallen}, A LEVEL {fallen_level} {fallen_species}."** (kickoff: "A custom room, insertable
+> into gates, where you can place objects that will take on sprites (non-moving) and interactables (text when examined)
+> of any monsters the player beat a boss OR an arena level with … ONLY if monster is no longer with player … Scope it
+> out please." → the scope (no flags; ~1 KB of SRAM bank 3) + questions → user: "Slightly grey, unmoving monster sprites
+> as tiles … Level they won … all bosses AND starry night … New bosses in existing gates count … if present at battle
+> then count … Drop oldest" → "Great lets go with shared pool … Maybe I want to have more statues as game goes on so I
+> change game state … Just get them to roll from shared pool and make sure statue objects in same room roll different if
+> possible otherwise stay blank"). **Built S154, NOT yet user-tested.** Test ROM **`DWM-S154-memorial-test.gbc`**
+> (`62c63043…`, patched) = the user's project + THE MEMORIAL HALL / THE MEMORIAL CRYPT (`examples/s154_memorial_demo/
+> build_demo.py`; way in: the MEMORIAL GUIDE, Cities_FOUNT (3, 4)). Example pin `eb283a19…` (patched; was `d88d5436…`,
+> patched): bank $73 (the save / load of the list's window, always built), bank $77 (the re-pinned head), WRAM; the four
+> regions keep the game's bytes, bank $79 stays empty (no statue in the example).
+> **Measured + annotated (code-read + PyBoy, both trees, comments only, clean `1ca6579…` byte-perfect):** record +$82 =
+> resistance 26 (the 27th) has three readers — the battle packer puts it in packed POSITION 0 (bank $51
+> `SaveBtlS_4404`: "position 0 unused" was wrong), read by element 0 (134 skills, `AIRule_4c13`) and the FireSlash target
+> row (bank $58: a vanilla off-by-one, it masks position 0 not Fire); breeding indexes 7 rows by (p1 + p2) & 7 (a sum of
+> 7 has no row). So the memorial's TAG there is a multiple of 8 (8 … 248): 0 in battle, 0 mod 8 in breeding. Bank $0B's
+> two sheet loaders each hold 7 dead bytes after the sheet reached `$9000` (the hook); the battle's kind at
+> `BattleExitHandler` (`$DB55`, `$DA09` 3 = a boss battle, the plain-op bosses Digster / Durran / Terry by EID, the arena's
+> `$D999` / `$D9CE` / `$D9CD`). DATA_STRUCTURES "The memorial (S154)", BATTLE_SKILL_SYSTEM §15.3, BREEDING_SYSTEM.
+> **Built (engine):** bank $79 entries 6 `MemBattleStart` (the party count as the battle starts — a monster joining in
+> the battle is not a winner), 7 `MemBattleEnd` (a win of a boss / class / Starry Night's final: the fighters, fainted
+> ones too, tagged + on the list with this win's level and nickname), 8 `MemRoomTiles` (a different place than the last
+> full load re-rolls: each statue a different monster that has left — the 40 slots + the active sleep pool searched for
+> its (tag, species) — RNG16; then the standing picture drawn over the statue's 4 tiles, colour 0 transparent), 9
+> `MemSay` (story command 7: the inserts `$F9 $00/$10/$20` + `$D8E1`); a picture bank $80+ (`memorial_pics.asm`
+> `MemPicDraw` + 240 × 64 B); regions `memorial_battle_start` / `_end` (bank $50), `memorial_tiles_0` / `_1` (bank $0B);
+> bank $77 kind 7 + `BreedClose` → `MemorialRedraw77` (TEMPLATE_SIZE 2241); bank $73 `MemorialCommit` / `Restore` (bank 3
+> $A003 "M1", $A005 count, $A006 head); the list = SRAM bank 3 $A110 + 8 × ring index, a ring of cap + 9 (a reset
+> without saving gets the saved list back — KEY_LESSONS S154); WRAM `wMemCount` … `wMemTmp` $D56D-$D597 (wCustomPool −
+> 43). PROJECT_COMPILER §2.62.
+> **Built (compiler + editor):** NEW `memorial.py` (`custom.memorial` cap 8-120 + words, `custom.rooms[].statues` ≤ 8 a
+> room in fill order, statue entries per room state; the lowering to talk scripts + examine spots; the pictures; the
+> checks: resistance 26 ≠ 0 in a species row, the inserts outside statue words), NEW `memorial_doc.py`, NEW
+> `app/rooms/memorial_dialog.py`; Rooms tab **＋ Statue (U)** (4 free sheet tiles, the bottom-right on the wall side, the
+> empty-statue picture; the vocabulary release asked), marker M, the *Memorial statue* panel (order, tiles, words, in
+> states, Remove), Memorial settings…, Its words…; tile status `statue`; text tokens `{fallen}` / `{fallen_level}` /
+> `{fallen_species}`; Capacity rows (statues a room 8, remembered 120). Help `77_memorial.md` (NEW) + 00 / 90;
+> `EDITOR_REVISION` S154. `simulator/pacing.pack_res` puts index 26 at position 0 as the game.
+> **The acceptance (machine half):** NEW `tools/walk_memorial.py` on the user's save + the demo build: the hall empty;
+> the CHAMPION won → the 3 fighters on the list (tag 8, level, nickname), +$82 = 8; again → the packed byte 0 bits 7-6 =
+> 0 in battle, no duplicate; the BREEDER → exactly one statue shows the bred-away parent (its 4 VRAM tiles == the model);
+> its words (nickname / 23 / species, `$D8E1` 1; empty words, 0); the menu redraws; the JOURNAL save / reset / CONTINUE
+> (the list back; a win after the save forgotten); the MASON's state: 5 statues, 3 gone, all different, random over 10
+> visits; a battle keeps the picks; THE CRYPT in gate 2 (2 statues); the 14-kind battle census: **56 checks, 0 failed**;
+> `--negative` (the four regions' vanilla bytes) **19 FAIL**.
+> **Found on the way + fixed before delivery:** the vocabulary-release retry read a tileset the room did not have yet
+> (the GUI test waited for ever on the warning — KEY_LESSONS S154); the statue panel lost its statue after Memorial
+> settings… (every undo push re-shows the canvas; `_reselect_statue`).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1720 PASSED (+ `test_s154`, 21; its ROM check's
+> offset into `BattleExitHandler` corrected to +5); test_app `--rom` PASS (63 OK, + `s154_memorial`; the GUI build ==
+> the pin; one of two runs still exited 139 AFTER `PASS` — the S153 teardown crash is intermittent, not fixed) /
+> test_canvas `--rom` PASS (58 OK); the demo rebuilt from scratch == `62c63043…` (patched). **Next:** the user's test of the ROM (the hall: beat the CHAMPION, breed a winner away at the
+> BREEDER, come back; the MASON; gate 2's crypt); then the next big ticket (E3 b2 story-variable headroom; the
+> room-start hero name).
+> **r2 (the user on the r1 ROM, 2026-10-19 12:16: "1) Pedestal should be its own tile I can edit (in editor). The
+> whole thing then takes up 2 tiles. Then monster sits on top (second tile). 2) Monster should be grey but BACKGROUND
+> should be transparent. Currently its a grey square. 3) Can you confirm this will work with a) monsters I swap sprites
+> out and b) new custom monsters"):** a GBC background tile has no see-through colour (one slot of 4 colours, 1 / 3
+> forced) — the r1 square was the stone slot's colour 0. **Built:** a statue = TWO cells — the room's shared
+> **Pedestal** metatile on the clicked cell (ordinary tiles, editable in Draw) and the monster cell above it, whose 4
+> reserved tiles start as a COPY of the floor that was there; the editor gives both a statue palette slot = the
+> floor's colours with the index the floor does not use (colour 0 or 2) set to grey `$4210` (an existing matching slot,
+> else a free one, else the floor's own slot + a note); the engine draws the monster's colours 1 / 2 / 3 in the
+> statue's shade indices (`[1, g, 3]`: cream / grey / black) — a per-statue shade map in `MemRoomTable` (5-byte rows),
+> `MemShade` in the picture bank, `wMemDraw` 6 B (wCustomPool − 44). Re-pinned `bank_079_head` / `memorial_pics`;
+> example pin unchanged `eb283a19…` (patched). Help 77 §2-4 rewritten; `EDITOR_REVISION` S154r2.
+> **Measured:** walk **60 / 60** on the r2 demo (+ on screen: the monster cell's empty pixels == a plain floor cell,
+> 72 / 72; the middle shade one grey (128, 128, 128); the BG map's pedestal / monster cells; the user's new species
+> Klamutra (221) on a statue == its art), `--negative` **20 FAIL**; **Q3a** a scratch build with TreeSlime re-arted
+> (DarkCrab's walking art + layout, `gamedata.art`): the ROM picture is the new art, the statue shows it == the
+> picture (19 / 19). Q3 answer: the pictures are made at build time from the art the build gives each species
+> (`memorial.species_art`: the original, `gamedata.art`, `custom.species`). Test ROM **`DWM-S154r2-memorial-test.gbc`**
+> (`e77c006e…`, patched). **Checks:** test_compiler `--rom` ALL 1726 PASSED (+6 r2); test_app `--rom` PASS (63 OK,
+> exit 0); test_canvas `--rom` PASS (58 OK); verify_integrity PASS.
+
 > Last verified: 2026-10-18 (Session 153 — **ROADMAP E5 BUILT: THE TITLE SCREEN AND THE ENDING — YOUR WORDS ON THE
 > TITLE ("MILAYOU'S JOURNEY"), YOUR OWN CREDITS PAGES (TEXT, MONSTER, SECONDS, SONGS), THE FINAL SCENE OF ANY CUTSCENE
 > ROLLS THE CREDITS AND SENDS THE GAME ON TO A ROOM OF YOUR CHOICE; "…TO BE CONTINUED" (THE SAVE); THE ORIGINAL GAME'S

@@ -13,7 +13,9 @@ compares it with the JSON (the byte-identity proof of the move). Reads three
 layouts: the S110 pin's hand tables, the S111 engine's (CustomLearnTable
 $E0-$FE, CustomMPCostTable from $DE) and the S155 engine's (CustomLearnTable
 from $DE; + Repel / LoneWolf $DE/$DF, Punish..Rust $EB-$EE and their result
-lines) — test_compiler --rom runs extract() on the example build.
+lines) and the S156 engine's (+ Plunder $EA and its line, when StealTable is in
+the .sym; r2: the rise pages from CustomLine_PlunderDEF / _AGL) — test_compiler --rom
+runs extract() on the example build.
 
 USAGE
   python3 tools/extract_custom_skills.py --rom <build>/rom.gbc --sym <build>/game.sym [--write]
@@ -42,6 +44,10 @@ S155_HANDLER = {0xDE: 'repel', 0xDF: 'lonewolf', 0xEB: 'punish', 0xEC: 'finish',
 S155_LINES = (('lonewolf_line', 'CustomLine_LoneWolf'), ('punish_line', 'CustomLine_Punish'),
               ('finish_line', 'CustomLine_Finish'), ('rupture_line', 'CustomLine_Rupture'),
               ('rust_line', 'CustomLine_Rust'))
+# S156: Plunder $EA — read when the build has the S156 engine (StealTable in the .sym)
+S156_IDS = (0xEA,)
+S156_HANDLER = {0xEA: 'plunder'}
+S156_LINES = (('plunder_line', 'CustomLine_Plunder'),)
 
 
 def parse_sym(path):
@@ -95,7 +101,9 @@ def extract(r):
     learn = {}
     s111 = 'CustomLearnTable' in r.s          # the S111 engine (one table, $E0-$FE)
     s155 = 'CustomPctTable' in r.s            # the S155 engine (the table from $DE)
-    ids = sorted(set(IDS) | set(S155_IDS)) if s155 else list(IDS)
+    s156 = 'StealTable' in r.s                # the S156 engine (Plunder)
+    ids = sorted(set(IDS) | set(S155_IDS) | (set(S156_IDS) if s156 else set())) if s155 \
+        else list(IDS)
     if s111:
         t = r.s['CustomLearnTable']
         first = 0xDE if s155 else 0xE0
@@ -124,7 +132,8 @@ def extract(r):
         tpl = r.at(b58, ann + sid, 1)[0] if sid < 0xE2 else r.at(b58, cann + sid - 0xE2, 1)[0]
         mp_ = r.word(b4c, mptr + 2 * (sid - 0xDE))
         msg = None if mp_ == dummy else r.string(b4c, mp_)
-        hd = S155_HANDLER[sid] if s155 and sid in S155_HANDLER else HANDLER[sid]
+        hd = S155_HANDLER[sid] if s155 and sid in S155_HANDLER else \
+            S156_HANDLER[sid] if s156 and sid in S156_HANDLER else HANDLER[sid]
         e = {'label': MT.decode(name), 'handler': hd,
              'name': MT.decode(name),
              'description': MT.desc_lines(desc) if desc else None,
@@ -136,12 +145,20 @@ def extract(r):
              'proxy': r.at(b5f, prox + sid - 0xDE, 1)[0]}
         if s155 and sid in S155_HANDLER:
             e['_since'] = 'S155'
+        if s156 and sid in S156_HANDLER:
+            e['_since'] = 'S156'
         sk[str(sid)] = e
     banners = {k: r.string(b4c, r.s[lab][1]).hex()
                for k, lab in (('quake_allies', 'CustomMsg_QuakeAllies'),
                               ('quake_flew', 'CustomMsg_QuakeFlew'),
                               ('mourn_boost', 'CustomMsg_MournBoost'))
-               + (S155_LINES if s155 else ())}
+               + (S155_LINES if s155 else ()) + (S156_LINES if s156 else ())}
+    if s156 and 'CustomLine_PlunderDEF' in r.s:   # [S156 r2] line 7 / 8 = the line + a page
+        main = bytes.fromhex(banners['plunder_line'])
+        for key, lab in (('plunder_def_rise', 'CustomLine_PlunderDEF'),
+                         ('plunder_agl_rise', 'CustomLine_PlunderAGL')):
+            full = r.string(b4c, r.s[lab][1])
+            banners[key] = (b'\xed' + full[len(main) - 2 + 4:]).hex()
     b72, tm = r.s['TameMeterTable']
     tame = {str(sid): r.word(b72, tm + 2 * k) for k, sid in enumerate((0xE1, 0xE2, 0xE3))}
     _, qp = r.s['QuakePowerTable']
@@ -175,7 +192,8 @@ DOC = [
     "this skill's own `message`, $FF = none), message (raw battle-text bytes,",
     "$F0-terminated), proxy (the stock skill whose animation / flash / sounds it",
     "borrows). handler = the bank $72 code that runs it (mechanism, not data).",
-    "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines).",
+    "S156 added Plunder ($EA, \"_since\": \"S156\", authored — PROJECT_COMPILER §2.64).",
+    "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines; S156 Plunder's).",
 ]
 
 

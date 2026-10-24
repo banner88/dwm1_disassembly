@@ -768,7 +768,7 @@ wMournSlashes:: db ;debb — double-slash replay counter (starts at 2; decrement
 wGateDiveGate:: db ;debc — wGateID+1 of the dive in progress (0 = none)
 wGateDiveMask:: db ;debd — once-per-dive rule bits served this dive (per gate, max 8)
 ; [S155] the S155 custom skills (BATTLE_SKILL_SYSTEM §13.10). Transient (outside the
-; save image), boot-zeroed by ClearAllWRAM. Reserve now 18 B, growth starts $DECC (S155 r5).
+; save image), boot-zeroed by ClearAllWRAM. Reserve now 18 B, growth starts $DECC (S155 r5); S156 wSteal: 12 B, $DED2.
 wCustomJump:: dw ;debe — the bank-$52 address the dispatcher jumps to for an S155
                 ;   battle skill (FarSkillFork returns HL = this cell; RST_08 reads it)
 wCustomLine:: db ;dec0 — the extra battle line pending (bank $4C CustomLinePtrs,
@@ -786,5 +786,9 @@ wQuakeHitLate:: db ;deca — [S155 r2] 1 = the Quake crossover's ally hit has it
 wBlunted:: db ;decb — [S155 r5] bit s = battle slot s is BLUNTED (its ATK lowered by
                 ;   Blunt; Blunt does not stack: another one fails, the AI skips it).
                 ;   Zeroed by bank $50 BattleInit; cleared per slot when DeMagic /
-                ;   Surge give the ATK back (bank $53 RestoreATK53). 18 B left, $DECC.
+                ;   Surge give the ATK back (bank $53 RestoreATK53).
+; [S156] Plunder (BATTLE_SKILL_SYSTEM §13.11). Transient, boot-zeroed. 12 B left, $DED2.
+wSteal:: ds 6 ;decc — bank $72 SkillPlunder / ScoreSteal72: +0 the caster, +1 the target
+                ;   (the slot tested), +2 1 = only the buffs the caster lacks, +3 the
+                ;   pick (counts down), +4 the StealTable row, +5 its name's skill id
 

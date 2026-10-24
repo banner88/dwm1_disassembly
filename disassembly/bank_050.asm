@@ -4518,6 +4518,12 @@ PersonalityRunTable:
     ret
 
 
+; [S156] the battle ANNOUNCE's inserts (measured, PyBoy, party and enemy caster):
+; $C180 [INS 00] := the attacker's name (here), $C190 [INS 10] := the skill's name
+; (jr_050_5a1c, SetupVRAMParams mode 6), $C1A0 [INS 20] := the target (ReadBtl_5a53 /
+; BattleTarget_5ac5) — what a skill handler sees. The hit / result message refills them
+; ($C180 the target, $C190 the hit's number, $C1A0 the attacker); $C1B0 [INS 30] stays
+; untouched in battle (TEXT_SYSTEM; BATTLE_SKILL_SYSTEM §13.11).
     ld a, [wBattleAttackerIdx]
     ld hl, $c180
     ld [$db50], a

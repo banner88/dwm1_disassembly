@@ -11873,7 +11873,9 @@ MournBoostPtrTable:
 ; skill that set it (wCustomLineSkill == $DB8A; another skill's $FD drops it and
 ; goes on as before). One-shot: wCustomLine := 0. The lines are battle text in
 ; the gd_custom_msgs region (CustomLine_*; $F9 $00 = the target, $F9 $10 = the
-; number of the hit — the damage / the ATK lost). BATTLE_SKILL_SYSTEM §13.10.
+; number of the hit — the damage / the ATK lost; [S156] at this $FD render $F9 $20
+; = the caster (the game's own fill, measured) and Plunder's $F9 $30 = the buff's
+; name, put in $C1B0 by bank $72 StealName72). BATTLE_SKILL_SYSTEM §13.10 / §13.11.
 LoadB4c_CustomLine:
     ld b, a
     xor a
@@ -11901,6 +11903,9 @@ CustomLinePtrs:                      ; [S155] LINE_* (bank $72), from 1
     dw CustomLine_Finish             ; 3 Finish: more than x1
     dw CustomLine_Rupture            ; 4 Rupture: the ailments burst
     dw CustomLine_Rust               ; 5 Rust: the ATK lost
+    dw CustomLine_Plunder            ; 6 [S156] Plunder: the buff stolen
+    dw CustomLine_PlunderDEF         ; 7 [S156 r2] + the caster's DEF rise
+    dw CustomLine_PlunderAGL         ; 8 [S156 r2] + the caster's AGL rise
 
 CustomMsgModeTable:
     dw CustomMsgPtrTable             ; mode 0 -> the custom pointer table
@@ -11916,7 +11921,7 @@ QuakeAlliesPtrTable:
 ; and gd_custom_msgs (up to $7A9D). The line bytes are battle text: $ED (a box
 ; opener), $F9 $00 = the subject's name (the caster in an announce, the target
 ; in a hit line), $F1 = next line, $FC $10 $EC $F2 = next page, $EC $F0 = end.
-    ASSERT @ == $7452                ; [S155] editor2/core/custom_skills.py MSG_PTRS_AT
+    ASSERT @ == $7458                ; [S155] editor2/core/custom_skills.py MSG_PTRS_AT ([S156] +2: CustomLine_Plunder; r2 +4: _PlunderDEF / _AGL; was $7452)
 CustomMsgPtrTable:
 ; @BUILD_PROJECT BEGIN gd_custom_msg_ptrs
     dw CustomMsg_dummy         ; [$DE] Repel
@@ -11931,7 +11936,7 @@ CustomMsgPtrTable:
     dw CustomMsgLine_229       ; [$E7] QuakeMore
     dw CustomMsgLine_229       ; [$E8] QuakeMost
     dw CustomMsgLine_233       ; [$E9] Mourn
-    dw CustomMsg_dummy         ; [$EA] -
+    dw CustomMsg_dummy         ; [$EA] Plunder
     dw CustomMsg_dummy         ; [$EB] Punish
     dw CustomMsg_dummy         ; [$EC] Finish
     dw CustomMsg_dummy         ; [$ED] Rupture
@@ -11974,6 +11979,8 @@ CustomMsg_MournBoost:  ; "['Fallen allies', 'lend power!']"
     db $29, $3E, $49, $49, $42, $4B, $62, $3E, $49, $49, $46, $42, $50, $F1, $49, $42, $4B, $41, $62, $4D, $4C, $54, $42, $4F, $63, $EC, $F0
 CustomLine_LoneWolf:  ; "["A lone wolf's", 'fury!']"
     db $ED, $24, $62, $49, $4C, $4B, $42, $62, $54, $4C, $49, $43, $68, $F1, $43, $52, $4F, $56, $63, $EC, $F0
+CustomLine_Plunder:  ; "[['{name} steals', "{target}'s"], ['{buff}!']]"
+    db $ED, $F9, $20, $62, $50, $51, $42, $3E, $49, $50, $F1, $F9, $00, $68, $FC, $10, $EC, $F2, $F9, $30, $63, $EC, $F0
 CustomLine_Punish:  ; "['It punishes the', "foe's buffs!"]"
     db $ED, $2C, $51, $62, $4D, $52, $4B, $46, $50, $45, $42, $50, $62, $51, $45, $42, $F1, $43, $4C, $42, $68, $62, $3F, $52, $43, $43, $50, $63, $EC, $F0
 CustomLine_Finish:  ; "['It goes in for', 'the kill!']"
@@ -11982,6 +11989,10 @@ CustomLine_Rupture:  ; "['The ailments', 'burst!']"
     db $ED, $37, $45, $42, $62, $3E, $46, $49, $4A, $42, $4B, $51, $50, $F1, $3F, $52, $4F, $50, $51, $63, $EC, $F0
 CustomLine_Rust:  ; "['{target} loses', '{amount} attack!']"
     db $ED, $F9, $00, $62, $49, $4C, $50, $42, $50, $F1, $F9, $10, $62, $3E, $51, $51, $3E, $40, $48, $63, $EC, $F0
+CustomLine_PlunderDEF:  ; "[['{name} steals', "{target}'s"], ['{buff}!'], ["{name}'s defense", 'goes up by {amount}!']]"
+    db $ED, $F9, $20, $62, $50, $51, $42, $3E, $49, $50, $F1, $F9, $00, $68, $FC, $10, $EC, $F2, $F9, $30, $63, $FC, $10, $EC, $F2, $F9, $20, $68, $62, $41, $42, $43, $42, $4B, $50, $42, $F1, $44, $4C, $42, $50, $62, $52, $4D, $62, $3F, $56, $62, $F9, $10, $63, $EC, $F0
+CustomLine_PlunderAGL:  ; "[['{name} steals', "{target}'s"], ['{buff}!'], ["{name}'s speed", 'goes up by {amount}!']]"
+    db $ED, $F9, $20, $62, $50, $51, $42, $3E, $49, $50, $F1, $F9, $00, $68, $FC, $10, $EC, $F2, $F9, $30, $63, $FC, $10, $EC, $F2, $F9, $20, $68, $62, $50, $4D, $42, $42, $41, $F1, $44, $4C, $42, $50, $62, $52, $4D, $62, $3F, $56, $62, $F9, $10, $63, $EC, $F0
 ; @BUILD_PROJECT END gd_custom_msgs
 ; --- end S2e custom-message infrastructure ---
     ds $7a9d - @, $00       ; the bank's free run (was a counted nop pad)

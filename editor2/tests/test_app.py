@@ -4050,7 +4050,7 @@ def main():
     st = w.skills_tab
     w.tabs.setCurrentWidget(st)
     app.processEvents()
-    assert st.list.count() == 238, st.list.count()     # S111: + the 10 custom skills; S155: + 6
+    assert st.list.count() == 239, st.list.count()     # S111: + the 10 custom skills; S155: + 6; S156: + Plunder
 
     def pick(sid):
         for i in range(st.list.count()):
@@ -4185,6 +4185,27 @@ def main():
     app.processEvents()
     assert doc.data['gamedata']['skills']['238']['result_line'] == [['{target} loses', '{amount} ATK!']], \
         doc.data['gamedata']['skills']['238']
+    pick(234)                                          # S156 Plunder: no numbers, one foe
+    assert 'Plunder' in st.title.text(), st.title.text()
+    assert not st.pct_spins and st.line_shows is None and len(st.result_edits) == 6
+    assert not st.sec_target.content.isEnabled() and 'one foe only' in st.target_note.text().lower()
+    assert [e.text() for e in st.result_edits[:3]] == ['{name} steals', "{target}'s", '{buff}!'], \
+        [e.text() for e in st.result_edits]
+    st.result_edits[1].setText('{target}!')
+    st.result_edits[1].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['234']['result_line'] == \
+        [['{name} steals', '{target}!'], ['{buff}!']], doc.data['gamedata']['skills']['234']
+    assert doc.skill_detail(234)['params']['result_line'][0] == \
+        [['{name} steals', '{target}!'], ['{buff}!']]
+    # S156 r2: the two rise pages (a raised DEF / AGL stolen: how much the user's stat rose)
+    assert set(st.rise_edits) == {'def_rise', 'agl_rise'}, st.rise_edits
+    assert [e.text() for e in st.rise_edits['agl_rise']] == ["{name}'s speed", 'goes up by {amount}!']
+    st.rise_edits['def_rise'][0].setText('{name} hardens')
+    st.rise_edits['def_rise'][0].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['234']['def_rise'] == ['{name} hardens', 'goes up by {amount}!'], \
+        doc.data['gamedata']['skills']['234']
     pick(222)                                          # Repel: field only, no numbers
     assert not st.pct_spins and not st.sec_target.content.isEnabled()
     nid = st.create_skill(16, 'Thunder')                # a NEW skill based on Zap
@@ -4229,7 +4250,7 @@ def main():
         assert word in hlp, f'help 54_skills.md lacks "{word}"'
     print('OK: Skills tab (S111) — Quake MP 12 / Explosion / its own line; MagicBurn MP is '
           'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
-          'from Zap); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; '
+          'from Zap); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; S156 Plunder\'s line ({name} / {target} / {buff}) + r2 its rise pages; '
           'undo restores everything')
 
     # S112 (P3.11e): the Animations tab (a mashup with the preview) and the

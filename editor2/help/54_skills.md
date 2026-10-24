@@ -202,7 +202,25 @@ Built-in custom skills only — the data their code uses:
   already blunted it fails ("But nothing happens!", the MP spent), and the monster
   AI does not pick it then. It resists like Sap (the DefDown resistance); DeMagic
   and Surge put the ATK back (then it can be blunted again).
-- **Its line** (the five above). LoneWolf, Punish, Finish, Rupture: the line
+- **Plunder** (no numbers; one foe only): steals ONE buff of the foe at random
+  and puts it on the user, as if the user had cast it this round. It picks among
+  the foe's buffs the user does not have yet (if the user has them all, among all
+  of them — the foe still loses it). The buffs are Punish's list, with a raised
+  DEF and a raised AGL counted apart: TwinHits, ALLCHANGE, TakeMagic, Bounce,
+  Barrier, MagicBack, TailWind / StormWind, MagicWall, ChargeUP, SuckAir, Focus,
+  SideStep, a raised DEF, a raised AGL, Dodge, Imitate, SuckAll, a Defence /
+  StrongD / BladeD stance — never iron or a transformation. How it lands on the
+  user: lasting buffs as they are; Bounce and MagicBack replace each other; a
+  ChargeUP / SuckAir / Focus starts fresh (it powers the user's next round); a
+  stance (Dodge, Imitate, SuckAll, Defence …) lasts the rest of this round; a
+  buff cast on a whole side moves only the foe's own copy, only to the user. A
+  raised DEF / AGL: the foe's stat goes back to its base and the user gets one
+  Upper / Speed on itself (+ half its own base, with the usual caps). It always
+  lands (no roll, no resistance; MagicBack, Cover and Dodge do not stop it). A
+  foe without a buff: "But nothing happens!" — the MP is spent. The monster AI
+  uses it only when a foe has a buff to take (+20 per buff on the richest foe)
+  and aims it at that foe.
+- **Its line** (the six above). LoneWolf, Punish, Finish, Rupture: the line
   that says what the skill tries to do — it replaces "… uses …!" BEFORE the
   attack and stays on screen while the attack plays; then the hit shows the
   game's own "… takes … damage pts!" with its damage sound and shake, as every
@@ -212,12 +230,27 @@ Built-in custom skills only — the data their code uses:
   when there is something to burst). One page of 2 lines; `{name}` = the user
   (the target and the damage are not known yet). Blunt: its line IS the
   result ("… loses … attack!"), up to 3 pages of 2 lines; `{target}` = the
-  target, `{amount}` = the ATK lost.
+  target, `{amount}` = the ATK lost, `{name}` = the user. Plunder: its line IS
+  the result, shown with the cast's look, up to 3 pages of 2 lines; `{name}` =
+  the user, `{target}` = the foe, `{buff}` = the name of the skill whose buff was
+  taken (Barrier, ChargeUP … ; Upper for a raised DEF, Speed for a raised AGL, the
+  stance by its level) — a renamed skill shows its new name. The original:
+  "{name} steals / {target}'s" then "{buff}!" — a long foe name and a long buff
+  name (MagicBack, TakeMagic, ALLCHANGE) do not fit one line of 18 cells.
+  When the stolen buff is a raised DEF or AGL and the user's own stat went up,
+  one more page says by how much — **Next page when it steals a raised DEF / AGL**
+  (one page of 2 lines; `{amount}` = how much the user's DEF / AGL rose, plus
+  `{name}`, `{target}`, `{buff}`). The originals follow the game's own Upper /
+  Speed lines: "{name}'s defense / goes up by {amount}!" and "{name}'s speed /
+  goes up by {amount}!". Enemies get the same page. A user already at its cap
+  gains nothing: then the page is left out. Stealing again and again climbs like
+  casting Upper / Speed again and again and stops at the same cap; past it, a
+  steal only strips the foe (its stat back to base) — an enemy thief does that too.
 - **Repel** (field only, no numbers): cast from the field menu where monsters
   attack, it works like the Repellant — no random battles for the rest of the
   gate floor, or in a room until the party leaves it. It fizzles (no MP spent)
   where no battle can happen or while it is already on. In battle it does
-  nothing. (Plunder, id 234, comes in a later version.)
+  nothing.
 
 The shares are fractions — type `1/3`, `2/5` or a whole number (top and bottom
 up to 255; MP shares at most 1, damage shares at most 4 — 2 for Quake's own
@@ -256,8 +289,9 @@ evolve chain — read-only (edit them on the Monsters tab).
 - The custom skills' EFFECTS are their own code; a new skill reuses an
   original skill's effect. A new effect needs code (a session with Claude).
 - The built-in custom skill names share bank $41 with the new monsters' names:
-  since S155 19 new monsters with 8-letter names AND 4-letter nicknames are a
-  letter or two too many (the Capacity tab / the build says so).
+  since S155 (and Plunder, S156) about 19 new monsters with 8-letter names AND
+  4-letter nicknames are a few letters too many (the Capacity tab / the build
+  says so).
 - New animations cannot be drawn; a skill can only borrow an existing look.
 - Custom skills are never learned "by stats alone" (the S75 crash fence): they
   evolve from a known skill or are a natural skill.

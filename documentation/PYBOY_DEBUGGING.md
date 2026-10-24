@@ -1186,3 +1186,19 @@ edge and the battle waits for input forever.
   party's hit shake: SCY 2 ↔ 0 for ~16 frames) and a screenshot every 4 frames, sheeted
   7 across with the frame offset. The vanilla hit: sound part 2 + reaction + message on
   one frame (d9ee 15 → 16), the shake 4 frames later.
+
+## S156 techniques — the simulator twin as the oracle (tools/walk_plunder.py)
+
+- **ROM == twin, byte for byte:** hook the handler's entry (`SkillPlunder`), read the board
+  the handler reads ($DB00-$DB4B, the DEF / AGL words, `$DD1B`, `$C86C`) and the RNG
+  (`$C899/$C89A`) into a `simulator.battle.Board`, run the twin (`s155_custom.plunder_one`) on
+  it; hook the result's render (bank $4C `LoadB4c_CustomLine`) and compare the ROM's board with
+  the twin's. The bases (bank $57 entries 7 / 8) = the stats at the battle's first command
+  frame (S130: the battle starts at the base). One harness then checks every case and the
+  simulator at once.
+- **A roll that must vary:** `SkillWalk.rig(pin=False)` and the seed written in the command
+  phases only — with `pin=True` the rig rewrites the RNG on every battle frame (KEY_LESSONS S156).
+- **Insert slots:** log `$C180-$C1BF` (16-B slots, `$F0`-ended) at the handler AND at the
+  message render, for a party caster and an enemy caster, before mapping a `{token}`.
+- **A line's look:** a screenshot every 4 frames from the action's start, sheeted 9 across with
+  the frame offset (as S155 r2) — that is how the 20-cell overflow showed.

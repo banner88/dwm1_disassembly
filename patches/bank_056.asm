@@ -3415,7 +3415,7 @@ SkillDescPtrTable:  ; $6667 — 256 dw by skill id (mode 1)
     dw SkillDescC_231              ; [231] QuakeMore
     dw SkillDescC_232              ; [232] QuakeMost
     dw SkillDescC_233              ; [233] Mourn
-    dw SkillDesc_None              ; [234] -
+    dw SkillDescC_234              ; [234] Plunder
     dw SkillDescC_235              ; [235] Punish
     dw SkillDescC_236              ; [236] Finish
     dw SkillDescC_237              ; [237] Rupture
@@ -5537,7 +5537,9 @@ SkillDescC_237:  ; "Bursts the foe's/ailments for big/damage"
     db $25, $52, $4F, $50, $51, $50, $62, $51, $45, $42, $62, $43, $4C, $42, $68, $F1, $3E, $46, $49, $4A, $42, $4B, $51, $50, $62, $43, $4C, $4F, $62, $3F, $46, $44, $F1, $41, $3E, $4A, $3E, $44, $42, $F0
 SkillDescC_238:  ; "Lowers a foe's/attack power"
     db $2F, $4C, $54, $42, $4F, $50, $62, $3E, $62, $43, $4C, $42, $68, $F1, $3E, $51, $51, $3E, $40, $48, $62, $4D, $4C, $54, $42, $4F, $F0
-    ds 2752, $00   ; free (2752 of 2993 B)
+SkillDescC_234:  ; "Steals one buff/from a foe"
+    db $36, $51, $42, $3E, $49, $50, $62, $4C, $4B, $42, $62, $3F, $52, $43, $43, $F1, $43, $4F, $4C, $4A, $62, $3E, $62, $43, $4C, $42, $F0
+    ds 2725, $00   ; free (2725 of 2993 B)
 ; @BUILD_PROJECT END gd_skill_desc_extra
 ; ============================================================================
 ; [S73] Custom-skill DESCRIPTION strings (SKIL-menu info box) — [S111] compiler
@@ -5547,7 +5549,7 @@ SkillDescC_238:  ; "Lowers a foe's/attack power"
 ; lines max, <=18 cells/line.
 ; ============================================================================
 ; @BUILD_PROJECT BEGIN gd_custom_skill_desc
-; (6 text(s) placed in gd_skill_desc_extra)
+; (7 text(s) placed in gd_skill_desc_extra)
 SkillDescC_224:  ; "Burns half its MP/to damage all/enemies"
     db $25, $52, $4F, $4B, $50, $62, $45, $3E, $49, $43, $62, $46, $51, $50, $62, $30, $33, $F1, $51, $4C, $62, $41, $3E, $4A, $3E, $44, $42, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
 SkillDescC_225:  ; "Builds trust to/make the enemy/join you"

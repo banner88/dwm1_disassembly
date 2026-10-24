@@ -1448,7 +1448,7 @@ CustomRecordPtrTable:
     dw CustomRecord_E7     ; [$E7] QuakeMore
     dw CustomRecord_E8     ; [$E8] QuakeMost
     dw CustomRecord_E9     ; [$E9] Mourn
-    dw $41CF               ; [$EA] -
+    dw CustomRecord_EA     ; [$EA] Plunder
     dw CustomRecord_EB     ; [$EB] Punish
     dw CustomRecord_EC     ; [$EC] Finish
     dw CustomRecord_ED     ; [$ED] Rupture
@@ -1493,6 +1493,8 @@ CustomRecord_E8:  ; [232] QuakeMost — Quake (all foes, then a share to allies,
     db $46, $12, $12, $00, $18, $10, $05, $01, $06, $02, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_E9:  ; [233] Mourn — Mourn (ATK-vs-DEF + a bonus per fallen ally)
     db $00, $13, $11, $14, $0A, $00, $04, $41, $07, $17, $02, $00, $00, $00, $00, $00, $00, $00, $00
+CustomRecord_EA:  ; [234] Plunder — Plunder (steals one of the target's buffs onto the user)
+    db $00, $23, $11, $0A, $06, $00, $00, $00, $00, $00, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_EB:  ; [235] Punish — Punish (ATK-vs-DEF + a share per buff on the target)
     db $00, $13, $11, $14, $05, $00, $00, $83, $EE, $3E, $02, $00, $00, $00, $00, $00, $00, $00, $00
 CustomRecord_EC:  ; [236] Finish — Finish (ATK-vs-DEF x more the more HP the target has lost)

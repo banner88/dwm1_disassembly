@@ -13,7 +13,8 @@
   "this skill's own `message`, $FF = none), message (raw battle-text bytes,",
   "$F0-terminated), proxy (the stock skill whose animation / flash / sounds it",
   "borrows). handler = the bank $72 code that runs it (mechanism, not data).",
-  "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines)."
+  "S156 added Plunder ($EA, \"_since\": \"S156\", authored \u2014 PROJECT_COMPILER \u00a72.64).",
+  "banners = the fixed extra battle lines (Quake, Mourn; S155 the result lines; S156 Plunder's; S156 r2 its rise pages)."
  ],
  "_generator": "tools/extract_custom_skills.py on the S110 pin 534bfb6245e825445f6d45764ed7305e (patched)",
  "skills": {
@@ -210,6 +211,22 @@
    "message": "edf900625250424162304c524f4b63ecf0",
    "proxy": 64
   },
+  "234": {
+   "label": "Plunder",
+   "handler": "plunder",
+   "name": "Plunder",
+   "description": [
+    "Steals one buff",
+    "from a foe"
+   ],
+   "mp": 6,
+   "record": "0023110a060000000000020000000000000000",
+   "learn": null,
+   "announce_template": 35,
+   "message": null,
+   "proxy": 26,
+   "_since": "S156"
+  },
   "235": {
    "label": "Punish",
    "handler": "punish",
@@ -286,7 +303,10 @@
   "punish_line": "ed2c51624d524b465045425062514542f1434c4268623f5243435063ecf0",
   "finish_line": "ed2c5162444c425062464b62434c4ff1514542624846494963ecf0",
   "rupture_line": "ed374542623e46494a424b5150f13f524f505163ecf0",
-  "rust_line": "edf90062494c504250f1f910623e51513e404863ecf0"
+  "rust_line": "edf90062494c504250f1f910623e51513e404863ecf0",
+  "plunder_line": "edf920625051423e4950f1f90068fc10ecf2f93063ecf0",
+  "plunder_def_rise": "edf9206862414243424b5042f1444c425062524d623f5662f91063ecf0",
+  "plunder_agl_rise": "edf9206862504d424241f1444c425062524d623f5662f91063ecf0"
  },
  "tame_meter": {
   "225": 10,

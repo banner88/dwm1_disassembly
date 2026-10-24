@@ -700,7 +700,10 @@ class SkillsTab(QWidget):
             self.target_note.setText(
                 ('One foe: the AI aims it at the foe it suits best (an ailment to burst, the '
                  'most buffs, the most HP lost, the highest ATK). All foes: every foe in turn.'
-                 if builtin and d.get('target_choice') else '')
+                 if builtin and d.get('target_choice') else
+                 'One foe only: the AI aims it at the foe with the most buffs it can steal '
+                 '(and never uses it when no foe has one).'
+                 if builtin and d['handler'] == 'plunder' else '')
                 if SK.side(R['target_mode']) == SK.side(VR['target_mode']) else
                 'The SIDE changed from the original — its effect code was written for the '
                 'other side (test it in battle).')
@@ -1101,8 +1104,15 @@ class SkillsTab(QWidget):
             g = QGridLayout(w)
             after = self.sid in CS.RESULT_AFTER            # [S155 r2] Blunt: the result
             npg = 3 if after else 1
-            g.addWidget(QLabel('Its line — the result of the hit: {target} = the target, '
-                               '{amount} = the ATK lost. Up to 3 pages of 2 lines:' if after else
+            g.addWidget(QLabel(('Its line — the result: {name} = the user, {target} = the foe, '
+                                '{buff} = the buff it stole (the name of the skill that gives '
+                                'it, e.g. Barrier, Upper for a raised DEF, Speed for a raised '
+                                'AGL). Up to 3 pages of 2 lines (18 cells; a long foe name + a '
+                                'long buff name do not fit one line):')
+                               if self.sid == 0xEA else           # [S156] Plunder
+                               'Its line — the result of the hit: {target} = the target, '
+                               '{amount} = the ATK lost, {name} = the user. Up to 3 pages of '
+                               '2 lines:' if after else
                                'Its line — shown before the attack and while it plays (the hit '
                                'then shows "takes … damage" with its sound). {name} = the user. '
                                'One page of 2 lines:'), 0, 0, 1, 2)
@@ -1154,8 +1164,13 @@ class SkillsTab(QWidget):
             row(w)
         labels = {'allies_line': 'Line when the wave turns on its own side',
                   'flew_line': 'Line for an ally that flies over it ({name} = the flyer)',
-                  'boost_line': 'Line when fallen allies boost the hit'}
-        for key in ('allies_line', 'flew_line', 'boost_line'):
+                  'boost_line': 'Line when fallen allies boost the hit',
+                  'def_rise': 'Next page when it steals a raised DEF ({amount} = how much the '
+                              "user's DEF went up; {name}, {target}, {buff} as above)",
+                  'agl_rise': 'Next page when it steals a raised AGL ({amount} = how much the '
+                              "user's AGL went up)"}
+        self.rise_edits = {}                    # [S156 r2] test hook: key -> [QLineEdit x2]
+        for key in ('allies_line', 'flew_line', 'boost_line', 'def_rise', 'agl_rise'):
             if key in P:
                 cur, orig = P[key]
                 w = QWidget()
@@ -1168,6 +1183,8 @@ class SkillsTab(QWidget):
                     e.setToolTip('Battle text: 2 lines of 18 cells')
                     g.addWidget(e, 1 + k, 0, 1, 2)
                     edits.append(e)
+                if key in ('def_rise', 'agl_rise'):
+                    self.rise_edits[key] = edits
 
                 def fin(key=key, edits=edits, orig=orig):
                     lines = [x.text() for x in edits]

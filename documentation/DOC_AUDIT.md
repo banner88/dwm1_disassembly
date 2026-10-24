@@ -1058,3 +1058,12 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | disassembly bank $50 `jr_050_4945` (battle_command #2 "[INS 00] doesn't have any skill") | ✏️ annotated S155 r4 | it never fills `$C180` (ATK's target list leaves a foe's name: an original-game bug; patches `NoSkillName50`) | walk_skills.py `noskill` (PyBoy, the user's save) |
 | patches/bank_04c.asm (S2d-S155 r2): the `$4019[$FD]` row naming `CustomMsg_E0_MagicBurn` is "dead since S2e" (+ BATTLE_SKILL_SYSTEM §13.1, TEXT_SYSTEM "repointed there") | ❌ WRONG — fixed S155 r3 | the game renders a stock `$FD` through it after the poison tick (`$E1`): "… burns half its MP!" under every poison tick; the row is the vanilla `$5F6C` again | walk_skills.py `numbers` (the poison tick, r3); the negative ROM with the old row FAILs |
 | BATTLE_SKILL_SYSTEM §13.7 (Quake v4): the ally banner, then "the first ally's damage message" | ⚠ INCOMPLETE — fixed S155 r2 | the ally's damage sound + the party's shake played under the banner, 84 frames before its text; held now | the r2 frame log |
+
+## S156 addendum (2026-10-21; Plunder — ROADMAP E12)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| ROADMAP E12 plan (S155): Plunder "moved bit-for-bit to the caster's block (the stances with their round counters), a raised DEF / AGL as the amount over base" | ⚠ SUPERSEDED S156 | the user's answers (S155 Q14 "Yes" to "the foe drops back to base and you get one Upper's worth"; S156 "fresh", "only caster"): timed buffs fresh, the raised stat = one Upper / Speed on the caster | BATTLE_SKILL_SYSTEM §13.11 |
+| BATTLE_SKILL_SYSTEM §13.10 / PROJECT_COMPILER §2.63 / help 54: "`$EA` Plunder held — refused", "in battle Repel and Plunder do nothing", the AI "Repel / Plunder veto" | ⚠ SUPERSEDED S156 | Plunder is a built-in with its handler, AI rule and pick (§13.11, §2.64) | walk_plunder.py |
+| `custom_skills.TOKENS` (S155): `{name}` in Blunt's result line = `$F9 $00` (it printed the TARGET) | ⚠ SUPERSEDED S156 | at the result render `[INS 20]` = the caster (measured): Blunt's `{name}` = `$F9 $20` now (`RESULT_TOKENS`) | slot log, TEXT_SYSTEM |
+| PROJECT_COMPILER §2.63: "the S155 names spill 28 B" | ⚠ SUPERSEDED S156 | 36 B with Plunder (placed last) | `CS.layout` |

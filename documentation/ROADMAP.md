@@ -3441,18 +3441,43 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       for HL after ATK → B → SKIL (bank $50 `NoSkillName50`). Test ROM `DWM-S155r4-skills-test.gbc`.
       **S155 r5:** Blunt does not stack (a second one on a blunted monster fails; the AI stops
       casting it). Test ROM `DWM-S155r5-skills-test.gbc`.
-- [ ] **E12 — Plunder (`$EA`, id 234 HELD by S155; NEXT, S156).** User: "steal a foe's buff onto
-      yourself as if you cast it that round on yourself … Requires enemy to have a buff.
-      Requires to select enemy … Steal 1 at random … Exclude iron." Plan: a one-foe skill; the
-      buff picked uniformly from the target's `BuffTable` bits (bank $72) minus iron; moved
-      bit-for-bit to the caster's block (the stances with their round counters), a raised
-      DEF / AGL as the amount over base; "But nothing happens!" without one (MP spent?
-      — ask); AI: veto without a buffed foe, + per buff; the simulator twin. The compiler
-      already refuses 234 ("held for Plunder").
+- [x] **E12 — Plunder (`$EA`, id 234; ADDED S155, BUILT S156; built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.");
+      test ROM `DWM-S156-plunder-test.gbc`).** User (S155): "steal a foe's buff onto yourself as
+      if you cast it that round on yourself … Requires enemy to have a buff. Requires to select
+      enemy … Steal 1 at random … Exclude iron", "[the foe drops back to base and you get one
+      Upper's worth on yourself, within the usual caps]: Yes"; S156: no buff → "But nothing
+      happens!" (MP spent); random among the buffs the caster lacks, else any; timed buffs
+      fresh; a side-wide buff only to the caster; always lands; iron ignored; one foe only;
+      the AI as Punish's; "{name} steals {target}'s {buff}!". (The S155 plan sentence "moved
+      bit-for-bit … a raised DEF / AGL as the amount over base" was superseded by those
+      answers.) Built: bank $72 `SkillPlunder` + the 18-row `StealTable` (BuffTable with the
+      raised stat split into DEF / AGL), one BattleRNG step, the stat moves through bank $57's
+      bases and Upper's / Speed's caps, SuckAll's side marks; the result line (bank $4C line
+      6; `{name}` [INS 20] / `{target}` [INS 00] / `{buff}` [INS 30] — measured slots); the AI
+      rule + pick (`ScoreSteal72`); custom_skills.json row 234, `{buff}` in the compiler, the
+      Skills tab, help 54; the simulator twin `s155_custom.plunder_one` (the walk compares it
+      with the ROM byte for byte). Walk `tools/walk_plunder.py` on the user's save +
+      `examples/s156_plunder_demo` (THE ROGUE HALL) 41 / 41, negative 31 FAIL.
+      BATTLE_SKILL_SYSTEM §13.11, PROJECT_COMPILER §2.64. Not built (not asked): Plunder in
+      an all-foes form; a resistance / hit roll.
+      **S156 r2 (the user on the ROM: "Seems to work well. One thing - … the next textbox should
+      report by how much the effect affects new monster. Same with enemies"):** a stolen raised
+      DEF / AGL that rose on the thief adds a page "{name}'s defense / speed goes up by
+      {amount}!" (editable: `def_rise` / `agl_rise`); walk 45 / 45, negative 33 FAIL; test ROM
+      `DWM-S156r2-plunder-test.gbc`.
 - [ ] **E13 — more custom skill ids (not asked; the user: "more is a bonus").** 16 NEW ids
       (`$EF-$FE`) is the limit of the `$DE-$FE` tables; more = re-using stock ids the game
       never shows (the item-effect / internal rows 155-221 that no record, shop or drop
       reaches — to be measured) or a second id byte. Scope only when asked.
+- [ ] **E14 — the built-in custom skill names out of bank $41 (S156: banked until it binds).**
+      The 17 built-in names overflow the 94-B `gd_custom_skill_names` region by 36 B (S156;
+      27 B S155) into the `ns_text_*` extents the new species' names use — the "19 new
+      species, 8-letter names + 4-letter nicknames" fixture is a few letters over. Plan when a
+      project needs the room: read the custom ids' names (mode 6, ids ≥ $DE) through the S150
+      text-override hook from a text bank $80+ (TEXT_SYSTEM "Edited game text (S150)"), which
+      frees the region and the extents; measure every name reader (the SKIL menu, the battle
+      announce `$C190`, the learn / upgrade messages, Plunder's `{buff}` copy). The user (S156:
+      "what do YOU think?") was told: accept the cost now, move them when it binds.
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work

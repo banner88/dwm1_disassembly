@@ -10784,7 +10784,7 @@ CustomMPCostTable:              ; u16 LE MP cost, indexed (id - $DE) * 2 — ids
     dw 16   ; [$E7] QuakeMore
     dw 24   ; [$E8] QuakeMost
     dw 10   ; [$E9] Mourn
-    dw 0    ; [$EA] -
+    dw 6    ; [$EA] Plunder
     dw 5    ; [$EB] Punish
     dw 6    ; [$EC] Finish
     dw 6    ; [$ED] Rupture

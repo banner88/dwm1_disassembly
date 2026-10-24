@@ -35,7 +35,7 @@ DEF RATIO_MOURN      EQU 20             ; Mourn: bonus per fallen ally, x the ba
 ; $DE / $DF were the retired S45 POCs Scorch / Smite)
 DEF ID_REPEL         EQU $DE            ; field: no random encounters (the Repellant's flag)
 DEF ID_LONEWOLF      EQU $DF            ; ATK-vs-DEF x more in a party of two / alone
-DEF ID_PLUNDER       EQU $EA            ; (reserved: S156 — inert until built)
+DEF ID_PLUNDER       EQU $EA            ; [S156] steals one of the target's buffs (SkillPlunder)
 DEF ID_PUNISH        EQU $EB            ; ATK-vs-DEF + a share per buff on the target
 DEF ID_FINISH        EQU $EC            ; ATK-vs-DEF x (low .. high) by the target's missing HP
 DEF ID_RUPTURE       EQU $ED            ; consumes the target's ailments for ATK-vs-DEF x big
@@ -55,6 +55,9 @@ DEF LINE_PUNISH      EQU 2
 DEF LINE_FINISH      EQU 3
 DEF LINE_RUPTURE     EQU 4
 DEF LINE_RUST        EQU 5
+DEF LINE_PLUNDER     EQU 6              ; [S156] the steal ({name} / {target} / {buff})
+DEF LINE_PLUNDER_DEF EQU 7              ; [S156 r2] + "{name}'s defense goes up by {amount}!"
+DEF LINE_PLUNDER_AGL EQU 8              ; [S156 r2] + "{name}'s speed goes up by {amount}!"
 
 SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
 
@@ -279,10 +282,10 @@ CustomBattleRun:
     jp z, SkillRupture
     cp ID_RUST
     jp z, SkillRust
+    cp ID_PLUNDER                       ; [S156] the buff thief
+    jp z, SkillPlunder
     cp ID_REPEL                         ; field-only (the menu refuses it in battle,
-    jr z, .inert                        ;   the AI turns it into Attack) and Plunder
-    cp ID_PLUNDER                       ;   (not built yet): no effect if ever run
-    jr z, .inert
+    jr z, .inert                        ;   the AI turns it into Attack): no effect if ever run
     cp $E0
     jp z, SkillMagicBurn
     cp $E1
@@ -1195,7 +1198,7 @@ CustomRatioTable:
 
 ; =============================================================================
 ; [S155] THE S155 CUSTOM SKILLS — Repel, LoneWolf, Punish, Finish, Rupture, Rust
-; (+ Plunder reserved). BATTLE_SKILL_SYSTEM §13.10; PROJECT_COMPILER §2.63.
+; ([S156] + Plunder, below: §13.11). BATTLE_SKILL_SYSTEM §13.10; PROJECT_COMPILER §2.63.
 ; Their numbers are project data: CustomPctTable (gd_custom_pcts, percentages);
 ; their extra battle lines are bank $4C CustomLinePtrs (gd_custom_lines).
 ; =============================================================================
@@ -1208,7 +1211,8 @@ CustomRatioTable:
 ;   LoneWolf / Punish / Finish / Rupture -> MournDispatch52 (CalcDefenseWrapper:
 ;       the ATK-vs-DEF roll in $DB56, then the shared descriptor + handler tail)
 ;   Rust / Repel / Plunder -> CustomDispatch52_shared (no damage machine: the
-;       handler writes everything; the MegaMagic setup would step the RNG)
+;       handler writes everything; the MegaMagic setup would step the RNG;
+;       [S156] Plunder's one BattleRNG step is its pick)
 NewDispatch72:
     ld hl, MournDispatch52
     cp ID_LONEWOLF
@@ -1971,6 +1975,644 @@ BattleRNG72:
     ret
 
 ; -----------------------------------------------------------------------------
+; [S156] Plunder ($EA) — steals ONE buff of the target and puts it on the
+; caster "as if you cast it that round on yourself" (the user, S155 / S156:
+; "Requires enemy to have a buff. Requires to select enemy … Steal 1 at random
+; … Exclude iron"; "fresh"; "only caster"; "always lands"). BATTLE_SKILL_SYSTEM
+; §13.11. One foe; no roll (record flags 7 / 8 = 0, DeMagic's shape: never
+; misses, never reflected, Covered or dodged; an iron target can be robbed —
+; iron itself is never taken).
+;   * The buffs = StealTable (18 rows: BuffTable's 17 with "a stat raised"
+;     split into DEF and AGL; never iron +7 & $C0 or the transformed bits).
+;   * The pick: ONE BattleRNG step, row = the k-th eligible one, k =
+;     (wRNG1 x n) >> 8 — among the target's buffs the caster LACKS (for DEF /
+;     AGL: the caster's stat can still rise), else among all of them (the
+;     target loses it, the caster gains nothing new). None -> "But nothing
+;     happens!" ($BB, descriptor $84; the MP is spent — the user: "1) Yes").
+;   * The move (StealApply72): the target's bits cleared; the caster's byte
+;     := (byte & ~clear) | value — the persistent bits as they are, Bounce /
+;     MagicBack replacing each other, ChargeUP / SuckAir / Focus FRESH ($03 /
+;     $30 / $80: they power the caster's next round), SideStep and the
+;     Defence / StrongD / BladeD level copied, Dodge / Imitate / SuckAll for
+;     the rest of this round. A side-wide buff moves only the target's copy,
+;     only to the caster. SuckAll also moves its side mark (side byte bit 6,
+;     $DB4A + side), not when the caster's side already has one (SkillSuckAll).
+;     DEF / AGL raised: the target's stat back to its base (bank $57 entries 7
+;     / 8), its raised mark (+8 bit 6) kept only while the other stat is still
+;     above base; the caster gets ONE Upper / Speed on itself (+ its base / 2,
+;     999 / 511 and the x4 party / x2 enemy cap — StatDefUp_5e3e /
+;     StatAglUp_5f08 — the mark set) (the user, S155: "the foe drops back to
+;     base and you get one Upper's worth on yourself, within the usual caps").
+;   * [S156 r2] a raised DEF / AGL that rose on the caster: LINE_PLUNDER_DEF /
+;     _AGL = the same line + a page "{name}'s defense / speed goes up by
+;     {amount}!" ($DB56 = the rise, [INS 10]) — the user: "the next textbox should
+;     report by how much the effect affects new monster. Same with enemies".
+;   * The line LINE_PLUNDER replaces the hit message ($FD, Rust's shape): the
+;     game fills [INS 00] = the target, [INS 20] = the caster (measured S156 at
+;     the $FD render: $C180 / $C1A0); the handler puts the buff's name in
+;     [INS 30] ($C1B0, unused in battle — measured): the name of the stock
+;     skill that gives it (StealTable's last byte; the stance by its level), so
+;     a renamed stock skill shows its new name.
+; -----------------------------------------------------------------------------
+DEF STEAL_BIT     EQU 0                 ; a bit field (offset, mask, clear, value)
+DEF STEAL_DEF     EQU 1                 ; DEF raised (wBattleDEF over the base)
+DEF STEAL_AGL     EQU 2                 ; AGL raised (wBattleAGL over the base)
+DEF STEAL_SUCKALL EQU 3                 ; SuckAll (+ its side mark)
+DEF STEAL_STANCE  EQU 4                 ; Defence / StrongD / BladeD (+9 level, named by it)
+DEF STEAL_ROW     EQU 6                 ; bytes per StealTable row
+DEF STEAL_ROW_DEF EQU 12                ; [S156 r2] the DEF-raised row (AGL = the next; ASSERTed)
+
+SkillPlunder:
+    xor a
+    ld [$db56], a
+    ld [$db57], a
+    ld a, [wBattleAttackerIdx]
+    and $07
+    ld [wSteal], a                      ; +0 the caster
+    ld b, a
+    ld a, [wBattleTargetIdx]
+    and $07
+    ld [wSteal + 1], a                  ; +1 the target
+    cp b
+    jp z, RustFail72                    ; (never from itself)
+    ld a, $01                           ; first the buffs the caster lacks
+    ld [wSteal + 2], a
+    call StealCount72                   ; B = n
+    ld a, b
+    or a
+    jr nz, .pick
+    xor a                               ; it has them all: any of the target's
+    ld [wSteal + 2], a
+    call StealCount72
+    ld a, b
+    or a
+    jp z, RustFail72                    ; no buff: "But nothing happens!" (MP spent)
+.pick:
+    push bc
+    call BattleRNG72
+    pop bc
+    ld a, [wRNG1]
+    ld e, a
+    ld d, $00
+    call Mul16by8_72                    ; HL = RNG1 x n (B = n; < 256 x 18)
+    ld a, h                             ; k = (RNG1 x n) >> 8 = 0 .. n-1
+    ld [wSteal + 3], a
+    call StealFind72                    ; [wSteal+4] = the row
+    call StealApply72
+    ld a, $98                           ; Rust's success shape (no HP damage)
+    ld [$dd6f], a
+    ld a, $b8
+    ld [$dd71], a
+    ld b, LINE_PLUNDER                  ; [S156 r2] a raised DEF / AGL that rose on the
+    ld a, [$db56]                       ;   caster: the line + a page with the amount
+    ld c, a                             ;   ($DB56 = the rise -> [INS 10]; the user: "the
+    ld a, [$db57]                       ;   next textbox should report by how much the
+    or c                                ;   effect affects new monster. Same with enemies")
+    jr z, .line
+    ld a, [wSteal + 4]
+    sub STEAL_ROW_DEF
+    jr c, .line
+    cp $02
+    jr nc, .line
+    add LINE_PLUNDER_DEF
+    ld b, a
+.line:
+    ld a, b
+    jp SetLine72
+
+; StealCount72 — B = the eligible StealTable rows (StealOK72). Clobbers all.
+StealCount72:
+    ld bc, $0000                        ; B = count, C = row
+.lp:
+    push bc
+    ld a, c
+    call StealOK72
+    pop bc
+    jr z, .no
+    inc b
+.no:
+    inc c
+    ld a, c
+    cp STEAL_COUNT
+    jr c, .lp
+    ret
+
+; StealFind72 — [wSteal+4] := the [wSteal+3]-th eligible row (0-based; k < n).
+StealFind72:
+    ld c, $00
+.lp:
+    push bc
+    ld a, c
+    call StealOK72                      ; (writes [wSteal+4] = C)
+    pop bc
+    jr z, .no
+    ld a, [wSteal + 3]
+    or a
+    ret z                               ; this one
+    dec a
+    ld [wSteal + 3], a
+.no:
+    inc c
+    ld a, c
+    cp STEAL_COUNT
+    jr c, .lp
+    ret                                 ; (unreachable while k < n)
+
+; StealOK72 — A = a row ([wSteal+4] := A): NZ = the target ([wSteal+1]) has its
+; buff and, in mode 1 ([wSteal+2]), the caster ([wSteal]) does not / can rise.
+StealOK72:
+    ld [wSteal + 4], a
+    ld a, [wSteal + 1]
+    call StealHas72
+    ret z
+    ld a, [wSteal + 2]
+    or a
+    jr z, .yes
+    ld a, [wSteal]
+    call StealCasterHas72
+    jr nz, .no
+.yes:
+    or $01                              ; NZ
+    ret
+.no:
+    xor a
+    ret
+
+; StealRowPtr72 — HL = StealTable row [wSteal+4]. Clobbers A, DE.
+StealRowPtr72:
+    ld a, [wSteal + 4]
+    ld e, a
+    add a
+    add e
+    add a                               ; 6 x row
+    ld e, a
+    ld d, $00
+    ld hl, StealTable
+    add hl, de
+    ret
+
+; StealByte72 — A = a slot, D = an offset in its block -> HL = the byte.
+StealByte72:
+    call BlockPtr72
+    ld a, l
+    add d                               ; $DB00 + 8 x 7 + 9 at most: no carry
+    ld l, a
+    ret
+
+; StealHas72 — A = a slot: NZ = it HAS the buff of row [wSteal+4]: its bits;
+; DEF / AGL: the raised mark (+8 bit 6), not transformed (+3 & $30), and the
+; stat above its base. Clobbers all.
+StealHas72:
+    ld c, a
+    call StealRowPtr72
+    ld a, [hl+]
+    ld d, a                             ; offset
+    ld e, [hl]                          ; mask
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]                          ; kind
+    cp STEAL_DEF
+    jr z, .stat
+    cp STEAL_AGL
+    jr z, .stat
+    ld a, c
+    call StealByte72
+    ld a, [hl]
+    and e
+    ret
+.stat:
+    ld e, a                             ; E = the kind
+    ld a, c
+    call BlockPtr72
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]                          ; +3
+    and $30
+    jr nz, .not                         ; transformed: its stats are copies
+    ld a, l
+    add 5
+    ld l, a                             ; +8
+    bit 6, [hl]
+    jr z, .not
+    ld a, c
+    jp StatAboveBase72
+.not:
+    xor a
+    ret
+
+; StealCasterHas72 — A = the caster: NZ = it already has row [wSteal+4]'s
+; buff (DEF / AGL: its stat cannot rise any more; SuckAll: its side already has
+; a SuckAll user). Clobbers all.
+StealCasterHas72:
+    ld c, a
+    call StealRowPtr72
+    ld a, [hl+]
+    ld d, a                             ; offset
+    ld e, [hl]                          ; mask
+    inc hl
+    inc hl
+    inc hl
+    ld a, [hl]                          ; kind
+    cp STEAL_DEF
+    jr z, .stat
+    cp STEAL_AGL
+    jr z, .stat
+    cp STEAL_SUCKALL
+    jr z, .suck
+    ld a, c
+    call StealByte72
+    ld a, [hl]
+    and e
+    ret
+.suck:
+    ld a, c
+    call SideByte72
+    ld a, [hl]
+    and $40
+    ret
+.stat:
+    ld e, a
+    ld a, c
+    call StatLoad72
+    call StatRoom72                     ; carry = it can rise
+    ld a, $00
+    jr c, .ok
+    inc a
+.ok:
+    or a
+    ret
+
+; SideByte72 — A = a slot -> HL = its side byte ($DB00 party / $DB01 enemy),
+; A = the side (0 / 1).
+SideByte72:
+    and $04
+    rrca
+    rrca
+    ld l, a
+    ld h, HIGH($db00)
+    ret
+
+; StealApply72 — moves row [wSteal+4]'s buff from the target to the caster and
+; puts its name in [INS 30] ($C1B0). Clobbers all.
+StealApply72:
+    call StealRowPtr72
+    ld a, [hl+]
+    ld d, a                             ; D = offset
+    ld a, [hl+]
+    ld e, a                             ; E = mask
+    ld a, [hl+]
+    ld b, a                             ; B = the caster's bits to clear
+    ld a, [hl+]
+    ld c, a                             ; C = the value ($FF = the target's bits)
+    ld a, [hl+]                         ; kind
+    push af
+    ld a, [hl]
+    ld [wSteal + 5], a                  ; the name's skill id
+    pop af
+    cp STEAL_DEF
+    jp z, .stat
+    cp STEAL_AGL
+    jp z, .stat
+    cp STEAL_SUCKALL
+    jp z, .suck
+    push af                             ; kind (bits / stance)
+    push bc
+    ld a, [wSteal + 1]
+    call StealByte72
+    pop bc
+    ld a, [hl]
+    and e
+    push af                             ; the target's bits
+    ld a, e
+    cpl
+    and [hl]
+    ld [hl], a                          ; the target loses them
+    push bc
+    ld a, [wSteal]
+    call StealByte72
+    pop bc
+    pop af
+    ld d, a                             ; D = the target's bits
+    ld a, c
+    inc a
+    jr nz, .val
+    ld c, d                             ; $FF: copied as they were
+.val:
+    ld a, b
+    cpl
+    and [hl]
+    or c
+    ld [hl], a                          ; the caster gains them
+    pop af                              ; kind
+    cp STEAL_STANCE
+    jr nz, .name
+    ld a, d                             ; the stance by its level
+    ld b, $8E                           ; 2: StrongD
+    cp $02
+    jr z, .lvl
+    ld b, $90                           ; 4: BladeD
+    cp $04
+    jr z, .lvl
+    ld b, $8D                           ; 1: Defence
+.lvl:
+    ld a, b
+    ld [wSteal + 5], a
+    jr .name
+.suck:                                  ; the target: +8 bit 1 and its side's mark
+    ld a, [wSteal + 1]
+    call BlockPtr72
+    ld a, l
+    add 8
+    ld l, a
+    res 1, [hl]
+    ld a, [wSteal + 1]
+    call SideByte72
+    res 6, [hl]
+    add LOW($db4a)
+    ld l, a
+    ld a, [hl]
+    and $03
+    ld [hl], a
+    ld a, [wSteal]                      ; the caster: as SkillSuckAll (its side's
+    call SideByte72                     ;   mark set already: nothing)
+    bit 6, [hl]
+    jr nz, .name
+    set 6, [hl]
+    add LOW($db4a)
+    ld l, a
+    ld a, [wSteal]
+    and $03
+    add a
+    add a
+    or [hl]
+    ld [hl], a
+    ld a, [wSteal]
+    call BlockPtr72
+    ld a, l
+    add 8
+    ld l, a
+    set 1, [hl]
+    jr .name
+.stat:                                  ; A = STEAL_DEF / STEAL_AGL
+    ld e, a
+    push de
+    ld a, [wSteal + 1]
+    call StatToBase72                   ; the target's stat back to its base
+    pop de
+    push de
+    ld a, [wSteal]
+    call StatRise72                     ; one Upper / Speed on the caster
+    pop de
+    ld a, e
+    xor STEAL_DEF ^ STEAL_AGL           ; the other stat
+    ld e, a
+    ld a, [wSteal + 1]
+    call StatAboveBase72
+    jr nz, .name                        ; still raised: the mark stays
+    ld a, [wSteal + 1]
+    call BlockPtr72
+    ld a, l
+    add 8
+    ld l, a
+    res 6, [hl]
+.name:
+    ld a, [wSteal + 5]
+    ; fall through
+; StealName72 — A = a stock skill id: its name (bank $41 mode 6, the game's own
+; copy — SetupVRAMParams = bank $41 entry 1) into [INS 30] ($C1B0, $F0-ended).
+StealName72:
+    ld l, a
+    ld h, $06
+    ld de, $c1b0
+    jp SetupVRAMParams
+
+; ---- the stats (wCustomTmp: +0 slot, +1 kind, +2/+3 the base) ----------------
+; StatInfo72 — E = STEAL_DEF / STEAL_AGL -> HL = its battle array, D = the bank
+; $57 base entry (7 DEF / 8 AGL).
+StatInfo72:
+    ld hl, wBattleDEF
+    ld d, $07
+    ld a, e
+    cp STEAL_DEF
+    ret z
+    ld hl, wBattleAGL
+    ld d, $08
+    ret
+
+; BaseStat72 — A = a slot, E = a bank $57 entry (6 ATK / 7 DEF / 8 AGL) -> HL =
+; its BASE (the party record / the enemy row, BATTLE_SKILL_SYSTEM §15.11.F7).
+; $DD72 / $DD73 are kept (the AI's plan byte shares them: ScoreSteal72 runs in
+; the AI's rule walk). Clobbers all else.
+BaseStat72:
+    and $07
+    ld b, a
+    ld a, [$dd72]
+    ld c, a
+    ld a, [$dd73]
+    push af
+    push bc
+    ld a, b
+    ld [$dd72], a
+    ld l, e
+    ld h, $57
+    rst $10
+    pop bc
+    ld a, [$dd72]
+    ld l, a
+    ld a, [$dd73]
+    ld h, a
+    pop af
+    ld [$dd73], a
+    ld a, c
+    ld [$dd72], a
+    ret
+
+; StatLoad72 — A = a slot, E = the kind -> wCustomTmp (+0 slot, +1 kind, +2/+3
+; base); HL = &its stat, DE = the stat. Clobbers all.
+StatLoad72:
+    ld [wCustomTmp], a
+    ld a, e
+    ld [wCustomTmp + 1], a
+    call StatInfo72
+    ld e, d
+    ld a, [wCustomTmp]
+    call BaseStat72
+    ld a, l
+    ld [wCustomTmp + 2], a
+    ld a, h
+    ld [wCustomTmp + 3], a
+    ld a, [wCustomTmp + 1]
+    ld e, a
+    call StatInfo72
+    ld a, [wCustomTmp]
+    call SlotPtr72
+    ld e, [hl]
+    inc hl
+    ld d, [hl]
+    dec hl
+    ret
+
+; StatRoom72 — after StatLoad72, DE = a value of the stat: carry = it is below
+; the limit (999 DEF / 511 AGL) and below the cap (base x4 for a slot < 4 or a
+; link battle, x2 for an enemy — UpperStatCapCheck_6a13 / StatCapMul_6af5);
+; BC = the bound it met (the limit when at / over it, else the cap). Keeps DE,
+; HL.
+StatRoom72:
+    push hl
+    ld a, [wCustomTmp + 1]
+    ld bc, 999
+    cp STEAL_DEF
+    jr z, .lim
+    ld bc, 511
+.lim:
+    ld a, e
+    sub c
+    ld a, d
+    sbc b
+    jr nc, .no                          ; at / over the limit
+    ld a, [wCustomTmp + 2]
+    ld l, a
+    ld a, [wCustomTmp + 3]
+    ld h, a
+    add hl, hl                          ; x2
+    ld a, [$c86c]
+    or a
+    jr nz, .x4
+    ld a, [wCustomTmp]
+    cp $04
+    jr nc, .cap
+.x4:
+    add hl, hl                          ; x4
+.cap:
+    ld b, h
+    ld c, l
+    ld a, e                             ; carry = DE < cap
+    sub c
+    ld a, d
+    sbc b
+    pop hl
+    ret
+.no:
+    and a
+    pop hl
+    ret
+
+; StatAboveBase72 — A = a slot, E = the kind: NZ = the stat is above its base.
+StatAboveBase72:
+    call StatLoad72                     ; DE = the stat
+    ld a, [wCustomTmp + 2]              ; base - stat: a borrow = above
+    sub e
+    ld a, [wCustomTmp + 3]
+    sbc d
+    ld a, $00
+    rla
+    or a
+    ret
+
+; StatToBase72 — A = a slot, E = the kind: the stat := its base.
+StatToBase72:
+    call StatLoad72
+    ld a, [wCustomTmp + 2]
+    ld [hl+], a
+    ld a, [wCustomTmp + 3]
+    ld [hl], a
+    ret
+
+; StatRise72 — A = a slot, E = the kind: one Upper (DEF) / Speed (AGL) on it,
+; as StatDefUp_5e3e / StatAglUp_5f08 do: nothing when the stat is at the limit
+; or the cap; else + base / 2, a sum at / over the limit -> the limit, else over
+; the cap -> the cap; the raised mark (+8 bit 6) set; [S156 r2] $DB56 := the rise
+; (unchanged when nothing rose).
+StatRise72:
+    call StatLoad72                     ; HL = &stat, DE = the stat
+    call StatRoom72
+    ret nc                              ; no room: nothing
+    push hl
+    ld a, [wCustomTmp + 2]
+    ld l, a
+    ld a, [wCustomTmp + 3]
+    ld h, a
+    srl h
+    rr l                                ; base / 2
+    add hl, de
+    ld d, h
+    ld e, l                             ; DE = the sum
+    pop hl
+    call StatRoom72
+    jr c, .store
+    ld d, b                             ; the bound it met
+    ld e, c
+.store:
+    ld a, e                             ; [S156 r2] $DB56 := new - old (the rise, for
+    sub [hl]                            ;   the line's [INS 10])
+    ld [$db56], a
+    inc hl
+    ld a, d
+    sbc [hl]
+    ld [$db57], a
+    ld [hl], d
+    dec hl
+    ld [hl], e
+    ld a, [wCustomTmp]
+    call BlockPtr72
+    ld a, l
+    add 8
+    ld l, a
+    set 6, [hl]                         ; raised
+    ret
+
+; ScoreSteal72 — A = a slot -> A = how many of the StealTable buffs it has (the
+; AI's veto / bonus and the one-foe pick: the handler's own test). Clobbers all.
+ScoreSteal72:
+    ld [wSteal + 1], a
+    ld bc, $0000
+.lp:
+    push bc
+    ld a, c
+    ld [wSteal + 4], a
+    ld a, [wSteal + 1]
+    call StealHas72
+    pop bc
+    jr z, .no
+    inc b
+.no:
+    inc c
+    ld a, c
+    cp STEAL_COUNT
+    jr c, .lp
+    ld a, b
+    ret
+
+; StealTable — Plunder's buffs: [offset in the slot's block, mask (the
+; target's bits), the caster's bits cleared, the value set ($FF = the target's
+; bits copied), kind, the stock skill whose name the line shows]
+; (BuffTable's 17 with the raised stat split; BATTLE_SKILL_SYSTEM §15.11.F4 /
+; F6 / F7, §13.11).
+StealTable:
+    db 3, $04, $04, $04, STEAL_BIT, $25      ; TwinHits (armed; persistent)
+    db 3, $08, $08, $08, STEAL_BIT, $A6      ; ALLCHANGE (sure crits; persistent)
+    db 4, $01, $01, $01, STEAL_BIT, $1B      ; TakeMagic
+    db 4, $02, $22, $02, STEAL_BIT, $28      ; Bounce (replaces MagicBack, as cast)
+    db 4, $04, $04, $04, STEAL_BIT, $24      ; Barrier (only the target's copy)
+    db 4, $20, $22, $20, STEAL_BIT, $27      ; MagicBack (replaces Bounce)
+    db 4, $40, $40, $40, STEAL_BIT, $8A      ; TailWind / StormWind
+    db 5, $40, $40, $40, STEAL_BIT, $26      ; MagicWall (only the target's copy)
+    db 6, $03, $03, $03, STEAL_BIT, $41      ; ChargeUP — fresh: $03
+    db 6, $30, $30, $30, STEAL_BIT, $43      ; SuckAir — fresh: $30
+    db 6, $C0, $C0, $80, STEAL_BIT, $54      ; Focus — fresh: $80 (the follow-up next round)
+    db 7, $0C, $0C, $FF, STEAL_BIT, $77      ; SideStep (+7 bits 3:2 copied; persistent)
+    ASSERT (@ - StealTable) / STEAL_ROW == STEAL_ROW_DEF   ; [S156 r2] SkillPlunder's line choice
+    db 8, $40, $00, $00, STEAL_DEF, $1E      ; DEF raised -> one Upper on the caster
+    db 8, $40, $00, $00, STEAL_AGL, $22      ; AGL raised -> one Speed on the caster
+    db 8, $20, $20, $20, STEAL_BIT, $8C      ; Dodge (this round)
+    db 8, $08, $08, $08, STEAL_BIT, $7F      ; Imitate (this round)
+    db 8, $02, $00, $00, STEAL_SUCKALL, $8F  ; SuckAll (this round; + the side mark)
+    db 9, $07, $0F, $FF, STEAL_STANCE, $8D   ; Defence / StrongD / BladeD (level copied; this round)
+DEF STEAL_COUNT EQU (@ - StealTable) / STEAL_ROW
+
+; -----------------------------------------------------------------------------
 ; Repel ($DE) — FIELD only: the Repellant's own effect ($C93E bit 1: bank $16
 ; label16_6f05, the per-step encounter roll, does nothing while it is set).
 ; Reached from AnchorField14Tail (bank $14 entry 4, the field skill's
@@ -2071,7 +2713,10 @@ RepelCommit72:
 ; ids). Adjusts the BONUS $DD26 (saturating) / PENALTY $DD27 ($FF = veto); the
 ; actor = wBattleAttackerIdx (as the vanilla rules read it). The numbers are
 ; the vanilla rules' own sizes (+20 / +30, BATTLE_SKILL_SYSTEM §15.10.5):
-;   Repel, Plunder (not built) -> veto (field-only / nothing to do)
+;   Repel     -> veto (field-only)
+;   Plunder   -> [S156] veto unless a live opponent has a buff it can steal
+;                (ScoreSteal72 = the handler's own test); else +20 per buff on
+;                the opponent with the most (at most +60)
 ;   Rupture   -> veto unless a live opponent has an ailment; else +50
 ;   Punish    -> +20 per buff on the most-buffed live opponent (at most +60)
 ;   Finish    -> +40 when a live opponent has lost half its HP or more;
@@ -2088,7 +2733,7 @@ CustomAIRule72:
     cp ID_REPEL
     jr z, .veto
     cp ID_PLUNDER
-    jr z, .veto
+    jr z, .plunder
     cp ID_RUPTURE
     jr z, .rupture
     cp ID_PUNISH
@@ -2120,6 +2765,13 @@ CustomAIRule72:
     jr z, .veto
     ld a, 50
     jr AIBonus72
+.plunder:                               ; [S156] veto unless an opponent has a buff
+    ld hl, ScoreSteal72                 ;   Plunder can take; else +20 per buff on the
+    call OppScan72                      ;   richest one (at most +60, as Punish)
+    ld a, b
+    or a
+    jr z, .veto
+    jr .per
 .rust:
     ld hl, ScoreRust72
     call OppScan72
@@ -2133,6 +2785,7 @@ CustomAIRule72:
     ld a, b
     or a
     ret z
+.per:
     cp $03
     jr c, .p
     ld a, $03
@@ -2286,8 +2939,9 @@ ScoreHurt72:                            ; 1 + the share of its MaxHP it has lost
 ; whose CustomTargetBaseTable row is $F0 (the act-time AI's target of a one-foe
 ; S155 skill — the vanilla rows pick blindly). Out: E = the slot: the best
 ; opponent by the skill's own scorer (Rupture: one with an ailment; Punish: the
-; most buffs; Finish: the most HP lost; Rust: the highest ATK; others: the
-; first), else the first live opponent, else the opposing side's base.
+; most buffs; [S156] Plunder: the most buffs it can steal; Finish: the most HP
+; lost; Rust: the highest ATK; others: the first), else the first live
+; opponent, else the opposing side's base.
 ; -----------------------------------------------------------------------------
 CustomTargetPick72:
     ld a, [$db8a]
@@ -2297,6 +2951,7 @@ CustomTargetPick72:
     ld hl, ScoreBuffs72
     cp ID_PUNISH
     jr z, .scan
+    ld hl, ScoreSteal72                 ; [S156] the most buffs Plunder can take
     cp ID_PLUNDER
     jr z, .scan
     ld hl, ScoreHurt72
@@ -2408,7 +3063,7 @@ CustomBaseTable:
     db $FF   ; [$E7] QuakeMore
     db $FF   ; [$E8] QuakeMost
     db $FF   ; [$E9] Mourn
-    db $FF   ; [$EA] -
+    db $FF   ; [$EA] Plunder
     db $FF   ; [$EB] Punish
     db $FF   ; [$EC] Finish
     db $FF   ; [$ED] Rupture
@@ -2472,7 +3127,7 @@ CustomLearnTable:
     db $06, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E6, $FF, $FF, $FF, $FF   ; [$E7] QuakeMore: level 6
     db $08, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $E7, $FF, $FF, $FF, $FF   ; [$E8] QuakeMost: level 8
     db $03, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$E9] Mourn: level 3
-    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EA] -: not learnable
+    db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EA] Plunder: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EB] Punish: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$EC] Finish: not learnable
     db $FF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $FF, $FF   ; [$ED] Rupture: not learnable

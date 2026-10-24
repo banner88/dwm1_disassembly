@@ -1829,7 +1829,11 @@ suffixes share bytes. 19 eight-letter names + 19 four-letter nicknames
 four-letter nicknames now need 293 B of 292 (refused; two names a letter
 shorter fit — 291 B; the exact packer `species._pack` now runs up to 48 strings
 under a 200,000-state budget, was ≤ 40 unbounded; test_compiler `--rom` "19
-species"). Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM). The
+species"). Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM).
+**S156:** + Plunder (8 B, placed last): the spill is 36 B — 19 eight-letter names + 19
+four-letter nicknames need 299 B (after sharing) of 292; TEN names a letter shorter fit
+(292 B; nine: 293, refused) — built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works."); ROADMAP E14 (the built-in names
+out of bank $41) frees the room when a project needs it. The
 nickname lookup: `LoadModeBaseRedirect` (ROM0 `$00F0`) sends mode base
 `$4739` with id ≥ 221 to `$7D39`.
 
@@ -2246,7 +2250,7 @@ of any build — the --rom test does, on the example build). Editor: `skills_doc
 and lines"), help `54_skills.md`.
 
 **Ids** (BATTLE_SKILL_SYSTEM §13.9; **S155: 222-223 and 235-238 are built-ins now, 234 is
-held for Plunder, NEW = 239-254 — §2.63**): 222-223 ($DE/$DF) = the retired S45 POCs — refused;
+held for Plunder, NEW = 239-254 — §2.63; S156: 234 = the built-in Plunder — §2.64**): 222-223 ($DE/$DF) = the retired S45 POCs — refused;
 224-233 ($E0-$E9) = the BUILT-IN custom skills (MagicBurn, Tame / TameMore / TameMost,
 Anchor, Tremor / Quake / QuakeMore / QuakeMost, Mourn) — every build has them, a project
 edits their DATA; 234-254 ($EA-$FE) = NEW custom skills a project adds (21 slots): each
@@ -4916,8 +4920,8 @@ integrated with everything - editor, balance calculator for romhack (doesnt touc
 AI, etc."; "repel as a one-level is fine, just mimics item"; "16 new slots is entirely
 acceptable"). Engine (BATTLE_SKILL_SYSTEM §13.10) + compiler (`custom_skills.py`) + editor
 (Skills tab) + simulator (`simulator/skillfx/s155_custom.py`, `ai_rules.CUSTOM_RULES`) + help
-`54_skills.md`. Plunder (234, `$EA`) is HELD for S156: `CS.PLANNED`, any entry refused
-("held for Plunder").
+`54_skills.md`. Plunder (234, `$EA`) was HELD for S156 (`CS.PLANNED`, refused "held for
+Plunder"); S156 built it — §2.64 (`CS.PLANNED` = ()).
 
 - **Ids:** 222 Repel (`$DE`, field), 223 LoneWolf (`$DF`), 235 Punish, 236 Finish, 237
   Rupture, 238 Rust (`$EB-$EE`) join the built-ins (`CS.BUILTIN`; custom_skills.json rows
@@ -4988,6 +4992,61 @@ acceptable"). Engine (BATTLE_SKILL_SYSTEM §13.10) + compiler (`custom_skills.py
   S155 r3: the walk 30 / 30 (the lines on every cast, the poison tick's stock `$FD` empty),
   `--line-bonus` (CustomLineAlways 0 in the ROM copy) 30 / 30, `--negative` 18 FAIL;
   test_compiler + 5 line_shows / Blunt checks (`35133b67…`, patched); test_app the combo.
+
+## §2.64 S156 — PLUNDER: the buff thief (`gamedata.skills.234`)
+
+**Built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.")** (ROADMAP E12; user: "steal a foe's buff onto yourself as
+if you cast it that round on yourself … Requires to select enemy … Steal 1 at random …
+Exclude iron" + the S156 answers). Engine BATTLE_SKILL_SYSTEM §13.11; compiler
+`custom_skills.py`; editor (Skills tab); simulator `simulator/skillfx/s155_custom.py`
+(`plunder_one`, `steal_*`); help `54_skills.md`.
+
+- **Id:** 234 (`$EA`) joins the built-ins (`CS.BUILTIN`, `CS.S156`; custom_skills.json row
+  `"_since": "S156"`, handler `plunder`); `CS.PLANNED` = (). NEW skills stay 239-254.
+- **Keys:** the common ones (name, description, mp, learn, record minus the power words and
+  `target_mode` — one foe only, `$11`; `CustomTargetBaseTable` row `$F0` = its own AI pick),
+  looks_like / sounds_like, announce / announce_as, and `result_line` (`CS.RESULT_AFTER`: the
+  RESULT in place of the hit message, 1-3 pages × 2 lines): `{name}` / `{user}` = the user
+  (`$F9 $20`), `{target}` = the foe (`$F9 $00`), `{buff}` = the stolen buff's stock-skill name
+  (`$F9 $30`, filled by the handler) — `CS.RESULT_TOKENS[0xEA]`; any other token refused
+  (`encode_line(tokens=…)`). No `element` (no damage), no percentages. Default
+  `plunder_line` = "{name} steals / {target}'s" + "{buff}!" (a long foe + a long buff name do
+  not fit one 18-cell line — measured, KEY_LESSONS S156). Blunt's result line takes `{name}`
+  (`$F9 $20`) too since S156 (measured: the game fills it at that render; until S156 `{name}`
+  there encoded `$F9 $00` = the target).
+- **Regions:** no new region. Bytes changed in the existing ones: the Plunder rows (record,
+  MP, name, SKIL text, announce, proxy, the target row `$F0`, the learn row "not learnable"),
+  `gd_custom_msgs` + `CustomLine_Plunder`. Names: Plunder (8 B) is placed LAST (layout order
+  S111 → S155 → S156), so the S155 built-ins keep their places; the built-in names now spill
+  36 B (was 28) into the `ns_text_*` extents — the 19-species maximum fixture is that much
+  tighter (help 54 Limits). The description spills into `gd_skill_desc_extra` (7 texts).
+- **Engine patches** (hand): bank $72 `SkillPlunder` / `StealTable` / `Steal*72` / `Stat*72` /
+  `BaseStat72` / `ScoreSteal72` (+ `CustomBattleRun`, `CustomAIRule72 .plunder`,
+  `CustomTargetPick72`); bank $4C `CustomLinePtrs` + line 6 — `ASSERT @ == $7454` before
+  `CustomMsgPtrTable` (`CS.MSG_PTRS_AT` = `$7454`, was `$7452`); WRAM `wSteal` ($DECC, 6 B; 12 B
+  of the reserve left).
+- **Editor:** the Skills tab's line box label per skill (Plunder: `{name}` / `{target}` /
+  `{buff}`; Blunt: + `{name}`), the Target note ("one foe only …"); `skills_doc` decodes the
+  line with `CS.RESULT_TOKENS`. `EDITOR_REVISION` S156.
+- **Simulator / Balance:** `ACTION_HANDLERS[$EA]` = `plunder_handler` (was inert), the AI rule
+  (`ai_rule`: veto without a buff to take, +20 per buff, at most +60) and the pick
+  (`_score` = `steal_count`) — the Balance tab models a Plunder boss / party monster.
+  `extracted/balance_vanilla.json` re-tagged (raising digest `92d31c44…`; the old
+  `fecea30b…` = the new code without the Plunder record — proven, `--selftest` re-derived).
+- **Tools:** `tools/extract_custom_skills.py` reads the S156 engine (StealTable in the .sym):
+  Plunder + `plunder_line`.
+- **S156 r2 (the user: "the next textbox should report by how much the effect affects new
+  monster. Same with enemies"):** keys `def_rise` / `agl_rise` on 234 (`CS.RISE_KEYS`): one page
+  (1-2 lines), tokens = Plunder's + `{amount}` (`$F9 $10` = the caster's rise, `CS.RISE_TOKENS`);
+  banners `plunder_def_rise` / `plunder_agl_rise`; the compiler emits `CustomLine_PlunderDEF` /
+  `_AGL` = `rise_line(plunder_line, page)` (the result line's bytes without `$EC $F0` + `$FC $10
+  $EC $F2` + the page without its `$ED`) → bank $4C lines 7 / 8; `CS.MSG_PTRS_AT` = `$7458`. Editor:
+  two "Next page when it steals a raised DEF / AGL" boxes (`rise_edits`); `skills_doc` params
+  `def_rise` / `agl_rise`. `extract_custom_skills` reads the pages back from lines 7 / 8. Pin
+  `1051e08f…` (patched). `EDITOR_REVISION` S156r2.
+- **Acceptance:** `tools/walk_plunder.py` (PyBoy, the user's save + `examples/s156_plunder_demo`)
+  41 / 41 (r2: 45 / 45), `--negative` 31 FAIL (r2: 33); test_compiler (`test_s156_sim` 11 + the S155 tests updated:
+  17 built-ins, the `$F0` row, the name spill, Plunder's keys); pin moves.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

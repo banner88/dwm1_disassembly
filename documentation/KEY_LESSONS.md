@@ -7203,3 +7203,38 @@ stat is restored) checked by the handler AND the scorer. **Rule:** a new debuff 
 "already applied" state when its stat has no other trace (the shared `+8 bit 7` lowered mark
 also covers Sap); give the AI the same test as the handler, and walk a boss fight to the end
 to see the AI's choice after the first success.
+
+## S156 — Plunder, the buff thief (ROADMAP E12)
+
+### S156 — a battle line must fit its WORST names, not the example's
+**Symptom:** the first default Plunder line, "{name} steals" / "{target}'s {buff}!", read
+fine on paper; in PyBoy (a screenshot every 4 frames) "Anteater's MagicBack!" (20 cells)
+showed "Anteater's MagicBac", and the overflow then printed "Bac" and a stray "A" over the
+next box. **Root cause:** a battle box line holds 18 cells; an 8-letter species name + "'s"
++ a 9-letter skill name (MagicBack, TakeMagic, ALLCHANGE, MagicWall) is 20. **Fix:** the
+default is two pages, "{name} steals / {target}'s" then "{buff}!". **Rule:** size a line with
+inserts for the longest value each insert can take (species names 8, nicknames 4, skill names
+9, numbers 3) and LOOK at the longest case on screen before shipping the default.
+
+### S156 — the walk rig pins the RNG on every battle frame
+**Symptom:** "three buffs over 8 seeds" picked the same row 8 times. **Root cause:**
+`tools/walk_skills.py` `SkillWalk.rig(pin=True)` writes `$C899/$C89A` on EVERY battle frame —
+a seed written in the command phases was overwritten before the act. **Fix:** `pin=False`
+plus the seed in the command phases only, and the expected pick computed by the simulator
+twin from the RNG read at the handler's entry (the act's own state). **Rule:** a check that a
+roll VARIES must first prove the RNG it varies reaches the roll — read it at the consumer.
+
+### S156 — an insert slot holds what the game left there at THAT render
+Before adding `{buff}` the slots were logged at the handler and at the `$FD` result render,
+party and enemy caster: at the render `[INS 00]` = the target, `[INS 10]` = the hit's number,
+`[INS 20]` = the CASTER (the game refills $C180 / $C190 / $C1A0 for the hit message), and
+`[INS 30]` ($C1B0) = untouched zeros — free for the handler to fill. **Rule:** a new insert
+token is mapped to a slot only after logging `$C180-$C1BF` at the handler AND at the render
+for both sides; an unfilled slot prints through RAM (S118).
+
+### S156 — `--apply` rewrote comments again (the S153 lesson, repeated)
+`build_project.py --apply` on the example rewrote comment-only text in regions this session
+does not own (bank $04 arena masters, bank $56 skill-text addresses, bank $04D a label for a
+raw `dw $60BC`). **Rule (S153, kept):** after `--apply`, restore HEAD's text for every region
+whose code (comments stripped) is unchanged and that the session's change does not own; only
+the owned regions' new comments travel.
