@@ -1475,6 +1475,19 @@ def _shop_regions():
 REGISTRY += _shop_regions()
 
 
+def _loot_regions():
+    # S157 (ROADMAP E9): the random gates' item tables without the ONE-ONLY items (used-up
+    # chance 0) — the floor items / treasure chests (bank $16 FloorLayoutData), the rare
+    # chest and the Coliseum prizes (editor2/core/loot.py, PROJECT_COMPILER §2.65). No
+    # one-only item in a table == its original bytes.
+    from . import loot as LT
+    return [(name, "gamedata.items", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in LT.REGIONS]
+
+
+REGISTRY += _loot_regions()
+
+
 def _service_regions():
     # S126 (P3.14e1): the Medal Man's rewards (bank $12 MedalRewardTable +
     # MEDAL_REWARD_COUNT; editor2/core/services.py). No gamedata.medals = the

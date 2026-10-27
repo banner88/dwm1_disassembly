@@ -338,9 +338,74 @@ def resolve(prj_or_data, repo_root=None):
             x = index(repo).get('item_description', str(b))
             raw_desc = x.raw if x is not None else b''
         texts.append((DESC_TABLE, i, raw_desc + bytes([TM.END]), what + '.description'))
+    # S157 (ROADMAP E9, the user: "If I set an item to permanent … user should not be
+    # allowed to have more than 1 AND that item should NOT appear as a pickup in random
+    # gates" + "Kept after lost battles yes"): a PERMANENT item (used-up chance 0) is
+    # ONE-ONLY — and always kept after a lost battle (+11 bit 2), whatever keep_on_loss says
+    one_only = set()
+    for i, rec in enumerate(recs):
+        if i and base[i] and rec[3] == 0:
+            one_only.add(i)
+            if not rec[11] & 4:
+                rec[11] |= 4
+                if i < GAME_ITEMS:
+                    edited.add(i)
     return {'records': [bytes(r) for r in recs], 'base': base, 'count': len(recs),
             'names': names, 'edited': edited, 'new': news, 'texts': texts,
-            'messages': messages}
+            'messages': messages, 'one_only': one_only}
+
+
+def one_only(prj_or_data, repo_root=None):
+    """S157: the ids of the ONE-ONLY items (used-up chance 0 = permanent): the player holds
+    at most one (bag + Vault), they never lie on random gate floors / in their chests /
+    as a Coliseum prize (loot.py), a shop hides one while it is held, and they are kept
+    after a lost battle. The game's own: BeastTail (38) and ShinyHarp (41)."""
+    try:
+        return set(resolve(prj_or_data, repo_root)['one_only'])
+    except ItemError:
+        return set()
+
+
+# S157: the line a give of a one-only item the player already holds shows instead of the
+# script's "full" words (bank $77 OneOnlyLine; {ins 00} = the item's name).
+RULES_KEYS = ('already_has',)
+DEFAULT_ALREADY_HAS = "{hero} already\nhas a {ins 00}."
+ALREADY_LINES, ALREADY_CELLS = 2, 18
+
+
+def item_rules(prj_or_data):
+    r = ((_data(prj_or_data).get('gamedata') or {}).get('item_rules')) or {}
+    return r if isinstance(r, dict) else {}
+
+
+def already_has_markup(prj_or_data):
+    v = item_rules(prj_or_data).get('already_has')
+    return v if isinstance(v, str) and v.strip() else DEFAULT_ALREADY_HAS
+
+
+def check_rules(prj_or_data):
+    """(errors, warnings) of gamedata.item_rules."""
+    g = (_data(prj_or_data).get('gamedata') or {}).get('item_rules')
+    if g is None:
+        return [], []
+    if not isinstance(g, dict):
+        return ['gamedata.item_rules: an object ({"already_has": "<words>"})'], []
+    extra = {k for k in g if not str(k).startswith('_')} - set(RULES_KEYS) - {'comment'}
+    if extra:
+        return [f"gamedata.item_rules: unknown field(s) {sorted(extra)} ({', '.join(RULES_KEYS)})"], []
+    v = g.get('already_has')
+    if v is not None and not isinstance(v, str):
+        return ['gamedata.item_rules.already_has: words (markup)'], []
+    try:
+        raw = TM.encode(already_has_markup(prj_or_data), 'box')
+    except TM.MarkupError as e:
+        return [f"gamedata.item_rules.already_has: {e}"], []
+    warn = []
+    cs = TM.cells_per_line(raw, 'box')
+    if cs and max(cs) > ALREADY_CELLS:
+        warn.append(f"gamedata.item_rules.already_has: a line of {max(cs)} cells — the dialogue "
+                    f"box is {ALREADY_CELLS} wide (with the longest item name)")
+    return [], warn
 
 
 def item_ids(prj_or_data, repo_root=None):
@@ -396,7 +461,10 @@ def check(prj):
         resolve(prj, getattr(prj, 'repo_root', None))
     except ItemError as e:
         return [str(e)], []
-    return [], warnings_for(prj, getattr(prj, 'repo_root', None))
+    errs, warn = check_rules(prj)
+    if errs:
+        return errs, []
+    return [], warnings_for(prj, getattr(prj, 'repo_root', None)) + warn
 
 
 def text_slots(prj_or_data, repo_root=None):
@@ -431,6 +499,33 @@ def emit_lines(prj):
     out.append("ItemBaseTable:   ; the behaviour id of every item (the game's: itself)")
     for k in range(0, r['count'], 16):
         out.append("    db " + ", ".join(f"${x:02x}" for x in r['base'][k:k + 16]))
+    # S157: the one-only items' line + the script op arities the look-ahead walks
+    oo = sorted(r['one_only'])
+    out += ["; S157 (ROADMAP E9): ONE-ONLY items (used-up chance 0): "
+            + (", ".join(f"{i} {nm.get(i, i)}" for i in oo) or "none"),
+            "; OneOnlyLine — shown instead of a give's \"full\" words when the item is one-only",
+            "; and already held (gamedata.item_rules.already_has; {ins 00} = the item's name)",
+            "OneOnlyLine:"]
+    raw = TM.encode(already_has_markup(prj), 'box') + bytes([TM.END])
+    for k in range(0, len(raw), 16):
+        out.append("    db " + ", ".join(f"${x:02x}" for x in raw[k:k + 16]))
+    out += arity_lines()
+    return out
+
+
+def arity_lines():
+    """SCRIPT_OPS + ScriptArity77: the parameter words of every script op ($00-$65, from
+    the handlers — script_ops.OPS / extracted/script_param_counts.json), $FF = the op ends
+    the script (script_ops.TERMINAL) — bank $77 NextGive77 walks a script with them."""
+    from . import script_ops as SO
+    n = max(SO.OPS) + 1
+    ar = [0xFF if c in SO.TERMINAL else len(SO.OPS[c].params) if c in SO.OPS else 0xFF
+          for c in range(n)]
+    out = [f"SCRIPT_OPS EQU ${n:02X}",
+           "ScriptArity77:   ; S157: parameter words per script op ($FF = ends the script)"]
+    for k in range(0, n, 16):
+        out.append("    db " + ", ".join(f"${x:02x}" for x in ar[k:k + 16])
+                   + f"   ; ops ${k:02X}-${min(k + 15, n - 1):02X}")
     return out
 
 

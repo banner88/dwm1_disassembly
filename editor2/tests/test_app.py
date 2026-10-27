@@ -3109,6 +3109,27 @@ def s151_items(app, w):
         it.consume.setValue(0)
         it._field('consume', 0)
         assert doc.data['gamedata']['items']['29'] == {'consume': 0}
+        # S157 (ROADMAP E9): permanent = ONE-ONLY — the note, the locked keep box, the
+        # One-only items box and its "already has" line (box style, the game-font picture)
+        it._select(29)
+        app.processEvents()
+        assert it.info['one_only'] and not it.one_only.isHidden() and \
+            'ONE-ONLY' in it.one_only.text() and 'WarpWing: no longer found' in \
+            it.one_only.text(), it.one_only.text()
+        assert it.keep.isChecked() and not it.keep.isEnabled()
+        assert 'WarpWing (29)' in it.oo_list.text() and 'BeastTail (38)' in it.oo_list.text(), \
+            it.oo_list.text()
+        assert it.oo_line.text() == IT.DEFAULT_ALREADY_HAS and it.oo_line.style == 'box' and \
+            not it.oo_line.pic.pixmap().isNull()
+        it.oo_line.edit.setPlainText('{hero} has one:\n{ins 00}!')
+        app.processEvents()
+        assert it.oo_line.apply_b.isEnabled(), it.oo_line.status.text()
+        it.oo_line._apply()
+        app.processEvents()
+        assert doc.data['gamedata']['item_rules'] == {'already_has': '{hero} has one:\n{ins 00}!'}
+        it._select(1)
+        app.processEvents()
+        assert it.one_only.isHidden() and it.keep.isEnabled()
         # New item… works like the Herb
         k_gi, k_gt = ITm.QInputDialog.getItem, ITm.QInputDialog.getText
         ITm.QInputDialog.getItem = staticmethod(lambda _p, _t, _l, labels, *a, **k:
@@ -3187,7 +3208,8 @@ def s151_items(app, w):
             w.session.undo.undo()
         app.processEvents()
         assert doc.dumps() == before, 'undo must restore project.json exactly'
-        print('OK: Items tab (S151) — the Herb\'s power and battle power, a permanent WarpWing, '
+        print('OK: Items tab (S151 + S157 one-only) — the Herb\'s power and battle power, a permanent WarpWing '
+              '(one-only: the note, the locked keep box, the "already has" line), '
               'a new MegaHerb (works like the Herb) with its own price / power / use line, '
               'Copy, Delete, offered by the Shops tab, Original; undo restores everything')
     finally:

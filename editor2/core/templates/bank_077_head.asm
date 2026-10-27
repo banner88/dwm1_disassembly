@@ -161,9 +161,34 @@
 ;  18 BattleItemPick (E = the bag slot): the battle menu's pick (bank $50, same size):
 ;     wItemInUse := the item, [$db4c] := its battle skill as above, then bank $54 entry 5
 ;     (the item's target lookup). Banks $52 / $54 name the item from wItemInUse.
+;  (S157) ShopFill drops a ONE-ONLY item the player holds from the list (ShopDropHeld77).
+; Entries 19-22 (S157, ROADMAP E9 — ONE-ONLY ITEMS; PROJECT_COMPILER §2.65, DATA_STRUCTURES
+;   "Items (S151)" → "One-only items (S157)"): an item whose used-up chance (record +3) is 0
+;   — permanent — is ONE-ONLY: the player holds at most one (the bag and the Vault
+;   together). IsOneOnly77 / ItemHeld77 / OneOnlyHeld77 below test it.
+;  19 GiveOne ([wOneOnlyItem] = the item): the bag write of the script give ops $2A / $37 /
+;     $54 / $57 / $5D (bank $04, same-size): a one-only item already held -> nothing,
+;     wOneOnlyRes := 1; else the first empty bag slot ($00 / $FF) := the item, wOneOnlyRes
+;     := 1; no empty slot -> wOneOnlyRes := 0 (op $5D then waits, as the game did).
+;  20 BagFullCheck: op $2C's count (bank $04, same size; the counter = the op's target
+;     word): C := the bag's items up to the first empty slot (the game's loop). When the
+;     bag is not full, the script's NEXT give (op $2A / $37, read ahead with the VM's own
+;     word reader — NextGive77: op arities ScriptArity77, a goto / $2C / the end / a
+;     script-ending op stops the look-ahead) of a one-only item the player holds -> the
+;     item's name to $C180 ({ins 00}), C := 20 (the op takes its "full" branch) and, when
+;     that branch starts with a text, wOneOnlySay := 1: bank $60 TextOverride shows
+;     OneOnlyLine (entry 22) instead of it.
+;  21 BuyQtyMax: bank $09 BUY state 5 (the how-many window, same size): B := 2 (digits),
+;     C := the most the player may buy — 20, or 1 for a one-only item.
+;  22 OneOnlySay: bank $60 TextOverride (a SHOWN text while wOneOnlySay is set): the text
+;     about to show becomes OneOnlyLine (this bank) — [$C824] := $77, wTextOvrPtr := it,
+;     DE := wTextOvrPtr - 2 * [$C823]; wOneOnlySay := 0.
+;  (S157) StoryCommand give_item: a one-only item held -> nothing ($D8E1 := 0); a one-only
+;     item not held -> at most one.
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
 ;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
-;   ServicePairs_n (S126); S151: ITEM_COUNT, ItemTable, ItemBaseTable.
+;   ServicePairs_n (S126); S151: ITEM_COUNT, ItemTable, ItemBaseTable; S157: OneOnlyLine,
+;   SCRIPT_OPS + ScriptArity77.
 ; =============================================================================
 
 SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
@@ -189,6 +214,10 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw ItemRecordCopy                   ; entry 16 (HL=$7710, S151)
     dw BattleItemProbe                  ; entry 17 (HL=$7711, S151)
     dw BattleItemPick                   ; entry 18 (HL=$7712, S151)
+    dw GiveOne                          ; entry 19 (HL=$7713, S157)
+    dw BagFullCheck                     ; entry 20 (HL=$7714, S157)
+    dw BuyQtyMax                        ; entry 21 (HL=$7715, S157)
+    dw OneOnlySay                       ; entry 22 (HL=$7716, S157)
 
 ShopFill:
     ld a, [wShopID]
@@ -240,7 +269,38 @@ ShopFill:
     inc de
     cp $ff
     jr nz, .copy
-    ret
+    ; fall through (S157): a one-only item the player holds is not offered
+
+; S157 — $C0D8's list without the one-only items the player holds (bag or Vault):
+; kept items move up in order, the $FF after them, zeros over the old tail (the
+; buffer as the fill leaves it). Clobbers A/BC/DE/HL.
+ShopDropHeld77:
+    ld hl, $c0d8
+    ld d, h
+    ld e, l                             ; DE = where the next kept item goes
+.read:
+    ld a, [hl+]
+    cp $ff
+    jr z, .end
+    ld c, a
+    push hl
+    call OneOnlyHeld77                  ; keeps BC / DE
+    pop hl
+    jr c, .read                         ; held: dropped
+    ld a, c
+    ld [de], a
+    inc de
+    jr .read
+.end:
+    ld [de], a                          ; the $FF
+.zero:
+    inc de
+    ld a, e
+    cp l
+    ret z                               ; DE reached the old end (HL = past the old $FF)
+    xor a
+    ld [de], a
+    jr .zero
 
 ShopClose:
     ld hl, wGameState
@@ -1574,6 +1634,16 @@ StoryCommand:
     ld a, [hl+]
     ld d, a                             ; D = the item
     ld e, [hl]                          ; E = how many
+    ; S157: a one-only item held -> nothing (the "full" branch); not held -> one
+    ld a, d
+    call OneOnlyHeld77                  ; keeps BC / DE
+    ld a, $00
+    jr c, .result
+    ld a, d
+    call IsOneOnly77                    ; keeps BC / DE
+    jr nc, .many
+    ld e, $01
+.many:
     ld hl, wInventory
     ld bc, $1400                        ; C = free slots
 .free:
@@ -1889,4 +1959,331 @@ BattleItemPick:                         ; E = the bag slot
     ld [$db4c], a
     ld hl, $5405                        ; bank $54 entry 5: the item's target lookup
     rst $10
+    ret
+
+; -----------------------------------------------------------------------------
+; Entries 19-22 (S157, ROADMAP E9): ONE-ONLY items (see the header)
+; -----------------------------------------------------------------------------
+; A = an item -> CF set when it is ONE-ONLY: an item of this build (its ItemBaseTable
+; byte is not 0 — 0 = no item / a gap id) whose record +3, the used-up chance, is 0
+; (permanent). Keeps BC / DE. Clobbers A / HL.
+IsOneOnly77:
+    and a
+    ret z                               ; item 0 (CF clear)
+    cp ITEM_COUNT
+    jr nc, .no
+    push de
+    ld e, a
+    ld d, $00
+    ld hl, ItemBaseTable
+    add hl, de
+    ld a, [hl]
+    and a
+    jr z, .noPop                        ; a gap id: not an item
+    ld l, e
+    ld h, d
+    add hl, hl
+    add hl, hl                          ; x 4
+    ld d, h
+    ld e, l
+    add hl, hl                          ; x 8
+    add hl, de                          ; x 12
+    ld de, ItemTable + 3                ; +3 the used-up chance
+    add hl, de
+    ld a, [hl]
+    pop de
+    and a
+    ret nz                              ; it can be used up (CF clear)
+    scf
+    ret
+.noPop:
+    pop de
+.no:
+    and a                               ; CF clear
+    ret
+
+; A = an item -> CF set when the bag (wInventory, 20) or the Vault (wBankSlots, 40)
+; holds it. Keeps BC / DE. Clobbers A / HL.
+ItemHeld77:
+    push bc
+    ld c, a
+    ld hl, wInventory
+    ld b, 20
+.bag:
+    ld a, [hl+]
+    cp c
+    jr z, .yes
+    dec b
+    jr nz, .bag
+    ld hl, wBankSlots
+    ld b, 40
+.vault:
+    ld a, [hl+]
+    cp c
+    jr z, .yes
+    dec b
+    jr nz, .vault
+    pop bc
+    and a                               ; CF clear
+    ret
+.yes:
+    pop bc
+    scf
+    ret
+
+; A = an item -> CF set when it is one-only AND already held. Keeps BC / DE.
+OneOnlyHeld77:
+    push de
+    ld e, a
+    call IsOneOnly77
+    ld a, e
+    call c, ItemHeld77
+    ld a, e
+    pop de
+    ret
+
+GiveOne:                                ; [wOneOnlyItem] = the item
+    ld a, [wOneOnlyItem]
+    call OneOnlyHeld77
+    ld a, $01
+    jr c, .res                          ; held: nothing to do (done)
+    ld a, [wOneOnlyItem]
+    ld c, a
+    ld hl, wInventory
+    ld b, 20
+.slot:
+    ld a, [hl]
+    or a
+    jr z, .put
+    cp $ff
+    jr z, .put
+    inc hl
+    dec b
+    jr nz, .slot
+    xor a                               ; the bag is full
+    jr .res
+.put:
+    ld [hl], c
+    ld a, $01
+.res:
+    ld [wOneOnlyRes], a
+    ret
+
+; HL = a script counter -> BC = the script word there, HL = its address (the VM's own
+; reader: bank $04 MapTypeDispatch's choice — map type < $06 bank $0C, < $20 $0D,
+; < $40 $0E, else bank $60 entry 6 GateAwareDispatch, as DispatchBank0F_Ext). Leaves
+; the VM's counter AT that word. Clobbers A / DE.
+ScriptWord77:
+    ld a, l
+    ld [wScriptCounter], a
+    ld a, h
+    ld [wScriptCounter + 1], a
+    ld a, [wScriptMapType]
+    ld hl, $0c00
+    cp $06
+    jr c, .go
+    ld h, $0d
+    cp $20
+    jr c, .go
+    ld h, $0e
+    cp $40
+    jr c, .go
+    ld hl, $6006
+.go:
+    rst $10
+    ret
+
+; The item the script gives NEXT -> A (0 = none found): from the word after the
+; counter's (op $2C's target), straight on — a text = one word, an op = 1 + its
+; ScriptArity77 words; op $2A <item> -> the item, op $37 <n> -> [$D9CF + n]; the end
+; ($FFFF), op $2C, a goto ($14), a script-ending op (arity $FF) or 40 words -> none.
+; The VM's counter is put back. Clobbers BC / DE / HL.
+NextGive77:
+    ld a, [wScriptCounter]
+    ld l, a
+    ld a, [wScriptCounter + 1]
+    ld h, a
+    push hl                             ; the VM's counter
+    ld a, 40
+.word:
+    inc hl
+.next:                                  ; HL = the word to read, A = words left
+    dec a
+    jr z, .none
+    push af
+    push hl
+    call ScriptWord77                   ; BC = the word
+    pop hl
+    pop af
+    ld e, a                             ; E = words left
+    ld a, b
+    inc a
+    ld a, e
+    jr nz, .word                        ; not $FFxx: a text, one word
+    ld a, c
+    inc a
+    jr z, .none                         ; $FFFF: the end
+    ld a, c
+    cp $2a
+    jr z, .item
+    cp $37
+    jr z, .stored
+    cp $2c
+    jr z, .none
+    cp $14
+    jr z, .none                         ; a goto: not followed
+    cp SCRIPT_OPS
+    jr nc, .none
+    push hl
+    ld hl, ScriptArity77
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]                          ; its parameter words ($FF = it ends the script)
+    pop hl
+    cp $ff
+    jr z, .none
+    inc a                               ; + the op word
+    add l
+    ld l, a
+    jr nc, .same
+    inc h
+.same:
+    ld a, e
+    jr .next
+.item:
+    inc hl
+    call ScriptWord77
+    ld a, c
+    jr .done
+.stored:
+    inc hl
+    call ScriptWord77
+    ld a, c
+    ld hl, $d9cf
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]
+    jr .done
+.none:
+    xor a
+.done:
+    pop hl
+    ld e, a
+    ld a, l
+    ld [wScriptCounter], a
+    ld a, h
+    ld [wScriptCounter + 1], a
+    ld a, e
+    ret
+
+BagFullCheck:                           ; the counter = op $2C's target word
+    xor a
+    ld [wOneOnlySay], a
+    ld hl, wInventory
+    ld bc, $1400                        ; B = 20 slots, C = 0 items
+.count:
+    ld a, [hl+]
+    or a
+    jr z, .counted
+    cp $ff
+    jr z, .counted
+    inc c
+    dec b
+    jr nz, .count
+.counted:
+    ld a, c
+    cp 20
+    ret nc                              ; full: the game's own branch
+    push bc
+    call NextGive77
+    call OneOnlyHeld77
+    jr nc, .keep
+    ; a one-only item the player holds: its name for {ins 00} ...
+    ld l, a
+    ld h, $08                           ; text mode 8: the item names
+    ld de, $c180
+    call SetupVRAMParams
+    ; ... and the "already has one" line when the "full" branch starts with a text
+    ld a, [wScriptCounter]
+    ld l, a
+    ld a, [wScriptCounter + 1]
+    ld h, a
+    push hl
+    call ScriptWord77                   ; BC = the target, HL = its word's address
+    ld a, c
+    sub l
+    ld c, a
+    ld a, b
+    sbc h
+    ld b, a
+    sra b
+    rr c                                ; BC = (target - here) / 2, signed
+    pop hl
+    push hl
+    add hl, bc                          ; the target's counter
+    call ScriptWord77                   ; BC = the branch's first word
+    pop hl
+    ld a, l
+    ld [wScriptCounter], a
+    ld a, h
+    ld [wScriptCounter + 1], a
+    ld a, b
+    inc a
+    jr z, .noLine                       ; an op / the end there: no words to replace
+    ld a, $01
+    ld [wOneOnlySay], a
+.noLine:
+    pop bc
+    ld c, 20                            ; take the "full" branch
+    ret
+.keep:
+    pop bc
+    ret
+
+BuyQtyMax:                              ; bank $09 BUY state 5
+    ld a, [$c8e3]                       ; the page (4 rows a page)
+    add a
+    add a
+    ld b, a
+    ld a, [$c8e2]
+    and $7f                             ; the row
+    add b
+    ld hl, $c0d8
+    add l
+    ld l, a
+    adc h
+    sub l
+    ld h, a
+    ld a, [hl]                          ; the item chosen
+    call IsOneOnly77
+    ld bc, $0214                        ; B = 2 digits, C = 20 (the game's)
+    ret nc
+    ld c, $01                           ; one-only: just one
+    ret
+
+OneOnlySay:                             ; bank $60 TextOverride, a shown text
+    xor a
+    ld [wOneOnlySay], a
+    ld a, $77
+    ld [$c824], a                       ; the engine reads the line from this bank
+    ld a, LOW(OneOnlyLine)
+    ld [wTextOvrPtr], a
+    ld a, HIGH(OneOnlyLine)
+    ld [wTextOvrPtr + 1], a
+    ld a, [$c823]
+    ld l, a
+    ld h, $00
+    add hl, hl                          ; 2 * id
+    ld a, LOW(wTextOvrPtr)
+    sub l
+    ld e, a
+    ld a, HIGH(wTextOvrPtr)
+    sbc h
+    ld d, a                             ; DE = wTextOvrPtr - 2 * id
     ret

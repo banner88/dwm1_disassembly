@@ -84,8 +84,22 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
 ; 2. TEXT_OVR_HOME (generated: the text home bank, editor2/core/gametext.py;
 ;    0 = no edited text in this build): its entry 0 TextOvrFind (templates/
 ;    text_home.asm) swaps in an edited text — DE in / out (rst $10 keeps it).
-; TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58.
+; 0. (S157, ROADMAP E9) wOneOnlySay set (bank $77 entry 20 BagFullCheck: a give of a
+;    one-only item the player already holds) and this text is SHOWN, not copied ->
+;    bank $77 entry 22 OneOnlySay swaps in the "already has one" line (DE / [$C824] /
+;    wTextOvrPtr as an edited text) and clears the mark.
+; TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58 / §2.65.
 TextOverride:
+    ld a, [wOneOnlySay]
+    and a
+    jr z, .nick
+    ld a, [wTextOvrMode]
+    and a
+    jr nz, .nick                ; a copy (an insert's name): not the line
+    ld hl, $7716                ; bank $77 entry 22 OneOnlySay
+    rst $10
+    ret
+.nick:
     ld a, d
     cp $47
     jr nz, .edited

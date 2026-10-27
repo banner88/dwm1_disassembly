@@ -217,7 +217,9 @@ A session picks ONE item. Status legend: [ ] open · [~] partial · [!] blocked.
       budget; gate-detection fixes in $06/$07; --build automation; runtime-correct
       tileset PNGs S9). Confirmed in-game.
       → KEY_LESSONS S6–S9; TOOLS_AND_DATA; archive: SESSION_HISTORY Part 3.
-- [~] **Multi-screen room editing** — ROM-side patches complete (v28):
+- [x] **Multi-screen room editing** (CLOSED S157, clean-up: the Rooms canvas pages screens
+      and adds / removes them, any grid up to 16 screens — P3.3 / P3.3b S93-S94, a room kept a
+      full rectangle S149) — ROM-side patches complete (v28):
       2-screen vertical room proven (Room $6B, screens 0+4). Key changes:
       room height in $26DD table ($2A39: $80→$00,$01 = 256px = 2 rows),
       sub-table indices 0+4, bank $64 entries 0-3 (per-screen layout+attr),
@@ -439,7 +441,7 @@ pipeline — never retrofit the overlay.
       burn-down") — **DONE S138 (ARC CAP2e: 256-row tables, no `cp $80`)**; the two exit validators (custom-dest exits gate_flag=0;
       trigger_x≠$FF) exist (`validators.py`, S120 re-check).
 - [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
-- [ ] **A′3 — bank $60 multi-bank spill** (bank_map; 16 KB won't hold 75
+- [x] **A′3 — bank $60 multi-bank spill** (CLOSED S157, clean-up: superseded by ARC CAP2b, the place banks) (bank_map; 16 KB won't hold 75
       rooms of scripts+dialogue; 13 banks / 208 KB free). **S133: superseded by ARC CAP
       CAP2 (place banks — every custom data class, not only $60; the "13 banks free" was
       stale: every bank is owned since S121).**
@@ -586,7 +588,7 @@ recipes are pure authoring.
       vanilla. Supersedes B3's emitter. Delivers the machinery; the recipe REWRITE is
       editor-authored content later.
       → BREEDING_SYSTEM; KEY_LESSONS S17; archive: SESSION_HISTORY Part 3.
-- [~] **B6 — Family reassignment** — reassignment DONE S18, user-confirmed
+- [x] **B6 — Family reassignment** (CLOSED S157, clean-up: its remainder was B8 / B9) — reassignment DONE S18, user-confirmed
       (build_family_reassign.py: same-size family-byte edits, ANY family incl. ???;
       reader gate cleared — eligibility is joinability + boss table, NOT family; three
       family representations documented). Dynamic-library POC superseded by B7.
@@ -598,11 +600,11 @@ recipes are pure authoring.
       semantics; NUM_FAMILIES/256-id aware; specials 215–220 protected). *Open:* tool
       selftest not run by verify_integrity.py (see B3 note).
       → BREEDING_SYSTEM "B7"; KEY_LESSONS S19; archive: SESSION_HISTORY Part 3.
-- [~] **B8 — ??? → "Spirit" rename** — trace SOLVED S20: the family "name" is an ICON
+- [x] **B8 — ??? → "Spirit" rename** (CLOSED S157, clean-up: not taken — Spirit was ADDED, B9 / P3.10a) — trace SOLVED S20: the family "name" is an ICON
       font tile ($4F:$4110–$41A0, text bytes $10–$19, addr=$4010+byte*16), not a
       string. NOT taken — user decision: Spirit is ADDED (B9). Kept as the
       solved-trace record. → BREEDING_SYSTEM "Family icons"; archive: SESSION_HISTORY.
-- [~] **B9 — Add an 11th family (Spirit)** — VRAM corruption FIXED (ClampFamIdx,
+- [x] **B9 — Add an 11th family (Spirit)** (CLOSED S157, clean-up: done under P3.10a, S104) — VRAM corruption FIXED (ClampFamIdx,
       ROM0) + Spirit whip icon SHIPPED on byte $19 / $4F:$41A0 (user-confirmed; the
       "free" $1A slot is runtime-blanked — not usable). *Open:* wire Spirit as family
       11 — $4D detail line, tab-strip 11th cell, $FA wildcard question,
@@ -2463,7 +2465,7 @@ recipes are pure authoring.
       it BEFORE the dresser with the hook on, would draw her sheet with Terry's frames (the
       icon's sheet is a table entry; vanilla names after the dresser); other users of
       `FollowerGfxTable`s' entry 0 not swept.
-- [ ] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB** — **S133: PROMOTED to
+- [x] **CONTINGENCY (banked, not scheduled) — ROM expansion 2→4 MB** — **CLOSED S157 (clean-up): built as ARC CAP1 (S134, USER-CONFIRMED).** **S133: PROMOTED to
       ARC CAP CAP1 (needed for hundreds of places; audited + measured buildable / bootable,
       a far call RAN in bank $80):**
       assessed S90 (EDITOR_DESIGN §6.4) — MBC5 8-bit ROMB0 covers 256
@@ -3247,7 +3249,10 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       banking) / known_RAM_map ($FFA3); this item for the editor-object +
       implementation work.*
 
-- [ ] **E4 — Overworld / gate-network structure at campaign scale.**
+- [x] **E4 — Overworld / gate-network structure at campaign scale. CLOSED S157 (ROADMAP
+      clean-up, user OK'd): answered by ARC NG (NG1 new gates 32-95, NG2 entrances + unlocks,
+      NG3 worlds), P3.14d (the hub + world rules) and ARC CAP3 (regions) — every box built and
+      user-confirmed.** Original text:
       Custom rooms (mapID ≥ `$6B`, bank `$60`+) and individual warps are proven, but the
       **gate-selection / world-hub network** as an authorable graph — which gates exist, their
       unlock order, the gate-warp/selection menu, the GreatLog hub topology — is not specced
@@ -3287,7 +3292,9 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       priority (cosmetic bookends). Owning doc: a new subsection of CUSTOM_CUTSCENES /
       DATA_STRUCTURES once found.*
 
-- [ ] **E6 — Text / script capacity at full-campaign scale.** **S133: answered by ARC CAP
+- [x] **E6 — Text / script capacity at full-campaign scale. CLOSED S157 (clean-up): ARC CAP
+      answered it — text sections per bank (CAP2b), text banks $80+ (S150), the Capacity tab
+      (CAP4d).** **S133: answered by ARC CAP
       — text sections per bank (CAP2) + the measured per-place cost (EDITOR_DESIGN §6.4).**
       The dialogue compiler is specced (Phase 2: auto-wrap 18 ch, auto-DTE, page-split,
       two-level table emission, multi-bank spill). What is NOT validated is total capacity for
@@ -3340,8 +3347,9 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       visible in SameBoy; authoring schema (`gamedata.shops`) specced.
       *Confidence: HIGH it's shallow (per user), unproven.*
 
-- [ ] **E9 — Item authoring: edit vanilla items + custom items (ADDED S72;
-      carries a concrete user spec).** Read-only knowledge exists
+- [x] **E9 — Item authoring: edit vanilla items + custom items (ADDED S72;
+      carries a concrete user spec). CLOSED S157: the "single-slot" answer built as the
+      ONE-ONLY rule (built S157, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works"); test ROM `DWM-S157-oneonly-test.gbc`).** Read-only knowledge exists
       (ItemNamePtrTable/ItemDescPtrTable `$41`, 44 items; 37 item_effect
       records in `skill_records.json`); there is NO edit/add arc. **S117:** the 12-byte
       item records = `ItemInfoTable` $03:$71DA (+0 group, +1/+2 buy price — editable since
@@ -3380,6 +3388,27 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       Follow-ups (not built): a project item's OWN battle power (today its base's skill);
       items that work like the TinyMedal / BeastTail lack the Medal Man count / the gate-map
       compass (both test the real id); the gate-floor chests give the game's items only.
+      **S157 — the answer (user: "If I set an item to permanent (doesnt break) user should not
+      be allowed to have more than 1 AND that item should NOT appear as a pickup in random
+      gates" / "bag or vault" / "Kept after lost battles yes" / a give of one held: "c
+      ideally" = a line of its own / "I basically want warpwing to be permanent as QOL") —
+      ONE-ONLY items:** used up 0 % (the game's BeastTail / ShinyHarp + any item set so) =
+      at most one in the bag + the Vault: bank $77 entries 19 `GiveOne` (the give ops $2A /
+      $37 / $54 / $57 / $5D, same-size in bank $04), 20 `BagFullCheck` (op $2C reads the
+      script's next give ahead with the VM's own reader — `NextGive77`, `ScriptArity77` — and
+      takes the "full" branch for a one-only item held; its first text becomes `OneOnlyLine`
+      through bank $60 `TextOverride` → entry 22 `OneOnlySay`), 21 `BuyQtyMax` (bank $09 BUY
+      state 5: the how-many window stops at 1), `ShopDropHeld77` (a held one-only item is
+      off the shop list), the story give at most one; kept after a lost battle (the compiler
+      sets +11 bit 2); the random gates' tables without them (`editor2/core/loot.py`, regions
+      `gd_floor_loot` / `gd_rare_chest` / `gd_coliseum_prizes`, the share spread in
+      proportion); `gamedata.item_rules.already_has` (default "{hero} already / has a {ins
+      00}."); the Items tab's note + the One-only box; help 74. Walk `tools/walk_oneonly.py`
+      on the user's save + `examples/s157_oneonly_demo` (THE AVIARY / THE PERCH): 28 / 28 incl.
+      400 game-made floors (0 one-only items; the original ROM: 43 WarpWings on floors, 119 in
+      chests), `--negative` 14 FAIL. PROJECT_COMPILER §2.65, DATA_STRUCTURES "One-only items
+      (S157)", GATE_GENERATION §5 "S157". Not built (not asked): the gate Coliseum's prize
+      is byte-checked, not walked; project gate rooms give what their author placed.
 
 - [x] **E10 — The memorial: statues of the monsters that won and have left (ADDED + BUILT
       S154; built S154, NOT yet user-tested; test ROM `DWM-S154-memorial-test.gbc`).** User:
@@ -3560,7 +3589,9 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
       Bug-family cut) proven 3 ways + renamed, SameBoy-confirmed; bank $52 header
       corrected ($6CC7 / 222 / 115). → BATTLE_SKILL_SYSTEM; DOC_AUDIT #12–14;
       archive: SESSION_HISTORY Part 3.
-- [~] **S2 — Custom skills (ARC, not a single item).** S45 marked this "done" off a
+- [x] **S2 — Custom skills (ARC, not a single item).** (CLOSED S157, clean-up: every child
+      built — custom skills as project data S111, new skills S111d / S155 / S156; only the
+      optional per-enemy hit-blink stays banked by the user.) S45 marked this "done" off a
       narrow POC; corrected (S46). The arc:
   - [x] **S2a — Alias EFFECTS POC** (S45, SameBoy-confirmed; S155: the ids $DE / $DF are
         Repel / LoneWolf now, the alias commit neutralized — E11): net-new ids $DE Scorch /
@@ -3619,7 +3650,9 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         slot work); harness KEPT per user. Learn/upgrade user-confirmed (v34); MP
         charge + meter values + msg page-split built, NOT yet user-tested.
         → §13.6 (systems), §11.7 (blink), KEY_LESSONS S52.
-  - [ ] **§13.4 follow-ups** — (a) custom-id skill-NAME insert so name-inserting
+  - [x] **§13.4 follow-ups** (CLOSED S157, clean-up: (a) the custom-id name insert S111 —
+        bank $50 `SaveBtl_5ad2`; (b) the `$FD` escape became the general custom-message
+        path with Tame, S50 — BATTLE_SKILL_SYSTEM §13.4 / §13.5) — (a) custom-id skill-NAME insert so name-inserting
         announce templates work for ids ≥ $DE; (b) a 2nd bespoke-message render path
         beyond the single `$FD` escape. *Accept:* a custom skill using a
         name-inserting stock announce template renders correctly. → §13.4.
@@ -3629,16 +3662,20 @@ layer (record params, item/meat, animation dispatch) is decoded (S46, `BATTLE_SK
         Implementation deferred by user ("bank it"). Plan: drive the blink phase from
         `TameGateHook` via `$da82/$da83/$da84/$da34` state injection; expect 1-2
         SameBoy iterations. Full map: → §11.7.
-  - [ ] **S2f — FIELD-cast custom skill (e.g. teleport/warp).** A different code path the
+  - [x] **S2f — FIELD-cast custom skill (e.g. teleport/warp).** (CLOSED S157, clean-up: Anchor
+        `$E4`, S73 — BATTLE_SKILL_SYSTEM §14 "closes the §13.4(c) open item"; Repel S155.) A different code path the
         battle foundation (§13) doesn't touch yet — genuinely new groundwork. *Accept:* a custom
         field skill (warp) fires from the field menu in SameBoy.
-- [~] **S3 — AI selection RE (partly answered S46).** **Found:** the per-skill AI lever is
+- [x] **S3 — AI selection RE (partly answered S46).** (CLOSED S157, clean-up: the whole AI
+      decoded + modelled S80 / S81 — `simulator/ai.py` 26 / 26, the rule chains 240 / 240 —
+      and annotated S82, BATTLE_SKILL_SYSTEM §15.) **Found:** the per-skill AI lever is
       **record +3 (`ai_weight`)** — the enemy AI (`$57 AIState3SkillSums_7529`) walks its skill list and
       SUMS record[+3] into the score table `$dce4`, then picks weighted (Sacrifice/MegaMagic=0).
       Distinct from per-monster enemy-stats `+17..20`. *Remaining:* trace the weighted pick + how
       per-monster weights combine; confirm with a SameBoy watchpoint on `$dce4`/record+3.
       *Accept:* selection algorithm documented (MONSTER_DATA battle-AI subsec).
-- [ ] **S4 — Per-skill AI authoring.** Likely easy now: edit record +3 (`ai_weight`) per skill
+- [x] **S4 — Per-skill AI authoring.** (CLOSED S157, clean-up: the Skills tab's Monster AI
+      box — plan / weight / element, S110; the custom skills' own AI rules, S155.) Likely easy now: edit record +3 (`ai_weight`) per skill
       (round-trips via `build_skill_tables.py`). *Accept:* changing a skill's ai_weight measurably
       shifts enemy choice in SameBoy.
 
@@ -3661,8 +3698,10 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
       re-emits the full 16KB banks **byte-identical**; `extracted/songs_spec.json` is the
       M3 common intermediate. Grammar corrected en route (no 3-byte $FC token; loop-jump =
       Bn-pair prm=$FC + target pair — SOUND_SYSTEM §5, DOC_AUDIT S62).
-- [~] **M3 — Custom song authoring.** Core acceptance MET (custom tracks play in-game,
-      user-confirmed S62/S63); M3a complete; M3b/M3c open below.
+- [x] **M3 — Custom song authoring.** Core acceptance MET (custom tracks play in-game,
+      user-confirmed S62/S63); M3a complete; M3b/M3c open below. (CLOSED S157, clean-up: M3b /
+      M3c done S64, the Music tab S116, songs at campaign scale S147; the CI gap below stays
+      open on its own.)
   - [x] **M3-POC (S62, user-confirmed by ear):** DWM2 BGM #06 ported into custom well
         room $6B (BGM NPC, SetBGM $9E). **ZERO ROM0 changes** — ids $9E-$A0 ride the
         4 orphan record slots @ $1E:$419D that the open-ended master-table row already

@@ -685,6 +685,11 @@ user-confirmed hand-authored code:
   NEW pinned `memorial_pics.asm` (r1 `a3886f30…ae08`): the picture bank's entry 0 `MemPicDraw` +
   `MemVramRead` / `MemVramWrite` (the generator writes the SECTION + bank byte before it, the
   pictures after `MemPics:`). Current values: `templates/PINNED_SHA256`.
+* S157 re-pins (§2.65, ROADMAP E9 — one-only items): `bank_077_head.asm` (`ShopDropHeld77`, the
+  story give test, entries 19-22 `GiveOne` / `BagFullCheck` / `BuyQtyMax` / `OneOnlySay` + their
+  helpers; `TEMPLATE_SIZE[$77]` 2730 — `ShopPtrTable` `$4AAA`, was 2241) and `bank_060_head.asm`
+  (`TextOverride` tests `wOneOnlySay` first; `TEMPLATE_SIZE[$60]` 1842 — `SkillScriptPtrTable`
+  `$4732`, was 1825). Current values: `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -5047,6 +5052,90 @@ Exclude iron" + the S156 answers). Engine BATTLE_SKILL_SYSTEM §13.11; compiler
 - **Acceptance:** `tools/walk_plunder.py` (PyBoy, the user's save + `examples/s156_plunder_demo`)
   41 / 41 (r2: 45 / 45), `--negative` 31 FAIL (r2: 33); test_compiler (`test_s156_sim` 11 + the S155 tests updated:
   17 built-ins, the `$F0` row, the name spill, Plunder's keys); pin moves.
+
+## §2.65 S157 — ONE-ONLY ITEMS: a permanent item is held once, never found in the random gates (ROADMAP E9)
+
+**Built S157; USER-CONFIRMED 2026-10-26 13:12 ("Great, it works")** (user: "If I set an item to permanent (doesnt break) user
+should not be allowed to have more than 1 AND that item should NOT appear as a pickup in random
+gates" / "bag or vault" / "Kept after lost battles yes" / a give of one already held: "c
+ideally" = a line of its own / "I basically want warpwing to be permanent as QOL"). The game
+and the code that read it: DATA_STRUCTURES "One-only items (S157)"; the random gates' tables:
+GATE_GENERATION §5 "S157".
+
+- **The rule:** an item whose used-up chance (record +3) is 0 — permanent — is ONE-ONLY
+  (`items.one_only`; the game's own: BeastTail 38, ShinyHarp 41): the player holds at most one,
+  the bag (20) and the Vault (40) together. `items.resolve` returns `one_only` and sets record
+  +11 bit 2 (kept after a lost battle) on every one of them, whatever `keep_on_loss` says (a
+  game item so forced counts as edited).
+- **Engine (bank $77, `templates/bank_077_head.asm` entries 19-22; WRAM `wOneOnlyItem` $DED2 /
+  `wOneOnlyRes` $DED3 / `wOneOnlySay` $DED4):** helpers `IsOneOnly77` (A = item → CF: an item of
+  the build — `ItemBaseTable` byte ≠ 0 — with `ItemTable` +3 = 0), `ItemHeld77` (bag or Vault),
+  `OneOnlyHeld77`; **19 `GiveOne`** = the bag write of the script give ops (bank $04, same-size:
+  `$2A` GiveItem 20 B, `$37` GiveStoredItem 20 B, `$54` / `$57` the random gives 21 B, `$5D` the
+  Coliseum prize 22 B — the item in `wOneOnlyItem`, `ld hl, $7713 / rst $10`): a one-only item
+  held → nothing; else the first empty slot; `wOneOnlyRes` 0 = the bag full (op `$5D` returns
+  without the continue, as the game's loop did); **20 `BagFullCheck`** = op `$2C`'s count (bank
+  $04, 19 B: `ld hl, $7714 / rst $10` + nops, then the game's `ld a, c / cp $14`): C = the items
+  up to the first empty slot; with room, `NextGive77` reads the script ahead with the VM's own
+  reader (`ScriptWord77` = MapTypeDispatch's choice: banks $0C / $0D / $0E, bank $60 entry 6 for
+  $40+) — a text = one word, an op = 1 + `ScriptArity77[op]` words (generated from
+  `script_ops.OPS`, `$FF` = the six script-ending ops), op `$2A <item>` / `$37 <n>` (= `[$D9CF +
+  n]`) = the give; the end, `$2C`, a goto `$14`, a script-ending op or 40 words = none — and a
+  one-only item held → its name to `$C180` (`SetupVRAMParams`, mode 8), C := 20 (the "full"
+  branch) and, when that branch's first word is a text, `wOneOnlySay` := 1; **bank $60
+  `TextOverride`** (pinned head) first tests `wOneOnlySay` on a SHOWN text → **22 `OneOnlySay`**:
+  `[$C824]` := $77, `wTextOvrPtr` := `OneOnlyLine`, DE := `wTextOvrPtr` − 2 · `[$C823]` (the S150
+  contract), the mark cleared; **21 `BuyQtyMax`** = bank $09 BUY state 5 (13 B: `ld hl, $7715 /
+  rst $10 / ld de, $498d / ld hl, wPLAN_selection / call FuncFld9_434a` — was `ld b, $02 / ld c,
+  $14` before the call): B = 2, C = 20 or 1 for a one-only item (the item = `$C0D8[$C8E3 · 4 +
+  ($C8E2 & $7F)]`); `ShopFill` falls through to **`ShopDropHeld77`** (a held one-only item off
+  the list, the rest moved up, zeros after the `$FF`); `StoryCommand` give_item: held → `$D8E1`
+  := 0, not held → at most one. `TEMPLATE_SIZE[$77]` 2730 (`ShopPtrTable` `$4AAA`, was 2241),
+  `TEMPLATE_SIZE[$60]` 1842 (`SkillScriptPtrTable` `$4732`, was 1825); both heads re-pinned.
+- **Schema:** `gamedata.item_rules` = `{"already_has": "<box markup>"}` — the line shown instead
+  of a give's "full" words (default `items.DEFAULT_ALREADY_HAS` "{hero} already\nhas a {ins
+  00}." — `{ins 00}` = the item's name, `$C180`); validated (`items.check_rules`: unknown keys,
+  words, markup; a line past 18 cells warns). `gamedata.SECTIONS` + `item_rules`.
+- **Emit:** bank $77 after `ItemBaseTable`: a comment naming the one-only items, `OneOnlyLine`
+  (box-style bytes + `$F0`), `SCRIPT_OPS EQU $66`, `ScriptArity77` (`items.arity_lines`).
+  **`editor2/core/loot.py`** (regions, `emitters._loot_regions`): `gd_floor_loot` (bank $16
+  `FloorLayoutData`'s 48 rows), `gd_rare_chest` (bank $16 `RareChestItems` $6E04),
+  `gd_coliseum_prizes` (bank $04 `ColiseumPrizesLow` / `High` $6F44 / $6F54 — re-sectioned from
+  mgbdis fake code S157, `tools/resection_loot_lists.py`, both trees). A cumulative row
+  (`loot.shares`: c = 0-99, the first non-zero byte ≥ c or = 100) loses its one-only items and
+  their % goes to the row's other items in proportion (`loot.rebuild`: largest remainder, each
+  kept item ≥ 1 %, the last byte 99); a 16-entry list gets the dropped entries replaced by its
+  other items in turn (`replace_list`); none left → the Herb. A table without a one-only item =
+  its original bytes (the example's three regions are).
+- **Warnings:** a Give of 2+ of a one-only item (`Project.story_command`): "the player gets just
+  one, and none when one is held".
+- **The editor:** the Items tab — under Used up a note when the item is one-only (+ `loot.notes`:
+  where it left the gates), "Kept when the party loses a battle" ticked and locked for one; a
+  **One-only items** box (the project's list + the "already has" line, `MarkupField` box style).
+  `Document`: `item_info` + `one_only` / `loot_notes`, `item_rule` / `set_item_rule` (the
+  default removes the key), `one_only_names`. Help `74_items.md`. `EDITOR_REVISION` S157.
+- **Pin:** example `0f341f17…` (patched; was `1051e08f…`, patched): banks $00 (header), $04 (121
+  B, the hooks + the re-sectioned prize lists' labels — bytes unchanged there), $09 (10 B), $60
+  (TextOverride +17 B, the rest shifted), $77 (the head + data) — the example has no one-only
+  item in a loot table, so the regions are the original bytes.
+- **Measured:** `tools/walk_oneonly.py` (PyBoy, the user's `.sav`, `examples/s157_oneonly_demo` =
+  the user's project + the WarpWing permanent + THE AVIARY / THE PERCH): the stall lists the
+  WarpWing / BeastTail when none held, three UPs at how-many confirm 1, exactly one bought for
+  100 G, the next BUY list without it, the Herb still 3 at once; a WarpWing in the Vault only —
+  hidden; the WINGKEEPER (conversation Give) with one held: the text engine shows `OneOnlyLine`
+  (bank $77) and gives nothing, without one: its "got" words + one; the game's Stable dresser
+  (script 15; flags `$0035` on, `$0090` / `$00F1` off): `OneOnlyLine` instead of "Found a WarpWing!
+  But cannot carry …", `$0090` stays clear, without one: "[HERO] got a WarpWing!" + the flag; the
+  NEST's "2 BeastTails" (story command): one, then nothing ("full" words); the BRUISER: the
+  WarpWing kept after the lost battle; 400 maze floors generated by the game (the census_maze rig
+  on this ROM, SetBrd_6db0 / CallBrd_6ddb run on each): 900 floor items, 3,200 chests, 1,600
+  rare-chest slots — no one-only item; the original ROM, the same floors: 43 WarpWings on floors,
+  119 in chests — **28 / 28**; `--negative` (`IsOneOnly77` = `and a / ret`) **14 FAIL**.
+  Seen on screen: "MILLY already / has a WarpWing." (the aviary and the Stable). test_compiler
+  `test_s157` (21: the rule, the loot shares, the regions, the line, the arity table, refusals,
+  the warning, `TEMPLATE_SIZE`, the Document; `--rom`: the hook bytes, the regions in the ROM,
+  `IsOneOnly77` for ids 0-127 / 200 / 255, `ShopDropHeld77`, `GiveOne`, `BuyQtyMax`, `OneOnlySay`
+  on dwm/sm83).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

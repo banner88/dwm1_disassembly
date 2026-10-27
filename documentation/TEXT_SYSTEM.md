@@ -419,6 +419,16 @@ them, measured); how the packed menu-word field messages (`PUT TAKEEXIT`,
 `ITEMGOLDEXIT`, `WHOINFOOKMONEGG`) are cut — NOT measured; the window widths of the
 non-dialogue tables; the debug texts.
 
+
+**S157 (ROADMAP E9, one-only items):** bank $60 `TextOverride` first tests `wOneOnlySay`
+($DED4, set by bank $77 entry 20 `BagFullCheck` when a give of a one-only item the player
+holds takes its "full" branch and that branch starts with a text): on a SHOWN text (not a copy)
+it far-calls bank $77 entry 22 `OneOnlySay`, which serves `OneOnlyLine` (bank $77, the
+project's `gamedata.item_rules.already_has`, default "{hero} already / has a {ins 00}.") exactly
+as an edited text — `[$C824]` := $77, `wTextOvrPtr` := the line, DE := `wTextOvrPtr` − 2 · id —
+and clears the mark. Measured on the user's save (a project conversation and the game's Stable
+dresser): "MILLY already / has a WarpWing." (PROJECT_COMPILER §2.65).
+
 ## Monster text blocks (S108)
 
 The three per-species text blocks (all contiguous, id-ordered, one string per

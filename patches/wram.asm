@@ -787,8 +787,17 @@ wBlunted:: db ;decb — [S155 r5] bit s = battle slot s is BLUNTED (its ATK lowe
                 ;   Blunt; Blunt does not stack: another one fails, the AI skips it).
                 ;   Zeroed by bank $50 BattleInit; cleared per slot when DeMagic /
                 ;   Surge give the ATK back (bank $53 RestoreATK53).
-; [S156] Plunder (BATTLE_SKILL_SYSTEM §13.11). Transient, boot-zeroed. 12 B left, $DED2.
+; [S156] Plunder (BATTLE_SKILL_SYSTEM §13.11). Transient, boot-zeroed. 12 B left, $DED2 (S157: 9 B, $DED5).
 wSteal:: ds 6 ;decc — bank $72 SkillPlunder / ScoreSteal72: +0 the caster, +1 the target
                 ;   (the slot tested), +2 1 = only the buffs the caster lacks, +3 the
                 ;   pick (counts down), +4 the StealTable row, +5 its name's skill id
 
+; [S157] ONE-ONLY items (ROADMAP E9; DATA_STRUCTURES "One-only items (S157)", bank $77
+; entries 19-22). Transient, boot-zeroed. 9 B left, growth starts $DED5.
+wOneOnlyItem:: db ;ded2 — the item a script give op ($2A / $37 / $54 / $57 / $5D, bank $04)
+                ;   hands bank $77 entry 19 GiveOne
+wOneOnlyRes:: db ;ded3 — GiveOne's result: 1 = done (given, or a one-only item already
+                ;   held), 0 = the bag is full (op $5D waits, as the game did)
+wOneOnlySay:: db ;ded4 — 1 = the next SHOWN text is the "already has one" line (set by
+                ;   bank $77 entry 20 BagFullCheck, consumed by bank $60 TextOverride ->
+                ;   bank $77 entry 22 OneOnlySay; cleared at every op $2C)

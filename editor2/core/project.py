@@ -3034,6 +3034,20 @@ class Project:
             rec = _ST.cmd_record(kind, params, ctx, self)
         except _ST.StoryError as ex:
             raise ProjectError(str(ex))
+        if kind == 'give_item' and int(params.get('count', 1) or 1) > 1:
+            # S157 (ROADMAP E9): a one-only item (used up 0 %) comes as ONE (bank $77
+            # StoryCommand give_item), and not at all when the player holds one
+            from . import items as _IT
+            try:
+                oo = _IT.one_only(self, getattr(self, 'repo_root', None))
+            except Exception:                                  # noqa: BLE001
+                oo = set()
+            it = params.get('item')
+            if isinstance(it, int) and it in oo:
+                msg = (f"{ctx}: gives {params.get('count')} of item {it}, a ONE-ONLY item "
+                       "(used up 0 %) — the player gets just one, and none when one is held")
+                if msg not in self.warnings:
+                    self.warnings.append(msg)
         if rec not in self._story_cmds:
             if len(self._story_cmds) >= _ST.STORY_CMD_MAX:
                 raise ProjectError(f"{ctx}: more than {_ST.STORY_CMD_MAX} different story "

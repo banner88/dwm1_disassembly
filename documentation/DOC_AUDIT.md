@@ -1067,3 +1067,13 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | BATTLE_SKILL_SYSTEM §13.10 / PROJECT_COMPILER §2.63 / help 54: "`$EA` Plunder held — refused", "in battle Repel and Plunder do nothing", the AI "Repel / Plunder veto" | ⚠ SUPERSEDED S156 | Plunder is a built-in with its handler, AI rule and pick (§13.11, §2.64) | walk_plunder.py |
 | `custom_skills.TOKENS` (S155): `{name}` in Blunt's result line = `$F9 $00` (it printed the TARGET) | ⚠ SUPERSEDED S156 | at the result render `[INS 20]` = the caster (measured): Blunt's `{name}` = `$F9 $20` now (`RESULT_TOKENS`) | slot log, TEXT_SYSTEM |
 | PROJECT_COMPILER §2.63: "the S155 names spill 28 B" | ⚠ SUPERSEDED S156 | 36 B with Plunder (placed last) | `CS.layout` |
+
+## S157 addendum (2026-10-24; one-only items + the ROADMAP clean-up — ROADMAP E9)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| GATE_GENERATION §5 "Item tier by depth — tier $01 → item id RNG mod $0D + $07; tier $02 → RNG mod $1E + $28. So late gates draw from higher item ranges" | ❌ WRONG | those are GOLD amounts (a floor entry whose sub-kind is `$00`); the item id is the entry's sub-kind, chosen at build time from `FloorLayoutData` | bank $01 `jr_001_5aab` → `jr_001_5b22` adds `wGroundItemData` to the purse; PyBoy floors census S157 |
+| DATA_STRUCTURES "Items (S151)" / ROADMAP E9 "single-slot like BeastTail" open | ✅ ANSWERED S157 | the user's rule = ONE-ONLY (used up 0 % → at most one in bag + Vault, never in the random gates' tables, kept on loss) | user S157; DATA_STRUCTURES "One-only items (S157)" |
+| bank $04 `$6F44-$6F63` mgbdis code (`inc bc / inc b / ld b,$0c …` with a `jr nz, FindEmptySlotLoop`) | ❌ DATA | `ColiseumPrizesLow` / `ColiseumPrizesHigh`, 2 × 16 item ids (op `$5C` reads them) | re-sectioned both trees, `tools/resection_loot_lists.py`, clean `1ca6579…` |
+| ROADMAP boxes S2f, §13.4 follow-ups, S4, S3 [~], S2 [~], M3 [~], E4, E6, A′3, the 4 MB contingency, multi-screen editing [~], B6 / B8 / B9 [~] still open | ⚠ STALE | each already built by a later session (the box now names it) | ROADMAP clean-up S157 (user: "Also clean up roadmaps") |
+| EDITOR_DESIGN §9 G-E "'play this room' from the Rooms tab is still open"; G-F "the network / unlock half stays open" | ⚠ STALE | ▶ Play here S132 (P3.4); NG2 / NG3 / P3.14d / CAP3 built the network | ROADMAP P3.4, ARC NG, P3.14d, CAP3 |

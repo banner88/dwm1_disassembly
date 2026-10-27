@@ -4227,13 +4227,16 @@ jr_001_5aa0:
     ld h, a
     jr jr_001_5a7f
 
-jr_001_5aab:
+jr_001_5aab:                     ; S157: the player stands on a floor item ($D793 list entry)
     xor a
     ld [$c92e], a
     pop hl
     inc hl
     ld a, [hl]
-    ld [$d78f], a
+    ld [$d78f], a                 ;   $D78F := its SUB-KIND: $FF nothing, $00 GOLD (below:
+                                  ;   the amount by wBossTileset tier — NOT an item tier,
+                                  ;   DOC_AUDIT S157), else the ITEM ID (Jump_001_5b43:
+                                  ;   into the first empty bag slot)
     dec hl
     cp $ff
     jp z, Jump_001_5b57

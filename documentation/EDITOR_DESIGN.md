@@ -1843,6 +1843,15 @@ session". A tab before Shops.
   conversation stops here / carry on with the steps below" (`on_full`, default stop); the
   step's line ends "— no room: stop here".
 
+**S157 (ROADMAP E9 — one-only items; built, PyBoy-verified, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works")):** an item
+used up 0 % shows a note under **Used up** — permanent = ONE-ONLY (at most one in the bag +
+Vault, shops hide a held one and sell one at a time, a give of one held shows the "already
+has" line, never in the random gates' tables, always kept after a lost battle) + where it left
+the gates (`loot.notes`); **Kept when the party loses a battle** is ticked and locked for it; a
+**One-only items** box at the bottom: the project's one-only items and the **"already has"
+line** (`MarkupField` in box style, the game-font picture; `{ins 00}` = the item, `{hero}`;
+empty / the default = `gamedata.item_rules` removed). PROJECT_COMPILER §2.65.
+
 ### 5.6c Services tab (as built S126 — ROADMAP P3.14e1; built, PyBoy-verified, NOT yet user-tested)
 
 `app/services_tab.py`, model `core/services_doc.py` (`ServicesMixin`), compiler
@@ -2653,8 +2662,8 @@ row is click-navigable (§5.0).
 | G-B | NPC sprite-id catalog | ✅ CLOSED S91: `extracted/npc_sprite_catalog.json` + sheet + per-id crops (`npc_field_sprites/`), tools/dump_npc_sprite_catalog.py; classes/names hand-curated in npc_names.json. No id crashes ($11-crash was custom-room context); $23 = boss-composite fragment; aliases $4E/$4F/$F0-$F3 → $00. ROOM_DATA_FORMAT S91 section owns the facts |
 | G-C | Encounters #2 — custom monster pools in a free bank | ✅ CLOSED S114 (test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): the project's own lists 128-255 in bank $76, chosen by `EncResolve` behind a same-size bank $01 fork (PROJECT_COMPILER §2.30; DATA_STRUCTURES "Encounter list choice (S114)") |
 | G-D | Layer A-lite `gamedata` emitters + readers (monsters/skills/breeding/encounters; port randomizer `romdata.py`) | ROADMAP P3.9 — **CLOSED S103** (backend; GUI = P3.10-P3.13) |
-| G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ROADMAP P3.4 — the cutscene Playback window (S118, §5.1d) is this widget for scenes (cached base state, recipe, Qt blit, sound, keys); "play this room" from the Rooms tab is still open |
-| G-F | E4 gate-network / world-hub schema | ROADMAP Phase E (design item; World tab ships without it). S115: gate NUMBERS beyond 32 exist (NG1 — `custom.gates[]` 32-95, gate-entrance exits); the network / unlock half stays open (ARC NG NG2 / NG3) |
+| G-E | Embedded PyBoy preview widget (cached savestate → warp → Qt blit + input) | ✅ CLOSED S132 (ROADMAP P3.4: ▶ Play here from the Rooms tab, USER-CONFIRMED 2026-10-09); the cutscene Playback window (S118, §5.1d) is this widget for scenes |
+| G-F | E4 gate-network / world-hub schema | ✅ CLOSED (ROADMAP E4 ticked S157): new gates 32-95 (NG1 S115), entrances + unlocks (NG2 S117), worlds (NG3 S123), the hub + world rules (P3.14d S125-S129), regions (CAP3 S140) |
 | G-G | First-class `states[]` (step-counter variants) in the custom-room schema | ✅ CLOSED: schema/emitter S92 (PROJECT_COMPILER §2.10); GUI state switcher + add/duplicate/own-layout/remove S93 (ROADMAP P3.3) |
 | G-H | Cutscene storyboard model over compile/decompile_script | 🟢 read + display + play BUILT S118 (§5.1d; `editor2/core/cutscenes.py` / `script_ops.py` / `playback.py`), NOT yet user-tested; authoring = ROADMAP P3.8 part B |
 | G-I | Music audition harness (PyBoy play-song) | ✅ CLOSED S116 (built, NOT yet user-tested) — not PyBoy: the game's own sequencer on the editor's SM83 interpreter + a synth (SOUND_SYSTEM §9), streamed in the Music tab (§5.6 "As built S116") |

@@ -1824,10 +1824,14 @@ CallFld9_4915:
     ret
 
 
+    ; S157 (ROADMAP E9, one-only items): SAME-SIZE (13 B) — the how-many window's limits
+    ; come from bank $77 entry 21 BuyQtyMax: B = 2 digits, C = 20 (the game's `ld b, $02 /
+    ; ld c, $14`) or 1 for a one-only item (record +3 = 0; the player holds none — the
+    ; shop's list drops it while one is held, bank $77 ShopFill).
+    ld hl, $7715                ; bank $77 entry 21 BuyQtyMax
+    rst $10
     ld de, $498d
     ld hl, wPLAN_selection
-    ld b, $02
-    ld c, $14
     call FuncFld9_434a
     ld a, [wJoypad_current_frame]
     bit 1, a

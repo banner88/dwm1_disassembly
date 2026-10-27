@@ -51,9 +51,10 @@ class MarkupField(QWidget):
     the status and Apply. The rule (EDITOR_DESIGN §5.0 "Game text"): no game words in a
     plain text edit without the game's picture."""
 
-    def __init__(self, tab, width, height, on_apply, tip=''):
+    def __init__(self, tab, width, height, on_apply, tip='', style='rows'):
         super().__init__()
         self.tab, self.width_cells, self.on_apply = tab, width, on_apply
+        self.style = style                      # S157: 'box' for a dialogue line
         self.markup = ''
         h = QHBoxLayout(self)
         h.setContentsMargins(0, 0, 0, 0)
@@ -91,13 +92,13 @@ class MarkupField(QWidget):
         txt = self.text()
         rom = getattr(getattr(self.tab.s, 'renderer', None), 'rom', None)
         try:
-            raw = TM.encode(txt, 'rows') if txt else b''
+            raw = TM.encode(txt, self.style) if txt else b''
             err = None
         except ValueError as ex:
             raw, err = None, str(ex)
         if raw is not None:
             if txt:
-                self.pic.setPixmap(render(rom, raw, 'rows', self.width_cells))
+                self.pic.setPixmap(render(rom, raw, self.style, self.width_cells))
             else:
                 self.pic.clear()
             self.status.setStyleSheet('color: #2a7a2a;')
@@ -197,6 +198,11 @@ class ItemsTab(QWidget):
         self.consume.editingFinished.connect(lambda: self._field('consume',
                                                                  self.consume.value()))
         f.addRow('Used up', self.consume)
+        # S157 (ROADMAP E9): used-up 0 = permanent = ONE-ONLY
+        self.one_only = QLabel('')
+        self.one_only.setWordWrap(True)
+        self.one_only.setStyleSheet('color: #e0b050;')
+        f.addRow('', self.one_only)
         self.field_use = QCheckBox('Can be used from the field menu')
         self.field_use.setToolTip('Off: "… uses the X as a tool. But nothing happens." '
                                   '(a key item)')
@@ -262,6 +268,21 @@ class ItemsTab(QWidget):
         self.b_note = QLabel('')
         self.b_note.setWordWrap(True)
         f.addRow('', self.b_note)
+        bv.addWidget(g)
+
+        # S157 (ROADMAP E9): the one-only items — a project-wide line
+        g = QGroupBox('One-only items (used up 0 %)')
+        f = QFormLayout(g)
+        self.oo_list = QLabel('')
+        self.oo_list.setWordWrap(True)
+        f.addRow('This project', self.oo_list)
+        self.oo_line = MarkupField(
+            self, 18, 54, self._rule_done,
+            'Shown instead of a give\'s "bag full" words when the player already holds a '
+            'one-only item (the game\'s scripts and yours). {ins 00} = the item\'s name, '
+            '{hero} = the hero; a new line = the next line of the box. Empty + Apply = the '
+            'default.', style='box')
+        f.addRow('"Already has" line', self.oo_line)
         bv.addWidget(g)
 
         self.uses = QLabel('')
@@ -373,11 +394,29 @@ class ItemsTab(QWidget):
         self.sell.setText(f"{info['sell']} G" if f['sellable'] else '— (not on the SELL list)')
         self.sellable.setChecked(f['sellable'])
         self.keep.setChecked(f['keep_on_loss'])
+        # S157: a permanent item is always kept after a lost battle (the compiler sets it)
+        self.keep.setEnabled(not info['one_only'])
+        self.keep.setToolTip('A permanent item (used up 0 %) is always kept.'
+                             if info['one_only'] else '')
+        if info['one_only']:
+            self.one_only.setText(
+                'Permanent = ONE-ONLY: the player holds just one (the bag and the Vault '
+                'together). Shops hide it while one is held and sell one at a time; a give '
+                'of one already held shows the "already has" line (below); it never lies on '
+                'random gate floors, in their chests or as a Coliseum prize; it is always '
+                'kept after a lost battle.' +
+                ''.join('\n• ' + n for n in info['loot_notes']))
+            self.one_only.show()
+        else:
+            self.one_only.hide()
         for w, key in ((self.power, 'power'), (self.consume, 'consume'),
                        (self.price, 'price')):
             w.setStyleSheet('color: rgb(255,200,80);' if f[key] != van[key] else '')
         self._set_line_combo(self.use_line, f['use_message'], info['use_text'])
         self._set_line_combo(self.result_line, f['result_message'], info['result_text'])
+        oo = self.s.doc.one_only_names()
+        self.oo_list.setText(', '.join(f'{n} ({i})' for i, n in oo) or 'none')
+        self.oo_line.set(self.s.doc.item_rule('already_has'))
         self.own_use.set(info['use_text'] or '', new)
         self.own_result.set(info['result_text'] or '', new)
         b = info['battle']
@@ -441,6 +480,12 @@ class ItemsTab(QWidget):
             return
         n = cb.currentData()
         self._field(key, n)
+
+    def _rule_done(self, txt):
+        """S157: the one-only "already has" line (gamedata.item_rules.already_has)."""
+        def do(d):
+            d.set_item_rule('already_has', txt)
+        self._push('"already has" line', do)
 
     def _own(self, which, text):
         if self._building or self.info is None:

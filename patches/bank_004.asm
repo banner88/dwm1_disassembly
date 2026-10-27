@@ -4123,27 +4123,26 @@ ScriptCmd2A_GiveItem:
     adc $00
     ld [$d8d6], a
     call MapTypeDispatch
-    ld hl, wInventory
-    ld b, $14
-
-CheckEmptySlot:
-    ld a, [hl]
-    or a
-    jr z, WriteItemToSlot
-
-    cp $ff
-    jr z, WriteItemToSlot
-
-    inc hl
-    dec b
-    jr nz, CheckEmptySlot
-
+    ; S157 (ROADMAP E9, one-only items): SAME-SIZE (20 B) — the bag write is bank $77
+    ; entry 19 GiveOne (a one-only item the player already holds is not given again;
+    ; else the first empty slot, as the loop here did: CheckEmptySlot /
+    ; WriteItemToSlot, see disassembly/).
+    ld a, c
+    ld [wOneOnlyItem], a
+    ld hl, $7713                ; bank $77 entry 19 GiveOne
+    rst $10
     ret
-
-
-WriteItemToSlot:
-    ld [hl], c  ;loads item into empty inventory slot from treasure chest [MAY BE MORE]
-    ret
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 ScriptCmd2B_IfMonsterPedigree:
     ld a, [wScriptCounter]
@@ -4229,21 +4228,28 @@ ScriptCmd2C_IfBagFull:
     ld a, [$d8d6]
     adc $00
     ld [$d8d6], a
-    ld hl, wInventory
-    ld b, $14
-    ld c, $00
-
-CheckNextSlot:
-    ld a, [hl+]
-    or a
-    jr z, CheckSlotCount14
-
-    cp $ff
-    jr z, CheckSlotCount14
-
-    inc c
-    dec b
-    jr nz, CheckNextSlot
+    ; S157 (ROADMAP E9): SAME-SIZE (19 B) — the count (CheckNextSlot's loop, see
+    ; disassembly/) is bank $77 entry 20 BagFullCheck: C = the items up to the first
+    ; empty slot, or 20 when the script's next give is of a one-only item the player
+    ; already holds (then its "full" branch runs — its first text shows the "already
+    ; has one" line: wOneOnlySay, bank $60 TextOverride).
+    ld hl, $7714                ; bank $77 entry 20 BagFullCheck
+    rst $10
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
 CheckSlotCount14:
     ld a, c
@@ -4746,26 +4752,25 @@ ScriptCmd37_GiveStoredItem:
     adc h
     ld h, a
     ld c, [hl]
-    ld hl, wInventory
-    ld b, $14
+    ; S157 (ROADMAP E9): SAME-SIZE (20 B) — the bag write is bank $77 entry 19 GiveOne
+    ; (CheckMonsterSlotEmpty's loop, see disassembly/); C = the item, kept for its name.
+    ld a, c
+    ld [wOneOnlyItem], a
+    push bc
+    ld hl, $7713                ; bank $77 entry 19 GiveOne
+    rst $10
+    pop bc
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
-CheckMonsterSlotEmpty:
-    ld a, [hl]
-    or a
-    jr z, WriteMonsterToSlot
-
-    cp $ff
-    jr z, WriteMonsterToSlot
-
-    inc hl
-    dec b
-    jr nz, CheckMonsterSlotEmpty
-
-    jr SetupMonsterHL
-
-WriteMonsterToSlot:
-    ld [hl], c
-
+    nop
 SetupMonsterHL:
     ld l, c
     ld h, $08
@@ -5815,26 +5820,26 @@ ScriptCmd54_GiveRandomItem:
     call Div8x8
     inc a
     ld c, a
-    ld hl, wInventory
-    ld b, $14
-
-CheckSlotHL:
-    ld a, [hl]
-    or a
-    jr z, WriteAndSetupHL
-
-    cp $ff
-    jr z, WriteAndSetupHL
-
-    inc hl
-    dec b
-    jr nz, CheckSlotHL
-
-    jp Jump_004_55f5
-
-
+    ; S157 (ROADMAP E9): SAME-SIZE (21 B) — the bag write is bank $77 entry 19 GiveOne
+    ; (CheckSlotHL's loop, see disassembly/); the name setup below now runs on a full bag too.
+    ld a, c
+    ld [wOneOnlyItem], a
+    push bc
+    ld hl, $7713                ; bank $77 entry 19 GiveOne
+    rst $10
+    pop bc
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 WriteAndSetupHL:
-    ld [hl], c
     ld l, c
     ld h, $08
     ld de, $c180
@@ -5931,26 +5936,26 @@ ScriptCmd57_GiveRandomItem2:
     call Div8x8
     add $13
     ld c, a
-    ld hl, wInventory
-    ld b, $14
-
-CheckSlotHLB:
-    ld a, [hl]
-    or a
-    jr z, WriteAndSetupHLB
-
-    cp $ff
-    jr z, WriteAndSetupHLB
-
-    inc hl
-    dec b
-    jr nz, CheckSlotHLB
-
-    jp Jump_004_55f5
-
-
+    ; S157 (ROADMAP E9): SAME-SIZE (21 B) — the bag write is bank $77 entry 19 GiveOne
+    ; (CheckSlotHLB's loop, see disassembly/); the name setup below now runs on a full bag too.
+    ld a, c
+    ld [wOneOnlyItem], a
+    push bc
+    ld hl, $7713                ; bank $77 entry 19 GiveOne
+    rst $10
+    pop bc
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 WriteAndSetupHLB:
-    ld [hl], c
     ld l, c
     ld h, $08
     ld de, $c180
@@ -6321,12 +6326,12 @@ ColiseumCallAndRead:
     call FuncScr_6eb3
     ld hl, $d7ca
     call SaveScr_6e41
-    ld hl, $6f44
+    ld hl, ColiseumPrizesLow    ; S157 (was $6f44)
     ld a, [$d9cf]
     cp $09
     jr c, ColiseumRNGPrize
 
-    ld hl, $6f54
+    ld hl, ColiseumPrizesHigh   ; S157 (was $6f54)
 
 ColiseumRNGPrize:
     push hl
@@ -6513,34 +6518,16 @@ SaveScr_6f35:
     ret
 
 
-    inc bc
-    inc b
-    ld b, $0c
-    dec d
-    rla
-    jr @+$1b
-
-    ld a, [de]
-    dec de
-    inc e
-    dec h
-    ld a, [de]
-    dec de
-    inc e
-    dec h
-    dec c
-    ld c, $0f
-    db $10
-    ld de, $1e12
-    rra
-    jr nz, FindEmptySlotLoop
-
-    ld [hl+], a
-    inc hl
-    jr nz, @+$23
-
-    ld [hl+], a
-    inc hl
+; ColiseumPrizesLow / ColiseumPrizesHigh ($04:$6F44 / $6F54; re-sectioned S157 — mgbdis
+; decoded them as code): the gate Coliseum's prize. Op $5C ColiseumInitPrize picks the
+; LOW list when [$D9CF] < 9, else the HIGH one, row wRNG1 & 15 -> [$D9D0]; op $5D
+; (ScriptCmd5D_GiveColiseumPrize) gives it after the win. 16 rows each, 1/16 a row.
+; @BUILD_PROJECT BEGIN gd_coliseum_prizes
+ColiseumPrizesLow:
+    db $03, $04, $06, $0c, $15, $17, $18, $19, $1a, $1b, $1c, $25, $1a, $1b, $1c, $25   ; SageStone WorldDew ElfWater WorldLeaf Rib Sirloin BoltStaff WindStaff MistStaff LavaStaff SnowStaff FireStaff MistStaff LavaStaff SnowStaff FireStaff
+ColiseumPrizesHigh:
+    db $0d, $0e, $0f, $10, $11, $12, $1e, $1f, $20, $21, $22, $23, $20, $21, $22, $23   ; LifeAcorn MysticNut AtkSeed DefSeed AglSeed IntSeed TinyMedal QuestBk HorrorBk BeniceBk CheaterBk SmartBk HorrorBk BeniceBk CheaterBk SmartBk
+; @BUILD_PROJECT END gd_coliseum_prizes
 
 ScriptCmd5D_GiveColiseumPrize:
     ld a, [$d9d0]
@@ -6548,29 +6535,23 @@ ScriptCmd5D_GiveColiseumPrize:
     ld h, $08
     ld de, $c180
     call SetupVRAMParams
-    ld hl, wInventory
-    ld b, $14
-
-FindEmptySlot:
-    ld a, [hl]
-    or a
-    jr z, WriteToEmptySlot
-
-    cp $ff
-    jr z, WriteToEmptySlot
-
-    inc hl
-    dec b
-
-FindEmptySlotLoop:
-    jr nz, FindEmptySlot
-
-    ret
-
-
-WriteToEmptySlot:
+    ; S157 (ROADMAP E9): SAME-SIZE (22 B) — the bag write is bank $77 entry 19 GiveOne
+    ; (FindEmptySlot's loop, see disassembly/); a full bag returns without the continue,
+    ; as the game's loop did (the op runs again).
     ld a, [$d9d0]
-    ld [hl], a
+    ld [wOneOnlyItem], a
+    ld hl, $7713                ; bank $77 entry 19 GiveOne
+    rst $10
+    ld a, [wOneOnlyRes]
+    and a
+    ret z
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     jp Jump_004_55f5
 
 

@@ -23,6 +23,26 @@ the gate. The blue line says what that code does with the item's **Power**:
 game's usual), 0 % = never — a permanent item (e.g. a WarpWing that is never
 used up), 50 % = one time in two ("The Feather falls apart!" when it breaks).
 
+**Permanent = ONE-ONLY.** An item that is used up 0 % (the game's BeastTail
+and ShinyHarp, and any item you set to 0 %) can be held only ONCE — the bag
+and the Vault together:
+
+- a shop does not list it while the player holds one, and sells one at a time
+  (the "how many?" window stops at 1);
+- a give of it when one is held gives nothing and shows the **"already has"
+  line** instead of the "bag full" words — in the game's own scripts too (the
+  Stable dresser keeps its WarpWing for later). Edit that line in the
+  **One-only items** box at the bottom: `{ins 00}` = the item's name, `{hero}`
+  = the hero. A Give of 2 or more of a one-only item gives just one (the build
+  warns);
+- it never lies on a random gate floor, in a treasure chest of the random
+  gates, in the rare chest or as a gate Coliseum prize — its share goes to the
+  other items of the same table (the panel lists where it was);
+- it is always **kept when the party loses a battle** (that box is ticked and
+  locked).
+
+Your own hand-made rooms and worlds give what you put there.
+
 **Can be used from the field menu** — off makes a key item: "… uses the
 OldKey as a tool. But nothing happens." **Asks which monster** — the WHO box
 before the effect (off for items that act on the whole party or nobody).
@@ -58,4 +78,4 @@ cutscene, ask for them in a story check or a quest.
 Special cases: the Medal Man counts only the game's TinyMedal, and the gate
 map's compass is the game's BeastTail's only — an item working like those
 works in the bag, without those extras. The gate-floor chests give the
-game's items only.
+game's items only (never a one-only one).

@@ -7238,3 +7238,32 @@ does not own (bank $04 arena masters, bank $56 skill-text addresses, bank $04D a
 raw `dw $60BC`). **Rule (S153, kept):** after `--apply`, restore HEAD's text for every region
 whose code (comments stripped) is unchanged and that the session's change does not own; only
 the owned regions' new comments travel.
+
+### S157 — the "got" text comes BEFORE the give: decide at the bag check
+**Symptom:** the plan for "a give of a one-only item already held shows its own line" put the
+test in op `$2A` (the give) — but the game's WarpWing gives say "Got a WarpWing." / "[HERO] got
+a WarpWing!" BEFORE the `$2A` (Castle script 6, the Stable dresser script 15): a refusal at the
+give would follow the "got" words. **Root cause:** the script's only decision point is op
+`$2C` (bag full → its branch), which runs before the text; `$2A` has no branch. **Fix:** op
+`$2C`'s count (bank $77 `BagFullCheck`) reads the script ahead for its next give (the VM's own
+reader + the op arities) and takes the "full" branch; that branch's first text becomes the
+line (the text hook). **Rule:** to change what a script SAYS about an action, find the op that
+DECIDES the branch (decode the script — `cutscenes.decode_vanilla` — before designing), not the
+op that performs the action.
+
+### S157 — event flag bits are MSB-first
+**Symptom:** the walk's "flag $0090 clear" left the dresser's flag set and read another bit;
+the dresser took a different branch on the next run. **Root cause:** the walk used `1 << (n %
+8)`; the game's mask table (ROM0 `$26D5`) is `$80 $40 … $01` — bit `$80 >> (n % 8)`. **Fix:**
+`walk_oneonly.flag` / `set_flag` use the table's order. **Rule:** a harness reading or writing
+an event flag uses `$D99B + n / 8` with mask `$80 >> (n % 8)` (EVENT_FLAGS), never the low bit
+first.
+
+### S157 — a doc's label for a variable is a claim: follow the value to its use
+**Symptom:** GATE_GENERATION §5 said deeper gates "draw from higher item ranges" (`RNG mod 13 +
+7`, `RNG mod 30 + 40`) — it would have put the one-only filter at the wrong place. **Root
+cause:** the numbers are written to `wGroundItemData` and ADDED TO THE PURSE (`jr_001_5b22`):
+they are the gold of a gold pickup; the item id is the floor entry's sub-kind, chosen when the
+floor is built. **Fix:** corrected (DOC_AUDIT S157); the filter is on the build-time tables.
+**Rule:** before relying on "X is the item / amount / id", follow the register to its store and
+the store to its reader.

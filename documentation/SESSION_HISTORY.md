@@ -1,5 +1,119 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-19 (Session 155 — **ROADMAP E11 BUILT: SIX NEW BUILT-IN CUSTOM SKILLS — REPEL (THE REPELLANT AS A
+> FIELD SKILL: ONE GATE FLOOR, OR A ROOM UNTIL THE PARTY LEAVES), LONEWOLF (×2 IN A PAIR / ×4 ALONE), PUNISH (+50 % PER BUFF),
+> FINISH (×0.2 AT FULL HP → ×2 NEAR 0), RUPTURE (×3, BURSTS EVERY AILMENT; NONE → FAILS, MP SPENT), RUST (ATK − 50 % OF BASE,
+> FLOOR 1; DEMAGIC / SURGE RESTORE) — PERCENTAGES + RESULT LINES EDITABLE, ONE FOE / ALL FOES, THE ENEMY AI USES THEM (RULES +
+> A SKILL-AWARE TARGET PICK), THE BALANCE SIMULATOR MODELS THEM; PLUNDER HELD FOR S156** (kickoff: "New custom skill
+> functionality added and integrated with everything - editor, balance calculator for romhack (doesnt touch vanilla), AI,
+> etc." + Repel/RepelAll, LoneWolf, Plunder, Punish, Finish, Rupture, Rust → the scope + questions → user: "Why not custom
+> skills? … distinct separate custom skills with logic"; "repel as a one-level is fine, just mimics item"; "16 new slots is
+> entirely acceptable for me, more is a bonus … Exclude iron and transform … Once per buff … Finish … from 0.2x to 2x
+> (editable) … 300% … any debuff counts … consume all … Fail with mp spent … floor 1 … Yes patch … Offer both … Steal 1 at
+> random … Lasts once per gate floor"). **Built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM).** Test ROM **`DWM-S155-skills-test.gbc`**
+> (`ce83780f…`, patched) = the user's project + THE WOLF DOJO / THE WOLF DEN (`examples/s155_dojo_demo/build_demo.py`; way
+> in: the DOJO GUIDE, Cities_FOUNT (3, 4); the user's save CONTINUEs in the dojo — it was made in the S154 hall, map $77).
+> Example pin `8ef5311a…` (patched; was `eb283a19…`, patched).
+> **Ids:** `$DE` Repel / `$DF` LoneWolf (the retired S45 POCs' ids; bank $50 `AliasCommit` neutralized), `$EA` Plunder
+> HELD (refused), `$EB-$EE` Punish / Finish / Rupture / Rust; NEW skills a project adds = 239-254 (`$EF-$FE`, 16; were
+> 234-254 — a project with one at 234-238 must re-make it). BATTLE_SKILL_SYSTEM §13.10, PROJECT_COMPILER §2.63.
+> **Built (engine):** bank $72 `NewDispatch72` (a bank-$52 address in WRAM `wCustomJump`, which `FarSkillFork` returns:
+> LoneWolf / Punish / Finish / Rupture → `MournDispatch52` = the ATK-vs-DEF roll; Rust / Repel / Plunder → the no-damage
+> path), the handlers + `DamagePct72` (min 999, ≥ 1 on a landed hit), `MulPct72` exact, `BuffTable` (17 buffs: the
+> game's DeMagic set minus iron / transform + the stances), `RustRoll72` (Sap's roll, resistance 12), the result lines
+> (bank $4C `LoadB4c_CustomLine`, `wCustomLine`; `{target}` / `{amount}`), entries 8 `CustomAIRule72` (bank $57 NEW patch
+> file: `CustomAI57` at the chain end) / 9 `CustomTargetPick72` (bank $58 row `$F0`) / 10 `RepelCommit72` (bank $73),
+> `RepelField72` + `EncountersHere72` (bank $07 `Repel07Post`, bank $14's tail; `$C93E` bit 1); bank $53 DeMagic / Surge
+> restore ATK; bank $06 learning from `$DE`; WRAM $DEBE-$DEC8. Region `gd_custom_pcts` NEW (21 regions).
+> **Built (compiler + editor + simulator):** `custom_skills.py` (`PCT_KEYS`, `RESULT_LINES`, `TARGET_CHOICE`, `PLANNED`,
+> the S155 rows in custom_skills.json); Skills tab: the percentage boxes (×N label), the result line (3 pages × 2), the
+> Target box with just one foe / all foes; NEW `simulator/skillfx/s155_custom.py` + `ai_rules.CUSTOM_RULES` + the picks;
+> `balance.py` passes the percentages / target rows to the board. **FIXED:** the Balance simulator never saw `quake_power`
+> edits (it read `extras['quake_power']`; `resolve` returns `'quake'`). Help `54_skills.md`; `EDITOR_REVISION` S155.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_skills.py` on the demo): 28 / 28 checks**; `--negative` (the five handlers +
+> `CustomAIRule72` = `ret`, Repel never matched) **15 FAIL** (every effect, the LONE WOLF / BURSTER casts, Repel; the
+> gifts, the battle starts, the RUST KNIGHT's casts pass). Numbers: LoneWolf pair 4 → 8, enemy alone 7 → 28 (line 1); Punish 0 buffs 4 → 4,
+> 2 buffs → 8 (line 2); Finish full HP → 1, 100 / 999 HP 4 → 7 (line 3); Rupture poison + StopSpell 4 → 12 (line 4), both
+> cleared, none → "But nothing happens!"; Rust −9, −9, then `$BB` at ATK 1; DeMagic 1 → 19, Surge 1 → 12; the gifts carry
+> the skills; the LONE WOLF casts LoneWolf alone, the BURSTER Rupture on a poisoned party monster, the RUST KNIGHT Rust;
+> Repel in the WOLF DEN: `$C93E` 2, MP −4, 0 battles in 150 steps, a 2nd cast fizzles, leaving clears it, battles return,
+> Cities_FOUNT fizzles (no MP). Earlier (scratch rigs): the all-foes LoneWolf hits 3 victims; the AI with INT 100 vetoes
+> Rupture without an ailment and targets the poisoned / buffed / strongest slot; Finish when the party is hurt.
+> **Found on the way + fixed before delivery:** the caster at a handler is `$DB88` (`$DB77` reads `$FF` there — LoneWolf
+> showed ×2 for a lone enemy); a low-INT enemy never runs the rule chains (`$DD0B` 0); `wRoomEncFlag` is stale until the
+> first step in a room (Repel accepted in Cities_FOUNT right after the den — `EncountersHere72` asks bank $71 entry 1);
+> the six names spill 27 B into the new-species name extents: 19 maxed species are now 1 B over (two names a letter
+> shorter fit; `species._pack` exact up to 48 strings with a step budget); the S111 FarSkillFork / learn tests moved to
+> 239 / `$DE`. KEY_LESSONS S155.
+> **Checks:** verify_integrity PASS (`audit_mapid_range` + the three S155 sites, CROSSBANK_ROOMS "S155 sites"; the balance anchor
+> re-tagged: its raising digest changed ONLY by the six S155 records — none learnable, in no original enemy row — proven
+> by recomputing without them = the old `879a8933…`; `build_balance_anchor --selftest` re-derived 3 fights + 1 dive + 2
+> player fights == the JSON); test_compiler `--rom` ALL 1743 PASSED (+ `test_s155_sim` 15, the S111 tests for
+> the new ids, the blank project's extents = the original but the S155 strings); test_app `--rom` PASS (63 OK; exit 139 after PASS — the known S153 teardown crash) (+ the S155
+> Skills-tab block; this container's QtMultimedia segfaults in `QMediaDevices`, so the song player's probe was stubbed by a
+> wrapper — not an editor change); test_canvas `--rom` PASS (58 OK, the same stub); the simulator validators f7 / f10 / rules / f10_rules
+> unchanged (0 mismatches). **Next:** the user's test of the ROM (the GIFT MASTER's monsters in battle and in the field,
+> the three sparring bosses, Repel in the WOLF DEN, the Skills tab's new boxes); then E12 Plunder (S156).
+> **r2 (the user on the S155 ROM, 2026-10-20 16:13: "'A lone wolf's fury!' Should NOT coincide with damage sound but
+> precede it. The damage sound and screen shake (when I am attacked) should coincide with 'X takes y damage'. This should
+> be the same for all custom skills, here and elsewhere. 'It goes in for the kill' also should PRECEDE the slash on enemy
+> not come after. It should be there WHILE slash is happening. Otherwise all seems fine"):** measured first (a frame log:
+> message renders, visuals, the damage sound, the hit reaction, SCY / hFFBB, screenshots every 4 frames): r1 put the line
+> on page 1 of the HIT message, which the engine renders on the frame of the damage sound and the hit reaction (slash
+> f+86-118, line + sound f+121, "takes 8 damage" f+186). **Built:** bank $72 `LineSlot72` (QuakeAnimHold72's head) renders
+> the bonus line on the first `$da82` gate poll of the announce slot (`SlashLine72`: the handler's own tests; `FinishPct72`
+> split out), the handlers no longer touch `$dd70`: announce → the line (it stays) → the attack animation under it → the
+> game's own "takes … damage pts!" with the sound and the shake on one frame (party LoneWolf: line f+46, animation f+107,
+> sound + text f+157; enemy LoneWolf: shake f+113-129 with "receives" f+109). `[INS 00]` at the slot = the USER (measured),
+> so the four lines are one page with `{name}`; `{target}` / `{amount}` refused (Rust keeps its result line). **The rule
+> applied to the older customs:** MagicBurn / Mourn / Tame / the first Quake victim measured compliant; FIXED the Quake
+> crossover — the ally's sound + the party's shake played under the "allies are caught" banner, 84 frames before "PX
+> receives …": bank $53 `QuakeHitLate53` / `QuakeLateFire53` hold them to the text's frame (banner f+136, sound + shake +
+> text f+220). WRAM `wLineShown` $DEC9 / `wQuakeHitLate` $DECA. Editor: the line box is one page for the four; help 54;
+> `EDITOR_REVISION` S155r2. Example pin `6904f81d…` (patched; r1 `8ef5311a…`, patched). **Walk:** `tools/walk_skills.py`
+> **29 / 29** (the `numbers` checks now test the beats: the line before the attack animation, the damage sound on the hit
+> message's frame; + the Tremor crossover), `--negative` (+ `SlashLine72` = ret) **16 FAIL**. **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1748 PASSED (+ 5 S155 r2 checks); test_app `--rom` PASS (63 OK, exit 0; + the one-page line box); test_canvas `--rom` PASS (58 OK) — both with the audio-probe stub of r1. Test ROM
+> **`DWM-S155r2-skills-test.gbc`** (`480612e6…`, patched).
+> **r3 (the user on the r2 ROM: "I would prefer it displayed the text regardless of whether threshold is reached or not -
+> so the user can see what the skill is trying to do. At least give me this option in the editor. Otherwise it just looks
+> like normal attack."; a WingSnake: "BURNS HALF OF ITS MP! A HUGE BURST OF … - NOTHING HAPPENS. Is this normal? Should it
+> know manaburn?"; "Also please call rust 'blunt'."):** **Built:** bank $72 `LineAlways72` at `SlashLine72`'s head reads
+> `CustomLineAlways` (1 B appended to region `gd_custom_pcts`; bits 0-3 LoneWolf / Punish / Finish / Rupture; default
+> `%00001111` = the line on EVERY cast); project key `line_shows` ("always" / "bonus" = the r2 behaviour), the Skills tab's
+> "Show it" combo, help 54. **The WingSnake:** it did not know MagicBurn — the battle-message table's `$FD` row
+> (`$4c:$4213`) had named MagicBurn's line since S2d ("dead since S2e" — not so: after the poison tick `$E1` the game renders
+> a stock `$FD` through `LoadB4c_Fork_stockfd`), so every poisoned monster "burned half its MP"; the row is the vanilla
+> `$5F6C` (empty) again (KEY_LESSONS S155 r3, DOC_AUDIT). **Blunt:** skill 238's name + label (custom_skills.json; the
+> code keeps the Rust labels); the S155 names now spill 28 B (the 19-species maximum 2 B over; the test shortens three
+> names); demo BLUNTER / BLUNT KNIGHT. `EDITOR_REVISION` S155r3. Example pin `35133b67…` (patched; r2 `6904f81d…`,
+> patched). **Walk:** `tools/walk_skills.py` **30 / 30** (Punish without a buff, Finish at full HP, a failing Rupture: the
+> line first; the poison tick's stock `$FD` reads `$F0` at `$5F6C`), `--line-bonus` (the byte 0 in the ROM copy) **30 / 30**
+> (the r2 expectations), `--negative` (+ the old `$FD` row) **18 FAIL**. **Checks:** test_compiler `--rom` ALL 1753 PASSED
+> (+ 5 line_shows / Blunt checks); test_app `--rom` PASS (63 OK; exit 139 after PASS — the known teardown crash; + the "Show it" combo); test_canvas `--rom` PASS (58 OK); verify_integrity PASS; `extract_custom_skills --check` OK. Test ROM **`DWM-S155r3-skills-test.gbc`** (`05a7c4d9…`, patched).
+> **r4 (the user on the r3 ROM, 2026-10-20 17:46: "Stop pushing I wont allow." — no more push attempts; "on save when
+> fighting viper and bombcrag I try to use skill on HL (heal slime). It says BombCrag (??) doesnt have any skills? Why
+> BombCrag? Seems like a bug."):** an ORIGINAL-GAME bug: battle_command #2 "[INS 00] doesn't have any skill" (bank $50
+> `jr_050_4945`) prints `$C180` without filling it; ATK's target list writes the foes' names there, so ATK → (cursor on
+> BombCrag) → B → SKIL named the foe (reproduced in PyBoy through the real menus on the user's save; the straight path showed
+> "HL"). **Built:** bank $50 `NoSkillName50` (11 B of the S155 freed AliasCommit bytes) refills `$C180` from `$C8DD`'s party
+> slot (`CheckSlotUnder3`); the site's 16 B rewritten in place. Example pin `bce1c883…` (patched; r3 `35133b67…`,
+> patched). **Walk:** `tools/walk_skills.py` + step `noskill` **32 / 32**, `--negative` (+ `NoSkillName50` = ret: "BombCrag")
+> **19 FAIL**. **Checks:** test_compiler `--rom` ALL 1753 PASSED; test_app `--rom` PASS (63 OK, the GUI build = the pin); test_canvas `--rom` PASS (58 OK); verify_integrity PASS. Test ROM **`DWM-S155r4-skills-test.gbc`**
+> (`641bca31…`, patched). The user's HL and PX have no skills on this save (the message itself is right).
+> **r5 (the user on the r4 ROM, 2026-10-20 18:22: "MadKnight cast blunt like 6 times in a row, only THEN used Upper.
+> Obviously punish was pointless at that point because it did 1 dmg. Blunt should NOT stack. Also can I set it to remove
+> half/remove third/etc in editor?"):** **Built:** WRAM `wBlunted` $DECB (bit = battle slot; 18 B left): bank $50
+> BattleInit zeroes it (its 22-B tail regrouped), bank $72 `SkillRust` fails a blunted slot (`$BB` before the roll, MP
+> spent) and sets the bit when it lands (`BluntBit72`), `ScoreRust72` scores a blunted one 0 (the AI vetoes Blunt when
+> every opponent is blunted; the pick skips them), bank $53 `RestoreATK53` (DeMagic / Surge) clears it; the simulator
+> mirrors it (`s155_custom.blunted`). The editor already sets the amount: `atk_loss` 1-100 % of the base ATK (50 = half,
+> 33 ≈ a third) — help 54 now says so and that Blunt does not stack; `EDITOR_REVISION` S155r5. Example pin `a7018025…`
+> (patched; r4 `bce1c883…`, patched). **Walk:** **33 / 33** (Blunt once, then `$BB`, ATK stays 10; DeMagic / Surge, then
+> Blunt lands again; the BLUNT KNIGHT blunts each party monster once, then no more), `--negative` **19 FAIL**.
+> **Checks:** test_compiler `--rom` ALL 1756 PASSED (+ 3 r5 sim checks); test_app `--rom` PASS (the GUI build = the pin;
+> re-run without `--rom` after the help edit: PASS); test_canvas `--rom` PASS; verify_integrity PASS. Test ROM
+> **`DWM-S155r5-skills-test.gbc`** (`e6ad2d26…`, patched).
+
 > Last verified: 2026-10-19 (Session 154 — **ROADMAP E10 BUILT: THE MEMORIAL — STATUES IN YOUR ROOMS THAT SHOW THE
 > MONSTERS WHO WON A BOSS BATTLE, AN ARENA CLASS OR STARRY NIGHT WITH THE PLAYER AND HAVE SINCE LEFT (BRED, RELEASED,
 > TRADED): A SHARED POOL, A RANDOM PICK AT EACH VISIT, EVERY STATUE OF A ROOM DIFFERENT (ELSE BLANK), MORE STATUES IN LATER

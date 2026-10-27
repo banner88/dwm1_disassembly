@@ -2070,3 +2070,21 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `tools/walk_plunder.py` | + the rise page / `[INS 10]` checks (the DEF / AGL rows, a foe on party slot 0's AGL, a caster at its cap → line 6) | 45 / 45; negative 33 FAIL |
 | help `54_skills.md`, `_revision.md`; `EDITOR_REVISION` S156r2 | the rise pages | test_app (help revision) |
 
+
+## S157 rows (ROADMAP E9 — one-only items; built S157, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works"))
+
+| File | What | Verified |
+|---|---|---|
+| `tools/resection_loot_lists.py` (NEW) | bank $16 `RareChestItems` ($6E04, labelled + `ld de, RareChestItems`) and bank $04 `ColiseumPrizesLow` / `ColiseumPrizesHigh` ($6F44 / $6F54, re-sectioned from mgbdis fake code + the two `ld hl` labelled), both trees; in `patches/` inside the regions `gd_rare_chest` / `gd_coliseum_prizes`; `--check` | clean `1ca6579…` byte-perfect; example pin unchanged by it |
+| `patches/bank_016.asm` | region `gd_floor_loot` around `FloorLayoutData`'s 48 rows (+ the two above) | test_compiler `test_s157` |
+| `patches/bank_004.asm` | same-size: ops `$2A` / `$37` / `$54` / `$57` / `$5D` → bank $77 entry 19 `GiveOne`, op `$2C`'s count → entry 20 `BagFullCheck` | walk_oneonly.py; `test_s157 --rom` |
+| `patches/bank_009.asm` | BUY state 5: `ld hl, $7715 / rst $10` (entry 21 `BuyQtyMax`) before `FuncFld9_434a` (13 B) | walk_oneonly.py; `test_s157 --rom` |
+| `patches/wram.asm` | `wOneOnlyItem` $DED2, `wOneOnlyRes` $DED3, `wOneOnlySay` $DED4 (9 B left) | — |
+| `editor2/core/templates/bank_077_head.asm`, `bank_060_head.asm`, `PINNED_SHA256` | entries 19-22 + `IsOneOnly77` / `ItemHeld77` / `OneOnlyHeld77` / `ScriptWord77` / `NextGive77` / `ShopDropHeld77`, the story give test; `TextOverride` tests `wOneOnlySay`; re-pinned | `test_s157` (SM83 runs); walk_oneonly.py |
+| `editor2/core/items.py` | `one_only`, the forced keep bit, `item_rules` / `already_has_markup` / `check_rules`, `OneOnlyLine` + `arity_lines` (`SCRIPT_OPS`, `ScriptArity77`) | `test_s157` |
+| `editor2/core/loot.py` (NEW) | `shares` / `rebuild` / `replace_list` / `resolve` / `notes`; regions `gd_floor_loot` / `gd_rare_chest` / `gd_coliseum_prizes` | `test_s157`; walk_oneonly.py floors |
+| `editor2/core/emitters.py`, `gamedata.py`, `project.py`, `validators.py` | `_loot_regions`; `SECTIONS` + `item_rules`; the Give-of-2 warning; `TEMPLATE_SIZE` $60 1842 / $77 2730 | test_compiler |
+| `editor2/core/items_doc.py`, `editor2/app/items_tab.py` | `item_info` one_only / loot_notes, `item_rule` / `set_item_rule` / `one_only_names`; the Used-up note, the locked keep box, the One-only items box (`MarkupField` box style) | test_app; `test_s157` |
+| help `74_items.md`, `_revision.md`; `EDITOR_REVISION` S157 | permanent = one-only | test_app (help revision) |
+| `examples/s157_oneonly_demo/build_demo.py` (NEW) | the user's project + the WarpWing permanent + THE AVIARY (WING STALL, WINGKEEPER, VAULT keeper) / THE PERCH (NEST, BRUISER, EXIT GUIDE) + the AVIARY GUIDE in Cities_FOUNT (3, 4); refuses to build when its rooms warn | builds (one warning by design: the NEST's Give of 2) |
+| `tools/walk_oneonly.py` (NEW) | PyBoy on the user's save + the S157 demo: `guide`, `buy`, `vault`, `give`, `dresser` (the game's Stable dresser), `nest`, `lose`, `floors` (the census_maze rig on the build + the original ROM: floor items, SetBrd_6db0 chests, CallBrd_6ddb rare chests); `--negative` (`IsOneOnly77` = `and a / ret`) | 28 / 28; negative 14 FAIL |

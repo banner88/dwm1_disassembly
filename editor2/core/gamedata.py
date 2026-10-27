@@ -47,7 +47,8 @@ SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
             'arena',          # S109: arena fees / masters / team sizes (arena.py)
             'items', 'shops',  # S117: item prices / the vanilla shop lists (shops.py)
             'medals',          # S126: the Medal Man's rewards (services.py)
-            'text')            # S150: the game's own texts, edited (gametext.py)
+            'text',            # S150: the game's own texts, edited (gametext.py)
+            'item_rules')      # S157: the one-only items' "already has" line (items.py)
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every

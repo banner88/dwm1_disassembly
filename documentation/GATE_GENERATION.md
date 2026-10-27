@@ -381,10 +381,34 @@ handlers in bank `$01` (`$01:$5B68`+):
   `wGroundItemData`/`$D792`, formatted + added via `CompareGold`); else = an
   **item** id pushed into `wInventory`. Pickup plays SFX `$53`. ✅
 
-**Item tier by depth** ✅ — bank `$01` (~`$5AD0`) reads `wBossTileset`:
+~~**Item tier by depth** — bank `$01` (~`$5AD0`) reads `wBossTileset`:
 tier `$01` → item id `RNG mod $0D + $07`; tier `$02` → `RNG mod $1E + $28`. So
-late gates draw from higher item ranges. Masters/other feature types share the
-same placement machinery (rarely rolled).
+late gates draw from higher item ranges.~~ **WRONG (S157, code-read, DOC_AUDIT S157):
+those are GOLD AMOUNTS.** The pickup (bank $01 `jr_001_5aab`) puts the list entry's
+SUB-KIND in `$D78F`: `$FF` = nothing, any other non-zero byte = that ITEM ID into the
+bag (`Jump_001_5b43`), `$00` = GOLD — and only then reads `wBossTileset`: tier 1 →
+`wRNG1 mod 13 + 7` G, tier 2 → `wRNG1 mod 30 + 40` G, else `(wEncounterPoolIndex + 10) ×
+(floor + 1) × (50..99) / 100` G, added to the purse. The ITEM a floor holds is chosen
+when the floor is built (MazePlaceItem: kind → `MazeItemSubKind`, 1 → `SelectFloorType`
+over the `FloorLayoutData` row of `wFloorType3`). Masters / other feature types share
+the same placement machinery (rarely rolled).
+
+**The item tables (S157, read + PyBoy-measured):** `FloorLayoutData` (`$16:$7436`, 16
+rows × 48 B, one per gate CONTENTS row) is CUMULATIVE — `SelectFloorType` rolls c =
+(wRNG2:wRNG1) mod 100 and takes the first NON-ZERO byte ≥ c (or a byte = 100); an item's
+share = its byte − the previous non-zero byte (+1 for the first); the INDEX picked is the
+item id. Vanilla: Herb / Lovewater / meats lead; **WarpWing 2-5 % in every row**, TinyMedal
+1 %; BeastTail / ShinyHarp never. The same row fills the treasure room's 8 chests
+(`SetBrd_6db0`, `$D9CF-$D9D6`). The one-rare-chest room: `RareChestItems` (`$16:$6E04`,
+16 rows, 1/16 each — SageStone … FireStaff); the gate Coliseum: `ColiseumPrizesLow` /
+`ColiseumPrizesHigh` (`$04:$6F44` / `$6F54`, op `$5C`: `[$D9CF]` < 9 → low). **Patched
+(S157, ROADMAP E9):** a ONE-ONLY item (used up 0 %) is taken out of all three at compile
+time (`editor2/core/loot.py`, regions `gd_floor_loot` / `gd_rare_chest` /
+`gd_coliseum_prizes`; its share spread over the row's other items in proportion; a table
+without one = the original bytes). Measured (`tools/walk_oneonly.py floors`): 400 floors
+built by the game on the S157 demo ROM, SetBrd_6db0 and CallBrd_6ddb run on each — 900
+floor items, 3,200 chests, 1,600 rare-chest slots, no one-only item; the original ROM, the
+same floors: 43 WarpWings on the floors, 119 in the chests.
 
 ## 5.1 Damage tiles ✅ (resolved S37, code-derived + watchpoint-confirmed)
 

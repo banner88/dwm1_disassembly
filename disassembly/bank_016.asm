@@ -2632,6 +2632,11 @@ jr_016_5f9f:
 ;            RNG16-mod-100 roll. Used by all three FloorTypeSelectionTable stages
 ;            and by the FloorLayoutData sub-selection.
 ; -----------------------------------------------------------------------------
+; SelectFloorType (S157 note): HL = a CUMULATIVE row; c = (wRNG2:wRNG1) mod 100 (one
+; GenerateRNG); the result A = the INDEX of the first non-zero byte >= c, or of a byte = 100
+; (zeros are skipped) — an entry's share = its byte minus the previous non-zero byte (+1 for
+; the first). Used for the floor type tables and FloorLayoutData (index = the item id;
+; GATE_GENERATION §4 / §5, editor2/core/loot.shares).
 SelectFloorType:
     push hl
     call GenerateRNG
@@ -5114,7 +5119,7 @@ CallBrd_6ddb:
     ld a, $00
     adc h
     ld h, a
-    ld de, $6e04
+    ld de, RareChestItems   ; S157 (was $6e04)
     push de
     push hl
     call GenerateRNG
@@ -5131,7 +5136,11 @@ CallBrd_6ddb:
     ld [hl], a
     ret
 
-    db $03, $04, $06, $0c, $15, $17, $18, $19, $1a, $1b, $1c, $25, $1a, $1b, $1c, $25
+; RareChestItems ($16:$6E04; labelled S157): the one-rare-chest treasure room's item —
+; CallBrd_6ddb puts row (wRNG1 & 15) into chest $D9CF + (wRNG1 & 3), the other chests
+; stay empty (SpecialRoom1_OneRareChest). 16 rows, each 1/16.
+RareChestItems:
+    db $03, $04, $06, $0c, $15, $17, $18, $19, $1a, $1b, $1c, $25, $1a, $1b, $1c, $25   ; SageStone WorldDew ElfWater WorldLeaf Rib Sirloin BoltStaff WindStaff MistStaff LavaStaff SnowStaff FireStaff MistStaff LavaStaff SnowStaff FireStaff
 
 SetRandomEncounterCounter:
     call GenerateRNG

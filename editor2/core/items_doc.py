@@ -106,8 +106,47 @@ class ItemsMixin:
                'use_text': (e or {}).get('use_text'), 'result_text': (e or {}).get('result_text'),
                'use_line': self._use_line(f['use_message'], r),
                'result_line': self._use_line(f['result_message'], r) if f['result_message'] else '',
-               'battle': self._battle_info(i, base)}
+               'battle': self._battle_info(i, base),
+               # S157 (ROADMAP E9): used-up chance 0 = ONE-ONLY (items.one_only, loot.py)
+               'one_only': i in r.get('one_only', ()),
+               'loot_notes': self._loot_notes(i) if i in r.get('one_only', ()) else []}
         return out
+
+    def _loot_notes(self, i):
+        """S157: where item i (one-only) no longer appears in the random gates."""
+        from . import loot as LT
+        nm = self.item_names_all().get(i, str(i))
+        return [n for n in LT.notes(self, getattr(self, 'repo_root', None))
+                if n.startswith(nm + ':')]
+
+    # ---- S157: the one-only rule's line (gamedata.item_rules)
+    def item_rule(self, key):
+        """The markup of a one-only rule line ('already_has'): the project's or the default."""
+        if key != 'already_has':
+            raise KeyError(key)
+        return IT.already_has_markup(self)
+
+    def set_item_rule(self, key, markup):
+        """Set (or, empty / the default, remove) gamedata.item_rules[key]."""
+        if key not in IT.RULES_KEYS:
+            raise KeyError(key)
+        txt = (markup or '').rstrip('\n')
+        if txt:
+            TM.encode(txt, 'box')                                   # validates
+        gd = self.data.setdefault('gamedata', {})
+        rules = gd.setdefault('item_rules', {})
+        if not txt or txt == IT.DEFAULT_ALREADY_HAS:
+            rules.pop(key, None)
+        else:
+            rules[key] = txt
+        if not rules:
+            gd.pop('item_rules', None)
+        self.touch()
+
+    def one_only_names(self):
+        """[(id, name)] of the project's one-only items."""
+        names = self.item_names_all()
+        return [(i, names.get(i, str(i))) for i in sorted(self.items_resolved().get('one_only', ()))]
 
     @staticmethod
     def _sell_price(base, price):

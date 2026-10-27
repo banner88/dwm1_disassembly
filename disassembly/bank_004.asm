@@ -6314,12 +6314,12 @@ ColiseumCallAndRead:
     call FuncScr_6eb3
     ld hl, $d7ca
     call SaveScr_6e41
-    ld hl, $6f44
+    ld hl, ColiseumPrizesLow    ; S157 (was $6f44)
     ld a, [$d9cf]
     cp $09
     jr c, ColiseumRNGPrize
 
-    ld hl, $6f54
+    ld hl, ColiseumPrizesHigh   ; S157 (was $6f54)
 
 ColiseumRNGPrize:
     push hl
@@ -6506,34 +6506,14 @@ SaveScr_6f35:
     ret
 
 
-    inc bc
-    inc b
-    ld b, $0c
-    dec d
-    rla
-    jr @+$1b
-
-    ld a, [de]
-    dec de
-    inc e
-    dec h
-    ld a, [de]
-    dec de
-    inc e
-    dec h
-    dec c
-    ld c, $0f
-    db $10
-    ld de, $1e12
-    rra
-    jr nz, FindEmptySlotLoop
-
-    ld [hl+], a
-    inc hl
-    jr nz, @+$23
-
-    ld [hl+], a
-    inc hl
+; ColiseumPrizesLow / ColiseumPrizesHigh ($04:$6F44 / $6F54; re-sectioned S157 — mgbdis
+; decoded them as code): the gate Coliseum's prize. Op $5C ColiseumInitPrize picks the
+; LOW list when [$D9CF] < 9, else the HIGH one, row wRNG1 & 15 -> [$D9D0]; op $5D
+; (ScriptCmd5D_GiveColiseumPrize) gives it after the win. 16 rows each, 1/16 a row.
+ColiseumPrizesLow:
+    db $03, $04, $06, $0c, $15, $17, $18, $19, $1a, $1b, $1c, $25, $1a, $1b, $1c, $25   ; SageStone WorldDew ElfWater WorldLeaf Rib Sirloin BoltStaff WindStaff MistStaff LavaStaff SnowStaff FireStaff MistStaff LavaStaff SnowStaff FireStaff
+ColiseumPrizesHigh:
+    db $0d, $0e, $0f, $10, $11, $12, $1e, $1f, $20, $21, $22, $23, $20, $21, $22, $23   ; LifeAcorn MysticNut AtkSeed DefSeed AglSeed IntSeed TinyMedal QuestBk HorrorBk BeniceBk CheaterBk SmartBk HorrorBk BeniceBk CheaterBk SmartBk
 
 ScriptCmd5D_GiveColiseumPrize:
     ld a, [$d9d0]

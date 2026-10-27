@@ -406,6 +406,47 @@ names the item from **`wItemInUse` $D565**; the count lists cover 128 ids. Measu
 `tools/walk_items.py` (the user's save: bought, used, given, sold, in battle, the WarpWing /
 a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 
+### One-only items (S157 — ROM-traced + PyBoy-measured; patched builds: ROADMAP E9, PROJECT_COMPILER §2.65)
+
+**Every way an item enters the bag** (the original game; census of every `wInventory` writer,
+S157 — the other references are reads, the bag menus' compact / sort / discard in bank $07,
+the lost-battle drop in banks $06 / $50, the TinyMedal count in bank $12, the debug start bag
+in banks $01 / $55):
+
+| Path | Code | Item from |
+|---|---|---|
+| script op `$2A` give_item | bank $04 `ScriptCmd2A_GiveItem` (first empty slot; full = nothing) | its parameter |
+| op `$37` give_stored_item (the treasure / maze rooms' chests) | `ScriptCmd37_GiveStoredItem` | `[$D9CF + n]` (`$D9CF-$D9D6` filled by bank $16 SetBrd_6db0 / CallBrd_6ddb) |
+| op `$54` / `$57` random gives | `ScriptCmd54_GiveRandomItem` (1-37) / `ScriptCmd57_GiveRandomItem2` ($13-$17) | RNG — no vanilla script uses them |
+| op `$5D` the gate Coliseum's prize | `ScriptCmd5D_GiveColiseumPrize` (full = `ret` without the continue: the op runs again) | `[$D9D0]`, op `$5C` ColiseumInitPrize from `ColiseumPrizesLow` / `High` |
+| a maze floor's item | bank $01 `jr_001_5aab`: the floor list entry's SUB-KIND is the item id (`$00` = gold, `$FF` = none) | bank $16 MazePlaceItem: `FloorLayoutData` row (GATE_GENERATION §5) |
+| a shop's BUY | bank $09 (the amount `$C8DD`, at most 20 — `FuncFld9_434a` with C = $14; the bag must hold them all; the price × amount) | `$C0D8` (bank $77 ShopFill in patched builds) |
+| the Vault's withdraw | bank $09 → bank $03 entry 6 `ItemBagAdd` per item | the Vault |
+| patched: a project story command give_item (count > 1) | bank $77 `StoryCommand` | its parameters |
+
+The bag check before a give is op `$2C` (`ScriptCmd2C_IfBagFull`: the items up to the first
+empty slot; 20 → its branch) — every vanilla give that can meet a full bag is `$2C <target> …
+$2A <item>` (the target = the "full" words), and the editor's Give step emits the same
+(`check_inv_full @gfull` + `give_item`). Battles give no items. The original game gives a
+WarpWing at two places: the Castle (script 6, an examine spot) and the Stable dresser (script
+15 at screen 2 cell (8, 0): flag `$0035` on, `$0090` off → "[HERO] looked inside the dresser."
+`$01D1`, `$2C`, "[HERO] got a WarpWing!" `$039D`, set `$0090`, give; full → "Found a WarpWing!
+But cannot carry any more! … returned the WarpWing to the dresser." `$039E`, the flag NOT set).
+Event flags: `$D99B + n / 8`, mask `$80 >> (n % 8)` (ROM0 `$26D5` table — the walk got it
+backwards first, KEY_LESSONS S157).
+
+**Patched (S157): ONE-ONLY** = used-up chance 0 (record +3; the game's BeastTail / ShinyHarp + any
+item so set): the player holds at most one (bag + Vault). Every path above: the give ops write
+through bank $77 entry 19 `GiveOne` (a held one-only item is not given); op `$2C` through entry
+20 `BagFullCheck` (the script's NEXT give read ahead — a one-only item held takes the "full"
+branch, whose first text the text hook replaces with `OneOnlyLine`, "{hero} already / has a
+{ins 00}."); the shop list drops a held one (bank $77 `ShopDropHeld77`) and the how-many window
+stops at 1 for one (entry 21 `BuyQtyMax`); the random gates never hold one (compile time: the
+loot tables, GATE_GENERATION §5 "S157"); the story give at most one; record +11 bit 2 (kept
+after a lost battle) set by the compiler. The Vault withdraw and the floor pickup are not
+hooked (the copy moved is the only one; the floor tables hold none). Measured:
+`tools/walk_oneonly.py` (PROJECT_COMPILER §2.65).
+
 ### New game start (S152 — PyBoy-measured on the original ROM; patched builds: ROADMAP E3 a2, PROJECT_COMPILER §2.60)
 
 - **The title's NEW GAME** (bank $15, annotated S152: `TitleContinue` / `TitleNewGame` /

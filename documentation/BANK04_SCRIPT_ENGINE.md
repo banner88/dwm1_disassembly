@@ -862,6 +862,24 @@ at the command after the battle opcode**. On a LOSS the engine warps to the
 Castle and clears `$D8D7` (script killed). Full story-engine writeup:
 SIDEQUEST_MAP "Story progression ENGINE + AUTHORING SPEC — DECODED S68".
 
+## Item gives and the bag check (S157)
+
+The ops that put an item in the bag — `$2A` give_item (parameter), `$37` give_stored_item
+(`[$D9CF + n]`, the treasure / maze chests), `$54` / `$57` random gives (no vanilla script
+uses them), `$5D` the gate Coliseum's prize (`[$D9D0]`) — each scan `wInventory` for the first
+`$00` / `$FF` slot and write the item there; a full bag gives nothing (`$5D`: `ret` without the
+continue, so the op runs again). Op `$2C <target>` counts the items up to the first empty slot
+and branches to `<target>` (the "full" words) at 20. Every vanilla give that can meet a full bag
+is `$2C <target> … $2A <item>` — and the "got" text usually comes BEFORE the give (Castle script
+6, the Stable dresser, script 15), so the "full" decision is the `$2C`'s. Patched builds (S157,
+ROADMAP E9, one-only items — DATA_STRUCTURES "One-only items (S157)"): the five give ops write
+through bank $77 entry 19 `GiveOne` and `$2C`'s count is bank $77 entry 20 `BagFullCheck`, which
+reads the script AHEAD for its next give with the VM's own word reader (MapTypeDispatch's banks;
+op arities `ScriptArity77` from `script_ops`) — same-size edits, every bank $04 address kept
+(the labels inside the old loops are gone: `CheckEmptySlot`, `WriteItemToSlot`,
+`CheckNextSlot`, `CheckMonsterSlotEmpty`, `WriteMonsterToSlot`, `CheckSlotHL(B)`,
+`FindEmptySlot`, `FindEmptySlotLoop`, `WriteToEmptySlot` — in `disassembly/` they stay).
+
 ## Evaluator opcodes (the $D8E1 family; S68 census of every writer)
 
 All share the pattern: read game state → result to `$D8E1` (or act on a
