@@ -3580,6 +3580,165 @@ def s154_memorial(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s158_hints(app, w):
+    """S158 (the breeding hints; user: "the player can come across a new breeding
+    combination by interacting with a monument … Archive will be: 1 per family … Colour it
+    in editor"): + Monument (O) / + Archive (K) on selected cells (the archive's family
+    asked), the canvas markers (Mo, the archive in its family's colour As), the hint panel
+    (families, skip owned, what it shows), Its words…, the Breeding tab's Hints page
+    (whitelist, a tick, a riddle, the page's rows), the project compiles (bank $79's
+    HintTable, story command 8), Remove; undo restores project.json."""
+    import shutil
+    import tempfile
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QDialog, QInputDialog
+    import editor2.app.rooms.tab as TABm
+    import editor2.app.hints_dialog as HDm
+    import editor2.app.breeding_tab as BTm
+    from editor2.app.rooms import canvas as CVm
+    from editor2.core import compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s158_hints_')
+    k_w = TABm.QMessageBox.warning
+    k_bw = BTm.QMessageBox.warning
+    k_item = QInputDialog.getItem
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.rooms_tab
+        w.tabs.setCurrentWidget(rt)
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(Qt.UserRole) == 'gate_island':
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.room_id == 'gate_island', rt.room_id
+        assert rt.act_add_monument.text() == '+ Monument (O)'
+        assert rt.act_add_archive.text() == '+ Archive (K)'
+
+        def _no_warning(*a, **k):
+            raise AssertionError(f'unexpected warning box: {a[1:]!r}')
+        TABm.QMessageBox.warning = staticmethod(_no_warning)
+        BTm.QMessageBox.warning = staticmethod(_no_warning)
+        QInputDialog.getItem = staticmethod(lambda *a, **k: ('Dragon', True))
+        rt._add_hint_object((2, 2), 'monument')
+        app.processEvents()
+        rt._add_hint_object((3, 2), 'archive')
+        app.processEvents()
+        room = doc.room('gate_island')
+        assert [m['id'] for m in room.get('monuments')] == ['monument_1'], room.get('monuments')
+        assert room.get('archives') == [{'id': 'archive_1', 'family': 'Dragon'}], \
+            room.get('archives')
+        kinds = [m[0] for m in rt.canvas.markers]
+        assert 'monument' in kinds and 'archive1' in kinds, kinds
+        assert CVm.MARKER_TEXT['archive1'] == 'ADr' and CVm.MARKER['archive1'] == \
+            CVm.ARCHIVE_COLOURS[1]
+        assert not rt.hint_panel.isHidden() and 'Dragon' in rt.hint_panel.title(), \
+            rt.hint_panel.title()
+        # the monument: Slime only, no skip, riddles
+        idx = next(i for i, e in enumerate(doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                           rt.state_idx))
+                   if e.get('kind') == 'monument')
+        rt._show_hint_panel(idx)
+        rt._hint_fields({'families': ['Slime'], 'skip_owned': False, 'show': 'riddle'})
+        app.processEvents()
+        m = doc.monument(doc.room('gate_island'), 'monument_1')
+        assert m == {'id': 'monument_1', 'families': ['Slime'], 'skip_owned': False,
+                     'show': 'riddle'}, m
+        assert rt._sel_hint() is not None, 'still selected after the edit'
+        k_e, k_v = HDm.HintWordsDialog.exec, HDm.HintWordsDialog.values
+        HDm.HintWordsDialog.exec = lambda self: QDialog.Accepted
+        HDm.HintWordsDialog.values = lambda self: {'intro': [['A mossy stone.']], 'text': None,
+                                                   'outro': None, 'exhausted': None}
+        try:
+            rt._hint_words()
+        finally:
+            HDm.HintWordsDialog.exec, HDm.HintWordsDialog.values = k_e, k_v
+        app.processEvents()
+        assert doc.monument(doc.room('gate_island'), 'monument_1').get('intro') == \
+            [['A mossy stone.']]
+        # the Breeding tab's Hints page: whitelist + two Slime crosses, a riddle
+        bt = w.breeding_tab
+        w.tabs.setCurrentWidget(bt)
+        bt.show_hints()
+        app.processEvents()
+        assert bt.h_table.rowCount() > 100, bt.h_table.rowCount()
+        # S158r3 (the user: "clicking 'take the shown out' just makes it freeze"): the
+        # whole pool out and back in, each in seconds (ResizeToContents re-measured every
+        # row at each setItem — minutes); then undo both
+        import time as _time
+        _t = _time.time()
+        bt._hint_shown(False)
+        app.processEvents()
+        _t_out = _time.time() - _t
+        assert len(doc.custom['hints'].get('exclude', [])) == bt.h_table.rowCount(), \
+            'every shown cross out of the pool'
+        _t = _time.time()
+        bt._hint_shown(True)
+        app.processEvents()
+        _t_in = _time.time() - _t
+        assert not doc.custom['hints'].get('exclude'), 'every cross back in'
+        assert _t_out < 15 and _t_in < 15, f'take out {_t_out:.1f} s, put in {_t_in:.1f} s'
+        w.session.undo.undo()
+        w.session.undo.undo()
+        app.processEvents()
+        bt.h_mode.setCurrentIndex(1)
+        app.processEvents()
+        assert doc.custom['hints'].get('mode') == 'whitelist'
+        bt.h_fam.setCurrentIndex(1)                          # Slime
+        app.processEvents()
+        n_slime = bt.h_table.rowCount()
+        assert 0 < n_slime < 200, n_slime
+        bt.h_table.item(0, 0).setCheckState(Qt.Checked)
+        app.processEvents()
+        key0 = bt.h_table.item(0, 0).data(Qt.UserRole)
+        assert doc.custom['hints'].get('include') == [key0], doc.custom['hints']
+        bt.h_table.setCurrentCell(0, 3)
+        k_e, k_v = HDm.RiddleDialog.exec, HDm.RiddleDialog.value
+        HDm.RiddleDialog.exec = lambda self: QDialog.Accepted
+        HDm.RiddleDialog.value = lambda self: [['A small riddle', 'of {child}.']]
+        try:
+            bt._hint_riddle()
+        finally:
+            HDm.RiddleDialog.exec, HDm.RiddleDialog.value = k_e, k_v
+        app.processEvents()
+        assert doc.custom['hints']['riddles'] == {key0: [['A small riddle', 'of {child}.']]}
+        assert 'A small riddle' in bt.h_table.item(0, 7).text(), bt.h_table.item(0, 7).text()
+        assert key0 in doc.custom['hints']['numbers'], 'its number pinned'
+        out, prj, _w = C2.compile_project(_save_tmp(doc, tmp), REPO)
+        b79 = out['patches/bank_079.asm']
+        assert 'HINT_COUNT EQU' in b79 and 'HintRiddle_' in b79 and 'HintMonTable:' in b79
+        assert (8, 0, 0) in prj.story_commands(), prj.story_commands()
+        w.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        idx = next(i for i, e in enumerate(doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                           rt.state_idx))
+                   if e.get('kind') == 'archive')
+        rt._show_hint_panel(idx)
+        rt._hint_delete()
+        app.processEvents()
+        assert not doc.room('gate_island').get('archives'), 'the archive removed'
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print('OK: S158 the breeding hints — the whole pool out / in in seconds (r3), + Monument (O), + Archive (K) (family asked), '
+              'markers Mo / ADr (the family colour), the hint panel (Slime only, no skip, '
+              'riddle), Its words… (an intro), the Hints page (whitelist, a tick, a riddle, '
+              'its number pinned), the project compiles (HintTable, story command 8), '
+              'Remove; undo restores project.json')
+    finally:
+        TABm.QMessageBox.warning = k_w
+        BTm.QMessageBox.warning = k_bw
+        QInputDialog.getItem = k_item
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def _save_tmp(doc, tmp):
     """The document as it stands -> a project folder the compiler reads (assets beside)."""
     import json as _json
@@ -5090,6 +5249,7 @@ def main():
     s152_opening(app, w)
     s153_ending(app, w)
     s154_memorial(app, w)
+    s158_hints(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

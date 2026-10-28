@@ -15,6 +15,11 @@ Three pages over `gamedata.breeding` (model: editor2/core/breeding_doc.py):
   Special recipes  the whole special table in the order the game reads it
                    (the editor sorts it: the most specific recipe first).
   Family recipes   the 215 family recipes (= what each library page shows).
+  Hints            (S158) the BREEDING HINTS' pool: every special recipe that can be a
+                   hint (it fires), ticked in the pool or not (blacklist: every one but
+                   the unticked; whitelist: only the ticked), its number (= its bit in
+                   the save), its riddle; the words every monument / archive says, the
+                   families' words, renumbering (editor2/core/hints_doc.py, help 78).
 
 Plus "Generate a tree…" (editor2/core/breed_gen.py: the randomizer's
 depth-profile builder on this project) and "Work on the whole table".
@@ -342,6 +347,7 @@ class BreedingTab(QWidget):
         self._build_by_monster()
         self._build_special()
         self._build_family()
+        self._build_hints()
         self._stale = False
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
@@ -529,6 +535,259 @@ class BreedingTab(QWidget):
         v.addWidget(self.fam_table, 1)
         self.pages.addTab(page, 'Family recipes')
 
+
+    # ------------------------------------------------------------ S158: hints
+    HINT_COLS = ['In the pool', '#', 'Family', 'Makes', 'Pedigree', 'Mate', 'Plus', 'Riddle',
+                 'Row']
+
+    def _build_hints(self):
+        from editor2.core import hints as HT
+        page = QWidget()
+        v = QVBoxLayout(page)
+        note = QLabel('BREEDING HINTS: a hint MONUMENT (Rooms tab, + Monument) teaches the player '
+                      'one of these crosses they have not found yet; an ARCHIVE (+ Archive, one '
+                      'per family) lists the ones they have unlocked — at monuments or by '
+                      'breeding exactly that cross. The pool follows your breeding table: a '
+                      'recipe you change or remove changes its hint. Family recipes are what '
+                      'each library page already shows, so they are never hints. A hint\'s '
+                      'NUMBER is its bit in the save: it is kept when you untick it, so a '
+                      'save made earlier stays right.')
+        note.setWordWrap(True)
+        v.addWidget(note)
+        top = QHBoxLayout()
+        self.h_mode = QComboBox()
+        self.h_mode.addItem('Blacklist: every recipe is a hint unless you untick it')
+        self.h_mode.addItem('Whitelist: only the recipes you tick are hints')
+        self.h_mode.currentIndexChanged.connect(self._hint_mode)
+        top.addWidget(self.h_mode, 2)
+        self.h_fam = QComboBox()
+        self.h_fam.addItem('Every family')
+        for f in HT.FAMILIES:
+            self.h_fam.addItem(f)
+        self.h_fam.currentIndexChanged.connect(lambda *_: self._fill_hints())
+        top.addWidget(self.h_fam)
+        self.h_find = QLineEdit()
+        self.h_find.setPlaceholderText('Find a monster…')
+        self.h_find.textChanged.connect(lambda *_: self._fill_hints())
+        top.addWidget(self.h_find, 1)
+        self.h_only = QComboBox()
+        self.h_only.addItems(['All recipes', 'In the pool', 'Not in the pool'])
+        self.h_only.currentIndexChanged.connect(lambda *_: self._fill_hints())
+        top.addWidget(self.h_only)
+        v.addLayout(top)
+        self.h_sum = QLabel()
+        self.h_sum.setWordWrap(True)
+        v.addWidget(self.h_sum)
+        self.h_table = QTableWidget(0, len(self.HINT_COLS))
+        self.h_table.setHorizontalHeaderLabels(self.HINT_COLS)
+        self.h_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.h_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.h_table.verticalHeader().setVisible(False)
+        self.h_table.verticalHeader().setDefaultSectionSize(22)
+        # Interactive + one resizeColumnsToContents after a fill: ResizeToContents
+        # re-measured every row at each setItem — minutes for the whole pool (S158r3)
+        self.h_table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.h_table.itemChanged.connect(self._hint_ticked)
+        self.h_table.cellDoubleClicked.connect(lambda *_: self._hint_riddle())
+        v.addWidget(self.h_table, 1)
+        row = QHBoxLayout()
+        b = QPushButton('Riddle…')
+        b.setToolTip('The selected cross\'s riddle (a monument set to show riddles says it '
+                     'instead of the cross)')
+        b.clicked.connect(self._hint_riddle)
+        row.addWidget(b)
+        b = QPushButton('Put the shown in the pool')
+        b.clicked.connect(lambda: self._hint_shown(True))
+        row.addWidget(b)
+        b = QPushButton('Take the shown out')
+        b.clicked.connect(lambda: self._hint_shown(False))
+        row.addWidget(b)
+        row.addStretch(1)
+        b = QPushButton('Words…')
+        b.setToolTip('What every monument / archive says (unless it has its own words)')
+        b.clicked.connect(self._hint_words)
+        row.addWidget(b)
+        b = QPushButton('Family words…')
+        b.setToolTip('"any Dragon" — how a family parent reads; the (bred) mark')
+        b.clicked.connect(self._hint_family_words)
+        row.addWidget(b)
+        b = QPushButton('Renumber…')
+        b.setToolTip('Numbers from 0 again for the pool as it is (an old save then reads '
+                     'other hints\' bits — for a clean start before release)')
+        b.clicked.connect(self._hint_renumber)
+        row.addWidget(b)
+        v.addLayout(row)
+        self.hints_page = page
+        self.pages.addTab(page, 'Hints')
+        self._hint_rows = []
+        self.pages.currentChanged.connect(lambda *_: self._fill_hints()
+                                          if self.pages.currentWidget() is self.hints_page
+                                          else None)
+
+    def show_hints(self):
+        self.pages.setCurrentWidget(self.hints_page)
+        self._fill_hints()
+
+    def _fill_hints(self):
+        if self.pages.currentWidget() is not self.hints_page:
+            return
+        from editor2.core import hints as HT
+        doc = self.s.doc
+        try:
+            rows = doc.hint_rows()
+            st = doc.hints_settings()
+        except Exception as ex:                          # noqa: BLE001 — a bad table / key
+            self.h_sum.setText(f'<b>The hints cannot be worked out:</b> {ex}')
+            self.h_table.setRowCount(0)
+            return
+        self._hint_rows = rows
+        names = self.an.names
+        self.h_mode.blockSignals(True)
+        self.h_mode.setCurrentIndex(0 if st['mode'] == 'blacklist' else 1)
+        self.h_mode.blockSignals(False)
+        fam_sel = self.h_fam.currentIndex() - 1
+        q = self.h_find.text().strip().lower()
+        only = self.h_only.currentIndex()
+
+        def nm(m):
+            return HT.FAMILIES[m - 0xF0] + ' family' if m >= 0xF0 else names.get(m, str(m))
+        shown = []
+        for r in rows:
+            if fam_sel >= 0 and r['fam'] != fam_sel:
+                continue
+            if only == 1 and not r['in_pool'] or only == 2 and r['in_pool']:
+                continue
+            if q and not any(q in nm(x).lower() for x in (r['p1'], r['p2'], r['child'])):
+                continue
+            shown.append(r)
+        self._hint_shown_rows = shown
+        per = {}
+        for r in rows:
+            if r['in_pool']:
+                per[r['fam']] = per.get(r['fam'], 0) + 1
+        n_in = sum(per.values())
+        self.h_sum.setText(
+            f'<b>{n_in}</b> hints in the pool (of {sum(1 for r in rows if not r["gone"])} '
+            'recipes that can be one) — ' + ', '.join(f'{HT.FAMILIES[f]} {n}'
+                                                     for f, n in sorted(per.items())
+                                                     if f is not None)
+            + (f' · <b>{sum(1 for r in rows if r["gone"])}</b> ticked / numbered crosses no '
+               'longer in your table' if any(r['gone'] for r in rows) else ''))
+        t = self.h_table
+        t.blockSignals(True)
+        t.setUpdatesEnabled(False)
+        t.setSortingEnabled(False)
+        t.setRowCount(len(shown))
+        for i, r in enumerate(shown):
+            it = QTableWidgetItem('' if not r['gone'] else 'gone')
+            it.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+            it.setCheckState(Qt.Checked if r['in_pool'] else Qt.Unchecked)
+            it.setData(Qt.UserRole, r['key'])
+            t.setItem(i, 0, it)
+            vals = ['' if r['number'] is None else str(r['number']),
+                    HT.FAMILIES[r['fam']] if r['fam'] is not None else '?',
+                    names.get(r['child'], str(r['child'])), nm(r['p1']), nm(r['p2']),
+                    f"+{r['plus']}" if r['plus'] else '',
+                    ' / '.join(' '.join(b) for b in r['riddle'])[:40] if r['riddle'] else '',
+                    '' if r['row'] is None else str(r['row'])]
+            for c, val in enumerate(vals, 1):
+                cell = QTableWidgetItem(val)
+                if r['gone']:
+                    cell.setForeground(QColor(150, 150, 150))
+                t.setItem(i, c, cell)
+        t.resizeColumnsToContents()
+        t.setUpdatesEnabled(True)
+        t.blockSignals(False)
+
+    def _hint_mode(self, i):
+        mode = 'blacklist' if i == 0 else 'whitelist'
+        if self._push('Hint pool mode', lambda doc: doc.set_hints_mode(mode)):
+            self._fill_hints()
+
+    def _hint_ticked(self, item):
+        if item.column() != 0:
+            return
+        key = item.data(Qt.UserRole)
+        on = item.checkState() == Qt.Checked
+        self._push('Hint in the pool' if on else 'Hint out of the pool',
+                   lambda doc: doc.set_hints_in_pool([key], on))
+        self._fill_hints()
+
+    def _hint_shown(self, on):
+        keys = [r['key'] for r in getattr(self, '_hint_shown_rows', []) if not r['gone']]
+        if not keys:
+            return
+        self._push(f"{len(keys)} hints {'in' if on else 'out of'} the pool",
+                   lambda doc: doc.set_hints_in_pool(keys, on))
+        self._fill_hints()
+
+    def _hint_sel(self):
+        i = self.h_table.currentRow()
+        rows = getattr(self, '_hint_shown_rows', [])
+        return rows[i] if 0 <= i < len(rows) else None
+
+    def _hint_riddle(self):
+        r = self._hint_sel()
+        if r is None:
+            return
+        from editor2.app.hints_dialog import RiddleDialog
+        names = self.an.names
+        from editor2.core import hints as HT
+        nm = (lambda m: HT.FAMILIES[m - 0xF0] + ' family' if m >= 0xF0 else names.get(m, m))
+        cross = f"{nm(r['p1'])} × {nm(r['p2'])} → {names.get(r['child'], r['child'])}"
+        dlg = RiddleDialog(self.s.renderer.rom, cross, r['riddle'], self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        val = dlg.value()
+        key = r['key']
+        self._push('Hint riddle', lambda doc: doc.set_hint_riddle(key, val))
+        self._fill_hints()
+
+    def _hint_words(self):
+        from editor2.app.hints_dialog import HintWordsDialog
+        from editor2.core import hints_doc as HD
+        st = self.s.doc.hints_settings()
+        roles = [(r, HD.ROLE_LABELS[r], st['words'][r], st['own'][r],
+                  'the default words' if r != 'archive_no' else 'nothing')
+                 for r in ('monument', 'exhausted', 'archive_ask', 'archive_empty',
+                           'archive_entry', 'archive_more', 'archive_end', 'archive_no')]
+        dlg = HintWordsDialog(self.s.renderer.rom, 'Hint words (every monument / archive)',
+                              roles, intro='What every monument and archive says unless it has '
+                              'its own words (Rooms tab → its panel → Its words…).', family=True,
+                              parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        vals = dlg.values()
+
+        def op(doc):
+            for role, boxes in vals.items():
+                doc.set_hint_words(role, boxes)
+        self._push('Hint words', op)
+
+    def _hint_family_words(self):
+        from editor2.app.hints_dialog import FamilyWordsDialog
+        from editor2.core import hints as HT
+        dlg = FamilyWordsDialog(self.s.doc.hints_settings(), self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        v = dlg.values()
+
+        def op(doc):
+            for f, w in zip(HT.FAMILIES, v['family_words']):
+                doc.set_family_word(f, w or None)
+            doc.set_bred_words(v['bred_word'], v['unbred_word'])
+        self._push('Hint family words', op)
+
+    def _hint_renumber(self):
+        if QMessageBox.question(
+                self, 'Renumber the hints',
+                'Number the pool\'s hints from 0 again, in archive order? A save made with '
+                'the old numbers then reads other hints\' bits (what the player learned gets '
+                'mixed up). Do it once, before release.') != QMessageBox.Yes:
+            return
+        self._push('Renumber hints', lambda doc: doc.renumber_hints())
+        self._fill_hints()
+
     # ------------------------------------------------------------ refresh
     def _undo_changed(self, _i):
         if self.isVisible():
@@ -561,6 +820,7 @@ class BreedingTab(QWidget):
         self._fill_problems()
         self._fill_special()
         self._fill_family()
+        self._fill_hints()
         self._try()
 
     def _fam_icon(self, s):

@@ -88,7 +88,10 @@ SECTION "ROM Bank $060", ROMX[$4000], BANK[$60]
 ;    one-only item the player already holds) and this text is SHOWN, not copied ->
 ;    bank $77 entry 22 OneOnlySay swaps in the "already has one" line (DE / [$C824] /
 ;    wTextOvrPtr as an edited text) and clears the mark.
-; TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58 / §2.65.
+; 0b. (S158, ROADMAP E15) wHintSay set (bank $79 HintCommand sub 1: a monument's
+;    riddle is next) and this text is SHOWN -> bank $79 entry 12 HintSay swaps in the
+;    current hint's riddle the same way and clears the mark.
+; TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58 / §2.65 / §2.66.
 TextOverride:
     ld a, [wOneOnlySay]
     and a
@@ -99,7 +102,18 @@ TextOverride:
     ld hl, $7716                ; bank $77 entry 22 OneOnlySay
     rst $10
     ret
+.hint:
+    ld hl, $790c                ; S158: bank $79 entry 12 HintSay (the riddle)
+    rst $10
+    ret
 .nick:
+    ld a, [wHintSay]
+    and a
+    jr z, .nick2
+    ld a, [wTextOvrMode]
+    and a
+    jr z, .hint                 ; a SHOWN text (a copy is an insert's name)
+.nick2:
     ld a, d
     cp $47
     jr nz, .edited

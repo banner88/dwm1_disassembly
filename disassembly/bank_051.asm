@@ -6867,8 +6867,8 @@ jr_051_6933:
     jr nz, jr_051_6933
 
     ld a, [$da18]
-    ld hl, $ca94
-    call SetBitInArray
+    ld hl, $ca94             ; S158: the library bit of [$DA18] — a monster that JOINS after a battle
+    call SetBitInArray       ;   (the staging record $D665 copied into slot [$DA14]): "ever owned"
     ret
 
 

@@ -7267,3 +7267,63 @@ they are the gold of a gold pickup; the item id is the floor entry's sub-kind, c
 floor is built. **Fix:** corrected (DOC_AUDIT S157); the filter is on the build-time tables.
 **Rule:** before relying on "X is the item / amount / id", follow the register to its store and
 the store to its reader.
+
+## S158 — breeding hints (ROADMAP E15)
+
+### S158 — SRAM a save never wrote is junk: a new store needs a magic
+**Symptom:** the walk's first monument read reported hints "already learned" on the user's
+save, before anything had been read. **Root cause:** SRAM bank 3 above the memorial's list had
+never been written by this game; the user's file holds `$FF` there, so every bit read as set.
+**Fix:** a magic "H1" at `$A007`; `HintEnsure` zeroes both bitsets when it is missing, and the
+walk's `bits()` reads nothing without it; NEW GAME writes it (`HintNewGameClear`). **Rule:** a
+new store in cartridge RAM starts with a magic and treats "no magic" as empty — never trust the
+bytes of an area the game did not own before.
+
+### S158 — PyBoy savestates carry the cartridge RAM
+**Symptom:** the crypt step found every hint already learned ("worn away") on a fresh start.
+**Root cause:** the persist step's `s_continue` re-saved `continue.state` after the monuments had
+been read; a PyBoy state includes cartridge RAM, so every later step began with those bits.
+**Fix:** the persist step backs `continue.state` up and restores it. **Rule:** a step that
+writes SRAM and then saves a state changes every later step's starting save; keep the shared
+start state read-only (or restore it).
+
+### S158 — a filter bug hides behind a value that passes everything
+**Symptom:** the "every family" pillar worked; the Slime-only pillar taught Dragon crosses.
+**Root cause:** `HintCandidate` read the row's PLUS byte (+5) as the child's family (+6); with
+the all-families mask every value passes, so only a narrow monument showed it. **Fix:** the
+missing `inc hl`. **Rule:** test a filter with a NARROW setting first — a wide-open mask proves
+nothing about the field it reads.
+
+### S158 — "both" must mean "once" when one half is missing
+**Symptom:** the "riddle, then the cross" pillar showed the cross twice for a hint without a
+riddle. **Root cause:** sub 1 left the text unswapped when there was no riddle, and the script
+then printed the cross again. **Fix:** sub 1 `[1, 1]` returns `$D8E1` = 0 when the hint has no
+riddle and the lowering skips the riddle's text then. **Rule:** a compound mode lowers every
+part behind a "is this part there" branch, decided by the engine that knows.
+
+### S158 — the game breeds only from level 10
+**Symptom:** the walk's breeding ceremony ended with "You can't breed low level monsters!".
+**Root cause:** the user's Healer is level 5; the shrine refuses parents below 10. **Fix:** the
+walk sets the Healer's record level to 10 (a rig, said in the log). **Rule:** a breeding test
+checks both parents' levels (record +$4B ≥ 10) before driving the menus — and the test
+instructions tell the user.
+
+### S158 — a negative control that leaves a branch variable stale hangs the game
+**Symptom:** the `--negative` walk sat for 50 minutes after its second check; py-spy showed
+`p.tick()` never returning. **Root cause:** story command 8 patched to a bare `ret` left `$D8E1`
+at 1, so the archive's script looped "entry / Keep reading?" with no command behind it and the
+game hung (no frame completed). **Fix:** the negative patch is `xor a / ld [$D8E1], a / ret` —
+the feature gone, its report "none". **Rule:** a negative removes the feature AND its result
+(set the outputs the script branches on to "nothing"); and run walks with `python3 -u`, or a
+killed run loses every buffered line.
+
+### S158r3 — a ResizeToContents header on a big table freezes a SHOWN window
+**Symptom:** the user: "take the shown out" froze the editor for 3+ minutes; every offscreen
+test passed in a fraction of a second. **Root cause:** the Hints table's header was
+`QHeaderView.ResizeToContents`, which re-measures every row at each `setItem` — but only while
+the widget is shown; the S158 GUI test ran `s158_hints` alone in a hidden window. 169 rows took
+12 s, the whole pool (823 × 9 cells) 316 s. **Fix:** header `Interactive`, updates off
+during the fill, one `resizeColumnsToContents()` at the end (2 s for the whole pool); the test
+now times the whole pool out and back in. **Rule:** a table of more than a few dozen rows is
+filled with updates off and resized once; time GUI operations with the window SHOWN at the
+largest size a user's project gives (the whole pool, not a family).

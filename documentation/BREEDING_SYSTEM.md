@@ -504,7 +504,7 @@ concern and changes with the B9 tab UI, not the data path.
 
 **Walker contract** (matches vanilla `SetItem_6242`): blanks the `$C0D8` buffer
 (`$20` bytes) to `$FF`; for each member writes the **unseen-marker `$FE`** if its
-seen-bit (`$CA94`) is clear, else the species id; stores `$C8E9` = member count
+seen-bit (`$CA94` — "ever owned", DOC_AUDIT S158) is clear, else the species id; stores `$C8E9` = member count
 (total slots) and `$C8E8` = seen count. ROM0 helpers only (`FillNBytesWithRegA`,
 `TestBitInArray`). Capacity: the emitter guarantees every family ≤ buffer capacity
 (32), so no runtime overflow check is needed.
@@ -801,6 +801,22 @@ randomizer's "keep the specificity blocks" rule is now the compiler's job. Two r
 the same parents and min plus can never both fire: refused when a project row is
 involved (vanilla's own two such pairs, 682/693 and 802/803, are reported by the editor
 as "never fires").
+
+## Which row made the egg — breeding hints (S158, ROADMAP E15; built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results"))
+
+Bank $69 `RelocatedSpecialScan` now counts the special rows it passes and stores the matching
+row's number (the effective table's order, the compiler's numbering) in **`wHintRow`**
+($D5B0-$D5B1), `$FFFF` when no special row matched (the family table or the fallback decides).
+It runs for every resolve — the Old Man's preview, a ceremony, the link. With project breeding
+hints the call of `BreedResolveOffspring` inside entry 0 `BreedCreateOffspring` (bank $16;
+callers `$0A:$4A8D` / `$0A:$56F8` / `$15:$5B7D` = the link) is replaced by `HintBreed16`
+(region `hint_breed_16`, same size): resolve, then bank $79 entry 11 `HintBreed`, which marks
+the hint of that row (if it is in the pool) unlocked + bred in SRAM bank 3. The preview (entry
+3) is not hooked, so asking the Old Man teaches nothing. The egg's species is also set in the
+library bits `$CA94` — "ever owned" (known_RAM_map; a monument's "skip owned"). Measured
+(walk `census`, `tools/walk_hints.py`): `wHintRow` == the resolver model for 7,776 crosses, 0
+mismatches; a real MadCat × Healer ceremony on the user's save marked row 748's hint bred.
+The full model is DATA_STRUCTURES "Breeding hints (S158)".
 
 ---
 

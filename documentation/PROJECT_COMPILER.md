@@ -690,6 +690,11 @@ user-confirmed hand-authored code:
   helpers; `TEMPLATE_SIZE[$77]` 2730 — `ShopPtrTable` `$4AAA`, was 2241) and `bank_060_head.asm`
   (`TextOverride` tests `wOneOnlySay` first; `TEMPLATE_SIZE[$60]` 1842 — `SkillScriptPtrTable`
   `$4732`, was 1825). Current values: `templates/PINNED_SHA256`.
+* S158 re-pins (§2.66, ROADMAP E15 — breeding hints): `bank_079_head.asm` (entries 10-12
+  `HintCommand` / `HintBreed` / `HintSay` + their helpers; `MemRoomTiles` calls `HintRoomNote`),
+  `bank_077_head.asm` (`StoryCommand` kind 8; `TEMPLATE_SIZE[$77]` 2741, was 2730),
+  `bank_060_head.asm` (`TextOverride` step 0b; `TEMPLATE_SIZE[$60]` 1859, was 1842). Current
+  values: `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -5136,6 +5141,97 @@ GATE_GENERATION §5 "S157".
   the warning, `TEMPLATE_SIZE`, the Document; `--rom`: the hook bytes, the regions in the ROM,
   `IsOneOnly77` for ids 0-127 / 200 / 255, `ShopDropHeld77`, `GiveOne`, `BuyQtyMax`, `OneOnlySay`
   on dwm/sm83).
+
+## §2.66 S158 — BREEDING HINTS: monuments teach a cross, archives list a family's (ROADMAP E15)
+
+**Built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results")** (user: "Since I am scrambling breeding, the player needs
+in-game hints of new combinations" / a hint = "individual" special rows / basic = "what library
+already knows" / skip owned children "yes" / unlocks saved "immediately" / "keep reading every
+entry" / the archive's art is the author's own "book case with family emblem" / link breeding
+too "sure"). The game side: DATA_STRUCTURES "Breeding hints (S158)"; the resolver's row number:
+BREEDING_SYSTEM "Which row made the egg"; the riddle swap + inserts: TEXT_SYSTEM "S158"; the
+save: ARCHITECTURE "SRAM bank 3"; help `78_hints.md`. Code: `editor2/core/hints.py` (the
+compiler), `hints_doc.py` (`HintsMixin`).
+
+- **A hint** = one row of the EFFECTIVE special table (the order bank $69 holds, §2.29) that can
+  decide an egg: `hints.candidates` runs `FastResolver` over the row's members (each species of
+  a family matcher, at every plus ≥ the row's min plus; species 215-220 never — Iron Rule 8) and
+  keeps the row when some pair resolves to it. Family-table recipes are never hints (the library
+  already shows them). Vanilla: 825 rows, 823 can fire (682 / 693 and 802 / 803 never do).
+  KEY = `"<p1>x<p2>+<min plus>><child>"`, a matcher = a species id or a family name
+  (`"Slimex68+0>10"` = any Slime × MadCat → FangSlime) — the key follows the table, not a row
+  index, so an insert above it keeps its hint.
+- **Schema** (`custom.hints`): `mode` `"blacklist"` (default: every candidate minus `exclude`) /
+  `"whitelist"` (only `include`; both lists kept across a switch); `numbers` {key: n} — the
+  pinned save numbers (hint n = bit n of the UNLOCKED / BRED bitsets; holes allowed; the editor
+  pins every pool hint, `hints.numbers_to_pin`; new ones get numbers after the highest pinned,
+  sorted by (child family, child, row)); `riddles` {key: boxes | dialogue id}; `family_words`
+  {family: ≤ 12 cells, default "any <Family>"}; `bred_word` (≤ 15, default "(bred)") /
+  `unbred_word` (default ""); `words` {monument | exhausted | archive_ask | archive_empty |
+  archive_entry | archive_more | archive_end | archive_no: boxes} (defaults `hints.DEFAULTS`).
+  Room objects: `rooms[].monuments[]` `{id, families: [names] | null (all), skip_owned (true),
+  show: "explicit" | "riddle" | "both", intro? / text? / outro? / exhausted?}` (≤ 8 a room, ≤
+  255 a project), `rooms[].archives[]` `{id, family, ask? / empty? / entry? / more? / end? /
+  no?}`; a state's npcs[] cell `{"kind": "monument" | "archive", x, y, "monument" | "archive":
+  id}` = an examine spot (no art: the author draws the stone / the bookcase). Every text is
+  inline boxes or a `custom.dialogue` id; an archive's generated copy has `{family}` written in.
+- **Lowering** (`hints.lower`, run by `Project` after the memorial; any error drops the hint
+  objects and their scripts so the rest still builds): each cell → an examine spot with the
+  script `_hint_<room>_<obj>` (talk step `{"hint": …}` → `hints.lower_step`). A monument: op
+  `$24` story command 8 `[0, m]` (pick), `$D8E1` = 0 → the worn words; else [intro], then by
+  `show` — riddle: `[1, 1]` + the words (the engine swaps in the riddle; none → the words as
+  written); both: `[1, 1]`, `$D8E1` = 0 skips the riddle's text, `[1, 0]`, the words; explicit:
+  the words — [outro]. An archive: the question (YES / NO) → NO: [no]; `[2, f]` (start), 0 →
+  the empty words; loop `[3, f]`: 0 → the end words, 2 → the entry + the end words, 1 → the
+  entry + "Keep reading?" (YES → loop). Every text after an op `$24` opens its box (`init_dialog`).
+  Story command 8 = `story.CMD_KINDS['hint']` (sub 0-3, arg 0-255).
+- **Emit** (bank $79 after the memorial's data; empty stubs when inactive, `milly.emit_bank_079`
+  also runs for hints): `HINT_COUNT`; `HintTable` 8-byte rows by number (row lo / hi, child,
+  plus, child family | `$FF` = a hole, p1, p2, matcher kinds); `HintRiddles` (a word per hint,
+  0 = none); `HINT_MON_COUNT` + `HintMonTable` (slot, families lo, families hi | `$80` skip
+  owned); `HintFamLists` (per family, its hints by child then row, `$FFFF`-ended);
+  `HintFamWords`, `HintBredWord` / `HintUnbredWord`; `HintRiddle_k` (box bytes,
+  `textenc.entry_bytes`). Budget `BANK79_HINT_BUDGET` 12,500 B (the all-823 blacklist pool with 3
+  riddles: 10,225 B measured, estimate 10,278; `capacity` rows `monuments_room` / `hint_numbers`
+  / `hint_bytes`). Region `hint_breed_16` (bank $16: `call BreedResolveOffspring` →
+  `call HintBreed16`, same size; the original bytes without hints).
+- **Engine (pinned, re-pinned S158):** `bank_079_head.asm` entries 10 `HintCommand`, 11
+  `HintBreed`, 12 `HintSay` + `MemRoomTiles` → `HintRoomNote` (the visit); `bank_077_head.asm`
+  `StoryCommand` kind 8 (`TEMPLATE_SIZE[$77]` 2741, was 2730); `bank_060_head.asm`
+  `TextOverride` step 0b `wHintSay` (`TEMPLATE_SIZE[$60]` 1859, was 1842). Hand-kept patches:
+  bank $69 `RelocatedSpecialScan` row counter → `wHintRow`; bank $16 `HintBreed16`; bank $73
+  `CF3NewGameClear` → `jp HintNewGameClear` (SRAM bank 3 zeroed + "H1"); WRAM $D599-$D5BB
+  (`wCustomPool` moved to $D5BC). The memorial's room-load regions are on when the project has
+  statues OR monuments (`memorial._region_fn`).
+- **Checks** (`hints.problems`): a hint insert outside the hint words; `{family}` in a plain
+  dialogue entry; a line past 18 cells with every insert at its longest (`{family}` =
+  "Material"); a riddle for a key not in the pool (warning: stale); an empty pool with
+  monuments (warning); more than 30 hints in one archive (warning); the bank $79 budget; room
+  limits, unknown families / keys / show / words (`settings`, `check_room`).
+- **The editor:** Breeding tab → **Hints** page (mode, filters, the tick column = in the pool,
+  Riddle…, Put the shown in / Take the shown out, Words…, Family words…, Renumber…); Rooms tab
+  **+ Monument (O)** / **+ Archive (K)** (markers `Mo` / `A<fam>` in the family's colour),
+  `HintObjectPanel`. `Document` `HintsMixin`; `_migrate` pins the numbers of an active project.
+  `EDITOR_REVISION` S158; **S158r2** (the user: the archive's default words lack punctuation /
+  capitals): help 78 § 4 "Fixing the grammar of the default words" (the suggested wording checked
+  with `hints.check_text`); defaults unchanged, `EDITOR_REVISION` S158r2.
+- **Pin:** example `e7267428…` (patched; was `0f341f17…`, patched) — banks $16 (nothing: the
+  example has no hints, the region = the original bytes), $60, $69, $73, $77, $79 (the heads
+  and the stubs). The original ROM's md5 is unchanged (`verify_integrity`).
+- **Measured:** `tools/walk_hints.py` (PyBoy, the user's `.sav`, `examples/s158_hints_demo` =
+  the user's project + THE STONE GARDEN / THE GREAT ARCHIVE / THE RUNE CRYPT, a whitelist of 8):
+  an empty archive's words before anything is learned; the left pillar 6 hints over 6 visits
+  (random order, never one whose child the save owns), the same hint on a re-read, the worn
+  words after; the middle pillar's riddles (bank $79 text) and the cross for a hint without one;
+  the right pillar's intro → riddle → cross; the Slime bookcase in list order with "Keep
+  reading?", NO stops; the BREEDER's MadCat × Healer (level 10) → FangSlime: row 748's hint bred,
+  "(bred)" in the archive, FangSlime's library bit; knowledge kept over a reset without a save;
+  NEW GAME clears it; the crypt on gate 2 floor 2 one hint per dive; `census`: 7,776 crosses,
+  `wHintRow` == the model, HintBreed in / out of the pool / `$FFFF`. `--negative` (story
+  command 8 does nothing and sets `$D8E1` = 0, `HintBreed16` without the far call): 19 FAIL. test_compiler
+  `test_s158` (keys, candidates vs never-fires, pool numbering / pins / holes, lowering, the
+  data, the region, 8 refusals, the Document; `--rom`: entries 10-12, `HintTable`, the
+  HintBreed16 call, the `wHintRow` store, `jp HintNewGameClear`); test_app `s158_hints`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

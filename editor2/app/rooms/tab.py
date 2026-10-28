@@ -95,19 +95,21 @@ class _ObjectPanels:
     def setVisible(self, on):
         t = self.tab
         if not on:
-            for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel, t.statue_panel):
+            for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel, t.statue_panel,
+                      t.hint_panel):
                 p.setVisible(False)
             t.npc_hint.setVisible(True)
 
     def isHidden(self):
         t = self.tab
         return all(p.isHidden() for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel,
-                                          t.statue_panel))
+                                          t.statue_panel, t.hint_panel))
 
 
 class RoomsTab(QWidget):
     status = Signal(str)
     gatesRequested = Signal(str)            # S100: room id -> the Gates tab
+    hintsRequested = Signal()               # S158: the Breeding tab's Hints page
     HELP = ('V select · D / X add a door / examine spot on the selected cell · double-click to edit · B paint · I / right-click eyedrop · W walkability · '
             'Esc select · ⌘/Ctrl+wheel zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
 
@@ -253,6 +255,26 @@ class RoomsTab(QWidget):
                 self.act_add_statue.triggered.connect(
                     lambda: self._add_on_selected(self._add_statue))
                 self.tools.addAction(self.act_add_statue)
+                # S158: the breeding hints (editor2/core/hints.py, help 78)
+                self.act_add_monument = QAction('+ Monument (O)', self)
+                self.act_add_monument.setShortcut(QKeySequence('O'))
+                self.act_add_monument.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_monument.setToolTip(
+                    'Add a hint MONUMENT on the selected cell (put it on your own art: a '
+                    'stone, a pillar): read, it teaches a breeding cross the player has not '
+                    'found yet — typically in a room served on gate floors.')
+                self.act_add_monument.triggered.connect(
+                    lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'monument')))
+                self.tools.addAction(self.act_add_monument)
+                self.act_add_archive = QAction('+ Archive (K)', self)
+                self.act_add_archive.setShortcut(QKeySequence('K'))
+                self.act_add_archive.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+                self.act_add_archive.setToolTip(
+                    'Add a hint ARCHIVE on the selected cell (a bookcase with a family\'s '
+                    'emblem): it lists the crosses of ONE family the player has unlocked.')
+                self.act_add_archive.triggered.connect(
+                    lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'archive')))
+                self.tools.addAction(self.act_add_archive)
                 # S132: + NPC on the bar too (the "Add NPC here…" button now
                 # sits on the Object page, one click away)
                 self.act_add_npc = QAction('+ NPC (N)', self)
@@ -662,6 +684,10 @@ class RoomsTab(QWidget):
         self.statue_panel = StatuePanel()
         self.statue_panel.setVisible(False)
         nl.addWidget(self.statue_panel)
+        from editor2.app.rooms.object_panels import HintObjectPanel      # S158
+        self.hint_panel = HintObjectPanel()
+        self.hint_panel.setVisible(False)
+        nl.addWidget(self.hint_panel)
         nl.addStretch(1)
         self.inspector.npc = _ObjectPanels(self)
         npc.fieldsEdited.connect(self._npc_fields)
@@ -708,6 +734,12 @@ class RoomsTab(QWidget):
         stp.orderRequested.connect(self._statue_order)
         stp.presenceToggled.connect(self._statue_presence)
         stp.deleteRequested.connect(self._statue_delete)
+        hp = self.hint_panel                                             # S158
+        hp.fieldsEdited.connect(self._hint_fields)
+        hp.wordsRequested.connect(self._hint_words)
+        hp.settingsRequested.connect(lambda: self.hintsRequested.emit())
+        hp.presenceToggled.connect(self._hint_presence)
+        hp.deleteRequested.connect(self._hint_delete)
         self.sec_npc = self.rail.add_page(
             'object', 'Object', npcbox,
             tip='The selected cell, NPC, door, exit or spot — opens by itself when you '
@@ -1590,6 +1622,9 @@ class RoomsTab(QWidget):
                 self._show_spot_panel(ref[1], ref[2])
             elif sel['kind'] == 'statue' and ref and ref[0] == 'npc':     # S154
                 self._show_statue_panel(ref[1])
+            elif (sel['kind'] == 'monument' or sel['kind'].startswith('archive')) \
+                    and ref and ref[0] == 'npc':                           # S158
+                self._show_hint_panel(ref[1])
             elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
                 self._show_door_panel(ref)
             elif sel['kind'] in ('exit', 'stairs', 'portal') and ref and ref[0] == 'exit':
@@ -1597,7 +1632,7 @@ class RoomsTab(QWidget):
 
     def _show_object(self, panel):
         for p in (self.npc_panel, self.door_panel, self.tele_panel, self.spot_panel,
-                  self.statue_panel):
+                  self.statue_panel, self.hint_panel):
             p.setVisible(p is panel)
         self.npc_hint.setVisible(panel is None)
         if panel is not None:
@@ -3087,6 +3122,177 @@ class RoomsTab(QWidget):
             return
         label = 'Delete spot' if self._sel_is_spot() else 'Delete NPC'
         if self._npc_op(label, lambda doc, r, k, st: doc.remove_npc(r, k, st, idx)) is not None:
+            self._sel_npc = None
+            self._show()
+            self.inspector.show_selection(None)
+
+    # ------------------------------------------------- breeding hints (S158)
+    def _sel_hint(self):
+        """(room, kind, id, npcs index) of the selected monument / archive, or None."""
+        room = self.current_room()
+        idx = self._sel_npc
+        if room is None or idx is None:
+            return None
+        lst = self.s.doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= idx < len(lst) or lst[idx].get('kind') not in ('monument', 'archive'):
+            return None
+        k = lst[idx]['kind']
+        return room, k, lst[idx].get(k), idx
+
+    def _show_hint_panel(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        doc = self.s.doc
+        lst = doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= index < len(lst) or lst[index].get('kind') not in ('monument', 'archive'):
+            return
+        e = lst[index]
+        kind = e['kind']
+        oid = e.get(kind)
+        obj = doc.monument(room, oid) if kind == 'monument' else doc.archive(room, oid)
+        if obj is None:
+            return
+        self._sel_npc = index
+        pres = [any(x.get('kind') == kind and x.get(kind) == oid for x in s2.get('npcs') or [])
+                for s2 in doc.states(room, self.key)]
+        self.hint_panel.show_object(kind, doc.npc_view(room, e), obj,
+                                    doc.hint_object_words(room, kind, oid), pres, editable=True)
+        self._show_object(self.hint_panel)
+
+    def _reselect_hint(self, index):
+        ref = self.canvas.select_npc(index)
+        if ref is not None:
+            m = next((m for m in self.canvas.markers if m[5] is ref), None)
+            if m is not None:
+                self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2],
+                                               'sprite': m[3], 'label': m[4], 'ref': ref},
+                                              editable=True)
+        self._show_hint_panel(index)
+
+    def _add_hint_object(self, cell, kind):
+        """S158: a monument / an archive on the selected cell — a new one, or (the room
+        has one that does not stand in this state) that one again."""
+        from PySide6.QtWidgets import QInputDialog
+        from editor2.core import hints as HT
+        room = self.current_room()
+        if room is None:
+            return
+        doc = self.s.doc
+        objs = doc.monuments(room) if kind == 'monument' else doc.archives(room)
+        here = {x.get(kind) for x in doc.npc_entries(room, self.key, self.state_idx)
+                if x.get('kind') == kind}
+        others = [o for o in objs if o['id'] not in here]
+        which = None
+        family = None
+        if others:
+            items = [f'A new {kind}'] + [f"{o['id']}" + (f" ({o['family']})" if kind == 'archive'
+                                                         else '') + ' — the same one as in '
+                                         'another state' for o in others]
+            it, ok = QInputDialog.getItem(self, f'Add a {kind}', f'Which {kind} stands here?',
+                                          items, 0, False)
+            if not ok:
+                return
+            if items.index(it) > 0:
+                which = others[items.index(it) - 1]['id']
+        if which is None and kind == 'archive':
+            taken = {o.get('family') for o in doc.archives(room)}
+            fams = [f for f in HT.FAMILIES]
+            first = next((i for i, f in enumerate(fams) if f not in taken), 0)
+            it, ok = QInputDialog.getItem(self, 'Add an archive', 'The archive of which family?',
+                                          fams, first, False)
+            if not ok:
+                return
+            family = it
+        cx, cy = cell
+
+        def op(doc2, r, k, st):
+            if which is not None:
+                return doc2.place_hint_object(r, k, st, cx, cy, kind, which)
+            if kind == 'monument':
+                doc2.add_monument(r, k, st, cx, cy)
+            else:
+                doc2.add_archive(r, k, st, cx, cy, family)
+            return len(doc2.npc_entries(r, k, st)) - 1
+        cmd = self._npc_op(f'Add {kind} ({cx},{cy})', op)
+        if cmd is None:
+            return
+        self._show()
+        self._reselect_hint(cmd.result)
+        self.status_line.setText(
+            f'{kind.capitalize()} on ({cx},{cy}) — an examine spot: draw your own art there. '
+            + ('It teaches a cross from the hint pool (Breeding tab → Hints).'
+               if kind == 'monument' else
+               f'It lists the {family or "its family"} crosses the player has unlocked.'))
+
+    def _hint_fields(self, fields):
+        sel = self._sel_hint()
+        if sel is None:
+            return
+        _room, kind, oid, idx = sel
+        if kind == 'monument':
+            op = (lambda doc, r, k, st: doc.update_monument(r, oid, **fields))
+        else:
+            op = (lambda doc, r, k, st: doc.update_archive(r, oid, family=fields.get('family')))
+        self._npc_op(f'{kind.capitalize()} settings', op)
+        self._show()
+        self._reselect_hint(idx)
+
+    def _hint_words(self):
+        sel = self._sel_hint()
+        if sel is None:
+            return
+        room, kind, oid, idx = sel
+        from editor2.app.hints_dialog import HintWordsDialog
+        from editor2.core import hints as HT
+        w = self.s.doc.hint_object_words(room, kind, oid)
+        labels = ({'intro': 'Before the cross (optional)', 'text': 'The cross\'s words',
+                   'outro': 'After the cross (optional)',
+                   'exhausted': 'When nothing is left to teach'} if kind == 'monument' else
+                  {'ask': 'Its question (YES / NO)', 'empty': 'Nothing unlocked yet',
+                   'entry': 'One entry (a cross)', 'more': 'After each entry (YES / NO)',
+                   'end': 'After the last entry', 'no': 'Answered NO (optional)'})
+        roles = [(r, labels[r], (w[r][0] or None), w[r][1],
+                  'the project\'s words' if w[r][0] else 'none') for r in labels]
+        dlg = HintWordsDialog(self.s.renderer.rom, f"{oid} — its words", roles,
+                              family=(kind == 'archive'), parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        vals = dlg.values()
+
+        def op(doc, r, k, st):
+            for role, boxes in vals.items():
+                doc.set_hint_object_words(r, kind, oid, role, boxes)
+        self._npc_op(f'{kind.capitalize()} words', op)
+        self._show()
+        self._reselect_hint(idx)
+
+    def _hint_presence(self, state, on):
+        sel = self._sel_hint()
+        if sel is None:
+            return
+        room, kind, oid, idx = sel
+        e = self.s.doc.npc_entries(room, self.key, self.state_idx)[idx]
+        x, y = int(e['x']), int(e['y'])
+
+        def op(doc, r, k, st):
+            lst = doc.npc_entries(r, k, state)
+            hit = [i for i, e2 in enumerate(lst) if e2.get('kind') == kind and e2.get(kind) == oid]
+            if on and not hit:
+                doc.place_hint_object(r, k, state, x, y, kind, oid)
+            elif not on and hit:
+                doc.remove_hint_object_here(r, k, state, hit[0])
+        self._npc_op(f"{kind.capitalize()} {'in' if on else 'out of'} state {state}", op)
+        self._show()
+        self._reselect_hint(idx)
+
+    def _hint_delete(self):
+        sel = self._sel_hint()
+        if sel is None:
+            return
+        _room, kind, _oid, idx = sel
+        if self._npc_op(f'Remove {kind}', lambda doc, r, k, st: doc.remove_hint_object_here(
+                r, k, st, idx)) is not None:
             self._sel_npc = None
             self._show()
             self.inspector.show_selection(None)

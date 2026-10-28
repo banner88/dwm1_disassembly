@@ -24,6 +24,10 @@ built from it (the original ROM is never changed).
   (S154) **＋ Statue** on the Rooms tab's tool bar adds a **memorial statue**: it shows a
   monster that won a boss battle, an arena class or Starry Night with you and has left
   since — see *The memorial: statues of the monsters that left*.
+  (S158) **＋ Monument** / **＋ Archive** add **breeding hints**: a monument teaches the
+  player a breeding cross they have not found yet, an archive lists one family's learned
+  crosses (the pool: Breeding tab → **Hints**) — see *Breeding hints: monuments and
+  archives*.
 - **Gates** — which custom rooms appear on which gate floors, per-gate
   settings (floor count, boss floor, hand-made gates, project enemies) and
   **new gates** of your own (a copy of a vanilla gate; entrances on the Rooms

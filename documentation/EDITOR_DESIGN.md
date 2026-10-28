@@ -1005,6 +1005,19 @@ the player (farm, library, medals) are not in the story state — flags ON cover
   state. Every statue edit is one `SnapshotCommand` (sheet assets included) and re-selects
   the statue afterwards (`_reselect_statue`: the push's re-show drops the selection).
   Capacity rows: statues in one room (8), monsters remembered (120).
+- **Breeding hint monuments and archives (as built S158 — ROADMAP E15; built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results"); PROJECT_COMPILER §2.66, help 78):** both are OBJECTS of a screen state
+  (`npcs[]` `kind: monument` / `archive`) on the author's own art — no tiles are drawn (user:
+  "I will handle visual tile myself. It will be book case with family emblem on it"). Select
+  tool → cell → **＋ Monument (O)** (marker **Mo**) or **＋ Archive (K)** (asks the family;
+  marker **A** + the family's letters — **ASl**, **ADr** … — in the family's own colour,
+  `canvas.ARCHIVE_COLOURS`). In a state where the room's objects do not stand, it asks "a new
+  one or one of the room's". `HintObjectPanel`: a monument's families (every family / ticked
+  ones), **skip children the player has owned** (default on), **shows** (the cross / the
+  riddle, else the cross / the riddle, then the cross); an archive's family; both: **Its
+  words…** (`HintWordsDialog`, game-text boxes with the inserts), **Hint settings…** (→ the
+  Breeding tab's Hints page), in states, Remove from this state. One `SnapshotCommand` per
+  edit, re-selected afterwards (`_reselect_hint`). Capacity rows: monuments in one room (8),
+  hint numbers (2048), the bank $79 hint bytes.
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
@@ -1698,6 +1711,19 @@ without breeding, shown in the dialog), one share box per depth (Default / Even 
 seed, monsters to keep; Propose shows the depth chart + counts; Apply = one undo step. Not built: the
 offspring's skills / stats in Try a cross (bank $16 entry 4), a gender rule (open
 question), live coherence beyond the library text (the compiler regenerates it).
+
+- **Hints page (as built S158 — ROADMAP E15; built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results")):** the pool of
+  breeding hints = the special rows that can decide an egg (`hints.candidates`), one row per
+  cross: number, pedigree, mate, min plus, child, family, riddle, state (gone = ticked but no
+  longer in the table, grey). **Mode** Blacklist (default; untick to take out) / Whitelist
+  (tick to put in) — both lists kept. Filters: family, find a monster, in / not in the pool;
+  **Put the shown in the pool** / **Take the shown out**; **Riddle…** (double-click,
+  `RiddleDialog`); **Words…** (every monument's / archive's default words); **Family words…**
+  (a family parent's words, ≤ 12, and the (bred) mark, `FamilyWordsDialog`); **Renumber…**
+  (numbers from 0 again — "once, before release"). Filled lazily when the page is first shown.
+  Every pool edit pins the numbers (`pin_hint_numbers`). **S158r3:** the table's header is
+  `Interactive`, filled with updates off and one `resizeColumnsToContents()` (a `ResizeToContents`
+  header froze the editor for minutes on the whole pool — KEY_LESSONS S158r3).
 
 ### 5.5 Encounters tab
 

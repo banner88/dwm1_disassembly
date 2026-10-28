@@ -598,6 +598,66 @@ won a boss battle, an arena class or Starry Night's final with the player and ha
   command 7 fills them for statue n and sets `$D8E1` (1 = a monster, 0 = empty) for the
   statue's script to branch on.
 
+### Breeding hints (S158 — code-read + PyBoy-measured on the user's save; patched builds: ROADMAP E15, PROJECT_COMPILER §2.66)
+
+A project room may hold hint MONUMENTS and ARCHIVES (examine spots on the author's own art).
+A HINT is one row of the effective special breeding table (bank $69 `RelocatedSpecialTable`,
+the order the compiler emits), put in the project's pool; hint k has a NUMBER k (pinned in
+project.json, so a save's knowledge survives edits) and two bits in SRAM bank 3 (ARCHITECTURE
+"SRAM bank 3"): UNLOCKED `$B000 + k / 8` and BRED `$B100 + k / 8`, mask `$80 >> (k & 7)`,
+magic "H1" at `$A007`. The game's side:
+
+- **Which row made the egg.** Bank $69 `RelocatedSpecialScan` counts the rows it passes (DE)
+  and stores the matching row's number in `wHintRow` (`$D5B0`), `$FFFF` when none matched
+  (every breeding, the Old Man's preview too, every build). BreedCreateOffspring (bank $16
+  entry 0 — Grandpa's / a master's ceremony and the link, callers `$0A:$4A8D` / `$0A:$56F8` /
+  `$15:$5B7D`) calls `BreedResolveOffspring`; with hints the call goes to `HintBreed16` (region
+  `hint_breed_16`, same size), which resolves, then far-calls bank $79 entry 11 `HintBreed`:
+  the hint whose row = `wHintRow` (none: nothing) is set UNLOCKED + BRED. A cross not in the
+  pool records nothing (the user's rule). PyBoy (walk `census`): `wHintRow` == the resolver
+  model's special row for 7,776 crosses; HintBreed marks exactly the hint of each pool row,
+  nothing for a row outside the pool or `$FFFF`.
+- **"Ever owned" = the library bits `$CA94`** (known_RAM_map — set by a monster's creation in
+  the roster, a join after battle, and the bred EGG's species; never cleared). A monument with
+  "skip owned" skips a hint whose child's bit is set. Measured: the egg of the walk's breeding
+  set FangSlime's bit.
+- **A monument** = story command 8 `[0, m]` (bank $77 `StoryCommand` → bank $79 entry 10
+  `HintCommand`, E = sub 0, D = the monument's number in `HintMonTable`: its room slot 0-7,
+  family bits 0-10, bit 7 of byte 2 = skip owned). Its slot's LATCH (`wHintLatch` + 2 · slot,
+  hint + 1) holds this visit's hint: read again, the same hint. Else the candidates — a real
+  hint (family ≠ `$FF`) of one of its families, not unlocked, (skip owned) child not owned — are
+  counted; none → `$D8E1` = 0 (the script says the worn-away words); else one is picked with
+  ONE `GenerateRNG` step: r = ((x >> 5) · n) >> 11 (x = wRNG1:wRNG2, so the LCG's weak low bits
+  are dropped; r < n for n ≤ 2048), the r-th candidate in number order is set UNLOCKED at once,
+  latched, its names put in the inserts, `$D8E1` = 1. A VISIT = (`wMapRegion`, `wMapID`,
+  `wGateID`, `wCurrentFloor`): bank $79 `HintRoomNote` runs at every room load (the memorial's
+  room-load regions `memorial_tiles_0` / `_1` → entry 8 `MemRoomTiles`, on when the project
+  has statues OR monuments) and at every pick; another visit clears the latches. Measured:
+  the LEFT pillar taught 6 hints over 6 visits in random order (5, 2, 3, 7, 6, 0), never the 2
+  whose child the save owns, the 7th visit the worn words; a gate's floor-2 room taught one
+  hint per dive.
+- **The words.** Inserts (TEXT_SYSTEM "Name inserts"): `$C180` `{parent1}` / `$C190`
+  `{parent2}` = a species' name (text mode 5 via ROM0 `SetupVRAMParams`) or the family's words
+  (`HintFamWords`), `$C1A0` `{child}` = the name + " +N" when the row needs a plus (`$62 $A2`
+  + the digit glyphs), `$C1B0` `{bred}` = `HintBredWord` / `HintUnbredWord` by the BRED bit —
+  filled by sub 0 / 1 / 3 right before the words (measured: the inserts == the model for every
+  pick). A RIDDLE: sub 1 `[1, 1]` sets `wHintSay` when the hint has one (`HintRiddles[k]` ≠ 0;
+  `$D8E1` = 1, else 0) and the next SHOWN text (bank $60 `TextOverride` step 0b) becomes the
+  riddle — bank $79 entry 12 `HintSay` points level 2 at it as an edited text (`[$C824]` = $79,
+  `wTextOvrPtr`, DE = `wTextOvrPtr` − 2 · [$C823]; bank $77 `OneOnlySay`'s way). Measured: the
+  text engine prints from bank $79 inside `HintRiddle_k` for a riddle hint, from the room's text
+  for one without.
+- **An archive** = story command 8 `[2, f]` (start: `$D8E1` = 1 when family f has an unlocked
+  hint) and `[3, f]` (the next unlocked hint of `HintFamLists[f]` from `wHintCursor`: the
+  inserts, `$D8E1` = 1 more follow / 2 the last / 0 none). The script asks, then loops entry →
+  "Keep reading?" (PROJECT_COMPILER §2.66). Measured: the Slime bookcase listed exactly the
+  unlocked Slime hints in the list order, `$D8E1` 1, 1, 2; NO stopped it; after the breeding
+  its entry showed "(bred)".
+- **Knowledge is written at once** (not at the save; the user's call): a reset + CONTINUE
+  without a JOURNAL save kept the 6 hints learned (measured); NEW GAME zeroed both bitsets
+  (bank $73 `HintNewGameClear`, measured). SRAM a save never wrote holds junk (the user's save:
+  `$FF`): no magic = nothing known (`HintEnsure`).
+
 ### Encounter Runtime Flow (verified end-to-end, June 2026)
 
 The full chain from "player takes a step" to "wild battle starts". Every

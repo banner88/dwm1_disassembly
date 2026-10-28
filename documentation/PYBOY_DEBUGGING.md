@@ -1202,3 +1202,28 @@ edge and the battle waits for input forever.
   message render, for a party caster and an enemy caster, before mapping a `{token}`.
 - **A line's look:** a screenshot every 4 frames from the action's start, sheeted 9 across with
   the frame offset (as S155 r2) — that is how the 20-cell overflow showed.
+
+## S158 techniques — breeding hints walked on the user's save (tools/walk_hints.py)
+
+- **NEW GAME from a save:** the title menu opens on CONTINUE — start, A (logo), A (title), DOWN,
+  then A through the opening until map `$2F` (the intro bedroom). `to_bedroom`'s A alone
+  continues.
+- **A breeding ceremony by menus:** blind A taps fall into the WHO list; drive by state
+  (`$C83C` choice, the WHO cursor) and pick the partner by its slot. The game breeds only from
+  level 10 (record +$4B) — rig the level, say so in the log.
+- **Peek at a WAITING box, not the last one:** `converse` hooks the box's open and records (text
+  id, the `$C180-$C1BF` inserts, `[$C824]`, the text pointer `$C82D`, `$D8E1`) when the box
+  waits for A — the inserts at that moment are the ones on screen; `[$C824]` = $79 + a pointer
+  inside `HintRiddle_k` proves the riddle swap.
+- **A far call in the field from a stub:** write `di / ld hl, <entry> / rst $10 / jr $` at
+  `$DD40` (battle WRAM, unused in the field — census_breeding's park), set PC there, tick until
+  PC = the `jr`, restore PC. 7,776 crosses of bank $16 entry 2 + `HintBreed` that way in a few
+  minutes, compared with `FastResolver`.
+- **SRAM bits:** `p.memory[3, $B000 + k / 8]` (bank 3); read nothing without the magic at
+  `$A007`. A savestate restores SRAM too (KEY_LESSONS S158).
+- **Negative control:** in a ROM copy, `StoryCommand`'s kind-8 branch → `xor a / ld [$D8E1], a /
+  ret` and the far call in `HintBreed16` → nops; a reduced step set, no screenshots
+  (`no_snaps`). A bare `ret` hung the GAME: `$D8E1` stayed 1, the archive's script looped with
+  no command and `p.tick()` never returned (py-spy showed `converse` at f = 24 after 7 minutes)
+  — a negative must remove the feature, not leave the script's branch variable stale. 19 FAIL;
+  the `census` stub calls pass (they call the engine, not the hook).

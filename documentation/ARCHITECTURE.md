@@ -517,6 +517,16 @@ index = the memorial's entries (`MEM_RING` = `MEM_CAP` + 9 ≤ 129 → up to `$A
 bank $79 at a win, NOT at the save (DATA_STRUCTURES "The memorial (S154)"). Free in bank 3 now:
 `$A007-$A00F`, `$A110 + 8 × MEM_RING`-`$BFFF` (`$A518-$BFFF` at the largest memorial; all of
 `$A110-$BFFF` in a project without statues).
+**S158 (the breeding hints, built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results")):** `$A007-$A008` = magic "H1"
+(`$48,$31`), `$B000-$B0FF` = the UNLOCKED bitset, `$B100-$B1FF` = the BRED bitset (hint k =
+byte k / 8, mask `$80 >> (k & 7)`; hints 0-2047). Written AT ONCE by bank $79 (a monument read,
+an egg bred — the user's call: what the player learned stays known after a reset), not at the
+save; no magic = nothing known (bank $79 `HintEnsure` zeroes both bitsets and writes the magic
+at the first use — the user's own save held `$FF` there, measured S158); bank $73
+`HintNewGameClear` (the tail of entry 7 `CF3NewGameClear`) zeroes them + writes the magic at a
+NEW GAME. Same no-di RAMB 3 windows as the memorial (`MemBank3` / `MemBank0`). DATA_STRUCTURES
+"Breeding hints (S158)". Free in bank 3 now: `$A009-$A00F`, `$A110 + 8 × MEM_RING`-`$AFFF`,
+`$B200-$BFFF`.
 
 **What remains open in E3** (see ROADMAP): (a2) new-game INIT data as an
 authorable object; (b2) story-variable headroom schema on top of the new

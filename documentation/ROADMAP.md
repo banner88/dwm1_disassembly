@@ -3507,6 +3507,34 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       frees the region and the extents; measure every name reader (the SKIL menu, the battle
       announce `$C190`, the learn / upgrade messages, Plunder's `{buff}` copy). The user (S156:
       "what do YOU think?") was told: accept the cost now, move them when it binds.
+- [x] **E15 — Breeding hints: monuments teach a cross, archives list a family's (ADDED + BUILT
+      S158; built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results"); test ROM `DWM-S158-hints-test.gbc`).** User: "Since
+      I am scrambling breeding, the player needs in-game hints of new combinations" — a
+      monument in a custom room (in a gate) reveals a combination the player has not unlocked;
+      unlocked by a monument OR by breeding it the first time; a pool, whitelist or blacklist
+      (default: everything but the basic), made from the breeding table as it stands; the
+      words, a riddle, or both; an archive per family ("would you like to view it?", "It seems
+      you have not found any clues yet…", the unlocked ones with whether the player made
+      them). Decided: a hint = ONE special-table row ("I want individual"); basic = the family
+      table ("what library already knows"); no all-families archive; the same hint on a re-read
+      in one visit, a new one the next visit; skip children the player has owned (a monument
+      tick, default on); written to the save at once; "Keep reading?" after every entry; the
+      archive's art is the author's ("book case with family emblem"); link breeding too.
+      Built: bank $69 `wHintRow` (the special row that made the egg), bank $16 region
+      `hint_breed_16` → bank $79 entry 11 `HintBreed`; bank $79 entries 10 `HintCommand`
+      (pick / riddle / archive start / next) + 12 `HintSay` (the riddle through bank $60
+      `TextOverride`); bank $77 story command 8; SRAM bank 3 "H1" $A007 + UNLOCKED $B000 / BRED
+      $B100 (2048 hints), bank $73 `HintNewGameClear`; `custom.hints` + `rooms[].monuments` /
+      `archives`; the Breeding tab's Hints page, **+ Monument (O)** / **+ Archive (K)**, the
+      inserts `{parent1}` / `{parent2}` / `{child}` / `{bred}` / `{family}`; help 78. Walk
+      `tools/walk_hints.py` (PyBoy, the user's save) 72 / 72, negative 19 FAIL.
+      PROJECT_COMPILER §2.66, DATA_STRUCTURES "Breeding hints (S158)". Not built (not asked): an
+      all-families archive; hints for family-table recipes; a hint art tile drawn by the editor.
+      **S158r2 (the user: "Archive is gramatically bad … fixable in editor?" → "Update the help
+      section with this specifically"):** help 78 § 4 "Fixing the grammar of the default words";
+      the default words unchanged (a possible follow-up: better defaults, not asked).
+      **S158r3 (the user: "take the shown out" froze the editor):** the Hints table's header
+      re-measured every row at each cell (`ResizeToContents`) — fixed (one resize after the fill).
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work

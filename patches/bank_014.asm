@@ -222,8 +222,8 @@ label14_40b4:
     jr z, jr_014_4158
 
     ld a, [$da18]
-    ld hl, $ca94
-    call SetBitInArray
+    ld hl, $ca94             ; S158: the library bit of [$DA18] (the new monster's species) — set at every
+    call SetBitInArray       ;   monster CREATED into the roster (join / gift; not the staging slot $15): "ever owned"
 
 Jump_014_4158:
 jr_014_4158:

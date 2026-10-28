@@ -2088,3 +2088,18 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | help `74_items.md`, `_revision.md`; `EDITOR_REVISION` S157 | permanent = one-only | test_app (help revision) |
 | `examples/s157_oneonly_demo/build_demo.py` (NEW) | the user's project + the WarpWing permanent + THE AVIARY (WING STALL, WINGKEEPER, VAULT keeper) / THE PERCH (NEST, BRUISER, EXIT GUIDE) + the AVIARY GUIDE in Cities_FOUNT (3, 4); refuses to build when its rooms warn | builds (one warning by design: the NEST's Give of 2) |
 | `tools/walk_oneonly.py` (NEW) | PyBoy on the user's save + the S157 demo: `guide`, `buy`, `vault`, `give`, `dresser` (the game's Stable dresser), `nest`, `lose`, `floors` (the census_maze rig on the build + the original ROM: floor items, SetBrd_6db0 chests, CallBrd_6ddb rare chests); `--negative` (`IsOneOnly77` = `and a / ret`) | 28 / 28; negative 14 FAIL |
+
+## S158 rows (ROADMAP E15 — breeding hints; built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results"))
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/hints.py` (NEW) | the compiler: keys, `candidates` (FastResolver), `pool` (numbers, pins, holes), `settings` / `check_room`, `lower` / `lower_step` (story command 8), `data_lines` (bank $79 `HintTable` / `HintRiddles` / `HintMonTable` / `HintFamLists` / words), region `hint_breed_16`, `problems` | `test_s158` |
+| `editor2/core/hints_doc.py` (NEW) | `HintsMixin`: mode, pool ticks, pins / renumber, riddles, words, monuments / archives in rooms | `test_s158`; test_app `s158_hints` |
+| `editor2/core/templates/bank_079_head.asm`, `bank_077_head.asm`, `bank_060_head.asm`, `PINNED_SHA256` | entries 10-12 `HintCommand` / `HintBreed` / `HintSay` + helpers, `MemRoomTiles` → `HintRoomNote`; story command 8; `TextOverride` step 0b | walk_hints.py; `test_s158 --rom` |
+| `patches/bank_069.asm`, `bank_016.asm`, `bank_073.asm`, `wram.asm` | `wHintRow` row counter; region `hint_breed_16` + `HintBreed16`; `HintNewGameClear`; WRAM $D599-$D5BB (`wCustomPool` → $D5BC) | walk_hints.py `census` / `newgame` |
+| `editor2/core/document.py`, `project.py`, `story.py`, `textenc.py`, `validators.py`, `milly.py`, `memorial.py`, `emitters.py`, `capacity.py` | the mixin + views; the lowering; `CMD_KINDS['hint']` 8; the inserts `{parent1}` / `{parent2}` / `{child}` / `{bred}` / `{family}`; `TEMPLATE_SIZE` $60 1859 / $77 2741; bank $79 for hints; the room-load regions for monuments; capacity rows | test_compiler |
+| `editor2/app/hints_dialog.py` (NEW), `rooms/object_panels.py`, `rooms/canvas.py`, `rooms/tab.py`, `breeding_tab.py`, `main.py` | the word / riddle / family-word dialogs; `HintObjectPanel`; markers Mo / A<fam>; + Monument (O) / + Archive (K); the Hints page (r3: the table filled without a per-cell resize) | test_app `s158_hints` |
+| help `78_hints.md` (NEW), `00_start.md`, `58_breeding.md`, `90_limits.md`, `_revision.md`; `EDITOR_REVISION` S158 (r2: S158r2 — § 4 "Fixing the grammar of the default words") | the hints | test_app (help revision) |
+| `disassembly/` + `patches/` `bank_014.asm`, `bank_016.asm`, `bank_051.asm` | comments: the `$CA94` writers = "ever owned" | verify_integrity (byte-perfect) |
+| `examples/s158_hints_demo/build_demo.py` (NEW) | the user's project + THE STONE GARDEN (3 pillars, BREEDER), THE GREAT ARCHIVE (11 bookcases), THE RUNE CRYPT (gate 2 floor 2) + the HINT GUIDE in Cities_FOUNT (3, 4); a whitelist of 8, 3 riddles | walk_hints.py |
+| `tools/walk_hints.py` (NEW) | PyBoy on the user's save + the S158 demo: `empty`, `pick`, `riddle`, `both`, `archive`, `breed`, `persist`, `newgame`, `crypt`, `census` (7,776 crosses, stub at `$DD40`); `--negative` (kind 8 does nothing, `$D8E1` = 0; no HintBreed) | 72 / 72; negative 19 FAIL |

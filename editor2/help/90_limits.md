@@ -216,3 +216,9 @@
   {fallen_level} / {fallen_species} only in a statue's words. Every monster's 27th
   resistance must stay 0 while the project has statues. A save made before the memorial
   starts with an empty memorial. See *The memorial: statues of the monsters that left*.
+- The breeding hints (S158): up to 2,048 hint numbers (the pool + the numbers kept for
+  crosses taken out); up to 8 monuments a room, 255 in the project; a family's words 12
+  letters, the bred mark 15. Hints are special recipes only (family recipes are on the
+  library pages). What the player learned is in the save at once (SRAM bank 3; a NEW GAME
+  clears it); renumbering the hints mixes up an older save's knowledge. See *Breeding
+  hints: monuments and archives*.

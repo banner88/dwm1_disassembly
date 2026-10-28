@@ -57,14 +57,27 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           # S125: where a hub rule brings the player home
           'hub': QColor(255, 200, 40),
           # S154: a memorial statue
-          'statue': QColor(200, 200, 220)}
+          'statue': QColor(200, 200, 220),
+          # S158: a breeding-hint monument; archives (below) take their family's colour
+          'monument': QColor(170, 190, 255)}
+# S158 (user: "Colour it in editor"): an archive's marker = its family's colour + letters
+ARCHIVE_COLOURS = [QColor(80, 160, 255), QColor(255, 90, 60), QColor(220, 160, 80),
+                   QColor(120, 220, 255), QColor(110, 220, 90), QColor(190, 220, 60),
+                   QColor(190, 90, 255), QColor(150, 170, 120), QColor(200, 200, 200),
+                   QColor(255, 210, 40), QColor(255, 140, 220)]
+ARCHIVE_TAGS = ['Sl', 'Dr', 'Be', 'Bi', 'Pl', 'Bu', 'De', 'Zo', 'Ma', 'Bo', 'Sp']
+for _i, _c in enumerate(ARCHIVE_COLOURS):
+    MARKER[f'archive{_i}'] = _c
+MARKER['archive'] = QColor(220, 220, 220)
 MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
                'door_dead': 'D!',
                'examine': 'X',
                'step': 'T',
                'stairs': 'S↓', 'gate_arrival': 'G',
-               'portal': 'P', 'world_land': 'W↓', 'hub': 'H', 'statue': 'M'}
+               'portal': 'P', 'world_land': 'W↓', 'hub': 'H', 'statue': 'M',
+               'monument': 'Mo', 'archive': 'A?'}
+MARKER_TEXT.update({f'archive{_i}': 'A' + _t for _i, _t in enumerate(ARCHIVE_TAGS)})
 SEL = QColor(255, 230, 0)
 
 
@@ -86,6 +99,12 @@ def classify_npc(entry):
     if k == 'statue':                                   # S154: a memorial statue
         return ('statue', int(entry['x']), int(entry['y']), None,
                 f"memorial statue '{entry.get('statue')}' (examine it in the game)")
+    if k == 'monument':                                 # S158: a breeding-hint monument
+        return ('monument', int(entry['x']), int(entry['y']), None,
+                f"hint monument '{entry.get('monument')}' (teaches a breeding cross)")
+    if k == 'archive':                                  # S158: a breeding-hint archive
+        return ('archive', int(entry['x']), int(entry['y']), None,
+                f"hint archive '{entry.get('archive')}'")
     if k == 'npc':
         spr = val(entry.get('sprite', 0))
         beh = entry.get('behaviour', 'stand')
@@ -600,6 +619,14 @@ class RoomCanvas(QGraphicsView):
             names = {}
         for i, e in enumerate(st.get('npcs', [])):
             kind, x, y, spr, label = classify_npc(e)
+            if kind == 'archive':                       # S158: its family's colour
+                a = next((o for o in (self.room or {}).get('archives') or []
+                          if o.get('id') == e.get('archive')), None)
+                from editor2.core import hints as _HT
+                fi = _HT.family_index((a or {}).get('family'))
+                if fi is not None:
+                    kind = f'archive{fi}'
+                    label += f" — the {_HT.FAMILIES[fi]} family"
             ref = ('npc', i, e)
             if i in names:
                 label = f'“{names[i]}” — {label}'

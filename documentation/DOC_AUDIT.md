@@ -1077,3 +1077,11 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | bank $04 `$6F44-$6F63` mgbdis code (`inc bc / inc b / ld b,$0c …` with a `jr nz, FindEmptySlotLoop`) | ❌ DATA | `ColiseumPrizesLow` / `ColiseumPrizesHigh`, 2 × 16 item ids (op `$5C` reads them) | re-sectioned both trees, `tools/resection_loot_lists.py`, clean `1ca6579…` |
 | ROADMAP boxes S2f, §13.4 follow-ups, S4, S3 [~], S2 [~], M3 [~], E4, E6, A′3, the 4 MB contingency, multi-screen editing [~], B6 / B8 / B9 [~] still open | ⚠ STALE | each already built by a later session (the box now names it) | ROADMAP clean-up S157 (user: "Also clean up roadmaps") |
 | EDITOR_DESIGN §9 G-E "'play this room' from the Rooms tab is still open"; G-F "the network / unlock half stays open" | ⚠ STALE | ▶ Play here S132 (P3.4); NG2 / NG3 / P3.14d / CAP3 built the network | ROADMAP P3.4, ARC NG, P3.14d, CAP3 |
+
+## S158 addendum (2026-10-28; breeding hints — ROADMAP E15)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| known_RAM_map / BREEDING_SYSTEM: `$CA94` = the library's "seen" bits | ❌ WRONG | "EVER OWNED": set when a monster is created in the roster (bank $14 `label14_40b4`), joins after a battle (bank $51 `SetBtlS_6928`) and for a bred egg's species (bank $16 `BreedCreateOffspring`); never set by only seeing one, never cleared | code-read S158 (the three `SetBitInArray` callers, commented both trees); PyBoy: the walk's egg set FangSlime's bit |
+| `Project` story checks: the label `'seen'` worded "monsters seen" | ⚠ WORDING | reads the same `$CA94` bits = ever owned; the label is kept (project files use it), the meaning is "owned at some time" | S158 (not changed: a rename would break projects) |
+| SRAM bank 3 above the memorial's list "free" | ✅ FREE but JUNK | never written by the game: the user's save holds `$FF` there — a store needs a magic (KEY_LESSONS S158) | PyBoy S158 |

@@ -564,7 +564,13 @@ HOOK = {
 
 def _region_fn(name):
     def fn(prj, warnings):
-        return HOOK[name] if active(prj.custom) else VANILLA[name]
+        on = active(prj.custom)
+        if name in ('memorial_tiles_0', 'memorial_tiles_1'):
+            # S158: the room-load hook is also the breeding hints' visit (bank $79
+            # MemRoomTiles -> HintRoomNote): on with statues OR hint monuments
+            from . import hints as _HT
+            on = on or _HT.active(prj.custom)
+        return HOOK[name] if on else VANILLA[name]
     fn.__name__ = f'emit_region_{name}'
     return fn
 

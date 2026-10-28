@@ -1,5 +1,70 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-21 (Session 156 — **ROADMAP E12 BUILT: PLUNDER — THE BUFF THIEF (`$EA`, 234): STEALS ONE BUFF OF A
+> FOE AT RANDOM (AMONG THE ONES THE USER LACKS, ELSE ANY) AND PUTS IT ON THE USER AS IF CAST THIS ROUND; ALWAYS LANDS; NO BUFF →
+> "BUT NOTHING HAPPENS!" (MP SPENT); ONE FOE; THE ENEMY AI USES IT ONLY WITH A BUFF TO TAKE; ITS LINE NAMES THE BUFF; THE
+> BALANCE SIMULATOR MODELS IT** (kickoff: "New custom skill functionality added and integrated with everything - editor,
+> balance calculator for romhack (doesnt touch vanilla), AI, etc. Continue with that." → the audit + 10 questions → user:
+> "1) Yes 2) Choose at random yes 3) Fresh 4) Only caster 5) Always lands 6) Ignore iron 7) Sounds good. 8) One foe only 9) Yes
+> 10) what do YOU think?" → answered: accept the 8-B name cost now, move the names out of bank $41 when it binds (ROADMAP E14)).
+> **Built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.").** Test ROM **`DWM-S156-plunder-test.gbc`** (`c2d1e3db…`, patched) = the user's project + THE
+> ROGUE HALL (`examples/s156_plunder_demo/build_demo.py`; way in: the HALL GUIDE, Cities_FOUNT (3, 4); the GIFT MASTER's
+> PLUNDERER (Plunder / Barrier / Upper / ChargeUP) and SHIELDER (Barrier / Increase / SpeedUp / TailWind), the BUFF KNIGHT (buffs
+> itself) and the BANDIT (plunders)). Example pin `06bd2458…` (patched; was `a7018025…`, patched).
+> **Built (engine):** bank $72 `SkillPlunder` (via `CustomBattleRun`; the no-damage dispatch of S155) + `StealTable` (18 rows
+> of 6 B: BuffTable's 17 with "a stat raised" split into DEF / AGL; offset, mask, the caster's bits cleared, the value — `$FF`
+> = copied —, kind, the stock skill whose name the line prints); the pick = ONE BattleRNG step, the k-th eligible row,
+> k = (RNG1 × n) >> 8, among the target's buffs the caster lacks (`StealCasterHas72`: its bits; DEF / AGL: its stat cannot
+> rise; SuckAll: its side has one), else among all; the move (`StealApply72`): persistent bits as they are, Bounce / MagicBack
+> replace each other, ChargeUP / SuckAir / Focus FRESH ($03 / $30 / $80), SideStep and the stance level copied, SuckAll with
+> its side marks; a raised DEF / AGL: the target back to its base (bank $57 entries 7 / 8 via `BaseStat72`, `$DD72/73`
+> kept), ONE Upper / Speed on the caster (999 / 511, ×4 / ×2 caps — `StatRoom72` / `StatRise72`); none → `RustFail72` ($BB, MP
+> spent); the result line LINE 6 (bank $4C `CustomLinePtrs`, ASSERT `$7454`) with `[INS 20]` = the caster and `[INS 00]` = the
+> target (the game's own fills at that render — MEASURED) and `[INS 30]` ($C1B0, untouched in battle) := the buff's name
+> (`StealName72`, bank $41 mode 6); the AI: `CustomAIRule72 .plunder` (veto without a buff to take, +20 per buff, at most +60)
+> and `CustomTargetPick72` (`ScoreSteal72` = the handler's own test); record = DeMagic's shape, flags 0 (never misses, not
+> reflected / Covered / dodged / iron-blocked); WRAM `wSteal` $DECC (6 B). BATTLE_SKILL_SYSTEM §13.11.
+> **Built (compiler + editor + simulator):** custom_skills.json row 234 (`"_since": "S156"`) + `plunder_line` ("{name} steals /
+> {target}'s" + "{buff}!"), `CS.BUILTIN` + 234, `CS.PLANNED` = (), `RESULT_TOKENS` (`{buff}` `$F9 $30`, `{name}` `$F9 $20`; Blunt's
+> result line takes `{name}` too), `MSG_PTRS_AT` $7454, the names' order S111 → S155 → S156; the Skills tab (the line box
+> label, the Target note); help 54; `EDITOR_REVISION` S156; `simulator/skillfx/s155_custom.py` the twin (`plunder_one`,
+> `steal_*`, the AI rule, the pick); `tools/extract_custom_skills.py` the S156 layout. PROJECT_COMPILER §2.64.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_plunder.py` on the demo): 41 / 41** — at every forced cast the ROM's
+> board ($DB00-$DB4B, DEF / AGL) at the result line == the simulator twin run on the board + RNG read at the handler's entry:
+> each of the 18 buffs alone on the foe (the line 6, the stock name in [INS 30], the cast's visual with it), no buff → $BB, the
+> lacking-first rule (4 seeds), three buffs over 8 seeds (rows 0 / 2 / 4), DEF + AGL raised, the caster at its DEF cap, Bounce
+> over MagicBack, the stance at levels 2 / 4 (StrongD / BladeD), Focus $40 → $80, a transformed foe's raised DEF (not a buff),
+> an iron foe (Barrier taken, iron kept), an enemy caster on party slot 0, the MP 200 → 194; the gifts; the BANDIT (INT 200)
+> never casts it at an unbuffed party and plunders slot 1 (Barrier + TailWind held there) every time; the BUFF KNIGHT buffs
+> itself. `--negative` (SkillPlunder = ret, ScoreSteal72 = 0) **31 FAIL**.
+> **Found on the way + fixed before delivery:** the first default line "{target}'s {buff}!" overflowed the 18-cell box with
+> an 8-letter foe + a 9-letter buff ("Anteater's MagicBac", then "Bac" / "A" over the next box — screenshots) → two pages;
+> the walk's seeds never reached the roll (the rig pins the RNG every battle frame) → `pin=False` + the twin fed the
+> handler's RNG; `--apply` rewrote comment-only regions again (S153) → HEAD's text kept outside the owned regions. KEY_LESSONS
+> S156. The 19-species maximum fixture: TEN names a letter shorter fit (was three; the built-in names spill 36 B, was 28).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1771 PASSED (+ `test_s156_sim` 11, Plunder's compiler checks; the S111 / S155 tests updated: 17 built-ins, the `$F0` row, the name spill, the 19-species fixture); test_app `--rom` PASS (63 OK, exit 0, with `QT_AUDIO_BACKEND=none QT_QPA_PLATFORM=offscreen`; + the Plunder block of the Skills-tab test; the GUI build = the pin); test_canvas `--rom` PASS (58 OK);
+> `build_balance_anchor --selftest` OK (re-tagged `92d31c44…`: the new code without the Plunder record = the stored
+> `fecea30b…` — proven; Plunder is not learnable and in no original enemy row). **Next:** the user's test of the ROM (the GIFT
+> MASTER's PLUNDERER against the BUFF KNIGHT, SHIELDER's buffs against the BANDIT, the Skills tab's Plunder line); then E13 /
+> E14 or the next big ticket.
+> **r2 (the user on the S156 ROM, 2026-10-22 10:39: "Seems to work well. One thing - if you say "X steal's Y's Upper" or
+> something, then the next textbox should report by how much the effect affects new monster. Same with enemies"):** the
+> game's own lines read "{target}'s / defense goes up" + "by {amount}!" ($92) and "{target}'s speed / goes up by
+> {amount}!" ($97) (measured: Upper / Speed's result messages). **Built:** bank $72 `StatRise72` puts the rise in `$DB56`
+> (→ `[INS 10]` at the render); `SkillPlunder` picks LINE_PLUNDER_DEF (7) / _AGL (8) when the stolen row is the raised DEF
+> / AGL (`STEAL_ROW_DEF` 12, ASSERTed) and something rose, else line 6; bank $4C lines 7 / 8 (ASSERT `$7458`); the
+> compiler makes them = the result line + a page (`rise_line`), keys `def_rise` / `agl_rise` (one page; `CS.RISE_KEYS`,
+> `RISE_TOKENS` = Plunder's + `{amount}`), defaults "{name}'s defense / goes up by {amount}!" and "{name}'s speed / goes up
+> by {amount}!"; the Skills tab's two "Next page when it steals a raised DEF / AGL" boxes; help 54; `EDITOR_REVISION`
+> S156r2; the twin returns (row, name, rise, line); `extract_custom_skills` reads the pages back. Example pin
+> `1051e08f…` (patched; S156 `06bd2458…`, patched). **Walk:** `tools/walk_plunder.py` **45 / 45** (+ the DEF / AGL rows'
+> line 7 / 8 with `[INS 10]` = the caster's rise; a foe stealing party slot 0's raised AGL: line 8, its own rise; a caster
+> at its DEF cap: nothing rises → line 6), `--negative` **33 FAIL**. Seen on screen: "PX steals / Anteater's" → "Upper!" →
+> "PX's defense / goes up by 2!". **Checks:** test_compiler `--rom` ALL 1773 PASSED (+ the r2 sim / compiler checks);
+> test_app `--rom` PASS (63 OK; the GUI build = the pin; re-run without `--rom` after the help edit: PASS); test_canvas
+> `--rom` PASS (58 OK); verify_integrity PASS; `extract_custom_skills --check` OK. Test ROM
+> **`DWM-S156r2-plunder-test.gbc`** (`dff9088d…`, patched).
+
 > Last verified: 2026-10-19 (Session 155 — **ROADMAP E11 BUILT: SIX NEW BUILT-IN CUSTOM SKILLS — REPEL (THE REPELLANT AS A
 > FIELD SKILL: ONE GATE FLOOR, OR A ROOM UNTIL THE PARTY LEAVES), LONEWOLF (×2 IN A PAIR / ×4 ALONE), PUNISH (+50 % PER BUFF),
 > FINISH (×0.2 AT FULL HP → ×2 NEAR 0), RUPTURE (×3, BURSTS EVERY AILMENT; NONE → FAILS, MP SPENT), RUST (ATK − 50 % OF BASE,

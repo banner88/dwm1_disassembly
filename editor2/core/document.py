@@ -56,6 +56,7 @@ from editor2.core.items_doc import ItemsMixin             # S151 (E9: items)
 from editor2.core.newgame_doc import NewGameMixin         # S152 (E3 a2: the new game's start)
 from editor2.core.ending_doc import EndingMixin           # S153 (E5: the title + the credits)
 from editor2.core.memorial_doc import MemorialMixin      # S154: the memorial statues
+from editor2.core.hints_doc import HintsMixin            # S158: the breeding hints
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -233,7 +234,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
-               NewGameMixin, EndingMixin, MemorialMixin):
+               NewGameMixin, EndingMixin, MemorialMixin, HintsMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -309,6 +310,18 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_unique_names(notes)
         # S149 r2 (the user: "0 HP should never be possible"): enemy rows' HP >= 2
         self._migrate_enemy_hp(notes)
+        # S158: a project with hint monuments / archives keeps every hint's number (its
+        # bit in the save) from now on
+        try:
+            from editor2.core import hints as _HT
+            if _HT.active(self.custom):
+                n = self.pin_hint_numbers()
+                if n:
+                    notes.append(f'breeding hints: {n} hint number{"s" if n != 1 else ""} '
+                                 'written in (S158) — a save keeps what the player learned '
+                                 'when you edit the pool or the breeding table')
+        except Exception:                                  # noqa: BLE001 — reported at build
+            pass
         self._note_room_holes()
         if notes:
             self.dirty = True
@@ -3019,6 +3032,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             # S154: a memorial statue (memorial_doc.py) — an examine spot in the game
             return {'kind': 'statue', 'x': int(entry['x']), 'y': int(entry['y']),
                     'statue': entry.get('statue'), 'facing': 'any', 'raw': False}
+        if k in ('monument', 'archive'):
+            # S158: a breeding-hint monument / archive (hints_doc.py) — an examine spot
+            return {'kind': k, 'x': int(entry['x']), 'y': int(entry['y']),
+                    k: entry.get(k), 'facing': 'any', 'raw': False}
         if k == 'raw':
             b = [val(x) for x in entry['bytes']]
             table = {int(i): sid for i, sid in (room.get('scripts') or {}).items()}

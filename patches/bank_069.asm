@@ -32,12 +32,17 @@ SECTION "ROM Bank $069", ROMX[$4000], BANK[$69]
 ;                $DA74 p2 family, $DA77 offspring plus.
 ; Outputs (RAM): $DA71 result species (untouched if no match), $DA77 += plus_mod.
 ; -----------------------------------------------------------------------------
+; S158 (ROADMAP E15, the breeding hints): the number of the row that matched (0 =
+; the table's first) -> wHintRow, $FFFF when none did — bank $79 HintBreed reads it
+; after BreedCreateOffspring (a hint = a special row). DE kept.
 RelocatedSpecialScan:
+    push de
+    ld de, $0000                      ; S158: the row number
     ld hl, RelocatedSpecialTable      ; relocated table: 825 base + appended (B3); scan to $FF
 .scan:
     ld a, [hl]
     cp $ff                            ; $FF = end of table
-    jr z, .done
+    jr z, .none
     push hl
     call .checkentry                  ; port of BreedSpecialEntryCheck
     pop hl
@@ -50,8 +55,16 @@ RelocatedSpecialScan:
     ld a, h
     adc $00
     ld h, a
+    inc de
     jr .scan
+.none:
+    ld de, $ffff                      ; S158: no row matched
 .done:
+    ld a, e
+    ld [wHintRow], a
+    ld a, d
+    ld [wHintRow + 1], a
+    pop de
     ret                               ; back to bank $16 plus-clamp ($4710)
 
 ; Port of BreedSpecialEntryCheck ($471C): match one 5-byte entry against the parents.

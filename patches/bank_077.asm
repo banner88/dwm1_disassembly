@@ -1117,6 +1117,11 @@ ScriptCommand:
 ;        $D8E1 := 1; an empty statue: $D8E1 := 0 (bank $79 entry 9 MemSay;
 ;        editor2/core/memorial.py). BreedClose's sheet reload ends in
 ;        MemorialRedraw77 (generated: bank $79 entry 8, or ret)
+;     8 hint [sub, arg]  (S158) the breeding hints (editor2/core/hints.py) — bank $79
+;        entry 10 HintCommand, E = sub, D = arg: 0 a monument's pick [monument]
+;        ($D8E1 1 / 0 none left), 1 a hint's words prepared [riddle next?], 2 an
+;        archive opened [family] ($D8E1 1 / 0 empty), 3 its next entry [family]
+;        ($D8E1 0 none / 1 more follow / 2 the last)
 ;   Op $24 yields (BANK04_SCRIPT_ENGINE "Breeding"): a later text needs
 ;   init_dialog — the compiler adds it.
 ; SHOP ITEM SETS: ShopFill picks list a, then ShopSetPick walks ShopSetTable
@@ -1554,9 +1559,21 @@ StoryCommand:
     ; 7 memorial [statue] (S154): the statue's monster into the text inserts $C180 /
     ; $C190 / $C1A0, $D8E1 = 1 (none on it: 0) — bank $79 entry 9 MemSay, E = the statue
     dec a
-    ret nz
+    jr nz, .hint
     ld e, [hl]
     ld hl, $7909
+    rst $10
+    ret
+.hint:
+    ; 8 hint [sub, arg] (S158): the breeding hints — a monument's pick, a hint's words
+    ; prepared, an archive opened / its next entry — bank $79 entry 10 HintCommand,
+    ; E = sub, D = arg (editor2/core/hints.py)
+    dec a
+    ret nz
+    ld a, [hl+]
+    ld e, a
+    ld d, [hl]
+    ld hl, $790a
     rst $10
     ret
 .storyPoint:

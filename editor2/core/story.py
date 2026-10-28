@@ -82,7 +82,8 @@ CMD_KINDS = {'take_item': 0, 'give_gold': 1, 'take_gold': 2, 'give_item': 3,
              'name_given': 4,   # S152: the monster just given gets a name (+ the naming screen)
              'story_point': 5,  # S153: the original game's story as at a point (bank $79 entry 5)
              'credits_after': 6,   # S153: where the field goes after the credits (wCreditsAfter)
-             'memorial': 7}     # S154: a memorial statue's monster into the text inserts (bank $79 entry 9)
+             'memorial': 7,     # S154: a memorial statue's monster into the text inserts (bank $79 entry 9)
+             'hint': 8}         # S158: the breeding hints — monuments / archives (bank $79 entry 10)
 
 QUEST_KEYS = ('id', 'name', 'giver', 'requires', 'not_yet', 'offer', 'accept', 'decline',
               'objective', 'progress', 'take', 'reward', 'complete', 'done', 'bag_full',
@@ -363,6 +364,12 @@ def cmd_record(kind, params, ctx, prj=None):
             raise StoryError(f'{ctx}: {ex}')
         except Exception as ex:                          # noqa: BLE001 (ProjectError)
             raise StoryError(str(ex))
+    if kind == 'hint':
+        # S158: [sub, arg] — 0 a monument's pick [monument], 1 a hint's words prepared
+        # [riddle next 0 / 1], 2 an archive opened [family], 3 its next entry [family]
+        # (hints.py; bank $79 HintCommand)
+        return (code, _int(params.get('sub'), ctx + '.sub', 0, 3),
+                _int(params.get('arg', 0), ctx + '.arg', 0, 255))
     if kind == 'memorial':
         # S154: [statue] — the statue's index in its room (memorial.py; bank $79 MemSay)
         from . import memorial as _MM

@@ -143,7 +143,9 @@ jr_016_402d:
     ld [$da75], a            ;   ($D665/$D6FA via the GMDP decode). Was $14/$15 = farm slots
     ld a, $29                ;   20/21 in FX1 builds: the egg's plus + level bonus came from
     ld [$da76], a            ;   those (empty: plus 1, no + recipe ever fired). PyBoy S113.
+; @BUILD_PROJECT BEGIN hint_breed_16
     call BreedResolveOffspring
+; @BUILD_PROJECT END hint_breed_16
     ld hl, $caca
     call LoadBrd_41b1
     ld a, [$da71]
@@ -152,8 +154,8 @@ jr_016_402d:
     ld hl, $0301
     rst $10
     ld a, [wTempSpeciesId]
-    ld hl, $ca94
-    call SetBitInArray
+    ld hl, $ca94             ; S158: the library bit of the EGG's species — set when the egg is made (the
+    call SetBitInArray       ;   ceremony), before it hatches: "ever owned" (hints.py skip owned reads it)
     ld hl, $cacb
     call LoadBrd_41b1
     ld a, [$da33]
@@ -5949,6 +5951,23 @@ NewRecipePairs:                   ; 19 x 2 B, ids 221-239 (region ns_recipe_pair
     db $00, $00   ; [238] (none)
     db $00, $00   ; [239] (none)
 ; @BUILD_PROJECT END ns_recipe_pair
+
+; =============================================================================
+; S158 (ROADMAP E15) — BREEDING HINTS: the egg's cross. A project with hint
+; monuments / archives (editor2/core/hints.py) turns BreedCreateOffspring's `call
+; BreedResolveOffspring` (region hint_breed_16, same size) into `call HintBreed16`:
+; the offspring is resolved as before, then bank $79 entry 11 HintBreed marks the
+; hint of the special row that made it (wHintRow, bank $69 RelocatedSpecialScan)
+; UNLOCKED + BRED. Every breeding goes through BreedCreateOffspring (Grandpa's /
+; a master's ceremony, the link — callers $0A:$4A8D / $0A:$56F8 / $15:$5B7D); the
+; Old Man's preview (entry 3) does not. Registers: the caller reloads all after the
+; call (HL / A next), so rst $10's A is free.
+; =============================================================================
+HintBreed16:
+    call BreedResolveOffspring
+    ld hl, $790b                  ; bank $79 entry 11 HintBreed
+    rst $10
+    ret
 
 ; =============================================================================
 ; GATE ROOM INSERTION (S100, ROADMAP P3.7b part 1; was the S41 Pillar B POC)

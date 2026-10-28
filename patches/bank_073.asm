@@ -1148,6 +1148,38 @@ CF3NewGameClear:
     ld h, a
     dec b
     jr nz, .fclr2
+    jp HintNewGameClear             ; S158: the breeding hints known start empty
+
+; -----------------------------------------------------------------------------
+; HintNewGameClear (S158, ROADMAP E15 — the breeding hints, editor2/core/hints.py):
+; a NEW GAME knows no hint — SRAM bank 3's two hint bitsets (UNLOCKED $B000-$B0FF,
+; BRED $B100-$B1FF) zeroed and the magic "H1" written at $A007 (bank $79 HintEnsure
+; does the same the first time a save without the magic is used). The bitsets are
+; written at once by the game (not at the save: a hint read stays known after a
+; reset), so only a new game clears them. Always built (a project without hints
+; clears space nothing reads). RAMB 3 for the loop, 0 after (the pin invariant's
+; no-di chunk window: the ISR graph neither reads SRAM nor writes RAMB).
+; -----------------------------------------------------------------------------
+HintNewGameClear:
+    ld a, $0a
+    ld [$0100], a
+    ld a, 3
+    ld [$4100], a
+    ld hl, $b000
+    ld bc, $0200
+.clr:
+    xor a
+    ld [hl+], a
+    dec bc
+    ld a, b
+    or c
+    jr nz, .clr
+    ld hl, $a007
+    ld a, $48                       ; "H1"
+    ld [hl+], a
+    ld [hl], $31
+    xor a
+    ld [$4100], a
     ret
 
 ; -----------------------------------------------------------------------------

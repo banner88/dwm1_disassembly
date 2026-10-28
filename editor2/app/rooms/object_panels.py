@@ -12,6 +12,8 @@
   * StatuePanel   — a MEMORIAL STATUE (S154, editor2/core/memorial.py): which
                     statue it is (its fill order), its words, the memorial's
                     settings, its states.
+  * HintObjectPanel — a breeding-hint MONUMENT (the families it teaches, skip owned,
+                    what it shows) or ARCHIVE (its family) — S158, editor2/core/hints.py.
 All of them emit signals; the Rooms tab turns them into undoable Document ops.
 """
 
@@ -453,3 +455,141 @@ class StatuePanel(QGroupBox):
             w.setEnabled(editable)
         self.btn_up.setEnabled(editable and number > 1)
         self.btn_down.setEnabled(editable and number < count)
+
+
+class HintObjectPanel(QGroupBox):
+    """S158: a breeding-hint MONUMENT or ARCHIVE (editor2/core/hints.py, help 78_hints.md)."""
+    fieldsEdited = Signal(dict)          # monument: families / skip_owned / show; archive: family
+    wordsRequested = Signal()
+    settingsRequested = Signal()
+    presenceToggled = Signal(int, bool)
+    deleteRequested = Signal()
+
+    SHOW_LABELS = (('explicit', 'the cross (names)'), ('riddle', 'the riddle (else the cross)'),
+                   ('both', 'the riddle, then the cross'))
+
+    def __init__(self, parent=None):
+        super().__init__('Hint monument', parent)
+        from editor2.core import hints as HT
+        self.HT = HT
+        f = QFormLayout(self)
+        f.setLabelAlignment(Qt.AlignRight)
+        self.form = f
+        self.what = _lbl()
+        self.what.setStyleSheet('color:#aaa;')
+        f.addRow(self.what)
+        self.pos = _lbl()
+        f.addRow('cell', self.pos)
+        # monument
+        fam = QWidget()
+        from PySide6.QtWidgets import QGridLayout
+        g = QGridLayout(fam)
+        g.setContentsMargins(0, 0, 0, 0)
+        self.fam_all = QCheckBox('every family')
+        self.fam_all.toggled.connect(self._fam_all)
+        g.addWidget(self.fam_all, 0, 0, 1, 3)
+        self.fam_cb = []
+        for i, name in enumerate(HT.FAMILIES):
+            cb = QCheckBox(name)
+            cb.toggled.connect(lambda _v: self._emit_mon())
+            g.addWidget(cb, 1 + i // 3, i % 3)
+            self.fam_cb.append(cb)
+        self.fam_row = fam
+        f.addRow('teaches', fam)
+        self.skip = QCheckBox('skip children the player has owned')
+        self.skip.toggled.connect(lambda _v: self._emit_mon())
+        f.addRow('', self.skip)
+        self.show_box = QComboBox()
+        for _k, lab in self.SHOW_LABELS:
+            self.show_box.addItem(lab)
+        self.show_box.currentIndexChanged.connect(lambda _i: self._emit_mon())
+        f.addRow('shows', self.show_box)
+        # archive
+        self.family = QComboBox()
+        for name in HT.FAMILIES:
+            self.family.addItem(name)
+        self.family.currentIndexChanged.connect(
+            lambda i: (not self._loading) and self.fieldsEdited.emit({'family': HT.FAMILIES[i]}))
+        f.addRow('family', self.family)
+        self.words = _lbl()
+        self.words.setStyleSheet('color:#9fd0ff;')
+        f.addRow('says', self.words)
+        row = QHBoxLayout()
+        self.btn_words = QPushButton('Its words…')
+        self.btn_words.clicked.connect(self.wordsRequested.emit)
+        self.btn_settings = QPushButton('Hint pool…')
+        self.btn_settings.setToolTip('The Breeding tab\'s Hints page: which crosses are hints, '
+                                     'riddles, the words every monument / archive says')
+        self.btn_settings.clicked.connect(self.settingsRequested.emit)
+        row.addWidget(self.btn_words)
+        row.addWidget(self.btn_settings)
+        f.addRow('', row)
+        self.states = _StatesRow()
+        self.states.toggled.connect(self.presenceToggled.emit)
+        f.addRow('in states', self.states)
+        self.btn_del = QPushButton('Remove from this state')
+        self.btn_del.clicked.connect(self.deleteRequested.emit)
+        f.addRow('', self.btn_del)
+        self._loading = False
+        self.kind = 'monument'
+
+    def _fam_all(self, on):
+        for cb in self.fam_cb:
+            cb.setEnabled(not on)
+        self._emit_mon()
+
+    def _emit_mon(self):
+        if self._loading or self.kind != 'monument':
+            return
+        fams = None if self.fam_all.isChecked() else \
+            [n for n, cb in zip(self.HT.FAMILIES, self.fam_cb) if cb.isChecked()]
+        if fams == []:
+            return                                      # pick at least one (or every family)
+        self.fieldsEdited.emit({'families': fams, 'skip_owned': self.skip.isChecked(),
+                                'show': self.SHOW_LABELS[self.show_box.currentIndex()][0]})
+
+    def show_object(self, kind, view, obj, words, presence, editable=True):
+        """kind 'monument' / 'archive', obj = its record, words = {role: (boxes, own)}."""
+        self._loading = True
+        self.kind = kind
+        mon = kind == 'monument'
+        self.setTitle('Hint monument' if mon else f"Hint archive — {obj.get('family')}")
+        self.what.setText(
+            'An examine spot (put it on your own art — a stone, a pillar). Read, it teaches '
+            'a breeding cross the player has not found yet (random among the hint pool\'s '
+            'crosses of the families below) and unlocks it at once; read again in the same '
+            'visit it repeats it; the next visit teaches another. None left: its worn-away '
+            'words.' if mon else
+            'An examine spot (put it on your own art — a bookcase with the family\'s '
+            'emblem). It asks to be read, then lists the family\'s crosses the player has '
+            'unlocked (at monuments, or by breeding them), "(bred)" on the ones made, '
+            '"Keep reading?" after each.')
+        self.pos.setText(f"({view['x']},{view['y']}) — '{obj.get('id')}'")
+        for w in (self.fam_row, self.skip, self.show_box):
+            self.form.setRowVisible(w, mon)
+        self.form.setRowVisible(self.family, not mon)
+        if mon:
+            fams = obj.get('families')
+            self.fam_all.setChecked(not fams)
+            for n, cb in zip(self.HT.FAMILIES, self.fam_cb):
+                cb.setChecked(bool(fams) and n in fams)
+                cb.setEnabled(bool(fams) and editable)
+            self.skip.setChecked(obj.get('skip_owned', True))
+            keys = [k for k, _l in self.SHOW_LABELS]
+            self.show_box.setCurrentIndex(keys.index(obj.get('show', 'explicit')))
+        else:
+            fi = self.HT.family_index(obj.get('family')) or 0
+            self.family.setCurrentIndex(fi)
+        main = words.get('text' if mon else 'ask') or (None, False)
+        first = ' / '.join(' '.join(b) for b in (main[0] or [])[:2])
+        own = [r for r, (_b, o) in words.items() if o]
+        self.words.setText(first + (f"  (own: {', '.join(own)})" if own else ''))
+        if presence and len(presence) > 1:
+            self.states.show_states(presence, 'standing in state {n} of this screen')
+            self.form.setRowVisible(self.states, True)
+        else:
+            self.form.setRowVisible(self.states, False)
+        for w in (self.fam_all, self.skip, self.show_box, self.family, self.btn_words,
+                  self.btn_del, self.states):
+            w.setEnabled(editable)
+        self._loading = False

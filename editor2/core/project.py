@@ -409,6 +409,27 @@ class Project:
                         for _st in _MM._states(_scr):
                             _st['npcs'] = [n for n in (_st.get('npcs') or [])
                                            if not (isinstance(n, dict) and n.get('kind') == 'statue')]
+        # S158: the breeding hints' monuments / archives -> their talk scripts + examine
+        # spots (hints.py); a bad one is reported by validators.validate (hint_error) and
+        # every monument / archive dropped
+        from . import hints as _HT
+        self.hint_error = None
+        try:
+            _HT.lower(self)
+        except _HT.HintError as ex:
+            self.hint_error = str(ex)
+            self._hint_monuments = []
+            for _r in self.custom.get('rooms') or []:
+                if isinstance(_r, dict):
+                    _r.pop('monuments', None)
+                    _r.pop('archives', None)
+                    for _scr in (_r.get('screens') or {}).values():
+                        for _st in _HT._states(_scr):
+                            _st['npcs'] = [n for n in (_st.get('npcs') or [])
+                                           if not (isinstance(n, dict) and n.get('kind')
+                                                   in ('monument', 'archive'))]
+            self.custom['scripts'] = [s for s in self.custom.get('scripts') or []
+                                      if not str(s.get('id', '')).startswith(_HT.SCRIPT_PREFIX)]
         self._lower_talk_scripts()
         self._lower_shop_scripts()
         # S126 (ROADMAP P3.14e1): service NPCs (+ shop line sets) — the vanilla
@@ -856,7 +877,9 @@ class Project:
                   # S129 (ROADMAP P3.14b / c): story commands + the story spine
                   'give_item', 'give_monster', 'take_item', 'gold', 'refresh', 'by_progress',
                   # S154: a memorial statue's words (memorial.py writes these scripts)
-                  'memorial')
+                  'memorial',
+                  # S158: a breeding-hint monument / archive (hints.py writes these scripts)
+                  'hint')
     HELPER_SPRITE = 0x39                # Warubou — the darker Watabou (user S101 r2: the
                                         # romhack's helper; vanilla boss exits use $21 Watabou)
     HELPER_FLY = 0x16                   # $1C anim: fly to ($D8E3, $D8E4)
@@ -1031,6 +1054,15 @@ class Project:
                 ops += f_ops + [['op', 'goto', f'@mdone{n}'], f'label:mempty{n}'] + e_ops \
                     + [f'label:mdone{n}']
                 field = True
+            elif kind == 'hint':
+                # S158 (hints.py): {"monument": n, "show", "text", "exhausted", "intro"?,
+                # "outro"?} / {"archive": family, "ask", "empty", "entry", "more", "end",
+                # "no"?} — story command 8 (bank $79 HintCommand) + the words
+                from . import hints as _HT
+                if field:
+                    ops.append(['op', 'init_dialog'])
+                ops += _HT.lower_step(self, st['hint'] or {}, c, lab)
+                field = False
             elif kind == 'take_item':
                 g = st['take_item'] or {}
                 w = self.story_command('take_item', {'item': g.get('item'),

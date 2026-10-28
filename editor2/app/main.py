@@ -174,6 +174,7 @@ class MainWindow(QMainWindow):
             self.rooms_tab = RoomsTab(self.session)
             self.rooms_tab.status.connect(self.statusBar().showMessage)
             self.rooms_tab.gatesRequested.connect(self._open_gates_for)
+            self.rooms_tab.hintsRequested.connect(self._open_hints)       # S158
             self.tabs.addTab(self.rooms_tab, 'Rooms')
             from editor2.app.import_tab import ImportTab
             self.import_tab = ImportTab(self.session)
@@ -336,6 +337,14 @@ class MainWindow(QMainWindow):
         """Monsters tab → the Text tab's Dialogue page listing the texts that name `sid`."""
         self.dialogue_tab.show_monster(sid)
         self.tabs.setCurrentWidget(self.dialogue_tab)
+
+    def _open_hints(self):
+        """S158: the Breeding tab's Hints page (a monument's / archive's "Hint pool…")."""
+        bt = getattr(self, 'breeding_tab', None)
+        if bt is None:
+            return
+        self.tabs.setCurrentWidget(bt)
+        bt.show_hints()
 
     def _open_gates_for(self, room_id):
         """Rooms tab 'Gates tab…' -> the Gates tab on the first gate serving

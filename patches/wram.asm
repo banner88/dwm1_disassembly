@@ -499,7 +499,26 @@ wMemGone:: ds 16 ;d57a — the roll: live entry i has left the player (bit i)
 wMemDraw:: ds 6 ;d58a — species, tile ids TL / TR / BL / BR, the shade map (the picture bank's input)
 wMemCur:: ds 7 ;d590 — tag, species, level, nickname (4)
 wMemTmp:: ds 2 ;d597 — scratch
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 ;d599-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map)
+; S158 — THE BREEDING HINTS (monuments and archives; PROJECT_COMPILER §2.66,
+; DATA_STRUCTURES "Breeding hints (S158)", bank $79 entries 10-12). What the player
+; knows lives in SRAM bank 3 (two bitsets, written at once); this is transient:
+; wHintPlace = the visit (region, map id, gate, floor of the last room load — another
+; one clears the latches), wHintLatch = per monument slot of the room the hint it
+; showed this visit + 1 (0 = none yet) — MUST follow wHintPlace (HintRoomNote clears
+; both in one run), wHintCur = the hint the inserts hold, wHintSay = 1: the next
+; shown text is its riddle (bank $60 TextOverride), wHintRow = the special-table row
+; the last breeding scan matched ($FFFF none; bank $69), wHintCursor = an archive's
+; next position, wHintN / wHintK / wHintTmp = scratch.
+wHintPlace:: ds 4 ;d599 — region, map id, gate, floor of the last room load
+wHintLatch:: ds 16 ;d59d — per monument slot (8): the hint shown this visit + 1
+wHintCur:: dw ;d5ad — the hint in the inserts
+wHintSay:: db ;d5af — 1 = the next shown text is the hint's riddle
+wHintRow:: dw ;d5b0 — the special row the last scan matched ($FFFF none)
+wHintCursor:: dw ;d5b2 — the archive's next list position
+wHintN:: dw ;d5b4 — candidates counted
+wHintK:: dw ;d5b6 — a hint (scratch)
+wHintTmp:: ds 4 ;d5b8 — the monument's slot / families lo / hi / scratch
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 - 35 ;d5bc-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map; S158 35: the breeding hints)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

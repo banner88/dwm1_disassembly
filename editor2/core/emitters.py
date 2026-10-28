@@ -1611,6 +1611,19 @@ def _memorial_entries():
 REGISTRY += _memorial_entries()
 
 
+def _hint_entries():
+    # S158: THE BREEDING HINTS — monuments and archives. The same-size region in bank
+    # $16 (BreedCreateOffspring: the egg's cross marked) — bank $79 entries 10-12 + their
+    # data come with hooks79, the room-load hook with the memorial's tile regions —
+    # editor2/core/hints.py. No monument / archive == vanilla bytes.
+    from . import hints as HT
+    return [(name, "custom.rooms.monuments", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in HT.REGIONS]
+
+
+REGISTRY += _hint_entries()
+
+
 TEXT_SPRITE_VANILLA = """\
 jr_006_6893:
     ld a, [wInGateworld]

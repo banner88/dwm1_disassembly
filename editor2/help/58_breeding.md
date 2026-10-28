@@ -74,6 +74,11 @@ The 215 family recipes (one per monster, = its library page). **Change…**,
 parent pairs the recipe names really give that monster (a special recipe
 can win first). The library page's text follows your change.
 
+## Hints (S158)
+
+The **Hints** page picks which special recipes the game's hint MONUMENTS teach and its
+ARCHIVES list — see *Breeding hints: monuments and archives*.
+
 ## Working on the whole table
 
 By default the project stores only your changes to the original recipes.

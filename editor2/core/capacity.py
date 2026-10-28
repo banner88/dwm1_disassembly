@@ -411,6 +411,28 @@ def _project_rows(prj, data, rows):
         'the oldest is forgotten', 'Rooms',
         tech='SRAM bank 3 $A110+, 8 B an entry, a ring of MEM_CAP + 9; wMemCount / wMemHead '
              'saved at $A005 / $A006 (bank $73 MemorialCommit)')
+    # S158: the breeding hints — monuments a room, hint numbers, the hint data in bank $79
+    from . import hints as HT
+
+    def _hint_pool():
+        if not HT.active(custom):
+            return None
+        try:
+            return HT.pool(prj)
+        except Exception:                                  # noqa: BLE001 — reported at build
+            return None
+
+    add('monuments_room', 'Rooms', 'Hint monuments in one room (the most)',
+        lambda: max([len(HT.room_monuments(r)) for r in custom.get('rooms') or []] or [0]),
+        HT.MONUMENTS_ROOM_MAX, 'the editor refuses another', 'Rooms',
+        tech='bank $79 HINT_SLOTS (wHintLatch: the hint each one showed this visit)')
+    add('hint_numbers', 'Text and story', 'Breeding hint numbers (the pool + numbers kept)',
+        lambda: (_hint_pool() or ([], 0, {}))[1], HT.POOL_MAX, 'the build stops', 'Breeding',
+        tech='SRAM bank 3 $B000 / $B100: two 256-byte bitsets (unlocked, bred)')
+    add('hint_bytes', 'Text and story', 'Breeding hint data in bank $79 (bytes)',
+        lambda: (HT.data_bytes(prj, *(_hint_pool()[:2]), HT.settings(custom))
+                 if _hint_pool() else 0), HT.BANK79_HINT_BUDGET, 'the build stops', 'Breeding',
+        tech='HintTable 8 B + a riddle word a number, the archive lists, the riddles')
     from . import services as SV
     add('line_sets', 'Text and story', 'Line sets of shop and service people',
         lambda: len(SV.resolve(prj)['numbers']), SV.MAX_SETS, 'the build stops',

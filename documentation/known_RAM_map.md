@@ -260,8 +260,16 @@
                  Castle script 0 branches on values 1/2 to choose post-
                  tournament path. Value determines which variant of the
                  Starry Night victory cutscene plays (sets flag $00F1).
-   CA94    30    Library "seen" species bit array (bit N = species N seen).
-                 Set via SetBitInArray on add-to-storage ($14:label14_40b4);
+   CA94    30    Library species bit array (bit N = species N) — "SEEN" in the
+                 old docs, but S158 (code-read, every writer; PyBoy: a bred egg set
+                 FangSlime's bit) shows it means EVER OWNED: the only writers are
+                 SetBitInArray at bank $14 label14_40b4 (a monster CREATED into the
+                 roster — a join, a gift; not the staging slot $15), bank $16
+                 BreedCreateOffspring (the EGG's species, at the ceremony) and bank
+                 $51 SetBtlS_6928 (a monster that joins after a battle); nothing
+                 clears it. Read by the library, the breeding preview, story check
+                 `seen`, the S158 hints' "skip owned".
+                 (was: "Set via SetBitInArray on add-to-storage ($14:label14_40b4);")
                  bank $07 completion counters scan bits 0-$EF (240 bits →
                  $CA94-$CAB1). Bit order MSB-first: byte $CA94+id/8, mask
                  $80>>(id&7) (ROM0 $26D5 table; PyBoy S105: species 4 =
@@ -433,7 +441,18 @@
                  the ring entry shown, $FF none), wMemGone $D57A-$D589 (128-bit roll bitmap),
                  wMemDraw $D58A-$D58F (species + 4 tile ids + the shade map, S154 r2, for the
                  picture bank), wMemCur $D590-$D596 (one entry), wMemTmp $D597-$D598 /
-                 wCustomPool $D599-$D5E4 (transient reserve; $D598 in S154 r1, $D56D before S154, $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 [S158] the breeding hints $D599-$D5BB (bank $79 entries 10-12; DATA_STRUCTURES
+                 "Breeding hints (S158)"), all transient — what the player KNOWS is in SRAM bank
+                 3 ($B000 / $B100, written at once): wHintPlace $D599-$D59C (region, map,
+                 wGateID, wCurrentFloor of the last room load — another one = a new visit) and
+                 wHintLatch $D59D-$D5AC right after it (per monument slot the hint shown this
+                 visit + 1; HintRoomNote clears both in one run), wHintCur $D5AD-$D5AE (the
+                 hint in the inserts), wHintSay $D5AF (1 = the next SHOWN text is its riddle,
+                 bank $60 TextOverride), wHintRow $D5B0-$D5B1 (the special-table row bank $69's
+                 scan matched, $FFFF none — every breeding, every build), wHintCursor
+                 $D5B2-$D5B3 (an archive's next position), wHintN / wHintK $D5B4-$D5B7,
+                 wHintTmp $D5B8-$D5BB (the monument's slot / families / scratch) /
+                 wCustomPool $D5BC-$D5E4 (transient reserve; $D599 before S158, $D598 in S154 r1, $D56D before S154, $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

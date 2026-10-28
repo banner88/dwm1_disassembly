@@ -429,6 +429,19 @@ as an edited text — `[$C824]` := $77, `wTextOvrPtr` := the line, DE := `wTextO
 and clears the mark. Measured on the user's save (a project conversation and the game's Stable
 dresser): "MILLY already / has a WarpWing." (PROJECT_COMPILER §2.65).
 
+**S158 (ROADMAP E15, breeding hints — built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results")):** `TextOverride` step
+0b, after the one-only test: when `wHintSay` ($D5AF, set by story command 8 sub 1 for a hint
+that has a riddle) is set and the text is SHOWN (`wTextOvrMode` = 0), it far-calls bank $79
+entry 12 `HintSay`, which serves the hint's riddle (`HintRiddle_k`, bank $79) the same way —
+`[$C824]` := $79, `wTextOvrPtr` := the riddle, DE := `wTextOvrPtr` − 2 · [$C823] — and clears
+the mark. The hint words use four insert slots, filled by bank $79 `HintFill` right before the
+text: `{parent1}` = `$F9 $00` ($C180), `{parent2}` = `$F9 $10` ($C190), `{child}` = `$F9 $20`
+($C1A0, the name + " +N" when the cross needs a plus), `{bred}` = `$F9 $30` ($C1B0, the bred
+word or the not-bred word); `{family}` is the archive's family name, written into the text by
+the compiler (no slot). The editor counts each at its longest (12 / 12 / 13 / 15 cells, the
+family at its longest name "Material"). Measured: the inserts == the resolver model for every
+pick; a riddle printed from bank $79 (DATA_STRUCTURES "Breeding hints").
+
 ## Monster text blocks (S108)
 
 The three per-species text blocks (all contiguous, id-ordered, one string per

@@ -153,8 +153,8 @@ jr_016_402d:
     ld hl, $0301
     rst $10
     ld a, [wTempSpeciesId]
-    ld hl, $ca94
-    call SetBitInArray
+    ld hl, $ca94             ; S158: the library bit of the EGG's species — set when the egg is made (the
+    call SetBitInArray       ;   ceremony), before it hatches: "ever owned" (hints.py skip owned reads it)
     ld hl, $cacb
     call LoadBrd_41b1
     ld a, [$da33]

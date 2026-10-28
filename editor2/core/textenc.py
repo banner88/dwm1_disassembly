@@ -101,6 +101,34 @@ TOKENS = {
 MEMORIAL_TOKENS = ('{fallen}', '{fallen_level}', '{fallen_species}')
 
 
+def _glyphs(s):
+    return [GLYPHS[c] for c in s]
+
+
+# S158 (hints.py): a breeding hint's cross — only in the hint words (a monument's /
+# an archive's texts, a riddle): bank $79 HintFill fills the slots right before.
+# {parent1} / {parent2} = a species' name (<= 9) or the family's words (<= 12: "any
+# Material"), {child} = the child's name + " +N" when the cross needs a plus (<= 13),
+# {bred} = the bred / not-bred words (<= 15).
+TOKENS.update({
+    '{parent1}': ([0xF9, 0x00], 12, _glyphs('Tonguella')),
+    '{parent2}': ([0xF9, 0x10], 12, _glyphs('any Dragon')),
+    '{child}': ([0xF9, 0x20], 13, _glyphs('GulpBeast')),
+    '{bred}': ([0xF9, 0x30], 15, _glyphs('(bred)')),
+    # an archive's family name — WRITTEN IN by the compiler (hints.text_ref) before a text
+    # is encoded; it never reaches the game as a code (bytes: none). 8 = "Material"
+    '{family}': ([], 8, _glyphs('Material')),
+})
+HINT_TOKENS = ('{parent1}', '{parent2}', '{child}', '{bred}')
+
+
+def uses_hint(entry_or_text):
+    """S158: True when a dialogue entry / text uses a breeding-hint insert."""
+    import json as _j
+    t = entry_or_text if isinstance(entry_or_text, str) else _j.dumps(entry_or_text)
+    return any(k in t for k in HINT_TOKENS)
+
+
 def uses_memorial(entry_or_text):
     """S154: True when a dialogue entry / text uses a memorial insert."""
     import json as _j
