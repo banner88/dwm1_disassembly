@@ -58,6 +58,8 @@ SKILLS_MAX = 8
 QUEUE_LEN = 25
 FF = 0xFF
 VANILLA_LEARN_ROWS = 0xDA     # ids $00-$D9
+# S160 (ROADMAP E13): the reclaimed ids hold new skills in vanilla rows (custom_skills.RECLAIM)
+RECLAIMED = frozenset(list(range(0xBC, 0xC2)) + list(range(0xCC, 0xD4)))
 # Rows the creator gives ANOTHER master's name (+$0C) — bank $14 Jump_014_4413:
 # EIDs $131-$13C (the rival-species teams 305-316).
 FOREIGN_MASTER_EIDS = frozenset(range(0x131, 0x13D))
@@ -435,6 +437,9 @@ def learn_scan(T, m, policy='casual', score=None, codes=None):
                     break
             if not known_all:
                 continue
+            if n > 1 and (c >= VANILLA_LEARN_ROWS or c in RECLAIMED):
+                continue      # S160: code 2 is fenced for custom ids (bank $06 LearnFence06:
+                              #   $DA+ since S75, + the 14 reclaimed ids) — the scan skips it
             hit = (c, 1, pre[0]) if n == 1 else (c, 2, None)
             break
         if hit is None:
@@ -446,6 +451,11 @@ def learn_scan(T, m, policy='casual', score=None, codes=None):
         if code == 1 and old in work:
             work[work.index(old)] = c
         else:
+            # [S160] code 1 with `old` already replaced (two skills evolving from ONE
+            # skill, both qualifying in this pass): the GAME never gets here — bank $51
+            # LevelUpS04_LearnScan places nothing and the scanner offers c again, forever
+            # (measured S160, tools/walk_reclaim.py freeze). The original data has no such
+            # pair; the compiler warns (custom_skills.shared_evolution_check).
             work.append(c)
     m.queue = [q for q in m.queue if q != FF]
     if len(work) > SKILLS_MAX:

@@ -1361,8 +1361,12 @@ jr_057_476f:
     ret
 
 
+; [S160] AIRule_4785 — VETO the option (AIScanSlots_4456 with E = $40: +2 bit 6) when every
+; valid opponent is PARALYSED, for the working ids $15-$19, $1C-$28, $2A, $68-$6B, $6E,
+; $71-$73, $77-$80, $88-$D9 and $DC (the paralysis / disable family — and, by the range,
+; Chance's outcomes and the item ids $B0-$D4); a reclaimed id is seen as $EF (SkillView57).
 AIRule_4785:
-    ld a, [$db8a]
+    call SkillView57        ; [S160] same size (was ld a, [$db8a]): a reclaimed id = a new skill's
     cp $15
     ret c
 
@@ -12327,35 +12331,25 @@ CustomAI57:
 .done:
     ld a, [$c1fc]
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [S160] SkillView57 (ROADMAP E13, BATTLE_SKILL_SYSTEM §13.12) — AIRule_4785's
+; `ld a, [$db8a]` (same size): A := the working skill id the rule sees. The rule (veto
+; the option when every valid opponent is paralysed, +2 bit 6) selects stock ids by
+; range — $93-$D9 among them, the item ids too — so a NEW skill on a RECLAIMED id
+; ($BC-$C1 / $CC-$D3) is seen as RECLAIM_VIEW, the id of a new skill $EF-$FE, which the
+; rule never selects: all 30 new skills are judged alike. Other ids: unchanged.
+; =============================================================================
+SkillView57:
+    ld a, [$db8a]
+    cp RECLAIM_A
+    ret c
+    cp RECLAIM_B_END
+    ret nc
+    cp RECLAIM_A_END
+    jr c, .view
+    cp RECLAIM_B
+    ret c                   ; $C2-$CB: the meats / staves, unchanged
+.view:
+    ld a, RECLAIM_VIEW
+    ret
+    ds $8000 - @, $00       ; the bank's trailing free bytes (were nops)

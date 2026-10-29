@@ -663,13 +663,15 @@ jr_058_43fe:
 
 
 SaveBtlFX_43ff:
-; SkillFXRouter — routes the working skill id ($db8a) to one of two effect-
-; presentation handlers by id range (the "id-range bucketing" the skill system is
-; built on): id < $37, or id == $d9 / $dd  -> bank $54 entry 3 ($52C7); else ->
-; bank $52 entry 3 ($5203). Those handlers drive targeting / animation / battle
-; message. The animation POINTER itself is set deeper, by the effect handler's
-; descriptor-setter (e.g. $52:SetHLBattle_54e7 -> $dd70/71 = $b882 for Blaze);
-; it is NOT carried in the skill record. See BATTLE_SKILL_SYSTEM.md.
+; [S160 correction] the AI's DAMAGE ESTIMATE of the acting skill ($db8a) on one target
+; (the S48 note called it a presentation router — it is not: nothing here touches the
+; animation). Called twice from the target picker of Attack's row $41E9 (the loops at
+; $4276 / $42CC: each live target's HP minus this estimate -> the pick). id < $37, or
+; $d9 / $dd -> bank $54 entry 3 SkillPowerBySide ($52C7: the record's power for the
+; caster's side); else -> bank $52 entry 3 AIDamageEstimate_538f ($5203: a per-skill
+; dispatch whose table holds 28 rows — see there). Result in $db56 / $db57.
+; Patched builds (S160, ROADMAP E13): the bank $52 call is FxEstimate58 (a reclaimed id
+; is estimated as a new skill's id, $EF).
     push bc
     ld a, [$db8a]
     cp $37
@@ -681,8 +683,8 @@ SaveBtlFX_43ff:
     cp $dd
     jr z, jr_058_4415
 
-    ld hl, $5203
-    rst $10
+    call FxEstimate58       ; [S160] same size (was ld hl, $5203 / rst $10): bank $52 entry 3,
+    nop                     ;   a reclaimed id seen as a new skill (its row is past the table)
     jr jr_058_4419
 
 jr_058_4415:
@@ -4276,9 +4278,15 @@ AnnounceTemplateTable:
     db $27, $27, $27, $70, $49, $49, $49, $49, $51, $52, $4A, $4B, $53, $28, $54, $56   ; ids $80-$8F
     db $55, $26, $4C, $4D, $26, $4E, $26, $2A, $18, $22, $22, $57, $58, $5C, $59, $5A   ; ids $90-$9F
     db $5B, $29, $6F, $FF, $FF, $70, $71, $FF, $FF, $73, $FF, $74, $75, $FF, $FF, $77   ; ids $A0-$AF
+    ; [S160] ids $B0-$DD: compiler region gd_reclaim_announce — the item ids' slots stay the
+    ; original game's except the 14 RECLAIMED ids ($BC-$C1 / $CC-$D3, ROADMAP E13), whose
+    ; byte is the announce of the new skill there ($FD = its own line, bank $4C
+    ; CustomMsgPtrTable row 33+; $FF = silent, as the unused item slots)
+; @BUILD_PROJECT BEGIN gd_reclaim_announce
     db $5D, $5D, $5F, $60, $5D, $5D, $5D, $5D, $5D, $5D, $5D, $5D, $FF, $FF, $FF, $FF   ; ids $B0-$BF
     db $FF, $FF, $5E, $5E, $5E, $5E, $5E, $61, $62, $63, $64, $65, $FF, $FF, $FF, $FF   ; ids $C0-$CF
     db $FF, $FF, $FF, $FF, $66, $23, $24, $24, $24, $24, $23, $29, $23, $44   ; ids $D0-$DD
+; @BUILD_PROJECT END gd_reclaim_announce
     ; --- custom / high skill-id announce slots $DE-$E1 (the table's last 4 bytes;
     ; [S111] compiler region gd_custom_announce_lo — the message id the battle
     ; announces a custom skill with: $FD = its own line (bank $4C
@@ -7502,7 +7510,7 @@ DispatchBoundsStub:
     cp $e4
     jr z, .anchor
     cp $de
-    jr c, .row              ; stock ids: their own row (vanilla)
+    jr c, .stock            ; stock ids: their own row (vanilla); [S160] a reclaimed id's base's
     jr z, .anchor           ; [S155] $DE Repel is field-only too: Attack, like $E4
     sub $de                 ; [S111] custom ids $DE-$FE: CustomTargetBaseTable
     ld c, a                 ;   [id-$DE] = the stock id whose row (target service)
@@ -7537,6 +7545,9 @@ DispatchBoundsStub:
     ld h, a
     ld [hl], e
     ret
+.stock:                     ; [S160] a stock id: a reclaimed id's new skill uses the row
+    call ReclaimRow58       ;   ReclaimTargetTable names (its base's, as CustomTargetBaseTable
+    jr .row                 ;   for $EF-$FE); every other stock id keeps its own (vanilla)
 ; [S111] compiler region gd_custom_target (editor2/core/custom_skills.py).
 CustomTargetBaseTable:
 ; @BUILD_PROJECT BEGIN gd_custom_target
@@ -7574,6 +7585,78 @@ CustomTargetBaseTable:
     db $E5   ; [$FD] -: the vanilla slack row $E5 = $6367 (a harmless target write)
     db $E5   ; [$FE] -: the vanilla slack row $E5 = $6367 (a harmless target write)
 ; @BUILD_PROJECT END gd_custom_target
+; [S160] ReclaimTargetTable [id-$BC] (ROADMAP E13) — the stock id whose target row
+; (BtlSkillTargetDispatch_401d) the new skill on a RECLAIMED id uses: its base's, or the
+; row of a stock skill with its target mode when the project changed it (as
+; CustomTargetBaseTable for $EF-$FE); $FF = no new skill there (the item's own row
+; $63D6, as the original game). $C2-$CB stay items: always $FF. Compiler region
+; gd_reclaim_target (editor2/core/custom_skills.py).
+ReclaimTargetTable:
+; @BUILD_PROJECT BEGIN gd_reclaim_target
+    db $FF, $FF, $FF, $FF, $FF, $FF   ; [$BC-$C1] LifeAcorn MysticNut AtkSeed DefSeed AglSeed IntSeed
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$C2-$CB] the meats and staves (items, never reclaimed)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$CC-$D3] WarpWing TinyMedal QuestBk HorrorBk BeniceBk CheaterBk SmartBk ComedyBk
+; @BUILD_PROJECT END gd_reclaim_target
+; [S160] IsReclaimed58 — A = a skill id -> CF set when it is one of the 14 reclaimed ids
+; ($BC-$C1 / $CC-$D3). Keeps A and every other register.
+IsReclaimed58:
+    cp RECLAIM_A
+    jr c, .no
+    cp RECLAIM_A_END
+    ret c                   ; $BC-$C1
+    cp RECLAIM_B
+    jr c, .no
+    cp RECLAIM_B_END
+    ret                     ; $CC-$D3: CF set; $D4+: clear
+.no:
+    and a                   ; CF clear (A kept)
+    ret
+; [S160] ReclaimRow58 — DispatchBoundsStub's stock path: A = a stock id -> A = the stock
+; id whose target row to use (ReclaimTargetTable for a reclaimed id with a new skill),
+; else A unchanged. Keeps BC / DE / HL.
+ReclaimRow58:
+    call IsReclaimed58
+    ret nc
+    push hl
+    push de
+    ld e, a
+    sub RECLAIM_A
+    ld hl, ReclaimTargetTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $FF
+    jr nz, .row
+    ld a, e                 ; no new skill on this id: the item's own row
+.row:
+    pop de
+    pop hl
+    ret
+; [S160] FxEstimate58 — SaveBtlFX_43ff's call of bank $52 entry 3 (the AI's damage estimate
+; of the acting skill on one target, a dispatch on the working id $DB8A into the 28-entry
+; jump table $52:$53E9). A reclaimed id would index $16+ rows past it — into code (the
+; S84 overrun class): the AI aiming a reclaimed new skill jumped wild. The estimate runs
+; with $DB8A = RECLAIM_VIEW (what it computes for every new skill $EF-$FE: row $1B,
+; CalcSkillDefense), the real id put back after. Other ids: the call as before.
+FxEstimate58:
+    ld a, [$db8a]
+    call IsReclaimed58
+    jr nc, .plain
+    push af
+    ld a, RECLAIM_VIEW
+    ld [$db8a], a
+    ld hl, $5203            ; bank $52 entry 3
+    rst $10
+    pop af
+    ld [$db8a], a           ; the real id again
+    ret
+.plain:
+    ld hl, $5203            ; bank $52 entry 3 (as the original game)
+    rst $10
+    ret
     ds $7959 - @, $00       ; the bank's free run (was a counted nop pad)
     ASSERT @ == $7959
 

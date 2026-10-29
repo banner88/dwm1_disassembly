@@ -610,9 +610,14 @@ class Gamedata:
         # overrides the battle byte (expert).
         # S111: ids 222-254 are the CUSTOM skills (editor2/core/custom_skills.py
         # validates and emits them); only the 222 stock skills are handled here.
+        # S160 (ROADMAP E13): the 14 RECLAIMED ids (custom_skills.RECLAIM) hold NEW skills —
+        # custom_skills.py validates them; their record, MP (both copies) and learn row
+        # live in these stock tables, so they are copied in from its resolve().
+        from . import custom_skills as CS
         stock = {k: v for k, v in (self.gd.get('skills') or {}).items()
                  if str(k).startswith('_') or not str(k).strip().isdigit()
-                 or int(k) < SKILL_COUNT}
+                 or (int(k) < SKILL_COUNT and int(k) not in CS.RECLAIM)}
+        self._reclaimed_skills(CS)
         for sid, o in _key_ids(stock, 'skills', 0, SKILL_COUNT - 1):
             what = f"gamedata.skills.{sid}"
             _check_keys(o, ('mp', 'learn', 'record', 'name', 'description', 'looks_like',
@@ -692,6 +697,32 @@ class Gamedata:
                         "foes, $21 one ally, $22 all allies, $41 the user (or the original)")
                 if bytes(r) != before:
                     self.edited['record'].add(sid)
+
+    def _reclaimed_skills(self, CS):
+        """S160: a new skill on a reclaimed id -> its record, MP and learn row in the stock
+        tables (an unused reclaimed id keeps the original bytes)."""
+        try:
+            sk, _x, _w = CS.resolve({"gamedata": self.gd}, self.repo)
+        except CS.CustomSkillError:
+            return                       # the custom-skill validator reports it
+        for sid in CS.RECLAIM:
+            v = sk.get(sid)
+            if v is None:
+                continue
+            rec = bytearray(v['record'])
+            if bytes(self.record[sid]) != bytes(rec):
+                self.record[sid] = rec
+                self.edited['record'].add(sid)
+            mp = bytearray(2)
+            _put16(mp, 0, v['mp'])
+            if bytes(self.mp[sid]) != bytes(mp):
+                self.mp[sid] = mp
+                self.edited['mp'].add(sid)
+            row = bytearray(v['learn']) if v['learn'] else \
+                bytearray([0xFF] + [0] * 12 + [0xFF] * 5)
+            if bytes(self.learn[sid]) != bytes(row):
+                self.learn[sid] = row
+                self.edited['learn'].add(sid)
 
     # -- curves ---------------------------------------------------------
     def _curves(self):

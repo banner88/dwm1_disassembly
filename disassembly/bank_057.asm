@@ -1361,6 +1361,12 @@ jr_057_476f:
     ret
 
 
+; [S160] AIRule_4785 — VETO the option (AIScanSlots_4456 with E = $40: +2 bit 6) when every
+; valid opponent is PARALYSED, for the working ids $15-$19, $1C-$28, $2A, $68-$6B, $6E,
+; $71-$73, $77-$80, $88-$D9 and $DC (the paralysis / disable family — and, by the range,
+; Chance's outcomes and the item ids $B0-$D4). Patched builds (ROADMAP E13): the head is
+; `call SkillView57` — a NEW skill on a reclaimed id ($BC-$C1 / $CC-$D3) is judged as one
+; on $EF-$FE (the rule never selects those). Simulator: ai_rules.f10_rules (DeMagic).
 AIRule_4785:
     ld a, [$db8a]
     cp $15

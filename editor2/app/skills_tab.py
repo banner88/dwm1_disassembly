@@ -28,7 +28,8 @@ text space meters; New skill… / Delete. Right, one foldable section per topic:
 Power also holds the ELEMENT (the resistance the damage tests, S111).
 
 Battle items (ids 176-212) are listed read-only: they are edited with the
-items (the Items tab, ROADMAP E9). Every edit is one undo step
+items (the Items tab, ROADMAP E9). S160: not the 14 field-only items' ids (188-193,
+204-211) — those hold new skills (listed with them) or are free. Every edit is one undo step
 (SnapshotCommand); the model validates with the compiler's own code.
 """
 
@@ -144,7 +145,8 @@ class SkillsTab(QWidget):
         lv.addWidget(self.list, 1)
         bh = QHBoxLayout()
         self.new_btn = QPushButton('New skill…')
-        self.new_btn.setToolTip('A new skill (ids 239-254) that runs the effect of an original '
+        self.new_btn.setToolTip('A new skill (30: ids 239-254, then 188-193 / 204-211 — the ids of '
+                                '14 field-only items) that runs the effect of an original '
                                 'skill you pick, with its own name, text, power, look, '
                                 'element and learning')
         self.new_btn.clicked.connect(self._new_skill)
@@ -960,7 +962,7 @@ class SkillsTab(QWidget):
             dv = d['looks_like']
             self.sounds.addItem(f'same as the look ({names.get(dv, dv)})', dv)
         for k in range(SK.N_IDS):
-            if k != dv:
+            if k != dv and k not in CS.RECLAIM:     # S160: a new-skill slot, not a look
                 self.sounds.addItem(f'{k:3d}  {names.get(k, k)}', k)
         self.sounds.setCurrentIndex(max(0, self.sounds.findData(d['sounds_like'])))
         _bold(self.sounds, d['sounds_like'] != dv)

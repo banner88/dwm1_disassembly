@@ -3494,35 +3494,41 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       DEF / AGL that rose on the thief adds a page "{name}'s defense / speed goes up by
       {amount}!" (editable: `def_rise` / `agl_rise`); walk 45 / 45, negative 33 FAIL; test ROM
       `DWM-S156r2-plunder-test.gbc`.
-- [ ] **E13 — more custom skill ids (ASKED S159 — NEXT: "30 skills would be ok and
-      acceptable"; the user: "#2 now and flag e13 for next").** 16 NEW ids (`$EF-$FE`) is the
-      limit of the `$DE-$FE` tables. **The S159 audit (agreed with the user):** reclaim the 14
-      item-effect ids whose record +10 = 1 "not usable in battle" — LifeAcorn, MysticNut and
-      the four seeds (`$BC-$C1`, items 13-18) and WarpWing, TinyMedal and the six books
-      (`$CC-$D3`, items 29-36) → **30 NEW skills**. The internal rows 151-175 are NOT free
-      (Chance's outcomes, confusion actions, the AI defaults — S130). Measured S159: the battle
-      ITEM pick reads only that +10 byte (bank $54 entry 5 → bank $50 `jr_050_5199`, "Can't use
-      this item in battle!", nothing used), so a custom skill holding the id would make the
-      item usable — the reclaimed items need a fixed "not usable" rule in bank $77
-      `BattleItemProbe` / `BattleItemPick` (patched code), and the compiler must refuse a
-      reclaimed item as a battle item / a base. To do: extend every per-id custom table
-      (`CustomRecordPtrTable`, MP, announce, target, message, proxy, SFX, base, element, learn,
-      names, SKIL texts) to the window; audit the `$db8a` range gates that treat `>= $B0` as an
-      item (the item handler `$4625`, the "uses the X" naming in banks $52 `Jump_052_727a` / $54
-      `LoadB54_53f6`, the battle items' message path) and the equality checks up to `$C5`
-      (the seeds' ids) — `tools/map_skill_id_buckets.py` for the window; the names / texts
-      through E14's text-bank plan. User: "why would I want to use minimedals in battle?";
-      S159 (2026-10-29, after the answer "editing / new items" of 2026-10-28 18:13): "I do NOT
-      care about making ANY seeds, books and warpwing every work in battle. I jsut wanted to
-      check its restricted to thems pecifically and messing with other skills/making new skills
-      does not shift this" — so: the 14 items are field-only for good (the Items tab's battle
-      half gone for them; a new item on one of them as a base field-only too — the rule keys on
-      `wItemBase`); their field effects, the other items, new items on other bases, edits of
-      any skill and new skills leave the reclaim as it is (new items cost no skill id: they use
-      their base's battle row). Open choice for E13: reserve all 14 up front or take them as
-      new skills 17+ need them.
-      Rejected options: retiring built-ins (id-keyed in many forks), a second id byte (every
-      skill list is one byte).
+- [x] **E13 — more custom skill ids: 30 new skills (ASKED S159; BUILT S160; built S160, USER-CONFIRMED
+      2026-10-29 14:48 ("Ok both twins work the same"); test ROM `DWM-S160-twins-test.gbc`).** User (S159): "30 skills would be ok
+      and acceptable"; "I do NOT care about making ANY seeds, books and warpwing every work in
+      battle. I jsut wanted to check its restricted to thems pecifically and messing with other
+      skills/making new skills does not shift this"; (S160) "Mostly likely the new skills will
+      be damage skills. but IDK yet. I need the space." / allocation "Sure" (the 16 high ids
+      first). **Built:** the 14 item-effect ids whose record +10 = 1 — LifeAcorn, MysticNut, the
+      four seeds (`$BC-$C1`, items 13-18), WarpWing, TinyMedal, the six books (`$CC-$D3`, items
+      29-36) — hold NEW skills 17-30 (`custom_skills.NEW`); they act exactly like `$EF-$FE`
+      (the stock rows filled by the compiler + `ReclaimBaseTable` / `ReclaimTargetTable` /
+      own-line rows 33-46 + the id views `FxEstimate58` / `SkillView57` + `LearnFence06`); the
+      14 items are field-only for good by their BASE (bank $77 `ReclaimedSkill77`: "Can't use
+      this item in battle!" whatever the new skill's record says; their field use, the other
+      items, new items on other bases and skill edits never move it). The ladder audit of every
+      id-range site, the item path (`HeroItemAction_727a`, ex `Jump_052_727a`), the dead
+      airborne check: BATTLE_SKILL_SYSTEM §13.12; PROJECT_COMPILER §2.68. Walk
+      `tools/walk_reclaim.py` (PyBoy, the user's save, `examples/s160_twin_demo` THE TWIN HALL)
+      44 / 44, negative 33 FAIL. Rejected options (S159): retiring built-ins
+      (id-keyed in many forks), a second id byte (every skill list is one byte); the internal
+      rows 151-175 are not free (Chance's outcomes, confusion actions, the AI defaults — S130).
+      **Found S160, open:**
+      - [ ] **Two skills evolving from ONE skill freeze the level up** (measured: "… becomes X!"
+        forever; bank $51 `LevelUpS04_LearnScan` code 1 finds no prerequisite left to replace).
+        The original data never does it (42 parents, one child each); the compiler WARNS since
+        S160. Engine fix to decide with the user: when the replaced skill is gone, ADD the second
+        (what the simulator's `learn_scan` already does) — a few bytes in bank $51 (free space
+        or a far call) + `census_raising.py`'s stub caller.
+      - [ ] **"Evolves from" two or more skills on a custom / new skill is never learned** (the
+        S75 crash fence, `$DA+` and now the 14 ids): help 54 said "knows one of them" (wrong —
+        a combination needs ALL, DOC_AUDIT S160); the help is corrected. Lifting the fence for
+        new skills needs the S75 crash re-measured.
+      - [ ] **The clone census re-measure is timing-sensitive:** a 700-frame window flips 8
+        bases between runs (34, 36, 38, 61, 89, 108, 129, 213 — BeDragon likely a real
+        difference, the rest the window); S160 kept the S111 verdicts and added the reclaim
+        section. Make the census compare whole battles before trusting a re-run.
 - [ ] **E14 — the built-in custom skill names out of bank $41 (S156: banked until it binds).**
       The 17 built-in names overflow the 94-B `gd_custom_skill_names` region by 36 B (S156;
       27 B S155) into the `ns_text_*` extents the new species' names use — the "19 new
@@ -3586,7 +3592,13 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       weights 30 / 250 / 30 / 0) whose only skill is a NEW skill on Bang never cast it in
       23-27 actions — the S158 build too; with Boom beside it the AI cast Boom. Trace which
       rule chain / category a new id gets (bank $57 chain tables by id, bank $58 rows,
-      `CustomAI57`), then decide with the user.
+      `CustomAI57`), then decide with the user. **S160:** wider — INT-200 enemies whose four
+      skills are all new (EvilSlash / Beserker / SquallHit / Whistle bases; Sleep / Sap /
+      PsycheUp / BoltSlash) cast none in 19-20 actions each, high and reclaimed ids alike
+      (walk_reclaim.py `enemy`). Also here: the AI damage estimate of every new skill is row
+      `$1B` (CalcSkillDefense), not its base's estimate; the simulator's `core_alias` applies the
+      BASE's id-keyed rules to a new skill where the ROM treats `$EF+` generically (both kinds
+      of new id) — one decision for both.
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work

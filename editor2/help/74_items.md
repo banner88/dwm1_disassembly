@@ -67,6 +67,13 @@ Your items do in battle what the item they work like does, with its battle
 power; the battle text names YOUR item. Items 38-43 (BeastTail … BookMark)
 do nothing in battle.
 
+**Field-only for good (S160):** LifeAcorn, MysticNut, the four seeds (13-18),
+WarpWing, TinyMedal and the six books (29-36) never worked in battle in the
+game ("Can't use this item in battle!"); since S160 their battle-skill ids hold
+your new skills (Skills tab), so they have no battle half to edit and stay
+field-only — and so does every item of yours that works like one of them. Their
+field use is unchanged (a LifeAcorn still raises max HP).
+
 **New item…** asks what it works like and its name and starts with every
 field of that item. **Copy** makes a new item with every field of the
 selected one. **Delete** (your items; a shop / give / story check that still

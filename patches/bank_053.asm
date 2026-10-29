@@ -719,10 +719,10 @@ jr_053_451e:
 
     ld hl, $db79
     call CalcBtlC_4be3
-    cp $10
-    jr nz, jr_053_4546
-
-    ld a, $09
+    cp $10                  ; [S160] the round-order entry $10 = the HERO: his action is an
+    jr nz, jr_053_4546      ;   ITEM — act state 9 (bank $52 HeroItemAction_727a); a monster's
+                            ;   skill, whatever its id (an item-window id $B0-$D4 too), takes the
+    ld a, $09               ;   skill states below
     ld [$d9ed], a
     ret
 

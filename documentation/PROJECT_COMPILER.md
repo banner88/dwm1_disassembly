@@ -699,6 +699,10 @@ user-confirmed hand-authored code:
   record +$82 & `$F8` in `MemUpsert` / `MemRecMatch` / `MemRecTag`, a new tag OR-ed over bits
   0-2; the dead "not a tag" test dropped). No TEMPLATE_SIZE. Current values:
   `templates/PINNED_SHA256`.
+* S160 re-pin (§2.68, ROADMAP E13 — the reclaimed skill ids): `bank_077_head.asm`
+  (`BattleItemProbe` / `BattleItemPick` call `ReclaimedSkill77`: an item whose battle skill is one
+  of the 14 reclaimed ids is refused as "not usable in battle"; `TEMPLATE_SIZE[$77]` 2785 —
+  `ShopPtrTable` `$4AE1`, was 2741). Current values: `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -4590,7 +4594,7 @@ code that reads it: DATA_STRUCTURES "Items (S151)".
   Bank $50: the battle menu's probe → bank $77 entry 17 `BattleItemProbe` (E = the item: [$db4c]
   := the base's skill = base + $AF, [$db4d] := 0, [$db4e] := $0A, bank $54 entry 0), the pick →
   entry 18 `BattleItemPick` (E = the bag slot: `wItemInUse` := the item, [$db4c] := its skill,
-  bank $54 entry 5). Banks $52 (`Jump_052_727a`) / $54 (`LoadB54_53f6`): `ld a, [wItemInUse] /
+  bank $54 entry 5). Banks $52 (`HeroItemAction_727a`) / $54 (`LoadB54_53f6`): `ld a, [wItemInUse] /
   nop / nop` (was `ld a, [skill] / sub $af`). `templates/bank_077_head.asm` entries 16-18 +
   `BattleSkillOf` (`TEMPLATE_SIZE[$77]` 2074, was 1967; sha re-pinned).
 - **Pin:** example `046319ef…` (patched; was `96d05355…`, patched): banks $00 (header), $03,
@@ -5267,6 +5271,45 @@ S159 neither was filled outside the validators, so **element edits were never si
 after its damage (bank $52 `CustomElemTail52`); the record core runs the ladder at level 0
 for "none". `pacing.pack_res`: index 26 at position 27. `raising_digest` hashes the two
 maps when set (the original game's digests unchanged). `test_compiler.test_s159`.
+
+## §2.68 S160 — 30 NEW SKILLS: the 14 reclaimed item-effect ids (ROADMAP E13)
+
+**Schema.** No new key: `gamedata.skills.<id>` with `base` + `name` is a NEW skill on any of
+the 30 ids `custom_skills.NEW` = 239-254 (`NEW_HIGH`) then 188-193 / 204-211 (`RECLAIM`, the
+battle skills of items 13-18 / 29-36, `RECLAIM_ITEMS`); `Document.new_custom_skill` takes them
+in that order, a 31st is refused. An unused reclaimed id keeps the item's original rows; a
+`gamedata.skills.<188-211>` entry WITHOUT a `base` is an error naming S160 (the id holds a
+new skill since S160). Every per-skill key of a new skill works on a reclaimed id (record,
+MP, learn, name, description, looks / sounds, element, announce / own line, `line_shows` …).
+
+**Where the data goes.** A reclaimed new skill is written into the STOCK tables at its own
+id (record `$54:$41CF`, MP `$07:$570C`, learn `$06:$50E0`, names `$41:$4539`, SKIL text bank
+$56, `StockPresentTable` / `StockSfxTable`, `StockElemTable`) — `gamedata._reclaimed_skills`
+and `skills.effective` take them from `custom_skills.resolve`. NEW regions: `gd_reclaim_base`
+(bank $72 `ReclaimBaseTable`, 24 rows `$BC-$D3`: the base, `$FF` = none), `gd_reclaim_target`
+(bank $58 `ReclaimTargetTable`: the base's AI target row), `gd_reclaim_announce` (bank $58, the
+announce template rows `$B0-$DD`); `gd_custom_msg_ptrs` grows to 47 rows (rows 33-46 = the
+reclaimed ids, `MSG_ROWS`; `MSG_PTRS_AT` `$7476`). REGIONS 24. Engine (every build, patched):
+banks $72 / $58 / $57 / $4C / $06 forks + views and bank $77 `ReclaimedSkill77`
+(BATTLE_SKILL_SYSTEM §13.12); WRAM equates `RECLAIM_A` … `CUSTOM_MSG_ROWS` (patches/wram.asm).
+Example pin moves (banks $06 / $4C / $57 / $58 / $72 / $77; the example has no reclaimed skill:
+the tables `$FF`, the 14 dummy line rows).
+
+**Validation.** `custom_skills.resolve`: a reclaimed entry must be a new skill (base +
+name); `items_doc.set_item_battle` refuses the 14 field-only items (`FIELD_ONLY_ITEMS`); the
+Items tab says "field-only". NEW warning (S160) `shared_evolution_check`: two skills (stock or
+custom) whose learn rows name the SAME single prerequisite — the game freezes at a level up
+where both qualify (measured; BATTLE_SKILL_SYSTEM §13.12 "FOUND S160"); the original data has
+none; and one for a custom / new skill whose learn row names two or more prerequisites (never
+learned: the S75 code-2 fence). `tools/validate_custom_data.py` accepts the `call LearnFence06 / jp c` fence.
+
+**Editor / simulator.** Skills list: the 14 ids leave the stock list; new skills sorted
+`$EF-$FE` first; lend / sounds pickers skip unused reclaimed ids; Monsters tab labels a
+reclaimed id as custom. Simulator: `raising.learn_scan` fences code 2 for the 14 ids (as for
+`$DA+`); `planner` keeps a reclaimed id that holds a skill (its `NEVER $A2-$D4` drop only for
+ids without one); `balance._stock_elements` skips custom ids. `census_skill_clone.py
+--reclaim` (the clone census at `$BC` / `$CC` / `$EF`). Help 54 / 74 / 00, `EDITOR_REVISION`
+S160. `test_compiler.test_s160`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

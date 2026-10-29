@@ -269,6 +269,9 @@ def resolve(prj_or_data, repo_root=None):
         sid = _int(k, what)
         if sid >= N_IDS:
             continue                    # S111: custom skills = custom_skills.py
+        from . import custom_skills as CS
+        if sid in CS.RECLAIM:
+            continue                    # S160: a reclaimed id's new skill = custom_skills.py
         if sid < 0:
             raise SkillError(f"{what}: not a skill id")
         r = {'name': None, 'desc': None, 'looks': None, 'sounds': None}
@@ -385,6 +388,25 @@ def effective(prj_or_data, repo_root=None):
             sounds[sid] = r['looks']
         if r.get('sounds') is not None:
             sounds[sid] = r['sounds']
+    # S160 (ROADMAP E13): the new skills on the 14 RECLAIMED ids keep these stock slots —
+    # their name, SKIL text, look (default = the base's) and sounds come from
+    # custom_skills.resolve(); an unused reclaimed id keeps the item's bytes
+    from . import custom_skills as CS
+    try:
+        csk, _x, _w = CS.resolve(prj_or_data, repo_root)
+    except CS.CustomSkillError:
+        csk = {}
+    for sid in CS.RECLAIM:
+        v = csk.get(sid)
+        if v is None:
+            continue
+        names[sid] = v['name']
+        if v['desc']:
+            descs[sid] = v['desc']
+            if sid in van['desc_shared']:
+                own.add(sid)
+        looks[sid] = v['proxy']
+        sounds[sid] = v['sfx']
     return {'names': names, 'descs': descs, 'looks': looks, 'sounds': sounds, 'own_desc': own}
 
 

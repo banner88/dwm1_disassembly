@@ -90,7 +90,7 @@ FarSkillFork:
     ld a, [$db86]                       ; legacy alias fallback (now always 0)
 .haveid:
     cp $DE
-    jr c, .vanilla
+    jr c, .stock                        ; [S160] a stock id: a reclaimed id's new skill?
     ld c, a                             ; [S111] a NEW custom skill (P3.11d) runs the
     sub $DE                             ;   effect code of a stock skill: CustomBaseTable
     ld e, a                             ;   [id-$DE] = that skill's id ($FF = the
@@ -110,6 +110,8 @@ FarSkillFork:
 .mourn:
     ld hl, MournDispatchPtr             ; [MOURN S75] -> MournDispatch52 (CalcDefenseWrapper path)
     ret                                 ; (cross-bank label; assembles in one pass via game.asm)
+.stock:
+    call ReclaimBase72                  ; [S160] A = the base of a reclaimed id's new skill
 .vanilla:
     ld c, a
     ld b, $00
@@ -3085,6 +3087,43 @@ CustomBaseTable:
     db $FF   ; [$FD] -
     db $FF   ; [$FE] -
 ; @BUILD_PROJECT END gd_custom_base
+; [S160] ReclaimBaseTable [id-$BC] (ROADMAP E13, BATTLE_SKILL_SYSTEM §13.12) — the
+; stock skill whose effect code the NEW skill on a RECLAIMED id runs ($BC-$C1 / $CC-$D3,
+; the battle skills of 14 items the game never lets the hero use in battle); $FF = no new
+; skill there (the item's own handler, $52:$4625, as the original game). $C2-$CB (the
+; meats and staves, which stay items) are always $FF. Compiler region gd_reclaim_base
+; (editor2/core/custom_skills.py); read by ReclaimBase72 (FarSkillFork's stock path).
+ReclaimBaseTable:
+; @BUILD_PROJECT BEGIN gd_reclaim_base
+    db $FF, $FF, $FF, $FF, $FF, $FF   ; [$BC-$C1] LifeAcorn MysticNut AtkSeed DefSeed AglSeed IntSeed
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$C2-$CB] the meats and staves (items, never reclaimed)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF   ; [$CC-$D3] WarpWing TinyMedal QuestBk HorrorBk BeniceBk CheaterBk SmartBk ComedyBk
+; @BUILD_PROJECT END gd_reclaim_base
+; [S160] ReclaimBase72 — FarSkillFork's stock path: A = a stock id (< $DE) -> A = the base
+; of the new skill on a reclaimed id (ReclaimBaseTable), else A unchanged. Keeps BC / DE / HL.
+ReclaimBase72:
+    cp RECLAIM_A
+    ret c
+    cp RECLAIM_B_END
+    ret nc
+    push hl
+    push de
+    ld e, a
+    sub RECLAIM_A
+    ld hl, ReclaimBaseTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $FF
+    jr nz, .base
+    ld a, e                             ; no new skill on this id: the item's own handler
+.base:
+    pop de
+    pop hl
+    ret
 ; StockElemTable [id] (0-221) / CustomElemTable [id-$DE] — the resistance a
 ; skill's damage tests (gamedata.skills.<id>.element): $FF = the effect code's
 ; own (stock) / none (built-in custom), $FE = none (level 0), 0-26 = one of the

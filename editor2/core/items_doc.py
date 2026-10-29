@@ -6,7 +6,9 @@ Mixed into Document. Every mutation edits project data only:
                                        game's own is removed)
   * gamedata.text.item_name / item_description.<1-43>   their name / description
   * gamedata.skills.<176-212>.record   the battle half of the game's items 1-37 (power,
-                                       range, usable in battle — the item's battle skill)
+                                       range, usable in battle — the item's battle skill);
+                                       S160: not the 14 field-only items (FIELD_ONLY_ITEMS),
+                                       whose ids hold new skills
   * custom.items[]                     the project's NEW items 44-127 (everything in the
                                        entry: name, description, base, fields, own lines)
 """
@@ -20,6 +22,12 @@ FIELD_KEYS = ('price', 'consume', 'field_use', 'pick_monster', 'use_message',
               'result_message', 'power', 'sellable', 'keep_on_loss')
 BATTLE_ITEMS = range(1, 38)        # items 1-37 = the item_effect skills 176-212
 SKILL_OF = lambda i: i + 0xAF      # noqa: E731 — bank $50 / $77 BattleSkillOf
+# S160 (ROADMAP E13): the 14 FIELD-ONLY items — LifeAcorn, MysticNut, the four seeds (13-18),
+# WarpWing, TinyMedal, the six books (29-36). The game never let the hero use them in battle
+# (record +10 = 1); their battle-skill ids now hold new skills (custom_skills.RECLAIM), so
+# they have no battle half, and a new item that works like one is field-only too (bank $77
+# BattleItemProbe / BattleItemPick refuse them by the base).
+FIELD_ONLY_ITEMS = frozenset(list(range(13, 19)) + list(range(29, 37)))
 
 
 def _skill_records(repo_root=None):
@@ -191,11 +199,14 @@ class ItemsMixin:
         """{'skill', 'usable', 'power', 'range', 'own', 'item_effect'} — the battle half:
         the item's (a project item: its base's) item skill record."""
         sid = SKILL_OF(base)
+        if base in FIELD_ONLY_ITEMS:                    # S160: no battle half (a new skill's id)
+            return {'skill': sid, 'usable': False, 'power': 0, 'range': 0, 'own': False,
+                    'item_effect': False, 'field_only': True}
         rec = self._battle_record(sid)
         return {'skill': sid, 'usable': rec[10] != 1,
                 'power': rec[11] | rec[12] << 8, 'range': rec[13] | rec[14] << 8,
                 'own': i < IT.GAME_ITEMS and base in BATTLE_ITEMS,
-                'item_effect': base in BATTLE_ITEMS}
+                'item_effect': base in BATTLE_ITEMS, 'field_only': False}
 
     def item_uses(self, i):
         """[words] — where item i is sold / given / checked (shops, item sets, story checks
@@ -333,6 +344,9 @@ class ItemsMixin:
         if i not in BATTLE_ITEMS:
             raise ValueError('only the game\'s items 1-37 have a battle record of their own '
                              '(a project item uses its base\'s)')
+        if i in FIELD_ONLY_ITEMS:
+            raise ValueError('this item is field-only: the game never lets it be used in '
+                             'battle, and its battle-skill id holds a new skill (S160)')
         sid = SKILL_OF(i)
         from editor2.core.gamedata import RECORD_FIELDS
         raw = bytes.fromhex(_skill_records(getattr(self, 'repo_root', None))[sid]

@@ -2083,6 +2083,86 @@ preferred, and with that one alone it is still taken — pure denial, the foe ba
 caster's room, so a capped enemy thief keeps stripping a party monster's raised stat. Left as
 is by the user's sign-off (not built: a cap on Plunder's own gain; a room-aware AI score).
 
+### 13.12 The 14 RECLAIMED ids — 30 new skills (`$BC-$C1`, `$CC-$D3`, S160)  [S160, 2026-10-29; PyBoy-verified, built S160, USER-CONFIRMED 2026-10-29 14:48 ("Ok both twins work the same")]
+
+**What.** The battle-skill ids of LifeAcorn, MysticNut, AtkSeed, DefSeed, AglSeed, IntSeed
+(`$BC-$C1` = items 13-18 + `$AF`) and WarpWing, TinyMedal and the six books (`$CC-$D3` = items
+29-36) hold NEW skills after the 16 high ids `$EF-$FE` (the allocation order). The 14 rows
+are the ones whose record +10 = 1 "not usable in battle" in the original game (every other
+item row is 2 or 3 — S159's audit, re-read S160), so nothing the player could do in battle is
+lost. The user (S159): "I do NOT care about making ANY seeds, books and warpwing every work in
+battle. I jsut wanted to check its restricted to thems pecifically and messing with other
+skills/making new skills does not shift this"; (S160) "Mostly likely the new skills will be
+damage skills … I need the space". All 30 behave identically: a reclaimed id acts exactly like
+a `$EF-$FE` new skill (following the base's id-keyed rules is E17).
+
+**Design ("option A": the stock rows stay).** A reclaimed id keeps its STOCK-table rows,
+filled with the new skill's data by the compiler: the record (`$54:$41CF + id×19` via
+`$4013`), MP (`$07:$570C`), learn (`$06:$50E0 + id×18`), name (`$41:$4539`), SKIL text
+(bank $56), `StockPresentTable` / `StockSfxTable` (look / sounds), `StockElemTable`, the
+announce template (`$58:$5806` row; region `gd_reclaim_announce` over `$B0-$DD`). What the
+high ids get from their `$DE+` tables a reclaimed id gets from small new tables + id views:
+
+| Where | What (patched code) |
+|---|---|
+| bank $72 `FarSkillFork` | `cp $DE / jr c, .stock`; `.stock: call ReclaimBase72` — `ReclaimBaseTable` (region `gd_reclaim_base`, 24 rows `$BC-$D3`, `$FF` = not reclaimed) gives the base's id: the EFFECT runs as the base's (the high ids: `CustomBaseTable`) |
+| bank $58 `DispatchBoundsStub` | `.stock: call ReclaimRow58` — the AI target row from `ReclaimTargetTable` (`gd_reclaim_target`) |
+| bank $58 `SaveBtlFX_43ff` | `call FxEstimate58 / nop` (same size as `ld hl,$5203 / rst $10`): the AI damage estimate (bank $52 entry 3 `AIDamageEstimate_538f`) runs with `$DB8A` = `RECLAIM_VIEW` ($EF), put back after — its ladder sends `$6D-$D5` (but `$7E`) to rows past its 28-row table (CODE read as a pointer); a high id lands on row `$1B` (CalcSkillDefense) |
+| bank $57 `AIRule_4785` | `call SkillView57` (same size as `ld a,[$db8a]`): a reclaimed id is seen as `$EF` — the original rule VETOES `$88-$D9` when every opponent is paralysed |
+| bank $4C `LoadB4c_Fork_custom` | `$FD` with `$DB8A < $DE`: `ReclaimLine4C` → row 33 + k of `CustomMsgPtrTable` (47 rows since S160, `ASSERT @ == $7476`); other stock ids → `LoadB4c_Fork_stockfd` (the vanilla empty `$FD`, the poison tick's follow-up) |
+| bank $06 `LearnCode2Guard06` | `call LearnFence06 / jp c`: code 2 (two or more prerequisites) fenced for `$DA+` (S75) AND the 14 ids |
+| bank $77 `BattleItemProbe` / `BattleItemPick` | `ReclaimedSkill77`: an item whose battle skill (its BASE's, `BattleSkillOf`) is one of the 14 ids is refused as record +10 = 1 — "Can't use this item in battle!" (`$F200`, bank $50 `jr_050_5199`) — whatever the new skill's record says |
+
+**Where the battle buckets the id (the S160 ladder audit).** Every compare ladder after a read
+of `$DB8A` / `$DB78` / `$DB4C` / `$DB4F` / `$C1FC` (banks $00, $06, $07, $12, $14, $4C,
+$50-$58, $5F, $72) was run concretely (a scratch walker on `tools/sm83dis.py`) for `$EF` and
+each reclaimed id. An effect-level difference (not merely another `ret`): `$52:$538F` (the
+estimate — FxEstimate58), `$57:$4785` (SkillView57), `$52:$7661` (the airborne-reach check —
+DEAD code: 0 hits in 181 casts at an airborne target, measured; annotated
+`AirborneReachDead_763e`), bank $4C's `$FD` (ReclaimLine4C). Not reachable by a reclaimed new
+skill: `$52:$732E` (`$DB78` = the hero's pending item action; the 14 items are refused
+before), `$54:$535F` (bank $54 entry 5: only the battle ITEM pick calls it, `$50:$5114`),
+`$5F:$52F0` (the presentation ladder: it reaches the stock rows the compiler fills). Breeding
+never passes a reclaimed (or any `$97+`) skill on: `UnevolvedSkillMap` is `$FF` there (bank
+$16). `tools/map_skill_id_buckets.py` covers ids `>= $DE` only (DOC_AUDIT S160).
+
+**How an item reaches battle.** Items are the HERO's action: bank $53 entry 0's round order
+routes `$10` → `$D9ED` = 9 → bank $52 `HeroItemAction_727a` (renamed from `Jump_052_727a`,
+both trees). A MONSTER acting an id of the item window takes the ordinary skill path — so a
+reclaimed id cast by a monster is just a skill. The estimate (`SaveBtlFX_43ff`) runs only in
+the target pick of Attack's row `$41E9` for a PARTY actor with `$DD0B` ≠ 0 (or a link battle)
+— a monster picking its own target; enemies take `Jump_058_441b` (no estimate).
+
+**Measured (PyBoy, the user's save; `tools/walk_reclaim.py` on `examples/s160_twin_demo`, 44 /
+44).** 14 TWIN pairs (the same base and data; `H…` on `$EF-$FC`, `R…` on the 14 ids), each
+cast by party slot 0 from one saved state with the RNG pinned: the same battle messages (id,
+`wCustomLine`, subject, `$DB56`) and cast counts; HFireb / RFireb render their own lines (rows
+17 / 33). The estimate (`SaveBtlFX_43ff` stub-called in a live battle) of the five Attack-row
+bases (Beserker, EvilSlash, SquallHit, PsycheUp, Whistle): the same value for H and R,
+`AIDamageEstimate_538f` sees `$EF`, never a reclaimed id. `AIRule_4785` with every party
+monster paralysed: stock Sleep vetoed (`$DD27` = `$FF`), the H / R twins of Sleep, Sap,
+PsycheUp, BoltSlash, EvilSlash, Whistle not. Sparring rows in pairs (INT 200, the AI free): the
+same enemy action sequences — and **0 new-skill casts of either kind** (E17). The battle ITEM
+menu: LifeAcorn / WarpWing (holding RFireb / RMulti) refused, nothing acts, the bag keeps them;
+a Herb accepted (the control); the field LifeAcorn +5 max HP as always. A level up teaches
+HFireb (from Blazemost) and RFireb (from Firebolt); HBang / RBang (two prerequisites) never.
+The clone census (`census_skill_clone.py --reclaim`, `extracted/skill_clone_census.json`
+"reclaim"): every allowed base `same` at `$BC` / `$CC`, or as at `$EF`. `--negative` (the S160 views removed): 33 FAIL — 13 twin pairs differ, the five reclaimed
+estimates lock the emulated CPU up (the table overrun), the R twins are vetoed by `AIRule_4785`, LifeAcorn /
+WarpWing are used in battle, RBang is learned.
+
+**FOUND S160 — two skills evolving from ONE skill freeze the game.** The learn scanner (bank
+$06) offers a code-1 skill when its single prerequisite is in the RECORD; the bank $51 caller
+`LevelUpS04_LearnScan` replaces that prerequisite in the WORKING list `$C0D8`. When two skills
+evolve from the same skill and both qualify at one level up, the first replaces it and the
+second finds no copy to replace — the caller places nothing and the scanner offers it again:
+"… becomes X!" forever, the battle never ends (measured: `walk_reclaim.py` freeze; a probe with
+HFireb + RFireb both from Blaze). The original game has 42 single-prerequisite parents with one
+child each, so it never happens there; a project makes it with any two skills (stock edits or
+new skills — e.g. a new skill "from Blaze" beside Blazemore). The compiler WARNS
+(`custom_skills.shared_evolution_check`); the simulator's `learn_scan` appends instead
+(unreachable in the game, commented). The engine fix is open (ROADMAP E13 note).
+
 ---
 
 ## Power calibration — what actually makes a fight hard (S76)

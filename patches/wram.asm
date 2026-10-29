@@ -467,6 +467,22 @@ wTextOvrPtr:: dw ;d562 — the edited text's address for SaveBankAndSwitch's lev
 ; hero picked in battle (bank $77 entry 18 BattleItemPick): the battle names it from here
 ; (banks $52 / $54 read it where they used to compute skill − $AF). Transient.
 ITEM_FIRST_NEW EQU $2C ; S151: the first project item id (the game's items are 0-43)
+; S160 (ROADMAP E13) — 14 RECLAIMED skill ids: the battle skills of the items LifeAcorn,
+; MysticNut, the four seeds ($BC-$C1 = items 13-18) and WarpWing, TinyMedal, the six books
+; ($CC-$D3 = items 29-36) — items the game never lets the hero use in battle (record +10
+; = 1) — hold NEW skills (each runs a stock skill's effect, its BASE). A reclaimed id keeps
+; its stock rows (record, both MP copies, name, SKIL text, look, sound, element, learn
+; row, announce slot = the skill's data); bank $72 ReclaimBaseTable names its base, bank
+; $58 ReclaimTargetTable its AI target row; the game's id-range code sees it as a new
+; skill (RECLAIM_VIEW) at the sites where an item id would behave otherwise
+; (BATTLE_SKILL_SYSTEM §13.12); bank $77 refuses the 14 items in battle by their base.
+RECLAIM_A EQU $BC       ; S160: the first reclaimed id (LifeAcorn's battle skill)
+RECLAIM_A_END EQU $C2   ; S160: one past the first run ($BC-$C1)
+RECLAIM_B EQU $CC       ; S160: the second run (WarpWing's battle skill)
+RECLAIM_B_END EQU $D4   ; S160: one past the second run ($CC-$D3)
+RECLAIM_VIEW EQU $EF    ; S160: the id the game's id-range code sees for a reclaimed id (a new skill's)
+RECLAIM_ROWS EQU 24     ; S160: ReclaimBaseTable / ReclaimTargetTable rows ($BC-$D3; $C2-$CB = $FF)
+CUSTOM_MSG_ROWS EQU 33  ; S160: bank $4C CustomMsgPtrTable rows of $DE-$FE (the 14 reclaimed ids follow)
 wItemBase:: db ;d564 — the behaviour id of the item last copied to $DA62 (S151)
 wItemInUse:: db ;d565 — the item the hero uses in battle (S151)
 ; S153 (ROADMAP E5) — THE ENDING: where the field goes after the credits. A project's

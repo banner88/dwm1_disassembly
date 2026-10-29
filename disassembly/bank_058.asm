@@ -680,13 +680,15 @@ jr_058_43fe:
 
 
 SaveBtlFX_43ff:
-; SkillFXRouter — routes the working skill id ($db8a) to one of two effect-
-; presentation handlers by id range (the "id-range bucketing" the skill system is
-; built on): id < $37, or id == $d9 / $dd  -> bank $54 entry 3 ($52C7); else ->
-; bank $52 entry 3 ($5203). Those handlers drive targeting / animation / battle
-; message. The animation POINTER itself is set deeper, by the effect handler's
-; descriptor-setter (e.g. $52:SetHLBattle_54e7 -> $dd70/71 = $b882 for Blaze);
-; it is NOT carried in the skill record. See BATTLE_SKILL_SYSTEM.md.
+; [S160 correction] the AI's DAMAGE ESTIMATE of the acting skill ($db8a) on one target
+; (the S48 note called it a presentation router — it is not: nothing here touches the
+; animation). Called twice from the target picker of Attack's row $41E9 (the loops at
+; $4276 / $42CC: each live target's HP minus this estimate -> the pick). id < $37, or
+; $d9 / $dd -> bank $54 entry 3 SkillPowerBySide ($52C7: the record's power for the
+; caster's side); else -> bank $52 entry 3 AIDamageEstimate_538f ($5203: a per-skill
+; dispatch whose table holds 28 rows — see there). Result in $db56 / $db57.
+; Patched builds (S160, ROADMAP E13): the bank $52 call is FxEstimate58 (a reclaimed id
+; is estimated as a new skill's id, $EF).
     push bc
     ld a, [$db8a]
     cp $37

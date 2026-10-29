@@ -1246,3 +1246,33 @@ edge and the battle waits for input forever.
 - **The battle ITEM menu by buttons:** in the command menu RIGHT (ITEM), A (the list, the
   first bag item), A (use) — a non-battle item shows "Can't use this item in battle!"
   (bank $50 `jr_050_5199`).
+
+## S160 techniques — the reclaimed skill ids walked on the user's save (tools/walk_reclaim.py)
+
+- **Twins from one state:** save the state in the field, then for each pair load it, start
+  the S110 rig against EID 3 with party slot 0 forced to the H skill, reload, the R skill; the
+  RNG pinned every frame (`$C899/$C89A`) makes the two battles identical up to the id — compare
+  the message log (`$C823`, `wCustomLine`, `$DB8A` mapped R→H, `$DB89`, `$DB56`).
+- **Which line text the game read:** a hook on CallTextEngine's tail `$00:$05E3` gives the
+  bank / address of every rendered string (`$C824`, `$C82D/E`) — compare with the ROM's
+  `CustomMsgPtrTable` row (row 17 = `$EF`, row 33 = `$BC`).
+- **Calling a banked routine in a live battle:** a WRAM stub at `$DE40` (the audio engine's
+  free margin `$DE2C-$DE73`): `di / ld a,bank / ld [$2100],a / ld c,n / call addr / ld a,$A5 /
+  ld [$DE3F],a / jr $`; set PC to it, tick until the marker, read the result, reload the
+  state. Nested `rst $10` far calls return to the stub's bank (RST_10 saves `[$4000]`, the
+  bank's own number). Used for bank $58 `SaveBtlFX_43ff` (C = the target slot, `$DB88` = 0,
+  `$DB89` = 4) and bank $57 `AIRule_4785` (`$DB88` = 4, the veto in `$DD27`).
+- **Paralysis for the AI's veto:** `$DB02 + 8k` bit 6 (the rule scans `$DB02 + 8 ×` the side
+  base with mask `$40`). A party ALL paralysed in a real battle loses it — poke it only for a
+  stub call.
+- **The battle command menu is up** when `$D9EC` = 4 and `$D9F4` = 2 (not `$D9F5`); RIGHT, A =
+  ITEM; the list is the bag in order, 4 a page. A refused item renders message `$F2` (hook
+  `$4C:$42D1`, `$C823`). Hurt the lead first (`$DBA3` = 1) so a Herb has work (a full-HP
+  Herb says `$BB` and is not used).
+- **A demo battle that never ends:** check the enemy's joinability first (0 = asks to join; a
+  full party loops "Choose a monster back to farm"); then the phases `$D9EC` / `$D9F4` with
+  screenshots. A level-up learn loop shows as `$D9EC` 11 → 12 (1, 2, 3, 4, 8, 17) → 11 … with
+  the level unchanged and "… becomes X!" on screen (two skills from one prerequisite).
+- **A runaway guard:** a negative ROM can run code through a hooked address thousands of times
+  a frame — every Python hook call slows the walk to a crawl. Stop a rig when its logs pass a
+  few thousand entries.

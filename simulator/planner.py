@@ -352,8 +352,10 @@ def make_planner(records, species=None, draws=3, enemy_draws=1, stats=None):
             ol = (b.ext.get('f10_optlists') or [[]] * 8)[s] or []
             skills = [x for _t, x in ol]
         for sk in skills or []:
-            if sk is None or sk == 0xFF or sk in NEVER or sk == ATTACK or sk in out:
+            if sk is None or sk == 0xFF or sk == ATTACK or sk in out:
                 continue
+            if sk in NEVER and sk not in getattr(b, 'core_alias', {}):
+                continue          # S160: a reclaimed id ($BC-$C1 / $CC-$D3) holding a new skill acts
             f = _f(records, sk)
             if not f:
                 continue
@@ -586,6 +588,7 @@ def make_planner(records, species=None, draws=3, enemy_draws=1, stats=None):
             st['seconds'] += time.perf_counter() - t0
 
     planner.stats = st
+    planner.options = options        # S160: the candidate actions (tests)
     planner.values = values
     planner.effect = effect
     planner.threat = threat

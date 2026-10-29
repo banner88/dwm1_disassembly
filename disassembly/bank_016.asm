@@ -1631,7 +1631,11 @@ label16_485c:
 ; UnevolvedSkillMap — 256 bytes
 ; Maps skill ID (as array index) → base skill ID in evolution chain.
 ; Example: Blazemore ($01) → Blaze ($00), Explodet ($08) → Bang ($06).
-; $FF = skill cannot be inherited (fake/special skills only).
+; $FF = skill cannot be inherited (fake/special skills only). [S160] every id $97-$FF
+; but BeDragon / Smashlime / Sheldodge / Branching / GigaSlash ($D5-$D9) is $FF: Chance's
+; outcomes, the item ids $B0-$D4 and every custom id $DE-$FE (built-in or new) — so a
+; NEW skill, on $EF-$FE or on a reclaimed item id ($BC-$C1 / $CC-$D3), is never
+; inherited by an egg (the same for all 30).
 ; Used during breeding to inherit evolved versions of parent skills.
 ; ---------------------------------------------------------------
 UnevolvedSkillMap:

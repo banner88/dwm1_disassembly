@@ -4312,7 +4312,7 @@ def main():
     st = w.skills_tab
     w.tabs.setCurrentWidget(st)
     app.processEvents()
-    assert st.list.count() == 239, st.list.count()     # S111: + the 10 custom skills; S155: + 6; S156: + Plunder
+    assert st.list.count() == 225, st.list.count()     # S111: + the 10 custom skills; S155: + 6; S156: + Plunder; S160: - the 14 reclaimed item ids (new-skill slots)
 
     def pick(sid):
         for i in range(st.list.count()):

@@ -20,7 +20,10 @@ Custom skill ids are $DE-$FE (222-254; $FF = "no skill" in every skill list):
   235-238  $EB-$EE   S155 built-ins Punish, Finish, Rupture, Blunt (the user's
                      S155 list; BATTLE_SKILL_SYSTEM §13.10)
   239-254  $EF-$FE   NEW custom skills a project adds (P3.11d; 234-254 until
-                     S155): each runs the
+                     S155) — S160: + the 14 RECLAIMED ids 188-193 / 204-211
+                     ($BC-$C1 / $CC-$D3, the battle skills of LifeAcorn ... IntSeed,
+                     WarpWing, TinyMedal, the six books — field-only items), taken
+                     after 239-254 (NEW = 30 ids): each runs the
                      effect code of a STOCK skill (`base`) with its own record
                      (power, targets, MP, AI fields), name, text, learn row,
                      announce, look, sounds and element. The working id stays
@@ -87,7 +90,8 @@ Keys (all optional except `base` + `name` for a new skill):
                               that suits the skill) or $12 all foes
                               (the RATIOS: "n/d", [n, d] or an integer; n 0-255,
                               d 1-255; bank $72 CustomRatioTable; results <= 999)
-  base                        239-254 only: the stock skill whose effect runs
+  base                        new skills only (239-254, 188-193, 204-211): the
+                              stock skill whose effect runs
 
 No edits = the built-in data (the S110 behaviour, plus the S111 fixes: custom
 skills' sounds read CustomSfxTable instead of past the stock tables).
@@ -106,7 +110,20 @@ PLANNED = ()                          # S155 held 234 for Plunder; S156 built it
 S155 = (0xDE, 0xDF, 0xEB, 0xEC, 0xED, 0xEE)
 S156 = (0xEA,)                        # Plunder (BATTLE_SKILL_SYSTEM §13.11)
 BUILTIN = (0xDE, 0xDF) + tuple(range(0xE0, 0xEA)) + (0xEA, 0xEB, 0xEC, 0xED, 0xEE)
-NEW = range(0xEF, 0xFF)               # 239-254 (S155; 234-254 before)
+NEW_HIGH = tuple(range(0xEF, 0xFF))   # 239-254 (S155; 234-254 before): the $DE-$FE tables' rows
+# [S160] (ROADMAP E13) 14 RECLAIMED ids: the battle skills of LifeAcorn, MysticNut, the four
+# seeds (items 13-18 = $BC-$C1) and WarpWing, TinyMedal, the six books (items 29-36 =
+# $CC-$D3) — items the game never lets the hero use in battle (record +10 = 1). A NEW
+# skill there keeps the id's STOCK rows (record, both MP copies, name, SKIL text, look,
+# sound, element, learn row, announce slot) and adds its base (bank $72
+# ReclaimBaseTable), its AI target row (bank $58 ReclaimTargetTable) and its own battle
+# line (bank $4C CustomMsgPtrTable rows 33-46); the 14 items are field-only for good (bank
+# $77 BattleItemProbe / Pick). BATTLE_SKILL_SYSTEM §13.12, PROJECT_COMPILER §2.68.
+RECLAIM = tuple(range(0xBC, 0xC2)) + tuple(range(0xCC, 0xD4))
+RECLAIM_ITEMS = {sid: sid - 0xAF for sid in RECLAIM}     # the item whose battle skill it was
+RECLAIM_FIRST, RECLAIM_LAST = 0xBC, 0xD3   # ReclaimBaseTable / ReclaimTargetTable span (24 rows)
+NEW = NEW_HIGH + RECLAIM              # [S160] the 30 new-skill ids, in the order the editor takes them
+MSG_ROWS = 33 + len(RECLAIM)          # [S160] CustomMsgPtrTable: $DE-$FE, then the reclaimed ids
 LEARN_FIRST = 0xDE                    # CustomLearnTable starts here (33 rows; S155, $E0 before)
 LEARN_ROWS = LAST - LEARN_FIRST + 1   # 33
 ANNOUNCE_SPLIT = 0xE2                 # $DE-$E1 in AnnounceTemplateTable, $E2+ CustomAnnounceTable
@@ -114,8 +131,8 @@ STOCK = 222
 NAME_REGION = 0x7FF6 - 0x7F98         # bank $41 gd_custom_skill_names (94 B)
 DESC_REGION = 0x8000 - 0x7E42         # bank $56 gd_custom_skill_desc (446 B)
 MSG_A = 56                            # bank $4C gd_custom_msg_a ($7326)
-MSG_PTRS_AT = 0x7458                  # bank $4C CustomMsgPtrTable (S155: + LoadB4c_CustomLine; ASSERT there; S156 +2, r2 +4)
-MSG_POOL = 0x7A9D - (MSG_PTRS_AT + 2 * N)  # bank $4C gd_custom_msgs (to $7A9D)
+MSG_PTRS_AT = 0x7476                  # bank $4C CustomMsgPtrTable (S155: + LoadB4c_CustomLine; ASSERT there; S156 +2, r2 +4; S160 +30: ReclaimLine4C)
+MSG_POOL = 0x7A9D - (MSG_PTRS_AT + 2 * MSG_ROWS)  # bank $4C gd_custom_msgs (to $7A9D; S160: 47 rows)
 NO_ELEMENT, ELEMENT_NONE = 0xFF, 0xFE
 FIELD_ONLY = (0x37, 0x38)           # StepGuard, MapMagic (bank $50 FieldOnlySkillA)
 TARGET_ROW_FOR_MODE = {0x11: 0x00, 0x12: 0x03, 0x21: 0x2B, 0x22: 0x2D, 0x41: 0x41}
@@ -569,9 +586,14 @@ def resolve(prj_or_data, repo_root=None):
             sid = int(k)
         except ValueError:
             continue
+        what = f"gamedata.skills.{sid}"
+        if sid in RECLAIM:                  # [S160] a reclaimed id: a NEW skill's slot
+            if not isinstance(e, dict) or not any(not str(x).startswith('_') for x in e):
+                continue                    # an empty entry: no skill there
+            edits[sid] = e
+            continue
         if sid < STOCK:
             continue
-        what = f"gamedata.skills.{sid}"
         if not FIRST <= sid <= LAST:
             raise CustomSkillError(f"{what}: custom skill ids are 222-254 ($FF = no skill)")
         if sid in RETIRED:
@@ -582,7 +604,7 @@ def resolve(prj_or_data, repo_root=None):
         if not isinstance(e, dict):
             raise CustomSkillError(f"{what}: must be an object")
         edits[sid] = e
-    valid_ids = set(range(STOCK)) | set(BUILTIN) | {s for s in edits if s in NEW}
+    valid_ids = (set(range(STOCK)) - set(RECLAIM)) | set(BUILTIN) | {s for s in edits if s in NEW}
     out = {}
     for sid in list(BUILTIN) + sorted(s for s in edits if s in NEW):
         e = edits.get(sid, {})
@@ -603,7 +625,7 @@ def resolve(prj_or_data, repo_root=None):
                 allowed += tuple(RISE_KEYS)
             if 'base' in e:
                 raise CustomSkillError(f"{what}.base: the built-in custom skills run their "
-                                       "own code; `base` is for new skills (239-254)")
+                                       "own code; `base` is for new skills (239-254, 188-193, 204-211)")
             base = None
             name = MT.encode_name(b['name'], what) if b['name'] else b''
             desc = MT.encode_desc(b['description'], what) if b['description'] else None
@@ -618,6 +640,12 @@ def resolve(prj_or_data, repo_root=None):
         else:
             allowed = KEYS_COMMON + ('base',)
             if 'base' not in e:
+                if sid in RECLAIM:
+                    raise CustomSkillError(
+                        f"{what}: since S160 id {sid} holds a NEW skill (the item "
+                        f"#{RECLAIM_ITEMS[sid]} it belonged to is field-only) — give it a "
+                        "`base` and a `name`, or remove the entry (an old edit of the "
+                        "item's battle use: the 14 items are field-only now)")
                 raise CustomSkillError(f"{what}: a new custom skill needs `base` — the stock "
                                        "skill (0-221) whose effect it runs")
             base = _int(e['base'], what + '.base', 0, STOCK - 1)
@@ -626,7 +654,7 @@ def resolve(prj_or_data, repo_root=None):
                 raise CustomSkillError(f"{what}.base {base}: "
                                        f"{SK.vanilla_name(base, repo)} is not a skill "
                                        "(battle action / item) — pick a stock skill")
-            prob = clone_problem(base, repo)
+            prob = clone_problem(base, repo, sid)
             if prob:
                 raise CustomSkillError(f"{what}.base {base}: {prob}")
             handler = 'clone'
@@ -837,18 +865,20 @@ def resolve(prj_or_data, repo_root=None):
 # which stock skills a new skill may run (P3.11d, MEASURED)
 # ---------------------------------------------------------------------------
 
-def _clone_census(repo):
+def _clone_census(repo, section='results'):
     try:
         d = json.load(open(os.path.join(repo or _repo(), 'extracted',
                                         'skill_clone_census.json')))
-        return {int(k): v for k, v in d.get('results', {}).items()}
+        return {int(k): v for k, v in d.get(section, {}).items()}
     except (OSError, ValueError):
         return {}
 
 
-def clone_problem(base, repo=None):
+def clone_problem(base, repo=None, sid=None):
     """Why a new custom skill cannot run `base`'s effect (None = it can):
-    tools/census_skill_clone.py measured the clone against the stock skill."""
+    tools/census_skill_clone.py measured the clone against the stock skill. [S160] On a
+    RECLAIMED id the copy there was measured too (the census's `reclaim` section: the twins
+    at $BC and $CC)."""
     if base in FIELD_ONLY:
         return "a field skill: a copy could not be used outside battle (the field menu " \
                "knows the stock ids only) and does nothing in battle"
@@ -857,13 +887,24 @@ def clone_problem(base, repo=None):
         return "not measured as a base yet (extracted/skill_clone_census.json)"
     if c.get('result') != 'same':
         return f"a copy does not behave like the original (measured: {c.get('why', c.get('result'))})"
+    if sid in RECLAIM:
+        # a twin on a reclaimed id measured EXACTLY like the $EF twin (as_EF: lines, HP / MP
+        # changes, acts) takes the $EF verdict above; otherwise its own comparison decides
+        r = _clone_census(repo, 'reclaim').get(base)
+        key = 'BC' if sid < 0xCC else 'CC'
+        if r is None or key not in r:
+            return "not measured as a base on a reclaimed id yet (skill_clone_census.json reclaim)"
+        if not r.get('as_EF') and r[key].get('result') != 'same':
+            return (f"a copy on a reclaimed id does not behave like the original (measured: "
+                    f"{r[key].get('why', r[key].get('result'))})")
     return None
 
 
-def clone_bases(repo=None):
-    """[(id, note)] — the stock skills a new skill may be based on."""
+def clone_bases(repo=None, sid=None):
+    """[(id, note)] — the stock skills a new skill (on id `sid`, S160) may be based on."""
     return sorted((k, v.get('note', '')) for k, v in _clone_census(repo).items()
-                  if v.get('result') == 'same' and k not in FIELD_ONLY)
+                  if v.get('result') == 'same' and k not in FIELD_ONLY
+                  and (sid not in RECLAIM or clone_problem(k, repo, sid) is None))
 
 
 # ---------------------------------------------------------------------------
@@ -925,12 +966,16 @@ def layout(prj_or_data, repo_root=None):
     sk, ex, _w = resolve(prj_or_data, repo_root)
     # S155: the S155 built-ins come last, so the S111 skills keep their places
     # (and bytes) in the bank $41 / $56 regions; theirs fill what is left first-fit
-    order = sorted(sk.items(), key=lambda kv: (2 if kv[0] in S156 else kv[0] in S155, kv[0]))
+    # [S160] a reclaimed id's name / SKIL text are in the STOCK blocks (skills.py places
+    # them in its stock slots): only the $DE-$FE ids here
+    order = sorted(((s, v) for s, v in sk.items() if s >= FIRST),
+                   key=lambda kv: (2 if kv[0] in S156 else kv[0] in S155, kv[0]))
     nm = [(name_label(s, v['name']), v['name'] + b'\xf0') for s, v in order]
     ds = [(desc_label(s), v['desc'] + b'\xf0') for s, v in order if v['desc']]
-    # battle lines: MagicBurn's first (it owned $7326), identical lines shared
+    # battle lines: MagicBurn's first (it owned $7326), identical lines shared;
+    # [S160] the reclaimed ids' lines last (the $DE-$FE skills keep their places)
     lines, owner = [], {}
-    order = sorted(sk, key=lambda s: (s != 0xE0, s))
+    order = sorted(sk, key=lambda s: (s != 0xE0, s in RECLAIM, s))
     for s in order:
         m = sk[s]['message']
         if m is None:
@@ -989,6 +1034,8 @@ def check(prj):
             sid = int(k)
         except ValueError:
             continue
+        if sid in RECLAIM:                  # [S160] a new skill: resolve() checked it (its base)
+            continue
         if 0 <= sid < STOCK and isinstance(e, dict) and e.get('element') is not None:
             element_value(e['element'], f"gamedata.skills.{sid}.element")
             if native_element(sid) is None:
@@ -1001,6 +1048,61 @@ def check(prj):
         if v['handler'] == 'clone' and v['learn'] is None:
             out.append(f"gamedata.skills.{s}: {MT.decode(v['name'])} has no learn row — only "
                        "an enemy row / a species' skill slot can give it")
+    out += [w for w in shared_evolution_check(prj, sk) if w not in out]
+    for s, v in sorted(sk.items()):                     # [S160] combinations: fenced (S75)
+        r = v.get('learn') or b''
+        pre = [x for x in r[13:18] if x != 0xFF] if len(r) >= 18 and r[13] != 0xFF else []
+        if len(pre) > 1:
+            out.append(f"gamedata.skills.{s}: {MT.decode(v['name'])} evolves from {len(pre)} skills "
+                       "— a custom or new skill with two or more prerequisites is never learned "
+                       "(the S75 crash fence); give it one 'Evolves from' skill")
+    return out
+
+
+def shared_evolution_check(prj, sk):
+    """[S160] Two skills (stock or custom) that both evolve from the SAME single skill
+    freeze the game: a level up where both qualify learns the first (it REPLACES the
+    prerequisite in the working list, bank $51 LevelUpS04_LearnScan code 1), then the
+    scanner offers the second (its prerequisite is still in the record) and the caller
+    finds no prerequisite left to replace — it places nothing and asks again, forever
+    (measured S160, PyBoy: the level-up text repeats, the battle never ends). The
+    original game has no such pair (42 single-prerequisite parents, one child each).
+    -> warnings, one per shared parent (ROADMAP E13 note: the engine fix is open)."""
+    from . import gamedata as G
+    try:
+        g = prj.gamedata()
+    except Exception:                                   # noqa: BLE001 — gamedata reports its own errors
+        return []
+    rows = {sid: bytes(g.learn[sid]) for sid in range(min(len(g.learn), G.LEARN_ROWS))}
+    for s, v in sk.items():
+        rows[s] = bytes(v['learn']) if v.get('learn') else b''
+    child = {}
+    for sid in sorted(rows):
+        r = rows[sid]
+        if len(r) < 18 or r[13] == 0xFF:
+            continue
+        pre = [x for x in r[13:18] if x != 0xFF]
+        if len(pre) != 1:
+            continue
+        child.setdefault(pre[0], []).append(sid)
+    from . import skills as SK
+    names = {}
+
+    def nm(i):
+        if i not in names:
+            v = sk.get(i)
+            names[i] = MT.decode(v['name']) if v and v.get('name') else SK.vanilla_name(i)
+        return f"{names[i]} ({i})"
+    out = []
+    for p, kids in sorted(child.items()):
+        if len(kids) > 1:
+            out.append(
+                f"gamedata.skills: {' and '.join(nm(k) for k in kids)} {'both' if len(kids) == 2 else 'all'} "
+                f"evolve from {nm(p)} alone — the game "
+                f"FREEZES at a level up where two of them qualify (the first replaces {nm(p)}, "
+                "the second finds nothing to replace and is offered again forever; measured "
+                "S160), and otherwise only the first is ever learned. Give each its own "
+                "'Evolves from' skill, or make all but one not learnable")
     return out
 
 
@@ -1061,15 +1163,25 @@ def emit_base(prj, warnings):
 
 
 def stock_elements(prj):
-    """[222] the StockElemTable bytes (gamedata.skills.<0-221>.element)."""
+    """[222] the StockElemTable bytes (gamedata.skills.<0-221>.element; S160: a reclaimed
+    id's = its new skill's element, resolve())."""
     out = [NO_ELEMENT] * STOCK
     for k, e in (_gd(prj) or {}).items():
         try:
             sid = int(k)
         except ValueError:
             continue
+        if sid in RECLAIM:
+            continue
         if 0 <= sid < STOCK and isinstance(e, dict) and 'element' in e:
             out[sid] = element_value(e['element'], f"gamedata.skills.{sid}.element")
+    try:
+        sk, _x, _w = resolve(prj)
+    except CustomSkillError:
+        sk = {}
+    for sid in RECLAIM:
+        if sid in sk:
+            out[sid] = sk[sid]['element']
     return out
 
 
@@ -1138,10 +1250,57 @@ def emit_msg_ptrs(prj, warnings):
     lay = layout(prj)
     sk = lay['skills']
     out = []
-    for s in range(FIRST, LAST + 1):
+    for s in tuple(range(FIRST, LAST + 1)) + RECLAIM:   # [S160] rows 33-46 = the reclaimed ids
         v = sk.get(s)
         lab = lay['msg_owner'].get(v['message']) if v and v['message'] else 'CustomMsg_dummy'
         out.append(f"    dw {lab:<24}; [${s:02X}] {_cname(sk, s)}")
+    return "\n".join(out) + "\n"
+
+
+# [S160] the reclaimed ids' own tables (ROADMAP E13). The comment text of the unedited
+# rows is the committed patches' (the example build's region text).
+_RECLAIM_ROWS = ((0xBC, 0xC2, "LifeAcorn MysticNut AtkSeed DefSeed AglSeed IntSeed"),
+                 (0xC2, 0xCC, "the meats and staves (items, never reclaimed)"),
+                 (0xCC, 0xD4, "WarpWing TinyMedal QuestBk HorrorBk BeniceBk CheaterBk SmartBk ComedyBk"))
+
+
+def _reclaim_rows(vals, sk):
+    out = []
+    for lo, hi, what in _RECLAIM_ROWS:
+        row = [vals.get(s, 0xFF) for s in range(lo, hi)]
+        used = [f"{s}={MT.decode(sk[s]['name'])}" for s in range(lo, hi) if s in sk]
+        out.append(_db(row) + f"   ; [${lo:02X}-${hi - 1:02X}] "
+                   + (", ".join(used) + " (new skills)" if used else what))
+    return "\n".join(out) + "\n"
+
+
+def emit_reclaim_base(prj, warnings):
+    """bank $72 ReclaimBaseTable (gd_reclaim_base): the base of each reclaimed id's new skill."""
+    sk = layout(prj)['skills']
+    return _reclaim_rows({s: sk[s]['base'] for s in RECLAIM if s in sk}, sk)
+
+
+def emit_reclaim_target(prj, warnings):
+    """bank $58 ReclaimTargetTable (gd_reclaim_target): the stock id whose AI target row
+    a reclaimed id's new skill uses."""
+    sk = layout(prj)['skills']
+    return _reclaim_rows({s: sk[s]['target_row'] for s in RECLAIM if s in sk}, sk)
+
+
+def emit_reclaim_announce(prj, warnings):
+    """bank $58 AnnounceTemplateTable ids $B0-$DD (gd_reclaim_announce): the original
+    game's bytes, the reclaimed ids' = their new skill's announce."""
+    sk = layout(prj)['skills']
+    van = _vanilla(None)['announce']
+    vals = [sk[s]['template'] if s in sk else van[s] for s in range(0xB0, STOCK)]
+    out = []
+    for k in range(0xB0, STOCK, 16):
+        row = vals[k - 0xB0:min(k + 16, STOCK) - 0xB0]
+        line = _db(row) + f"   ; ids ${k:02X}-${k + len(row) - 1:02X}"
+        used = [f"${s:02X} {MT.decode(sk[s]['name'])}" for s in range(k, k + len(row)) if s in sk]
+        if used:
+            line += "  ; new skills: " + ", ".join(used)
+        out.append(line)
     return "\n".join(out) + "\n"
 
 
@@ -1301,4 +1460,7 @@ REGIONS = [
     ('gd_custom_skill_names', 'patches/bank_041.asm', emit_names, 0x41),
     ('gd_custom_skill_desc_ptrs', 'patches/bank_056.asm', emit_desc_ptrs, 0x56),
     ('gd_custom_skill_desc', 'patches/bank_056.asm', emit_descs, 0x56),
+    ('gd_reclaim_base', 'patches/bank_072.asm', emit_reclaim_base, 0x72),          # [S160]
+    ('gd_reclaim_target', 'patches/bank_058.asm', emit_reclaim_target, 0x58),      # [S160]
+    ('gd_reclaim_announce', 'patches/bank_058.asm', emit_reclaim_announce, 0x58),  # [S160]
 ]

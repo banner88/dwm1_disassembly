@@ -6,7 +6,8 @@ looks_like / sounds_like) + editor2/core/custom_skills.py (the custom skills
 
 Reads and writes `gamedata.skills.<id>`: the 222 stock skills, the ten
 built-in custom skills (222-223, 224-233, 235-238 since S155, 234 since S156) and the project's
-NEW skills (239-254; 234-254 until S155). The
+NEW skills (239-254; 234-254 until S155; S160: + the 14 reclaimed ids 188-193 /
+204-211, whose items are field-only — custom_skills.RECLAIM). The
 project stores only differences: a field set back to its original value (for
 a new skill: the value its base skill gives it) removes its key, and the
 skill's object when it empties (a new skill keeps `base` + `name`). Every
@@ -57,6 +58,12 @@ def decode_record(r):
     return out
 
 
+def _custom_id(sid):
+    """S160: a skill the custom-skill model owns — 222-254, or a RECLAIMED id (188-193,
+    204-211) holding a new skill (custom_skills.RECLAIM; its data is a new skill's)."""
+    return int(sid) >= SK.N_IDS or int(sid) in CS.RECLAIM
+
+
 def decode_learn(r):
     if r is None:
         return None
@@ -70,6 +77,8 @@ class SkillsMixin:
         """{id: name the player sees} for the 222 stock skills (renames applied)
         + the custom skills (built-in and new, S111). The one skill-name source."""
         out = SK.names(self.data, REPO)
+        for sid in CS.RECLAIM:          # S160: a free new-skill slot is no skill (its item is field-only)
+            out.pop(sid, None)
         try:
             out.update(CS.names(self.data, REPO))
         except Exception:                                   # noqa: BLE001
@@ -84,11 +93,13 @@ class SkillsMixin:
         names = SK.names(self.data, REPO)
         out = []
         for sid in range(SK.N_IDS):
+            if sid in CS.RECLAIM:
+                continue          # S160: a new-skill slot (its item is field-only), below
             out.append({'id': sid, 'name': names[sid], 'vanilla': SK.vanilla_name(sid, REPO),
                         'kind': SK.kind(sid, REPO), 'edited': self.skill_edited(sid)})
         cn = CS.names(self.data, REPO)
         base = CS.baseline()['skills']
-        for sid in sorted(cn):
+        for sid in sorted(cn, key=lambda x: (x in CS.RECLAIM, x)):   # S160: 239-254 first
             new = sid in CS.NEW
             out.append({'id': sid, 'name': cn[sid],
                         'vanilla': cn[sid] if new else base[sid]['name'],
@@ -112,7 +123,7 @@ class SkillsMixin:
         """Everything the Skills tab shows for skill `sid` — effective values
         and the original game's next to them."""
         sid = int(sid)
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             return self._custom_detail(sid, model)
         g = model or self._project().gamedata()
         van = SK.vanilla(REPO)
@@ -280,10 +291,11 @@ class SkillsMixin:
         """[(donor id, name, problem or None, warning or None)] for the
         looks-like picker (problem = refused, warning = allowed, shown)."""
         names = SK.names(self.data, REPO)
-        if sid >= SK.N_IDS:
-            return [(d, names[d], None, None) for d in range(SK.N_IDS)]
+        donors = [d for d in range(SK.N_IDS) if d not in CS.RECLAIM]   # S160: new-skill slots
+        if _custom_id(sid):
+            return [(d, names[d], None, None) for d in donors]
         return [(d, names[d], SK.lend_problem(self.data, sid, d, REPO),
-                 SK.lend_warning(self.data, sid, d, REPO)) for d in range(SK.N_IDS)]
+                 SK.lend_warning(self.data, sid, d, REPO)) for d in donors]
 
     # ------------------------------------------------------------ writing
     def _skill_write(self, sid, mutate):
@@ -311,7 +323,7 @@ class SkillsMixin:
         return self._custom_default(int(sid))
 
     def set_skill_name(self, sid, name):
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             o, _x = self._orig(sid)
             van = MT.decode(o['name']) if sid in CS.BUILTIN else None
         else:
@@ -326,7 +338,7 @@ class SkillsMixin:
 
     def set_skill_description(self, sid, lines):
         """lines: [str] (1-3), [] = no text, None = the original."""
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             o, _x = self._orig(sid)
             van = o['desc'] or b''
         else:
@@ -348,7 +360,7 @@ class SkillsMixin:
 
     def set_skill_mp(self, sid, mp):
         """mp: 0-255, 'ALL' (only Farewell / MegaMagic) or None = original."""
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             o, _x = self._orig(sid)
             van = o['mp']
         else:
@@ -365,7 +377,7 @@ class SkillsMixin:
     def set_skill_learn(self, sid, changes):
         """changes: {level, hp … int, prereqs} (None value = original);
         custom skills also {'learnable': bool}."""
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             return self._set_custom_learn(sid, changes)
         if sid >= G.LEARN_ROWS:
             raise G.GamedataError(f"skill {sid} has no learn row (ids $DA-$DD)")
@@ -412,7 +424,7 @@ class SkillsMixin:
         """changes: {record field: value | None (= original)}; also the
         derived keys 'ai_tag' (high half of category) and 'flag.<key>'
         (one bit)."""
-        if sid >= SK.N_IDS:
+        if _custom_id(sid):
             o, _x = self._orig(sid)
             vr = bytes(o['record'])
             v, _x = self._custom_effective(self.data, sid)
@@ -456,7 +468,7 @@ class SkillsMixin:
         self._skill_write(sid, mut)
 
     def set_skill_looks(self, sid, donor):
-        orig = self._orig(sid)[0]['proxy'] if sid >= SK.N_IDS else sid
+        orig = self._orig(sid)[0]['proxy'] if _custom_id(sid) else sid
 
         def mut(e):
             if donor is None or int(donor) == int(orig):
@@ -469,7 +481,7 @@ class SkillsMixin:
         """S111: the sounds alone (default = the look's / the built-in's)."""
         if sid in CS.NEW:
             orig = self._custom_effective(self.data, sid)[0]['proxy']   # default = its look
-        elif sid >= SK.N_IDS:
+        elif _custom_id(sid):
             orig = self._orig(sid)[0]['sfx']
         else:
             orig = SK.effective(self.data, REPO)['looks'][sid]
@@ -526,12 +538,13 @@ class SkillsMixin:
         self._skill_write(sid, mut)
 
     def new_custom_skill(self, base, name):
-        """Add a NEW custom skill (the first free id 239-254) running stock
-        skill `base`'s effect. Returns its id."""
+        """Add a NEW custom skill (the first free id: 239-254, then — S160 — the 14
+        reclaimed ids 188-193 / 204-211) running stock skill `base`'s effect. Returns its id."""
         used = set(self.new_skill_ids())
         free = [i for i in CS.NEW if i not in used]
         if not free:
-            raise CS.CustomSkillError(f"all {len(CS.NEW)} new skill ids (239-254) are used")
+            raise CS.CustomSkillError(f"all {len(CS.NEW)} new skill ids (239-254, 188-193, "
+                                      "204-211) are used")
         sid = free[0]
         data = copy.deepcopy(self.data)
         sk = data.setdefault('gamedata', {}).setdefault('skills', {})
@@ -543,7 +556,7 @@ class SkillsMixin:
         """Remove a NEW skill (refused while a monster, enemy row or another
         skill's learn row still uses it)."""
         if sid not in CS.NEW:
-            raise CS.CustomSkillError("only new skills (239-254) can be deleted")
+            raise CS.CustomSkillError("only new skills (239-254, 188-193, 204-211) can be deleted")
         d = self.skill_detail(sid)
         users = []
         if d['natural']:

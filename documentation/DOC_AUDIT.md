@@ -1095,3 +1095,16 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | (implicit, S111-S158) the Balance tab simulates the project's skill elements | ❌ WRONG | `Board.elem_override` was set only by the validators: element edits never reached a Balance number; monster resistance edits did (species info → `pack_res`) | S159 code-read; fixed (PROJECT_COMPILER §2.67) |
 | BATTLE_SKILL_SYSTEM §15.11.F10 (S130): `AIRule_4c13` "veto when EVERY live opponent has res level 3" (code-read) | ✅ MEASURED S159 | a Bang caster: 15 / 32 actions at Explosion 0, 0 / 26 at Explosion 3 (INT 200) | walk_earth.py `ai` control |
 | MONSTER_DATA type table: Heat = "Firebal/bane/bolt, LavaStaff" | ✅ / unverified | the Firebal line measured (census S111); LavaStaff (an item's battle skill) not measured | extracted/skill_element_census.json |
+
+## S160 addendum (2026-10-29; 30 new skills, the reclaimed ids — ROADMAP E13)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| bank $58 `SaveBtlFX_43ff` (S48 note): "a presentation router" | ❌ WRONG | the AI's DAMAGE ESTIMATE of `$DB8A` on one target (bank $54 entry 3 below `$37` / `$D9` / `$DD`, else bank $52 entry 3), called by the target pick of Attack's row `$41E9` for a party actor (`$DD0B` ≠ 0) or a link battle; nothing touches the animation | code-read + stub calls S160 (both trees commented) |
+| bank $54 entry 5 `SkillMagnitudeBySide` ($535F): a "side-power reader" of skills | ⚠ PARTIAL | its one caller is the battle ITEM pick (`$50:$5114`, the item's target lookup) | code-read S160 (bank $54 commented, both trees) |
+| help 54 (S111-S159): "Evolves from — up to 5 skills: a monster that knows ONE of them learns this one in its place" | ❌ WRONG | one prerequisite = in its place (code 1); two to five = a combination: the monster must know ALL of them, the skill is added (code 2) — and code 2 is fenced for custom ids (`$DA+`, S75; + the 14 reclaimed ids S160): such a skill is never learned | `simulator/raising.learn_scan` (census S130); walk_reclaim.py `learn` |
+| (implicit) learn rows: any skills may share an "Evolves from" | ❌ WRONG | two skills from one single prerequisite FREEZE the level up (bank $51 `LevelUpS04_LearnScan` code 1 finds nothing to replace) — the original data has none | walk_reclaim.py `freeze` (S160); compiler warning |
+| `extracted/skill_records.json` names of the item rows 199-212 | ⚠ OFFSET | six staff names for five staves: from about 200 the labels are one id late (204 "FIRESTAFF" is the WarpWing's battle skill, item 29 + `$AF`; 212 "COMEDYBK" is 211's); 176-198 are right. The battle skill of item n is n + `$AF` | S160: the records' +10 = 1 rows are exactly `$BC-$C1` / `$CC-$D3` (items 13-18 / 29-36); the JSON is not rewritten (its readers key by id) |
+| `tools/map_skill_id_buckets.py` — the `$db8a` range gates "for a new id" | ⚠ SCOPE | written for ids `>= $DE` (the first `cp` of each read); an id window below `$DE` needs the concrete ladder walk (BATTLE_SKILL_SYSTEM §13.12) | S160 |
+| S159 finding "an enemy with only a new skill on Bang never casts it" | ✅ WIDER S160 | INT-200 enemies whose four skills are all new (EvilSlash / Beserker / SquallHit / Whistle bases; Sleep / Sap / PsycheUp / BoltSlash) cast none in 19-20 actions each, `$EF+` and reclaimed alike | walk_reclaim.py `enemy` (ROADMAP E17) |
+

@@ -12,7 +12,8 @@ data can produce a crashy patched ROM while assembling cleanly:
      prereq bytes), level 1-99 or $FF (= not learnable), prereq ids $FF or a
      skill id ($00-$D9 a stock row, $E0-$FE a custom one with a learn row).
    - UNIVERSAL QUALIFIERS (no prereq AND all-zero stats) are only permitted
-     if the code-2 fence (LearnCode2Guard06, `cp $da` since S111) is present
+     if the code-2 fence (LearnCode2Guard06, `cp $da` since S111; S160: `call
+     LearnFence06 / jp c`, which also fences the 14 reclaimed ids) is present
      in the built ROM: without it, any monster at the required level
      stat-learns the custom skill through the never-exercised code-2 display
      path.
@@ -117,6 +118,12 @@ def check_rom(rom_path, universal, errors):
         tgt = head[1] | (head[2] << 8)
         body = rom[b06 + (tgt - 0x4000):b06 + (tgt - 0x4000) + 8]
         fence_ok = bytes([0x79, 0xFE, 0xDA]) == body[:3] and body[3] == 0xD2   # S111: cp $da
+        if not fence_ok and body[0] == 0xCD and body[3] == 0xDA:
+            # S160 (ROADMAP E13): `call LearnFence06 / jp c` — the fence routine starts
+            # `ld a, c / cp $da / ccf / ret c` (custom ids $DA+), then the reclaimed ids
+            f = body[1] | (body[2] << 8)
+            fb = rom[b06 + (f - 0x4000):b06 + (f - 0x4000) + 5]
+            fence_ok = fb == bytes([0x79, 0xFE, 0xDA, 0x3F, 0xD8])
     if universal and not fence_ok:
         errors.append(
             f"universal-qualifier learn rows {['$%02X' % u for u in universal]} present "

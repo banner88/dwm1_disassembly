@@ -7355,3 +7355,44 @@ position 27 — the position the S111 element reader (t + 1) and the AI element 
 exactly the original game. **Rule:** when a new meaning needs a byte the game already moves
 around, first look for the layout under which no existing reader's view changes; prefer one
 same-size move at the producer over hooks at every consumer.
+
+### S160 — compare id ladders at the EFFECT level, not the landing address
+**Symptom:** the first concrete ladder walk (every `cp` chain after a `$DB8A` read, run for
+`$EF` and each reclaimed id) flagged 12 sites in bank $57 alone — most were `ret c` vs `ret
+nc` on the same rule: different addresses, the same "no opinion" return. **Fix:** walk until
+an effect (a `ret` of either flag = RET, else the first non-ladder instruction) and compare
+those; four real sites remained (the AI estimate, `AIRule_4785`, the dead airborne check, the
+`$FD` line). **Rule:** a static id-range audit must normalise its landings to what they DO;
+then measure the survivors (here: twin skills cast from one saved state, stub calls of the
+routines in a live battle).
+
+### S160 — a routine the walk never reaches is tested by calling it
+**Symptom:** the AI damage estimate (bank $58 `SaveBtlFX_43ff` → bank $52 entry 3), the very
+site the reclaim had to fix, ran 0 times in every sparring battle — enemies take another
+target path, and the party's own picks need `$DD0B` ≠ 0 at act time. **Fix:** in a live battle
+(phase 4) write a WRAM stub (`di / ld a,bank / ld [$2100],a / ld c,n / call addr / ld a,$A5 /
+ld [MARK],a / jr $` in the audio engine's free margin `$DE40`), set `$DB8A` / `$DB88` and run
+it — the H and R twins return the same value and the hook on `AIDamageEstimate_538f` shows
+`$EF`; the state is reloaded after each call. A nested `rst $10` returns to the stub's bank
+because RST_10 saves the caller's bank from `[$4000]` (each bank's first byte). **Rule:** when
+the gameplay path to a patched routine is rare, prove the routine itself by a stub call in a
+real context, and say so next to the gameplay measurement.
+
+### S160 — a "hang" in a demo battle may be the demo's own question
+**Symptom:** the TRAINING DUMMY battle never ended (phase 13, a blank screen) — on the S160
+build AND on a variant without any new skill. **Root cause:** the dummy had joinability 0 (it
+asks to join); the party was full, "Choose a monster back to farm" looped under the walk's
+A presses. **Fix:** joinability 7. **Rule:** before blaming the feature for a stuck battle,
+rebuild the same scene without the feature; screenshot the phases (`$D9EC` / `$D9F4`) — a
+loop of sub-states is a menu, not a crash.
+
+### S160 — the original data can hide an engine assumption the editor lets a project break
+**Symptom:** with HFireb and RFireb both "evolving from Blaze" the level up repeated
+"… becomes HFireb!" forever. **Root cause:** bank $51 `LevelUpS04_LearnScan` replaces the
+prerequisite in the working list; a second skill from the same prerequisite finds nothing to
+replace, nothing is placed and the scanner offers it again. The original game never has two
+children of one parent (42 parents, one child each), so it never shows. **Fix:** a compiler
+warning naming the pair; the demo uses parents nothing else evolves from. **Rule:** for every
+editable table the engine reads, list the invariants the ORIGINAL data happens to keep (unique
+children, sorted rows, no gaps) and check them in the compiler — the editor makes the cases
+the original never had.

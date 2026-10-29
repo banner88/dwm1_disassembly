@@ -9690,9 +9690,8 @@ jr_006_7f02:
 ; vanilla tail unchanged (A already holds C after the cp — flags only).
 ; 16 bytes from the 17-byte $7F1E free run; 1 spare rst kept.
 LearnCode2Guard06:
-    ld a, c
-    cp $da                      ; [S111] every non-vanilla id ($DA+: was $E1+, the
-    jp nc, jr_006_507c          ;   custom ids now start at $E0) -> not learnable here; scan on
+    call LearnFence06           ; [S160] same size (was ld a, c / cp $da): A := C, CF = fenced —
+    jp c, jr_006_507c           ;   every non-vanilla id ($DA+) and the 14 RECLAIMED ids -> not learnable here; scan on
     pop bc
     pop hl
     pop de
@@ -9734,6 +9733,27 @@ LearnLoopFork:
     ret
 .vanilla:
     or a                        ; NZ (C >= 1 here)
+    ret
+; [S160] LearnFence06 (ROADMAP E13) — LearnCode2Guard06's test: A := C (the scanned
+; id); CF set when code 2 (all of 2-5 prerequisites known) is closed for it: a custom
+; id ($DA+, the S75 fence) or one of the 14 RECLAIMED ids ($BC-$C1 / $CC-$D3), whose
+; rows are in the vanilla table but which hold new skills — learned like every new skill
+; (a natural slot, or evolving from ONE prerequisite: code 1). Vanilla ids: CF clear.
+LearnFence06:
+    ld a, c
+    cp $da
+    ccf
+    ret c                       ; $DA+
+    cp RECLAIM_A
+    jr c, .open
+    cp RECLAIM_A_END
+    ret c                       ; $BC-$C1
+    cp RECLAIM_B
+    jr c, .open
+    cp RECLAIM_B_END
+    ret                         ; $CC-$D3: CF set; else clear
+.open:
+    and a                       ; CF clear (A = C kept)
     ret
     ds $7f7f - @, $FF           ; rst $38 fill (the freed S52/S74 learn tables)
     ASSERT @ == $7f7f

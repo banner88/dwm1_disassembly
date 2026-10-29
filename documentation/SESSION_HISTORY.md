@@ -1,5 +1,59 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-28 (Session 158 — **ROADMAP E15 CLOSED: BREEDING HINTS — MONUMENTS IN A PROJECT'S ROOMS (A GATE'S
+> FLOORS TOO) TEACH ONE SPECIAL CROSS THE PLAYER HAS NOT LEARNED (RANDOM; THE SAME ON A RE-READ IN ONE VISIT, ANOTHER NEXT
+> VISIT; SKIP CHILDREN THE PLAYER HAS OWNED; THE CROSS, A RIDDLE, OR BOTH), ONE ARCHIVE PER FAMILY LISTS ITS LEARNED CROSSES
+> WITH "(BRED)" ("KEEP READING?" AFTER EACH), BREEDING A HINT'S CROSS (CEREMONY OR LINK) LEARNS IT; A POOL BY BLACKLIST
+> (DEFAULT) / WHITELIST MADE FROM THE BREEDING TABLE AS IT STANDS; THE KNOWLEDGE IN SRAM AT ONCE** (user: "Since I am
+> scrambling breeding, the player needs in-game hints of new combinations" + the monument / unlocking / pool / text / archive
+> spec → 9 questions → "1) … Maybe I just want to showcase one of them and let player discover the rest through breeding … 2)
+> What library already knows 3) No 'all families' archive. 4) correct 5) Yes skip - I dont know about CA94 6) Perfect yes
+> immediately. 7) Keep reading every entry. 8) Editor, I will handle visual tile myself. It will be book case with family
+> emblem on it. 9) Sure." → "1) Great. I want individual. … Go ahead"). **Built S158, USER-CONFIRMED 2026-10-28 13:09 ("Seems to work" / "Happy with results").**
+> Test ROM **`DWM-S158-hints-test.gbc`** (`48258c8b…`, patched) = the user's project + THE STONE GARDEN / THE GREAT ARCHIVE /
+> THE RUNE CRYPT (`examples/s158_hints_demo/build_demo.py`; way in: the HINT GUIDE, Cities_FOUNT (3, 4)). Example pin
+> `e7267428…` (patched; was `0f341f17…`, patched).
+> **Found:** `$CA94` = EVER OWNED, not "seen" (three writers: a roster creation, a join, the bred egg — DOC_AUDIT S158);
+> SRAM bank 3 past the memorial is junk on a save that never wrote it (`$FF` on the user's) — a magic is needed; the game
+> breeds only from level 10; vanilla's 825 special rows: 823 can decide an egg (GulpBeast alone: 71 rows).
+> **Built (engine):** bank $69 `RelocatedSpecialScan` → `wHintRow`; bank $16 region `hint_breed_16` (`HintBreed16`) → bank
+> $79 entry 11 `HintBreed`; bank $79 entries 10 `HintCommand` (story command 8: pick / riddle / archive start / next) and 12
+> `HintSay` (bank $60 `TextOverride` step 0b — the riddle), `MemRoomTiles` → `HintRoomNote` (the visit); bank $77 story
+> command 8; bank $73 `HintNewGameClear`; SRAM bank 3 "H1" $A007 + UNLOCKED $B000 / BRED $B100 (2048 hints); WRAM
+> $D599-$D5BB (`wCustomPool` → $D5BC). Heads re-pinned: `TEMPLATE_SIZE[$77]` 2741, `[$60]` 1859. PROJECT_COMPILER §2.66,
+> DATA_STRUCTURES "Breeding hints (S158)".
+> **Built (compiler + editor):** NEW `editor2/core/hints.py` / `hints_doc.py` (`custom.hints`, `rooms[].monuments` /
+> `archives`; the pool from `FastResolver`, pinned numbers, the lowering, bank $79 data, budget 12,500 B — all 823: 10,225 B);
+> the inserts `{parent1}` / `{parent2}` / `{child}` / `{bred}` / `{family}`; the Breeding tab's **Hints** page; Rooms tab **+
+> Monument (O)** / **+ Archive (K)** (markers Mo / A<fam> in the family's colour), `HintObjectPanel`, NEW `app/hints_dialog.py`;
+> capacity rows; help NEW 78 + 00 / 58 / 90; `EDITOR_REVISION` S158.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_hints.py` on the demo): 72 / 72** — the empty archive's words; the
+> left pillar 6 hints in 6 visits, random order, never one whose child the save owns, the same on a re-read, then the worn
+> words; riddles from bank $79; intro → riddle → cross; the Slime bookcase with "Keep reading?"; MadCat × Healer → FangSlime:
+> the hint bred, "(bred)", the library bit; kept over a reset without a save; NEW GAME clears; the crypt one hint per dive;
+> `census` 7,776 crosses `wHintRow` == the model. `--negative` (kind 8 does nothing, `$D8E1` = 0; no HintBreed; the `census` stub calls still pass — they call the engine directly) **19 FAIL**.
+> **Annotation:** the three `$CA94` writers commented "ever owned" (banks $14 / $16 / $51, both trees; byte-perfect).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1822 PASSED (+ `test_s158`; the S151 / S157 size checks
+> updated); test_app `--rom` PASS (64 OK, the GUI build = the pin; + `s158_hints`); test_canvas `--rom` PASS (58 OK).
+> **User test (2026-10-28 12:59): "Seems to work. Archive is gramatically bad (no punctuation, sometimes no capitalization,
+> etc). I assume its fixable in editor?"** — yes: every word is editable (Hints → Words… / Family words…, a bookcase's Its
+> words…); the defaults are placeholders, and one family's words ("any Slime") serve both a sentence's start and its middle.
+> **S158r2 (user: "Update the help section with this specifically then hand off entirely. Happy with results."):** help
+> `78_hints.md` § 4 "Fixing the grammar of the default words" (where each text is edited, why "any Slime" is lowercase, wording
+> that keeps `{parent1}` / `{parent2}` mid-sentence — every suggested line checked by `hints.check_text` at the inserts'
+> longest); the defaults are unchanged (no ROM change, the pin stays); `EDITOR_REVISION` S158r2. test_app PASS (63 OK, help revision == S158r2;
+> exit 139 after PASS — the known S153 teardown crash); verify_integrity PASS.
+> **S158r3 (the user, 2026-10-28 13:33: "Selecting 9 and clicking "take the shown out" just makes it freeze for at least 3
+> mins"):** reproduced only with the window SHOWN (the offscreen tests never showed it before `main()`'s `w.show()`, and
+> `s158_hints` ran alone hidden): the Hints table's header was `ResizeToContents`, so every `setItem` re-measured every row —
+> 169 rows 12 s, the whole pool (823) many minutes. Fix (`breeding_tab._fill_hints`): header `Interactive`, updates off during
+> the fill, one `resizeColumnsToContents()` after: the whole pool out 2.1 s, back in 0.8 s (the rest is the Breeding tab's
+> own refresh). test_app `s158_hints` now takes the whole pool out and back in (< 15 s each; with the old header the same
+> check took 316 s out / 303 s in — the user's freeze). `EDITOR_REVISION` S158r3 (no ROM change). KEY_LESSONS S158r3. test_app `--rom` PASS (64 OK, the GUI
+> build = the pin, help revision S158r3); verify_integrity PASS.
+> **Next:** the user's re-test of the Hints page; then the next ROADMAP item (candidates: the preserved-systems flag audit,
+> T-follow, Phase D annotation, the SRAM bank 1-3 map; E15 follow-up only if asked: better default words).
+
 > Last verified: 2026-10-24 (Session 157 — **ROADMAP E9 CLOSED: ONE-ONLY ITEMS — AN ITEM USED UP 0 % (PERMANENT) IS HELD
 > ONCE (BAG + VAULT): SHOPS HIDE A HELD ONE AND SELL ONE AT A TIME, A GIVE OF ONE HELD SHOWS ITS OWN "ALREADY HAS" LINE (THE
 > GAME'S SCRIPTS TOO), IT NEVER LIES ON A RANDOM GATE FLOOR / IN ITS CHESTS / AS A COLISEUM PRIZE, IT IS KEPT AFTER A LOST

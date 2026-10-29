@@ -47,6 +47,7 @@ from editor2.app import sprite_qt as Q
 from editor2.app.rooms import commands as C
 from editor2.app.rooms.inspector import narrow_combo
 from editor2.core import gamedata as G
+from editor2.core import custom_skills as CS
 from editor2.core import monsters as M
 from editor2.core import sheet_import as S
 from editor2.core import species as SP
@@ -510,8 +511,8 @@ class MonstersTab(QWidget):
                     c.blockSignals(True)
                     c.clear()
                     for sid, nm in sorted(self.skills.items()):
-                        c.addItem(f'{nm}' + ('' if sid < G.SKILL_COUNT else
-                                             f'  (custom ${sid:02X})'), sid)
+                        c.addItem(f'{nm}' + ('' if sid < G.SKILL_COUNT and sid not in CS.RECLAIM
+                                             else f'  (custom ${sid:02X})'), sid)
                     if cur is not None and c.findData(cur) >= 0:
                         c.setCurrentIndex(c.findData(cur))
                     c.blockSignals(False)
@@ -520,7 +521,8 @@ class MonstersTab(QWidget):
                     sid = c.itemData(i)
                     if sid is not None:
                         c.setItemText(i, self.skills.get(sid, str(sid))
-                                      + ('' if sid < G.SKILL_COUNT else f'  (custom ${sid:02X})'))
+                                      + ('' if sid < G.SKILL_COUNT and sid not in CS.RECLAIM
+                                         else f'  (custom ${sid:02X})'))
         except Exception as ex:                     # noqa: BLE001
             self.title.setText('The project does not validate')
             self.subtitle.setText(str(ex))

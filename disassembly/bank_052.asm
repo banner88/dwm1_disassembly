@@ -3756,6 +3756,20 @@ SetStatBothMarks_5382:
     ret
 
 
+; [S160] AIDamageEstimate_538f — bank $52 entry 3 ($5203; its one caller: bank $58
+; SaveBtlFX_43ff at $58:$440F, for working ids >= $37 except $D9 / $DD). The AI's damage
+; estimate of the acting skill on one target (the target picker behind Attack's row $41E9
+; scores each live target by it): a dispatch on $DB8A into the 28-entry jump table at
+; $53E9 ($00 / $01 / $03 / ... = CalcSkillDefense $60D7, the rest per-skill estimates).
+; The ladder's index: < $3A and $7E -> 0; $3A-$3F -> id - $3A; $40 -> 5; $41-$4F ->
+; id - $3E; $50-$54 -> $11; $55-$57 -> id - $42; $58-$66 -> $14; $67-$D5 -> id - $51;
+; $D6-$DC -> id - $BD; $DD+ (every custom id) -> $1B (CalcSkillDefense). Only indexes
+; <= $1B are table rows: ids $6D-$D5 (but $7E) and $D9-$DC would read CODE as a pointer
+; (the S84 overrun class) — the original game never sends them here. S160 (ROADMAP E13):
+; a NEW skill on a reclaimed id ($BC-$C1 / $CC-$D3) based on a skill with Attack's row
+; (Beserker, EvilSlash, SquallHit, PsycheUp, Whistle) would — bank $58 FxEstimate58 runs
+; this with $DB8A = $EF (a new skill's id) for them (patched builds).
+AIDamageEstimate_538f:
     ld a, [$db8a]
     cp $3a
     jr c, jr_052_53dc
@@ -8612,7 +8626,7 @@ BtlActStateTable_6c60:
     dw Jump_052_6ffa ; state $06
     dw BtlActState_7227 ; state $07
     dw BattleTarget_7242 ; state $08
-    dw Jump_052_727a ; state $09
+    dw HeroItemAction_727a ; state $09
     dw BtlActState_7350 ; state $0A
     dw BtlActState_7416 ; state $0B
     dw jr_052_7474 ; state $0C
@@ -8647,7 +8661,7 @@ BtlActState0Setup_6c98:
     ld [hl+], a
     ld a, $fe
     ld [hl], a
-    jp Jump_052_727a
+    jp HeroItemAction_727a
 
 
 BtlActState_6cb2:
@@ -9748,7 +9762,14 @@ jr_052_7274:
     ret
 
 
-Jump_052_727a:
+; [S160] HeroItemAction_727a — act state 9 ($D9ED): the HERO's action, an ITEM. Bank $53
+; entry 0 sends the round-order entry $10 (the hero, never a monster) here; $DB77 / $DB78 =
+; the item's target / battle skill (item + $AF; patched: the base's, bank $77). Every item
+; test on $DB78 below (the meats $C2-$C6, BadMeat $C5, the naming from wItemInUse,
+; LoadBattle_5589's $55C1 table) runs only for the hero's item — a MONSTER casting a skill
+; id in the item window ($B0-$D4) never comes here (it takes the skill states). S160
+; (ROADMAP E13): the 14 field-only items' ids hold new skills; they never reach this state.
+HeroItemAction_727a:
     ld a, [$db78]
     cp $d5
     jr nz, jr_052_7286
@@ -10418,6 +10439,14 @@ jr_052_762d:
     ret
 
 
+; [S160] AirborneReachDead_763e — UNREFERENCED (no call / jp / jr / pointer to $763E
+; anywhere in the ROM; measured: 0 runs in 181 enemy casts of every skill at an AIRBORNE
+; party monster, +6 & $0C set, PyBoy on the user's save — while the game's own airborne
+; block, MISS gate 1 (bank $53), answered every physical skill with $C1). Dead code: a
+; target ironized (+7 & $C0; $80 / $83 / $A5 pass) or airborne (+6 & $0C) would have
+; refused ids $44-$59, $5B, $67-$7D, $B0-$D4 and $D6-$D9 with message $C1 ("doesn't
+; reach"). Its item-id window ($B0-$D4) never decides anything (ROADMAP E13).
+AirborneReachDead_763e:
     ld a, [wBattleTargetIdx]
     ld hl, $db07
     call HL_AddA_x8

@@ -426,7 +426,14 @@ class ItemsTab(QWidget):
         self.b_usable.setChecked(b['usable'])
         self.b_power.setValue(b['power'])
         self.b_range.setValue(b['range'])
-        if not b['item_effect']:
+        if b.get('field_only'):
+            self.b_note.setText('Field-only: the game never lets the hero use this item in '
+                                'battle ("Can\'t use this item in battle!"), and new items '
+                                'that work like it are field-only too. Its battle-skill id '
+                                f"({b['skill']}) can hold one of your new skills (Skills tab).")
+            for w in (self.b_usable, self.b_power, self.b_range):
+                w.setEnabled(False)
+        elif not b['item_effect']:
             self.b_note.setText('This item does nothing in battle in the game (no battle '
                                 'skill of its own).')
             for w in (self.b_usable, self.b_power, self.b_range):

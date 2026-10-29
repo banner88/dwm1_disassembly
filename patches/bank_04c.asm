@@ -11827,9 +11827,14 @@ LoadB4c_Fork_custom:
                                      ;   QuakeGate_delay renderer right after)
     ld a, [$db8a]                    ; current skill id
     cp $de
+    jr nc, .custom
+    call ReclaimLine4C               ; [S160] a reclaimed id ($BC-$C1 / $CC-$D3) -> its row
     jr c, LoadB4c_Fork_stockfd       ; not a custom skill -> vanilla $FD
+    jr .row
+.custom:
     sub $de
-    ld [$c823], a                    ; id = custom index (skill - $DE)
+.row:
+    ld [$c823], a                    ; id = custom index (skill - $DE; S160: 33+ = a reclaimed id)
     xor a
     ld [$c822], a                    ; mode 0
     ld de, CustomMsgModeTable        ; private mode table -> CustomMsgPtrTable
@@ -11913,6 +11918,26 @@ QuakeAlliesModeTable:
     dw QuakeAlliesPtrTable           ; [QUAKE] mode 0 -> the 1-entry ally table
 QuakeAlliesPtrTable:
     dw CustomMsg_QuakeAllies
+; [S160] ReclaimLine4C (ROADMAP E13) — A = a stock skill id -> NC + A = its
+; CustomMsgPtrTable row when it is a RECLAIMED id (the 33 rows of $DE-$FE, then
+; $BC-$C1 = 33-38, $CC-$D3 = 39-46: the own battle lines of the new skills there),
+; else CF set (the stock $FD: the poison tick's empty follow-up and the like).
+ReclaimLine4C:
+    sub RECLAIM_A
+    jr c, .no                        ; below $BC
+    cp RECLAIM_A_END - RECLAIM_A
+    jr c, .row                       ; $BC-$C1 -> 0-5
+    sub RECLAIM_B - RECLAIM_A
+    jr c, .no                        ; $C2-$CB
+    cp RECLAIM_B_END - RECLAIM_B
+    jr nc, .no                       ; $D4+
+    add RECLAIM_A_END - RECLAIM_A    ; $CC-$D3 -> 6-13
+.row:
+    add CUSTOM_MSG_ROWS              ; NC (at most 46)
+    ret
+.no:
+    scf
+    ret
 ; [S111] Compiler regions (editor2/core/custom_skills.py, PROJECT_COMPILER
 ; §2.27): CustomMsgPtrTable = one line per custom id $DE-$FE (index id-$DE;
 ; CustomMsg_dummy = an empty line), then the lines themselves + the three fixed
@@ -11921,7 +11946,7 @@ QuakeAlliesPtrTable:
 ; and gd_custom_msgs (up to $7A9D). The line bytes are battle text: $ED (a box
 ; opener), $F9 $00 = the subject's name (the caster in an announce, the target
 ; in a hit line), $F1 = next line, $FC $10 $EC $F2 = next page, $EC $F0 = end.
-    ASSERT @ == $7458                ; [S155] editor2/core/custom_skills.py MSG_PTRS_AT ([S156] +2: CustomLine_Plunder; r2 +4: _PlunderDEF / _AGL; was $7452)
+    ASSERT @ == $7476                ; [S155] editor2/core/custom_skills.py MSG_PTRS_AT ([S156] +2: CustomLine_Plunder; r2 +4: _PlunderDEF / _AGL; [S160] +30: the reclaimed ids' line fork + ReclaimLine4C; was $7458)
 CustomMsgPtrTable:
 ; @BUILD_PROJECT BEGIN gd_custom_msg_ptrs
     dw CustomMsg_dummy         ; [$DE] Repel
@@ -11957,6 +11982,20 @@ CustomMsgPtrTable:
     dw CustomMsg_dummy         ; [$FC] -
     dw CustomMsg_dummy         ; [$FD] -
     dw CustomMsg_dummy         ; [$FE] -
+    dw CustomMsg_dummy         ; [$BC] -
+    dw CustomMsg_dummy         ; [$BD] -
+    dw CustomMsg_dummy         ; [$BE] -
+    dw CustomMsg_dummy         ; [$BF] -
+    dw CustomMsg_dummy         ; [$C0] -
+    dw CustomMsg_dummy         ; [$C1] -
+    dw CustomMsg_dummy         ; [$CC] -
+    dw CustomMsg_dummy         ; [$CD] -
+    dw CustomMsg_dummy         ; [$CE] -
+    dw CustomMsg_dummy         ; [$CF] -
+    dw CustomMsg_dummy         ; [$D0] -
+    dw CustomMsg_dummy         ; [$D1] -
+    dw CustomMsg_dummy         ; [$D2] -
+    dw CustomMsg_dummy         ; [$D3] -
 ; @BUILD_PROJECT END gd_custom_msg_ptrs
 ; @BUILD_PROJECT BEGIN gd_custom_msgs
 CustomMsg_dummy:

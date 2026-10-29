@@ -33,8 +33,17 @@ the bank $41 space new monsters' names share; texts: a 2,993-byte spare area).
   monster learns the skill at a level-up when the skill is in its learnable set
   (its three natural skills and what they evolve into) and it meets the level
   and every stat. Below the level it cannot cast it yet.
-- **Evolves from** — up to 5 skills: a monster that knows one of them learns
-  this one **in its place** (Blaze → Blazemore → Blazemost).
+- **Evolves from** — one skill: a monster that knows it learns this one **in
+  its place** (Blaze → Blazemore → Blazemost). Two to five skills: a
+  **combination** — the monster must know ALL of them and learns this one beside
+  them (an original skill only: a custom or new skill with two or more is never
+  learned — the game's S75 crash fence; the build warns).
+- **Never let two skills evolve from the same single skill** (S160, measured):
+  at a level up where both qualify the game learns the first in the old one's
+  place, then offers the second forever — the battle never ends. The original
+  game never does it (each skill evolves into at most one); the build warns and
+  names the pair. Pick a skill nothing evolves from yet (Blazemost, Firebolt,
+  Defence …: the Who-has-it box shows a skill's evolve chain).
 - Ids $DA-$DD (LIFE, RUN, IRONIZE, Ahhh) have no learn row (those bytes are
   code); they can still be a monster's natural skill.
 
@@ -264,9 +273,15 @@ shows the multiplier.
 
 ## New skills
 
-**New skill…** adds a skill of your own (up to 16, ids 239-254; 234-238 belong
-to the built-ins Plunder … Blunt since S155 — a project that had a new skill
-there must re-make it). It runs the
+**New skill…** adds a skill of your own — up to **30** (S160): ids 239-254
+first, then the 14 ids the game used for LifeAcorn, MysticNut, the four seeds
+(188-193), WarpWing, TinyMedal and the six books (204-211). Those 14 items are
+**field-only** now (they never worked in battle: "Can't use this item in
+battle!"); their field use is unchanged, and no other item, new item or skill
+edit moves the rule. A new skill on one of the 14 ids works exactly like one on
+239-254 (measured twin by twin). (234-238 belong to the built-ins Plunder …
+Blunt since S155 — a project that had a new skill there must re-make it.) It
+runs the
 effect of an original skill you pick — its **base** — and everything else is
 its own: name, SKIL text, MP, power, targets, monster AI, behaviour, look,
 sounds, element, announce line and learning. Only bases measured to behave
@@ -286,9 +301,12 @@ evolve chain — read-only (edit them on the Monsters tab).
 
 ## Limits
 
-- Battle items (HERB, seeds, meats, staves …) are skills in the game's tables;
-  they are shown read-only here and will be edited with the items (Items tab,
-  not built yet).
+- Battle items (HERB, meats, staves …) are skills in the game's tables; they
+  are shown read-only here and edited on the Items tab. The 14 field-only items'
+  ids (188-193, 204-211) are not listed: they hold your new skills (S160).
+- The enemy AI has not been seen choosing a new skill (either kind of id: 0 of
+  about 40 actions of INT-200 enemies whose four skills were all new, S159 /
+  S160; ROADMAP E17) — they attack instead.
 - The custom skills' EFFECTS are their own code; a new skill reuses an
   original skill's effect. A new effect needs code (a session with Claude).
 - The built-in custom skill names share bank $41 with the new monsters' names:

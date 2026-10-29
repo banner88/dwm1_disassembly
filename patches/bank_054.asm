@@ -784,6 +784,10 @@ jr_054_5356:
 ; ids >= $DE) -> $53a6 which zeroes $db4c and returns (no record-power read). This is
 ; a MINOR reader (HW Test C: Scorching/Zap/IceStorm do NOT reach it) -- DEFER forking
 ; it; the first custom skills use the main path ($66D6 -> entry 1). See §12.
+; [S160] its ONE caller is the battle ITEM pick (bank $50 $5114 `ld hl, $5405 / rst $10`;
+; patched: bank $77 BattleItemPick) — a byte scan of the ROM finds no other (the S48
+; bucket map's "$55:$532A / $5332" is not a caller): it is the hero's item target lookup
+; (+10 usable, +2 target), never a monster's skill.
     cp $d5
     jr z, jr_054_539d
 

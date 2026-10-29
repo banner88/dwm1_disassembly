@@ -390,7 +390,7 @@ $0E; nothing for cures / seeds / meats / books), `$4F72` (`$1D` WarpWing: sound 
 1-47 → `$C0D8` in id order; SELL skips +11 bit 0); bank $50 the battle ITEM menu: an item's
 battle skill = **id + $AF** (items 1-43 = skills $B0-$DA; 1-37 have item_effect records —
 the battle power; field10 = 1 not usable in battle), probe `jr_050_4fec` / pick `jr_050_50f4`
-(+ bank $54 entries 0 / 5); banks $52 `Jump_052_727a` / $54 `LoadB54_53f6` name the item as
+(+ bank $54 entries 0 / 5); banks $52 `HeroItemAction_727a` / $54 `LoadB54_53f6` name the item as
 skill − $AF; bank $12 the Medal Man counts the real TinyMedal `$1E`; bank $19 the gate map's
 compass needs the real BeastTail `$26`. Bag `wInventory` `$CA51` (20 B), Vault `wBankSlots`
 `$CA65` (40 B); `$00` / `$FF` = empty. Menus: the field item list 5 a page (`$C8DC` page,
@@ -405,6 +405,15 @@ names the item from **`wItemInUse` $D565**; the count lists cover 128 ids. Measu
 `tools/census_items.py` (every id 0-127 through every routine, 1,607 / 1,607),
 `tools/walk_items.py` (the user's save: bought, used, given, sold, in battle, the WarpWing /
 a WarpWing-based item out of a gate, a lost battle — 33 / 33).
+
+**The field-only items (S160, ROADMAP E13).** Exactly 14 item records say "not usable in battle"
+(battle skill record +10 = 1): LifeAcorn, MysticNut, AtkSeed, DefSeed, AglSeed, IntSeed (items
+13-18 → skills `$BC-$C1`) and WarpWing, TinyMedal and the six books (29-36 → `$CC-$D3`); every
+other item row is 2 or 3. In patched builds since S160 those 14 skill ids hold NEW skills
+(BATTLE_SKILL_SYSTEM §13.12), so bank $77 `ReclaimedSkill77` refuses any item whose BASE's battle
+skill is one of them (probe: as +10 = 1; pick: `[$DB4C]` = 0 → `jr_050_5199` "Can't use this item
+in battle!") whatever the new skill's record says; their field use (bank $03 / $07 by
+`wItemBase`) is unchanged (walk_reclaim.py: the LifeAcorn +5 max HP).
 
 ### One-only items (S157 — ROM-traced + PyBoy-measured; patched builds: ROADMAP E9, PROJECT_COMPILER §2.65)
 

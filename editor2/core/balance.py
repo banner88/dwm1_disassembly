@@ -234,6 +234,8 @@ class BattleData:
         for sid, el in enumerate(st):
             if el == CS.NO_ELEMENT:
                 continue
+            if sid in self.custom:      # S160: a reclaimed id's new skill (_custom_skills: its base's ladder)
+                continue
             kind = (D.SPELL_LADDER.get(sid) or (None, 'A'))[1]
             self.elem_override[sid] = (None if el == CS.ELEMENT_NONE else int(el), kind)
 

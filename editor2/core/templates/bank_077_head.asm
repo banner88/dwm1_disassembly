@@ -1957,6 +1957,8 @@ BattleSkillOf:
 BattleItemProbe:                        ; E = the item
     ld a, e
     call BattleSkillOf
+    call ReclaimedSkill77               ; [S160] a field-only item (its skill id is a new skill's)
+    jr c, .fieldOnly
     ld [$db4c], a
     xor a
     ld [$db4d], a
@@ -1964,6 +1966,12 @@ BattleItemProbe:                        ; E = the item
     ld [$db4e], a
     ld hl, $5400                        ; bank $54 entry 0: the skill record's +10
     rst $10
+    ret
+.fieldOnly:                             ; as record +10 = 1: "not usable in battle"
+    ld a, $01
+    ld [$db4c], a
+    xor a
+    ld [$db4d], a
     ret
 
 BattleItemPick:                         ; E = the bag slot
@@ -1973,9 +1981,35 @@ BattleItemPick:                         ; E = the bag slot
     ld a, [hl]
     ld [wItemInUse], a
     call BattleSkillOf
+    call ReclaimedSkill77               ; [S160] a field-only item: "Can't use this item in battle!"
+    jr c, .fieldOnly
     ld [$db4c], a
     ld hl, $5405                        ; bank $54 entry 5: the item's target lookup
     rst $10
+    ret
+.fieldOnly:                             ; [$DB4C] = 0: bank $50 jr_050_5199 refuses it
+    xor a
+    ld [$db4c], a
+    ld [$db4d], a
+    ret
+
+; [S160] ReclaimedSkill77 (ROADMAP E13) — A = a battle skill id -> CF set when it is one of
+; the 14 RECLAIMED ids ($BC-$C1 / $CC-$D3): the battle skills of LifeAcorn, MysticNut, the
+; four seeds, WarpWing, TinyMedal and the six books. Those items (and every project item
+; that works like one: the id is the BASE's skill, BattleSkillOf) are field-only for good —
+; the original game refused them already (their record +10 = 1), and the record there is
+; a new skill's now. Keeps A.
+ReclaimedSkill77:
+    cp RECLAIM_A
+    jr c, .no
+    cp RECLAIM_A_END
+    ret c                               ; $BC-$C1
+    cp RECLAIM_B
+    jr c, .no
+    cp RECLAIM_B_END
+    ret                                 ; $CC-$D3: CF set; else clear
+.no:
+    and a
     ret
 
 ; -----------------------------------------------------------------------------

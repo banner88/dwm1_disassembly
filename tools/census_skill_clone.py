@@ -25,9 +25,21 @@ slots. result = 'same' when the clone acted as often as B (>= 1) and its
 message list and HP / MP changes are identical; else 'differs' (why) or
 'nocast' (B itself never acts in a battle — field-only, items).
 
+S160 (ROADMAP E13) --reclaim: the 14 RECLAIMED ids ($BC-$C1 / $CC-$D3, the battle skills of
+14 field-only items) hold new skills too, in the id's STOCK rows (BATTLE_SKILL_SYSTEM §13.12):
+per base B the census also makes $BC and $CC B's twins (ReclaimBaseTable / ReclaimTargetTable
+/ StockPresentTable / StockSfxTable / StockElemTable / the record pointer $54:$4013 / the
+$07 MP word / AnnounceTemplateTable / the name pointer) and casts them from the same state:
+result 'same' when the twin = B (the S111 rule) — written to the JSON's `reclaim` section
+({base: {'BC': …, 'CC': …, 'as_EF': bool, 'EF_now': …}}, as_EF = both twins == the $EF twin
+exactly (lines, HP / MP changes, acts: the parity the engine's id views give), EF_now = this
+run's $EF twin vs B). With --reclaim the recorded `results` are KEPT (the compiler's rule for
+every new skill; S160 re-measured them on the user's save: 8 of 155 flip, from the compare's
+700-frame window — KEY_LESSONS S160); bases missing from the file are measured.
+
 USAGE
   python3 tools/census_skill_clone.py --rom <build>/rom.gbc --sym <build>/game.sym \\
-      --sav <a real .sav> [--bases 0-221] [--out extracted/skill_clone_census.json]
+      --sav <a real .sav> [--bases 0-221] [--out extracted/skill_clone_census.json] [--reclaim]
 """
 import argparse
 import io
@@ -70,6 +82,33 @@ def poke_clone(p, S, base, van):
     lo, hi = p.memory[nb, na + 2 * base], p.memory[nb, na + 2 * base + 1]
     p.memory[nb, na + 2 * CLONE] = lo
     p.memory[nb, na + 2 * CLONE + 1] = hi
+
+
+def poke_reclaim(p, S, base, van, rid):
+    """[S160] Make the RECLAIMED id `rid` ($BC-$C1 / $CC-$D3) = base's twin, in the loaded
+    cartridge: its stock rows (the record pointer, the $07 MP word, the announce slot, the
+    look, the sounds, the element, the name pointer) + ReclaimBaseTable / ReclaimTargetTable."""
+    k = rid - 0xBC
+
+    def w(label, off, val):
+        b, a = S[label]
+        p.memory[b, a + off] = val
+    w('ReclaimBaseTable', k, base)
+    w('ReclaimTargetTable', k, base)
+    w('StockPresentTable', rid, base)
+    w('StockSfxTable', rid, base)
+    w('StockElemTable', rid, 0xFF)
+    w('AnnounceTemplateTable', rid, van['announce'][base])
+    rec = 0x41CF + 19 * base
+    p.memory[0x54, 0x4013 + 2 * rid] = rec & 0xFF
+    p.memory[0x54, 0x4013 + 2 * rid + 1] = rec >> 8
+    mp = van['mp'][base] if van['mp'][base] <= 255 else 0
+    p.memory[0x07, 0x570C + 2 * rid] = mp & 0xFF
+    p.memory[0x07, 0x570C + 2 * rid + 1] = mp >> 8
+    nb, na = S['SkillNamePtrTable']
+    lo, hi = p.memory[nb, na + 2 * base], p.memory[nb, na + 2 * base + 1]
+    p.memory[nb, na + 2 * rid] = lo
+    p.memory[nb, na + 2 * rid + 1] = hi
 
 
 def run(p, sid, caster, target, ecount):
@@ -149,6 +188,8 @@ def main():
     ap.add_argument('--sav', required=True)
     ap.add_argument('--bases', default='0-221')
     ap.add_argument('--out', default=os.path.join(REPO, 'extracted', 'skill_clone_census.json'))
+    ap.add_argument('--reclaim', action='store_true',
+                    help='S160: also the twins at the reclaimed ids $BC / $CC (the `reclaim` section)')
     a = ap.parse_args()
     lo, hi = (int(x) for x in a.bases.split('-'))
     S = parse_sym(a.sym)
@@ -160,16 +201,22 @@ def main():
                                                             'skill_records.json')))['records']}
     p = continue_game(a.rom, a.sav)
     st = io.BytesIO(); p.save_state(st)
-    results = {}
+    results, reclaim, old = {}, {}, {}
     if os.path.exists(a.out):
-        results = json.load(open(a.out)).get('results', {})
+        old = json.load(open(a.out))
+        results = old.get('results', {})
+        reclaim = old.get('reclaim', {})
     t0 = time.time()
 
     def save():
-        out = {'_generator': (f"tools/census_skill_clone.py (S111) on {os.path.basename(a.rom)} + "
-                              "a real .sav; PyBoy, the stock skill vs its copy at id $EF, RNG "
-                              "pinned, party slot 0 casting"),
+        gen = old.get('_generator') if not a.reclaim else None
+        out = {'_generator': gen or (
+                   f"tools/census_skill_clone.py (S111; S160 --reclaim) on {os.path.basename(a.rom)} "
+                   "+ a real .sav; PyBoy, the stock skill vs its copy at id $EF (results) and at "
+                   "the reclaimed ids $BC / $CC (reclaim), RNG pinned, party slot 0 casting"),
                'results': dict(sorted(results.items(), key=lambda kv: int(kv[0])))}
+        if reclaim:
+            out['reclaim'] = dict(sorted(reclaim.items(), key=lambda kv: int(kv[0])))
         json.dump(out, open(a.out, 'w'), indent=1)
 
     for base in range(lo, hi + 1):
@@ -186,11 +233,29 @@ def main():
         poke_clone(p, S, base, van)
         rb = run(p, CLONE, 0, target, ecount)
         res, why = compare(ra, rb)
-        results[str(base)] = {'name': r.get('name', ''), 'result': res, 'why': why,
-                              'acts': [ra[0], rb[0]]}
+        line = f"{base:3d} {r.get('name', ''):10s} {res:8s} {why[:70]}"
+        if not a.reclaim or str(base) not in results:
+            results[str(base)] = {'name': r.get('name', ''), 'result': res, 'why': why,
+                                  'acts': [ra[0], rb[0]]}
+        if a.reclaim:                                   # [S160] the reclaimed twins
+            # the recorded S111 `results` stay (the compiler's rule for every new skill);
+            # this run's $EF twin is kept here beside the reclaimed ones (EF_now)
+            ent = {'name': r.get('name', ''), 'EF_now': {'result': res, 'why': why,
+                                                        'acts': [ra[0], rb[0]]}}
+            same_ef = True
+            for rid in (0xBC, 0xCC):
+                st.seek(0); p.load_state(st)
+                poke_reclaim(p, S, base, van, rid)
+                rc = run(p, rid, 0, target, ecount)
+                rr, rw = compare(ra, rc)
+                ent[f'{rid:02X}'] = {'result': rr, 'why': rw, 'acts': rc[0]}
+                same_ef = same_ef and rc[1:] == rb[1:] and rc[0] == rb[0]
+                line += f" | ${rid:02X} {rr}"
+            ent['as_EF'] = same_ef
+            reclaim[str(base)] = ent
+            line += f" | as $EF {same_ef}"
         save()
-        print(f"{base:3d} {r.get('name', ''):10s} {res:8s} {why[:90]}  ({time.time() - t0:.0f} s)",
-              flush=True)
+        print(f"{line}  ({time.time() - t0:.0f} s)", flush=True)
     save()
 
 

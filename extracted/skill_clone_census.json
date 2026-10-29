@@ -1,5 +1,5 @@
 {
- "_generator": "tools/census_skill_clone.py (S111) on the S111 example build 4a2860cfd148cafa6843221d8be1ad49 (patched) + a real .sav; PyBoy, the stock skill vs its copy at id $EA, RNG pinned, party slot 0 casting",
+ "_generator": "tools/census_skill_clone.py (S111; S160 --reclaim) on rom.gbc + a real .sav; PyBoy, the stock skill vs its copy at id $EF (results) and at the reclaimed ids $BC / $CC (reclaim), RNG pinned, party slot 0 casting",
  "results": {
   "0": {
    "name": "Blaze",
@@ -1663,6 +1663,3418 @@
   "221": {
    "name": "Ahhh",
    "result": "not a skill"
+  }
+ },
+ "reclaim": {
+  "0": {
+   "name": "Blaze",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "1": {
+   "name": "Blazemore",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "2": {
+   "name": "Blazemost",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "3": {
+   "name": "Firebal",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "4": {
+   "name": "Firebane",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "5": {
+   "name": "Firebolt",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "6": {
+   "name": "Bang",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "7": {
+   "name": "Boom",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "8": {
+   "name": "Explodet",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "9": {
+   "name": "Infernos",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "10": {
+   "name": "Infermore",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "11": {
+   "name": "Infermost",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "12": {
+   "name": "IceBolt",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "13": {
+   "name": "SnowStorm",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "14": {
+   "name": "Blizzard",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "15": {
+   "name": "Bolt",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "16": {
+   "name": "Zap",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "17": {
+   "name": "Thordain",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "18": {
+   "name": "Beat",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
+    "acts": [
+     2,
+     1
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
+    "acts": 1
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
+    "acts": 1
+   },
+   "as_EF": true
+  },
+  "19": {
+   "name": "Defeat",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
+    "acts": [
+     4,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "20": {
+   "name": "Sacrifice",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "21": {
+   "name": "Sleep",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "22": {
+   "name": "SleepAll",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "23": {
+   "name": "StopSpell",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "24": {
+   "name": "Surround",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "25": {
+   "name": "PanicAll",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "26": {
+   "name": "RobMagic",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "27": {
+   "name": "TakeMagic",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "28": {
+   "name": "Sap",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "29": {
+   "name": "Defence",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "30": {
+   "name": "Upper",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "31": {
+   "name": "Increase",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "32": {
+   "name": "Slow",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "33": {
+   "name": "SlowAll",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "34": {
+   "name": "Speed",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "35": {
+   "name": "SpeedUp",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     6,
+     6
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "as_EF": true
+  },
+  "36": {
+   "name": "Barrier",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "37": {
+   "name": "TwinHits",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "38": {
+   "name": "MagicWall",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": [
+     3,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "39": {
+   "name": "MagicBack",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "40": {
+   "name": "Bounce",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "41": {
+   "name": "Transform",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (-88, 0, 0, 0, 0, 0, 0, 0, -195, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (-88, 0, 0, 0, 0, 0, 0, 0, -195, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": false
+  },
+  "42": {
+   "name": "Ironize",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
+    "acts": [
+     1,
+     1
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
+    "acts": 1
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
+    "acts": 1
+   },
+   "as_EF": true
+  },
+  "43": {
+   "name": "Heal",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "44": {
+   "name": "HealMore",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "45": {
+   "name": "HealAll",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
+    "acts": [
+     2,
+     1
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
+    "acts": 1
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
+    "acts": 1
+   },
+   "as_EF": true
+  },
+  "46": {
+   "name": "HealUs",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     6,
+     6
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 6
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 6
+   },
+   "as_EF": true
+  },
+  "47": {
+   "name": "HealUsAll",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
+    "acts": [
+     6,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "48": {
+   "name": "Vivify",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "49": {
+   "name": "Revive",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "50": {
+   "name": "Farewell",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "51": {
+   "name": "Antidote",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "52": {
+   "name": "NumbOff",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     6,
+     6
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "as_EF": true
+  },
+  "53": {
+   "name": "DeChaos",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     6,
+     6
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "as_EF": true
+  },
+  "54": {
+   "name": "CurseOff",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     6,
+     6
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 6
+   },
+   "as_EF": true
+  },
+  "55": {
+   "name": "StepGuard",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "56": {
+   "name": "MapMagic",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "57": {
+   "name": "Chance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "59": {
+   "name": "TwinSlash",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "60": {
+   "name": "Ramming",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "61": {
+   "name": "Beserker",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2d', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2d', '0x82', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": false
+  },
+  "62": {
+   "name": "Kamikaze",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "63": {
+   "name": "Massacre",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "64": {
+   "name": "EvilSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "65": {
+   "name": "ChargeUP",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "66": {
+   "name": "HighJump",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "67": {
+   "name": "SuckAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "68": {
+   "name": "FireSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "69": {
+   "name": "BoltSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "70": {
+   "name": "VacuSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "71": {
+   "name": "IceSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "72": {
+   "name": "MetalCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "73": {
+   "name": "DrakSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "74": {
+   "name": "BeastCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "75": {
+   "name": "BirdBlow",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "76": {
+   "name": "DevilCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "77": {
+   "name": "ZombieCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "78": {
+   "name": "CleanCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "79": {
+   "name": "MultiCut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "80": {
+   "name": "BiAttack",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": [
+     4,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "81": {
+   "name": "QuadHits",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": [
+     7,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "82": {
+   "name": "CallHelp",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "83": {
+   "name": "YellHelp",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "84": {
+   "name": "Focus",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "85": {
+   "name": "SquallHit",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "86": {
+   "name": "PsycheUp",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "87": {
+   "name": "RainSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "88": {
+   "name": "WindBeast",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "89": {
+   "name": "Vacuum",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "90": {
+   "name": "Lightning",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "91": {
+   "name": "RockThrow",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "92": {
+   "name": "FireAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "93": {
+   "name": "BlazeAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "94": {
+   "name": "Scorching",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "95": {
+   "name": "WhiteFire",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "96": {
+   "name": "FrigidAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "97": {
+   "name": "IceAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "98": {
+   "name": "IceStorm",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "99": {
+   "name": "WhiteAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "100": {
+   "name": "Hellblast",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "101": {
+   "name": "BigBang",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "102": {
+   "name": "MegaMagic",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "103": {
+   "name": "PoisonHit",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "104": {
+   "name": "NapAttack",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "105": {
+   "name": "Paralyze",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "106": {
+   "name": "SleepAir",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "107": {
+   "name": "PalsyAir",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
+    "acts": [
+     4,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "108": {
+   "name": "PoisonGas",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "109": {
+   "name": "PoisonAir",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "110": {
+   "name": "PaniDance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "111": {
+   "name": "Curse",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "112": {
+   "name": "Ahhh",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "113": {
+   "name": "K.O.Dance",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
+    "acts": [
+     4,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "114": {
+   "name": "SandStorm",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0x1f']",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xec']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xfc']",
+    "acts": 3
+   },
+   "as_EF": false
+  },
+  "115": {
+   "name": "Radiant",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0x1f']",
+    "acts": [
+     4,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xec']",
+    "acts": 4
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xfc']",
+    "acts": 4
+   },
+   "as_EF": false
+  },
+  "116": {
+   "name": "EerieLite",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "117": {
+   "name": "OddDance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "118": {
+   "name": "RobDance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "119": {
+   "name": "SideStep",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "120": {
+   "name": "LureDance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "121": {
+   "name": "LushLicks",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "122": {
+   "name": "SickLick",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "123": {
+   "name": "LegSweep",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "124": {
+   "name": "BigTrip",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "125": {
+   "name": "WarCry",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "126": {
+   "name": "Whistle",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "127": {
+   "name": "Imitate",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
+    "acts": 3
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "128": {
+   "name": "DeMagic",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "129": {
+   "name": "Surge",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
+    "acts": [
+     5,
+     5
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
+    "acts": 5
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
+    "acts": 5
+   },
+   "as_EF": true
+  },
+  "130": {
+   "name": "UltraDown",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "131": {
+   "name": "ThickFog",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
+    "acts": [
+     1,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "132": {
+   "name": "TatsuCall",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "133": {
+   "name": "DiagoCall",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "134": {
+   "name": "SamsiCall",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "135": {
+   "name": "BazooCall",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "136": {
+   "name": "Cover",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "137": {
+   "name": "Guardian",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "138": {
+   "name": "TailWind",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "139": {
+   "name": "StormWind",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     3,
+     3
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 3
+   },
+   "as_EF": true
+  },
+  "140": {
+   "name": "Dodge",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "142": {
+   "name": "StrongD",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "143": {
+   "name": "SuckAll",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "144": {
+   "name": "BladeD",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "145": {
+   "name": "DanceShut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "146": {
+   "name": "MouthShut",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "147": {
+   "name": "Meditate",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "148": {
+   "name": "Hustle",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": [
+     4,
+     4
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 4
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
+    "acts": 4
+   },
+   "as_EF": true
+  },
+  "149": {
+   "name": "LifeSong",
+   "EF_now": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "150": {
+   "name": "LifeDance",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "213": {
+   "name": "BeDragon",
+   "EF_now": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
+    "acts": [
+     7,
+     2
+    ]
+   },
+   "BC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
+    "acts": 2
+   },
+   "CC": {
+    "result": "differs",
+    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "214": {
+   "name": "Smashlime",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "215": {
+   "name": "Sheldodge",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "216": {
+   "name": "Branching",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "217": {
+   "name": "GigaSlash",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     2,
+     2
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 2
+   },
+   "as_EF": true
+  },
+  "219": {
+   "name": "RUN",
+   "EF_now": {
+    "result": "same",
+    "why": "",
+    "acts": [
+     1,
+     1
+    ]
+   },
+   "BC": {
+    "result": "same",
+    "why": "",
+    "acts": 1
+   },
+   "CC": {
+    "result": "same",
+    "why": "",
+    "acts": 1
+   },
+   "as_EF": true
   }
  }
 }
