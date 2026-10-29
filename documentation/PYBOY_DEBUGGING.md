@@ -1227,3 +1227,22 @@ edge and the battle waits for input forever.
   no command and `p.tick()` never returned (py-spy showed `converse` at f = 24 after 7 minutes)
   — a negative must remove the feature, not leave the script's branch variable stale. 19 FAIL;
   the `census` stub calls pass (they call the engine, not the hook).
+
+## S159 techniques — Earth walked on the user's save (tools/walk_earth.py)
+
+- **A forced battle against any enemy row:** the S110 rig with `$DA03/$DA04` = the EID
+  (project rows: `Project.quest_enemy_rows()` `_eid`, 519 + n); the packed resistances are
+  already written at the first frame of phase ≥ 1 (read `$DD28 + 7k` there).
+- **A resistance level in battle:** poke the packed byte (position t + 1: byte (t + 1) >> 2,
+  shift (3 − ((t + 1) & 3)) × 2) of the target in phases 4-6 — the damage ladders read it
+  live; the target's `$DB05 + 8k` bits 6-7 cleared (guard / amplify rows). Record +$82 before
+  a talked battle sets a party monster's Earth (poke after the last warp).
+- **What the AI chose:** a hook on bank $72 `FarSkillFork` (every acting skill; `$DB88` = the
+  attacker) — not `$DB8A` in phase 7 (KEY_LESSONS S159). The party "only defends": write `$8D`
+  into its queue slots each command phase.
+- **Registers:** this PyBoy has `p.register_file` (A, D, E … at a hook): the AI veto's level
+  was read at `$57:$4C2F` (the `and $03` after `LoadBtlAI_7aa6`) — A = 3 with d = 6, e = 3
+  (position 27).
+- **The battle ITEM menu by buttons:** in the command menu RIGHT (ITEM), A (the list, the
+  first bag item), A (use) — a non-battle item shows "Can't use this item in battle!"
+  (bank $50 `jr_050_5199`).

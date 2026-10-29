@@ -34,7 +34,10 @@ rolled to 80-100 %).
   their row's stats.
 - **Resistances** — none (full effect), some (−15 %), strong (−50 %),
   immune. (Breath attacks: 1 / 0.75 / 0.4 / 0; status effects: always /
-  85 % / 50 % / never.)
+  85 % / 50 % / never.) Shown in groups (elemental spells, breaths, status ailments,
+  stat down / drain, seals, special attacks); **Earth** (S159) is the new 27th. Every
+  monster at once, what each blocks and which skills test it: the **Resistances**
+  tab — see *Resistances (and Earth)*.
 - **Reset** puts the species back as in the original game (a new species:
   back to the monster it starts from). Changed resistances are bold.
 

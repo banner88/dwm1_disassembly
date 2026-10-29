@@ -38,6 +38,11 @@ built from it (the original ROM is never changed).
 - **Monsters** — every monster's species data (family, growth, resistances,
   natural skills …), every battle row it appears in (stats, AI, joining), new
   monsters cut from a sprite sheet, and new art for the original monsters.
+- **Resistances** (S159) — every monster's 27 resistances in one grid, grouped
+  (elemental spells — Earth is new —, breaths, status ailments, stat down / drain,
+  seals, special attacks); what each blocks, what a level does, and which skills test
+  each one (right-click a skill to make it test another) — see *Resistances (and
+  Earth)*.
 - **Text** — every text of the game, searchable and **editable** (S150): dialogue,
   battle, items, menus & field, credits — one sub-tab each; any length.
 - **Arena** — the classes, Starry Night and Monster Grandpa's match: entry fees, each

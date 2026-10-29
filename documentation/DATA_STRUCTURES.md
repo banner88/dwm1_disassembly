@@ -548,6 +548,12 @@ won a boss battle, an arena class or Starry Night's final with the player and ha
   gets row 0, the game's own case). The memorial writes its **tag** there: 8, 16 … 248
   (31 values); an entry's identity = (tag, species). For a child of tagged parents
   (t1 + t2) & 7 = 0 picks row 0 — the game's own case of two parents at 0 (code-read).
+  **S159 (ROADMAP E16): index 26 is EARTH** — +$82 bits 0-1 = the monster's Earth level
+  (species +$29 at creation), bits 3-7 = the tag: bank $79 `MemUpsert` / `MemRecMatch` /
+  `MemRecTag` read the tag as +$82 & `$F8` and a new tag is OR-ed over bits 0-2 (measured,
+  `tools/walk_earth.py --memorial`: a won CHAMPION battle kept Earth 1 / 2 / 3 beside tag 8,
+  the list's tags 8, no statue picked them; negative control `and $FF`: 3 FAIL). Breeding:
+  (t1 + l1 + t2 + l2) & 7 = l1 + l2 ≤ 6 — the Earth levels' sum, never the missing row 7.
 - **"Still with the player"** = any in-use record (+$00) of the 40 slots (ROM0
   `GetMonsterDataPtr`, A = slot, keeps BC / DE) — the party and the farm — or of the bank-2
   sleep pool when it is active ($CA41 bit 7 and magic "P1" at $A000; 40 records at

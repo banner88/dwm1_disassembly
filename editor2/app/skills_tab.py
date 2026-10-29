@@ -103,6 +103,19 @@ def _bold(w, on):
     w.setFont(f)
 
 
+def _grouped_resists(cb, first):
+    """S159: the 27 resistances into combo `cb` in the editor's groups (core/
+    resistances.py) — a grey title per group, item data = index + `first` (0 for the
+    damage element, 1 for the AI's 1-based record +5)."""
+    from editor2.core import resistances as RZ
+    for _k, title, ts in RZ.GROUPS:
+        cb.addItem(f'— {title} —', '__group__')
+        it = cb.model().item(cb.count() - 1)
+        it.setEnabled(False)
+        for t in ts:
+            cb.addItem(f'   {RZ.label(t)}', t + first)
+
+
 class SkillsTab(QWidget):
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -335,8 +348,7 @@ class SkillsTab(QWidget):
         self.ai_elem = QComboBox()
         self.ai_elem.setToolTip(SK.AI_ELEMENT_HINT)
         self.ai_elem.addItem('none', 0)
-        for k, n in enumerate(G.RESIST_NAMES, start=1):
-            self.ai_elem.addItem(n, k)
+        _grouped_resists(self.ai_elem, 1)           # S159: in the Resistances tab's groups
         self.ai_elem.currentIndexChanged.connect(
             lambda _i: self._record({'status_id': self.ai_elem.currentData()}, 'AI element'))
         f.addRow('Element:', self.ai_elem)
@@ -544,6 +556,21 @@ class SkillsTab(QWidget):
         self._busy = False
         if sel is not None:
             self.list.setCurrentItem(sel)
+
+    def show_skill(self, sid):
+        """S159: select skill `sid` (the Resistances tab's double-click): the filters
+        cleared first so it is listed."""
+        self.sid = int(sid)
+        self.filter.blockSignals(True)
+        self.filter.clear()
+        self.filter.blockSignals(False)
+        self.kind.setCurrentIndex(0)
+        self._fill_list()
+        for i in range(self.list.count()):
+            if self.list.item(i).data(Qt.UserRole) == self.sid:
+                self.list.setCurrentRow(i)
+                break
+        self._show()
 
     def _picked(self, cur, _prev):
         if self._busy or cur is None:
@@ -903,8 +930,7 @@ class SkillsTab(QWidget):
             self.element.addItem('none (ignores resistances)', 'none')
         else:
             self.element.addItem('— (its damage tests no resistance)', None)
-        for k, n in enumerate(G.RESIST_NAMES):
-            self.element.addItem(n, k)
+        _grouped_resists(self.element, 0)           # S159: grouped, Earth included
         cur = d['element']
         if cur == CS.ELEMENT_NONE:
             cur = 'none'

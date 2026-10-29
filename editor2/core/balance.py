@@ -66,6 +66,7 @@ if _REPO not in sys.path:
 from simulator import raising as R            # noqa: E402
 from simulator import pacing as P             # noqa: E402
 from simulator import battle as B             # noqa: E402
+from simulator import damage as D             # noqa: E402
 
 REF_CURVE = 11               # the exp curve most species use (20 of 215)
 WIN_TARGET = 0.90
@@ -162,10 +163,18 @@ class BattleData:
         self.custom_pcts = {}       # S155: gd_custom_pcts (skillfx/s155_custom.py)
         self.custom_rows = {}       # S155: the bank $58 target rows of the custom ids
         self.custom = {}
+        # S159: the project's skill elements (gamedata.skills.<id>.element) — the ROM's
+        # bank $72 override (StockElemTable / CustomElemTable). elem_override[id] = (a
+        # resistance 0-26 or None = "none", the handler's ladder kind) for the stock
+        # skills and the NEW skills on a stock base; custom_elem[id] = 0-26 / None for
+        # the built-ins whose handler deals damage (battle.custom_element)
+        self.elem_override = {}
+        self.custom_elem = {}
         if project is not None:
             self._custom_skills(project)
         else:
             self._custom_skills(None)
+        self._stock_elements(project)
         self.species = {}
         for sp, info in self.T.info.items():
             self.species[sp] = {'resistances': list(info[15:42]), 'can_fly': bool(info[4]),
@@ -189,6 +198,14 @@ class BattleData:
             self.records[sid] = record_dict(sid, e['record'], self.skill_names.get(sid, ''))
             if e.get('base') is not None:
                 self.core_alias[sid] = int(e['base'])
+            el = e.get('element', CS.NO_ELEMENT)
+            if el != CS.NO_ELEMENT:
+                rt = None if el == CS.ELEMENT_NONE else int(el)
+                if e.get('base') is not None:
+                    kind = (D.SPELL_LADDER.get(int(e['base'])) or (None, 'A'))[1]
+                    self.elem_override[sid] = (rt, kind)
+                else:
+                    self.custom_elem[sid] = rt
             if e.get('target_row') is not None:
                 self.custom_rows[sid] = int(e['target_row'])
         # S155 fix: resolve() returns Quake's numbers under 'quake' as
@@ -204,6 +221,21 @@ class BattleData:
             if sid in self.quake_range:
                 self.quake_range[sid] = (lo, hi)
         self.custom_pcts = dict((extras or {}).get('pcts') or {})
+
+    def _stock_elements(self, project):
+        """S159: the stock skills' element overrides (custom_skills.stock_elements)."""
+        if project is None:
+            return
+        from . import custom_skills as CS
+        try:
+            st = CS.stock_elements(project)
+        except Exception:                                   # noqa: BLE001 — the compiler reports it
+            return
+        for sid, el in enumerate(st):
+            if el == CS.NO_ELEMENT:
+                continue
+            kind = (D.SPELL_LADDER.get(sid) or (None, 'A'))[1]
+            self.elem_override[sid] = (None if el == CS.ELEMENT_NONE else int(el), kind)
 
     # -- enemies ----------------------------------------------------------
     def enemy_rec(self, eid):
@@ -802,6 +834,8 @@ def _board(data, party, enemies, db73):
     b.core_alias = data.core_alias
     b.quake_range = data.quake_range
     b.custom_pcts = data.custom_pcts          # S155
+    b.elem_override = getattr(data, 'elem_override', {})    # S159: the skills' elements
+    b.custom_elem = getattr(data, 'custom_elem', {})
     b.custom_rows = data.custom_rows
     return b
 
@@ -1235,6 +1269,11 @@ def raising_digest(data):
     for sid in sorted(data.records):
         h.update(data.records[sid]['battle_record']['raw'].encode())
     h.update(json.dumps(sorted(data.core_alias.items())).encode())
+    _eo = getattr(data, 'elem_override', {}) or {}          # S159: hashed only when set,
+    _ce = getattr(data, 'custom_elem', {}) or {}            #   so the original game's
+    if _eo or _ce:                                          #   digests stay as they were
+        h.update(json.dumps([sorted((k, list(v)) for k, v in _eo.items()),
+                             sorted(_ce.items())]).encode())
     h.update(json.dumps(sorted((k, list(v)) for k, v in data.quake_range.items())).encode())
     from . import custom_skills as _CS                      # S155: the percentages, when edited
     _pc = getattr(data, 'custom_pcts', {}) or {}

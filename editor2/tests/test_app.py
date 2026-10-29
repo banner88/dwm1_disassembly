@@ -3739,6 +3739,87 @@ def s158_hints(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s159_resistances(app, w):
+    """S159 (ROADMAP E16; user: "a proper resistance table visualizer and setter … Make sure
+    that I can look up which skills fall where, especially once I start fiddling with skill
+    resistance belonging and move them around"): the Resistances tab — the grid (every
+    species, 27 columns in groups, Earth included, the name in the row header), cells set
+    by the buttons (one undo step, `*` changed), a column's reference (its skills), the
+    map's right-click move (Quake to Earth: the map and the Skills tab follow), the
+    Monsters tab's grouped box (Earth), the compile (StockElemTable / CustomElemTable 26),
+    the whole grid timed with the window SHOWN; undo restores project.json."""
+    import shutil
+    import tempfile
+    import time
+    from PySide6.QtCore import Qt
+    from editor2.app.resistances_tab import FIRST_COL
+    from editor2.core import resistances as RZ, compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s159_res_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.resistances_tab
+        w.show()
+        w.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        g = rt.grid
+        assert g.columnCount() == 1 + 27, g.columnCount()
+        heads = [g.horizontalHeaderItem(c).text() for c in range(g.columnCount())]
+        assert heads[FIRST_COL + RZ.ORDER.index(26)] == 'ELEM\nEarth', heads
+        assert g.rowCount() >= 220, g.rowCount()
+        assert 'DrakSlime' in g.verticalHeaderItem(0).text(), g.verticalHeaderItem(0).text()
+        col = FIRST_COL + RZ.ORDER.index(26)
+        t0 = time.time()
+        for r in range(5):
+            g.item(r, col).setSelected(True)
+        rt.set_selected(2)
+        app.processEvents()
+        dt = time.time() - t0
+        assert dt < 15, f'setting 5 cells + the refresh took {dt:.1f} s (shown)'
+        sids = [g.item(r, 0).data(Qt.UserRole) for r in range(g.rowCount())
+                if g.item(r, col).data(Qt.UserRole) == 2]
+        assert len(sids) == 5 and all(g.item(r, col).text() == '2*' for r in range(g.rowCount())
+                                      if g.item(r, 0).data(Qt.UserRole) in sids)
+        m = doc.data['gamedata']['monsters']
+        assert all(m[str(s)]['resist'].get('Earth') == 2 for s in sids), m
+        n_undo = w.session.undo.index()
+        rt._header_clicked(FIRST_COL + RZ.ORDER.index(0))
+        names = {rt.t_skills.topLevelItem(i).text(0).strip().split(None, 1)[1]
+                 for i in range(rt.t_skills.topLevelItemCount())}
+        assert {'Blaze', 'Blazemore', 'Blazemost', 'FireSlash', 'BigBang'} <= names, names
+        assert rt.move_skills([230], 26)
+        app.processEvents()
+        assert doc.data['gamedata']['skills']['230']['element'] == 'Earth'
+        rt._show_type(26)
+        earth = [rt.t_skills.topLevelItem(i).text(0) for i in range(rt.t_skills.topLevelItemCount())]
+        assert any('Quake' in x for x in earth), earth
+        d = doc.skill_detail(230)
+        assert d['element'] == 26, d['element']
+        mt = w.monsters_tab
+        assert 'Earth' in mt.w_resist, sorted(mt.w_resist)
+        out, _prj, _w = C2.compile_project(_save_tmp(doc, tmp), REPO)
+        b72 = out['patches/bank_072.asm']
+        assert 'CustomElemTable:' in b72, 'the element tables are emitted'
+        assert w.session.undo.index() == n_undo + 1
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print(f'OK: S159 the Resistances tab — {g.rowCount()} monsters x 27 (Earth), 5 cells '
+              f'set to 2 in one undo step ({dt:.1f} s shown), the Fire column lists the Blaze '
+              'line, Quake moved to Earth by the map (the Skills tab follows), the Monsters box '
+              'has Earth, the project compiles; undo restores project.json')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def _save_tmp(doc, tmp):
     """The document as it stands -> a project folder the compiler reads (assets beside)."""
     import json as _json
@@ -5250,6 +5331,7 @@ def main():
     s153_ending(app, w)
     s154_memorial(app, w)
     s158_hints(app, w)
+    s159_resistances(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

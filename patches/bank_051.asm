@@ -594,12 +594,17 @@ jr_051_43e6:
     ld d, a
 
 ; [S154] The 27 resistances (record +$68.., species info +$0F..) -> 7 packed bytes at DE
-; (battle $DD28 + 7k): FIRST index 26 (the 27th, "unused") & 3 -> byte 0 bits 7-6 =
-; packed POSITION 0, then indices 0-25 -> positions 1-26; position 27 (byte 6 bits 1-0)
-; is always 0. So a reader of "type t at position t+1" never sees index 26, but element
-; 0 (position 0) does (bank $57 AIRule_4c13, the bank $58 FireSlash target row). The
-; memorial's tag in record +$82 is a multiple of 8, so it packs as 0 (DATA_STRUCTURES
-; "The memorial (S154)"; the old docs' "position 0 unused" corrected, DOC_AUDIT S154).
+; (battle $DD28 + 7k). VANILLA: FIRST index 26 (the 27th, "unused") & 3 -> byte 0 bits 7-6
+; = packed POSITION 0, then indices 0-25 -> positions 1-26; position 27 (byte 6 bits 1-0)
+; always 0 (disassembly/bank_051.asm keeps that form).
+; [S159] SAME SIZE (78 B, $4404-$4451): index 26 is EARTH (ROADMAP E16; gamedata
+; RESIST_NAMES[26]) and packs into POSITION 27 instead — so every resistance t sits at
+; position t+1 (the rule bank $72 ElemLevelOfA and record +5 = t+1 already use: Earth's
+; AI element = 27, used by no vanilla skill), and position 0 is always 0, exactly what
+; element 0 (record +5 = 0, 134 vanilla skills: bank $57 AIRule_4c13 / the element bonus
+; rule) and the FireSlash target row (bank $58, masks byte 0 $C0) read in the original
+; game. Record +$82 keeps the memorial's tag in bits 3-7 (bank $79 masks it with $F8):
+; & 3 = the Earth level.
 SaveBtlS_4404:
     push hl
     ld a, $1a
@@ -610,9 +615,7 @@ SaveBtlS_4404:
     ld h, a
     ld a, [hl]
     and $03
-    rrc a
-    rrc a
-    ld c, a
+    ld c, a                         ; C = the Earth level (index 26) -> position 27
     pop hl
     ld a, [hl+]
     sla a
@@ -623,12 +626,11 @@ SaveBtlS_4404:
     sla a
     or [hl]
     inc hl
-    or c
-    ld [de], a
+    ld [de], a                      ; byte 0: position 0 = 0, positions 1-3 = indices 0-2
     inc de
     ld b, $05
 
-jr_051_4428:
+.packLoop:
     ld a, [hl+]
     sla a
     sla a
@@ -645,7 +647,7 @@ jr_051_4428:
     ld [de], a
     inc de
     dec b
-    jr nz, jr_051_4428
+    jr nz, .packLoop
 
     ld a, [hl+]
     sla a
@@ -657,9 +659,12 @@ jr_051_4428:
     or [hl]
     sla a
     sla a
+    or c                            ; byte 6: positions 24-26 = indices 23-25, 27 = Earth
     ld [de], a
     ret
 
+    ds 4, $00                       ; [S159] the 4 bytes the two `rrc a` held (unreached)
+    ASSERT @ == $4452
 
 LoadBtlS_4452:
     ld a, [$c86c]

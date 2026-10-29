@@ -88,8 +88,19 @@ RESIST_NAMES = [
     "Fire", "Heat", "Explosion", "Wind", "Lightning", "Ice", "Accuracy", "Sleep",
     "Death", "MP", "SpellBlock", "Confusion", "DefDown", "AglDown", "Sacrifice",
     "MegaMagic", "FireBreath", "IceBreath", "Poison", "Paralyze", "Curse",
-    "MissATurn", "DanceBlock", "BreathBlock", "Aid", "GigaSlash", "Unused",
+    "MissATurn", "DanceBlock", "BreathBlock", "Aid", "GigaSlash", "Earth",
 ]
+# [S159] (ROADMAP E16) index 26 — "Unused" (0 in every species) until S159 — is EARTH: the
+# game carries it species info +$29 -> record +$82 (bits 0-1; the memorial's tag in bits
+# 3-7) -> battle; patched builds pack it into position 27 (bank $51 SaveBtlS_4404), the
+# position t+1 every element reader uses. Older projects' "Unused" keys still load.
+RESIST_ALIASES = {"Unused": "Earth"}
+EARTH = 26
+
+
+def resist_name(n):
+    """A resistance name as stored (an old alias -> its name today)."""
+    return RESIST_ALIASES.get(n, n)
 STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 # S149 r2 (the user: "0 HP should never be possible"): an enemy row's HP is at least 2.
 # A monster made from a row (a join, a gift, a breeding mate, a medal reward — bank $14
@@ -333,6 +344,7 @@ def apply_monster_fields(r, o, what, extra_keys=()):
         if isinstance(rs, list):
             r[15:42] = bytes(_list(rs, 27, 0, 3, what + '.resist'))
         else:
+            rs = {resist_name(k): v for k, v in rs.items()}        # [S159] "Unused" -> "Earth"
             _check_keys(rs, RESIST_NAMES, what + '.resist')
             for i, n in enumerate(RESIST_NAMES):
                 if n in rs:

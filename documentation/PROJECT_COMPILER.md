@@ -695,6 +695,10 @@ user-confirmed hand-authored code:
   `bank_077_head.asm` (`StoryCommand` kind 8; `TEMPLATE_SIZE[$77]` 2741, was 2730),
   `bank_060_head.asm` (`TextOverride` step 0b; `TEMPLATE_SIZE[$60]` 1859, was 1842). Current
   values: `templates/PINNED_SHA256`.
+* S159 re-pin (§2.67, ROADMAP E16 — Earth): `bank_079_head.asm` (the memorial's tag read as
+  record +$82 & `$F8` in `MemUpsert` / `MemRecMatch` / `MemRecTag`, a new tag OR-ed over bits
+  0-2; the dead "not a tag" test dropped). No TEMPLATE_SIZE. Current values:
+  `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -5232,6 +5236,37 @@ compiler), `hints_doc.py` (`HintsMixin`).
   `test_s158` (keys, candidates vs never-fires, pool numbering / pins / holes, lowering, the
   data, the region, 8 refusals, the Document; `--rom`: entries 10-12, `HintTable`, the
   HintBreed16 call, the `wHintRow` store, `jp HintNewGameClear`); test_app `s158_hints`.
+
+## §2.67 S159 — EARTH, the 27th resistance + the Resistances tab (ROADMAP E16)
+
+**Schema.** Resistance 26 is named **`Earth`** (`gamedata.RESIST_NAMES[26]`; "Unused" until
+S159 — `gamedata.RESIST_ALIASES` maps the old name, in `gamedata.monsters.<id>.resist` and in a
+skill's `element`). `gamedata.monsters.<id>.resist.Earth` 0-3 = species info +$29;
+`gamedata.skills.<id>.element: "Earth"` = 26 in `StockElemTable` / `CustomElemTable` (bank
+$72) and the record's +5 = 27 (the S111 rule element + 1). No new key, no new region.
+
+**Engine (every build).** `patches/bank_051.asm` `SaveBtlS_4404` (same size, `ASSERT @ ==
+$4452`): index 26 into packed position 27 (BATTLE_SKILL_SYSTEM §15.3 "Earth"); bank $79
+template `bank_079_head.asm` (re-pinned S159): the memorial's tag = +$82 & `$F8`, a new tag
+OR-ed over bits 0-2 (`MemUpsert` / `MemRecMatch` / `MemRecTag`). `memorial.problems`: a
+species' resistance 26 above 3 is an error (was: any non-zero). Example pin moves (bank $51).
+
+**Editor.** NEW `editor2/core/resistances.py` (`GROUPS`, `TYPES`, `LADDERS`, `skill_rows` /
+`by_type` — which skill tests which resistance in the project now: the census for damage
+skills + the element edits, the simulator's hit-helper tables for status skills, new skills
+via their base, built-ins via their element); `Document.set_species_resists` (many cells,
+one copy + one validation); NEW `editor2/app/resistances_tab.py` (the Resistances tab:
+the grid, This resistance, Skills by resistance + right-click moves through
+`set_skill_element`); the Monsters tab box and the Skills tab's two element lists grouped;
+`SkillsTab.show_skill`; help 79 (+ 00 / 52 / 54 / 90); `EDITOR_REVISION` S159.
+
+**Simulator / Balance.** `BattleData.elem_override` (stock + new skills: (type | None,
+the base's ladder)) and `custom_elem` (built-ins), set on every Board by `_board`; before
+S159 neither was filled outside the validators, so **element edits were never simulated**
+(monster resistance edits were). `battle.custom_element` applies a built-in's element
+after its damage (bank $52 `CustomElemTail52`); the record core runs the ladder at level 0
+for "none". `pacing.pack_res`: index 26 at position 27. `raising_digest` hashes the two
+maps when set (the original game's digests unchanged). `test_compiler.test_s159`.
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

@@ -2230,6 +2230,10 @@ jr_057_4bfe:
 ; [S154] element 0 reads packed POSITION 0 = resistance index 26 (bank $51 SaveBtlS_4404),
 ; which is 0 for every species and every record (the memorial's tags are multiples of 8:
 ; & 3 = 0) — that, not the code, is why element 0 never vetoes.
+; [S159] MEASURED (tools/walk_earth.py, the user's save, INT 200 bosses, the party
+; defending): the veto works — a boss with Bang never casts it at a party all
+; Explosion 3 (15 of 32 actions at Explosion 0, none of 26). Element 27 (record +5) = position 27 =
+; EARTH in patched builds (bank $51 SaveBtlS_4404): an Earth skill is vetoed alike.
 AIRule_4c13:
     call LoadBtlAI_4532
 

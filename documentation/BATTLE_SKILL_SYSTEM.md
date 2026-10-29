@@ -279,7 +279,7 @@ The editor shows every field with this meaning (editor2/core/skills.py `FLAG_BIT
 | +2 | `target_mode` | bit0 single, bit1 group; bit4 foes, bit5 allies, bit6 self ($11 / $12 / $21 / $22 / $41). Drives the battle menu ($50, ask for a target), the group loop ($52), the dead-target redirect ($53), Imitate's side test; the ACTUAL pick is per-skill code (bank $58 `BtlSkillTargetDispatch_401d`) | PROVEN |
 | +3 | `ai_weight` | AI only (bank $57 sums it per category) | PROVEN |
 | +4 | `mp_byte` | **the BATTLE MP cost, 8-bit**: menu afford check ($50 `SaveBtl_4ba4`), act-time afford + the "not enough MP" verb ($53 `SetupSub_480e`), deduct (two sites in $53; Farewell then zeroes MP), AI veto ($57), what a TakeMagic target GAINS (corrected S130: min(cost, MaxMP − MP); the skill still lands — nothing is soaked, §15.11.F6). The FIELD SKIL menu shows / charges the `$07` `SkillMPCostTable` u16 instead. Vanilla differs only for Farewell / MegaMagic (999 "All MP" vs 1) and StepGuard / MapMagic (field-only, 0) | PROVEN |
-| +5 | `status_id` | **AI element**: a packed resistance POSITION the AI assumes — 1-26 = resistance index 0-25 (1-based into `gamedata.RESIST_NAMES`); **0** (134 skills) = position 0 = resistance index 26, always 0 in the game (S154, §15.3); 27 (position 27, never written) is used by no skill. Damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
+| +5 | `status_id` | **AI element**: a packed resistance POSITION the AI assumes — 1-26 = resistance index 0-25 (1-based into `gamedata.RESIST_NAMES`); **0** (134 skills) = position 0 = resistance index 26, always 0 in the game (S154, §15.3); 27 (position 27, never written) is used by no skill. **S159: patched builds pack index 26 = EARTH into position 27 (position 0 stays 0): 27 = Earth, 0 = none as before (§15.3 "Earth").** Damage takes the element from the handler (§15.3). Was "status_id" (wrong) | PROVEN |
 | +6 | `damage_class` | AI only: 0 none / 4 spell damage / 5 breath damage — nonzero = "deals damage" | PROVEN |
 | +7 | flags7 | b0 cut by Defence (½) / StrongD (1/10); b1 physical — Surround's miss rolls; b2 **NOT READ**; b3 keeps its committed target (no act-time re-resolve); b4 BREATH (MouthShut seal, TailWind reflect, SuckAll absorb, SuckAir ×2-2.5 for ids $5C-$63, the "spits" verb); b5 DANCE (DanceShut, "dances"); b6 SPELL (StopSpell, side +0 bit3 "spell was broken", "casts"); b7 physical CONTACT (airborne miss, BladeD halves, the shield grab, ×2 vs target +8 bit2; S130: also the Dodge-skill machine `$53:$5091` and the BladeD COUNTER — the attacker takes dmg>>1 about half the time, §15.11.F6). The AI copies it to `$dd6b` | PROVEN |
 | +8 | flags8 | b0 reflected by MagicBack / Bounce; b1 redirected by Cover / Guardian; b2 fails on an IRON target (Ironize); b3 **NOT READ**; b4 may land a critical hit (corrected S130: the "attacks with full force!" $67 message announces the `$DB42` bit0 SURE crit of the tension roll, not ChargeUP — ChargeUP lives in own +6 bits 0-1; §15.11.F4); b5 doubled by TwinHits (attacker +3 bit2); b6 ChargeUP ×2-2.5; b7 dodge-able (corrected S130: the 50 % is the SideStep +7 & $0C STATUS — RNG1 even dodges, odd falls to the AGL ladder; the Dodge SKILL $8C is a separate act-state-7 machine on flags7 b7, §15.11.F6) | PROVEN |
@@ -2379,6 +2379,45 @@ byte, and the result runs through `CheckTargetGuardA` (measured: Quake → Fire 
 target). Measured on the user's save: Blaze → Ice vs a level-3 Ice target = 0 damage;
 Firebal untouched; Spark (Zap) → Lightning. The record's +5 (the AI's assumed element)
 moves with it (editor).
+
+**Earth (S159, ROADMAP E16 — patched builds; PyBoy-measured, `tools/walk_earth.py`).**
+Index 26 ("unused", 0 in every species) is EARTH: species info +$29 → record +$82 bits 0-1
+at creation (the S154 memorial's tag lives in bits 3-7; bank $79 masks it with `$F8`) →
+the packer. Patched bank $51 `SaveBtlS_4404` (same size) puts it in **position 27** (byte 6
+bits 1-0) instead of position 0 — so resistance t sits at position t + 1 for all 27 (the
+rule bank $72 `ElemLevelOfA` and the AI's record +5 = t + 1 already follow: Earth's AI
+element = 27, used by no vanilla skill), and position 0 is always 0, exactly what element
+0 (134 vanilla skills) and the FireSlash target row read in the original game. The
+original game's packer is kept in `disassembly/`. Nothing in the original game tests Earth;
+a skill does when its element (gamedata.skills.<id>.element, the S111 override) is Earth.
+Measured on the user's save: every combatant's 7 packed bytes == `simulator/pacing.pack_res`
+(party from record +$68..+$82 with tags, enemies from their species row), Quake / a new
+skill on Bang / Boom moved to Earth take ×1 / ×0.85 / ×0.5 / 0 at Earth 0-3 (==
+`damage.LADDER_A`), Bang and Blaze ignore Earth, Boom ignores Explosion; the enemy AI
+(INT 200) casts no Earth skill at a party all Earth 3 — `AIRule_4c13`'s all-immune veto,
+measured working for the game's own elements too (a Bang caster: 15 of 32 actions at
+Explosion 0, none of 26 at Explosion 3; the Earth caster's Boom 15 of 33 at Earth 0, none of 27 at Earth 3). Negative control (the original packer in the ROM copy):
+21 checks FAIL.
+
+**Found S159 (not fixed): an enemy whose only skill is a NEW skill on Bang (id 239+) never
+casts it** — 23-27 actions, all attacks, on the S158 build and the S159 build alike (INT
+200, AI weights 30 / 250 / 30 / 0); with Boom beside it the AI casts Boom. Why (the rule
+chains' id tables, the custom ids' category) is not traced — ROADMAP E16 note.
+
+**Who reads which resistance — the full map (S159, `editor2/core/resistances.py`).** Damage
+skills: the census above (`extracted/skill_element_census.json`, 38 skills). Hit rolls (the
+handler picks the type; §15.11.F1 / F5 / F7, not overridable): Sleep 7 (Sleep B, SleepAll /
+SleepAir / NapAttack's rider status ladder), Confusion 11 (PanicAll, PaniDance), Poison 18
+(PoisonGas, PoisonAir, PoisonHit's rider), Paralyze 19 (PalsyAir, Paralyze's rider), Curse 20,
+Accuracy 6 (Surround, Radiant B; SandStorm status), MissATurn 21 (Ahhh, LureDance, LushLicks,
+LegSweep B; BigTrip, WarCry status), Death 8 (Beat, Defeat, K.O.Dance status; EerieLite B;
+UltraDown the Kamikaze ladder), DefDown 12 (Sap, Defence B; SickLick status), AglDown 13
+(Slow, SlowAll B), MP 9 (RobMagic, RobDance, OddDance B), SpellBlock 10 (StopSpell),
+DanceBlock 22 (DanceShut), BreathBlock 23 (MouthShut), Sacrifice 14 (Sacrifice's own rule,
+Kamikaze's ladder, Ramming's damage), Aid 24 (RockThrow's damage, the CallHelp / YellHelp
+helpers' damage). Ladders in percent (no guard / amplify mark): spell 100 / 85 / 50 / 0,
+breath 100 / 75 / 40 / 0, elemental slash (the amplify row) 131 / 116 / 75 / 30, hit B
+always / 84 / 50 / never, status 75 / 50 / 25 / never, Kamikaze always / 75 / 40 / never.
 
 ### 15.4 Boss protection — `BossProtectionGate_51aa` (bank $53 entry $10)
 

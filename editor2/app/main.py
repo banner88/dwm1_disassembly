@@ -210,6 +210,12 @@ class MainWindow(QMainWindow):
                     from editor2.app.monsters_tab import MonstersTab
                     self.monsters_tab = MonstersTab(self.session)
                     self.tabs.addTab(self.monsters_tab, 'Monsters')
+                    # S159 (ROADMAP E16): every monster's 27 resistances in groups,
+                    # what each blocks and which skills test it (Earth included)
+                    from editor2.app.resistances_tab import ResistancesTab
+                    self.resistances_tab = ResistancesTab(self.session)
+                    self.tabs.addTab(self.resistances_tab, 'Resistances')
+                    self.resistances_tab.openSkill.connect(self._open_skill)
                     # S108 (P3.10 part 3): every text in the game, searchable;
                     # "Texts that name it…" on the Monsters tab opens it filtered.
                     # S150 (P3.6): the Text tab — the game's own texts EDITABLE,
@@ -332,6 +338,14 @@ class MainWindow(QMainWindow):
                 self.tabs.setCurrentIndex(i)
                 return True
         return False
+
+    def _open_skill(self, sid):
+        """S159: the Resistances tab -> the Skills tab on skill `sid`."""
+        st = getattr(self, 'skills_tab', None)
+        if st is None:
+            return
+        self.tabs.setCurrentWidget(st)
+        st.show_skill(sid)
 
     def _show_dialogue_for(self, sid):
         """Monsters tab → the Text tab's Dialogue page listing the texts that name `sid`."""

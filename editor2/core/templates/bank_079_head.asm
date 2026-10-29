@@ -319,10 +319,13 @@ StoryPointApply:
 ; wMemHead ride the explicit save: bank $73 MemorialCommit / MemorialRestore); full
 ; = the oldest is dropped (MEM_RING = MEM_CAP + 9 keeps the saved window intact for
 ; nine new entries after a save). An entry is (tag, species): THE TAG is written into
-; the monster's own record byte +$82 (resistance 26: no skill reads it — the battle
-; packer puts its low two bits in packed position 0, read by AIRule_4c13 / the
-; FireSlash target row, and breeding adds the two parents' bytes mod 8 — so a tag is
-; a MULTIPLE OF 8: 8, 16 … 248; KEY_LESSONS S154). A monster is "still with the
+; the monster's own record byte +$82 (resistance 26: the battle packer reads its low
+; two bits, and breeding adds the two parents' bytes mod 8 — so a tag is a MULTIPLE OF
+; 8: 8, 16 … 248; KEY_LESSONS S154). [S159] Resistance 26 is EARTH (ROADMAP E16): its
+; level 0-3 shares the byte in bits 0-1 (bank $51 packs +$82 & 3 into position 27), so
+; the tag = +$82 & $F8 everywhere here and a tag is written OR-ed over bits 0-2 (two
+; parents' Earth levels sum to 6 at most: (p1 + p2) & 7 is still the levels' sum and
+; never 7). A monster is "still with the
 ; player" while any record of the 40 slots (or the bank-2 sleep pool while it is
 ; active, $CA41 bit 7 + magic "P1") has that species and that tag.
 ;
@@ -435,8 +438,8 @@ MemBattleEnd:
 
 ; A = a party slot -> the monster on the list: tagged already (its entry gets this
 ; win's level and its nickname; an entry dropped from the full list comes back at the
-; end) or a new tag + a new entry. Eggs and records whose +$82 is not a tag (a species
-; with resistance 26 <> 0) are left alone. Clobbers all.
+; end) or a new tag + a new entry. Eggs are left alone. [S159] the tag = +$82 & $F8
+; (bits 0-1 = the monster's Earth level). Clobbers all.
 MemUpsert:
     ld [wMemTmp], a
     ld hl, $cac1
@@ -455,6 +458,7 @@ MemUpsert:
     ld de, $82
     add hl, de
     ld a, [hl]
+    and $F8                         ; [S159] bits 0-1 = Earth, not the tag
     ld [wMemCur], a                 ; +0 the tag
     pop hl
     push hl
@@ -479,10 +483,7 @@ MemUpsert:
     dec b
     jr nz, .nick
     ld a, [wMemCur]
-    ld b, a
-    and $07
-    ret nz                          ; not a tag of ours
-    ld a, b
+    ld b, a                         ; [S159] already & $F8: always a tag or 0
     or a
     jr z, .new
     ld d, b
@@ -501,7 +502,10 @@ MemUpsert:
     ld a, [wMemTmp]
     ld hl, $cac1 + $82
     call GetMonsterDataPtr
-    ld [hl], b                      ; the record's +$82 := the tag
+    ld a, [hl]
+    and $07                         ; [S159] keep the Earth level (bits 0-1)
+    or b
+    ld [hl], a                      ; the record's +$82 := the tag | Earth
 .append:
     ld a, [wMemCount]
     call MemRing                    ; (head + count) mod MEM_RING
@@ -609,6 +613,7 @@ MemRecMatch:
     ld bc, $82 - $09
     add hl, bc
     ld a, [hl]
+    and $F8                         ; [S159] the tag (bits 0-1 = Earth)
     cp d
     jr nz, .no
     pop bc
@@ -622,7 +627,7 @@ MemRecMatch:
     ret
 
 ; HL = a record -> carry + D = its tag, E = its species when it is in use and
-; tagged (+$82 a multiple of 8, not 0). Keeps BC, HL.
+; tagged (+$82 & $F8 not 0; [S159] bits 0-1 = the Earth level). Keeps BC, HL.
 MemRecTag:
     ld a, [hl]
     or a
@@ -634,14 +639,13 @@ MemRecTag:
     ld e, [hl]
     ld bc, $82 - $09
     add hl, bc
-    ld d, [hl]
+    ld a, [hl]
+    and $F8                         ; [S159] the tag (bits 0-1 = Earth)
+    ld d, a
     pop bc
     pop hl
-    ld a, d
     or a
     ret z
-    and $07
-    ret nz
     scf
     ret
 

@@ -302,19 +302,31 @@ class MonstersTab(QWidget):
         gv.addWidget(gn)
         v.addWidget(gr)
 
-        rs = QGroupBox('Resistances')
+        # S159 (ROADMAP E16): in the editor's groups (core/resistances.py), Earth included;
+        # the Resistances tab shows every monster at once
+        from editor2.core import resistances as RZ
+        rs = QGroupBox('Resistances (every monster at once: the Resistances tab)')
         rg = QGridLayout(rs)
         self.w_resist = {}
-        names = [n for n in G.RESIST_NAMES if n != 'Unused']
-        for i, n in enumerate(names):
-            r, c = i // 3, (i % 3) * 2
-            rg.addWidget(QLabel(n), r, c)
-            cb = QComboBox()
-            for k, t in enumerate(M.RESIST_LABELS):
-                cb.addItem(t, k)
-            cb.activated.connect(lambda _x, n=n, cb=cb: self._set(f'resist.{n}', cb.currentData()))
-            rg.addWidget(cb, r, c + 1)
-            self.w_resist[n] = cb
+        r = 0
+        for _k, title, ts in RZ.GROUPS:
+            gl = QLabel(f'<b>{title}</b>')
+            rg.addWidget(gl, r, 0, 1, 6)
+            r += 1
+            for i, t in enumerate(ts):
+                n = G.RESIST_NAMES[t]
+                rr, c = r + i // 3, (i % 3) * 2
+                lab = QLabel(n)
+                lab.setToolTip(f'{RZ.label(t)}: {RZ.TYPES[t][1]}')
+                rg.addWidget(lab, rr, c)
+                cb = QComboBox()
+                for k, tx in enumerate(M.RESIST_LABELS):
+                    cb.addItem(tx, k)
+                cb.setToolTip(lab.toolTip())
+                cb.activated.connect(lambda _x, n=n, cb=cb: self._set(f'resist.{n}', cb.currentData()))
+                rg.addWidget(cb, rr, c + 1)
+                self.w_resist[n] = cb
+            r += (len(ts) + 2) // 3
         v.addWidget(rs)
         row = QHBoxLayout()
         self.reset_btn = QPushButton('Reset this species to the original game')

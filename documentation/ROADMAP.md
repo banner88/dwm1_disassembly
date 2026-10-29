@@ -3494,10 +3494,35 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       DEF / AGL that rose on the thief adds a page "{name}'s defense / speed goes up by
       {amount}!" (editable: `def_rise` / `agl_rise`); walk 45 / 45, negative 33 FAIL; test ROM
       `DWM-S156r2-plunder-test.gbc`.
-- [ ] **E13 — more custom skill ids (not asked; the user: "more is a bonus").** 16 NEW ids
-      (`$EF-$FE`) is the limit of the `$DE-$FE` tables; more = re-using stock ids the game
-      never shows (the item-effect / internal rows 155-221 that no record, shop or drop
-      reaches — to be measured) or a second id byte. Scope only when asked.
+- [ ] **E13 — more custom skill ids (ASKED S159 — NEXT: "30 skills would be ok and
+      acceptable"; the user: "#2 now and flag e13 for next").** 16 NEW ids (`$EF-$FE`) is the
+      limit of the `$DE-$FE` tables. **The S159 audit (agreed with the user):** reclaim the 14
+      item-effect ids whose record +10 = 1 "not usable in battle" — LifeAcorn, MysticNut and
+      the four seeds (`$BC-$C1`, items 13-18) and WarpWing, TinyMedal and the six books
+      (`$CC-$D3`, items 29-36) → **30 NEW skills**. The internal rows 151-175 are NOT free
+      (Chance's outcomes, confusion actions, the AI defaults — S130). Measured S159: the battle
+      ITEM pick reads only that +10 byte (bank $54 entry 5 → bank $50 `jr_050_5199`, "Can't use
+      this item in battle!", nothing used), so a custom skill holding the id would make the
+      item usable — the reclaimed items need a fixed "not usable" rule in bank $77
+      `BattleItemProbe` / `BattleItemPick` (patched code), and the compiler must refuse a
+      reclaimed item as a battle item / a base. To do: extend every per-id custom table
+      (`CustomRecordPtrTable`, MP, announce, target, message, proxy, SFX, base, element, learn,
+      names, SKIL texts) to the window; audit the `$db8a` range gates that treat `>= $B0` as an
+      item (the item handler `$4625`, the "uses the X" naming in banks $52 `Jump_052_727a` / $54
+      `LoadB54_53f6`, the battle items' message path) and the equality checks up to `$C5`
+      (the seeds' ids) — `tools/map_skill_id_buckets.py` for the window; the names / texts
+      through E14's text-bank plan. User: "why would I want to use minimedals in battle?";
+      S159 (2026-10-29, after the answer "editing / new items" of 2026-10-28 18:13): "I do NOT
+      care about making ANY seeds, books and warpwing every work in battle. I jsut wanted to
+      check its restricted to thems pecifically and messing with other skills/making new skills
+      does not shift this" — so: the 14 items are field-only for good (the Items tab's battle
+      half gone for them; a new item on one of them as a base field-only too — the rule keys on
+      `wItemBase`); their field effects, the other items, new items on other bases, edits of
+      any skill and new skills leave the reclaim as it is (new items cost no skill id: they use
+      their base's battle row). Open choice for E13: reserve all 14 up front or take them as
+      new skills 17+ need them.
+      Rejected options: retiring built-ins (id-keyed in many forks), a second id byte (every
+      skill list is one byte).
 - [ ] **E14 — the built-in custom skill names out of bank $41 (S156: banked until it binds).**
       The 17 built-in names overflow the 94-B `gd_custom_skill_names` region by 36 B (S156;
       27 B S155) into the `ns_text_*` extents the new species' names use — the "19 new
@@ -3535,6 +3560,33 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       the default words unchanged (a possible follow-up: better defaults, not asked).
       **S158r3 (the user: "take the shown out" froze the editor):** the Hints table's header
       re-measured every row at each cell (`ResizeToContents`) — fixed (one resize after the fill).
+
+- [x] **E16 — Resistances: the visualiser + setter, EARTH (the 27th), the skills' elements in
+      the simulator (ADDED + BUILT S159; built S159, USER-CONFIRMED 2026-10-29 11:05 ("Great, works"); test ROM
+      `DWM-S159-earth-test.gbc`).** User: "a proper resistance table visualizer and setter …
+      all possible options (vanilla + quake family) … Stat resistances need to be separated
+      from elemental … what is HEAT resistance? … are resistances and changes to both skill
+      and monster resistances propagated to difficulty simulator?" → "Grouping good. Make sure
+      that I can look up which skills fall where … Real earth resistance so I can add new
+      earth skills". Found: Heat = the Firebal line, Fire = the Blaze line (two types in the
+      game, census S111); monster resistance edits reached the Balance simulator, **skill
+      element edits never did** (`Board.elem_override` was filled only by the validators).
+      Built: patched bank $51 `SaveBtlS_4404` packs index 26 = Earth into position 27
+      (position 0 stays 0: the original AI exactly); bank $79's memorial masks its tag `$F8`
+      (Earth in bits 0-1); `RESIST_NAMES[26]` "Earth" (old "Unused" loads); the Resistances tab
+      (`editor2/core/resistances.py`, `app/resistances_tab.py`: the grid in six groups, This
+      resistance, Skills by resistance + right-click moves), the Monsters / Skills tabs grouped;
+      the simulator: `elem_override` / `custom_elem` from the project, Earth at position 27;
+      help 79. Walk `tools/walk_earth.py` (PyBoy, the user's save) 40 / 40 + memorial 5 / 5,
+      negative 21 FAIL / memorial negative 3 FAIL; walk_memorial 60 / 60 (HEAD 60 / 60, an
+      emptied memorial). BATTLE_SKILL_SYSTEM §15.3 "Earth", PROJECT_COMPILER §2.67,
+      EDITOR_DESIGN §5.2d. Not built (not asked): renaming the stored FAQ names (the tab shows
+      subtitles), per-enemy resistances (the game has none: enemies use the species row).
+- [ ] **E17 — the enemy AI and NEW skills (FOUND S159, not asked).** An enemy (INT 200, AI
+      weights 30 / 250 / 30 / 0) whose only skill is a NEW skill on Bang never cast it in
+      23-27 actions — the S158 build too; with Boom beside it the AI cast Boom. Trace which
+      rule chain / category a new id gets (bank $57 chain tables by id, bank $58 rows,
+      `CustomAI57`), then decide with the user.
 
 **Bottom line (updated S67):** for editor v1 the RE is done and the gap is formats + UI.
 **E1 is DECODED (S67, arena path HW-verified)** — for a *new campaign* the remaining work

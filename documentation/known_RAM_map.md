@@ -726,7 +726,10 @@
    1:DD28  56    Packed battle resistances: 7 bytes/combatant (8 slots),
                  2-bit MSB-first, type t at packed position t+1 (byte
                  (t+1)//4, pair 3-((t+1)%4)); levels 0-3 from species info
-                 +$0F..+$29; read via BattleFunc_67bb..67d9 [S78]
+                 +$0F..+$29; read via BattleFunc_67bb..67d9 [S78].
+                 Index 26: position 0 in the original game (always 0);
+                 patched builds = EARTH at position 27, position 0 = 0
+                 (bank $51 SaveBtlS_4404, S159; BATTLE_SKILL_SYSTEM §15.3)
    1:DD23   3    Battle exp total, 24-bit (SOLVED S56; was "? related to
                  random battles or exp"): party share = total / eligible
                  party count; farm share = total/16 each (exp walker

@@ -490,6 +490,8 @@ def element_value(v, what):
         return ELEMENT_NONE
     if isinstance(v, str) and not v.strip()[:1].isdigit() and not v.strip().startswith('$'):
         low = {n.lower(): i for i, n in enumerate(G.RESIST_NAMES)}
+        low.update({a.lower(): G.RESIST_NAMES.index(n)                  # [S159] "Unused" = Earth
+                    for a, n in G.RESIST_ALIASES.items()})
         if v.strip().lower() not in low:
             raise CustomSkillError(f"{what}: unknown resistance {v!r} "
                                    f"({', '.join(G.RESIST_NAMES)}, or none)")

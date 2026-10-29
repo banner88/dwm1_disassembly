@@ -1,5 +1,47 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-24 (Session 157 — **ROADMAP E9 CLOSED: ONE-ONLY ITEMS — AN ITEM USED UP 0 % (PERMANENT) IS HELD
+> ONCE (BAG + VAULT): SHOPS HIDE A HELD ONE AND SELL ONE AT A TIME, A GIVE OF ONE HELD SHOWS ITS OWN "ALREADY HAS" LINE (THE
+> GAME'S SCRIPTS TOO), IT NEVER LIES ON A RANDOM GATE FLOOR / IN ITS CHESTS / AS A COLISEUM PRIZE, IT IS KEPT AFTER A LOST
+> BATTLE; + THE ROADMAP CLEAN-UP** (kickoff: the S156 sign-off + "Let's discuss whats next" → the audit of the open items →
+> user: "E9: If I set an item to permanent (doesnt break) user should not be allowed to have more than 1 AND that item should
+> NOT appear as a pickup in random gates. Do that one. I basically want warpwing to be permanent as QOL. Also clean up
+> roadmaps" → the census of every way an item enters the bag + 5 questions → "1) yes of course 2) Yes bag or vault 3) c
+> ideally but if too hard a is better 4) Kept after lost battles yes 5) Yes. Go ahead."). **Built S157, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works") on the S157 ROM.**
+> Test ROM **`DWM-S157-oneonly-test.gbc`** (`874da0e4…`, patched) = the user's project + the WarpWing permanent + THE AVIARY /
+> THE PERCH (`examples/s157_oneonly_demo/build_demo.py`; way in: the AVIARY GUIDE, Cities_FOUNT (3, 4)). Example pin
+> `0f341f17…` (patched; was `1051e08f…`, patched).
+> **Session environment:** this session's permission check refused the repo's own Python ("code from external") until the
+> user OK'd it in chat ("Yes run tools its safe"); PySide6 had to be installed for test_compiler / test_app.
+> **Found:** the original game's item paths (DATA_STRUCTURES "One-only items (S157)": ops `$2A` / `$37` / `$54` / `$57` /
+> `$5D`, the floor pickup, the shop BUY with its amount, the Vault, op `$2C` before every give, the "got" text BEFORE the give
+> — KEY_LESSONS S157); the WarpWing 2-5 % in every gate contents row, BeastTail / ShinyHarp never; GATE_GENERATION §5's
+> "item tier by depth" = the GOLD of a gold pickup (DOC_AUDIT S157); bank $04 `$6F44-$6F63` = the Coliseum prize lists
+> (re-sectioned both trees, `tools/resection_loot_lists.py`; bank $16 `RareChestItems` labelled).
+> **Built (engine):** bank $77 entries 19 `GiveOne` (the five give ops, same-size in bank $04), 20 `BagFullCheck` (op `$2C`:
+> reads the script's next give ahead — `NextGive77` / `ScriptWord77` / `ScriptArity77` — a held one-only item takes the
+> "full" branch; its first text → `OneOnlyLine` through bank $60 `TextOverride` → 22 `OneOnlySay`), 21 `BuyQtyMax` (bank $09
+> BUY state 5: how-many stops at 1), `ShopDropHeld77`, the story give at most one; WRAM `wOneOnlyItem` / `wOneOnlyRes` /
+> `wOneOnlySay` $DED2-$DED4. Heads re-pinned: `TEMPLATE_SIZE[$77]` 2730, `[$60]` 1842. PROJECT_COMPILER §2.65.
+> **Built (compiler + editor):** `items.one_only` + the forced keep bit; `editor2/core/loot.py` (regions `gd_floor_loot` /
+> `gd_rare_chest` / `gd_coliseum_prizes`: the share spread in proportion); `gamedata.item_rules.already_has` (default
+> "{hero} already / has a {ins 00}."); the Give-of-2 warning; the Items tab's one-only note, locked keep box, One-only items
+> box; help 74; `EDITOR_REVISION` S157.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_oneonly.py` on the demo): 26 / 26 + 3** — the stall, the how-many
+> window (3 UPs → 1), one bought, hidden while held (bag or Vault), the Herb still 3 at once; the WINGKEEPER and the game's
+> Stable dresser with a WarpWing held: "MILLY already / has a WarpWing." (screenshots), nothing given, the dresser's flag
+> `$0090` stays clear; without: their own words + one; the NEST's "2 BeastTails": one, then nothing; the BRUISER: the
+> WarpWing kept; 400 floors made by the game: 900 floor items, 3,200 chests, 1,600 rare-chest slots, no one-only item (the
+> original ROM, same floors: 43 + 119 WarpWings). `--negative` (`IsOneOnly77` = `and a / ret`) **14 FAIL**.
+> **ROADMAP clean-up (user: "Also clean up roadmaps"):** ticked with the evidence named in each box: E4, E6, A′3, the 4 MB
+> contingency, S2 (+ S2f, §13.4 follow-ups), S3, S4, M3, multi-screen editing, B6 / B8 / B9; EDITOR_DESIGN G-E / G-F rows
+> closed. Still open: G3 (2)-(4), the CI gap, E3 (b2), E13, E14, T-follow, T2…Tn, Phase D, P3.3g / P3.11b / P3.17 / P3.H,
+> the preserved-systems flag audit.
+> **Annotation:** `SelectFloorType` (bank $16) and the floor pickup `jr_001_5aab` (bank $01) commented, both trees.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1793 PASSED (+ `test_s157` 21; the S151 / S136 size checks updated); test_app `--rom` PASS (63 OK, the GUI build = the pin; exit 139 after PASS — the known S153 teardown crash; + the one-only block of the Items-tab test); test_canvas `--rom` PASS (58 OK).
+> **Next:** signed off ("Great, it works") — the next ROADMAP item (the S157 audit's candidates: the preserved-systems flag audit, T-follow, Phase D annotation, the SRAM bank 1-3 map); was: the user's test of the ROM (the AVIARY's stall / WINGKEEPER / Vault, THE PERCH, the Stable dresser, a random
+> gate's floors, the Items tab's one-only box); then the next item.
+
 > Last verified: 2026-10-21 (Session 156 — **ROADMAP E12 BUILT: PLUNDER — THE BUFF THIEF (`$EA`, 234): STEALS ONE BUFF OF A
 > FOE AT RANDOM (AMONG THE ONES THE USER LACKS, ELSE ANY) AND PUTS IT ON THE USER AS IF CAST THIS ROUND; ALWAYS LANDS; NO BUFF →
 > "BUT NOTHING HAPPENS!" (MP SPENT); ONE FOE; THE ENEMY AI USES IT ONLY WITH A BUFF TO TAKE; ITS LINE NAMES THE BUFF; THE

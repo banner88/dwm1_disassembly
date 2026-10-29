@@ -1085,3 +1085,13 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | known_RAM_map / BREEDING_SYSTEM: `$CA94` = the library's "seen" bits | ❌ WRONG | "EVER OWNED": set when a monster is created in the roster (bank $14 `label14_40b4`), joins after a battle (bank $51 `SetBtlS_6928`) and for a bred egg's species (bank $16 `BreedCreateOffspring`); never set by only seeing one, never cleared | code-read S158 (the three `SetBitInArray` callers, commented both trees); PyBoy: the walk's egg set FangSlime's bit |
 | `Project` story checks: the label `'seen'` worded "monsters seen" | ⚠ WORDING | reads the same `$CA94` bits = ever owned; the label is kept (project files use it), the meaning is "owned at some time" | S158 (not changed: a rename would break projects) |
 | SRAM bank 3 above the memorial's list "free" | ✅ FREE but JUNK | never written by the game: the user's save holds `$FF` there — a store needs a magic (KEY_LESSONS S158) | PyBoy S158 |
+
+## S159 addendum (2026-10-28; resistances + Earth — ROADMAP E16)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| MONSTER_DATA field table: resistances' status hit "always / 85 % / 50 % / never" | ⚠ PARTIAL | that is CheckTargetGuardB (`$6710`) only; the status ladder `$6749` (Beat, SleepAll, Poison …) is 75 / 50 / 25 % / never, Kamikaze's `$6733` always / 75 / 40 % / never | simulator/damage.py ladders (S78-S130); BATTLE_SKILL_SYSTEM §15.3 S159 |
+| help 90 / memorial.py (S154): "every monster's 27th resistance must stay 0 while the project has statues" | ⚠ SUPERSEDED S159 | index 26 = Earth: levels 0-3 share +$82 with the tag (bank $79 masks `$F8`) | walk_earth.py `--memorial` 5 / 5, negative 3 FAIL |
+| (implicit, S111-S158) the Balance tab simulates the project's skill elements | ❌ WRONG | `Board.elem_override` was set only by the validators: element edits never reached a Balance number; monster resistance edits did (species info → `pack_res`) | S159 code-read; fixed (PROJECT_COMPILER §2.67) |
+| BATTLE_SKILL_SYSTEM §15.11.F10 (S130): `AIRule_4c13` "veto when EVERY live opponent has res level 3" (code-read) | ✅ MEASURED S159 | a Bang caster: 15 / 32 actions at Explosion 0, 0 / 26 at Explosion 3 (INT 200) | walk_earth.py `ai` control |
+| MONSTER_DATA type table: Heat = "Firebal/bane/bolt, LavaStaff" | ✅ / unverified | the Firebal line measured (census S111); LavaStaff (an item's battle skill) not measured | extracted/skill_element_census.json |

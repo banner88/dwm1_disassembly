@@ -3165,6 +3165,12 @@ jr_050_518c:
     ret
 
 
+; [S159] The battle ITEM pick's REFUSAL: bank $54 entry 5 returned [$db4c] = 0 — the
+; item's battle skill (item id + $AF; patched builds: its base's, bank $77 entry 18
+; BattleItemPick) has record +10 = 1 "not usable in battle" (or an id >= $D6) — message
+; $F200 "Can't use this item in battle!" (measured S159 with a TinyMedal: PyBoy, the
+; user's save) and back to the menu; nothing is used. That byte is all the game checks:
+; a custom skill given an item-effect id (ROADMAP E13) would make the item usable.
 jr_050_5199:
     call ClearSpriteBuffer
     call LoadBattleGraphics

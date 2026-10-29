@@ -27,7 +27,7 @@
 | $0C | 1 | DEF growth | |
 | $0D | 1 | AGL growth | |
 | $0E | 1 | INT growth | |
-| $0F-$29 | 27 | Resistances | LEVEL 0-3 = how much gets through: 0 = none (full effect), 1 = some, 2 = strong, 3 = immune — spells ×1 / 0.85 / 0.5 / 0, breaths ×1 / 0.75 / 0.4 / 0, status hit always / 85 % / 50 % / never (BATTLE_SKILL_SYSTEM §15 ladders, simulator-validated S78). *S106 correction: the old "0=weak, 2=normal" wording was wrong.* |
+| $0F-$29 | 27 | Resistances | LEVEL 0-3 = how much gets through: 0 = none (full effect), 1 = some, 2 = strong, 3 = immune — spells ×1 / 0.85 / 0.5 / 0, breaths ×1 / 0.75 / 0.4 / 0, status hit always / 85 % / 50 % / never (BATTLE_SKILL_SYSTEM §15 ladders, simulator-validated S78). *S106 correction: the old "0=weak, 2=normal" wording was wrong.* *S159: "status hit always / 85 / 50 / never" is the CheckTargetGuardB ladder only; the status ladder ($6749: Beat, SleepAll, Poison …) is 75 / 50 / 25 % / never and Kamikaze's always / 75 / 40 % / never — BATTLE_SKILL_SYSTEM §15.3 "Who reads which resistance". +$29 (index 26) = EARTH in patched builds (S159).* |
 | $2A | 1 | Tier/rank | 0=starter, 3-6=normal, 7=endgame boss |
 
 ### Resistance Type Ordering (26 types + 1 unused, FAQ-confirmed)
@@ -63,7 +63,15 @@ Values (S106 corrected): 0 = no resistance (full effect), 1 = some, 2 = strong, 
 | 23 | $26 | X | BreathBlock | MouthShut |
 | 24 | $27 | Y | Aid | CallHelp, YellHelp, RockThrow |
 | 25 | $28 | Z | GigaSlash | GigaSlash |
-| 26 | $29 | - | (unused, always 0) | — |
+| 26 | $29 | - | **Earth** (S159, patched builds; "unused", always 0 in the original game) | none in the game — a skill whose element is Earth (BATTLE_SKILL_SYSTEM §15.3 "Earth") |
+
+The **Skills** column is the community FAQ's list; the measured map (which skill's code reads
+which type, through which ladder) is BATTLE_SKILL_SYSTEM §15.3 "Who reads which resistance"
+and the editor's Resistances tab (`editor2/core/resistances.py`, S159; its six groups:
+elemental spells 0-5 + 26, breaths 16-17, status ailments 7 / 11 / 18-20 / 6 / 21 / 8, stat
+down / drain 12 / 13 / 9, seals 10 / 22 / 23, special attacks 14 / 15 / 25 / 24). Fire vs
+Heat: two types in the game — Fire = the Blaze line (DQ "Gira"), Heat = the Firebal line
+("Mera"); FireSlash and BigBang read Fire (census S111).
 
 
 ## Stat Growth System (Bank $13)
@@ -251,7 +259,7 @@ Index function: `Call_000_223b` — `HL = field_base + index × $95`
 | $62 | 1 | Plus value |
 | $63 | 1 | **Egg flag** ($01 = egg; breeding sets it, the birth finalizer clears it) *(S130 row; see also "Record fields established")* |
 | $64 | 4 | **AI weights / personality** in order cat1/cat3/w3/cat2 ($CB25/26/27/28 views) — source of the battle category-base arrays $DC44/$DC54/$DC5C/$DC4C (bank $51 `LoadBtlS_44cb` → `jr_051_45f8`); adjusted by field item effects only (`Add/SubMonsterAIWeight*`), never mid-battle [S87, hook-verified] |
-| $68 | 27 | Resistances (species info +$0F..+$29 at creation; levels 0-3). **+$82 = index 26 (the 27th)**: 0 in every species row, packed into battle position 0 (BATTLE_SKILL_SYSTEM §15.3, S154 correction) — **patched builds with memorial statues (S154) keep the monster's memorial TAG there** (8, 16 … 248: & 3 = 0 in battle, (t1 + t2) & 7 = 0 in breeding; DATA_STRUCTURES "The memorial (S154)") |
+| $68 | 27 | Resistances (species info +$0F..+$29 at creation; levels 0-3). **+$82 = index 26 (the 27th)**: 0 in every species row, packed into battle position 0 (BATTLE_SKILL_SYSTEM §15.3, S154 correction) — **patched builds with memorial statues (S154) keep the monster's memorial TAG there** (8, 16 … 248: & 3 = 0 in battle, (t1 + t2) & 7 = 0 in breeding; DATA_STRUCTURES "The memorial (S154)"). **S159: index 26 = EARTH — bits 0-1 the Earth level (from species +$29 at creation; the packer's `& 3`, position 27 in patched builds), bits 3-7 the tag (bank $79 masks `$F8`); two parents' Earth levels sum to 6 at most, so breeding's (p1 + p2) & 7 is their sum and never 7** |
 | $83 / $8C | 8 + 8 | The parents' **nicknames** (their +$01), read by `PedigreeForeignCount` as 9-byte names *(S130)* |
 | $8B / $94 | 1 + 1 | The parents' plus values (their +$62) — the 9th byte of the +$83 / +$8C names *(S130, code-read)* |
 

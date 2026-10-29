@@ -1480,6 +1480,25 @@ Per species — every knob is a decoded, proven surface:
   Capacity row `game_texts` (tab Text). The S108 search / Names a monster / export work as
   before on the Dialogue page.
 
+### 5.2d Resistances tab (as built S159, ROADMAP E16)
+
+User (S159): "a proper resistance table visualizer and setter … properly set out of all
+possible options … Stat resistances need to be separated from elemental resistances …
+Make sure that I can look up which skills fall where, especially once I start fiddling
+with skill resistance belonging and move them around". Left: the GRID — every species
+(0-219 + new; 220 is the empty slot) × the 27 resistances in six groups (column header =
+group + name, tooltip = what it blocks); the name is the ROW HEADER (stays while the columns
+scroll); cells coloured by level, `*` + bold = changed; select + 0-3 / Set selected /
+Original / double-click +1 — one `SnapshotCommand` (`Document.set_species_resists`);
+filters name / family / changed / new / TERRY? + summons / one group. Right: **This
+resistance** (the clicked column: subtitle, blurb, the ladders its skills use as a table,
+the level counts, the skills testing it) and **Skills by resistance** (the whole map by
+group + "Tests no resistance"; right-click a movable skill → Test another resistance ▸ /
+Back to its own / No resistance; double-click → the Skills tab). Model
+`editor2/core/resistances.py` (PROJECT_COMPILER §2.67). Display names = the stored FAQ names
++ a subtitle ("Fire (Blaze line)", "Heat (Firebal line)", "Accuracy (blinding)"); renaming
+the stored names was offered and not asked for.
+
 ### 5.2a Families tab (as built S104 r2, ROADMAP P3.10a)
 
 A tab before Monsters (`editor2/app/families_tab.py`, model

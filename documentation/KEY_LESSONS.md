@@ -7327,3 +7327,31 @@ during the fill, one `resizeColumnsToContents()` at the end (2 s for the whole p
 now times the whole pool out and back in. **Rule:** a table of more than a few dozen rows is
 filled with updates off and resized once; time GUI operations with the window SHOWN at the
 largest size a user's project gives (the whole pool, not a family).
+
+### S159 — a skill id in `$DB8A` during act phase 7 is not the action being taken
+**Symptom:** the AI walk "saw" the SEISMIC SAGE cast Rockfall every round — at Earth 0 AND at
+Earth 3; counting it once per phase-7 entry instead gave only attacks. **Root cause:** the
+act-time AI scores every candidate skill of the next actor during phase 7, writing each one
+into `$DB8A`; a skill seen there was only considered. **Fix:** count the skills that RUN — a
+hook on bank $72 `FarSkillFork` (every acting skill's handler dispatch) with `$DB88` (the
+attacker). **Rule:** measure an action where it executes (the handler dispatch, its damage
+line), never from a working variable the AI also scribbles on.
+
+### S159 — the user's save is not the save a walk was written for
+**Symptom:** `walk_memorial.py` failed 14-15 of 60 on BOTH the S158 build and the S159 build.
+**Root cause:** the user has played the memorial since S154: the save's list holds 3 entries
+(the walk assumes an empty list). **Fix:** compare the two builds' verdicts on the same save
+(identical but for the random statue rolls), then run both on a copy of the save with the
+memorial's magic "M1" (SRAM bank 3 `$A003-$A004`) zeroed: 60 / 60 each. **Rule:** before
+reading a regression into an old walk's failures, run the same walk on the previous build with
+the same save; reset only the feature's own magic when a walk needs a fresh state.
+
+### S159 — moving a hidden byte into the slot every reader already assumes beats teaching readers
+**Symptom (design):** index 26 packed into position 0 — the one position the AI reads for
+"element 0 = none" (134 skills) and the FireSlash row's off-by-one mask; making it Earth there
+would have changed vanilla AI decisions. **Fix:** the packer (same size) writes index 26 into
+position 27 — the position the S111 element reader (t + 1) and the AI element convention
+(record +5 = t + 1) already give index 26; position 0 stays 0, so every original reader sees
+exactly the original game. **Rule:** when a new meaning needs a byte the game already moves
+around, first look for the layout under which no existing reader's view changes; prefer one
+same-size move at the producer over hooks at every consumer.

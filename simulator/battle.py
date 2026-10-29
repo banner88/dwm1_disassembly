@@ -1196,9 +1196,11 @@ def core_damage(ctx, v, div, state):
         prng = f['power_enemy_range'] if a & 4 else f['power_party_range']
         dmg, state = D.record_roll(pmin, prng, state)
         lad = getattr(b, 'elem_override', {}).get(ctx.real_sk, D.SPELL_LADDER.get(sk))
-        if lad is not None and lad[0] is not None:
+        if lad is not None:
             rt, kind = lad
-            lev = D.res_level(bytes(b.res[v * 7:v * 7 + 7]), rt)
+            # S159: an override "none" (rt None, bank $72 ElemLevelOfA $FE) = level 0, the
+            # handler's ladder still runs (its bit-7 amplify row too)
+            lev = 0 if rt is None else D.res_level(bytes(b.res[v * 7:v * 7 + 7]), rt)
             dmg = D.apply_ladder(dmg, D.LADDER_BREATH if kind == 'BREATH' else D.LADDER_A,
                                  b.stb(v, 5), lev)
         return 'dmg', dmg, state
@@ -1220,6 +1222,19 @@ def core_damage(ctx, v, div, state):
         ctx.log.append((a, 'status', (v, o)))
         return 'done', None, state
     return 'none', None, state
+
+
+def custom_element(b, real_sk, v, dmg):
+    """S159: a BUILT-IN custom skill's element (gamedata.skills.<222-238>.element; bank
+    $52 CustomElemTail52 after the bank $72 handler: CustomElemTable -> ElemLevelOfA ->
+    CheckTargetGuardA). Board.custom_elem[id] = a resistance 0-26 or None ("none" =
+    level 0); no entry = no element (the handler's damage as it is)."""
+    ce = getattr(b, 'custom_elem', None)
+    if not ce or real_sk not in ce:
+        return dmg
+    rt = ce[real_sk]
+    lev = 0 if rt is None else D.res_level(bytes(b.res[v * 7:v * 7 + 7]), rt)
+    return D.apply_ladder(dmg, D.LADDER_A, b.stb(v, 5), lev)
 
 
 def default_victims(ctx, damage_fn=None, victims=None, miss=True):
@@ -1277,6 +1292,8 @@ def default_victims(ctx, damage_fn=None, victims=None, miss=True):
             log.append((a, 'crit', v))
         else:
             kind, dmg, state = damage_fn(ctx, v, div, state)
+            if kind == 'dmg':
+                dmg = custom_element(b, ctx.real_sk, v, dmg)
         if kind == 'none':
             log.append((a, 'no-effect', ctx.real_sk)); continue
         if kind == 'done':

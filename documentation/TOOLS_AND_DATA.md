@@ -2103,3 +2103,17 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `disassembly/` + `patches/` `bank_014.asm`, `bank_016.asm`, `bank_051.asm` | comments: the `$CA94` writers = "ever owned" | verify_integrity (byte-perfect) |
 | `examples/s158_hints_demo/build_demo.py` (NEW) | the user's project + THE STONE GARDEN (3 pillars, BREEDER), THE GREAT ARCHIVE (11 bookcases), THE RUNE CRYPT (gate 2 floor 2) + the HINT GUIDE in Cities_FOUNT (3, 4); a whitelist of 8, 3 riddles | walk_hints.py |
 | `tools/walk_hints.py` (NEW) | PyBoy on the user's save + the S158 demo: `empty`, `pick`, `riddle`, `both`, `archive`, `breed`, `persist`, `newgame`, `crypt`, `census` (7,776 crosses, stub at `$DD40`); `--negative` (kind 8 does nothing, `$D8E1` = 0; no HintBreed) | 72 / 72; negative 19 FAIL |
+
+## S159 rows (ROADMAP E16 — resistances + Earth; built S159, USER-CONFIRMED 2026-10-29 11:05 ("Great, works"))
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/resistances.py` (NEW) | the 27 types in six groups (`GROUPS`, `ORDER`), `TYPES` (subtitle + what it blocks), `LADDERS`, `status_table` (the simulator's hit helpers), `skill_rows` / `by_type` (which skill tests which type in the project now), `level_counts` | `test_s159` |
+| `editor2/app/resistances_tab.py` (NEW), `main.py`, `monsters_tab.py`, `skills_tab.py` | the Resistances tab (grid, This resistance, Skills by resistance, right-click moves); the Monsters box and the Skills element lists grouped; `SkillsTab.show_skill` | test_app `s159_resistances` |
+| `editor2/core/gamedata.py`, `custom_skills.py`, `monsters.py`, `memorial.py`, `balance.py` | `RESIST_NAMES[26]` "Earth" + `RESIST_ALIASES`; `element_value` alias; `set_species_resists`; the memorial check 0-3; `elem_override` / `custom_elem` | `test_s159` |
+| `simulator/pacing.py`, `damage.py`, `battle.py` | `pack_res` index 26 → position 27; `custom_element`; the record core's "none" = level 0 | `test_s159`; walk_earth.py (ROM == ladder) |
+| `patches/bank_051.asm`; `editor2/core/templates/bank_079_head.asm`, `PINNED_SHA256` | `SaveBtlS_4404` (Earth → position 27, same size); the memorial's tag masks | walk_earth.py |
+| `disassembly/` + `patches/` `bank_050.asm`, `bank_051.asm` (disassembly), `bank_057.asm` | comments: the battle item refusal (measured), the packer's patched form, `AIRule_4c13` measured | verify_integrity (byte-perfect) |
+| help `79_resistances.md` (NEW), `00_start.md`, `52_monsters.md`, `54_skills.md`, `90_limits.md`, `_revision.md`; `EDITOR_REVISION` S159 | the tab, Earth | test_app (help revision) |
+| `examples/s159_earth_demo/build_demo.py` (NEW) | the user's project + THE FAULT HALL (FAULT GUIDE, GIFT MASON's TREMORER, STONE GOLEM / MUD DOLL / GOPHER, SEISMIC SAGE, BLAST IMP) + the FAULT GUIDE in Cities_FOUNT (3, 4); Quake + Boom → Earth, the new skill Rockfall | walk_earth.py |
+| `tools/walk_earth.py` (NEW) | PyBoy on the user's save + the S159 demo: `gift`, `pack`, `damage`, `ai`, `memorial` (with the S154 demo in the project); `--negative` (the original packer), `--negative-memorial` (`and $FF`) | 40 / 40 + memorial 5 / 5; negative 21 FAIL, memorial negative 3 FAIL |

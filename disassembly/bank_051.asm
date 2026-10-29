@@ -600,6 +600,12 @@ jr_051_43e6:
 ; 0 (position 0) does (bank $57 AIRule_4c13, the bank $58 FireSlash target row). The
 ; memorial's tag in record +$82 is a multiple of 8, so it packs as 0 (DATA_STRUCTURES
 ; "The memorial (S154)"; the old docs' "position 0 unused" corrected, DOC_AUDIT S154).
+; [S159] Patched builds: index 26 = EARTH (ROADMAP E16) packs into POSITION 27 instead
+; (patches/bank_051.asm, same size: C = index 26 & 3, `or c` into byte 6), so every
+; resistance t sits at position t+1 and position 0 is always 0 as here (measured:
+; tools/walk_earth.py). Readers of the packed bytes: bank $52 BattleFunc_67bb..67d9
+; (the damage ladders' byte selectors), bank $52 entry 6 (the AI / target rows' raw
+; byte, LoadBtlAI_7aa6's shift), bank $72 ElemLevelOfA (patched builds).
 SaveBtlS_4404:
     push hl
     ld a, $1a

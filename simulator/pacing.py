@@ -131,12 +131,15 @@ class IdlePolicy:
 def pack_res(levels27):
     """Species info 27 resistance levels -> the 7 packed $DD28 bytes
     (2-bit MSB-first, position t+1; damage.res_level is the reader).
-    S154: index 26 (the 27th, record +$82) goes to POSITION 0 — the game's packer
-    (bank $51 SaveBtlS_4404) writes it first; position 27 stays 0. Was position 27
-    (no difference while index 26 is 0, as in every species row)."""
+    S154: in the ORIGINAL game index 26 (the 27th, record +$82) goes to POSITION 0
+    (bank $51 SaveBtlS_4404 writes it first) — 0 in every species row. [S159] patched
+    builds (every project build) call index 26 EARTH and pack it into POSITION 27, so
+    every resistance t sits at t+1 (damage.res_level; ROADMAP E16) and position 0 stays
+    0 (what element 0 reads in the original game). Record +$82's memorial tag (bits 3-7)
+    is dropped by the & 3, as in the game."""
     out = [0] * 7
     for t, lv in enumerate(levels27):
-        pos = 0 if t == 26 else t + 1
+        pos = t + 1
         out[pos >> 2] |= (lv & 3) << ((3 - (pos & 3)) * 2)
     return out
 

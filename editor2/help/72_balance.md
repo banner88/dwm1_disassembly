@@ -80,6 +80,11 @@ fights by their reading at 99.
   always obey (WLD 0); joined ones may refuse an order, as in the game.
   Status locks such as Sleep on a boss are used when the boss's resistances
   allow them — as the game does.
+- **What it reads (S159):** every monster's resistances (the Monsters /
+  Resistances tabs — enemies use their species' levels) AND every skill's
+  element (the Skills tab's Element, the Resistances tab's moves — a skill moved
+  to Earth, a built-in given an element); before S159 the skills' elements were
+  not simulated, so numbers made then with element changes are recomputed.
 - **casual** — a team made of what was at hand: monsters that could join on
   the way, kept as they come (their first skills).
 - **strong** — the best of several tries per member, bred for skills once

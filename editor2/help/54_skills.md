@@ -54,7 +54,10 @@ damage really tests a resistance have one — measured for all 222 originals:
 the fire / heat / explosion / wind / ice / lightning spells, the breaths,
 BigBang, RockThrow, MegaMagic, Ramming, the elemental slashes, MultiCut,
 WindBeast, Vacuum, GigaSlash (38). Pick another resistance, or **none** (the
-damage ignores resistances). The built-in custom skills deal raw damage; giving
+damage ignores resistances). The list is grouped like the Resistances tab, and
+**Earth** (S159) is there: Tremor / Quake / QuakeMore / QuakeMost or a new skill with
+Earth test the monsters' Earth level. The Resistances tab lists which skills test which
+resistance and moves them by right-click — see *Resistances (and Earth)*. The built-in custom skills deal raw damage; giving
 one an element runs it through the spell ladder. The AI's element (Monster AI)
 follows your choice.
 

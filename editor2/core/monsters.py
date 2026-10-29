@@ -289,6 +289,43 @@ class MonstersMixin:
                     s['info'] = dict({'clone_from': cf}, **keep, **_keep_spelling(diff, info))
         self._commit_data(data)
 
+    def set_species_resists(self, changes):
+        """S159 (the Resistances tab): {species id: {resistance name: level 0-3}} for
+        many species at once — ONE copy + ONE validation (set_species_fields per cell
+        would validate the whole project per cell). Stores only the differences from
+        each species' base row (as set_species_fields)."""
+        data = copy.deepcopy(self.data)
+        model = self.monsters_model()
+        for sid, res in changes.items():
+            sid = int(sid)
+            if sid == 220:
+                raise ValueError('species 220 is the empty slot')
+            row = bytearray(self.species_row(sid, model))
+            G.apply_monster_fields(row, {'resist': dict(res)}, f'species {sid}')
+            diff = info_diff(bytes(row), self.species_base_row(sid))
+            if sid <= 220:
+                gd = data.setdefault('gamedata', {})
+                mons = gd.setdefault('monsters', {})
+                old = mons.get(str(sid)) or {}
+                rest = {k: v for k, v in old.items() if k != 'resist'}
+                d2 = dict(rest)
+                if 'resist' in diff:
+                    d2['resist'] = diff['resist']
+                if d2:
+                    mons[str(sid)] = d2
+                else:
+                    mons.pop(str(sid), None)
+                if not mons:
+                    gd.pop('monsters', None)
+            else:
+                for sp in data['custom']['species']:
+                    if sp.get('id') == sid:
+                        info = sp.setdefault('info', {})
+                        info.pop('resist', None)
+                        if 'resist' in diff:
+                            info['resist'] = diff['resist']
+        self._commit_data(data)
+
     def _commit_data(self, data):
         """Validate `data` with the compiler's models, then make it current."""
         prj = self._project(data)

@@ -54,7 +54,8 @@ def rng16_dividend(state):
 # (Blaze->Fire, Beat->Death, Kamikaze->Sacrifice, RockThrow->Aid, ...).
 
 def res_level(res7, rtype):
-    """res7: the 7 packed bytes for the combatant; rtype: 0..26."""
+    """res7: the 7 packed bytes for the combatant; rtype: 0..26 (26 = Earth, S159:
+    position 27 in patched builds — pacing.pack_res)."""
     pos = rtype + 1
     byte = res7[pos >> 2]
     shift = (3 - (pos & 3)) * 2

@@ -598,8 +598,9 @@ def problems(prj):
         settings(prj.custom)
     except MemorialError as ex:
         errs.append(str(ex))
-    # the tag lives in record byte +$82 (resistance 26): a species whose info row
-    # has a resistance 26 would hand every new monster a non-tag there
+    # the tag lives in record byte +$82 (resistance 26) bits 3-7; [S159] bits 0-1 are
+    # the monster's EARTH level (resistance 26 = Earth, ROADMAP E16; bank $79 masks the
+    # tag with $F8) — so a species' Earth level 0-3 is fine; more would reach the tag
     rows = {}
     try:
         rows = {sid: bytes(r) for sid, r in enumerate(prj.gamedata().monster)}
@@ -609,11 +610,11 @@ def problems(prj):
     except Exception:                                  # noqa: BLE001 — reported elsewhere
         pass
     if rows:
-        bad = [sid for sid, row in rows.items() if len(row) > 0x29 and row[0x29] != 0]
+        bad = [sid for sid, row in rows.items() if len(row) > 0x29 and row[0x29] > 3]
         if bad:
             errs.append('memorial: species ' + ', '.join(map(str, bad[:8]))
-                        + ' have a resistance in the unused 27th slot — the memorial keeps its '
-                        'mark there (it must stay 0)')
+                        + ' have an Earth resistance above 3 — the memorial keeps its mark '
+                        'in the same byte (levels 0-3 only)')
     for d in prj.custom.get('dialogue') or []:
         if not isinstance(d, dict):
             continue

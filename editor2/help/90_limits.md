@@ -213,8 +213,8 @@
   the oldest is forgotten when full); a monster can be told apart from another of its
   species by 31 marks — at most 31 monsters of ONE species remembered or carrying a mark
   at once (a 32nd winner of that species is not remembered). The inserts {fallen} /
-  {fallen_level} / {fallen_species} only in a statue's words. Every monster's 27th
-  resistance must stay 0 while the project has statues. A save made before the memorial
+  {fallen_level} / {fallen_species} only in a statue's words. The 27th resistance is
+  Earth (S159): levels 0-3 (it shares a byte with the memorial's mark). A save made before the memorial
   starts with an empty memorial. See *The memorial: statues of the monsters that left*.
 - The breeding hints (S158): up to 2,048 hint numbers (the pool + the numbers kept for
   crosses taken out); up to 8 monuments a room, 255 in the project; a family's words 12
