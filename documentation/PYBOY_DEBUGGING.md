@@ -1276,3 +1276,29 @@ edge and the battle waits for input forever.
 - **A runaway guard:** a negative ROM can run code through a hooked address thousands of times
   a frame — every Python hook call slows the walk to a crawl. Stop a rig when its logs pass a
   few thousand entries.
+
+## S161 techniques — the AI judged on twins (tools/walk_mirror.py)
+
+- **AI frequencies with the RNG free:** seed once at the battle's first frame and count casts over
+  several battles; a rig that writes the RNG every frame (S110 / S160) repeats ONE decision (KEY_LESSONS
+  S161). Hooks for a decision's anatomy: bank $57 `AIState0Preamble_6e2a` (start), `AIState4FilterEval_7439`
+  (`$DD6A` the category), `AIChainApplyDelta_78a2` (`$DD26` / `$DD27` before the chain end; +3 = after
+  `CustomAI57`), `AIChainZeroCell_788b` (a veto), `AIState5Pick_75a2` (`$DCE4` sums), `AIState6Post_7859`
+  (`$DCEC + 2·actor` the queued skill; `$D9ED` 1 = commit, $18 = the act-time re-decision of a `$DD0B`
+  = 2 actor). The plain-Attack score at the cat-1 post: `$DD26` (60 in these battles).
+- **Twins decide alike only with the RNG re-seeded at every stage:** the wait loops step the RNG, so
+  a build with a few more cycles drifts it (S86 idle model). Re-seed (seed + 97 k) at each AI state
+  0-5 and 7 (actor >= 4), at the commit-time fetch `$58:$545B` and at each act `$53:$520C`, and hold
+  the party's status block `$DB00-$DB17` (a landed Sleep changes the next decision's board) and HP;
+  compare the common prefix of decisions / acts (a fixed frame window can end one act apart).
+- **The simulator twin on the ROM's own board:** at each chain end snapshot `$DD6A`, `$DB88`, `$DD6B`, HP /
+  MaxHP / MP / MaxMP words (`$DBA3` / `$DBB3` / `$DBC3` / `$DBD3`), the status block `$DB00-$DB41`,
+  `$DD1B`, the packed resistances `$DD28 + 7k` → `ai_rules.BattleView` → `evaluate_chain`; compare the
+  STOCK twin's gap first (a gap both share is the model's — KEY_LESSONS S161).
+- **A level up on demand:** a party record's exp = one short of the next level's mark
+  (`raising.Tables.exp_to_reach(species, level + 1) - 1`), so the DUMMY's win levels it exactly; hook
+  `jr_051_5799` for each learn result (registers HL = the line's text id, C = the slot key, `[$FFD8]` the
+  skill). The forget menu (nine skills) answers to `battle_won`'s A taps.
+- **A record poked in the cartridge:** `p.memory[bank, CustomRecord_F0 + 4] = 255` changes a new skill's
+  battle MP for the run (the chain's `$45F2` rule then vetoes it) — proof the chain reads the new
+  skill's own record.

@@ -1364,9 +1364,10 @@ jr_057_476f:
 ; [S160] AIRule_4785 — VETO the option (AIScanSlots_4456 with E = $40: +2 bit 6) when every
 ; valid opponent is PARALYSED, for the working ids $15-$19, $1C-$28, $2A, $68-$6B, $6E,
 ; $71-$73, $77-$80, $88-$D9 and $DC (the paralysis / disable family — and, by the range,
-; Chance's outcomes and the item ids $B0-$D4). Patched builds (ROADMAP E13): the head is
-; `call SkillView57` — a NEW skill on a reclaimed id ($BC-$C1 / $CC-$D3) is judged as one
-; on $EF-$FE (the rule never selects those). Simulator: ai_rules.f10_rules (DeMagic).
+; Chance's outcomes and the item ids $B0-$D4). Patched builds: S160's `call SkillView57`
+; (a reclaimed id seen as $EF) was retired S161 — during the chain $DB8A holds a NEW skill's
+; BASE (AIViewArm57, state 4), so a new skill is vetoed exactly when its base is (ROADMAP
+; E17, BATTLE_SKILL_SYSTEM §13.13). Simulator: ai_rules.f10_rules (DeMagic).
 AIRule_4785:
     ld a, [$db8a]
     cp $15
@@ -9998,6 +9999,13 @@ jr_057_7418:
 ; State 4: zero $DCE4 entries whose tag != $DD6A; each surviving skill
 ; loads record flags7 -> $DD6B + its CATEGORY chain pointer
 ; (AIRuleChainIndex_4302) and switches to state 7. §15.10.5 (S80/S81).
+; [S161] the `ld [$db8a], a` below is the ONE place an option's id becomes what every rule
+; of the chain selects on ($DB8A); the rules pick skills BY ID (membership ladders), so an
+; id no rule names scores only its record's AI weight + a 0-15 roll and loses to the cat-1
+; plain-Attack compare (bank $58 entry 11, 60 in the S161 sparring battles; measured: a
+; Firebal / Bang / Infernos / SnowStorm mage casts Bang 16 of 58 actions, the same four as
+; new ids 0 of 50). Patched builds: `call AIViewArm57` — a NEW skill is judged as its BASE
+; (ROADMAP E17, BATTLE_SKILL_SYSTEM §13.13).
 AIState4FilterEval_7439:
     ld a, [$c1fe]
     ld l, a
@@ -10871,7 +10879,11 @@ AIChainZeroCell_788b:
 ; `call CustomAI57` (in the trailing nops at $7FD1): for an id >= $DE it runs
 ; bank $72 entry 8 CustomAIRule72 first (the S155 skills' own bonus / penalty /
 ; veto) — the chain end is the one spot every option of every category passes
-; with $DD26 / $DD27 still live (BATTLE_SKILL_SYSTEM §13.10).
+; with $DD26 / $DD27 still live (BATTLE_SKILL_SYSTEM §13.10). [S161] CustomAI57
+; calls for every option: a NEW skill's view ends there ($DB8A back to its own id)
+; and its AI preference is added (bank $72 AIPrefEnd72, §13.13). A mid-chain veto
+; leaves through AIChainZeroCell_788b without this point: patched, its `xor a /
+; ld [$dd26], a` is `call AIViewOff57 / nop` (the view off there too).
 ; NOTE (measured S155): an actor with $DD0B == 0 (an enemy of INT < $15) never
 ; reaches the chains — bank $57 AILightweightPick picks at random.
 AIChainApplyDelta_78a2:

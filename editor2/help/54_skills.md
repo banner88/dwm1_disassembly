@@ -38,12 +38,16 @@ the bank $41 space new monsters' names share; texts: a 2,993-byte spare area).
   **combination** — the monster must know ALL of them and learns this one beside
   them (an original skill only: a custom or new skill with two or more is never
   learned — the game's S75 crash fence; the build warns).
-- **Never let two skills evolve from the same single skill** (S160, measured):
-  at a level up where both qualify the game learns the first in the old one's
-  place, then offers the second forever — the battle never ends. The original
-  game never does it (each skill evolves into at most one); the build warns and
-  names the pair. Pick a skill nothing evolves from yet (Blazemost, Firebolt,
-  Defence …: the Who-has-it box shows a skill's evolve chain).
+- **Two skills evolving from the same single skill** (S160 / S161, measured): a
+  monster gets both only when both qualify at the SAME level up — the first
+  takes the old skill's place ("… Blaze becomes Blazemore!"), the second is
+  learned beside it ("… and learned Flare!"; with eight skills already the game
+  asks which one to forget). Once the old skill is gone, the other one can never
+  be learned (it evolves from a skill the monster no longer knows). Until S161
+  that level up never ended — the battle hung. The original game never does it
+  (each skill evolves into at most one); the build warns and names them. If each
+  should be reachable on its own, give each its own "Evolves from" skill
+  (Blazemost, Firebolt, Defence …: the Who-has-it box shows a skill's evolve chain).
 - Ids $DA-$DD (LIFE, RUN, IRONIZE, Ahhh) have no learn row (those bytes are
   code); they can still be a monster's natural skill.
 
@@ -84,7 +88,7 @@ foes** (each foe in turn). The other built-in custom skills keep their own.
 
 ## Monster AI
 
-Only the enemy / tactics AI reads these four; they never change what the skill
+Only the enemy / tactics AI reads these; they never change what the skill
 does:
 
 - **Plan** — attack, status / weaken or heal / support. The AI first picks a
@@ -93,6 +97,36 @@ does:
 - **Element** — the resistance the AI assumes the skill tests (it avoids
   targets that resist it). The real element is chosen by the effect code.
 - **Damage class** — none / spell damage / breath damage.
+- **Preference** (new skills only, -60 … +60, S161) — see below.
+
+### How the AI chooses, and a new skill's Preference (S161, measured)
+
+Each turn an enemy (with INT 21 or more) scores every skill of the plan it
+picked: the skill's **Weight**, a small random number (0-15), and the
+game's **rules** — dozens of small judgements, each about particular skills:
+"+60 for Bang", "+40 for Firebal", "+20 when the target does not resist the
+element", "never Sleep when everyone is already asleep", "never a heal when
+nobody is hurt"… Then the best skill must beat **plain Attack** (about 60) or
+the enemy just attacks.
+
+The rules name the ORIGINAL skills, so until S161 a new skill matched none of
+them and lost to Attack every time (a mage with four new spells cast none in
+50 actions; the same mage with the original four cast Bang 16 times). Since
+S161 the AI judges a new skill **as its base**: the rules see the base, so it
+gets the base's bonuses AND the base's "don't" rules — but every number comes
+from the new skill itself (its MP, element, power, weight). An enemy uses a
+new skill exactly as often as it would use its base (measured: the same
+decisions, battle for battle).
+
+**Preference** shifts that on top: the number is added like one more rule.
+**0 = exactly as its base.** Positive = favour it: +20 is a rule's worth, +60
+makes it the enemy's go-to skill (a SnowStorm twin at +60 was cast 30 times
+where the original SnowStorm was cast 0). Negative = avoid it: below about -40
+the enemy picks plain Attack instead (a Bang twin at -60 was never cast; Bang
+itself 16 times). A "don't" rule still wins — a preference never makes an enemy
+cast Sleep at a sleeping party. The built-in custom skills (Repel, LoneWolf,
+Punish, Finish, Rupture, Blunt, Plunder) have their own rules and no
+Preference. The Balance tab simulates all of this.
 
 ## Behaviour
 
@@ -304,9 +338,10 @@ evolve chain — read-only (edit them on the Monsters tab).
 - Battle items (HERB, meats, staves …) are skills in the game's tables; they
   are shown read-only here and edited on the Items tab. The 14 field-only items'
   ids (188-193, 204-211) are not listed: they hold your new skills (S160).
-- The enemy AI has not been seen choosing a new skill (either kind of id: 0 of
-  about 40 actions of INT-200 enemies whose four skills were all new, S159 /
-  S160; ROADMAP E17) — they attack instead.
+- (Fixed S161) Enemies never chose a new skill before S161; now they judge it
+  as its base (Monster AI above).
+- Enemies with INT under 21 pick a skill of their plan at random (the game's
+  lightweight picker): no rules, no Preference — the same for every skill.
 - The custom skills' EFFECTS are their own code; a new skill reuses an
   original skill's effect. A new effect needs code (a session with Claude).
 - The built-in custom skill names share bank $41 with the new monsters' names:

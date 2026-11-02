@@ -40,6 +40,7 @@ from editor2.app import sprite_qt as Q
 from editor2.app.rooms import commands as C
 from editor2.core import arena as AR
 from editor2.core import arena_doc as AD
+from editor2.core import gamedata as G
 from editor2.core import monsters as M
 from editor2.core import your_arena as YA
 from editor2.core import your_arena_doc as YD
@@ -159,6 +160,10 @@ class MatchCard(QGroupBox):
                         fo = it.font()
                         fo.setBold(True)
                         it.setFont(fo)
+                    if c == 9:   # S161: the four AI weights named
+                        it.setToolTip(' / '.join(f'{n} {v}' for n, v in
+                                                 zip(G.AI_WEIGHT_NAMES, fl['ai_weights']))
+                                      + '. ' + G.AI_WEIGHT_HELP)
                     self.table.setItem(r, c, it)
                 self.table.setVerticalHeaderItem(
                     r, QTableWidgetItem(f"{r + 1}  EID {sl['eid']}" +

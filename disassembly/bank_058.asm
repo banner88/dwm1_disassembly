@@ -688,7 +688,10 @@ SaveBtlFX_43ff:
 ; caster's side); else -> bank $52 entry 3 AIDamageEstimate_538f ($5203: a per-skill
 ; dispatch whose table holds 28 rows — see there). Result in $db56 / $db57.
 ; Patched builds (S160, ROADMAP E13): the bank $52 call is FxEstimate58 (a reclaimed id
-; is estimated as a new skill's id, $EF).
+; is estimated as a new skill's id, $EF). [S161] (ROADMAP E17): the body is `jp
+; EstimateView58` — a NEW skill estimated AS ITS BASE (the ladder below sees the base's id,
+; the record reads its own power; until S161 every new id took row $1B); the outer AI view
+; is saved / restored around it.
     push bc
     ld a, [$db8a]
     cp $37

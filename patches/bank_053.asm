@@ -2508,7 +2508,8 @@ jr_053_4ed3:
 
 
 DupCastSkillListCheck_4ed6:
-    ld hl, GroupDupSkillList_4ee4
+    call DupBase53              ; [S161] was `ld hl, GroupDupSkillList_4ee4` (3 B -> 3): a NEW
+                                ;   skill is looked up as its base (C = the base, HL = the list)
 
 jr_053_4ed9:
     ld a, [hl+]
@@ -7970,18 +7971,24 @@ RestoreATK53:
     ld a, [$dd72]
     ld [hl], a
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+
+; =============================================================================
+; [S161] DupBase53 (ROADMAP E17 note; BATTLE_SKILL_SYSTEM §13.13) — DupCastSkillListCheck_4ed6's
+; `ld hl, GroupDupSkillList_4ee4` (3 B -> 3): the enemy duplicate-group-cast conversion tests
+; the queued skill C against its 77-id list; a NEW skill is tested AS ITS BASE (bank $72 entry
+; 13 AIBaseOrSelf72; the id goes in E and comes back in E — RST_10 clobbers A and BC), so two
+; enemies casting a new group spell convert as the base's casters do. Out: C = the id (or its
+; base), HL = the list, DE kept. 12 B from the nop fill.
+; =============================================================================
+DupBase53:
+    push de
+    ld e, c
+    ld hl, $720D
+    rst $10
+    ld c, e
+    pop de
+    ld hl, GroupDupSkillList_4ee4
+    ret
     nop
     nop
     nop

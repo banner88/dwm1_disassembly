@@ -533,7 +533,8 @@ def dup_conversion(b, a, order, cursor, eid_flag):
             if cnt == 0:
                 return False
             continue
-        if b.q_skill(entry) == sk and sk in GROUP_DUP_SKILLS:
+        # [S161] a NEW skill is tested AS ITS BASE (bank $53 DupBase53, ROADMAP E17 note)
+        if b.q_skill(entry) == sk and getattr(b, 'core_alias', {}).get(sk, sk) in GROUP_DUP_SKILLS:
             return b.dd0b[a] != 2
     return False
 

@@ -159,6 +159,7 @@ class BattleData:
         self.records = {sid: record_dict(sid, bytes(r), self.skill_names.get(sid, ''))
                         for sid, r in enumerate(g.record)}
         self.core_alias = {}
+        self.ai_pref = {}           # [S161] a new skill's AI preference (custom_skills)
         self.quake_range = dict(B.QUAKE_RANGE)
         self.custom_pcts = {}       # S155: gd_custom_pcts (skillfx/s155_custom.py)
         self.custom_rows = {}       # S155: the bank $58 target rows of the custom ids
@@ -198,6 +199,8 @@ class BattleData:
             self.records[sid] = record_dict(sid, e['record'], self.skill_names.get(sid, ''))
             if e.get('base') is not None:
                 self.core_alias[sid] = int(e['base'])
+                if e.get('ai_pref'):                        # [S161] ROADMAP E17
+                    self.ai_pref[sid] = int(e['ai_pref'])
             el = e.get('element', CS.NO_ELEMENT)
             if el != CS.NO_ELEMENT:
                 rt = None if el == CS.ELEMENT_NONE else int(el)
@@ -834,6 +837,7 @@ def _board(data, party, enemies, db73):
         if m.get('res'):
             b.res[i * 7:(i + 1) * 7] = P.pack_res(m['res'])
     b.core_alias = data.core_alias
+    b.ai_pref = getattr(data, 'ai_pref', {})  # [S161] E17
     b.quake_range = data.quake_range
     b.custom_pcts = data.custom_pcts          # S155
     b.elem_override = getattr(data, 'elem_override', {})    # S159: the skills' elements
@@ -1271,6 +1275,10 @@ def raising_digest(data):
     for sid in sorted(data.records):
         h.update(data.records[sid]['battle_record']['raw'].encode())
     h.update(json.dumps(sorted(data.core_alias.items())).encode())
+    if data.core_alias:                                     # [S161] E17: the AI judges a new
+        h.update(b'S161 ai view')                           #   skill as its base (+ its AI
+        _ap = getattr(data, 'ai_pref', {}) or {}            #   preference) — a new key for
+        h.update(json.dumps(sorted(_ap.items())).encode())  #   projects with new skills only
     _eo = getattr(data, 'elem_override', {}) or {}          # S159: hashed only when set,
     _ce = getattr(data, 'custom_elem', {}) or {}            #   so the original game's
     if _eo or _ce:                                          #   digests stay as they were

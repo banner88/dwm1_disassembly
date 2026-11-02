@@ -1766,7 +1766,11 @@ and is now a byte-identical `dw` list of `LevelUpS00_Begin` … `LevelUpS11_Appl
 2. **S03 / S04**: `$C0D8` := $FF × 40, the 8 known skills copied in; then per
    tick `ld hl,$0605 / rst $10` = bank $06 entry 5 **`SkillLearnScan`** until
    `$FFD8` = $FF; the caller (`jr_051_5799`) places each result — code 0/2 →
-   the first $FF slot, code 1 → over the old id `$FFDA`; then `$0106`.
+   the first $FF slot, code 1 → over the old id `$FFDA`; then `$0106`. [S161]
+   Patched builds: a code 1 whose old id is no longer in `$C0D8` (a sibling from the
+   same prerequisite took its place this level up) → the first $FF slot with the
+   "… and learned …!" line (bank $51 `LearnUpgradeOrAdd51`; before S161 nothing was
+   placed and the scanner offered it forever — BATTLE_SKILL_SYSTEM §13.12).
 3. **S0A** `LearnCompactCount` compacts `$C0D8` and counts; ≥ 9 → the forget
    menu (states $0B-$0F).
 4. **S11** (`jr_051_5b04`): `LearnCopyBack` copies `$C0D8[0..7]` → +$29, then

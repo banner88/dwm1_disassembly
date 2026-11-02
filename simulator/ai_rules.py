@@ -110,8 +110,12 @@ def _all_live_opposing_have(view, actor, off, mask):
 
 
 def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = record status_id (res pos), S88
-                   rec_flags7):
-    """(delta, veto) for one tag-matched skill, mirroring $78A2/$788B."""
+                   rec_flags7, pref=0):
+    """(delta, veto) for one tag-matched skill, mirroring $78A2/$788B. [S161] `skill` = the id
+    the rules see (a NEW skill's BASE, the caller maps it); mp_cost / element / rec_flags7 =
+    the acting skill's own record; pref = a new skill's AI preference (-60 … +60), added at
+    the chain end like one more rule (bank $72 AIPrefEnd72: > 0 to the bonus, < 0 to the
+    penalty, capped below a veto)."""
     bonus = penalty = 0
 
     # $45F2 universal usability [measured]
@@ -265,6 +269,10 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
 
     bonus = min(bonus, 0xFF)
     penalty = min(penalty, 0xFF)
+    if pref > 0:                                          # [S161] AIPrefEnd72
+        bonus = min(bonus + pref, 0xFF)
+    elif pref < 0 and penalty < 0xFF:
+        penalty = min(penalty - pref, 0xFE)
     if bonus < penalty:
         return 0, True
     return bonus - penalty, False

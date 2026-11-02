@@ -1595,6 +1595,11 @@ scaffolding covers the DATA knobs; net-new ASM handlers remain an expert
 escape hatch (patches/), surfaced but not WYSIWYG. The S74 editor-safety
 invariants are hard validators.
 
+**S161 (ROADMAP E17; built S161, NOT yet user-tested):** Monster AI → **Preference** for a NEW
+skill only (-60 … +60, step 5, bold when not 0; the note: "Enemies judge X as they judge <base> …
+then add this"), `Document.set_skill_ai_pref`; the AI judges a new skill as its base (BATTLE_SKILL_SYSTEM
+§13.13, PROJECT_COMPILER §2.69).
+
 **As built S110 (ROADMAP P3.11 — the 222 ORIGINAL skills; test ROM
 USER-CONFIRMED 2026-10-02, the tab test_app-verified; the custom skills are P3.11c).** `editor2/app/skills_tab.py` over
 `editor2/core/skills_doc.py` (`SkillsMixin`); compiler §2.26 + §2.20. Left: the

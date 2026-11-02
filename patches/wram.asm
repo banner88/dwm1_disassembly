@@ -836,3 +836,12 @@ wOneOnlyRes:: db ;ded3 — GiveOne's result: 1 = done (given, or a one-only item
 wOneOnlySay:: db ;ded4 — 1 = the next SHOWN text is the "already has one" line (set by
                 ;   bank $77 entry 20 BagFullCheck, consumed by bank $60 TextOverride ->
                 ;   bank $77 entry 22 OneOnlySay; cleared at every op $2C)
+
+; [S161] the AI's view of a NEW skill (ROADMAP E17; BATTLE_SKILL_SYSTEM §13.13): while
+; the bank $57 rule chain walks a new skill's option, the rules see its BASE's id in
+; $DB8A and bank $54 Fork54_RecordIndex turns a record read of that base into the new
+; skill's own record. Armed by bank $72 entry 11 AIViewArm72 (state 4 / the party's
+; damage estimate, bank $58 EstimateView58), off at the chain end (entry 8) or a veto
+; (entry 12). Transient, boot-zeroed (0 = off). 7 B left, growth starts $DED7.
+wAIViewId:: db ;ded5 — the new skill's own id (0 = no view)
+wAIViewBase:: db ;ded6 — its base's id (what $DB8A holds while the view is on)

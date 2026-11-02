@@ -451,11 +451,13 @@ def learn_scan(T, m, policy='casual', score=None, codes=None):
         if code == 1 and old in work:
             work[work.index(old)] = c
         else:
-            # [S160] code 1 with `old` already replaced (two skills evolving from ONE
-            # skill, both qualifying in this pass): the GAME never gets here — bank $51
-            # LevelUpS04_LearnScan places nothing and the scanner offers c again, forever
-            # (measured S160, tools/walk_reclaim.py freeze). The original data has no such
-            # pair; the compiler warns (custom_skills.shared_evolution_check).
+            # code 0 / 2, or [S161] code 1 with `old` already replaced (two skills
+            # evolving from ONE skill, both qualifying in this pass): the patched game
+            # learns c as a NEW skill in the first free slot (bank $51
+            # LearnUpgradeOrAdd51, ROADMAP E13 note; until S161 the caller placed nothing
+            # and the scanner offered c again forever — measured S160). The original data
+            # has no such pair; the compiler still warns (custom_skills.shared_evolution_check:
+            # both only at the same level up).
             work.append(c)
     m.queue = [q for q in m.queue if q != FF]
     if len(work) > SKILLS_MAX:

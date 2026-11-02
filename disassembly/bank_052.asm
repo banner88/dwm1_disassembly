@@ -3768,7 +3768,9 @@ SetStatBothMarks_5382:
 ; (the S84 overrun class) — the original game never sends them here. S160 (ROADMAP E13):
 ; a NEW skill on a reclaimed id ($BC-$C1 / $CC-$D3) based on a skill with Attack's row
 ; (Beserker, EvilSlash, SquallHit, PsycheUp, Whistle) would — bank $58 FxEstimate58 runs
-; this with $DB8A = $EF (a new skill's id) for them (patched builds).
+; this with $DB8A = $EF (a new skill's id) for them (patched builds). [S161] patched builds
+; reach here with $DB8A = a new skill's BASE (bank $58 EstimateView58, ROADMAP E17): the
+; base's row, the new skill's record.
 AIDamageEstimate_538f:
     ld a, [$db8a]
     cp $3a

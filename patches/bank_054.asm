@@ -1408,7 +1408,12 @@ jr_054_56c7:
 ; bc(=id, b normally 0) is preserved; readers don't reuse bc afterwards.
 ; =============================================================================
 Fork54_RecordIndex:
+    ld a, [wAIViewId]       ; [S161] the AI's view of a NEW skill (ROADMAP E17): while it
+    or a                    ;   is on, the rules ask for the BASE's record (their $DB8A);
+    jr nz, .view            ;   give them the new skill's own (wAIViewId)
+.own:
     ld a, c
+.index:
     cp $DE
     jr nc, .custom
     ; vanilla path: identical to the original 3 instructions
@@ -1423,6 +1428,26 @@ Fork54_RecordIndex:
     ld c, a
     ld b, $00
     ld hl, CustomRecordPtrTable
+    add hl, bc
+    pop bc
+    ret
+; [S161] the view: a read of wAIViewBase (16-bit index, b = 0) -> the record of
+; wAIViewId; any other index -> as before. BC is kept.
+.view:
+    ld a, b
+    or a
+    jr nz, .own
+    ld a, [wAIViewBase]
+    cp c
+    jr nz, .own
+    ld a, [wAIViewId]
+    cp $DE
+    jr nc, .custom
+    push bc                 ; a reclaimed id: the stock table at its own row
+    ld c, a
+    ld b, $00
+    ld hl, $4013
+    add hl, bc
     add hl, bc
     pop bc
     ret

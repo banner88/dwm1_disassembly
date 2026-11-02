@@ -31,7 +31,7 @@ Each class and Starry Night fight three matches, Monster Grandpa's match one.
 - **The team** — one row per monster. These are the game's **enemy rows**
   (the EID is shown), so a change here is the same as on the Monsters tab's
   "Where you meet it" page: the monster (pick it from the list), level, HP,
-  MP, ATK, DEF, AGL, INT, exp, AI weights (four numbers 0-255) and up to 4
+  MP, ATK, DEF, AGL, INT, exp, AI weights (four numbers 0-255 — Damage / Heal-support / Status / Obedience; hover the cell) and up to 4
   battle skills (names, comma-separated). Double-click a number to change it.
 - **Back to the original match** — master, team size and all three rows as in
   the original game.

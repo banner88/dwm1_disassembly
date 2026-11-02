@@ -269,6 +269,7 @@ class SkillsMixin:
             'announce_text': msgs.get(tpl, '') if tpl not in (0xFD, 0xFF) else '',
             'params': params,
             'target_choice': handler in CS.TARGET_CHOICE,                     # [S155]
+            'ai_preference': v.get('ai_pref', 0) if sid in CS.NEW else None,  # [S161] E17
             'handler_shared_with': [],
             'natural': [(s, mnames.get(s, f'#{s}')) for s in natural],
             'enemies': enemies,
@@ -535,6 +536,22 @@ class SkillsMixin:
                 e.pop(key, None)
             else:
                 e[key] = value
+        self._skill_write(sid, mut)
+
+    def set_skill_ai_pref(self, sid, value):
+        """[S161] (ROADMAP E17) a NEW skill's AI preference, -60 … +60 added to its AI
+        score after its base's rules (0 / None = exactly as its base)."""
+        if int(sid) not in CS.NEW:
+            raise CS.CustomSkillError("the AI preference is for new skills (239-254, "
+                                      "188-193, 204-211); the others have their own rules")
+        if value is not None and value != 0:
+            CS.ai_pref_value(value, f'gamedata.skills.{sid}.ai_preference')
+
+        def mut(e):
+            if value is None or value == 0:
+                e.pop('ai_preference', None)
+            else:
+                e['ai_preference'] = int(value)
         self._skill_write(sid, mut)
 
     def new_custom_skill(self, base, name):

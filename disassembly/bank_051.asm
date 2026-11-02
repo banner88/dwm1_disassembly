@@ -4171,6 +4171,14 @@ jr_051_5754:
 ;   jr_051_5799 places the result: code 0/2 (C = $FF) -> the first
 ;   $FF slot of $C0D8, code 1 (C = old id $FFDA) -> over the old id.
 ;   Done -> bank $01 entry 6 ($0106), next state.
+;   Lines (bank $41 table $49CD): code 0 $0B02 "… increases to LV … and learned …!",
+;   code 1 $0B03 "…'s [old] becomes [new]!", code 2 $0B0F "… by chance, recalls …".
+;   [S161] HAZARD (never met by the original data): the scanner tests a code-1
+;   prerequisite against the KNOWN skills (record +$29) while this caller replaces it
+;   in the WORKING list; two skills evolving from one skill, both qualifying at one
+;   level up -> the second finds no old id, nothing is placed, the scanner offers it
+;   again: "… becomes …!" forever (measured S160). Patched builds: LearnUpgradeOrAdd51
+;   (patches/bank_051.asm) learns it as a new skill instead (ROADMAP E13 note).
 LevelUpS04_LearnScan:
     ld a, [$c825]
     or a
@@ -4201,7 +4209,8 @@ LevelUpS04_LearnScan:
     ld h, $06
     ld de, $c1b0
     call SetupVRAMParams
-    ld hl, DispatchAboveE2
+    ld hl, $0b03                ; [S161] the "becomes" line's text id (was the label
+                                ;   DispatchAboveE2 — a value, not a pointer)
     ldh a, [$da]
     ld c, a
 

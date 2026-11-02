@@ -234,6 +234,24 @@ def pct_value(v, what, lo=0, hi=2000):
 
 def pct_text(x):
     return f"x{x / 100:g}"
+
+
+# [S161] (ROADMAP E17) a NEW skill's AI preference: the bank $57 AI judges a new skill AS
+# ITS BASE (the base's rules, the new skill's own record), then adds this number like one
+# more rule — > 0 to the bonus, < 0 to the penalty (bank $72 AIPrefEnd72, region gd_ai_pref).
+# 0 = exactly as the base. The original rules' own sizes are +5 … +60 (Bang +60, Firebal
+# +40, BATTLE_SKILL_SYSTEM §15.10.5); plain Attack scores 20 + 10 per damage threshold.
+AI_PREF_MIN, AI_PREF_MAX = -60, 60
+
+
+def ai_pref_value(x, what):
+    if isinstance(x, bool) or not isinstance(x, int):
+        raise CustomSkillError(f"{what}: a whole number {AI_PREF_MIN} … +{AI_PREF_MAX} "
+                               "(0 = as its base)")
+    if not AI_PREF_MIN <= x <= AI_PREF_MAX:
+        raise CustomSkillError(f"{what} = {x}: {AI_PREF_MIN} … +{AI_PREF_MAX} (0 = as its base; "
+                               "the game's own AI rules add +5 … +60)")
+    return x
 KEYS_COMMON = ('name', 'description', 'mp', 'learn', 'record', 'looks_like',
                'sounds_like', 'element', 'announce', 'announce_as', 'presentation', 'comment')
 LINE_KEYS = {'allies_line': (0xE5, 'quake_allies', False),   # (owner id, banner, $ED prefix)
@@ -638,7 +656,7 @@ def resolve(prj_or_data, repo_root=None):
             sfx = 0x09
             element = NO_ELEMENT
         else:
-            allowed = KEYS_COMMON + ('base',)
+            allowed = KEYS_COMMON + ('base', 'ai_preference')
             if 'base' not in e:
                 if sid in RECLAIM:
                     raise CustomSkillError(
@@ -763,6 +781,9 @@ def resolve(prj_or_data, repo_root=None):
                                    "write it in `announce`")
         if mp > 255:
             raise CustomSkillError(f"{what}.mp = {mp}: 0-255")
+        ai_pref = 0
+        if 'ai_preference' in e and e['ai_preference'] is not None:    # [S161] ROADMAP E17
+            ai_pref = ai_pref_value(e['ai_preference'], what + '.ai_preference')
         target_row = None
         if sid in NEW:
             target_row = base if rec[2] == van['records'][base][2] else \
@@ -775,7 +796,7 @@ def resolve(prj_or_data, repo_root=None):
                     'mp': mp, 'record': bytes(rec), 'learn': bytes(learn) if learn else None,
                     'template': tpl, 'message': msg, 'proxy': proxy, 'sfx': sfx,
                     'element': element, 'target_row': target_row,
-                    'edited': bool(e)}
+                    'ai_pref': ai_pref, 'edited': bool(e)}
     # shared per-handler data
     tame = dict(B['tame_meter'])
     quake = {k: list(v) for k, v in B['quake_power'].items()}
@@ -1060,14 +1081,16 @@ def check(prj):
 
 
 def shared_evolution_check(prj, sk):
-    """[S160] Two skills (stock or custom) that both evolve from the SAME single skill
-    freeze the game: a level up where both qualify learns the first (it REPLACES the
-    prerequisite in the working list, bank $51 LevelUpS04_LearnScan code 1), then the
-    scanner offers the second (its prerequisite is still in the record) and the caller
-    finds no prerequisite left to replace — it places nothing and asks again, forever
-    (measured S160, PyBoy: the level-up text repeats, the battle never ends). The
-    original game has no such pair (42 single-prerequisite parents, one child each).
-    -> warnings, one per shared parent (ROADMAP E13 note: the engine fix is open)."""
+    """[S160, S161] Two skills (stock or custom) that both evolve from the SAME single
+    skill. The level up (bank $51 LevelUpS04_LearnScan, code 1) learns the first IN PLACE
+    of the prerequisite; until S161 the second then found nothing to replace and was
+    offered again forever (measured S160: the battle never ended). Since S161 (ROADMAP E13
+    note, `LearnUpgradeOrAdd51`) the second is learned as a NEW skill (the first free
+    slot, the "… and learned …!" line) when both qualify at the same level up. Once the
+    first has replaced the prerequisite in the record, the other one can no longer be
+    learned: the scanner tests the prerequisite against the KNOWN skills (measured S161).
+    The original game has no such pair (42 single-prerequisite parents, one child each).
+    -> warnings, one per shared parent."""
     from . import gamedata as G
     try:
         g = prj.gamedata()
@@ -1098,11 +1121,11 @@ def shared_evolution_check(prj, sk):
         if len(kids) > 1:
             out.append(
                 f"gamedata.skills: {' and '.join(nm(k) for k in kids)} {'both' if len(kids) == 2 else 'all'} "
-                f"evolve from {nm(p)} alone — the game "
-                f"FREEZES at a level up where two of them qualify (the first replaces {nm(p)}, "
-                "the second finds nothing to replace and is offered again forever; measured "
-                "S160), and otherwise only the first is ever learned. Give each its own "
-                "'Evolves from' skill, or make all but one not learnable")
+                f"evolve from {nm(p)} alone — a monster gets {'both' if len(kids) == 2 else 'them all'} "
+                f"only at the SAME level up (the first in {nm(p)}'s place, the "
+                f"{'other' if len(kids) == 2 else 'others'} as new skills); once one has replaced "
+                f"{nm(p)}, the {'other' if len(kids) == 2 else 'others'} can no longer be learned. "
+                "Give each its own 'Evolves from' skill if each should be reachable on its own")
     return out
 
 
@@ -1278,6 +1301,21 @@ def emit_reclaim_base(prj, warnings):
     """bank $72 ReclaimBaseTable (gd_reclaim_base): the base of each reclaimed id's new skill."""
     sk = layout(prj)['skills']
     return _reclaim_rows({s: sk[s]['base'] for s in RECLAIM if s in sk}, sk)
+
+
+def emit_ai_pref(prj, warnings):
+    """[S161] bank $72 AIPrefTable (gd_ai_pref): ids $BC-$FE, the AI preference of each new
+    skill as a signed byte (0 = as its base; rows of ids without a new skill: 0)."""
+    sk = layout(prj)['skills']
+    vals = [(sk[s]['ai_pref'] & 0xFF) if s in sk and s in NEW else 0 for s in range(0xBC, 0xFF)]
+    out = []
+    for k in range(0xBC, 0xFF, 16):
+        row = vals[k - 0xBC:min(k + 16, 0xFF) - 0xBC]
+        used = [f"{s}={MT.decode(sk[s]['name'])} {sk[s]['ai_pref']:+d}"
+                for s in range(k, min(k + 16, 0xFF)) if s in sk and s in NEW and sk[s]['ai_pref']]
+        out.append(_db(row) + f"   ; [${k:02X}-${min(k + 16, 0xFF) - 1:02X}]"
+                   + (" " + ", ".join(used) if used else ""))
+    return "\n".join(out) + "\n"
 
 
 def emit_reclaim_target(prj, warnings):
@@ -1463,4 +1501,5 @@ REGIONS = [
     ('gd_reclaim_base', 'patches/bank_072.asm', emit_reclaim_base, 0x72),          # [S160]
     ('gd_reclaim_target', 'patches/bank_058.asm', emit_reclaim_target, 0x58),      # [S160]
     ('gd_reclaim_announce', 'patches/bank_058.asm', emit_reclaim_announce, 0x58),  # [S160]
+    ('gd_ai_pref', 'patches/bank_072.asm', emit_ai_pref, 0x72),                    # [S161]
 ]

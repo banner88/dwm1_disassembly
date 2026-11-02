@@ -98,6 +98,14 @@ def _spin(lo, hi, tip=''):
     return s
 
 
+AI_PREF_HINT = ("A NEW skill's AI preference (S161): the enemy AI scores the skill exactly "
+                "as its base (the base's rules: when it is worth casting, when it is "
+                "pointless), on the new skill's own MP, element and power, then adds this "
+                "number. 0 = as its base. The game's own rules add +5 … +60 (Bang +60, "
+                "Firebal +40); a skill must beat plain Attack (about 60) to be used. "
+                "Positive = favour it, negative = avoid it.")
+
+
 def _bold(w, on):
     f = w.font()
     f.setBold(bool(on))
@@ -362,11 +370,28 @@ class SkillsTab(QWidget):
             lambda _i: self._record({'damage_class': self.ai_dmg.currentData()},
                                     'AI damage class'))
         f.addRow('Damage class:', self.ai_dmg)
-        note = QLabel('Only the enemy / tactics AI reads these four; they do not change '
-                      'what the skill does.')
+        # [S161] ROADMAP E17: a NEW skill is judged by the AI as its base; this adds to it
+        self.ai_pref = _spin(CS.AI_PREF_MIN, CS.AI_PREF_MAX, AI_PREF_HINT)
+        self.ai_pref.setSingleStep(5)
+        self.ai_pref.setValue(0)
+        self.ai_pref.valueChanged.connect(self._ai_pref_changed)
+        self.ai_pref_label = QLabel('Preference:')
+        f.addRow(self.ai_pref_label, self.ai_pref)
+        self.ai_pref_note = QLabel()
+        self.ai_pref_note.setWordWrap(True)
+        f.addRow(self.ai_pref_note)
+        note = QLabel('Only the enemy / tactics AI reads these; they do not change what the '
+                      'skill does.')
         note.setWordWrap(True)
         f.addRow(note)
         self.sec_ai = self._section('Monster AI', 'ai', w)
+
+    def _ai_pref_changed(self, v):
+        if self._busy:
+            return
+        sid = self.sid
+        self._push(self._label(f'AI preference → {v:+d}'),
+                   lambda doc: doc.set_skill_ai_pref(sid, v))
 
     def _build_flags(self):
         w = QWidget()
@@ -754,6 +779,20 @@ class SkillsTab(QWidget):
                 k = self.ai_dmg.count() - 1
             self.ai_dmg.setCurrentIndex(k)
             _bold(self.ai_dmg, R['damage_class'] != VR['damage_class'])
+            pref = d.get('ai_preference')                       # [S161] new skills only
+            for w_ in (self.ai_pref, self.ai_pref_label, self.ai_pref_note):
+                w_.setVisible(pref is not None)
+            if pref is not None:
+                self.ai_pref.setValue(pref)
+                _bold(self.ai_pref, pref != 0)
+                self.ai_pref_note.setText(
+                    f"Enemies judge {d['name']} as they judge {d['base_name']} (its base: the "
+                    "same reasons to use it or not), on its own MP, element and power — then "
+                    f"add this. {pref:+d}: " + (
+                        'exactly as its base.' if pref == 0 else
+                        'used more often than its base would be.' if pref > 0 else
+                        'used less often; at -40 to -60 almost never (an enemy picks plain '
+                        'Attack instead).'))
             # flags
             for key, cb in self.flags.items():
                 cb.setChecked(R['flags'][key])

@@ -49,7 +49,7 @@ lists (your project's), gate bosses and their join versions, arena classes
 masters), coliseum / random / mimic battles, script battles, the starter, and your own
 enemies. Double-click a number to change it: level, HP, MP, ATK, DEF, AGL,
 INT, exp reward (HP at least 2 — see the Enemies help), **Joins** (0 = always, 7 = never, anything else = a chance),
-**AI weights** (four numbers 0-255) and **Battle skills** (up to 4 skill
+**AI weights** (four numbers 0-255 — Damage / Heal-support / Status / Obedience; hover the cell, and see the Enemies help) and **Battle skills** (up to 4 skill
 names, separated by commas). Bold rows differ from the original game. Only
 the changes are saved (`gamedata.enemies`); your own enemies are edited in
 `progression.enemies`, like in the Enemies dialog.

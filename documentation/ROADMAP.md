@@ -3515,12 +3515,19 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       (id-keyed in many forks), a second id byte (every skill list is one byte); the internal
       rows 151-175 are not free (Chance's outcomes, confusion actions, the AI defaults — S130).
       **Found S160, open:**
-      - [ ] **Two skills evolving from ONE skill freeze the level up** (measured: "… becomes X!"
+      - [x] **Two skills evolving from ONE skill freeze the level up** (measured: "… becomes X!"
         forever; bank $51 `LevelUpS04_LearnScan` code 1 finds no prerequisite left to replace).
         The original data never does it (42 parents, one child each); the compiler WARNS since
         S160. Engine fix to decide with the user: when the replaced skill is gone, ADD the second
         (what the simulator's `learn_scan` already does) — a few bytes in bank $51 (free space
-        or a far call) + `census_raising.py`'s stub caller.
+        or a far call) + `census_raising.py`'s stub caller. **FIXED S161 (user: "do e17, e13 fix
+        both"; built S161, NOT yet user-tested; test ROM `DWM-S161-mirror-test.gbc`):** bank $51
+        `LearnUpgradeOrAdd51` (26 B of the free tail): the old id gone from `$C0D8` -> the plain
+        "… and learned …!" line ($0B02) into the first free slot; measured `tools/walk_mirror.py`
+        siblings / later / full / plain (the third child is never learned once the prerequisite
+        is gone; eight + two -> the forget menu); `census_raising.py` stub mirrors it (5,073
+        level-ups 0 mismatches); the warning reworded (both only at the SAME level up).
+        BATTLE_SKILL_SYSTEM §13.12, PROJECT_COMPILER §2.69.
       - [ ] **"Evolves from" two or more skills on a custom / new skill is never learned** (the
         S75 crash fence, `$DA+` and now the 14 ids): help 54 said "knows one of them" (wrong —
         a combination needs ALL, DOC_AUDIT S160); the help is corrected. Lifting the fence for
@@ -3588,7 +3595,42 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       emptied memorial). BATTLE_SKILL_SYSTEM §15.3 "Earth", PROJECT_COMPILER §2.67,
       EDITOR_DESIGN §5.2d. Not built (not asked): renaming the stored FAQ names (the tab shows
       subtitles), per-enemy resistances (the game has none: enemies use the species row).
-- [ ] **E17 — the enemy AI and NEW skills (FOUND S159, not asked).** An enemy (INT 200, AI
+- [x] **E17 — the enemy AI and NEW skills (FOUND S159; BUILT S161 — user: "do e17", "[AI preference]
+      Yes, with a sane base value"; built S161, NOT yet user-tested; test ROM `DWM-S161-mirror-test.gbc`).**
+      **Built:** the AI judges a NEW skill AS ITS BASE — during the rule chain `$DB8A` holds the base
+      (bank $57 `AIViewArm57` -> bank $72 `AIViewArm72`), every record read gives the new skill's own
+      (bank $54 `Fork54_RecordIndex`), the view off at the chain end / a veto; then its AI
+      **preference** (`gamedata.skills.<id>.ai_preference`, -60 … +60, default 0 = as its base;
+      bank $72 `AIPrefEnd72` / region `gd_ai_pref`); the party's damage estimate as the base (bank
+      $58 `EstimateView58`); `SkillView57` retired; the simulator's `ChainRules` the same; the
+      Skills tab's Preference. Measured `tools/walk_mirror.py` (THE MIRROR HALL, 35 / 35, later 37 / 37
+      with `dupcast`; negative 28, later 30 FAIL): twins decide alike (72 / 72 / 81 decisions), new skills cast as often as their
+      bases (18 / 18, 3 / 3), PBang -60 never, PSnow +60 30 vs 0, Sleep's veto applies to NSleep,
+      the new skill's own MP read in the chain, the estimate = the base's. BATTLE_SKILL_SYSTEM
+      §13.13, PROJECT_COMPILER §2.69. **Found S161, open:**
+      - [ ] **The S81 rule model is wrong for Sleep / Sap / PsycheUp / BoltSlash on a three-opponent
+        board** (an INT-200 enemy alone vs three defending monsters: Sleep +40 in the ROM vs 0 in
+        `ai_rules`, Sap +30 vs 0, BoltSlash +25 / +5 vs +35, PsycheUp vetoed vs +35 — measured S161,
+        `walk_mirror.py` `sim_check`: every chain end of the four, stock and new alike). The S81
+        sweep (`s81_sweep_corpus.json`) had ONE party monster. Next: re-sweep the 160 cat-1/2/3
+        skills on boards of 2-3 opponents (+ defending / statuses), find the rules that count
+        opponents, extend `ai_rules`; then the Balance tab is exact for status casters.
+      - [ ] **Act-time id lists outside the AI.** **The duplicate-group conversion FIXED later S161**
+        (the user: "fix the issues if not too large"; built S161, NOT yet user-tested): bank $53
+        `DupCastSkillListCheck_4ed6` `call DupBase53` + bank $72 entry 13 `AIBaseOrSelf72` — a new
+        skill is tested against the 77-id `GroupDupSkillList_4ee4` AS ITS BASE (two NEW MAGES: 21 / 21
+        conversions vs two stock, `walk_mirror.py` `dupcast`; BATTLE_SKILL_SYSTEM §13.13). Still
+        open: a census of the other act-time code that reads `$DB8A` against id lists.
+      - [ ] **Project enemy rows and `EnemyDupConvFlagTable_41df`** (FOUND later S161, a design
+        question for the user): the per-EID gate of the conversion has 487 rows; a project row (EID
+        ≥ 519) reads past it — 3,259 of 3,321 bytes there are "flagged" (vanilla: 182 / 487), so
+        whether a project enemy's second group spell converts is an accident. Proposed: a flag per
+        project row (default: the copied source row's), emitted by the compiler.
+      - [x] **`tools/walk_skills.py` (S155) on the user's current save: 2 LoneWolf checks FAILED** — FIXED
+        later S161: the walk's assumptions, not the ROM (the user's party is three, with high DEF):
+        `run(..., two=True)` now makes "a party of two" itself (party list +2 = $FF, `$CA8D` = 2) and
+        `_soft_target` holds DEF 1 for "an enemy alone"; 33 / 33 on the user's save.
+      Original note: An enemy (INT 200, AI
       weights 30 / 250 / 30 / 0) whose only skill is a NEW skill on Bang never cast it in
       23-27 actions — the S158 build too; with Boom beside it the AI cast Boom. Trace which
       rule chain / category a new id gets (bank $57 chain tables by id, bank $58 rows,

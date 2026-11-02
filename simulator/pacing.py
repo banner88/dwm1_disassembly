@@ -283,13 +283,20 @@ class ChainRules:
         self.view.board = b                 # S155: ai_rules.CUSTOM_RULES read the Board
         self.actor = actor
         self.records = records
+        self.alias = getattr(b, 'core_alias', {}) or {}     # [S161] ROADMAP E17
+        self.pref = getattr(b, 'ai_pref', {}) or {}
 
     def evaluate(self, category, skill, state):
+        # [S161] (ROADMAP E17, bank $57 AIViewArm57 / bank $72 AIViewArm72): a NEW skill is
+        # judged AS ITS BASE — the rules select on the base's id — with its OWN record (MP,
+        # element, flags7: bank $54 Fork54_RecordIndex), then its AI preference is added
+        # (bank $72 AIPrefEnd72). Until S161 the game judged it by its own id (no rule).
         rec = self.records.get(skill)
         f = rec['battle_record']['fields'] if rec else {}
         delta, veto = R.evaluate_chain(
-            category, skill, self.actor, self.view,
-            f.get('mp_cost_byte', 0), f.get('status_id', 0), f.get('flags7', 0))
+            category, self.alias.get(skill, skill), self.actor, self.view,
+            f.get('mp_cost_byte', 0), f.get('status_id', 0), f.get('flags7', 0),
+            pref=self.pref.get(skill, 0))
         return delta, veto
 
 

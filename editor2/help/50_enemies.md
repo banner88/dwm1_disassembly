@@ -12,6 +12,14 @@ enemies…**, or **Enemies…** inside a Battle step).
   older project's HP 1 rows are raised to 2 when you open it. The
   species list includes the project's new monster (`custom.species`) — its
   wild and boss rows are project enemies like these.
+- **AI weights** (S161: named in the dialog) — four numbers 0-255:
+  **Damage**, **Heal/support** and **Status** are how strongly the monster
+  leans to that kind of plan each turn; **Obedience** is the starting
+  obedience of a monster that joins from the row (higher = follows your
+  orders more often — enemies ignore it). A plan the monster has no skill
+  for ends in a plain Attack: a row of 30 / 250 / 30 with only attack
+  spells attacks most turns, because the heal/support plan wins and it has
+  no heal or support skill.
 - **joins?** — *always*, *sometimes* (tier 1 = likely … 6 = unlikely) or
   *never*.
 - **join version** — the monster the player gets instead of the one they

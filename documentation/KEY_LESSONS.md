@@ -7396,3 +7396,61 @@ warning naming the pair; the demo uses parents nothing else evolves from. **Rule
 editable table the engine reads, list the invariants the ORIGINAL data happens to keep (unique
 children, sorted rows, no gaps) and check them in the compiler — the editor makes the cases
 the original never had.
+
+## S161 — the enemy AI and new skills (ROADMAP E17); two skills from one skill (E13 note)
+
+### S161 — a rig that pins the RNG every frame measures one decision, many times
+**Symptom:** S160's walk counted "0 new-skill casts" for INT-200 enemies; S161's first trace showed
+the STOCK twin casting none either (all Attack). **Root cause:** the S110 rig writes the RNG on every
+battle frame, so every AI decision of a battle starts from the same RNG: one decision repeated. The
+E17 gap was real (free RNG: the stock mage cast Bang 16 / 58, its new twin 0 / 50), but the pinned
+measurement could not have shown it. **Fix:** measure AI frequencies with the RNG free (seeded once)
+over several battles, and always beside a STOCK twin. **Rule:** a frequency is measured with the RNG
+free and a control that is known to vary; a pinned RNG proves equality, never a rate.
+
+### S161 — the RNG steps while the CPU waits: a few more cycles change every roll after
+**Symptom:** STOCK and NEW twins with the RNG re-seeded at every AI decision still drifted apart
+(the same first decision, then different RNG at the next pick / act). **Root cause:** the battle's
+wait loops step the RNG (§15.8c idle model: thousands of steps per frame), so the CPU time a frame
+takes changes the count — the new skill's far calls (the AI view) cost a few cycles, the next frame's
+RNG differs. **Fix:** re-seed at EVERY stage that reads the RNG (each AI state 0-5 and 7, the commit,
+each act) and hold what an act changes on the board (the party's HP and status) — then the twins
+decide alike over whole battles (72 / 72 / 81). **Rule:** any byte change moves the RNG of every later
+frame; an A/B of two builds compares decisions from re-seeded stages and equal boards, never a whole
+battle from one seed.
+
+### S161 — a rule table keyed by id: present a new id as the id the table knows
+**Symptom (design):** 131 AI rules select skills by id ladders; teaching each one the new ids would
+touch every rule. **Fix:** one producer-side view: `$DB8A` = the base during the chain, and the ONE
+record-index routine every reader shares (bank $54 `Fork54_RecordIndex`) answers the base's index with
+the new skill's record — the rules unchanged, their numbers the new skill's. The view is armed at the
+one entry (state 4) and dropped at both exits (chain end, veto exit), with an outer view saved around a
+nested user (the estimate). **Rule:** to make new ids behave like old ones in id-keyed code, find the
+single place the id is loaded for that code and the single routine its data reads share; a view there
+beats teaching each consumer (S159's "move the byte the readers assume", for ids).
+
+### S161 — tell a model gap from a feature gap with the stock twin
+**Symptom:** the simulator's rule chain differed from the ROM at every chain end of the NEW CASTER's
+skills. **Root cause:** not the view — the S81 rule model differs from the ROM for Sleep / Sap /
+PsycheUp / BoltSlash on a three-opponent board (its sweep had one opponent); the STOCK caster's own
+skills differ the same way, chain end for chain end. **Fix:** the walk compares the new skills' gap with
+the stock twin's on the same boards (equal) and logs the model gap (ROADMAP E17 note). **Rule:** when a
+model disagrees with the ROM about a new thing, run the same comparison on its original twin first —
+a gap both share is the model's, not the feature's.
+
+### S161 — a far call through RST_10 eats A and BC: hand the value over in E
+**Symptom:** the first `DupBase53` passed the queued skill id to bank $72 in A (and expected it back
+in C): every id came back as garbage, the conversion list never matched. **Root cause:** RST_10's
+entry is `ld a, [$4000] / push af / … / ld bc, $4001` and its return `pop af` — A / F and BC are the
+far call's own; only DE / HL (and memory) survive both ways. **Fix:** `push de / ld e, c / ld hl,
+$720D / rst $10 / ld c, e / pop de`; bank $72 `AIBaseOrSelf72` takes and returns E. **Rule:** a value
+crosses an RST_10 far call in D / E (or HL after the target is loaded, or WRAM) — never A, F, B or C;
+save DE around it when the caller needs it.
+
+### S161 — a walk that fails on a new save: check its assumptions about the save first
+**Symptom:** `walk_skills.py` (S155) failed its two LoneWolf checks on the user's current save, on the
+S160 build as on S161's. **Root cause:** the walk assumed the S155 save — two party monsters ("a party
+of two" got no bonus with three) and a party DEF the enemy could pierce (a 0 roll took the miss line).
+**Fix:** the walk sets the board it needs (party slot 3 emptied, the target's DEF held at 1). **Rule:**
+when a walk fails identically on the previous build, suspect the walk's picture of the save before the
+ROM — and make the walk set what it assumes instead of reading it from the save.

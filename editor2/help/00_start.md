@@ -53,7 +53,8 @@ built from it (the original ROM is never changed).
   learn it, power, targets, how the monster AI treats it, its battle rules and
   which skill's animation and sounds it plays — or which animation, screen
   effect or nothing it shows; and up to 30 new skills of your own (S160: 16
-  ids plus the 14 of the field-only items).
+  ids plus the 14 of the field-only items) — enemies use a new skill as they
+  use its base, plus its AI Preference (S161).
 - **Animations** — new battle animations made from the frames of the game's
   45, with a playing preview and their sounds.
 - **Breeding** — every monster's breeding depth and how you get it, the

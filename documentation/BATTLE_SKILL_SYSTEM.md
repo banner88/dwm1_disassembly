@@ -2094,7 +2094,7 @@ lost. The user (S159): "I do NOT care about making ANY seeds, books and warpwing
 battle. I jsut wanted to check its restricted to thems pecifically and messing with other
 skills/making new skills does not shift this"; (S160) "Mostly likely the new skills will be
 damage skills … I need the space". All 30 behave identically: a reclaimed id acts exactly like
-a `$EF-$FE` new skill (following the base's id-keyed rules is E17).
+a `$EF-$FE` new skill (following the base's id-keyed rules is E17 — built S161, §13.13).
 
 **Design ("option A": the stock rows stay).** A reclaimed id keeps its STOCK-table rows,
 filled with the new skill's data by the compiler: the record (`$54:$41CF + id×19` via
@@ -2107,8 +2107,8 @@ high ids get from their `$DE+` tables a reclaimed id gets from small new tables 
 |---|---|
 | bank $72 `FarSkillFork` | `cp $DE / jr c, .stock`; `.stock: call ReclaimBase72` — `ReclaimBaseTable` (region `gd_reclaim_base`, 24 rows `$BC-$D3`, `$FF` = not reclaimed) gives the base's id: the EFFECT runs as the base's (the high ids: `CustomBaseTable`) |
 | bank $58 `DispatchBoundsStub` | `.stock: call ReclaimRow58` — the AI target row from `ReclaimTargetTable` (`gd_reclaim_target`) |
-| bank $58 `SaveBtlFX_43ff` | `call FxEstimate58 / nop` (same size as `ld hl,$5203 / rst $10`): the AI damage estimate (bank $52 entry 3 `AIDamageEstimate_538f`) runs with `$DB8A` = `RECLAIM_VIEW` ($EF), put back after — its ladder sends `$6D-$D5` (but `$7E`) to rows past its 28-row table (CODE read as a pointer); a high id lands on row `$1B` (CalcSkillDefense) |
-| bank $57 `AIRule_4785` | `call SkillView57` (same size as `ld a,[$db8a]`): a reclaimed id is seen as `$EF` — the original rule VETOES `$88-$D9` when every opponent is paralysed |
+| bank $58 `SaveBtlFX_43ff` | `call FxEstimate58 / nop` (same size as `ld hl,$5203 / rst $10`): the AI damage estimate (bank $52 entry 3 `AIDamageEstimate_538f`) runs with `$DB8A` = `RECLAIM_VIEW` ($EF), put back after — its ladder sends `$6D-$D5` (but `$7E`) to rows past its 28-row table (CODE read as a pointer); a high id lands on row `$1B` (CalcSkillDefense). **S161:** the body is `jp EstimateView58` — a new skill is estimated as its BASE (§13.13); `FxEstimate58` stays inside it for an unused reclaimed id |
+| bank $57 `AIRule_4785` | `call SkillView57` (same size as `ld a,[$db8a]`): a reclaimed id is seen as `$EF` — the original rule VETOES `$88-$D9` when every opponent is paralysed. **Retired S161:** the rule reads `$DB8A` again, which holds a new skill's BASE during the chain (§13.13) — a new skill is vetoed exactly when its base is |
 | bank $4C `LoadB4c_Fork_custom` | `$FD` with `$DB8A < $DE`: `ReclaimLine4C` → row 33 + k of `CustomMsgPtrTable` (47 rows since S160, `ASSERT @ == $7476`); other stock ids → `LoadB4c_Fork_stockfd` (the vanilla empty `$FD`, the poison tick's follow-up) |
 | bank $06 `LearnCode2Guard06` | `call LearnFence06 / jp c`: code 2 (two or more prerequisites) fenced for `$DA+` (S75) AND the 14 ids |
 | bank $77 `BattleItemProbe` / `BattleItemPick` | `ReclaimedSkill77`: an item whose battle skill (its BASE's, `BattleSkillOf`) is one of the 14 ids is refused as record +10 = 1 — "Can't use this item in battle!" (`$F200`, bank $50 `jr_050_5199`) — whatever the new skill's record says |
@@ -2151,7 +2151,7 @@ The clone census (`census_skill_clone.py --reclaim`, `extracted/skill_clone_cens
 estimates lock the emulated CPU up (the table overrun), the R twins are vetoed by `AIRule_4785`, LifeAcorn /
 WarpWing are used in battle, RBang is learned.
 
-**FOUND S160 — two skills evolving from ONE skill freeze the game.** The learn scanner (bank
+**FOUND S160 — two skills evolving from ONE skill freeze the game (FIXED S161, below).** The learn scanner (bank
 $06) offers a code-1 skill when its single prerequisite is in the RECORD; the bank $51 caller
 `LevelUpS04_LearnScan` replaces that prerequisite in the WORKING list `$C0D8`. When two skills
 evolve from the same skill and both qualify at one level up, the first replaces it and the
@@ -2162,6 +2162,106 @@ child each, so it never happens there; a project makes it with any two skills (s
 new skills — e.g. a new skill "from Blaze" beside Blazemore). The compiler WARNS
 (`custom_skills.shared_evolution_check`); the simulator's `learn_scan` appends instead
 (unreachable in the game, commented). The engine fix is open (ROADMAP E13 note).
+
+**FIXED S161 (built S161, NOT yet user-tested): `LearnUpgradeOrAdd51`.** The 5 bytes `ldh a, [$da] /
+ld l, a / ld h, $06` of the code-1 path in `LevelUpS04_LearnScan` are `call LearnUpgradeOrAdd51 / jr c,
+jr_051_5799` (26 B in bank $51's free tail after `ArenaScriptType51`, `$7B3A`): the old id `$FFDA` still
+in the working list `$C0D8[0..39]` -> the upgrade as before (HL = `$06xx` for `[INS 30]`); gone -> HL =
+`$0B02` (the plain "… increases to LV … and learned …!" line, bank $41 table `$49CD` row 2) and C = `$FF`
+(the first free slot) — the second skill is learned BESIDE the first; the scanner then finds it in
+`$C0D8` and moves on. The level-up lines: code 0 `$0B02`, code 1 `$0B03` "…'s [old] becomes [new]!",
+code 2 `$0B0F` "… by chance, recalls …" (the clean tree's `ld hl, DispatchAboveE2` was this text id,
+a value). Measured (PyBoy, the user's save, `tools/walk_mirror.py` `siblings` / `later` / `full` /
+`plain`): Blaze at level 12 -> 13 = "Blaze becomes Blazemore!" ($0B03, C = Blaze) then "… and learned
+Flare!" ($0B02, C = $FF), the battle ends; once Blaze is gone the third child (Glow, level 40) is NEVER
+learned — the scanner tests a single prerequisite against the KNOWN skills (a monster still knowing
+Blaze learns it: the control); eight skills + two more -> the game's own forget menu, the battle ends;
+an ordinary upgrade (Firebal -> Firebane) unchanged. `--negative` (the 5 original bytes): the level up
+never ends again. `census_raising.py` (its stub caller mirrors the fix): 5,073 level-ups on a project
+with the pair, 0 mismatches; the S160 stub hangs on exactly that case. The compiler still WARNS (both
+children only at the same level up).
+
+### 13.13 The enemy AI and NEW skills — judged AS THEIR BASE (ROADMAP E17, S161)  [S161, 2026-10-30; PyBoy-verified, built S161, NOT yet user-tested]
+
+**The finding (measured S161, PyBoy, the user's save, the RNG free).** The AI (§15.10) scores each
+tag-matched option = the record's AI weight (+3) + a 0-15 roll + the bonus / penalty of its category's
+rule chain; cat 1 then compares the best with plain Attack (bank $58 entry 11: 60 in these battles).
+The 131 rules select skills **by id** (membership ladders on `$DB8A`), so a new id ($EF-$FE, or a
+reclaimed one) matched almost none and scored weight + roll only. Sparring rows (INT 200, weights
+30 / 250 / 30 / 0, the party defending): a mage with Firebal / Bang / Infernos / SnowStorm cast Bang 16
+of 58 actions (chain bonuses +40 / +60 / +40 / +40), the same mage with the four as NEW skills cast none
+in 50 (+0 / +20 / +0 / +0); a caster with Sleep / Sap / PsycheUp / BoltSlash 8 casts, its new twin 2.
+(S160's "0 new-skill casts" was measured with the RNG pinned every frame: every decision identical —
+the stock twin also cast none in that rig; DOC_AUDIT S161.) Stock slashers (EvilSlash / Beserker /
+SquallHit / Whistle) lose to Attack too: +25 / +30 / +30 / 0, sums ≤ 57 < 60 — the original game.
+
+**The design (user S161: "as base + preference", "Yes, with a sane base value").** While the chain
+walks a NEW skill's option, `$DB8A` holds its **base** (the stock skill whose effect it runs: bank $72
+`CustomBaseTable` / `ReclaimBaseTable`) — every id-keyed rule fires as for the base, vetoes included —
+and every record read (MP +4, element +5, flags, power, AI weight) gives the **new skill's own**
+record. Then its **AI preference** (`gamedata.skills.<id>.ai_preference`, -60 … +60, 0 = exactly as
+its base) is added like one more rule. The built-ins $DE-$EE (no base) keep their own rules (§13.10).
+
+| Where | What (patched code) |
+|---|---|
+| bank $57 state 4 `AIState4FilterEval_7439` | `call AIViewArm57` (was `ld [$db8a], a`, 3 B): `ld [$db8a], a`, then bank $72 entry 11 `AIViewArm72` — a new skill -> `wAIViewId` ($DED5) = its id, `wAIViewBase` ($DED6) = `$DB8A` = its base; any other id -> the view off (`wAIViewId` = 0). A = the option's own id again (its flags7 read). |
+| bank $54 `Fork54_RecordIndex` | the view on, a read of index `wAIViewBase` (b = 0) -> the record of `wAIViewId` (high: `CustomRecordPtrTable`; reclaimed: its own stock row) — all three record indexers (entries 0 / 1 / 2) go through it |
+| bank $57 `CustomAI57` (chain end `$78A2`) | `ld hl, $7208 / rst $10` for EVERY option (the `cp $DE` moved into bank $72): `CustomAIRule72` -> `AIPrefEnd72` when the view is on: the view off (`$DB8A` = the new id again), a veto (`$DD27` = $FF) stays one, else `AIPrefTable`[id − $BC] > 0 -> `$DD26` += it (saturating $FF, `AIBonus72`), < 0 -> `$DD27` += −it (saturating **$FE**: never a veto by itself; the chain end's borrow rule turns bonus < penalty into "not this turn", as for any rule). Built-ins: their S155 rules as before. |
+| bank $57 `AIChainZeroCell_788b` | `call AIViewOff57 / nop` (was `xor a / ld [$dd26], a`, 4 B): a mid-chain veto leaves without the chain end — bank $72 entry 12 `AIViewOff72`, then the same |
+| bank $57 `AIRule_4785` | back to `ld a, [$db8a]` (S160's `SkillView57` retired: `$DB8A` is the base during the chain) |
+| bank $58 `SaveBtlFX_43ff` | `jp EstimateView58` + 25 free bytes (`ASSERT @ == $441B`): the party's damage estimate (Attack row `$41E9`'s pick) runs with the view armed (the ladder sees the base: `SkillPowerBySide` for ids < $37, else `FxEstimate58` -> bank $52 entry 3), the record = the new skill's power; then the view off, `$DB8A` and an OUTER view (wAIViewId / wAIViewBase) put back. Until S161 every new id took row `$1B` (CalcSkillDefense) whatever its base. |
+| bank $72 | entries 11 `AIViewArm72` / 12 `AIViewOff72`, `AIBaseOf72` (id -> base, NC; C = not a new skill; `$FF` = none — `CustomBaseTable` covers $DE-$FE only), `AIPrefEnd72`, `AIPrefTable` (region `gd_ai_pref`, 67 signed bytes for ids $BC-$FE) |
+
+Bank $57's free tail: 13 B + `SkillView57`'s 16 + 3 from the shorter `CustomAI57` = 32 B; the three
+routines take 27 (`CustomAI57` 8, `AIViewArm57` 10, `AIViewOff57` 9).
+
+**Measured (PyBoy, the user's save, `tools/walk_mirror.py` on `examples/s161_mirror_demo` THE MIRROR
+HALL, 35 / 35; `--negative` (the view never on + the E13 fix removed) 28 FAIL).**
+- **Twins** (STOCK row vs its NEW twin, the same base data; the party defending, its HP and status
+  held; the RNG re-seeded at every AI state, commit and act — it also steps while the CPU idles, §15.8c,
+  so a new id's extra far calls drift it; KEY_LESSONS S161): the STOCK MAGE vs the NEW MAGE (high ids)
+  and vs the RECL MAGE (reclaimed ids): the same 72 decisions over 3 battles, 18 / 18 new-skill casts;
+  the STOCK CASTER vs the NEW CASTER: the same 81, 3 / 3. At every chain end of a new skill `$DB8A`
+  held its base.
+- **Preference** (the PICKY MAGE, RNG free, 3 battles): PBang (-60) cast 0, the stock Bang 16;
+  PSnow (+60) 30, the stock SnowStorm 0; after `CustomAI57` PSnow's bonus = 40 + 60 = 100, PBang's
+  60 with a penalty of 60 (net 0: weight + roll only — below Attack).
+- **Vetoes**: the party asleep -> Sleep and NSleep never cast, the veto exit saw Sleep's id `$15`.
+- **Own record**: NBang's battle MP (record +4) poked to 255 (ROM copy; the enemy has 250): NBang never
+  cast, vetoed at the chain as Bang's id by `$45F2` (the MP rule read the NEW skill's record).
+- **Estimate** (stub-called in a live battle): NFireb / NBang / NInfer / NSleep == their bases, the
+  ladder saw the base's id; NFireb's own power poked higher -> its estimate higher; an outer view put
+  back.
+- **The simulator** (`pacing.ChainRules` since S161: the base's id, the new skill's own record, its
+  preference — `ai_rules.evaluate_chain(..., pref=)`): == the ROM at all 168 + 168 chain ends of the new
+  mages' skills and 180 of the PICKY MAGE's. **FOUND S161:** for Sleep / Sap / PsycheUp / BoltSlash the
+  rule model differs from the ROM on this board (three live opponents, defending; e.g. Sleep +40 in the
+  ROM vs 0, BoltSlash +25 / +5 vs +35, PsycheUp vetoed vs +35) — for the STOCK skills exactly as for
+  their twins (the same 90+ / 90+ chain ends): the S81 sweep's board had ONE opponent. A gap of the
+  stock rule model (ROADMAP E17 note), not of the view.
+
+**Not changed.** An enemy with INT < 21 (`$DD0B` = 0) never runs the chains (the lightweight picker,
+§15.10.10: a random skill of its plan) — new and stock alike, no preference. Outside the AI the
+target rows were S111 / S160's (the base's row).
+
+**Later S161 — the duplicate-group-cast conversion tests a new skill as its base** (built S161, NOT yet
+user-tested; the user: "fix the issues if not too large"). An enemy's queued skill becomes Attack
+when it is in the 77-id `GroupDupSkillList_4ee4`, any enemy acts before it in the round, its EID flag
+is set and `$DD0B` ≠ 2 (§15.8b CLOSED S85; bank $53 `EnemyDupCastConversion_4e63` →
+`DupCastSkillListCheck_4ed6`, the id in C). Until now a new id was tested as itself (never in the
+list): two NEW MAGES both cast NBang where two stock mages convert the second Bang. Patched: `DupCastSkillListCheck_4ed6`'s `ld hl, GroupDupSkillList_4ee4` (3 B)
+→ `call DupBase53` (bank $53 $6DD1, 12 B of the tail's nops): `push de / ld e, c / ld hl, $720D / rst
+$10 / ld c, e / pop de / ld hl, GroupDupSkillList_4ee4 / ret` — bank $72 entry 13 `AIBaseOrSelf72`
+(`ld a, e / call AIBaseOf72 / ld e, a`): a new skill → its base, every other id itself. The id
+travels in **E** because RST_10's entry and return clobber A / F and BC (KEY_LESSONS S161). Measured
+(`walk_mirror.py` `dupcast`, 37 / 37; `--negative` 30 FAIL): `DupCastSkillListCheck_4ed6` stub-called
+for ids 0-255 → in the list exactly when the BASE is (NBang $F0, RBang $BD as Bang); two STOCK MAGES vs
+two NEW MAGES (INT mode 1, the RNG re-seeded): 21 / 21 conversions, 63 / 63 Bang casts; the simulator's
+`battle.dup_conversion` tests `core_alias` the same. **Found, open (a design question for the user):**
+the per-EID gate `EnemyDupConvFlagTable_41df` has 487 rows (one per vanilla EID); a PROJECT enemy row
+(EID ≥ 519) reads past it — 3,259 of the 3,321 bytes there are "flagged", vs 182 of the 487 vanilla
+rows — so whether a project enemy converts is an accident of the bytes after the table (ROADMAP E17
+note).
 
 ---
 

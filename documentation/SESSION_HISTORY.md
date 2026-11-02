@@ -1,5 +1,56 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-28 (Session 159 — **ROADMAP E16 BUILT: RESISTANCES — THE RESISTANCES TAB (EVERY MONSTER × THE
+> 27 IN SIX GROUPS: ELEMENTAL SPELLS, BREATHS, STATUS AILMENTS, STAT DOWN / DRAIN, SEALS, SPECIAL ATTACKS; WHAT EACH BLOCKS,
+> WHAT A LEVEL DOES, WHICH SKILLS TEST IT NOW, RIGHT-CLICK TO MOVE A SKILL), EARTH = THE UNUSED 27TH (QUAKE / NEW SKILLS / A
+> MOVED SKILL TEST IT; THE AI READS IT), THE SKILLS' ELEMENTS IN THE BALANCE SIMULATOR (NEVER SIMULATED BEFORE)** (user: "how
+> many extra custom skills I can make … proper resistance table visualizer and setter … (vanilla + quake family) … Stat
+> resistances need to be separated from elemental … what is HEAT resistance? … propagated to difficulty simulator?" → the
+> audit (16 new skill ids; E13's 14 reclaimable item-effect ids → 30; Heat = the Firebal line; skill elements never
+> simulated) → "1) Yes … 30 skills would be ok … 2) … I want quake included using the unused slot … Grouping good. Make sure
+> that I can look up which skills fall where … Real earth resistance so I can add new earth skills … #2 now and flag e13 for
+> next"). **Built S159, USER-CONFIRMED 2026-10-29 11:05 ("Great, works").**
+> Test ROM **`DWM-S159-earth-test.gbc`** (`f266a4cc…`, patched) = the user's project + THE FAULT HALL
+> (`examples/s159_earth_demo/build_demo.py`; way in: the FAULT GUIDE, Cities_FOUNT (3, 4)). Example pin `cee9bfb9…`
+> (patched; was `e7267428…`, patched — only `$51:$4410-$4451` + the header checksum differ).
+> **Session environment:** the permission check refused the RGBDS build until the user's OK ("Yes everything runs safe");
+> PySide6 6.12 segfaults in `QMediaDevices` here (the Music tab's `available()`) — test_app ran under PySide6 6.9.1.
+> **Found:** Fire = the Blaze line, Heat = the Firebal line (two types in the game; the names are the FAQ's); index 26 packs
+> into position 0 — the one position element 0 (134 skills) and the FireSlash row read — so Earth moved to position 27;
+> **skill element edits never reached the Balance simulator** (`Board.elem_override` filled only by validators; monster
+> resistances did); `AIRule_4c13`'s all-immune veto MEASURED working (a Bang caster 15 / 32 actions at Explosion 0, 0 / 26
+> at Explosion 3); the battle ITEM menu refuses a non-battle item ("Can't use this item in battle!") from the skill
+> record's +10 alone — E13 needs a fixed rule (ROADMAP E13); **an enemy with only a new skill on Bang never casts it** (S158
+> too; ROADMAP E17).
+> **Built (engine):** patched bank $51 `SaveBtlS_4404` (same size, `ASSERT @ == $4452`): resistance 26 = Earth → packed
+> position 27 (position 0 = 0: the original AI exactly); bank $79 template (re-pinned): the memorial's tag = record +$82
+> & `$F8`, a new tag OR-ed over bits 0-2 (`MemUpsert` / `MemRecMatch` / `MemRecTag`). BATTLE_SKILL_SYSTEM §15.3 "Earth",
+> PROJECT_COMPILER §2.67.
+> **Built (compiler + editor + simulator):** `RESIST_NAMES[26]` "Earth" (+ `RESIST_ALIASES` "Unused"); the memorial check
+> 0-3; NEW `editor2/core/resistances.py` + `app/resistances_tab.py` (the Resistances tab), `Document.set_species_resists`,
+> the Monsters box + the Skills element lists grouped, `SkillsTab.show_skill`; `BattleData.elem_override` / `custom_elem`,
+> `battle.custom_element`, `pacing.pack_res` Earth at 27, `raising_digest`; help NEW 79 + 00 / 52 / 54 / 72 / 90;
+> `EDITOR_REVISION` S159. EDITOR_DESIGN §5.2d.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_earth.py` on the demo): 40 / 40** — TREMORER's +$82 = 2 (StoneMan's
+> Earth); every combatant's packed bytes == `pack_res` (party with tag | Earth, enemies by species), position 27 = Earth,
+> position 0 = 0; Quake / Rockfall / Boom ×1 / ×0.85 / ×0.5 / 0 at Earth 0-3 (== the simulator ladder), Bang / Blaze
+> ignore Earth, Boom ignores Explosion; the SEISMIC SAGE casts Boom at Earth 0, no Earth skill at Earth 3 (every monster),
+> Boom at Explosion 3; the BLAST IMP control. `--negative` (the original packer) **21 FAIL**. `--memorial` (+ the S154
+> demo): 5 / 5 (Earth beside tag 8, the list's tags, no statue picks the fighters), `--negative-memorial` 3 FAIL;
+> walk_memorial 60 / 60 on S158 and S159 alike (a save copy with the memorial's "M1" zeroed — the user's save already holds
+> a list; KEY_LESSONS S159).
+> **Annotation:** bank $50 `jr_050_5199` (the item refusal, measured; both trees), bank $51 packer (the patched form),
+> bank $57 `AIRule_4c13` (measured; both trees).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1836 PASSED (+ `test_s159`; the S154 "27th resistance"
+> refusal became "Earth 2 compiles"); test_app `--rom` PASS (65 OK, the GUI build = the pin; + `s159_resistances`);
+> test_canvas `--rom` PASS; simulator validators f1 52,970 / f23 10,049 /
+> battle 6,614 / rules 240 / F10 332 — 0 mismatches (validate_damage s79's slot-2 pair fails on HEAD too).
+> **User test (2026-10-29 11:05): "Great, works - please hand off. I do NOT care about making ANY seeds, books and warpwing
+> every work in battle. I jsut wanted to check its restricted to thems pecifically and messing with other skills/making new
+> skills does not shift this"** — confirmed (2026-10-28 18:13 answer, ROADMAP E13): the reclaim touches only those 14 items'
+> battle row; their field use, every other item, new items on other bases and the skills / new skills never move it.
+> **Next:** ROADMAP E13 (30 custom skills; the 14 items field-only, the fixed rule keyed on the item's base).
+
 > Last verified: 2026-10-28 (Session 158 — **ROADMAP E15 CLOSED: BREEDING HINTS — MONUMENTS IN A PROJECT'S ROOMS (A GATE'S
 > FLOORS TOO) TEACH ONE SPECIAL CROSS THE PLAYER HAS NOT LEARNED (RANDOM; THE SAME ON A RE-READ IN ONE VISIT, ANOTHER NEXT
 > VISIT; SKIP CHILDREN THE PLAYER HAS OWNED; THE CROSS, A RIDDLE, OR BOTH), ONE ARCHIVE PER FAMILY LISTS ITS LEARNED CROSSES

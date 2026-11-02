@@ -2588,6 +2588,10 @@ jr_053_4ed3:
     ret
 
 
+; DupCastSkillListCheck_4ed6: Z iff the skill id in C is in GroupDupSkillList_4ee4 (the
+; 77 group skills a later enemy's cast converts to Attack, BATTLE_SKILL_SYSTEM §15.8b).
+; S161 (patched builds only, BATTLE_SKILL_SYSTEM §13.13): the `ld hl` is `call DupBase53`,
+; which turns a NEW skill's id in C into its base first (bank $72 AIBaseOrSelf72).
 DupCastSkillListCheck_4ed6:
     ld hl, GroupDupSkillList_4ee4
 

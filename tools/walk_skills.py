@@ -53,7 +53,7 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
-from tools.pyboy_harness import adv, tap, GAME_MODE, MAP_ID, PARTY_SLOT0  # noqa: E402
+from tools.pyboy_harness import adv, tap, GAME_MODE, MAP_ID, PARTY_SLOT0, PARTY_LIST  # noqa: E402
 from tools.walk_regions import Walk, s_continue                           # noqa: E402
 
 REPEL, LONEWOLF, PUNISH, FINISH, RUPTURE, RUST = 0xDE, 0xDF, 0xEB, 0xEC, 0xED, 0xEE
@@ -253,9 +253,15 @@ def s_numbers(w):
     st = io.BytesIO()
     w.p.save_state(st)
 
-    def run(sk, caster, tgt, **kw):
+    def run(sk, caster, tgt, two=False, **kw):
         st.seek(0)
         w.p.load_state(st)
+        if two:
+            # [S161] "a party of two": the walk was written for a save with two monsters in
+            # the party; the user's save (2026-10) has three — LoneWolf then gets no bonus
+            # (x1). Party slot 3 emptied in the field (after the last warp, the S70 rule).
+            w.m[PARTY_LIST + 2] = 0xFF
+            w.m[0xCA8D] = 2
         return w.rig(caster, sk, tgt, handlers=H, others=CURSE_ATTACK, **kw)
 
     # LoneWolf: party of two (the save's party) x2; an enemy alone x4. [S155 r2] the
@@ -268,10 +274,14 @@ def s_numbers(w):
                 and bt['hit'][1] == want and bt['line'] == line and order_ok(bt))
         w.check(what, good, f"roll {r}, line {bt['line']} @{bt['line_f']}, slash @"
                 f"{bt['slash_f']}, hit {bt['hit']} @{bt['hit_f']}, sound @{bt['snd_f']}")
+    def _soft_target(m):
+        # [S161] the user's party (2026-10) has DEF the enemy's ATK cannot pierce (roll 0 ->
+        # the miss line, no hit): party slot 0's DEF held at 1 for the "enemy alone" case
+        w16(m, 0xDBF3, 1)
     chk('LoneWolf, a party of two: line 1 before the attack, the hit x2 with its sound',
-        beats(run(LONEWOLF, 1, 4), LONEWOLF), 1, 200)
+        beats(run(LONEWOLF, 1, 4, two=True), LONEWOLF), 1, 200)
     chk('LoneWolf, an enemy alone: line 1 first, x4, the sound with "receives"',
-        beats(run(LONEWOLF, 4, 0), LONEWOLF), 1, 400)
+        beats(run(LONEWOLF, 4, 0, board=_soft_target), LONEWOLF), 1, 400)
     # Punish: no buff x1 (the line only when CustomLineAlways has it — S155 r3);
     # Bounce + Barrier on the foe = 2 buffs x2
     al = w.line_always

@@ -671,29 +671,12 @@ SaveBtlFX_43ff:
 ; caster's side); else -> bank $52 entry 3 AIDamageEstimate_538f ($5203: a per-skill
 ; dispatch whose table holds 28 rows — see there). Result in $db56 / $db57.
 ; Patched builds (S160, ROADMAP E13): the bank $52 call is FxEstimate58 (a reclaimed id
-; is estimated as a new skill's id, $EF).
-    push bc
-    ld a, [$db8a]
-    cp $37
-    jr c, jr_058_4415
-
-    cp $d9
-    jr z, jr_058_4415
-
-    cp $dd
-    jr z, jr_058_4415
-
-    call FxEstimate58       ; [S160] same size (was ld hl, $5203 / rst $10): bank $52 entry 3,
-    nop                     ;   a reclaimed id seen as a new skill (its row is past the table)
-    jr jr_058_4419
-
-jr_058_4415:
-    ld hl, $5403
-    rst $10
-
-jr_058_4419:
-    pop bc
-    ret
+; is estimated as a new skill's id, $EF). [S161] (ROADMAP E17): the whole estimate runs in
+; EstimateView58 — a NEW skill estimated AS ITS BASE (the ladder and the dispatch see the
+; base's id, the record reads give the new skill's own power); 28 B -> 3 + 25 free.
+    jp EstimateView58
+    ds 25, $00
+    ASSERT @ == $441b
 
 
 CallBtlFX_441b:
@@ -7656,6 +7639,51 @@ FxEstimate58:
 .plain:
     ld hl, $5203            ; bank $52 entry 3 (as the original game)
     rst $10
+    ret
+; [S161] EstimateView58 (ROADMAP E17, BATTLE_SKILL_SYSTEM §13.13) — SaveBtlFX_43ff's
+; body: the AI's damage estimate of the acting skill $DB8A on one target (C), result in
+; $DB56 / $DB57. A NEW skill is estimated AS ITS BASE (bank $72 entry 11 AIViewArm72:
+; $DB8A = the base, bank $54 reads the new skill's record for it) — until S161 every new
+; skill took row $1B (CalcSkillDefense) whatever its base; then the view off (entry 12),
+; the id and an outer view (a chain's, if any) put back. The ladder as the original:
+; id < $37, $D9, $DD -> bank $54 entry 3 SkillPowerBySide; else bank $52 entry 3
+; (FxEstimate58: an unused reclaimed id still seen as $EF).
+EstimateView58:
+    push bc
+    ld a, [wAIViewId]
+    push af
+    ld a, [wAIViewBase]
+    push af
+    ld a, [$db8a]
+    push af
+    push bc
+    push de
+    ld hl, $720B            ; AIViewArm72
+    rst $10
+    pop de
+    pop bc
+    ld a, [$db8a]
+    cp $37
+    jr c, .power
+    cp $d9
+    jr z, .power
+    cp $dd
+    jr z, .power
+    call FxEstimate58
+    jr .done
+.power:
+    ld hl, $5403
+    rst $10
+.done:
+    ld hl, $720C            ; AIViewOff72
+    rst $10
+    pop af
+    ld [$db8a], a
+    pop af
+    ld [wAIViewBase], a
+    pop af
+    ld [wAIViewId], a
+    pop bc
     ret
     ds $7959 - @, $00       ; the bank's free run (was a counted nop pad)
     ASSERT @ == $7959

@@ -5301,7 +5301,10 @@ Items tab says "field-only". NEW warning (S160) `shared_evolution_check`: two sk
 custom) whose learn rows name the SAME single prerequisite — the game freezes at a level up
 where both qualify (measured; BATTLE_SKILL_SYSTEM §13.12 "FOUND S160"); the original data has
 none; and one for a custom / new skill whose learn row names two or more prerequisites (never
-learned: the S75 code-2 fence). `tools/validate_custom_data.py` accepts the `call LearnFence06 / jp c` fence.
+learned: the S75 code-2 fence). **S161:** the freeze is fixed (bank $51 `LearnUpgradeOrAdd51`, §2.69);
+the warning now says the children are all learned only at the SAME level up (the first in the
+prerequisite's place, the others beside it) and that once one has replaced the prerequisite the others
+can no longer be learned. `tools/validate_custom_data.py` accepts the `call LearnFence06 / jp c` fence.
 
 **Editor / simulator.** Skills list: the 14 ids leave the stock list; new skills sorted
 `$EF-$FE` first; lend / sounds pickers skip unused reclaimed ids; Monsters tab labels a
@@ -5310,6 +5313,44 @@ reclaimed id as custom. Simulator: `raising.learn_scan` fences code 2 for the 14
 ids without one); `balance._stock_elements` skips custom ids. `census_skill_clone.py
 --reclaim` (the clone census at `$BC` / `$CC` / `$EF`). Help 54 / 74 / 00, `EDITOR_REVISION`
 S160. `test_compiler.test_s160`.
+
+
+## §2.69 S161 — the enemy AI and NEW skills: judged AS THEIR BASE + an AI preference (ROADMAP E17); two skills from one skill (the E13 note)
+
+**Schema.** `gamedata.skills.<id>.ai_preference` (a NEW skill only, ids `custom_skills.NEW`): a whole
+number -60 … +60 (`AI_PREF_MIN` / `AI_PREF_MAX`); absent / 0 = exactly as its base. Refused: out of
+range, not an int (bools too); on a built-in ($DE-$EE) it is an unknown key. `Document.set_skill_ai_pref
+(sid, v)` (0 / None removes the key); `skill_detail()['ai_preference']` (None for non-new skills).
+
+**Where the data goes.** NEW region `gd_ai_pref` (bank $72 `AIPrefTable`, 67 signed bytes for ids
+$BC-$FE, index id − $BC; rows without a new skill 0; `emit_ai_pref`). REGIONS 25.
+
+**Engine (every build, patched; BATTLE_SKILL_SYSTEM §13.13).** Bank $57: state 4 `call AIViewArm57`,
+`AIChainZeroCell_788b` `call AIViewOff57 / nop`, `CustomAI57` for every option, `AIRule_4785` back to
+`ld a, [$db8a]` (S160 `SkillView57` retired); bank $72 entries 11 `AIViewArm72` / 12 `AIViewOff72` +
+`AIBaseOf72` / `AIPrefEnd72` / `AIPrefTable`; bank $54 `Fork54_RecordIndex` (the view's record
+substitution); bank $58 `SaveBtlFX_43ff` -> `EstimateView58`; WRAM `wAIViewId` $DED5 / `wAIViewBase`
+$DED6. The E13 note: bank $51 `LearnUpgradeOrAdd51` (BATTLE_SKILL_SYSTEM §13.12 "FIXED S161"). No
+template re-pin (banks $51 / $54 / $57 / $58 / $72 are hand-kept patches). Example pin moves:
+`f4a78bfb…` (patched; was `1855e3a0…`, patched) — only banks $00 (the header checksum) / $51 / $54 /
+$57 / $58 / $72 differ. **Later S161:** bank $53 `DupCastSkillListCheck_4ed6` `call DupBase53` + bank
+$72 entry 13 `AIBaseOrSelf72` (the duplicate-group-cast conversion tests a new skill as its base,
+BATTLE_SKILL_SYSTEM §13.13) — the pin moves again to `c8fdb078…` (patched; the first S161 build
+`f4a78bfb…` historical), no template re-pin, no new region.
+
+**Simulator / Balance.** `BattleData.ai_pref` (from `custom_skills.resolve`'s `ai_pref`); the Board
+carries `ai_pref` (`balance._board`, `planner._SHARED`); `pacing.ChainRules.evaluate` runs
+`ai_rules.evaluate_chain` with the BASE's id (`b.core_alias`), the new skill's own record and `pref=`
+(> 0 bonus, < 0 penalty capped at $FE, a veto kept — `AIPrefEnd72`); the Balance cache key gains
+`'S161 ai view'` + the preferences for projects with new skills only (the original game's digests and
+the anchor unchanged). `raising.learn_scan`'s S160 "unreachable" branch is the game's since S161;
+`tools/census_raising.py`'s stub caller mirrors `LearnUpgradeOrAdd51`.
+
+**Editor.** Skills tab → Monster AI → **Preference** (a new skill only; the note says what the number
+does); help 54 "How the AI chooses, and a new skill's Preference" + the shared-parent paragraph, help 00
+/ 72; `EDITOR_REVISION` S161. `test_compiler.test_s161` (+ `--rom`: `AIViewArm72` / `AIViewOff72` /
+`CustomAIRule72` / `Fork54_RecordIndex` / `LearnUpgradeOrAdd51` RUN for every id, the hooks' bytes);
+`test_app` (the Preference box).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

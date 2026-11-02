@@ -95,58 +95,69 @@ def stub_rst(m, p, hl, park_off=4):
 
 # the bank $51 learn caller ($5763 state) as one loop: call the scanner until
 # $FFD8 = $FF; c = $FF (plain / all-prereqs) or the replaced id ($FFDA) for an
-# upgrade; the first $C0D8 byte == c takes the new id.
-LEARN_LOOP = [
-    0xF3,                    # di
-    0x21, 0x05, 0x06,        # loop: ld hl,$0605
-    0xD7,                    # rst $10
-    0xF0, 0xD8,              # ldh a,[$d8]
-    0xFE, 0xFF,              # cp $ff
-    0x28, 0x1E,              # jr z,done
-    0x0E, 0xFF,              # ld c,$ff
-    0xF0, 0xD9,              # ldh a,[$d9]
-    0xB7,                    # or a
-    0x28, 0x07,              # jr z,scan
-    0xFE, 0x02,              # cp 2
-    0x28, 0x03,              # jr z,scan
-    0xF0, 0xDA,              # ldh a,[$da]
-    0x4F,                    # ld c,a
-    0x21, 0xD8, 0xC0,        # scan: ld hl,$c0d8
-    0x06, 0x28,              # ld b,$28
-    0x7E,                    # s1: ld a,[hl]
-    0xB9,                    # cp c
-    0x20, 0x05,              # jr nz,s2
-    0xF0, 0xD8,              # ldh a,[$d8]
-    0x77,                    # ld [hl],a
-    0x18, 0xDE,              # jr loop
-    0x23,                    # s2: inc hl
-    0x05,                    # dec b
-    0x20, 0xF4,              # jr nz,s1
-    0x18, 0xD8,              # jr loop
-    0x3E, 0xA5,              # done: ld a,$A5
-    0xEA, MARK & 0xFF, MARK >> 8,   # ld [MARK],a
-    0x18, 0xFE,              # jr $
+# upgrade; the first $C0D8 byte == c takes the new id. [S161] an upgrade whose old id
+# is no longer in $C0D8 (two skills evolving from one skill, the patched bank $51
+# LearnUpgradeOrAdd51) goes into the first free slot instead (c := $FF, scan again).
+# Items: bytes, or ('jr', cond_opcode, label) / ('label', name).
+_LEARN_SRC = [
+    [0xF3],                          # di
+    ('label', 'loop'),
+    [0x21, 0x05, 0x06],              # ld hl,$0605
+    [0xD7],                          # rst $10
+    [0xF0, 0xD8],                    # ldh a,[$d8]
+    [0xFE, 0xFF],                    # cp $ff
+    ('jr', 0x28, 'done'),            # jr z,done
+    [0x0E, 0xFF],                    # ld c,$ff
+    [0xF0, 0xD9],                    # ldh a,[$d9]
+    [0xB7],                          # or a
+    ('jr', 0x28, 'scan'),            # jr z,scan
+    [0xFE, 0x02],                    # cp 2
+    ('jr', 0x28, 'scan'),            # jr z,scan
+    [0xF0, 0xDA],                    # ldh a,[$da]
+    [0x4F],                          # ld c,a
+    ('label', 'scan'),
+    [0x21, 0xD8, 0xC0],              # ld hl,$c0d8
+    [0x06, 0x28],                    # ld b,$28
+    ('label', 's1'),
+    [0x7E],                          # ld a,[hl]
+    [0xB9],                          # cp c
+    ('jr', 0x20, 's2'),              # jr nz,s2
+    [0xF0, 0xD8],                    # ldh a,[$d8]
+    [0x77],                          # ld [hl],a
+    ('jr', 0x18, 'loop'),            # jr loop
+    ('label', 's2'),
+    [0x23],                          # inc hl
+    [0x05],                          # dec b
+    ('jr', 0x20, 's1'),              # jr nz,s1
+    [0x79],                          # ld a,c        [S161] not found:
+    [0xFE, 0xFF],                    # cp $ff
+    ('jr', 0x28, 'loop'),            # jr z,loop     (a free-slot search found none)
+    [0x0E, 0xFF],                    # ld c,$ff      the upgrade's old id is gone:
+    ('jr', 0x18, 'scan'),            # jr scan       the first free slot
+    ('label', 'done'),
+    [0x3E, 0xA5],                    # ld a,$A5
+    [0xEA, MARK & 0xFF, MARK >> 8],  # ld [MARK],a
+    [0x18, 0xFE],                    # jr $
 ]
 
 
 def _fix_jumps():
-    """Resolve the relative jumps above from their labels (kept readable)."""
-    c = list(LEARN_LOOP)
-    loop, scan, s1, done = 1, 25, 30, 45
-    pos = {'jz_done': 9, 'jz_scan1': 16, 'jz_scan2': 20, 'jr_loop1': 37, 'jnz_s2': 32,
-           'jnz_s1': 41, 'jr_loop2': 43}
-    s2 = 39
-    def rel(at, to):
-        return (to - (at + 2)) & 0xFF
-    c[pos['jz_done'] + 1] = rel(pos['jz_done'], done)
-    c[pos['jz_scan1'] + 1] = rel(pos['jz_scan1'], scan)
-    c[pos['jz_scan2'] + 1] = rel(pos['jz_scan2'], scan)
-    c[pos['jnz_s2'] + 1] = rel(pos['jnz_s2'], s2)
-    c[pos['jr_loop1'] + 1] = rel(pos['jr_loop1'], loop)
-    c[pos['jnz_s1'] + 1] = rel(pos['jnz_s1'], s1)
-    c[pos['jr_loop2'] + 1] = rel(pos['jr_loop2'], loop)
-    assert c[scan] == 0x21 and c[s1] == 0x7E and c[s2] == 0x23 and c[loop] == 0x21
-    return c
+    """Assemble _LEARN_SRC (two passes: label addresses, then the relative jumps)."""
+    pos, at = {}, 0
+    for it in _LEARN_SRC:
+        if isinstance(it, tuple) and it[0] == 'label':
+            pos[it[1]] = at
+        else:
+            at += 2 if isinstance(it, tuple) else len(it)
+    out = []
+    for it in _LEARN_SRC:
+        if isinstance(it, tuple) and it[0] == 'label':
+            continue
+        if isinstance(it, tuple):
+            out += [it[1], (pos[it[2]] - (len(out) + 2)) & 0xFF]
+        else:
+            out += it
+    return out
 
 
 LEARN_CODE = _fix_jumps()

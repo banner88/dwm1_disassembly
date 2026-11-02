@@ -21,8 +21,10 @@ on the 14 reclaimed ids) + HSnow / HHell ($FD / $FE).
            E17). The two id-range routines STUB-CALLED in a live battle (a forked copy each,
            so a CPU lock-up is caught): bank $58 SaveBtlFX_43ff (the AI damage estimate, bank
            $52 entry 3 — reached in play only by a party monster's own target pick) of the
-           five Attack-row twins: H == R, AIDamageEstimate_538f sees $EF; bank $57 AIRule_4785
-           with every party monster paralysed: stock Sleep vetoed, six twin pairs not;
+           five Attack-row twins: H == R, AIDamageEstimate_538f never sees a raw reclaimed id
+           (S161: it sees the base, bank $58 EstimateView58); bank $57 AIRule_4785 with every
+           party monster paralysed, the view armed first as the chain does (S161, bank $72
+           AIViewArm72): stock Sleep vetoed, the six twin pairs judged as their bases;
   items    a LifeAcorn / a WarpWing in the bag: the battle ITEM menu refuses them ("Can't use
            this item in battle!", message $F2; no skill acts, the bag keeps them) though
            their ids hold RFireb / RMulti; a Herb is accepted (the control); in the field
@@ -32,9 +34,9 @@ on the 14 reclaimed ids) + HSnow / HHell ($FD / $FE).
            prerequisites: the learn scanner's code 2 is fenced for new skills, bank $06
            LearnFence06 — both kinds alike);
   freeze   (the hazard behind the compiler's S160 warning) in a ROM copy RFireb's learn row
-           names Blazemost too: the same level up never ends — bank $51 LevelUpS04_LearnScan
-           replaces Blazemost with the first, finds no Blazemost for the second and the scanner
-           offers it again, forever (any two skills evolving from one skill alone).
+           names Blazemost too: S160 measured a level up that never ended (bank $51
+           LevelUpS04_LearnScan found no Blazemost for the second); since S161 (bank $51
+           LearnUpgradeOrAdd51, ROADMAP E13 note) it ends and BOTH are learned.
 
   python3 tools/walk_reclaim.py --build DEMO/build/build --project DEMO/project.json \\
       --sav USER.sav --keep KEEP [--negative] [--steps …]
@@ -345,7 +347,11 @@ def s_enemy(w):
         r = forked(run_)
         return tuple(r) if isinstance(r, list) else (False, None, [r])
 
-    def veto(sk):
+    b72, a72 = w.sym['AIViewArm72']
+
+    def veto(sk, view=True):
+        """[S161] as the chain does it: bank $72 AIViewArm72 first ($DB8A = a new skill's
+        base, the view on), then AIRule_4785."""
         def run_():
             st2.seek(0)
             w.p.load_state(st2)
@@ -353,10 +359,12 @@ def s_enemy(w):
             m[0xDD27] = 0
             for k in range(3):
                 m[0xDB02 + 8 * k] |= 0x40
+            ok0 = stub_call(w, b72, a72) if view else True
+            seen = m[0xDB8A]
             ok = stub_call(w, b57, a57)
-            return [ok, m[0xDD27]]
+            return [ok0 and ok, m[0xDD27], seen]
         r = forked(run_)
-        return tuple(r) if isinstance(r, list) else (False, r)
+        return tuple(r) if isinstance(r, list) else (False, r, None)
     for n in ('Beser', 'Evil', 'Squal', 'Psych', 'Whist'):
         hi, re = w.H[n], w.R[n]
         a, b = est(hi), est(re)
@@ -367,15 +375,18 @@ def s_enemy(w):
         w.check(f'… AIDamageEstimate_538f never reads R{n}\'s raw id (it would index past its '
                 '28-row table)', b[0] and b[2] and not any(x in RECLAIMED for x in b[2]),
                 f'$DB8A seen {[hex(x) if isinstance(x, int) else x for x in b[2]]}')
-    sleep = veto(0x15)
+    sleep = veto(0x15, view=False)
     w.check('control — AIRule_4785, every opponent paralysed: the stock Sleep ($15) is VETOED '
-            '($DD27 = $FF)', sleep == (True, 0xFF), str(sleep))
+            '($DD27 = $FF)', sleep[:2] == (True, 0xFF), str(sleep))
+    bases = {'Sleep': 0x15, 'Sap': 0x1C, 'Psych': 0x56, 'Volt': 0x45, 'Evil': 0x40, 'Whist': 0x7E}
     for n in ('Sleep', 'Sap', 'Psych', 'Volt', 'Evil', 'Whist'):
         hi, re = w.H[n], w.R[n]
-        a, b = veto(hi), veto(re)
-        w.check(f'AIRule_4785, every opponent paralysed: H{n} (${hi:02X}) and R{n} '
-                f'(${re:02X}) the same — not vetoed (a new skill; ${re:02X} lies in the stock '
-                'veto range $88-$D9)', a[0] and b[0] and a == b == (True, 0), f'H {a}, R {b}')
+        a, b, c = veto(hi), veto(re), veto(bases[n], view=False)
+        w.check(f'AIRule_4785, every opponent paralysed: H{n} (${hi:02X}) and R{n} (${re:02X}) '
+                f'judged AS THEIR BASE ${bases[n]:02X} (S161: the rule sees the base\'s id; '
+                f'{"vetoed" if c[1] == 0xFF else "not vetoed"} like it)',
+                a[0] and b[0] and a[1] == b[1] == c[1] and a[2] == b[2] == bases[n],
+                f'H {a}, R {b}, base {c}')
 
 
 def battle_menu_item(w, slot):
@@ -522,7 +533,7 @@ def s_learn(w):
 
 
 def s_freeze(w):
-    print('freeze: two skills evolving from ONE skill (the compiler warns) — measured')
+    print('freeze: two skills evolving from ONE skill — the S160 freeze, fixed S161')
     rom = bytearray(open(w.rom, 'rb').read())
     o = 0x06 * 0x4000 + 0x50E0 - 0x4000 + 18 * w.R['Fireb'] + 13
     rom[o] = BLAZEMOST                                   # RFireb from Blazemost, as HFireb
@@ -542,9 +553,10 @@ def s_freeze(w):
         r = w.talk([True])
         back = w.battle_won(maxf=12000) if r == 'battle' else False
         w.snap('freeze')
-        w.check('HFireb and RFireb both from Blazemost (ROM copy): the level up never ends — '
-                'the learn step offers the second forever (the warning is real)',
-                r == 'battle' and not back and m[GAME_MODE] == 2,
+        sk = [w.rec(k, 0x29 + i) for i in range(8)]
+        w.check('HFireb and RFireb both from Blazemost (ROM copy): S160 measured a level up that '
+                'never ended; S161 (bank $51 LearnUpgradeOrAdd51): it ends and BOTH are learned',
+                r == 'battle' and back and w.H['Fireb'] in sk and w.R['Fireb'] in sk,
                 f'{r}, back to the field {back}, level {w.rec(k, 0x4B)}, skills '
                 f'{[hex(w.rec(k, 0x29 + i)) for i in range(4)]}')
     finally:
@@ -558,14 +570,11 @@ def negative_rom(w):
     rom[rom_off(sym, 'ReclaimBase72')] = 0xC9                      # ret: the id unchanged
     o = rom_off(sym, 'ReclaimLine4C')
     rom[o:o + 2] = b'\x37\xC9'                                     # scf / ret: stock $FD
-    o = rom_off(sym, 'SaveBtlFX_43ff')
-    k = rom.find(bytes([0xCD]) + bytes([sym['FxEstimate58'][1] & 0xFF,
-                                        sym['FxEstimate58'][1] >> 8]) + b'\x00', o, o + 0x40)
-    if k < 0:
-        raise SystemExit('SaveBtlFX_43ff: no `call FxEstimate58 / nop`')
-    rom[k:k + 4] = b'\x21\x03\x52\xD7'                             # ld hl,$5203 / rst $10
-    o = rom_off(sym, 'SkillView57')
-    rom[o + 3:o + 4] = b'\xC9'                                     # ld a,[$db8a] / ret
+    o = rom_off(sym, 'FxEstimate58')                               # [S161] the estimate's
+    pl = sym['FxEstimate58.plain'][1]                              #   body is EstimateView58:
+    rom[o:o + 3] = bytes([0xC3, pl & 0xFF, pl >> 8])               #   FxEstimate58 -> .plain
+    o = rom_off(sym, 'AIViewArm72')                                # [S161] SkillView57's
+    rom[o + 4] = 0xC9                                              #   successor: the view off
     o = rom_off(sym, 'ReclaimedSkill77')
     rom[o:o + 2] = b'\xA7\xC9'                                     # and a / ret: never
     o = rom_off(sym, 'LearnFence06')
@@ -574,8 +583,8 @@ def negative_rom(w):
     open(w.rom, 'wb').write(rom)
     w.negative = True
     print('NEGATIVE CONTROL: ReclaimBase72 / ReclaimLine4C return at once, FxEstimate58 = the '
-          'original estimate call, SkillView57 = $DB8A raw, ReclaimedSkill77 never, LearnFence06 '
-          '= custom $DA+ only')
+          'original estimate call, AIViewArm72 = the view off (S161; was SkillView57), '
+          'ReclaimedSkill77 never, LearnFence06 = custom $DA+ only')
 
 
 def main():

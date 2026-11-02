@@ -1048,6 +1048,11 @@
 ;                target (the slot tested), +2 1 = only the buffs the caster lacks, +3 the
 ;                pick (counts down), +4 the StealTable row, +5 the name's skill id.
 ;                Transient. BATTLE_SKILL_SYSTEM §13.11. [S156]
+;   DED2-DED4    wOneOnlyItem / wOneOnlyRes / wOneOnlySay (one-only items). [S157]
+;   DED5    1    wAIViewId — the AI's view of a NEW skill: its own id while the bank $57
+;                rule chain walks its option (0 = off); bank $72 AIViewArm72 / AIViewOff72,
+;                read by bank $54 Fork54_RecordIndex. Transient. BATTLE_SKILL_SYSTEM §13.13. [S161]
+;   DED6    1    wAIViewBase — its base's id (what $DB8A holds while the view is on). [S161]
 
 ## [S87] Obedience / WLD / party personality
 

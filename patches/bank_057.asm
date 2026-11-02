@@ -1364,9 +1364,11 @@ jr_057_476f:
 ; [S160] AIRule_4785 — VETO the option (AIScanSlots_4456 with E = $40: +2 bit 6) when every
 ; valid opponent is PARALYSED, for the working ids $15-$19, $1C-$28, $2A, $68-$6B, $6E,
 ; $71-$73, $77-$80, $88-$D9 and $DC (the paralysis / disable family — and, by the range,
-; Chance's outcomes and the item ids $B0-$D4); a reclaimed id is seen as $EF (SkillView57).
+; Chance's outcomes and the item ids $B0-$D4). [S161] A NEW skill is judged as its base
+; (AIViewArm57: $DB8A = the base during the chain), so a new skill on a vetoed base is
+; vetoed too; S160's SkillView57 (a reclaimed id seen as $EF here) is retired.
 AIRule_4785:
-    call SkillView57        ; [S160] same size (was ld a, [$db8a]): a reclaimed id = a new skill's
+    ld a, [$db8a]
     cp $15
     ret c
 
@@ -10016,7 +10018,9 @@ Jump_057_7441:
     ld [$dd27], a
     inc hl
     ld a, [hl]
-    ld [$db8a], a
+    call AIViewArm57            ; [S161] was `ld [$db8a], a` (3 B -> 3): a NEW skill is judged
+                                ;   AS ITS BASE — the rules see the base's id in $DB8A, every
+                                ;   record read still gives the new skill's own (A = its id)
     ld [$db4c], a
     ld a, $00
     ld [$db4d], a
@@ -10849,8 +10853,8 @@ jr_057_786d:
 ; Veto exit: zero the option's $DCE4 cell. Entered from BOTH the mid-chain
 ; $DD27==$FF check and the end-of-chain borrow (KEY_LESSONS S81). (S81)
 AIChainZeroCell_788b:
-    xor a
-    ld [$dd26], a
+    call AIViewOff57            ; [S161] was `xor a / ld [$dd26], a` (4 B -> 4): the view off
+    nop                         ;   ($DB8A = the option's own id again), then the same
     ld [$dd27], a
     ld a, [$c1fc]
     ld hl, $dce4
@@ -12316,40 +12320,38 @@ CalcBtlAI_7fca:
 
 ; =============================================================================
 ; [S155] CustomAI57 — the chain end (AIChainApplyDelta_78a2) of the AI's per-skill
-; rule walk, for a CUSTOM skill ($DB8A >= $DE): bank $72 entry 8 (CustomAIRule72)
-; adds its own bonus ($DD26) / penalty ($DD27; $FF = veto) — the vanilla rules
-; select on stock ids and never fire for these (BATTLE_SKILL_SYSTEM §15.10.5,
-; §13.10). Then the displaced `ld a, [$c1fc]`. 15 of the bank's 47 trailing
-; free bytes.
+; rule walk: bank $72 entry 8 (CustomAIRule72). [S161] called for EVERY option (the
+; id test moved into bank $72): a NEW skill's view ends there ($DB8A back to its own
+; id) and its AI preference is added; a built-in custom skill ($DE-$EE) adds its own
+; bonus ($DD26) / penalty ($DD27; $FF = veto) — the vanilla rules select on stock ids
+; (BATTLE_SKILL_SYSTEM §15.10.5, §13.10, §13.13). Then the displaced `ld a, [$c1fc]`.
 ; =============================================================================
 CustomAI57:
-    ld a, [$db8a]
-    cp $de
-    jr c, .done
     ld hl, $7208
     rst $10
-.done:
     ld a, [$c1fc]
     ret
 ; =============================================================================
-; [S160] SkillView57 (ROADMAP E13, BATTLE_SKILL_SYSTEM §13.12) — AIRule_4785's
-; `ld a, [$db8a]` (same size): A := the working skill id the rule sees. The rule (veto
-; the option when every valid opponent is paralysed, +2 bit 6) selects stock ids by
-; range — $93-$D9 among them, the item ids too — so a NEW skill on a RECLAIMED id
-; ($BC-$C1 / $CC-$D3) is seen as RECLAIM_VIEW, the id of a new skill $EF-$FE, which the
-; rule never selects: all 30 new skills are judged alike. Other ids: unchanged.
+; [S161] AIViewArm57 (ROADMAP E17, BATTLE_SKILL_SYSTEM §13.13) — state 4's
+; `ld [$db8a], a` for the option about to walk its rule chain (A = its skill id):
+; bank $72 entry 11 AIViewArm72 — a NEW skill (a base in CustomBaseTable /
+; ReclaimBaseTable) -> $DB8A := the base, wAIViewId / wAIViewBase set (bank $54
+; Fork54_RecordIndex then reads the new skill's record for the base's id); any other
+; id: $DB8A = A, the view off. Returns A = the option's own id (for its flags7 read).
 ; =============================================================================
-SkillView57:
-    ld a, [$db8a]
-    cp RECLAIM_A
-    ret c
-    cp RECLAIM_B_END
-    ret nc
-    cp RECLAIM_A_END
-    jr c, .view
-    cp RECLAIM_B
-    ret c                   ; $C2-$CB: the meats / staves, unchanged
-.view:
-    ld a, RECLAIM_VIEW
+AIViewArm57:
+    ld [$db8a], a
+    push af
+    ld hl, $720B
+    rst $10
+    pop af
+    ret
+; [S161] AIViewOff57 — AIChainZeroCell_788b's `xor a / ld [$dd26], a` (a veto ends
+; the walk without the chain end): bank $72 entry 12 AIViewOff72, then the same.
+AIViewOff57:
+    ld hl, $720C
+    rst $10
+    xor a
+    ld [$dd26], a
     ret
     ds $8000 - @, $00       ; the bank's trailing free bytes (were nops)

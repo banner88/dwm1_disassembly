@@ -73,6 +73,9 @@ SECTION "ROM Bank $072", ROMX[$4000], BANK[$72]
     dw CustomAIRule72                   ; entry 8  ($7208 -> $4011) [S155] AI bonus / veto for custom ids (bank $57 CustomAI57)
     dw CustomTargetPick72               ; entry 9  ($7209 -> $4013) [S155] AI act-time target of a custom id (bank $58 DispatchBoundsStub)
     dw RepelCommit72                    ; entry 10 ($720A -> $4015) [S155] Repel ends when the party leaves its room (bank $73 commit)
+    dw AIViewArm72                      ; entry 11 ($720B -> $4017) [S161] the AI judges a NEW skill as its base (bank $57 AIViewArm57, bank $58 EstimateView58)
+    dw AIViewOff72                      ; entry 12 ($720C -> $4019) [S161] the view off (bank $57 AIViewOff57, EstimateView58)
+    dw AIBaseOrSelf72                   ; entry 13 ($720D -> $401B) [S161] A = a new skill's base, else A (bank $53 DupBase53)
 
 ; -----------------------------------------------------------------------------
 ; FarSkillFork (entry 0) — replaces the dispatch's `ld hl,$4011/add hl,bc/add hl,bc`
@@ -2710,6 +2713,132 @@ RepelCommit72:
     ret
 
 ; -----------------------------------------------------------------------------
+; [S161] THE AI'S VIEW OF A NEW SKILL (ROADMAP E17; BATTLE_SKILL_SYSTEM §13.13).
+; The bank $57 rule chains select skills BY ID; a new id ($EF-$FE, or a reclaimed
+; $BC-$C1 / $CC-$D3) matched none, so it scored the record's AI weight + a roll only
+; and lost to plain Attack (measured S161: a mage of four new skills on Firebal / Bang
+; / Infernos / SnowStorm cast none in 50 actions, its stock twin Bang 16 of 58). While
+; the chain walks a new skill's option, $DB8A holds its BASE (the stock skill whose
+; effect it runs) and bank $54 Fork54_RecordIndex answers a record read of the base
+; with the NEW skill's own record (MP, element, flags, power, AI weight): the AI uses
+; it as often as it would use its base, judged on its own data. Then the project's AI
+; preference (gamedata.skills.<id>.ai_preference, -60 … +60) is added like one more
+; rule. The S155 built-ins ($DE-$EE, no base) keep their own rules.
+; -----------------------------------------------------------------------------
+; AIViewArm72 (entry 11) — $DB8A = the option's id. A new skill -> wAIViewId = the id,
+; wAIViewBase = $DB8A = its base; else the view off (wAIViewId = 0). Clobbers BC, HL.
+AIViewArm72:
+    xor a
+    ld [wAIViewId], a
+    ld a, [$db8a]
+    ld c, a
+    call AIBaseOf72
+    ret c
+    ld [wAIViewBase], a
+    ld [$db8a], a
+    ld a, c
+    ld [wAIViewId], a
+    ret
+
+; AIViewOff72 (entry 12) — the view on: $DB8A = the new skill's own id again, off.
+AIViewOff72:
+    ld a, [wAIViewId]
+    or a
+    ret z
+    ld [$db8a], a
+    xor a
+    ld [wAIViewId], a
+    ret
+
+; AIBaseOrSelf72 (entry 13) — E = a skill id -> E = the base of the NEW skill on it, else E
+; (bank $53 DupBase53: the duplicate-group-cast list tests a new skill as its base). E in and
+; out: RST_10 clobbers A / F and BC on the way (bank $00 RST_10 / RST_20), DE / HL survive.
+AIBaseOrSelf72:
+    ld a, e
+    call AIBaseOf72                     ; NC: the base; C: the id kept — either way A
+    ld e, a
+    ret
+
+; AIBaseOf72 — A = a skill id -> NC: A = the base of the NEW skill on it (CustomBaseTable
+; for $DE+: $FF = a built-in, no base; ReclaimBase72 for a reclaimed id); C: not a new
+; skill, A kept. Clobbers B, HL.
+AIBaseOf72:
+    ld b, a
+    cp $DE
+    jr nc, .high
+    call ReclaimBase72                  ; the base, or A unchanged
+    cp b
+    jr z, .not
+    and a
+    ret
+.high:
+    cp $FF                              ; $FF = no skill (CustomBaseTable covers $DE-$FE)
+    jr z, .not
+    sub $DE
+    ld hl, CustomBaseTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    cp $FF
+    jr z, .not
+    and a
+    ret
+.not:
+    ld a, b
+    scf
+    ret
+
+; AIPrefEnd72 — CustomAIRule72 for a new skill's option: the view off, then a veto
+; ($DD27 = $FF) stays one; else AIPrefTable [id - $BC] (signed): > 0 -> the bonus $DD26
+; += it (saturating $FF), < 0 -> the penalty $DD27 += -it (saturating $FE: never a veto
+; by itself; the chain end turns bonus < penalty into "not this turn", as the rules do).
+AIPrefEnd72:
+    call AIViewOff72
+    ld a, [$dd27]
+    cp $ff
+    ret z
+    ld a, [$db8a]
+    sub RECLAIM_A
+    ld hl, AIPrefTable
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    or a
+    ret z
+    bit 7, a
+    jp z, AIBonus72
+    cpl
+    inc a
+    ld hl, $dd27
+    add [hl]
+    jr c, .cap
+    cp $ff
+    jr c, .put
+.cap:
+    ld a, $fe
+.put:
+    ld [hl], a
+    ret
+
+; AIPrefTable [id - $BC] (ids $BC-$FE; signed bytes, 0 = exactly as the base) —
+; compiler region gd_ai_pref (editor2/core/custom_skills.py; the Skills tab's "AI
+; preference" of a new skill). Rows of ids that hold no new skill are 0 (never read).
+AIPrefTable:
+; @BUILD_PROJECT BEGIN gd_ai_pref
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [$BC-$CB]
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [$CC-$DB]
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [$DC-$EB]
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00   ; [$EC-$FB]
+    db $00, $00, $00   ; [$FC-$FE]
+; @BUILD_PROJECT END gd_ai_pref
+
+; -----------------------------------------------------------------------------
 ; CustomAIRule72 (entry 8) — bank $57 CustomAI57, at the end of the AI's rule
 ; walk for one option of a custom id (the vanilla rules self-select on stock
 ; ids). Adjusts the BONUS $DD26 (saturating) / PENALTY $DD27 ($FF = veto); the
@@ -2731,7 +2860,12 @@ RepelCommit72:
 ; The built-ins of S49-S75 keep no rule (unchanged). Clobbers all.
 ; -----------------------------------------------------------------------------
 CustomAIRule72:
+    ld a, [wAIViewId]                   ; [S161] a NEW skill's chain end: the view off, its
+    or a                                ;   AI preference (AIPrefTable), nothing more
+    jr nz, AIPrefEnd72
     ld a, [$db8a]
+    cp $DE                              ; [S161] the id test of bank $57 CustomAI57 (moved
+    ret c                               ;   here: CustomAI57 calls for every option)
     cp ID_REPEL
     jr z, .veto
     cp ID_PLUNDER

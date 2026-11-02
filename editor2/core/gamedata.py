@@ -108,6 +108,19 @@ STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 # HP 1 makes a 0-HP monster 51 times in 52 (fainted, never healed — measured S149 r1);
 # HP 2 gives at least 1. The game's own rows are HP 2 or more (row 480: 2).
 ENEMY_HP_MIN = 2
+
+# S161 (the user's Picky Mage: "attacked 80-90% of the time physically"): the four AI
+# weights of an enemy row, in row order +17 / +18 / +19 / +20 (BATTLE_SKILL_SYSTEM
+# §15.10.1): the category bases of the AI's plan pick — damage (cat 1), heal / support
+# (cat 3), status (cat 2) — and the obedience weight (party monsters only: w3/10 joins the
+# refusal threshold, §15.10.7a; an enemy always "refuses", so it is unused there). A plan
+# with no skill of its kind falls back to the plain Attack.
+AI_WEIGHT_NAMES = ('Damage', 'Heal/support', 'Status', 'Obedience')
+AI_WEIGHT_HELP = ("The AI's four weights, 0-255. Damage / Heal-support / Status: how strongly "
+                  "the monster leans to that kind of plan each turn — a plan it has no skill "
+                  "for (say Heal-support high with no heal skill) ends in a plain Attack. "
+                  "Obedience: the starting obedience of a monster that joins from this row "
+                  "(higher = follows your orders more often); enemies ignore it.")
 ENEMY_HP_WHY = ("a monster made from the row rolls its HP x0.80-1.00 rounded down, so "
                 "HP 1 gives a monster with 0 HP (fainted for good); the game's own rows "
                 "have HP 2 or more")

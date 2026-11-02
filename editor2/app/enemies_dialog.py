@@ -28,6 +28,7 @@ from editor2.core.conversation import (EnemiesMixin, JOIN_ALWAYS, JOIN_NEVER,
 
 STATS = ('hp', 'mp', 'atk', 'def', 'agl', 'int')
 from editor2.core.gamedata import ENEMY_HP_MIN   # noqa: E402  (S149 r2)
+from editor2.core import gamedata as G   # noqa: E402  (S161: AI weight names)
 
 
 class EnemyScratch(EnemiesMixin):
@@ -176,10 +177,16 @@ class EnemiesDialog(QDialog):
         ai = QHBoxLayout()
         self.ai = []
         for i in range(4):
+            # S161: the four weights named (gamedata.AI_WEIGHT_NAMES — the user could not tell
+            # a heal-heavy row from an attack-heavy one by four bare numbers)
+            lab = QLabel(G.AI_WEIGHT_NAMES[i])
+            lab.setToolTip(G.AI_WEIGHT_HELP)
             sb = QSpinBox()
             sb.setRange(0, 255)
+            sb.setToolTip(f'{G.AI_WEIGHT_NAMES[i]}. {G.AI_WEIGHT_HELP}')
             sb.valueChanged.connect(lambda _n: self._ai_changed())
             self.ai.append(sb)
+            ai.addWidget(lab)
             ai.addWidget(sb)
         f.addRow('AI weights', ai)
         box = QGroupBox('Enemy')

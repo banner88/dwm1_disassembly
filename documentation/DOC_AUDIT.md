@@ -1108,3 +1108,15 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | `tools/map_skill_id_buckets.py` — the `$db8a` range gates "for a new id" | ⚠ SCOPE | written for ids `>= $DE` (the first `cp` of each read); an id window below `$DE` needs the concrete ladder walk (BATTLE_SKILL_SYSTEM §13.12) | S160 |
 | S159 finding "an enemy with only a new skill on Bang never casts it" | ✅ WIDER S160 | INT-200 enemies whose four skills are all new (EvilSlash / Beserker / SquallHit / Whistle bases; Sleep / Sap / PsycheUp / BoltSlash) cast none in 19-20 actions each, `$EF+` and reclaimed alike | walk_reclaim.py `enemy` (ROADMAP E17) |
 
+
+## S161 addendum (2026-10-30; the enemy AI and new skills — ROADMAP E17; the E13 shared-parent note)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| S160: "INT-200 enemies whose four skills are all new cast none in 19-20 actions" (as evidence for E17) | ⚠ CONFOUNDED | measured with the S110 rig, which pins the RNG on EVERY battle frame: every decision of a battle was the same one; the STOCK twin (EvilSlash … Whistle) also cast none in that rig. The finding stands with a free RNG: a stock mage cast Bang 16 / 58, its new twin 0 / 50 | walk_mirror / the S161 measure (KEY_LESSONS S161) |
+| BATTLE_SKILL_SYSTEM §15.10 / `simulator/ai_rules.py`: the S81 rule membership is "AUTHORITATIVE" (240/240) | ⚠ SCOPE | authoritative on the S81 sweep's board (ONE party monster); with three live opponents (defending) the ROM gives Sleep +40 (model 0), Sap +30 (0), BoltSlash +25 / +5 (+35), PsycheUp a veto (+35) — every chain end of the four | walk_mirror `sim_check` on the STOCK caster (ROADMAP E17 note) |
+| ROADMAP E17 (S160): "the simulator's `core_alias` applies the BASE's id-keyed rules to a new skill" | ❌ WRONG for the AI | `core_alias` mapped the act-time rules (battle.py); the AI chain (`pacing.ChainRules`) evaluated the new skill's own id (no rule) — as the ROM did. Since S161 both judge it as its base | code-read S161 |
+| bank $57 `AIRule_4785` → `SkillView57` (S160) | ↻ SUPERSEDED | retired S161: during the chain `$DB8A` holds a new skill's BASE (`AIViewArm57`) | test_compiler test_s160 / test_s161 |
+| clean bank $51 `ld hl, DispatchAboveE2` in `LevelUpS04_LearnScan` | ❌ MISLABEL | the value `$0B03` is a text id ("…'s [old] becomes [new]!"), not the ROM0 label at `$0B03`; both trees now `ld hl, $0b03` (byte-identical) | S161 rebuild `1ca6579…` |
+| S155 `walk_skills.py`: "LoneWolf, a party of two" / "an enemy alone" read from the save | ⚠ SAVE-BOUND | true on the S155 save (two monsters, a piercable DEF); the user's 2026-10 save has three and high DEF — the walk now sets both (later S161) | `walk_skills.py` 33 / 33 (was 31 / 33 on S160 and S161 builds alike) |
+| BATTLE_SKILL_SYSTEM §13.13 (first S161 text): "the duplicate-group conversion's list still sees a new id as itself" | ↻ FIXED later S161 | `DupBase53` → `AIBaseOrSelf72`: a new skill is tested as its base; project enemy rows read `EnemyDupConvFlagTable_41df` past its 487 rows (open, ROADMAP E17 note) | `walk_mirror.py` `dupcast` (21 / 21 conversions) |

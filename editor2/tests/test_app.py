@@ -4060,6 +4060,10 @@ def main():
     app.processEvents()
     rows = {mt.table.item(r, 0).text(): r for r in range(mt.table.rowCount())}
     assert '2' in rows and '1' in rows, rows
+    # S161: the AI weights cell names its four numbers (Damage / Heal/support / Status / Obedience)
+    tip = mt.table.item(rows['2'], 11).toolTip()
+    assert tip.startswith('Damage ') and 'Heal/support' in tip and 'Obedience' in tip \
+        and 'plain Attack' in tip, tip
     it = mt.table.item(rows['2'], 3)          # HP of the wild Slime (EID 2)
     it.setText('99')
     assert doc.data['gamedata']['enemies']['2'] == {'hp': 99}, doc.data['gamedata'].get('enemies')
@@ -4488,10 +4492,22 @@ def main():
         e['sounds_like'] == 15 and e['element'] == 'Explosion' and \
         e['record']['party_min'] == 60 and e['learn']['prereqs'] == [16], e
     assert doc.skill_names_effective()[239] == 'Thunder'
+    # [S161] ROADMAP E17: a new skill's AI Preference (0 = as its base, -60 … +60)
+    assert st.ai_pref.isVisibleTo(st) and st.ai_pref.value() == 0 and \
+        'as they judge Zap' in st.ai_pref_note.text(), st.ai_pref_note.text()
+    st.ai_pref.setValue(30)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['239']['ai_preference'] == 30
+    assert '+30' in st.ai_pref_note.text() and st.ai_pref.font().bold()
+    st.ai_pref.setValue(0)
+    app.processEvents()
+    assert 'ai_preference' not in doc.data['gamedata']['skills']['239']
+    assert st.ai_pref.minimum() == -60 and st.ai_pref.maximum() == 60
     w.monsters_tab.refresh()
     assert any(c.findData(239) >= 0 for c in w.monsters_tab.w_skill)
     pick(30)                                           # Upper: no element to change
     assert not st.element.isEnabled()
+    assert not st.ai_pref.isVisibleTo(st)              # [S161] an original skill: no Preference
     pick(0)                                            # Blaze -> Ice
     st.element.setCurrentIndex(st.element.findData(5))
     app.processEvents()
@@ -4508,11 +4524,12 @@ def main():
     app.processEvents()
     assert doc.dumps() == before, 'undo must restore project.json exactly'
     hlp = open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
-    for word in ('New skill', 'Element', 'Sounds like', 'Its own numbers', 'share of the current MP'):
+    for word in ('New skill', 'Element', 'Sounds like', 'Its own numbers', 'share of the current MP',
+                 'Preference', 'as its base'):
         assert word in hlp, f'help 54_skills.md lacks "{word}"'
     print('OK: Skills tab (S111) — Quake MP 12 / Explosion / its own line; MagicBurn MP is '
           'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
-          'from Zap); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; S156 Plunder\'s line ({name} / {target} / {buff}) + r2 its rise pages; '
+          'from Zap; S161 its AI Preference +30 / back to 0); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; S156 Plunder\'s line ({name} / {target} / {buff}) + r2 its rise pages; '
           'undo restores everything')
 
     # S112 (P3.11e): the Animations tab (a mashup with the preview) and the

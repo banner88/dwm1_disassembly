@@ -706,6 +706,9 @@ class MonstersTab(QWidget):
                     it.setFont(fo)
                 if c == 10:
                     it.setToolTip(M.JOIN_LABELS.get(f['joinability'], 'joins by chance'))
+                if c == 11:   # S161: the four AI weights named
+                    it.setToolTip(' / '.join(f'{n} {v}' for n, v in zip(G.AI_WEIGHT_NAMES, f['ai_weights']))
+                                  + '. ' + G.AI_WEIGHT_HELP)
                 self.table.setItem(r, c, it)
             # S149: the creation gender — a choice on your own rows, the game's on its own
             g = f.get('gender', 'rolled')

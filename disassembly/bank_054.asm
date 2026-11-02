@@ -571,7 +571,10 @@ LoadB54_5249:
 ; indexes the 222-entry SkillRecordPtrTable by the skill id and OVERSHOOTS for a
 ; custom id (>= $DE). 5-byte window, byte-neutral `call Fork`+nop+nop trampoline
 ; (proven). Sites: $5251/$5276/$529E. See BATTLE_SKILL_SYSTEM.md §12 +
-; extracted/skill_id_bucket_map.json.
+; extracted/skill_id_bucket_map.json. [S161] every record read of the game goes through
+; these three indexers — the enemy AI's rules too (they read the record of [$db8a]: MP
+; +4, element +5, ...). Patched builds: Fork54_RecordIndex answers a read of the BASE's
+; record with the NEW skill's own while the AI's view is on (ROADMAP E17, §13.13).
     ld a, [$db4c]
     ld c, a
     ld a, [$db4d]

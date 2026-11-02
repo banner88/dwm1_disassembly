@@ -85,6 +85,11 @@ fights by their reading at 99.
   element (the Skills tab's Element, the Resistances tab's moves — a skill moved
   to Earth, a built-in given an element); before S159 the skills' elements were
   not simulated, so numbers made then with element changes are recomputed.
+  **S161:** an enemy's new skills are judged as their bases (+ each one's AI
+  Preference) — as the game does since S161; a project with new skills gets its
+  fights recomputed once. (Known: for Sleep, Sap, PsycheUp and BoltSlash the
+  simulator's AI rules differ from the game when an enemy faces three monsters —
+  the original skills and their new twins alike; ROADMAP E17 note.)
 - **casual** — a team made of what was at hand: monsters that could join on
   the way, kept as they come (their first skills).
 - **strong** — the best of several tries per member, bred for skills once

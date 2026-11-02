@@ -2690,6 +2690,12 @@ def v8_round_trip(new_dir):
 
     # the conversation, through the dialog
     def fake_enemies(dlg):
+        # S161: the four AI weights are named in the dialog (gamedata.AI_WEIGHT_NAMES)
+        from editor2.core import gamedata as G_
+        from PySide6.QtWidgets import QLabel as QL_
+        names = [lb.text() for lb in dlg.findChildren(QL_)]
+        assert all(n in names for n in G_.AI_WEIGHT_NAMES), names
+        assert len(dlg.ai) == 4 and dlg.ai[1].toolTip().startswith('Heal/support.'), dlg.ai[1].toolTip()
         eid = dlg.x.add_enemy(copy_eid=325, name='Court Dragon', species=V8_DRAGON, level=1,
                               hp=4, mp=0, atk=1, **{'def': 0}, agl=0, exp=5, joinability=0)
         dlg.x.make_join_version(eid)

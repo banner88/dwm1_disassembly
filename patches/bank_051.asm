@@ -4161,8 +4161,9 @@ jr_051_5754:
 
 ; [S130] level-up state $04 ($575F): one bank $06 SkillLearnScan ($0605) per tick until $FFD8 = $FF;
 ;   jr_051_5799 places the result: code 0/2 (C = $FF) -> the first
-;   $FF slot of $C0D8, code 1 (C = old id $FFDA) -> over the old id.
-;   Done -> bank $01 entry 6 ($0106), next state.
+;   $FF slot of $C0D8, code 1 (C = old id $FFDA) -> over the old id
+;   ([S161] or, when the old id is no longer there, the first $FF slot:
+;   LearnUpgradeOrAdd51). Done -> bank $01 entry 6 ($0106), next state.
 LevelUpS04_LearnScan:
     ld a, [$c825]
     or a
@@ -4188,12 +4189,20 @@ LevelUpS04_LearnScan:
     cp $02
     jr z, jr_051_5799
 
-    ldh a, [$da]
-    ld l, a
-    ld h, $06
+    ; [S161] (ROADMAP E13 note — two skills evolving from ONE skill froze the level up):
+    ; was `ldh a, [$da] / ld l, a / ld h, $06` (5 B -> 5 B). LearnUpgradeOrAdd51 looks
+    ; for the replaced skill $FFDA in the working list $C0D8: there -> the upgrade as
+    ; before (HL = $06xx, carry clear); gone (a sibling evolved from the same skill
+    ; earlier in this level up) -> carry: HL = $0B02 "… and learned …!", C = $FF, the
+    ; new skill goes into the first free slot like a plain learn (the scanner then
+    ; finds it in $C0D8 and moves on; the original game never has two children of
+    ; one parent, so its level ups are unchanged). BATTLE_SKILL_SYSTEM §13.12.
+    call LearnUpgradeOrAdd51
+    jr c, jr_051_5799
     ld de, $c1b0
     call SetupVRAMParams
-    ld hl, DispatchAboveE2
+    ld hl, $0b03                ; "[INS 00]'s [INS 30] becomes [INS 20]!" (was the
+                                ;   label DispatchAboveE2 — the value is a text id)
     ldh a, [$da]
     ld c, a
 
@@ -10518,6 +10527,37 @@ ArenaScriptType51:
     ld a, [wScriptMapType]
     jp ArenaAlias
 
+; =============================================================================
+; [S161] LearnUpgradeOrAdd51 (ROADMAP E13 note; BATTLE_SKILL_SYSTEM §13.12) — called by
+; LevelUpS04_LearnScan for a code-1 result (an upgrade: $FFD8 replaces $FFDA). The bank
+; $06 scanner tests the prerequisite against the KNOWN skills (record +$29), the caller
+; replaces it in the WORKING list $C0D8; when two skills evolve from the same skill and
+; both qualify in one level up, the second finds its prerequisite already replaced.
+;   $FFDA in $C0D8[0..39] -> L = $FFDA, H = $06 (the old name for [INS 30]), carry clear
+;   gone                  -> HL = $0B02 (the plain "learned" line), C = $FF (the first
+;                            free slot), carry set
+; 26 B from the nop fill (the bank's free tail, after ArenaScriptType51).
+; =============================================================================
+LearnUpgradeOrAdd51:
+    ldh a, [$da]
+    ld hl, $c0d8
+    ld b, $28
+.scan:
+    cp [hl]
+    jr z, .found
+    inc hl
+    dec b
+    jr nz, .scan
+    ld hl, $0b02
+    ld c, $ff
+    scf
+    ret
+.found:
+    ld l, a
+    ld h, $06
+    and a
+    ret
+
     nop
     nop
     nop
@@ -11714,29 +11754,4 @@ ArenaScriptType51:
     nop
     nop
     nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    ASSERT @ == $8000
