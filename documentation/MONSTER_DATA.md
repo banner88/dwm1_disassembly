@@ -204,6 +204,13 @@ enemy battle only that enemy can join.
   it (measured: the S149 r1 demo rows HP 1 → HP 0/0 MP 0/0; HP 30 → 29/29). The original rows
   are all HP 2 or more (row 480 = 2, worst roll 1). The editor and the compiler enforce
   `gamedata.ENEMY_HP_MIN` = 2 (PROJECT_COMPILER §2.57 r2).
+- **A third unbounded per-EID read, in battle (found later S161, FIXED S162 — built S162, USER-CONFIRMED
+  2026-11-02 13:27, "rom works exactly as intended"):** the enemy duplicate-group-cast conversion (bank $53
+  `EnemyDupCastConversion_4e63`) reads `EnemyDupConvFlagTable_41df[EID]` — 486 bytes (EIDs 0-485);
+  a project row read the code after it (3,259 of 3,321 EIDs non-zero: nearly every project row
+  "held back" its group spells by accident). Patched: bank $53 `DupConvFlag53` (EIDs 0-486 the
+  original bytes; higher → bank $6B entry 2 `EnemyHoldsOf` → `ProjectEnemyHolds`, one byte a row,
+  `progression.enemies[].holds_group_spells`; anything else 0). BATTLE_SKILL_SYSTEM §13.13 (S162).
 - **The battle JOIN is entry 3, not entry 2:** bank $51 `$5CB4` sets `$DA14` := `$14`
   (vanilla; `$28` = staging index 40 in patched builds, FX1) and far-calls bank $14 entry 3
   `CreateJoinedMonster` (was `label14_401d`, "party monster slot init/clear" — a misnomer): it

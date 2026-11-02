@@ -32,9 +32,19 @@
 ; In: wTempEnemyStatsId = EID. Out: E = the row's gender code ($FF for an EID
 ; that is not a project row). Clobbers A/BC/HL.
 ;
+; Entry 2 (HL=$6B02, S162) EnemyHoldsOf — called by bank $53 DupConvFlag53 (the
+; enemy duplicate-group-cast conversion's flag read, EnemyDupCastConversion_4e63)
+; for EIDs >= 487. In: DE = EID. Out: E = the row's "holds back group spells"
+; flag (ProjectEnemyHolds: 1 = a group spell becomes Attack when another enemy
+; acted before it in the round; 0 = keeps the cast), 0 for an EID that is not a
+; project row. Clobbers A/BC/HL. The original read ran past its 486-byte table
+; (bank $53 EnemyDupConvFlagTable_41df) into code — every project row's
+; behaviour was an accident until S162 (BATTLE_SKILL_SYSTEM §13.13).
+;
 ; Generated below the head: PROJECT_EID_BASE / PROJECT_ENEMY_ROWS / ROWS_HERE
 ; EQUs, RowBankTable ([dw end row (exclusive), db bank] per battle bank, in
-; row order), ProjectEnemyGender, ProjectEnemyRows (the first ROWS_HERE rows).
+; row order), ProjectEnemyGender, ProjectEnemyHolds (S162), ProjectEnemyRows
+; (the first ROWS_HERE rows).
 ; =============================================================================
 
 SECTION "ROM Bank $06B", ROMX[$4000], BANK[$6B]
@@ -44,6 +54,7 @@ SECTION "ROM Bank $06B", ROMX[$4000], BANK[$6B]
 ; rst-$10 entry table at $4001
     dw CopyEnemyRowExt                  ; entry 0  (HL=$6B00)
     dw EnemyGenderOf                    ; entry 1  (HL=$6B01, S149)
+    dw EnemyHoldsOf                     ; entry 2  (HL=$6B02, S162)
 
 ; RowIndexOf: HL := EID - PROJECT_EID_BASE; carry = not a project row
 ; (below the base or past the last row). Clobbers A.
@@ -121,6 +132,27 @@ EnemyGenderOf:
     ld bc, ProjectEnemyGender
     add hl, bc
     ld e, [hl]
+    ret
+
+EnemyHoldsOf:
+    ld a, e
+    sub LOW(PROJECT_EID_BASE)
+    ld l, a
+    ld a, d
+    sbc HIGH(PROJECT_EID_BASE)
+    ld h, a                             ; HL = row index (carry = EID < base)
+    jr c, .none
+    ld a, l
+    sub LOW(PROJECT_ENEMY_ROWS)
+    ld a, h
+    sbc HIGH(PROJECT_ENEMY_ROWS)
+    jr nc, .none                        ; past the last row
+    ld bc, ProjectEnemyHolds
+    add hl, bc
+    ld e, [hl]
+    ret
+.none:
+    ld e, $00
     ret
 
 ; ------------------------------- generated (editor2/core/battles.py) --------

@@ -180,7 +180,16 @@ class BattleData:
         for sp, info in self.T.info.items():
             self.species[sp] = {'resistances': list(info[15:42]), 'can_fly': bool(info[4]),
                                 'metal': bool(info[5]), 'family': info[0]}
-        self.dup = P.load_dup_flags()
+        self.dup = list(P.load_dup_flags())
+        # S162: a project row's own "holds back group spells" (bank $6B ProjectEnemyHolds, read
+        # by bank $53 DupConvFlag53); the original table covers EIDs 0-486 (486 = the next code
+        # byte, as the ROM reads it), EIDs 487-518 and the rest 0
+        if project is not None:
+            for e in project.quest_enemy_rows():
+                eid = int(e['_eid'])
+                if eid >= len(self.dup):
+                    self.dup += [0] * (eid + 1 - len(self.dup))
+                self.dup[eid] = 1 if e.get('holds_group_spells') else 0
         self.enemy_overrides = {}
         self.redirects = {f: j for f, j in g.redirects}
         if project is not None:
@@ -1237,6 +1246,8 @@ def fight_fingerprint(data, tl, fight, profile, step=None):
                          [(round(p, 4), e) for p, e in fight['groups']]]).encode())
     for e in fight['eids']:
         h.update(data.T.enemy(e))
+        if e > 486:                                         # S162: a project row's own
+            h.update(b'S162 holds %d' % (data.dup[e] if e < len(data.dup) else 0))  # flag
         if e in data.enemy_overrides:
             h.update(json.dumps(sorted(data.enemy_overrides[e].items())).encode())
         for s in data.T.enemy(e)[21:25]:

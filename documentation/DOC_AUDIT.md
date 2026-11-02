@@ -1120,3 +1120,11 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | clean bank $51 `ld hl, DispatchAboveE2` in `LevelUpS04_LearnScan` | ❌ MISLABEL | the value `$0B03` is a text id ("…'s [old] becomes [new]!"), not the ROM0 label at `$0B03`; both trees now `ld hl, $0b03` (byte-identical) | S161 rebuild `1ca6579…` |
 | S155 `walk_skills.py`: "LoneWolf, a party of two" / "an enemy alone" read from the save | ⚠ SAVE-BOUND | true on the S155 save (two monsters, a piercable DEF); the user's 2026-10 save has three and high DEF — the walk now sets both (later S161) | `walk_skills.py` 33 / 33 (was 31 / 33 on S160 and S161 builds alike) |
 | BATTLE_SKILL_SYSTEM §13.13 (first S161 text): "the duplicate-group conversion's list still sees a new id as itself" | ↻ FIXED later S161 | `DupBase53` → `AIBaseOrSelf72`: a new skill is tested as its base; project enemy rows read `EnemyDupConvFlagTable_41df` past its 487 rows (open, ROADMAP E17 note) | `walk_mirror.py` `dupcast` (21 / 21 conversions) |
+
+## S162 addendum (2026-11-02; holds back group spells — ROADMAP E17 note "Project enemy rows")
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| `EnemyDupConvFlagTable_41df` "487 rows, 181 set" (bank $53 comment, TOOLS_AND_DATA, the S161 notes) / "182 of the 487 vanilla rows" (BATTLE_SKILL_SYSTEM §13.13 first S161 text) | ❌ OFF BY ONE | the table is 486 bytes (EIDs 0-485, 181 set); EID 486's byte is `CmpBtlC_43c5`'s first opcode `$FE` (non-zero: the 182nd "flag" was code); EID 486 is the Dracky boss's join row, never fought; the table was fake `nop` / `ld bc` code in both trees — re-sectioned S162 | S162: ROM bytes `$53:$41DF+486` = `$FE` at the `CmpBtlC_43c5` label; clean rebuild `1ca6579…` |
+| ROADMAP E17 note (later S161): "Proposed: a flag per project row (default: the copied source row's)" | ↻ BUILT S162 | `progression.enemies[].holds_group_spells` (absent = casts; a copy keeps the original row's); the user's rows read `$03` / `$FE` / `$03` before — all "holding" by accident | `walk_holds.py` 13 / 13 |
+

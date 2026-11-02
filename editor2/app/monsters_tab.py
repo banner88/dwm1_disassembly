@@ -63,7 +63,15 @@ HELP_WHERE = ('Every enemy row of this species. A wild monster, a boss or an are
               'it. Joins: 0 = always, 7 = never, anything else = a chance. Gender = the '
               'gender of a monster that joins from the row (or is given by a script): '
               'rolled by the species\' female ratio, or always male / female — the '
-              'game\'s own rows keep theirs.')
+              'game\'s own rows keep theirs. Group spells (S162): "holds back" = when '
+              'another enemy acted before it in the round, its group spell or breath becomes '
+              'a plain Attack (the original game does this for its early wild rows and '
+              'random battles 0-4, never for a boss or an arena fighter) — tick it on your '
+              'own rows; the game\'s rows keep theirs.')
+HOLDS_TIP = ('Holds back group spells: when another enemy acted before it in the round, '
+             'its group spell or breath (Firebal, Bang, the breaths, the dances …) becomes '
+             'a plain Attack. Off = it always casts. An enemy at the top INT level always '
+             'casts. A copy of an original row starts with that row\'s setting.')
 GENDER_LABELS = [('rolled', 'rolled (by species)'), ('male', 'always male'),
                  ('female', 'always female')]
 TIER_HELP = '0 = starter, 3-6 = normal, 7 = endgame boss (the original game)'
@@ -348,7 +356,7 @@ class MonstersTab(QWidget):
         v.addWidget(h)
         self.table = QTableWidget()
         self.cols = ['EID', 'Where', 'Level', 'HP', 'MP', 'ATK', 'DEF', 'AGL', 'INT', 'Exp',
-                     'Joins', 'AI weights', 'Battle skills', 'Gender']
+                     'Joins', 'AI weights', 'Battle skills', 'Gender', 'Group spells']
         self.table.setColumnCount(len(self.cols))
         self.table.setHorizontalHeaderLabels(self.cols)
         self.table.verticalHeader().setVisible(False)
@@ -730,6 +738,17 @@ class MonstersTab(QWidget):
                 it.setToolTip("The original game's row: its gender stays the game's")
                 self.table.removeCellWidget(r, 13)
                 self.table.setItem(r, 13, it)
+            # S162: holds back group spells — a tick on your own rows, the game's on its own
+            hold = bool(f.get('holds_group_spells'))
+            it = QTableWidgetItem('holds back' if hold else 'casts')
+            if e['kind'] == 'project':
+                it.setFlags((it.flags() | Qt.ItemIsUserCheckable) & ~Qt.ItemIsEditable)
+                it.setCheckState(Qt.Checked if hold else Qt.Unchecked)
+                it.setToolTip(HOLDS_TIP)
+            else:
+                it.setFlags(it.flags() & ~Qt.ItemIsEditable & ~Qt.ItemIsUserCheckable)
+                it.setToolTip(HOLDS_TIP + " The original game's row keeps the game's setting.")
+            self.table.setItem(r, 14, it)
         self.table.resizeColumnsToContents()
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self._busy = False
@@ -843,6 +862,15 @@ class MonstersTab(QWidget):
             return
         r, c = it.row(), it.column()
         e = self._rows[r]
+        if c == 14:                     # S162: holds back group spells (your own rows)
+            want = it.checkState() == Qt.Checked
+            if e['kind'] != 'project' or bool(e['fields'].get('holds_group_spells')) == want:
+                return
+            eid, pid = e['eid'], e['id']
+            self._push(f"EID {eid}: group spells → {'holds back' if want else 'casts'}",
+                       lambda doc: doc.set_enemy_fields(eid, {'holds_group_spells': want},
+                                                        project_id=pid))
+            return
         key = {2: 'level', 3: 'hp', 4: 'mp', 5: 'atk', 6: 'def', 7: 'agl', 8: 'int',
                9: 'exp', 10: 'joinability', 11: 'ai_weights', 12: 'skills'}.get(c)
         if key is None:

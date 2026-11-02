@@ -24,6 +24,16 @@ game's worth of battles (the game itself uses 128 lists and 487 rows). Now:
     EIDs 0-511 and its unbounded read had given every project row a fixed or
     junk gender (measured S149). A project row never takes a rival tamer's
     master name / nickname / the egg flag (bank $14 ForeignNamesGate).
+  * HOLDS BACK GROUP SPELLS (S162; progression.enemies[].holds_group_spells =
+    true | false, absent = false): when another enemy acted before it in the
+    round, the row's group spell / breath (the 77 ids of bank $53
+    GroupDupSkillList_4ee4) becomes a plain Attack — the original game's rule
+    for 181 of its 486 rows (early wild rows, random battle tiers 0-4; never a
+    boss or an arena fighter). ProjectEnemyHolds here, one byte a row, read by
+    bank $53 DupConvFlag53 through bank $6B entry 2; the original read ran past
+    its 486-byte table, so a project row's behaviour was an accident of the
+    code after it (3,259 of 3,321 EIDs "flagged") until S162. A copy of an
+    original row keeps that row's flag (conversation.vanilla_holds).
 
 The battle banks are taken from Project._take_ext_bank('battles') after the
 stream / place / animation / song banks. A project that fits banks $6B / $76
@@ -42,6 +52,8 @@ LIST_BASE = 0x80
 LIST_CAP = 0x1000 - LIST_BASE                            # 3,968 lists (128-4095)
 LISTS_HOME = 256                      # project lists kept in bank $76
 GENDERS = {'rolled': 0xFF, 'male': 0x00, 'female': 0x01}
+PER_ROW_6B = 2                        # bank $6B bytes a row besides the row itself:
+                                      # gender code + holds flag (S162)
 GENDER_NAMES = {v: k for k, v in GENDERS.items()}
 # a battle bank's fixed part: self-ID + 2 entry words + the copier block
 # (templates/battle_bank.asm) = addr(the first generated label) - $4000,
@@ -60,6 +72,14 @@ def gender_code(e, ctx=''):
     if g not in GENDERS:
         raise BattleError(f"{ctx}: gender {g!r} — 'rolled', 'male' or 'female'")
     return GENDERS[g]
+
+
+def holds_code(e, ctx=''):
+    """S162: the row's "holds back group spells" byte (1 / 0)."""
+    v = e.get('holds_group_spells', False)
+    if not isinstance(v, bool):
+        raise BattleError(f"{ctx}: holds_group_spells {v!r} — true or false")
+    return 1 if v else 0
 
 
 def suffix(bank):
@@ -101,7 +121,7 @@ def plan(prj):
     cap_ext = BANK_SIZE - BATTLE_TEMPLATE_SIZE
 
     def layout(n_row_banks):
-        free = BANK_SIZE - head - 3 * n_row_banks - n
+        free = BANK_SIZE - head - 3 * n_row_banks - PER_ROW_6B * max(1, n)
         rows_here = min(n, max(1, free // ROW_BYTES)) if n else 0
         banks, left_rows, first_row = [], n - rows_here, rows_here
         left_lists, first_list = m - lists_here, lists_here
@@ -124,7 +144,7 @@ def plan(prj):
         if k2 == k:
             break
         k = k2
-    used_6b = head + 3 * k + n + max(1, rows_here) * ROW_BYTES
+    used_6b = head + 3 * k + PER_ROW_6B * max(1, n) + max(1, rows_here) * ROW_BYTES
     if used_6b > BANK_SIZE:
         raise BattleError(f"bank $6B: {used_6b} > {BANK_SIZE} bytes (rows {rows_here})")
     out = {'rows': n, 'rows_here': rows_here, 'lists': m, 'lists_here': lists_here,
@@ -207,8 +227,15 @@ def emit_bank_06b(prj, warnings):
     lines.append("ProjectEnemyGender:  ; per row: $FF rolled by the species' ratio, "
                  "$00 male, $01 female")
     codes = [gender_code(e, f"progression.enemies[{e.get('id')}]") for e in rows]
+    if not codes:
+        codes = [0xFF]                  # S162: the one zero row's (an empty project)
     for i in range(0, len(codes), 16):
         lines.append(F.db_line(codes[i:i + 16], comment=f"rows {i}-{min(i + 16, len(codes)) - 1}"))
+    lines.append("ProjectEnemyHolds:  ; S162 per row: 1 = holds back group spells (a group "
+                 "spell becomes Attack when another enemy acted first), 0 = casts")
+    holds = [holds_code(e, f"progression.enemies[{e.get('id')}]") for e in rows] or [0]
+    for i in range(0, len(holds), 16):
+        lines.append(F.db_line(holds[i:i + 16], comment=f"rows {i}-{min(i + 16, len(holds)) - 1}"))
     lines.append("ProjectEnemyRows:")
     if not rows:
         lines.append(F.db_line([0] * 25, comment="(no project enemies)"))

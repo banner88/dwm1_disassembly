@@ -381,11 +381,22 @@ def main():
         check('hub', (m[w['wWarpGateId']], m[w['wWarpRegion']]),
               (hub['mapID'] & 0xFF, (hub['mapID'] >> 8) + 1), F.hexb(hub['mapID']))
     for row in prj.gate_insert_rows():
-        S.reload()
-        S.call(0x04, [(w['wGateID'], row['gate'] if row['gate'] != 0xFE else 4),
-                      (w['wCurrentFloor'], row['first'] - 1), (w['wGateDiveGate'], 0),
-                      (w['wGateDiveMask'], 0), (w['wMapRegion'], 3 if len(regs) > 3 else 0)]
-               + [(x, 0) for x in range(0xD99B, 0xD9EA)], bank=0x71)
+        # S162: a row below 100 % rolls (GenerateRNG, then RNG16 mod 100 < chance) from the
+        # RNG of the reloaded state — which differs between emulator builds (the example's
+        # 50 % gate_rotation missed under PyBoy 2.9.0). This check is about where the insert
+        # sends the player (map id, region), so a row that rolls is tried from fixed RNG seeds
+        # until it hits (a 50 % row misses 32 seeds ~ 2^-32).
+        seeds = [None] if row.get('chance', 100) >= 100 else \
+            [((0x1234 + 0x9E3 * k) & 0xFFFF) for k in range(32)]
+        for sd in seeds:
+            S.reload()
+            rng = [] if sd is None else [(0xC899, sd & 0xFF), (0xC89A, sd >> 8)]   # wRNG1 / wRNG2
+            S.call(0x04, [(w['wGateID'], row['gate'] if row['gate'] != 0xFE else 4),
+                          (w['wCurrentFloor'], row['first'] - 1), (w['wGateDiveGate'], 0),
+                          (w['wGateDiveMask'], 0), (w['wMapRegion'], 3 if len(regs) > 3 else 0)]
+                   + [(x, 0) for x in range(0xD99B, 0xD9EA)] + rng, bank=0x71)
+            if m[w['wMapID']] == row['mapID'] & 0xFF:
+                break
         check('gate_insert', (m[w['wMapID']], m[w['wMapRegion']], m[w['wInGateworld']]),
               (row['mapID'] & 0xFF, row['mapID'] >> 8, 0), row['room_id'])
     cfg = prj.gate_configs()

@@ -7454,3 +7454,47 @@ of two" got no bonus with three) and a party DEF the enemy could pierce (a 0 rol
 **Fix:** the walk sets the board it needs (party slot 3 emptied, the target's DEF held at 1). **Rule:**
 when a walk fails identically on the previous build, suspect the walk's picture of the save before the
 ROM — and make the walk set what it assumes instead of reading it from the save.
+
+## S162 — holds back group spells (ROADMAP E17 note "Project enemy rows")
+
+### S162 — a per-EID table read with no bound: find EVERY one before a project adds rows
+**Symptom:** project enemy rows (EID 519+) "held back" their group spells at random — 3,259 of the
+3,321 project EIDs read a non-zero byte for bank $53 `EnemyDupConvFlagTable_41df`. **Root cause:** the
+original game indexes its per-EID tables by the 16-bit EID with no bound (it never had an EID past
+486); S149 found two such reads in the monster constructor (gender, foreign names), S161 / S162 a
+third in battle. Each table also ends at its own length (512 B, 486 B …), not at the enemy table's 487.
+**Fix:** a bounded read per table — the original bytes below the original length, the project row's
+own field above it (bank $6B entry 1 / entry 2), 0 / the neutral value otherwise. **Rule:** when a
+project can create ids past the original range, census every table indexed by that id (grep the id's
+WRAM home, e.g. `wTempEnemyId1` / `wTempEnemyStatsId`, and every `add LOW(table)`), and measure each
+table's real length from the bytes after it — the next label, not the row count of a sibling table.
+
+### S162 — `timeout … | tail` reports the pipe's exit, not the test's
+**Symptom:** a `test_compiler.py --rom` run "completed (exit code 0)" while its log stopped at line
+1,186, before the regression check. **Root cause:** `timeout 3500` killed the run; the shell's exit
+status was the trailing `grep`'s. **Fix:** no cap on the long runs (background), and `echo "EXIT $?"`
+written into the log right after the test command. **Rule:** a test's verdict is the test's own exit
+code or its final summary line in the log ("ALL n TESTS PASSED") — never the exit status of a pipeline
+or of the wrapper. (Also: `pkill -f '<pattern>'` from a shell whose own command line holds the
+pattern kills that shell — S162 lost a restart to it.)
+
+### S162 — a walk's `battle_won` ends the battle by poking the foes' HP to 1
+**Symptom:** the demo's conversation battle against two holding imps showed 0 conversions, though the
+flag read saw the right EID. **Root cause:** `Walk.battle_won` (tools/walk_regions.py) sets every
+enemy's HP to 1 at each poll, and the user's party one-shots a 900-HP imp besides — the second imp
+never acted after the first. **Fix:** watch the battle first (the party DEFENDING in its queue cells,
+both sides' HP held, 5,000 frames — `walk_holds.watch`), then `battle_won`; the demo's guide tells
+the user to DEF for a few rounds. **Rule:** a behaviour that needs several rounds is measured before
+any helper that ends the battle, with the user's (strong) party neutralised — and the demo's
+instructions say how a player sees it.
+
+### S162 — a census check on a path behind a random roll must control the roll
+**Symptom:** `test_compiler --rom` "ROM S140: census_regions" failed 1 (`gate_insert`, the example's
+`gate_rotation`) on S162's code AND on an untouched HEAD; S161's run had passed. **Root cause:** the
+row is a 50 % insert; the census stub-called bank $71 entry 4 once, and the roll (`GenerateRNG`, then
+RNG16 mod 100 < chance) ran from the reloaded savestate's RNG — which differs with the emulator build
+(PyBoy 2.9.0 here) — so it missed. **Fix:** the check tries fixed RNG seeds until the roll hits (it is
+about where the insert sends the player). **Rule:** a check that is not about a random outcome sets the
+RNG (or retries over fixed seeds) before the code that rolls; an environment change that flips a
+"deterministic" check points at an uncontrolled roll first.
+

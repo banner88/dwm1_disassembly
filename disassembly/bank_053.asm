@@ -68,373 +68,54 @@ CritChanceTableEnemy_4102:
     db $01, $00, $00, $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01  ; species 176-191
     db $01, $01, $00, $00, $00, $03, $03, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; species 192-207
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; species 208-220
-; EnemyDupConvFlagTable_41df — ONE BYTE PER ENEMY-STATS ID (487 rows, 0/1),
-; read by EnemyDupCastConversion_4e63 with the actor's 16-bit EID
-; ($DA03/05/07): only flagged EIDs (181 of 487) are subject to the
-; duplicate-group-cast -> Attack downgrade. Semantics decoded + measured S85;
-; the historical "EnemyDupConvFlagTable_41df" name was wrong (no HP is looked up).
+; EnemyDupConvFlagTable_41df — ONE BYTE PER ENEMY-STATS ID, EIDs 0-485 (486 bytes; 181 = 1).
+; Read by EnemyDupCastConversion_4e63 with the actor's 16-bit EID ($DA03/05/07): a flagged
+; enemy's group spell / breath (GroupDupSkillList_4ee4) becomes plain Attack ($3A) when any
+; other enemy acted before it in the round ($DD0B = 2 keeps the cast) — "holds back group
+; spells". Semantics decoded + measured S85 (the historical name BattleHPLookupTable was
+; wrong). The read is UNBOUNDED in the original: EID 486 (the Dracky boss's join row, never
+; fought) reads CmpBtlC_43c5's first opcode $FE, and a higher EID reads whatever code follows
+; (S162: patched builds read project rows' own flags — bank $6B entry 2 via DupConvFlag53).
+; Re-sectioned S162 from fake nop / ld bc instructions (byte-identical).
+; The flags follow row BLOCKS, not species (S162 census): early-game wild rows and random
+; battle tiers 0-4 hold back; story bosses, the arena, later wild rows and tiers 5-7 never.
 ; extracted/enemy_dupconv_flags.json (tools/dump_dupconv_table.py).
 EnemyDupConvFlagTable_41df:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0000
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    ld bc, $0000
-    ld bc, $0101
-    ld bc, $0001
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0001
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    ; EIDs 0-146: the early gate wild rows (flagged in runs) between story-boss blocks (0)
+    db $00, $00, $00, $00, $00, $00, $00, $01, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 0-15
+    db $01, $01, $01, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $00, $01, $00  ; EIDs 16-31
+    db $00, $01, $01, $01, $01, $01, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 32-47
+    db $01, $01, $01, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01  ; EIDs 48-63
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00, $00, $00  ; EIDs 64-79
+    db $00, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 80-95
+    db $01, $01, $01, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01  ; EIDs 96-111
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $00, $00, $00, $00  ; EIDs 112-127
+    db $00, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 128-143
+    ; EIDs 147-351: later wild rows, bosses, join versions, the arena classes (all 0)
+    db $01, $01, $01, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 144-159
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 160-175
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 176-191
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 192-207
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 208-223
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 224-239
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 240-255
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 256-271
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 272-287
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 288-303
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 304-319
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 320-335
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 336-351
+    ; EIDs 352-431: random battle tiers 0-4 (all 1)
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 352-367
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 368-383
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 384-399
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 400-415
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01  ; EIDs 416-431
+    ; EIDs 432-485: random battle tiers 5-7 + spares (all 0)
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 432-447
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 448-463
+    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00  ; EIDs 464-479
+    db $00, $00, $00, $00, $00, $00  ; EIDs 480-485
 
 CmpBtlC_43c5:
     cp $03

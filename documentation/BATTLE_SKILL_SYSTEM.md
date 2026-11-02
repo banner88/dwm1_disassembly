@@ -2163,7 +2163,7 @@ new skills — e.g. a new skill "from Blaze" beside Blazemore). The compiler WAR
 (`custom_skills.shared_evolution_check`); the simulator's `learn_scan` appends instead
 (unreachable in the game, commented). The engine fix is open (ROADMAP E13 note).
 
-**FIXED S161 (built S161, NOT yet user-tested): `LearnUpgradeOrAdd51`.** The 5 bytes `ldh a, [$da] /
+**FIXED S161 (built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`)): `LearnUpgradeOrAdd51`.** The 5 bytes `ldh a, [$da] /
 ld l, a / ld h, $06` of the code-1 path in `LevelUpS04_LearnScan` are `call LearnUpgradeOrAdd51 / jr c,
 jr_051_5799` (26 B in bank $51's free tail after `ArenaScriptType51`, `$7B3A`): the old id `$FFDA` still
 in the working list `$C0D8[0..39]` -> the upgrade as before (HL = `$06xx` for `[INS 30]`); gone -> HL =
@@ -2181,7 +2181,7 @@ never ends again. `census_raising.py` (its stub caller mirrors the fix): 5,073 l
 with the pair, 0 mismatches; the S160 stub hangs on exactly that case. The compiler still WARNS (both
 children only at the same level up).
 
-### 13.13 The enemy AI and NEW skills — judged AS THEIR BASE (ROADMAP E17, S161)  [S161, 2026-10-30; PyBoy-verified, built S161, NOT yet user-tested]
+### 13.13 The enemy AI and NEW skills — judged AS THEIR BASE (ROADMAP E17, S161)  [S161, 2026-10-30; PyBoy-verified, built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess"); S162 project rows' own group-spell flag: built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended")]
 
 **The finding (measured S161, PyBoy, the user's save, the RNG free).** The AI (§15.10) scores each
 tag-matched option = the record's AI weight (+3) + a 0-15 roll + the bonus / penalty of its category's
@@ -2257,11 +2257,40 @@ travels in **E** because RST_10's entry and return clobber A / F and BC (KEY_LES
 (`walk_mirror.py` `dupcast`, 37 / 37; `--negative` 30 FAIL): `DupCastSkillListCheck_4ed6` stub-called
 for ids 0-255 → in the list exactly when the BASE is (NBang $F0, RBang $BD as Bang); two STOCK MAGES vs
 two NEW MAGES (INT mode 1, the RNG re-seeded): 21 / 21 conversions, 63 / 63 Bang casts; the simulator's
-`battle.dup_conversion` tests `core_alias` the same. **Found, open (a design question for the user):**
-the per-EID gate `EnemyDupConvFlagTable_41df` has 487 rows (one per vanilla EID); a PROJECT enemy row
-(EID ≥ 519) reads past it — 3,259 of the 3,321 bytes there are "flagged", vs 182 of the 487 vanilla
-rows — so whether a project enemy converts is an accident of the bytes after the table (ROADMAP E17
-note).
+`battle.dup_conversion` tests `core_alias` the same. **Found later S161 (FIXED S162, below):**
+a PROJECT enemy row (EID ≥ 519) read past the per-EID gate `EnemyDupConvFlagTable_41df` — 3,259 of
+the 3,321 bytes there are non-zero — so whether a project enemy converted was an accident of the code
+after the table.
+
+**S162 — the per-EID gate bounded: "holds back group spells" per project row** (built S162, NOT yet
+user-tested; the user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just
+what I have"; ROADMAP E17 note). **The table, re-measured:** `EnemyDupConvFlagTable_41df` is **486
+bytes, EIDs 0-485, 181 set** (not "487 rows" / "182 of 487" — DOC_AUDIT S162): EID 486's read lands on
+`CmpBtlC_43c5`'s first opcode `$FE` (non-zero, so EID 486 "holds back" as the game reads it; it is the
+Dracky boss's JOIN row — never fought); re-sectioned S162 from fake `nop` / `ld bc` code into commented
+`db` rows (both trees, byte-identical). **What it flags (S162 census by row use):** blocks of rows, not
+species — the early gate wild rows of EIDs 0-146 (in runs between the story-boss blocks, which are 0)
+and the random battle tiers 0-4 (EIDs 352-431) hold back; EIDs 147-351 (later wild rows, bosses, join
+versions, every arena class) and tiers 5-7 (432-485) never. So the original game softens its early
+fights and never a boss. **Patched:** `EnemyDupCastConversion_4e63`'s 9-byte read (`ld a, l / add LOW
+(table) / ld l, a / ld a, h / adc HIGH(table) / ld h, a / ld a, [hl]`) → `call DupConvFlag53` + 6
+nops (bank $53 `$6DDD`, 34 B of the nop fill after `DupBase53`): HL = the EID in, A = the flag out;
+EIDs 0-486 read the table exactly as the original (so 486 still reads `$FE`); every higher EID goes to
+bank $6B entry 2 `EnemyHoldsOf` (DE = EID in, E = the flag out; BC / DE saved around RST_10 —
+KEY_LESSONS S161): a project row's `ProjectEnemyHolds` byte (one a row, after `ProjectEnemyGender`,
+`progression.enemies[].holds_group_spells`), 0 for EIDs 487-518, past the last row, 3839, `$0F00`+. A
+copy of an original row keeps that row's flag (`conversation.vanilla_holds`); a row without one casts.
+The original rows are not editable (the gender precedent). Measured (`tools/walk_holds.py`, PyBoy, the
+user's save, `examples/s162_volley_demo` THE VOLLEY HALL, 13 / 13): `DupConvFlag53` stub-called for
+EIDs 0-486 (the table, 486 = `$FE`), 487-518 (0), 25 project rows (their own), past the last row /
+3839 / `$0F00` / `$FFFF` (0), BC / DE kept; forced battles of two enemies of one row (RNG free, three
+seeds): the HOLDING imps 21 conversions in 84 enemy acts, the CASTING imps 0 (99 / 99 Bangs), the same
+from a battle bank (rows 694 / 695, bank $81); the original rows unchanged (EID 44 flagged: 8
+conversions; EID 309 not: 0); the game's own conversation battle with two holding rows: the read saw
+EID 522, 7 conversions. `--negative` (the original read put back): the casting / far casting imps
+convert like the holders (21 / 21 — their EIDs read code bytes `$C1` / `$CA`) and `DupConvFlag53`
+never runs: 3 FAIL. The Balance simulator reads the project rows' flags (`balance.BattleData.dup`;
+before S162 it gave them 0 where the ROM read the accident). PROJECT_COMPILER §2.70.
 
 ---
 
@@ -3113,7 +3142,8 @@ adjusters are the known writers).
 CLOSED S85: the 2nd-group-cast -> Attack rule (`EnemyDupCastConversion_
 4e63` + `EnemyDupConvFlagTable_41df` + `GroupDupSkillList_4ee4`, §15.8b
 — an enemy converts iff ANY enemy precedes it in the round order, EID
-flag set, $DD0B!=2; the S84 "single enemy never converts" observation is
+flag set (486 bytes, EIDs 0-485 — S162; project rows: their own flag
+since S162, §13.13), $DD0B!=2; the S84 "single enemy never converts" observation is
 exactly this); +2 bit1 applier = PoisonAir $6D; curse self-hit magnitude
 (MaxHP/6 branch + 3 siblings, §15.8 table); LoadBtlC_5857 = the skill-$41
 attacker +6&3 exemption. AI rule chains are DONE

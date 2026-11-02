@@ -703,6 +703,10 @@ user-confirmed hand-authored code:
   (`BattleItemProbe` / `BattleItemPick` call `ReclaimedSkill77`: an item whose battle skill is one
   of the 14 reclaimed ids is refused as "not usable in battle"; `TEMPLATE_SIZE[$77]` 2785 —
   `ShopPtrTable` `$4AE1`, was 2741). Current values: `templates/PINNED_SHA256`.
+* S162 re-pin (§2.70, ROADMAP E17 note — holds back group spells): `bank_06b_head.asm` (+ entry 2
+  `EnemyHoldsOf`: DE = EID -> E = the row's `ProjectEnemyHolds` byte, 0 off the project rows;
+  `TEMPLATE_SIZE[$6B]` 129 — `RowBankTable` `$4081` in the S162 example game.sym, was 100). Current
+  values: `templates/PINNED_SHA256`.
 * S136 re-pins (§2.45, ROADMAP ARC CAP2b): `bank_060_head.asm` (the forwarding head: entries
   0/1/2/4/5/8/9/10 → `PlaceOf` / `PlaceGo`, `SkillScriptRead`, the vanilla branches; the readers
   moved out) — current value in `templates/PINNED_SHA256`; NEW `place_readers.asm` (the reader block
@@ -5351,6 +5355,45 @@ does); help 54 "How the AI chooses, and a new skill's Preference" + the shared-p
 / 72; `EDITOR_REVISION` S161. `test_compiler.test_s161` (+ `--rom`: `AIViewArm72` / `AIViewOff72` /
 `CustomAIRule72` / `Fork54_RecordIndex` / `LearnUpgradeOrAdd51` RUN for every id, the hooks' bytes);
 `test_app` (the Preference box).
+
+## §2.70 S162 — HOLDS BACK GROUP SPELLS: a project enemy row's own setting for the duplicate-group-cast conversion (ROADMAP E17 note "Project enemy rows")
+
+**Built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended")** (user: "B sounds fine"; "make sure in a proper romhack nothing gets
+messed up not just what I have"). Engine side: BATTLE_SKILL_SYSTEM §13.13 (S162), MONSTER_DATA
+"Project enemy rows".
+
+- **Why (measured S161 / S162):** the original rule — an enemy's group spell / breath (bank $53
+  `GroupDupSkillList_4ee4`, 77 ids) becomes plain Attack when another enemy acted before it in the
+  round, `$DD0B` ≠ 2 — is gated per EID by `EnemyDupConvFlagTable_41df` (486 bytes, EIDs 0-485, 181
+  set: early wild rows + random battles 0-4, never a boss / arena row). Its read had no bound: a
+  project row (EID 519+) read code past the table (3,259 of 3,321 EIDs non-zero; the user's three
+  rows `$03` / `$FE` / `$03`), and the Balance simulator gave project rows 0.
+- **Schema:** `progression.enemies[].holds_group_spells` = `true` | `false` (absent = false);
+  validators refuse anything but a bool. `Document.add_enemy(copy_eid=an original row)` copies the
+  row's flag (`conversation.vanilla_holds`, from `extracted/enemy_dupconv_flags.json`; EID 486 =
+  `$FE` = true, as the game reads it); a copy of a project row / a join version keep it (ENEMY_FIELDS);
+  a new row from scratch is off. The original rows' flags are the game's (`set_enemy_fields` refuses
+  them — the S149 gender precedent). No migration: an older project's rows read "casts" (absent).
+- **Where the data goes:** bank $6B `ProjectEnemyHolds` (one byte a row, right after
+  `ProjectEnemyGender`; `battles.PER_ROW_6B` 2 in the plan — bank $6B at the 3,321-row cap: 129 +
+  6,642 + 383 rows = 16,361 B); an empty project emits one byte of each per-row table.
+- **Engine:** hand patch `patches/bank_053.asm` — `EnemyDupCastConversion_4e63`'s 9-byte read →
+  `call DupConvFlag53` + 6 nops; `DupConvFlag53` (34 B of the nop fill after `DupBase53`): EIDs 0-486
+  the original table, higher → bank $6B entry 2 (pinned head re-pinned, §5). The clean tree's
+  `EnemyDupConvFlagTable_41df` re-sectioned from fake code to `db` rows (byte-identical; both trees).
+- **Simulator / Balance:** `balance.BattleData.dup` extended with each project row's flag (the list
+  `battle.simulate_round` indexes by EID); `fight_fingerprint` hashes a project row's flag (EIDs >
+  486 only — the original game's digests unchanged).
+- **Editor:** Monsters tab "Where you meet it" — a **Group spells** column (a tick on your own rows,
+  "holds back" / "casts" read-only on the game's, `HOLDS_TIP`); the Enemies dialog — "holds back group
+  spells"; help 50_enemies, 52_monsters, 90_limits; `EDITOR_REVISION` S162.
+- **Pin:** example `97acc081…` (patched; was `c8fdb078…`, patched): banks $53 / $6B (+ the header
+  checksum) differ — the example's two rows both 0.
+- **Measured:** `tools/walk_holds.py` on the user's `.sav` (`examples/s162_volley_demo/`, THE VOLLEY
+  HALL; TOOLS_AND_DATA S162): 13 / 13; `--negative` 3 FAIL. Tests: `test_compiler.test_s162` (9 + 2
+  `--rom`: `DupConvFlag53` → `EnemyHoldsOf` RUN through MiniSM83 — which gained `sbc a, n` and a
+  stubbable `rst $10` — for EIDs 0-529, every row and the edges; the bank $53 site's bytes),
+  `test_app` (the Monsters tab column), `test_canvas` (the dialog's tick box).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

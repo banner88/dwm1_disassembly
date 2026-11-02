@@ -405,11 +405,12 @@ class MonstersMixin:
         vrows = G._rows(G.vanilla(REPO), 'enemy_stats')
         where = self.enemy_places(g)
         out = []
-        from editor2.core.conversation import vanilla_gender
+        from editor2.core.conversation import vanilla_gender, vanilla_holds
         for eid, r in enumerate(g.enemy):
             if r[0] == sid:
                 f = decode_enemy(r)
                 f['gender'] = vanilla_gender(eid)          # S149 (read-only)
+                f['holds_group_spells'] = vanilla_holds(eid)   # S162 (read-only)
                 out.append({'eid': eid, 'kind': 'original', 'id': None,
                             'fields': f,
                             'edited': bytes(r) != bytes(vrows[eid]),
@@ -420,6 +421,7 @@ class MonstersMixin:
                 f = {k: e.get(k) for k in ENEMY_KEYS}
                 f['skills'] = list(e.get('skills') or [])
                 f['gender'] = e.get('gender', 'rolled')    # S149
+                f['holds_group_spells'] = bool(e.get('holds_group_spells', False))  # S162
                 out.append({'eid': eid, 'kind': 'project', 'id': e.get('id'),
                             'fields': f, 'edited': True,
                             'where': where.get(eid, []) or where.get(e.get('id'), [])})
@@ -469,6 +471,8 @@ class MonstersMixin:
             data_before = copy.deepcopy(self.data)
             if changes.get('gender') == 'rolled':       # S149: absent = rolled
                 changes = dict(changes, gender=None)
+            if changes.get('holds_group_spells') is False:   # S162: absent = False
+                changes = dict(changes, holds_group_spells=None)
             try:
                 self.update_enemy(project_id, **changes)
                 self._commit_data(copy.deepcopy(self.data))
@@ -483,6 +487,9 @@ class MonstersMixin:
         if 'gender' in changes:
             raise G.GamedataError("an original row's gender is the game's (S149: only your "
                                   "own enemy rows choose one)")
+        if 'holds_group_spells' in changes:
+            raise G.GamedataError("an original row's 'holds back group spells' is the game's "
+                                  "(S162: only your own enemy rows choose it)")
         if changes.get('hp') is not None and int(changes['hp']) < G.ENEMY_HP_MIN:
             raise G.GamedataError(f"HP {int(changes['hp'])}: at least {G.ENEMY_HP_MIN} — "
                                   f"{G.ENEMY_HP_WHY} (S149 r2)")

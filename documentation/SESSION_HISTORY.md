@@ -1,5 +1,58 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-29 (Session 160 — **ROADMAP E13 BUILT: 30 NEW SKILLS — AFTER THE 16 HIGH IDS 239-254 A PROJECT'S
+> NEW SKILLS TAKE THE 14 BATTLE-SKILL IDS OF LIFEACORN, MYSTICNUT, THE FOUR SEEDS (188-193), WARPWING, TINYMEDAL AND THE SIX
+> BOOKS (204-211); THOSE 14 ITEMS ARE FIELD-ONLY FOR GOOD (BY THEIR BASE); A RECLAIMED NEW SKILL ACTS EXACTLY LIKE A HIGH
+> ONE** (user: "Continue with E13" → "1) … Mostly likely the new skills will be damage skills. but IDK yet. I need the space.
+> 2) Sure 3) Dont understand issue." — decided: all 30 alike (following the base's id rules is E17), the high ids first; the
+> "Evolves from 2+" point explained and logged). **Built S160, USER-CONFIRMED 2026-10-29 14:48 ("Ok both twins work the same").**
+> Test ROM **`DWM-S160-twins-test.gbc`** (`886d719e…`, patched) = the user's project + THE TWIN HALL
+> (`examples/s160_twin_demo/build_demo.py`; way in: the TWIN GUIDE, Cities_FOUNT (3, 4)): 14 TWIN pairs (H… on 239-252, R…
+> on the 14 ids, the same base and data) + HSnow / HHell; gifts HIGHTWIN / RECLTWIN, LEARNER (one level up at the TRAINING
+> DUMMY teaches HFireb + RFireb), HIGH / RECL SLASHER and CASTER (INT 200), the ITEM KEEPER (a LifeAcorn + a WarpWing).
+> Example pin `1855e3a0…` (patched; was `cee9bfb9…`, patched — banks $06 / $4C / $57 / $58 / $72 / $77 + the checksum).
+> **Session environment:** the permission check refused the RGBDS build until the user's "You have permission. You always
+> have permission."; PySide6 6.9.1 for test_app (6.12 segfaults here, S159).
+> **Found:** the battle's id-range sites for the window (a concrete ladder walk, compared at the EFFECT level — KEY_LESSONS
+> S160): the AI damage estimate (bank $52 entry 3, called from bank $58 `SaveBtlFX_43ff` — "a presentation router" since S48
+> was wrong, DOC_AUDIT S160) would index past its 28-row table for ids $6D-$D5; `AIRule_4785` vetoes $88-$D9 when every
+> opponent is paralysed; `$52:$763E` airborne reach = DEAD code (0 / 181 casts); bank $4C's `$FD` line; items are the HERO's
+> action (`HeroItemAction_727a`, ex `Jump_052_727a`); `UnevolvedSkillMap` $97+ = $FF (breeding never passes a new skill).
+> **Two skills evolving from ONE skill freeze the level up** ("… becomes X!" forever — bank $51 `LevelUpS04_LearnScan` finds
+> no prerequisite left to replace; the original data never has it; measured) → a compiler WARNING, ROADMAP E13 open note.
+> Help 54's "Evolves from — knows ONE of them" was wrong (2-5 = a combination: ALL needed; never for custom ids — the S75
+> fence). INT-200 enemies whose skills are all new cast none of them (both kinds; E17 wider). The clone census re-measure is
+> timing-sensitive (8 bases flip in a 700-frame window; S111 verdicts kept).
+> **Built (engine, patched):** bank $72 `FarSkillFork` `.stock` → `ReclaimBase72` / `ReclaimBaseTable`; bank $58
+> `DispatchBoundsStub` → `ReclaimRow58` / `ReclaimTargetTable`, `SaveBtlFX_43ff` → `FxEstimate58` (the estimate sees $EF),
+> region `gd_reclaim_announce`; bank $57 `AIRule_4785` → `SkillView57`; bank $4C `ReclaimLine4C` (rows 33-46, `ASSERT $7476`);
+> bank $06 `LearnFence06` (code 2 fenced for the 14 too); bank $77 template `ReclaimedSkill77` (re-pinned, `TEMPLATE_SIZE[$77]`
+> 2785); WRAM equates `RECLAIM_*`. BATTLE_SKILL_SYSTEM §13.12, PROJECT_COMPILER §2.68 (+ §5 re-pin), DATA_STRUCTURES "The
+> field-only items (S160)".
+> **Built (compiler + editor + simulator):** `custom_skills.NEW` = 30 (`NEW_HIGH` + `RECLAIM`), the reclaimed rows into the
+> stock tables (`gamedata._reclaimed_skills`, `skills.effective`), regions 24 (`gd_reclaim_base` / `_target` / `_announce`),
+> 47 line rows, `shared_evolution_check`; Skills list / pickers / Monsters labels; Items tab field-only (`FIELD_ONLY_ITEMS`,
+> `set_item_battle` refuses); simulator `learn_scan` fence + `planner`; `census_skill_clone.py --reclaim` (+ the census JSON's
+> "reclaim" section); `validate_custom_data.py` (the new fence); help 54 / 74 / 00, `EDITOR_REVISION` S160.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_reclaim.py` on the demo): 44 / 44** — the gifts; 14 twin pairs cast
+> from one saved state (RNG pinned): the same messages / numbers / cast counts, HFireb / RFireb their own lines (rows 17 /
+> 33); the AI estimate and `AIRule_4785` stub-called in a live battle: H == R, the estimate sees $EF, stock Sleep vetoed and
+> the twins not; the sparring pairs: the same action sequences (0 new-skill casts — E17); LifeAcorn / WarpWing refused in
+> battle (nothing acts, kept), a Herb accepted, the field LifeAcorn +5 max HP; the level up teaches HFireb + RFireb, never
+> HBang / RBang (two prerequisites); `freeze` (a ROM copy with both from Blazemost) never ends. `--negative` (the S160 views
+> removed): **33 FAIL** (twins 14 — HWhist / RWhist alike: ComedyBk's old effect matches Whistle's battle lines; the five R estimates LOCK THE CPU UP (`hung`) + their reads, the six R twins vetoed: 16; LifeAcorn / WarpWing used in battle: 2; RBang learned: 1).
+> **Annotation (both trees, `1ca6579…`):** bank $52 `AIDamageEstimate_538f`, `AirborneReachDead_763e`, `HeroItemAction_727a`
+> (renamed, every reference); bank $58 `SaveBtlFX_43ff` (corrected); bank $57 `AIRule_4785`; bank $53 the `cp $10` hero
+> routing; bank $54 entry 5's caller; bank $16 `UnevolvedSkillMap`.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1872 PASSED (+ `test_s160`); test_app `--rom` PASS (65 OK, the GUI build = the pin; the Skills list 225 rows: the 14 ids left the stock list); test_canvas
+> `--rom` PASS.
+> **User test (2026-10-29 14:48): "Ok both twins work the same. I assume this is proving a point? There is no reason for
+> there to be 2 skill clones, I just want more slots overall."** — yes: the twins are the demo's proof only; a project
+> just makes new skills (New skill… takes the next free id, high ids first, a 31st refused) and the compiler wires
+> each id. No push access (the user: "No push access allowed, give me zip").
+> **Next:** the E13 open notes (the shared-parent freeze: an engine fix
+> to decide; combinations for new skills) or the next ROADMAP item (E17 the AI and new skills, E14 names).
+
 > Last verified: 2026-10-28 (Session 159 — **ROADMAP E16 BUILT: RESISTANCES — THE RESISTANCES TAB (EVERY MONSTER × THE
 > 27 IN SIX GROUPS: ELEMENTAL SPELLS, BREATHS, STATUS AILMENTS, STAT DOWN / DRAIN, SEALS, SPECIAL ATTACKS; WHAT EACH BLOCKS,
 > WHAT A LEVEL DOES, WHICH SKILLS TEST IT NOW, RIGHT-CLICK TO MOVE A SKILL), EARTH = THE UNUSED 27TH (QUAKE / NEW SKILLS / A

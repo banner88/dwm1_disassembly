@@ -17,7 +17,7 @@ caller as ONE undo step.
 import copy
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QGridLayout, QGroupBox, QHBoxLayout, QInputDialog, QLabel,
                                QLineEdit, QListWidget, QMessageBox, QPushButton, QSpinBox,
                                QSplitter, QVBoxLayout, QWidget)
@@ -157,6 +157,17 @@ class EnemiesDialog(QDialog):
             lambda _i: self._set('gender', None if self.gender.currentData() == 'rolled'
                                  else self.gender.currentData()))
         f.addRow('gender', self.gender)
+        # S162: holds back group spells (bank $6B ProjectEnemyHolds — BATTLE_SKILL_SYSTEM §13.13)
+        self.holds = QCheckBox('holds back group spells')
+        self.holds.setToolTip('When another enemy acted before it in the round, its group '
+                              'spell or breath (Firebal, Bang, the breaths, the dances …) '
+                              'becomes a plain Attack. Off = it always casts. The original game '
+                              'does this for its early wild rows and random battles 0-4, never '
+                              'for a boss or an arena fighter; "Add from vanilla…" keeps the '
+                              'copied row\'s setting. An enemy at the top INT level always casts.')
+        self.holds.toggled.connect(
+            lambda on: self._set('holds_group_spells', True if on else None))
+        f.addRow('group spells', self.holds)
         sk = QHBoxLayout()
         self.skills = []
         try:                                   # S110: the project's skill names
@@ -260,6 +271,7 @@ class EnemiesDialog(QDialog):
                 self.join_as.addItem(f"{o.get('name') or o['id']}", o['id'])
         self.join_as.setCurrentIndex(max(0, self.join_as.findData(e.get('join_as'))))
         self.gender.setCurrentIndex(max(0, self.gender.findData(e.get('gender', 'rolled'))))
+        self.holds.setChecked(bool(e.get('holds_group_spells', False)))   # S162
         sk = list(e.get('skills') or [])
         for i, c in enumerate(self.skills):
             c.setCurrentIndex(max(0, c.findData(int(sk[i]) if i < len(sk) else None)))

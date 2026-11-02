@@ -4073,6 +4073,33 @@ def main():
     mt.select(224)
     mt._new_enemy_row()
     nid = [e for e in mt._rows if e['kind'] == 'project'][-1]
+    # S162: the Group spells column — a tick on your own row (a copy of the wild Slime: off),
+    # one undo step per change; the game's rows read-only ("casts" / "holds back")
+    def _gcell(pid):
+        r_ = next(i for i, e in enumerate(mt._rows) if e['id'] == pid)
+        return mt.table.item(r_, 14)
+    gi = _gcell(nid['id'])
+    assert gi.flags() & Qt.ItemIsUserCheckable and gi.checkState() == Qt.Unchecked \
+        and gi.text() == 'casts', (gi.text(), int(gi.flags()))
+    gi.setCheckState(Qt.Checked)
+    app.processEvents()
+    pe = {e['id']: e for e in doc.data['progression']['enemies']}[nid['id']]
+    assert pe.get('holds_group_spells') is True, pe
+    assert _gcell(nid['id']).text() == 'holds back'
+    _gcell(nid['id']).setCheckState(Qt.Unchecked)
+    app.processEvents()
+    pe = {e['id']: e for e in doc.data['progression']['enemies']}[nid['id']]
+    assert 'holds_group_spells' not in pe, pe
+    w.session.undo.undo()
+    w.session.undo.undo()
+    app.processEvents()
+    mt.select(8)
+    app.processEvents()
+    orig = {mt.table.item(r_, 0).text(): mt.table.item(r_, 14) for r_ in range(mt.table.rowCount())}
+    assert orig['2'].text() == 'casts' and not orig['2'].flags() & Qt.ItemIsUserCheckable, \
+        orig['2'].text()
+    mt.select(224)
+    app.processEvents()
     pd = PoolDialog(doc, nid['id'], 'test row', parent=mt)
     pd.pool.setCurrentIndex(pd.pool.findData(0))
     assert pd.table.currentRow() == 4, pd.table.currentRow()     # the free slot preselected

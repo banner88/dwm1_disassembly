@@ -2688,6 +2688,16 @@ the user picks.
         build → the Castle), a vanilla room entered from region 3 keeps it, a vanilla door
         redirect → region 0, the arena lobby (global) from region 3. *User half:* MET —
         `DWM-S140-compass-test.gbc` + `DWM-S140-plain-test.gbc`.
+        - [x] **(FOUND + FIXED S162 — a census defect, not a ROM one) `census_regions`'s
+          `gate_insert` check fails 1 on the example in 4 regions** (`test_compiler --rom`, "ROM
+          S140: census_regions"): `('gate_insert', 'gate_rotation', (0, 3, 0), (109, 0, 0))` — the
+          example's `gate_rotation` row is a 50 % chance (`custom.gate_inserts`, Villager floors 2-3,
+          `once_per_dive`), but the check stub-calls bank $71 entry 4 once and expects the insert;
+          the roll depends on the RNG in the reloaded state. Identical on an untouched HEAD
+          worktree in the S162 environment (PyBoy 2.9.0), so not caused by S162; S161's run passed.
+          (The tuple is (got, want): got `wMapID` 0 / region 3 as poked = no insert; want `$6D`.)
+          Fixed: a row below 100 % is called from fixed RNG seeds until its roll hits (the check is
+          about where the insert sends the player) — 1,117 / 1,117; TOOLS_AND_DATA S162.
   - [x] **CAP3b — the rest of the S135 acceptance, in game.** Play here into a region 1+ room
         (the poke is in, S140 — play it in the editor), the story-state model
         (`census_story_state` / the story-point game state) with regions, and the PyBoy
@@ -3521,7 +3531,7 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         S160. Engine fix to decide with the user: when the replaced skill is gone, ADD the second
         (what the simulator's `learn_scan` already does) — a few bytes in bank $51 (free space
         or a far call) + `census_raising.py`'s stub caller. **FIXED S161 (user: "do e17, e13 fix
-        both"; built S161, NOT yet user-tested; test ROM `DWM-S161-mirror-test.gbc`):** bank $51
+        both"; built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`); test ROM `DWM-S161-mirror-test.gbc`):** bank $51
         `LearnUpgradeOrAdd51` (26 B of the free tail): the old id gone from `$C0D8` -> the plain
         "… and learned …!" line ($0B02) into the first free slot; measured `tools/walk_mirror.py`
         siblings / later / full / plain (the third child is never learned once the prerequisite
@@ -3596,7 +3606,7 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       EDITOR_DESIGN §5.2d. Not built (not asked): renaming the stored FAQ names (the tab shows
       subtitles), per-enemy resistances (the game has none: enemies use the species row).
 - [x] **E17 — the enemy AI and NEW skills (FOUND S159; BUILT S161 — user: "do e17", "[AI preference]
-      Yes, with a sane base value"; built S161, NOT yet user-tested; test ROM `DWM-S161-mirror-test.gbc`).**
+      Yes, with a sane base value"; built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`); test ROM `DWM-S161-mirror-test.gbc`).**
       **Built:** the AI judges a NEW skill AS ITS BASE — during the rule chain `$DB8A` holds the base
       (bank $57 `AIViewArm57` -> bank $72 `AIViewArm72`), every record read gives the new skill's own
       (bank $54 `Fork54_RecordIndex`), the view off at the chain end / a veto; then its AI
@@ -3616,16 +3626,25 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         skills on boards of 2-3 opponents (+ defending / statuses), find the rules that count
         opponents, extend `ai_rules`; then the Balance tab is exact for status casters.
       - [ ] **Act-time id lists outside the AI.** **The duplicate-group conversion FIXED later S161**
-        (the user: "fix the issues if not too large"; built S161, NOT yet user-tested): bank $53
+        (the user: "fix the issues if not too large"; built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`)): bank $53
         `DupCastSkillListCheck_4ed6` `call DupBase53` + bank $72 entry 13 `AIBaseOrSelf72` — a new
         skill is tested against the 77-id `GroupDupSkillList_4ee4` AS ITS BASE (two NEW MAGES: 21 / 21
         conversions vs two stock, `walk_mirror.py` `dupcast`; BATTLE_SKILL_SYSTEM §13.13). Still
         open: a census of the other act-time code that reads `$DB8A` against id lists.
-      - [ ] **Project enemy rows and `EnemyDupConvFlagTable_41df`** (FOUND later S161, a design
-        question for the user): the per-EID gate of the conversion has 487 rows; a project row (EID
-        ≥ 519) reads past it — 3,259 of 3,321 bytes there are "flagged" (vanilla: 182 / 487), so
-        whether a project enemy's second group spell converts is an accident. Proposed: a flag per
-        project row (default: the copied source row's), emitted by the compiler.
+      - [x] **Project enemy rows and `EnemyDupConvFlagTable_41df`** (FOUND later S161; **FIXED S162
+        — user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just what I
+        have"; built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended"); test ROM `DWM-S162-volley-test.gbc`):** the per-EID gate
+        of the conversion is 486 bytes (EIDs 0-485, 181 set; EID 486 reads the next code byte `$FE`); a
+        project row (EID ≥ 519) read past it — 3,259 of 3,321 EIDs non-zero, so whether a project enemy's
+        second group spell converted was an accident. Built: `progression.enemies[].holds_group_spells`
+        (absent = casts; a copy of an original row keeps its flag; the original rows read-only), bank $6B
+        `ProjectEnemyHolds` + entry 2 `EnemyHoldsOf`, bank $53 `DupConvFlag53` (a bounded read: EIDs 0-486
+        the original bytes); the Balance simulator reads the rows' flags; Monsters tab **Group spells**
+        column + the Enemies dialog's tick box. Found: the flag follows row BLOCKS (early wild rows +
+        random battles 0-4 hold back, never a boss or the arena). Walk `tools/walk_holds.py` (PyBoy, the
+        user's save, `examples/s162_volley_demo` THE VOLLEY HALL) 13 / 13, negative 3 FAIL.
+        BATTLE_SKILL_SYSTEM §13.13 (S162), PROJECT_COMPILER §2.70. Not built (not asked): editing the
+        original rows' flags (the table would become a compiler region in bank $53).
       - [x] **`tools/walk_skills.py` (S155) on the user's current save: 2 LoneWolf checks FAILED** — FIXED
         later S161: the walk's assumptions, not the ROM (the user's party is three, with high DEF):
         `run(..., two=True)` now makes "a party of two" itself (party list +2 = $FF, `$CA8D` = 2) and

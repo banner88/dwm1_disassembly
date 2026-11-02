@@ -75,6 +75,8 @@
 - Enemy rows of your own (S149): at most 3,321 (EIDs 519-3839; was 640). Each
   chooses the gender of the monster that joins from it (rolled / male /
   female); none carries another master's name, a preset nickname or the egg.
+  Each also chooses whether it holds back group spells (S162) — the game's own
+  rows keep theirs (they cannot be changed in the editor).
 - New gates (S115): at most 64 (numbers 32-95). A new gate starts with the
   maze look, special rooms and depth tier of the gate it copies; since S120
   every gate can point at other rows (Gates tab → Maze floors) — the rows

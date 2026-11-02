@@ -10,11 +10,51 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-02 (Session 162 — **ROADMAP E17 NOTE "PROJECT ENEMY ROWS" FIXED: A PROJECT ENEMY ROW HAS ITS
+> OWN "HOLDS BACK GROUP SPELLS" (THE ORIGINAL RULE: A GROUP SPELL / BREATH BECOMES PLAIN ATTACK WHEN ANOTHER ENEMY ACTED
+> FIRST IN THE ROUND); THE FLAG READ IS BOUNDED — PROJECT ROWS NO LONGER READ THE CODE PAST THE 486-BYTE TABLE** (the
+> audit of the open items → user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just what I
+> have"; the S161 test-2 ROM: "Test fine I guess" — S161 USER-CONFIRMED). **Built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended").**
+> Test ROM **`DWM-S162-volley-test.gbc`** (`bfd33e4b…`, patched) = the user's project + THE VOLLEY HALL
+> (`examples/s162_volley_demo/build_demo.py`; way in: the VOLLEY GUIDE, Cities_FOUNT (3, 4)): the HOLDING / CASTING PAIR
+> (two Bang imps, INT 100, bank $6B), the FAR PAIR / FAR CASTERS (the same, rows 694 / 695 in battle bank $81 past ~690
+> spare rows); the guide tells the player to DEF for a few rounds. Example pin `97acc081…` (patched; was `c8fdb078…`,
+> patched — banks $53 / $6B + the header checksum).
+> **Session environment:** the RGBDS build needed the user's OK again ("You have permission"); PySide6 6.9.1, PyBoy 2.9.0.
+> **Found:** `EnemyDupConvFlagTable_41df` = 486 bytes (EIDs 0-485, 181 set), EID 486 reads `CmpBtlC_43c5`'s `$FE` (DOC_AUDIT
+> S162: "487 rows" / "182 of 487" wrong); the flags follow row BLOCKS — early wild rows (EIDs 0-146, in runs) and random
+> battles 0-4 (352-431) hold back, bosses / arena / later wild rows / tiers 5-7 never; the user's three rows read `$03` /
+> `$FE` / `$03` (all "holding" by accident; now casts — MegaOGRE's INT 230 always casts anyway); the Balance simulator gave
+> project rows 0; `census_regions`'s `gate_insert` check failed 1 on the example (a 50 % row checked as certain) on an
+> untouched HEAD too — the census now tries fixed RNG seeds (ROADMAP CAP3a note; FIXED S162).
+> **Built (engine, patched):** bank $53 `EnemyDupCastConversion_4e63` flag read → `call DupConvFlag53` + 6 nops,
+> `DupConvFlag53` ($6DDD, 34 B of the nop fill: EIDs 0-486 the original bytes, higher → bank $6B entry 2); bank $6B template
+> + entry 2 `EnemyHoldsOf` + `ProjectEnemyHolds` (re-pinned; `TEMPLATE_SIZE[$6B]` 129). BATTLE_SKILL_SYSTEM §13.13 (S162),
+> PROJECT_COMPILER §2.70, MONSTER_DATA "Project enemy rows".
+> **Built (compiler + editor + simulator):** `progression.enemies[].holds_group_spells` (bool; a copy of an original row keeps
+> its flag — `conversation.vanilla_holds`; the original rows read-only); `battles.PER_ROW_6B` 2; `balance.BattleData.dup` +
+> the project rows (+ `fight_fingerprint`); Monsters tab **Group spells** column, the Enemies dialog's tick box; help 50 /
+> 52 / 90, `EDITOR_REVISION` S162; MiniSM83 `sbc a, n` + a stubbable `rst $10`.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_holds.py` on the demo): 13 / 13** — `ProjectEnemyHolds` == the project
+> (697 rows); `DupConvFlag53` stub-called: EIDs 0-486 the table (486 = `$FE`), 487-518 0, 25 project rows their own, past the
+> last / 3839 / `$0F00` / `$FFFF` 0, BC / DE kept, == `BattleData.dup`; two-enemy forced battles (RNG free): HOLDING 21
+> conversions / 84 acts, CASTING 0 (99 / 99 Bangs), the FAR pair the same from bank $81, original EID 44 converts (8) and EID
+> 309 never; the game's own conversation battle: the read saw EID 522, 7 conversions. `--negative` (the original read) 3 FAIL.
+> **Annotation (both trees, `1ca6579…`):** bank $53 `EnemyDupConvFlagTable_41df` re-sectioned from fake code into 486
+> commented `db` bytes (what each block of rows is).
+> **Checks:** verify_integrity PASS (the `--apply` comment drift in banks $04 / $4D / $56 restored to HEAD — KEY_LESSONS
+> S153); test_compiler `--rom` ALL 1907 PASSED (+ `test_s162`; the S140 census fixed, above); test_app `--rom` PASS (65 OK,
+> the GUI build = the pin; + the Group spells column); test_canvas PASS (+ the dialog's tick box).
+> **User test (2026-11-02 13:27): "rom works exactly as intended".**
+> **Next:** the E17 rule model on 3-opponent boards (its own session),
+> the census of other act-time id lists, or E14 / the E13 note
+> "combinations for new skills".
+
 > Last verified: 2026-10-30 (Session 161 — **ROADMAP E17 BUILT: THE ENEMY AI JUDGES A NEW SKILL AS ITS BASE (THE BASE'S
 > RULES — BONUSES AND VETOES — ON THE NEW SKILL'S OWN RECORD) + A PER-SKILL AI PREFERENCE (-60 … +60, 0 = AS ITS BASE); THE
 > E13 NOTE FIXED: TWO SKILLS EVOLVING FROM ONE SKILL NO LONGER FREEZE THE LEVEL UP (THE SECOND IS LEARNED BESIDE THE FIRST)**
 > (user: "do e17, e13 fix both" → the measured cause + "as base" / "as base + preference" asked → "Yes, with a sane base
-> value" = default 0). **Built S161, NOT yet user-tested.**
+> value" = default 0). **Built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`).**
 > Test ROM **`DWM-S161-mirror-test.gbc`** (`91bb7495…`, patched) = the user's project + THE MIRROR HALL
 > (`examples/s161_mirror_demo/build_demo.py`; way in: the MIRROR GUIDE, Cities_FOUNT (3, 4)): STOCK / NEW / RECL MAGE
 > (Firebal, Bang, Infernos, SnowStorm), STOCK / NEW CASTER (Sleep, Sap, PsycheUp, BoltSlash), the PICKY MAGE (PSnow +60,
@@ -67,61 +107,9 @@
 > `EnemyDupConvFlagTable_41df` (ROADMAP E17 note); then the rule model on 3-opponent boards (its own session), the census
 > of other act-time id lists, or E14 (names) / the E13 note "combinations for new skills".
 
-> Last verified: 2026-10-29 (Session 160 — **ROADMAP E13 BUILT: 30 NEW SKILLS — AFTER THE 16 HIGH IDS 239-254 A PROJECT'S
-> NEW SKILLS TAKE THE 14 BATTLE-SKILL IDS OF LIFEACORN, MYSTICNUT, THE FOUR SEEDS (188-193), WARPWING, TINYMEDAL AND THE SIX
-> BOOKS (204-211); THOSE 14 ITEMS ARE FIELD-ONLY FOR GOOD (BY THEIR BASE); A RECLAIMED NEW SKILL ACTS EXACTLY LIKE A HIGH
-> ONE** (user: "Continue with E13" → "1) … Mostly likely the new skills will be damage skills. but IDK yet. I need the space.
-> 2) Sure 3) Dont understand issue." — decided: all 30 alike (following the base's id rules is E17), the high ids first; the
-> "Evolves from 2+" point explained and logged). **Built S160, USER-CONFIRMED 2026-10-29 14:48 ("Ok both twins work the same").**
-> Test ROM **`DWM-S160-twins-test.gbc`** (`886d719e…`, patched) = the user's project + THE TWIN HALL
-> (`examples/s160_twin_demo/build_demo.py`; way in: the TWIN GUIDE, Cities_FOUNT (3, 4)): 14 TWIN pairs (H… on 239-252, R…
-> on the 14 ids, the same base and data) + HSnow / HHell; gifts HIGHTWIN / RECLTWIN, LEARNER (one level up at the TRAINING
-> DUMMY teaches HFireb + RFireb), HIGH / RECL SLASHER and CASTER (INT 200), the ITEM KEEPER (a LifeAcorn + a WarpWing).
-> Example pin `1855e3a0…` (patched; was `cee9bfb9…`, patched — banks $06 / $4C / $57 / $58 / $72 / $77 + the checksum).
-> **Session environment:** the permission check refused the RGBDS build until the user's "You have permission. You always
-> have permission."; PySide6 6.9.1 for test_app (6.12 segfaults here, S159).
-> **Found:** the battle's id-range sites for the window (a concrete ladder walk, compared at the EFFECT level — KEY_LESSONS
-> S160): the AI damage estimate (bank $52 entry 3, called from bank $58 `SaveBtlFX_43ff` — "a presentation router" since S48
-> was wrong, DOC_AUDIT S160) would index past its 28-row table for ids $6D-$D5; `AIRule_4785` vetoes $88-$D9 when every
-> opponent is paralysed; `$52:$763E` airborne reach = DEAD code (0 / 181 casts); bank $4C's `$FD` line; items are the HERO's
-> action (`HeroItemAction_727a`, ex `Jump_052_727a`); `UnevolvedSkillMap` $97+ = $FF (breeding never passes a new skill).
-> **Two skills evolving from ONE skill freeze the level up** ("… becomes X!" forever — bank $51 `LevelUpS04_LearnScan` finds
-> no prerequisite left to replace; the original data never has it; measured) → a compiler WARNING, ROADMAP E13 open note.
-> Help 54's "Evolves from — knows ONE of them" was wrong (2-5 = a combination: ALL needed; never for custom ids — the S75
-> fence). INT-200 enemies whose skills are all new cast none of them (both kinds; E17 wider). The clone census re-measure is
-> timing-sensitive (8 bases flip in a 700-frame window; S111 verdicts kept).
-> **Built (engine, patched):** bank $72 `FarSkillFork` `.stock` → `ReclaimBase72` / `ReclaimBaseTable`; bank $58
-> `DispatchBoundsStub` → `ReclaimRow58` / `ReclaimTargetTable`, `SaveBtlFX_43ff` → `FxEstimate58` (the estimate sees $EF),
-> region `gd_reclaim_announce`; bank $57 `AIRule_4785` → `SkillView57`; bank $4C `ReclaimLine4C` (rows 33-46, `ASSERT $7476`);
-> bank $06 `LearnFence06` (code 2 fenced for the 14 too); bank $77 template `ReclaimedSkill77` (re-pinned, `TEMPLATE_SIZE[$77]`
-> 2785); WRAM equates `RECLAIM_*`. BATTLE_SKILL_SYSTEM §13.12, PROJECT_COMPILER §2.68 (+ §5 re-pin), DATA_STRUCTURES "The
-> field-only items (S160)".
-> **Built (compiler + editor + simulator):** `custom_skills.NEW` = 30 (`NEW_HIGH` + `RECLAIM`), the reclaimed rows into the
-> stock tables (`gamedata._reclaimed_skills`, `skills.effective`), regions 24 (`gd_reclaim_base` / `_target` / `_announce`),
-> 47 line rows, `shared_evolution_check`; Skills list / pickers / Monsters labels; Items tab field-only (`FIELD_ONLY_ITEMS`,
-> `set_item_battle` refuses); simulator `learn_scan` fence + `planner`; `census_skill_clone.py --reclaim` (+ the census JSON's
-> "reclaim" section); `validate_custom_data.py` (the new fence); help 54 / 74 / 00, `EDITOR_REVISION` S160.
-> **Measured (PyBoy, the user's save, NEW `tools/walk_reclaim.py` on the demo): 44 / 44** — the gifts; 14 twin pairs cast
-> from one saved state (RNG pinned): the same messages / numbers / cast counts, HFireb / RFireb their own lines (rows 17 /
-> 33); the AI estimate and `AIRule_4785` stub-called in a live battle: H == R, the estimate sees $EF, stock Sleep vetoed and
-> the twins not; the sparring pairs: the same action sequences (0 new-skill casts — E17); LifeAcorn / WarpWing refused in
-> battle (nothing acts, kept), a Herb accepted, the field LifeAcorn +5 max HP; the level up teaches HFireb + RFireb, never
-> HBang / RBang (two prerequisites); `freeze` (a ROM copy with both from Blazemost) never ends. `--negative` (the S160 views
-> removed): **33 FAIL** (twins 14 — HWhist / RWhist alike: ComedyBk's old effect matches Whistle's battle lines; the five R estimates LOCK THE CPU UP (`hung`) + their reads, the six R twins vetoed: 16; LifeAcorn / WarpWing used in battle: 2; RBang learned: 1).
-> **Annotation (both trees, `1ca6579…`):** bank $52 `AIDamageEstimate_538f`, `AirborneReachDead_763e`, `HeroItemAction_727a`
-> (renamed, every reference); bank $58 `SaveBtlFX_43ff` (corrected); bank $57 `AIRule_4785`; bank $53 the `cp $10` hero
-> routing; bank $54 entry 5's caller; bank $16 `UnevolvedSkillMap`.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1872 PASSED (+ `test_s160`); test_app `--rom` PASS (65 OK, the GUI build = the pin; the Skills list 225 rows: the 14 ids left the stock list); test_canvas
-> `--rom` PASS.
-> **User test (2026-10-29 14:48): "Ok both twins work the same. I assume this is proving a point? There is no reason for
-> there to be 2 skill clones, I just want more slots overall."** — yes: the twins are the demo's proof only; a project
-> just makes new skills (New skill… takes the next free id, high ids first, a 31st refused) and the compiler wires
-> each id. No push access (the user: "No push access allowed, give me zip").
-> **Next:** the E13 open notes (the shared-parent freeze: an engine fix
-> to decide; combinations for new skills) or the next ROADMAP item (E17 the AI and new skills, E14 names).
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S161** (2026-10-30): ROADMAP E17 built (engine + compiler + editor + simulator; pin moves twice) — the enemy AI judges a NEW skill AS ITS BASE (bank $57 `AIViewArm57` / `AIViewOff57` → bank $72 `AIViewArm72` / `AIViewOff72`; bank $54 `Fork54_RecordIndex` reads the new skill's own record; bank $58 `EstimateView58`; `SkillView57` retired) + a per-skill AI preference (`ai_preference` -60 … +60, region `gd_ai_pref`, `AIPrefEnd72`; the Skills tab's Preference); the E13 note fixed (bank $51 `LearnUpgradeOrAdd51`: two skills from one skill no longer freeze the level up); FOUND: the AI rules select by id (a new id +0), S160's pinned-RNG measurement, the RNG idle drift (twins re-seed at every stage), the S81 rule model's one-opponent gap (ROADMAP E17 note); NEW `tools/walk_mirror.py` + `examples/s161_mirror_demo` (35 / 35, negative 28 FAIL); later S161 (after the user's "looks good"): the duplicate-group-cast conversion tests a new skill as its base (bank $53 `DupBase53` + bank $72 `AIBaseOrSelf72`; `walk_mirror` 37 / 37, negative 30 FAIL), `walk_skills.py`'s save assumptions fixed (33 / 33), the four AI weights named in the editor (`gamedata.AI_WEIGHT_NAMES`); FOUND: project enemy rows read `EnemyDupConvFlagTable_41df` past its 487 rows (ROADMAP E17 note); BATTLE_SKILL_SYSTEM §13.13, PROJECT_COMPILER §2.69. Test ROMs `DWM-S161-mirror-test.gbc` (`91bb7495…`, patched; "Yeah looks good") and `DWM-S161-mirror-test-2.gbc` (`5fb10cd3…`, patched); pin `c8fdb078…` (patched; first `f4a78bfb…`, historical). Built S161, the later changes NOT yet user-tested.
+- **S162** (2026-11-02): ROADMAP E17 note "Project enemy rows" fixed (engine + compiler + editor + simulator; pin moves once) — `progression.enemies[].holds_group_spells` (a copy of an original row keeps its flag; the original rows read-only), bank $6B `ProjectEnemyHolds` + entry 2 `EnemyHoldsOf` (re-pinned, `TEMPLATE_SIZE[$6B]` 129), bank $53 `DupConvFlag53` (a bounded read: EIDs 0-486 the original bytes); `EnemyDupConvFlagTable_41df` = 486 bytes, re-sectioned as `db` (both trees); the flags follow row blocks (early wild + random 0-4); Balance reads the rows' flags; Monsters tab Group spells column + the Enemies dialog's tick box; NEW `tools/walk_holds.py` + `examples/s162_volley_demo` (13 / 13, negative 3 FAIL); FOUND + FIXED: `census_regions`'s gate-insert check was a 50 % roll (failed on HEAD too; it now tries fixed RNG seeds); S161 USER-CONFIRMED ("Test fine I guess"); BATTLE_SKILL_SYSTEM §13.13, PROJECT_COMPILER §2.70. Test ROM `DWM-S162-volley-test.gbc` (`bfd33e4b…`, patched); pin `97acc081…` (patched). Built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended").
+- **S161** (2026-10-30): ROADMAP E17 built (engine + compiler + editor + simulator; pin moves twice) — the enemy AI judges a NEW skill AS ITS BASE (bank $57 `AIViewArm57` / `AIViewOff57` → bank $72 `AIViewArm72` / `AIViewOff72`; bank $54 `Fork54_RecordIndex` reads the new skill's own record; bank $58 `EstimateView58`; `SkillView57` retired) + a per-skill AI preference (`ai_preference` -60 … +60, region `gd_ai_pref`, `AIPrefEnd72`; the Skills tab's Preference); the E13 note fixed (bank $51 `LearnUpgradeOrAdd51`: two skills from one skill no longer freeze the level up); FOUND: the AI rules select by id (a new id +0), S160's pinned-RNG measurement, the RNG idle drift (twins re-seed at every stage), the S81 rule model's one-opponent gap (ROADMAP E17 note); NEW `tools/walk_mirror.py` + `examples/s161_mirror_demo` (35 / 35, negative 28 FAIL); later S161 (after the user's "looks good"): the duplicate-group-cast conversion tests a new skill as its base (bank $53 `DupBase53` + bank $72 `AIBaseOrSelf72`; `walk_mirror` 37 / 37, negative 30 FAIL), `walk_skills.py`'s save assumptions fixed (33 / 33), the four AI weights named in the editor (`gamedata.AI_WEIGHT_NAMES`); FOUND: project enemy rows read `EnemyDupConvFlagTable_41df` past its 487 rows (ROADMAP E17 note); BATTLE_SKILL_SYSTEM §13.13, PROJECT_COMPILER §2.69. Test ROMs `DWM-S161-mirror-test.gbc` (`91bb7495…`, patched; "Yeah looks good") and `DWM-S161-mirror-test-2.gbc` (`5fb10cd3…`, patched); pin `c8fdb078…` (patched; first `f4a78bfb…`, historical). Built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`).
 - **S160** (2026-10-29): ROADMAP E13 built (engine + compiler + editor + simulator; pin moves once) — 30 new skills: 239-254 then the 14 reclaimed item-effect ids 188-193 / 204-211 (LifeAcorn … IntSeed, WarpWing, TinyMedal, the six books: field-only for good by their base, bank $77 `ReclaimedSkill77`); the stock rows filled by the compiler + `ReclaimBaseTable` / `ReclaimTargetTable` / line rows 33-46 + the id views `FxEstimate58` (the AI estimate) / `SkillView57` (`AIRule_4785`) + `LearnFence06`; the ladder audit (BATTLE_SKILL_SYSTEM §13.12); FOUND: two skills from one prerequisite freeze the level up (compiler warning), help 54's "Evolves from" wording, the AI casts no new skill (E17); NEW `tools/walk_reclaim.py` + `examples/s160_twin_demo` (14 twin pairs, 44 / 44); PROJECT_COMPILER §2.68.
 - **S159** (2026-10-28): ROADMAP E16 added + built (engine + compiler + editor + simulator; pin moves once) — resistances: the Resistances tab (`editor2/core/resistances.py`, `app/resistances_tab.py`: every monster × 27 in six groups, what each blocks, the ladders, which skills test it now, right-click moves = the element), EARTH = resistance 26 (bank $51 `SaveBtlS_4404` → packed position 27, position 0 = 0; bank $79 memorial tag & `$F8`; `RESIST_NAMES[26]` + alias "Unused"), the skills' elements in the Balance simulator (`elem_override` / `custom_elem` — never simulated before); walk_earth.py 40 / 40 + memorial 5 / 5, negative 21 / 3 FAIL; found: `AIRule_4c13` veto measured, the battle item refusal (+10 only — E13), an enemy never casts a new Bang-based skill (E17); E13 agreed (14 item-effect ids → 30 new skills) and flagged next. Test ROM `DWM-S159-earth-test.gbc` (`f266a4cc…`, patched); pin `cee9bfb9…` (patched). Built S159, USER-CONFIRMED 2026-10-29 11:05 ("Great, works"); E13 scope confirmed (the 14 items field-only).
 - **S158** (2026-10-28): ROADMAP E15 added + built (engine + compiler + editor; pin moves once) — breeding hints: monuments (story command 8 → bank $79 entry 10 `HintCommand`: a random not-learned special row of the pool, latched per visit `HintRoomNote`, skip owned `$CA94`; riddles via bank $60 `TextOverride` → entry 12 `HintSay`) and per-family archives ("Keep reading?"); bank $69 `wHintRow` + bank $16 `HintBreed16` → entry 11 `HintBreed` (bred = learned); SRAM bank 3 "H1" $A007 / $B000 / $B100 written at once, `HintNewGameClear`; `custom.hints` (blacklist / whitelist, pinned numbers) + `rooms[].monuments` / `archives`, `editor2/core/hints.py`; the Hints page, + Monument / + Archive; `$CA94` = ever owned (DOC_AUDIT S158); walk_hints.py 72 / 72, negative 19 FAIL; pin `e7267428…` (patched). USER-CONFIRMED 2026-10-28 13:09 ("Happy with results"); r2: help 78 "Fixing the grammar of the default words", `EDITOR_REVISION` S158r2.
@@ -319,6 +307,7 @@
 | The ending → the post-game (S144, PyBoy) | The Starry final's win tail (`$00E4`, mode 3 night Farm; the Farm's script 0 sets `$00E5` after its op `$3E`) → the Farm talk (script 19, YES) → Starry Shrine → ceremony (`$D951` 7 by op `$5E`, → 8 by bank $02 `CeremonySkyDone`) → white room (`$D99A` 3) → the bedroom (`$00E9`, the dresser `$00EA`, YES `$00EB`, step-on `$00ED` → credits = mode 4, `$00EE` + 18 rooms' post-game states) → "TO BE CONTINUED": **the only save** (bank $5F mode 4: a button + YES) → CONTINUE: bedroom (`$00EF`, `$00F0`) → the dresser → GreatTree → the Castle (`$00F1`). Model `story_state.run_ending`; census 40 / 40 steps. EVENT_FLAGS "Story state at a story point". |
 | Resistances (S159) | 27 levels 0-3 per species (info +$0F..+$29; enemies use their species' row, a monster its record +$68..+$82 made at creation); index 26 = **EARTH** in patched builds — record +$82 bits 0-1 (the memorial tag bits 3-7), packed POSITION 27 by bank $51 `SaveBtlS_4404` (original: position 0); every type t at position t + 1, AI element (record +5) = t + 1 (Earth 27, 0 = none). Fire = the Blaze line, Heat = the Firebal line. Which skill reads which type: BATTLE_SKILL_SYSTEM §15.3, `editor2/core/resistances.py` |
 | Enemy AI and new skills (S161) | The bank $57 rule chains select skills BY ID (`$DB8A`); patched builds set `$DB8A` = a NEW skill's base for its chain walk (state 4 `AIViewArm57` → bank $72 `AIViewArm72`, off at the chain end / veto exit) and bank $54 `Fork54_RecordIndex` answers the base's record with the new skill's own (`wAIViewId` / `wAIViewBase` $DED5 / $DED6); then its AI preference (`AIPrefTable`, -60 … +60). An enemy uses a new skill as often as its base (measured on twins). The battle RNG also steps in wait loops: a build with more cycles drifts every later roll (A/Bs re-seed at every stage). The duplicate-group-cast conversion (bank $53 `DupCastSkillListCheck_4ed6` → `DupBase53` → bank $72 `AIBaseOrSelf72`) tests a new skill as its base too; a far call through RST_10 carries the id in E (A / BC clobbered). BATTLE_SKILL_SYSTEM §13.13 |
+| Enemy group spells held back (S162) | bank $53 `EnemyDupCastConversion_4e63`: an enemy's group spell / breath (`GroupDupSkillList_4ee4`, 77 ids) becomes Attack when another enemy acted before it in the round, `$DD0B` ≠ 2, and its EID's flag is set — `EnemyDupConvFlagTable_41df` (486 bytes, EIDs 0-485, 181 set: early wild rows + random battles 0-4, never a boss / arena row; EID 486 reads the next code byte `$FE`). Patched: `DupConvFlag53` bounds the read (EIDs 0-486 the original, a project row bank $6B `ProjectEnemyHolds` via entry 2 `EnemyHoldsOf` = `progression.enemies[].holds_group_spells`, else 0). BATTLE_SKILL_SYSTEM §13.13 (S162) |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -338,7 +327,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $67 | Custom tileset sheets (`custom.tilesets[]`: raw2bpp incl. editor-copied vanilla sheets, or mashup spec); S135: first fit — the rest goes to the overflow banks $80+ | compiler-generated `patches/bank_067.asm` (`tilesets67`) |
 | $69 | Breeding special scanner (B2) + the live special table; S158 (E15): the scanner counts the rows and stores the matching row's number in `wHintRow` ($FFFF none) | hand-kept `patches/bank_069.asm` (scanner) + compiler region `gd_special_recipes` (`gamedata.breeding.special`, S103; `build_breeding.py --emit-special` retired) |
 | $6A | New-species info high table (ids 221-239; S105 G3, was 224+): hand `NewSpeciesInfoCopy` (`sub $dd`) + slots 0-18 = compiler region `ns_info` (S105) | hand-kept `patches/bank_06a.asm` + `custom.species` (editor2/core/species.py; `build_new_species.py` emit retired S105) |
-| $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101). **S149 (ARC CAP5): up to 3,321 rows — bank $6B keeps the first, `RowBankTable` names the battle bank of the rest; entry 1 `EnemyGenderOf` + `ProjectEnemyGender` (a row's creation gender, read by bank $14 `EnemyGenderCode`); TEMPLATE_SIZE 100** | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
+| $6B | Project enemy rows (`progression.enemies[]`, EID 519 + index, 25 B each, ≤640; entry 0 `CopyEnemyRowExt` called by bank $14 `LoadEnemyStatsExt`; S101). **S149 (ARC CAP5): up to 3,321 rows — bank $6B keeps the first, `RowBankTable` names the battle bank of the rest; entry 1 `EnemyGenderOf` + `ProjectEnemyGender` (a row's creation gender, read by bank $14 `EnemyGenderCode`); TEMPLATE_SIZE 100** **S162: entry 2 `EnemyHoldsOf` + `ProjectEnemyHolds` (a row's "holds back group spells", read by bank $53 `DupConvFlag53`); TEMPLATE_SIZE 129** | compiler-generated `patches/bank_06b.asm` (template `bank_06b_head.asm` + rows) |
 | $6C | Own tile animations (`custom.rooms[].tile_anims`: `CustomTileAnimate` entry 0 + `TileAnimRoomTable`, group records, 16-aligned frame blocks; S102). **S139 (ARC CAP2d):** the FIRST animation bank — entry 0 = the forwarder (`TileAnimDirectory`: bank, index per room), the player (`templates/tileanim_player.asm`) + the rooms that fit; the rest go to animation banks $80+; S140: `TileAnimDirectory` indexed by the place number (`PlaceNum6C`) | compiler-generated `patches/bank_06c.asm` (template `bank_06c_head.asm` + data; `tileanim6c`) |
 | $6D | Family systems (S104: Spirit = family 10 — entries 0/1 icon gfx id, 2 dialogue text group, 3 default-name id, gfx index 4 `SpiritIconStream`; callers = same-size forks in banks $01/$0A/$04/$09; S107 2c: + the saved-party icon forks in $07 ($62AB JOURNAL) / $0A ($6013), and `SpiritIconStream` is the compiler region `gd_spirit_icon_stream`) | hand-authored `patches/bank_06d.asm` (the Spirit icon bytes checked by `build_family_icon.py --selftest`) |
 | $6E | Arena systems (S109: entry 0 `ArenaTeamFixup`, far-called from the same-size tails of `ArenaBattleSetup` $04 / `LoadArenaEnemyStats` $50; `ArenaTeamSizeTable` = compiler region `gd_arena_team_sizes`) | hand-authored `patches/bank_06e.asm` (the table region from `gamedata.arena`, editor2/core/arena.py) |
@@ -561,6 +550,10 @@ re-section items).
   (Labyrinth `$42` 1, Forest Maze `$61` 2 / `$62` 1; no exit of the game names them) are left by the
   game's own camera 5-40 frames after a warp, the original rooms too, and `enter()` read 4 frames late;
   it reads at the arrival frame: 789 / 789 on that save (PYBOY_DEBUGGING S149, ROOM_DATA_FORMAT).
+- ~~(S162) `test_compiler --rom`'s "ROM S140: census_regions" failed 1: `('gate_insert', 'gate_rotation', (0, 3, 0),
+  (109, 0, 0))`~~ **FIXED S162 (the census, not the ROM):** the example's `gate_rotation` insert is a 50 % row and the
+  census called bank $71 entry 4 once from the reloaded state's RNG (PyBoy 2.9.0 → a miss; an untouched HEAD the same);
+  it now tries fixed RNG seeds until the roll hits — 1,117 / 1,117. ROADMAP CAP3a note.
 - `dump_monsters.py` WRITES the legacy `monsters.json` schema (43-byte parse) — don't
   re-run it casually (it recreates the deleted legacy file). (S120: `monsters_full.json`
   has NO generator — first import, == the ROM, frozen; `npc_catalog.json` rebuilt

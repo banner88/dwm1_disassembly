@@ -62,6 +62,15 @@ keep it (a row you copy from one of them starts with the same gender). A
 monster from your own rows always has you as its master and no preset
 nickname — the rival tamers' names and the egg row are the game's alone.
 
+**Group spells** (S162) — *holds back*: when another enemy acted before it in
+the round, the row's group spell or breath becomes a plain Attack; *casts*:
+it always casts. Tick it on your own rows (here or in the Enemies dialog); the
+game's rows show their own and keep it (the game holds back on its early wild
+rows and random battles 0-4, never on a boss or an arena fighter). A row you
+copy from one of the game's starts with its setting; **New enemy row for this
+monster** copies the species' first original row, so check the tick. An enemy
+at the top INT level (181 or more) always casts.
+
 ## New species from a sprite sheet
 
 **New species from a sprite sheet…** (below the list) opens a sheet — any

@@ -29,6 +29,16 @@ enemies…**, or **Enemies…** inside a Battle step).
 - **gender** (S149) — of the monster that joins: rolled by the species'
   female ratio (the default), or always male / always female. A join version
   decides for the monster you get.
+- **holds back group spells** (S162) — when another enemy acted before it in
+  the round, its group spell or breath (Firebal, Bang, the breaths, the dances
+  … — 77 skills) becomes a plain Attack. Off = it always casts. The original
+  game ticks this for its early wild rows and random battles 0-4, never for a
+  boss or an arena fighter; **Add from vanilla…** keeps the copied row's
+  setting, a brand-new row starts off. A monster at the top INT level (181 or
+  more) always casts, ticked or not. Two holding enemies of the same row fight
+  with about one group spell a round instead of two. (Before S162 your own
+  rows got this by accident — the game read a byte of code past the end of
+  its table; nearly every project row "held back".)
 
 A project has up to **3,321** enemy rows (S149; was 640): the first ones are
 kept with the enemy code, the rest go to new banks of the 4 MB ROM by

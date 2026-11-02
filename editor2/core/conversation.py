@@ -171,6 +171,22 @@ def vanilla_gender(eid):
     return {0x00: 'male', 0x01: 'female'}.get(v, 'rolled')
 
 
+def vanilla_holds(eid):
+    """S162: True when an original enemy row holds back group spells — bank $53
+    EnemyDupConvFlagTable_41df (EIDs 0-485; EID 486 reads the next code byte $FE, so
+    True as the game reads it): its group spell / breath becomes a plain Attack when
+    another enemy acted before it in the round (BATTLE_SKILL_SYSTEM §13.13)."""
+    if 'holds' not in _CACHE:
+        try:
+            d = json.load(open(os.path.join(_repo_root(), 'extracted',
+                                            'enemy_dupconv_flags.json')))
+            _CACHE['holds'] = [bool(v) for v in d['flags']]
+        except (OSError, ValueError, KeyError):
+            _CACHE['holds'] = []
+    t = _CACHE['holds']
+    return bool(t[eid]) if 0 <= eid < len(t) else False
+
+
 def vanilla_enemies():
     """[{eid, species, name, level, hp, mp, atk, def, agl, int, exp,
     joinability, skills, ai_weights, boss}] — extracted/enemy_stats.json
@@ -467,7 +483,8 @@ class ConversationMixin:
 class EnemiesMixin:
     ENEMY_FIELDS = ('species', 'level', 'exp', 'joinability', 'hp', 'mp', 'atk', 'def',
                     'agl', 'int', 'ai_weights', 'skills', 'join_as', 'name', 'comment',
-                    'gender')       # S149: 'rolled' (absent) | 'male' | 'female'
+                    'gender',       # S149: 'rolled' (absent) | 'male' | 'female'
+                    'holds_group_spells')   # S162: bool (absent = False)
 
     def project_enemies(self):
         return (self.data.get('progression') or {}).get('enemies') or []
@@ -541,6 +558,9 @@ class EnemiesMixin:
                         g = vanilla_gender(int(copy_eid))
                         if g != 'rolled':
                             base['gender'] = g
+                        # S162: ... and whether it holds back group spells
+                        if vanilla_holds(int(copy_eid)):
+                            base['holds_group_spells'] = True
                         break
         base.update(fields)
         _check_enemy_hp(base)
