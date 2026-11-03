@@ -290,6 +290,7 @@ class ChainRules:
         self.records = records
         self.alias = getattr(b, 'core_alias', {}) or {}     # [S161] ROADMAP E17
         self.pref = getattr(b, 'ai_pref', {}) or {}
+        self.fixes = getattr(b, 'ai_fixes', frozenset()) or frozenset()   # [S164]
 
     def evaluate(self, category, skill, state):
         # [S161] (ROADMAP E17, bank $57 AIViewArm57 / bank $72 AIViewArm72): a NEW skill is
@@ -301,7 +302,7 @@ class ChainRules:
         delta, veto = R.evaluate_chain(
             category, self.alias.get(skill, skill), self.actor, self.view,
             f.get('mp_cost_byte', 0), f.get('status_id', 0), f.get('flags7', 0),
-            pref=self.pref.get(skill, 0))
+            pref=self.pref.get(skill, 0), fixes=self.fixes)
         return delta, veto
 
 

@@ -2322,6 +2322,11 @@ AIRuleFamilyCutBonus_4c41:
 jr_057_4c62:
     ld a, [$db8a]
     sub $48
+; [S164] the rst $00 table below ($4C65, mgbdis code): rows = id - $48 for $48-$4F, then $D6-$D8
+; -> rows 8-10: MetalCut $48 -> Jump_057_4d29; DrakSlash $49 / BeastCut $4A / $4B / $4C / $4D / $4E
+; -> the family blocks 1 / 2 / 3 / 6 / 7 / 8 (each `ld a, fam / ld [$db4c], a / call
+; LoadBtlAI_44a7`); MultiCut $4F -> family 7's block again (and no $6848 veto: that covers
+; $48-$4E); $D6 / $D7 / $D8 -> families 0 / 5 / 4.
 
 jr_057_4c67:
     rst $00
@@ -3900,6 +3905,13 @@ jr_057_5512:
     ret
 
 
+; [S164] Decoded (BATTLE_SKILL_SYSTEM §15.10.5 "S164"): chain 2, only for an actor whose AI tier
+; $DD0B is 2 (LoadBtlAI_7c6e): Surround $18, Upper $1E, Increase $1F, SandStorm $72, Radiant $73,
+; SideStep $77 get +10 when the live opponents that are surrounded (+3 bit 1) or in a sandstorm
+; (+7 & 3) — their summed ATK / their count [$DB6C] — beat twice the own side's average DEF
+; (FuncBtlAI_7dc5). VANILLA BUGS: the ATK sum is divided by its own high byte (A = [$db57] at the
+; Div16x8To16 call), and the own average is never computed (see FuncBtlAI_7dc5). Patched builds
+; may switch both off (gamedata.ai_fixes.averages: region gd_ai_fix_avg -> OppAvgDiv57).
 AIRule_551b:
     call LoadBtlAI_7c6e
     ret nz

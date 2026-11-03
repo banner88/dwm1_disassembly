@@ -1,5 +1,45 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-02 (Session 162 — **ROADMAP E17 NOTE "PROJECT ENEMY ROWS" FIXED: A PROJECT ENEMY ROW HAS ITS
+> OWN "HOLDS BACK GROUP SPELLS" (THE ORIGINAL RULE: A GROUP SPELL / BREATH BECOMES PLAIN ATTACK WHEN ANOTHER ENEMY ACTED
+> FIRST IN THE ROUND); THE FLAG READ IS BOUNDED — PROJECT ROWS NO LONGER READ THE CODE PAST THE 486-BYTE TABLE** (the
+> audit of the open items → user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just what I
+> have"; the S161 test-2 ROM: "Test fine I guess" — S161 USER-CONFIRMED). **Built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended").**
+> Test ROM **`DWM-S162-volley-test.gbc`** (`bfd33e4b…`, patched) = the user's project + THE VOLLEY HALL
+> (`examples/s162_volley_demo/build_demo.py`; way in: the VOLLEY GUIDE, Cities_FOUNT (3, 4)): the HOLDING / CASTING PAIR
+> (two Bang imps, INT 100, bank $6B), the FAR PAIR / FAR CASTERS (the same, rows 694 / 695 in battle bank $81 past ~690
+> spare rows); the guide tells the player to DEF for a few rounds. Example pin `97acc081…` (patched; was `c8fdb078…`,
+> patched — banks $53 / $6B + the header checksum).
+> **Session environment:** the RGBDS build needed the user's OK again ("You have permission"); PySide6 6.9.1, PyBoy 2.9.0.
+> **Found:** `EnemyDupConvFlagTable_41df` = 486 bytes (EIDs 0-485, 181 set), EID 486 reads `CmpBtlC_43c5`'s `$FE` (DOC_AUDIT
+> S162: "487 rows" / "182 of 487" wrong); the flags follow row BLOCKS — early wild rows (EIDs 0-146, in runs) and random
+> battles 0-4 (352-431) hold back, bosses / arena / later wild rows / tiers 5-7 never; the user's three rows read `$03` /
+> `$FE` / `$03` (all "holding" by accident; now casts — MegaOGRE's INT 230 always casts anyway); the Balance simulator gave
+> project rows 0; `census_regions`'s `gate_insert` check failed 1 on the example (a 50 % row checked as certain) on an
+> untouched HEAD too — the census now tries fixed RNG seeds (ROADMAP CAP3a note; FIXED S162).
+> **Built (engine, patched):** bank $53 `EnemyDupCastConversion_4e63` flag read → `call DupConvFlag53` + 6 nops,
+> `DupConvFlag53` ($6DDD, 34 B of the nop fill: EIDs 0-486 the original bytes, higher → bank $6B entry 2); bank $6B template
+> + entry 2 `EnemyHoldsOf` + `ProjectEnemyHolds` (re-pinned; `TEMPLATE_SIZE[$6B]` 129). BATTLE_SKILL_SYSTEM §13.13 (S162),
+> PROJECT_COMPILER §2.70, MONSTER_DATA "Project enemy rows".
+> **Built (compiler + editor + simulator):** `progression.enemies[].holds_group_spells` (bool; a copy of an original row keeps
+> its flag — `conversation.vanilla_holds`; the original rows read-only); `battles.PER_ROW_6B` 2; `balance.BattleData.dup` +
+> the project rows (+ `fight_fingerprint`); Monsters tab **Group spells** column, the Enemies dialog's tick box; help 50 /
+> 52 / 90, `EDITOR_REVISION` S162; MiniSM83 `sbc a, n` + a stubbable `rst $10`.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_holds.py` on the demo): 13 / 13** — `ProjectEnemyHolds` == the project
+> (697 rows); `DupConvFlag53` stub-called: EIDs 0-486 the table (486 = `$FE`), 487-518 0, 25 project rows their own, past the
+> last / 3839 / `$0F00` / `$FFFF` 0, BC / DE kept, == `BattleData.dup`; two-enemy forced battles (RNG free): HOLDING 21
+> conversions / 84 acts, CASTING 0 (99 / 99 Bangs), the FAR pair the same from bank $81, original EID 44 converts (8) and EID
+> 309 never; the game's own conversation battle: the read saw EID 522, 7 conversions. `--negative` (the original read) 3 FAIL.
+> **Annotation (both trees, `1ca6579…`):** bank $53 `EnemyDupConvFlagTable_41df` re-sectioned from fake code into 486
+> commented `db` bytes (what each block of rows is).
+> **Checks:** verify_integrity PASS (the `--apply` comment drift in banks $04 / $4D / $56 restored to HEAD — KEY_LESSONS
+> S153); test_compiler `--rom` ALL 1907 PASSED (+ `test_s162`; the S140 census fixed, above); test_app `--rom` PASS (65 OK,
+> the GUI build = the pin; + the Group spells column); test_canvas PASS (+ the dialog's tick box).
+> **User test (2026-11-02 13:27): "rom works exactly as intended".**
+> **Next:** the E17 rule model on 3-opponent boards (its own session),
+> the census of other act-time id lists, or E14 / the E13 note
+> "combinations for new skills".
+
 > Last verified: 2026-10-30 (Session 161 — **ROADMAP E17 BUILT: THE ENEMY AI JUDGES A NEW SKILL AS ITS BASE (THE BASE'S
 > RULES — BONUSES AND VETOES — ON THE NEW SKILL'S OWN RECORD) + A PER-SKILL AI PREFERENCE (-60 … +60, 0 = AS ITS BASE); THE
 > E13 NOTE FIXED: TWO SKILLS EVOLVING FROM ONE SKILL NO LONGER FREEZE THE LEVEL UP (THE SECOND IS LEARNED BESIDE THE FIRST)**

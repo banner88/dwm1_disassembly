@@ -1528,6 +1528,18 @@ def _custom_skill_regions():
 REGISTRY += _custom_skill_regions()
 
 
+def _ai_fix_regions():
+    # S164 (ROADMAP E17 note "the original AI's bugs"): five bank $57 rules as switches —
+    # each a same-size region holding the original bytes or the fix (editor2/core/ai_fixes.py,
+    # PROJECT_COMPILER §2.72). No switch == the original bytes.
+    from . import ai_fixes as AF
+    return [(name, "gamedata.ai_fixes", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in AF.REGIONS]
+
+
+REGISTRY += _ai_fix_regions()
+
+
 def _anim_entries():
     # S112 (P3.11e): the project's NEW battle animations (bank $6F engine +
     # data, bank $70 tile sheets) and every skill's own presentation (bank

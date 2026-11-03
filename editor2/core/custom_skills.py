@@ -1018,12 +1018,30 @@ def layout(prj_or_data, repo_root=None):
             'skills': sk, 'extra': ex}
 
 
+NAME_TABLE = 0x4539                     # bank $41 SkillNamePtrTable (text mode 6)
+
+
 def bank41_spills(prj_or_data, repo_root=None):
-    """Custom skill names that must go to the shared bank-$41 extents."""
+    """Custom skill names that must go to the shared bank-$41 extents. [S164, ROADMAP E14]
+    none: the names past the 94-B region are served from the S150 text banks instead
+    (text_slots) — the ns_text_* extents stay whole for the new species' names / nicknames
+    and the renamed monsters."""
+    return []
+
+
+def text_slots(prj_or_data, repo_root=None):
+    """[S164, ROADMAP E14] [(bank $41, SkillNamePtrTable, id, name + $F0, what)] — the custom
+    skills' names that do not fit bank $41's gd_custom_skill_names region (94 B), for the S150
+    text banks (gametext.resolve appends them; TextOverride serves mode 6 row `id` from the
+    text bank — every reader goes through SaveBankAndSwitch: the SKIL menus, the battle
+    announce / {skill} insert, the level-up lines; measured S164, tools/walk_names.py)."""
     try:
-        return layout(prj_or_data, repo_root)['names'][1]
+        lay = layout(prj_or_data, repo_root)
     except CustomSkillError:
         return []
+    sid_of = {name_label(s, v['name']): s for s, v in lay['skills'].items() if s >= FIRST}
+    return [(0x41, NAME_TABLE, sid_of[lab], b, f"gamedata.skills.{sid_of[lab]}.name")
+            for lab, b in lay['names'][1]]
 
 
 def desc_spills(prj_or_data, repo_root=None):
@@ -1036,7 +1054,9 @@ def desc_spills(prj_or_data, repo_root=None):
 def usage(prj_or_data, repo_root=None):
     lay = layout(prj_or_data, repo_root)
     pool = sum(len(b) for _l, b in lay['msg_pool'])
-    return {'names': (lay['names'][2] + sum(len(b) for _l, b in lay['names'][1]), NAME_REGION),
+    # [S164] the names past the region go to the text banks (no limit there): the meter shows
+    # the region alone
+    return {'names': (lay['names'][2], NAME_REGION),
             'descs': (lay['descs'][2] + sum(len(b) for _l, b in lay['descs'][1]), DESC_REGION),
             'lines': (lay['msg_a'][1] + pool, MSG_A + MSG_POOL)}
 
@@ -1070,13 +1090,9 @@ def check(prj):
             out.append(f"gamedata.skills.{s}: {MT.decode(v['name'])} has no learn row — only "
                        "an enemy row / a species' skill slot can give it")
     out += [w for w in shared_evolution_check(prj, sk) if w not in out]
-    for s, v in sorted(sk.items()):                     # [S160] combinations: fenced (S75)
-        r = v.get('learn') or b''
-        pre = [x for x in r[13:18] if x != 0xFF] if len(r) >= 18 and r[13] != 0xFF else []
-        if len(pre) > 1:
-            out.append(f"gamedata.skills.{s}: {MT.decode(v['name'])} evolves from {len(pre)} skills "
-                       "— a custom or new skill with two or more prerequisites is never learned "
-                       "(the S75 crash fence); give it one 'Evolves from' skill")
+    # [S160-S163] a custom / new skill evolving from two or more skills warned "never learned"
+    # (bank $06 LearnFence06, the S75 fence); S164 opened code 2 for every id (ROADMAP E13
+    # note): such a skill is a COMBINATION, learned beside its prerequisites like FireSlash
     return out
 
 
@@ -1386,11 +1402,17 @@ def emit_sfx(prj, warnings):
 
 
 def emit_name_ptrs(prj, warnings):
-    sk = layout(prj)['skills']
+    lay = layout(prj)
+    sk = lay['skills']
+    texted = {lab for lab, _b in lay['names'][1]}       # [S164] served by the text banks
     out = []
     for s in range(FIRST, 256):
         lab = name_label(s, sk[s]['name']) if s in sk else 'SkillName_222_Unused_222'
-        out.append(f"    dw {lab}  ; [{s}]")
+        if lab in texted:
+            out.append(f"    dw SkillName_222_Unused_222  ; [{s}] {MT.decode(sk[s]['name'])}: "
+                       "its name is in the text banks (S164, TextOverride)")
+        else:
+            out.append(f"    dw {lab}  ; [{s}]")
     return "\n".join(out) + "\n"
 
 
@@ -1398,8 +1420,8 @@ def emit_names(prj, warnings):
     placed, spilled, used = layout(prj)['names']
     out = []
     if spilled:
-        out.append(f"; ({len(spilled)} name(s) placed in the ns_text_* extents: "
-                   + ", ".join(l for l, _b in spilled) + ")")
+        out.append(f"; ({len(spilled)} name(s) served from the S150 text banks — S164, ROADMAP "
+                   "E14: " + ", ".join(l for l, _b in spilled) + ")")
     for lab, b in placed:
         out.append(f"{lab}:  ; \"{MT.decode(b)}\"")
         out.append(_db(b))

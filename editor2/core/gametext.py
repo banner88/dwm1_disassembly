@@ -231,6 +231,16 @@ def resolve(prj_or_data, repo_root=None):
         x.raw, x.style, x.group, x.owner, x.title = raw[:-1], 'rows', 'items', 'Items', what
         x.same, x.first, x._markup, x.inside = [], True, None, None
         out.append((x, raw))
+    # S164 (ROADMAP E14): the custom skills' names past bank $41's 94-B region (custom_skills
+    # .text_slots) — mode 6 rows 222+ of SkillNamePtrTable, served from the text banks
+    from . import custom_skills as CS
+    for bank, table, idx, raw, what in CS.text_slots(prj_or_data, repo_root):
+        x = Entry()
+        x.source, x.key = 'skill_name', str(idx)
+        x.bank, x.table, x.index, x.addr = bank, table, idx, 0
+        x.raw, x.style, x.group, x.owner, x.title = raw[:-1], 'rows', 'skills', 'Skills', what
+        x.same, x.first, x._markup, x.inside = [], True, None, None
+        out.append((x, raw))
     # S153 (ROADMAP E5): the credits' pages (custom.credits, editor2/core/ending.py) —
     # every role / names text that differs from the game's, and the rows past 26
     from . import ending as EN
@@ -319,8 +329,14 @@ def plan(prj):
         if len(v) > 256:
             raise GameTextError(f"bank ${b:02X} table ${t:04X}: {len(v)} rows")
     dir_bytes = 32 + 6 * len(row_list) + 1 + 4 * len(items)
-    # the banks: battles etc. number first
-    from . import battles as BT
+    # the banks: streams, places, animations, songs, battles number first — ALWAYS in that
+    # order (S164: BT.plan numbers the animation / song banks only when IT needs a bank, so a
+    # project with songs past $75, no battle bank and an edited text got the text bank $80 or
+    # the song bank $80 depending on which planner the caller ran first — found when the
+    # example's build gained a text bank, ROADMAP E14)
+    from . import battles as BT, music as MU, tileanim as TA
+    TA.plan(prj)
+    MU.song_ext_banks(prj)
     BT.plan(prj)
     taken0 = list(getattr(prj, '_ext_taken', None) or [])
     try:

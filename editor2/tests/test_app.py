@@ -3770,6 +3770,53 @@ def s163_failed_op_assets(app, w):
           'assets/ and project.json unchanged')
 
 
+def s164_ai_fixes(app, w):
+    """S164 (ROADMAP E17 note "the original AI's bugs"): the Skills tab's Enemy AI fixes…
+    dialog — five tick boxes (off = the original game), OK = one undo step writing
+    gamedata.ai_fixes; the compile follows (bank $57's regions); undo restores project.json."""
+    import json
+    import editor2.app.skills_tab as STm
+    from PySide6.QtWidgets import QCheckBox
+    from editor2.core import ai_fixes as AF
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    st = w.skills_tab
+    assert st.ai_fix_btn.text() == 'Enemy AI fixes…'
+    seen = {}
+
+    class Tick(STm.QDialog):
+        def exec(self):
+            boxes = self.findChildren(QCheckBox)
+            seen['n'] = len(boxes)
+            seen['titles'] = [b.text() for b in boxes]
+            for b in boxes:
+                b.setChecked(True)
+            return STm.QDialog.Accepted
+    real = STm.QDialog
+    STm.QDialog = Tick
+    try:
+        n0 = s.undo.count()
+        st._ai_fixes()
+        app.processEvents()
+    finally:
+        STm.QDialog = real
+    assert seen.get('n') == 5 and seen['titles'] == [AF.TEXT[k][0] for k in AF.AI_FIXES], seen
+    assert doc.ai_fixes() == frozenset(AF.AI_FIXES) and s.undo.count() == n0 + 1, doc.ai_fixes()
+    from editor2.core import compiler as C2
+    from editor2.core.project import Project
+    prj = Project(json.loads(doc.dumps()), doc.project_dir)
+    prj.repo_root = REPO
+    gen, _w = C2._emit_all(prj)
+    txt = gen['region:patches/bank_057.asm#gd_ai_fix_cut']
+    assert 'LoadBtlAI_44a7' in txt, txt
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before and doc.ai_fixes() == frozenset(), 'undo restores the project'
+    print('OK: S164 Enemy AI fixes… — 5 boxes, one undo step, gamedata.ai_fixes all on, the '
+          'compile emits the fixed bank $57 regions; undo restores project.json')
+
+
 def s159_resistances(app, w):
     """S159 (ROADMAP E16; user: "a proper resistance table visualizer and setter … Make sure
     that I can look up which skills fall where, especially once I start fiddling with skill
@@ -5408,6 +5455,7 @@ def main():
     s158_hints(app, w)
     s159_resistances(app, w)
     s163_failed_op_assets(app, w)
+    s164_ai_fixes(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

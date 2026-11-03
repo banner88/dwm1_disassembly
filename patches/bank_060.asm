@@ -4863,4 +4863,4 @@ VanillaNPCExtTable:
 
 PLACE_COUNT EQU 9
 TEXT_SECTIONS EQU 1
-TEXT_OVR_HOME EQU $00   ; S150: the text home bank (0 = no edited game text in this build; editor2/core/gametext.py)
+TEXT_OVR_HOME EQU $80   ; S150: the text home bank (0 = no edited game text in this build; editor2/core/gametext.py)

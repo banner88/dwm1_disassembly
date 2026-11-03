@@ -836,11 +836,15 @@ LoadBtlAI_44a7:
     cp [hl]
     jr z, jr_057_44cf
 
+; [S164] compiler region gd_ai_fix_cut (editor2/core/ai_fixes.py; gamedata.ai_fixes.family_cut): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
 jr_057_44ca:
     inc c
     dec b
+; @BUILD_PROJECT BEGIN gd_ai_fix_cut
     jr nz, jr_057_44ca
-
+; @BUILD_PROJECT END gd_ai_fix_cut
+    ASSERT @ == $44ce
     ret
 
 
@@ -2321,6 +2325,11 @@ AIRuleFamilyCutBonus_4c41:
 jr_057_4c62:
     ld a, [$db8a]
     sub $48
+; [S164] the rst $00 table below ($4C65, mgbdis code): rows = id - $48 for $48-$4F, then $D6-$D8
+; -> rows 8-10: MetalCut $48 -> Jump_057_4d29; DrakSlash $49 / BeastCut $4A / $4B / $4C / $4D / $4E
+; -> the family blocks 1 / 2 / 3 / 6 / 7 / 8 (each `ld a, fam / ld [$db4c], a / call
+; LoadBtlAI_44a7`); MultiCut $4F -> family 7's block again (and no $6848 veto: that covers
+; $48-$4E); $D6 / $D7 / $D8 -> families 0 / 5 / 4.
 
 jr_057_4c67:
     rst $00
@@ -2679,18 +2688,21 @@ jr_057_4e51:
     ld b, $03
     ld e, $00
 
+; [S164] compiler region gd_ai_fix_aoe (editor2/core/ai_fixes.py; gamedata.ai_fixes.aoe_count): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
+; @BUILD_PROJECT BEGIN gd_ai_fix_aoe
 jr_057_4e5d:
     push de
     ld a, c
     call CheckMonsterSlot
     pop de
     jr c, jr_057_4e66
-
     inc e
-
 jr_057_4e66:
     dec b
     jr nz, jr_057_4e5d
+; @BUILD_PROJECT END gd_ai_fix_aoe
+    ASSERT @ == $4e69
 
     ld a, e
     cp $02
@@ -3899,6 +3911,13 @@ jr_057_5512:
     ret
 
 
+; [S164] Decoded (BATTLE_SKILL_SYSTEM §15.10.5 "S164"): chain 2, only for an actor whose AI tier
+; $DD0B is 2 (LoadBtlAI_7c6e): Surround $18, Upper $1E, Increase $1F, SandStorm $72, Radiant $73,
+; SideStep $77 get +10 when the live opponents that are surrounded (+3 bit 1) or in a sandstorm
+; (+7 & 3) — their summed ATK / their count [$DB6C] — beat twice the own side's average DEF
+; (FuncBtlAI_7dc5). VANILLA BUGS: the ATK sum is divided by its own high byte (A = [$db57] at the
+; Div16x8To16 call), and the own average is never computed (see FuncBtlAI_7dc5). Patched builds
+; may switch both off (gamedata.ai_fixes.averages: region gd_ai_fix_avg -> OppAvgDiv57).
 AIRule_551b:
     call LoadBtlAI_7c6e
     ret nz
@@ -3977,11 +3996,19 @@ jr_057_557f:
     or a
     ret z
 
+; [S164] VANILLA BUG: the opponents' summed ATK is divided by its own HIGH byte ([$db57] is
+; the last thing loaded into A), not by the count [$db6c] — 0 for a sum below 256, so the
+; "average" is $FFFF. The fix (gd_ai_fix_avg, with gd_ai_fix_avgdef): OppAvgDiv57.
+; [S164] compiler region gd_ai_fix_avg (editor2/core/ai_fixes.py; gamedata.ai_fixes.averages): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
+; @BUILD_PROJECT BEGIN gd_ai_fix_avg
     ld a, [$db56]
     ld l, a
     ld a, [$db57]
     ld h, a
     call Div16x8To16
+; @BUILD_PROJECT END gd_ai_fix_avg
+    ASSERT @ == $5593
     ld a, l
     ld [$db58], a
     ld a, h
@@ -8470,11 +8497,15 @@ jr_057_6bec:
     and $40
     ret nz
 
+; [S164] compiler region gd_ai_fix_demagic (editor2/core/ai_fixes.py; gamedata.ai_fixes.demagic_scan): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
+; @BUILD_PROJECT BEGIN gd_ai_fix_demagic
     dec b
     jr nz, jr_057_6bec
-
     call ClearBattleAction
     ret
+; @BUILD_PROJECT END gd_ai_fix_demagic
+    ASSERT @ == $6c0f
 
 
 AIRule_6c0f:
@@ -11897,8 +11928,13 @@ LoadBtlAI_7d37:
 ; sum = its level + theirs (a vanilla quirk; ai_rules._count_rule, S163).
 CallBtlAI_7d4d:
     call LoadBtlAI_7d73
+; [S164] compiler region gd_ai_fix_count (editor2/core/ai_fixes.py; gamedata.ai_fixes.class_count): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
+; @BUILD_PROJECT BEGIN gd_ai_fix_count
     xor a
     ld [$db54], a
+; @BUILD_PROJECT END gd_ai_fix_count
+    ASSERT @ == $7d54
 
 SetBtlAI_7d54:
     ld hl, wBattlePostFlag
@@ -11978,6 +12014,9 @@ LoadBtlAI_7dbe:
     xor $04
 
 FuncBtlAI_7dc5:
+; [S164] compiler region gd_ai_fix_avgdef (editor2/core/ai_fixes.py; gamedata.ai_fixes.averages): the original
+; bytes, or the fix when the project switches it on (the Skills tab's "Enemy AI fixes…").
+; @BUILD_PROJECT BEGIN gd_ai_fix_avgdef
     ld c, a
     ld b, $03
     ld de, $0000
@@ -12038,6 +12077,8 @@ jr_057_7e0b:
     ld a, h
     ld [$db57], a
     ret
+; @BUILD_PROJECT END gd_ai_fix_avgdef
+    ASSERT @ == $7e20
 
 
     ld a, [wBattleAttackerIdx]

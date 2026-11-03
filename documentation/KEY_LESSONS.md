@@ -7550,3 +7550,61 @@ ActBase50`; a static scan of every store of the id into other RAM; `walk_actbase
 PLAN → COMMAND → SKIL → WHO with a fallen ally. **Rule:** a "the code treats X like Y" census also lists
 every place X is COPIED to other RAM and follows the copy; a walk that measures player-facing behaviour
 goes through the player's own input path (the menu) at least once.
+
+## S164 — outstanding fixes (combinations, the clone census, the AI's bugs as switches, E14)
+
+### S164 — a fence built on a guess outlives the guess: re-read the code it guards
+**Symptom:** a custom / new skill that evolves from two or more skills was never learned (ROADMAP
+E13 note); the S75 fence `LearnCode2Guard06` was "hardening" against "a universal row (no
+prerequisite, zero stats) stat-learned by any monster through the unexercised code-2 path".
+**Root cause:** the premise was never true — `SkillLearnScan` skips a row whose FIRST prerequisite
+is `$FF` before it tests any prerequisite, so code 2 needs 2-5 prerequisites all known; the S75 crash
+itself was the echo-RAM slot 40 (`SlotProbeGuard50`). **Fix:** `LearnFence06` open; the validator
+checks the scanner's skip instead; the walk measures a universal row never learned off the queue.
+**Rule:** before keeping (or lifting) a defensive fence, find the exact instruction that makes its
+hazard possible; a fence whose comment names a path ("unexercised", "could") but no instruction is a
+guess — measure the path.
+
+### S164 — pin the RNG where battle code READS it, not only at its wrapper
+**Symptom:** the whole-battle clone census still split Thordain / SleepAir from their copies at the
+last message with `BattleRNG` pinned at every call. **Root cause:** banks $53 / $57 / $58 call ROM0
+`GenerateRNG` directly (damage rolls, the AI); between those reads the per-frame idle step runs a
+cycle-dependent number of times. **Fix:** hook `GenerateRNG` and pin when the return address is in a
+ROMX bank (a battle caller), let the ROM0 idle steps run. **Rule:** for A/B walks, enumerate every
+caller of the RNG routine in the banks under test (`grep "call GenerateRNG"`) and pin at the routine
+itself, filtered by caller — a wrapper hook covers only the wrapper's callers.
+
+### S164 — a model validated on captured boards is exact only there: mutate the boards
+**Symptom:** the S163 AI rule model passed 1,573 / 1,573 captured chain ends, yet on seeded mutations
+of the same boards (foes killed / revived, other species, status bits, stats, AI tier) 1,102 of
+7,865 chains differ for the ORIGINAL rules, and live in the walk `$4DF9` / `$4B8C` fired. **Root
+cause:** the captured boards never exercise many rule conditions (`$4AF6`, `$5F1F`, `$4B3D` …); the
+`$551B` rule and MultiCut's `$4C41` row were never seen at all. **Fix:** S164 judges the AI switches
+only on the boards where the model is exact for the original rules (the ROM itself — `rom_rules.Oracle`
+— is the referee) and logs the rest as a found item. **Rule:** a hand model of ROM logic is validated
+by the ROM run on MANY boards (mutated from captured ones), not by the captured corpus that built it;
+use the ROM-run oracle as the arbiter and report the inexact region instead of hiding it.
+
+### S164 — an APPLY list's DELETE line can be missed: a test that names the file catches it
+**Symptom:** test_compiler on an untouched HEAD failed "the example project carries no unnamed sheet
+file (the stray ts_28_0D.2bpp …)". **Root cause:** S163 deleted `editor2/example-project/assets/
+ts_28_0D.2bpp` in its DELETE list; the repo still has it. **Fix:** deleted again (S164 DELETE).
+**Rule:** run `test_compiler --rom` on HEAD at session start (in a scratch copy) — a failing HEAD is
+the first fix; DELETE entries deserve the same attention as REPLACE.
+
+### S164 — two hooks on one address: hook one instruction in
+**Symptom:** "Hook already registered for this bank and address" — `walk_mirror.spar` already hooks
+the chain walker / chain end / veto heads. **Fix:** the S164 walk hooks the instruction after each
+(`$7868`, `$78A8`, `$788C`), where nothing it reads has changed yet. **Rule:** PyBoy allows one hook
+per address: when a helper owns the head, hook the next instruction whose state is still the one you
+need (read the disassembly for what that instruction already did).
+
+### S164 — a resource allocator that numbers on demand must number in ONE order
+**Symptom:** test_compiler's S147 ROM check (the songs' banks in the plan == in the ROM) failed once
+the example's build gained a text bank. **Root cause:** the $80+ banks are taken first come, first
+served (`Project._take_ext_bank`); `gametext.plan` asked `battles.plan` to go first, but that plans
+the song banks only when battles need a bank — so text vs song order depended on the caller.
+**Fix:** each planner calls every earlier planner explicitly before it takes a bank. **Rule:** a
+lazily-numbered shared space needs a fixed precedence that every allocator enforces itself
+(call all predecessors first), never one inherited through another planner's conditional call.
+

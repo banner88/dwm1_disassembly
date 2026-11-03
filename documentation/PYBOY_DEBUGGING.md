@@ -1324,3 +1324,25 @@ edge and the battle waits for input forever.
 - **A negative control by bytes:** copy the ROM, put the original game's bytes back at every call to a
   view helper (`call` opcode + target in the helper set, original byte an `ld a, [nn]` / `ld a, n` /
   `call`), and the walk must fail on exactly the bases whose effect asks for the id.
+
+## S164 techniques — whole-battle twins, live AI chains vs a ROM oracle, every name lookup
+
+- **Pin the RNG at `GenerateRNG` for battle callers** (`census_skill_clone.py --whole`): hook ROM0
+  `GenerateRNG` and poke `$C899` / `$C89A` only when the return address (`[SP]`) is ≥ `$4000` (a ROMX
+  caller: bank $53's damage rolls, banks $57 / $58's AI); the per-frame idle steps (ROM0 callers) run
+  free. With only `BattleRNG` pinned, Thordain / SleepAir twins still split at their last message.
+- **One hook per address** — when a helper (`walk_mirror.spar`) owns a routine's head, hook the next
+  instruction whose state is unchanged (`$57:$7868` the walker after `ld a, [$c1fa]`, `$78A8` the chain
+  end after CustomAI57 / `ld hl, $dce4`, `$788C` the veto after `xor a`).
+- **Live chains judged by a ROM oracle** (`walk_aifix.py`): at the chain walker copy WRAM `$C000-$DFFF`
+  + HRAM, at the end read `$DD26` / `$DD27`; then run the SAME image through `simulator/rom_rules.Oracle`
+  on a ROM whose bank $57 is another build's (the original rules) — an A/B of code on one live state,
+  no second battle (no RNG to align). Judge a model only where it is exact for the original rules.
+- **Every text lookup of a kind** (`walk_names.py`): hook ROM0 `$094F` (SaveBankAndSwitch's `pop af`
+  after the level-2 read): `[$4000]` = the bank whose mode list was used, `$C822` / `$C823` = mode / id,
+  DE = the text (ROM: read `p.memory[[$C824], DE]`; a COPY of an edited text: DE in WRAM) — one hook
+  sees the SKIL menu, the battle announce and the level-up line alike.
+- **A stalled board**: party monsters marked surrounded (+3 bit 1) every frame from phase 1 gave no
+  enemy decision in 5,000 frames (dropped from walk_aifix); poke boards in phases 4-6 when the state
+  is one the game sets itself only mid-battle.
+

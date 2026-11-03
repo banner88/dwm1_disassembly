@@ -1689,6 +1689,13 @@ Every edit is one `SnapshotCommand`; refused edits show the compiler's message. 
 `57_animations.md` (new) + `54_skills.md` "Animation". Residuals: new tile art; the
 projectile "go back" loop is not authorable (copy frames instead).
 
+**As built S164 (built, NOT yet user-tested):** under the skill list, **Enemy AI fixes…** — five
+tick boxes (`editor2/core/ai_fixes.TEXT`: each the original rule's bug in words and the fix; off =
+the original game), OK = one undo step (`Document.set_ai_fix`) writing `gamedata.ai_fixes`; the Balance
+tab follows. The learn note says a custom / new skill with two to five "Evolves from" skills is a
+combination (learned beside them); the name meter counts bank $41's region only (the names past it
+come from the text banks, ROADMAP E14). The New skill dialog offers the 138 bases of the S164 census.
+
 ### 5.4 Breeding tab (edit + simulate — user spec "see randomizer")
 
 - **Table editor**: special recipes (bank `$69` full authoring stack

@@ -57,9 +57,9 @@ Where the data goes (all id-indexed, index = id - 221):
     suffixes shared). 19 eight-letter names + 19 four-letter nicknames fit
     (266 B) — S155: the built-in custom skill names overflow their own 94-B
     block by 27 B (28 B since S155 r3's "Blunt"; custom_skills NAME_REGION),
-    which these extents hold too, so that maximum is now 2 B over (three names a
-    letter shorter fit: 291 B in 42 strings, the exact search under its step
-    budget, `_pack`); 19
+    which these extents held too (that maximum was 2 B over) — S164 (ROADMAP
+    E14): those names come from the text banks (custom_skills.text_slots), the
+    extents hold the species' words (and renamed originals) alone; 19
     nine-letter names + 19 distinct four-letter nicknames do not (error).
 
 Walking layout (S105 fix): a new species borrows a bank-$11 species' layout.

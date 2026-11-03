@@ -85,6 +85,28 @@ class Rom:
             if c == end:
                 return bytes(out)
 
+    def ovr_text(self, bank, table, idx):
+        """[S164] an edited text slot (bank, table, row) through the S150 text home bank's
+        directory (TextOvrDir_T<home>: rows [bank, dw table, dw list, count], lists of
+        [id, text bank, dw address]) -> the text incl. $F0, or None. ROADMAP E14: the custom
+        skills' names past bank $41's region live there."""
+        d = [n for n in self.s if n.startswith('TextOvrDir_T')]
+        if not d:
+            return None
+        h, a = self.s[d[0]]
+        while True:
+            row = self.at(h, a, 6)
+            if row[0] == 0:
+                return None
+            if row[0] == bank and (row[1] | row[2] << 8) == table:
+                la = row[3] | row[4] << 8
+                for k in range(row[5] or 256):
+                    it = self.at(h, la + 4 * k, 4)
+                    if it[0] == idx:
+                        return self.string(it[1], it[2] | it[3] << 8)
+                return None
+            a += 6
+
 
 def extract(r):
     sk = {}
@@ -124,6 +146,9 @@ def extract(r):
         mp_first = 0xE0
     for sid in ids:
         name = r.string(b41, r.word(b41, ptr41 + 2 * sid))[:-1]
+        if not name:                           # [S164] served from the text banks (E14)
+            ov = r.ovr_text(0x41, ptr41, sid)
+            name = ov[:-1] if ov else name
         dp = r.word(b56, ptr56 + 2 * sid)
         desc = None if dp == none56 else r.string(b56, dp)[:-1]
         rp = r.word(b54, rptr + 2 * (sid - 0xDE))

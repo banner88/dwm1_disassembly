@@ -153,7 +153,7 @@ contiguous DTE string run from mgbdis fake-instructions to `TextStr_<bank>_<addr
 `db` blocks, one label per text id with decoded comment; labels/comments only, build
 stays `1ca6579…`. `--bank 0xNN [--apply|--check]`. Region from data (`text_id_map.json`
 first addr + ROM trailing-fill end), boundaries snapped to real line addresses via a
-probe-build so no fake instruction is split. Idempotent. bank `$47` done; rest of
+probe-build so no fake instruction is split. Idempotent. bank `$47` done (S164: re-run from the measured `text_id_map.json` → `$40C1-$5B74`, 56 strings — the S43 region had started at `$4174`); rest of
 `$42-$4B,$4E` pending (ROADMAP Phase F Arc 1). See TEXT_SYSTEM.md "Source re-section") ·
 `resection_library_tables.py` (✅ Session 26/27 — same probe-build machinery for bank `$12`) ·
 `resection_ai_bank57.py` (✅ new S82 — Iron-Rule-6 annotation of the bank-`$57` AI
@@ -2191,3 +2191,28 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `simulator/validate_rules_boards.py` (NEW) | replays each chain end of the corpus through `ai_rules.evaluate_chain` on the captured board (stats / families / traits from the WRAM image); `--build` merges sweep outputs | 1,573 / 1,573 |
 | `simulator/rom_rules.py` (NEW) | `Oracle(rom).chain(wram, hram, reads=)` runs bank $57's `AIState7ChainWalker_7865` over a captured RAM image: the per-rule (bonus, penalty) changes, the chain end, and what each rule reads | 160 / 160 exact (~7 ms a chain) |
 | `simulator/ai_rules.py`, `simulator/pacing.py` | `CHAINS`, the `IDS_*` ladders, `_count_rule`, `BattleView` atk / dfn / agl; $4D56 / $4C41 / class bonuses / $6444 / $4C13 / $6382 exact (BATTLE_SKILL_SYSTEM §15.10.5 "S163"); `ChainRules` passes families / traits / stats | validate_rules 240, boards 1,573, F10 rules 332, command 6,411, F10 1,335, battle 6,614 / 802 / 426 |
+
+## S164 rows (outstanding fixes: A1-A5 bookkeeping, ROADMAP E13 notes (combinations, the clone census), E14 (the custom skill names), E17 note (the original AI's bugs as switches); built S164, NOT yet user-tested)
+
+| File | What changed | Verified by |
+|---|---|---|
+| `.github/workflows/verify.yml` | the byte-perfect clean build copied to `data/DWM-original.gbc` (runner only), PyBoy / Pillow / numpy / PySide6 6.9.1 installed, `tools/verify_integrity.py` + `editor2/tests/test_compiler.py --rom` (Qt offscreen) | `test_s164` (the steps are there); the first push |
+| `disassembly/bank_047.asm` (+ `tools/resection_text_bank.py` re-run, unchanged) | the T1 region re-run from the measured `text_id_map.json`: `$40C1-$5B74`, 56 strings; the dispatch `dw`s name the strings; `TextRunB47_4091` / `TextShowRefreshB47_40a9` labels + the three stubs commented | clean `1ca6579…`; `test_s164` |
+| `disassembly/bank_057.asm`, `patches/bank_057.asm` | comments: `AIRule_551b` decoded, the `$4C41` rst table (MultiCut → family 7); patch: six compiler regions `gd_ai_fix_*` + `ASSERT`s | clean `1ca6579…`; `test_s164` |
+| `patches/bank_006.asm` | `LearnFence06` = `ld a, c / and a / ret` (code 2 open for every id) | `test_s164` (+ `--rom`); walk_combo |
+| `patches/bank_041.asm`, `bank_060.asm`, `bank_ext.asm`, NEW `bank_080.asm` | the example's compile: five name pointer rows → the placeholder, the extents freed, `TEXT_OVR_HOME` $80, text bank $80 (the names) | `test_compiler` pin `9a4337a9…` (patched); verify check 2 |
+| `editor2/core/ai_fixes.py` (NEW) | `AI_FIXES`, `TEXT`, `fixes_of`, `validate`, `REGIONS` (the six bank $57 regions) | `test_s164`; validate_ai_fixes; walk_aifix |
+| `editor2/core/emitters.py`, `gamedata.py` (`SECTIONS` + `ai_fixes`), `skills_doc.py` (`ai_fixes()` / `set_ai_fix`), `balance.py` (`BattleData.ai_fixes`, `_board`, the fingerprint), `app/skills_tab.py` (Enemy AI fixes… + the learn note) | the switches end to end | `test_s164`; test_app `s164_ai_fixes` |
+| `editor2/core/custom_skills.py` (`bank41_spills` = [], NEW `text_slots`, `NAME_TABLE`, `emit_name_ptrs` / `emit_names`, `usage`, no combination warning), `gametext.py` (`resolve` + the skill names) | ROADMAP E14 + the combination warning gone | `test_s164`; walk_names |
+| `simulator/ai_rules.py` | `evaluate_chain(…, fixes=)`, `f10_rules(…, fixes)`, `_count_rule(fixed=)`, `_avg16` / `_avg16_vanilla` / `_div16x8`, `IDS_551B` + the `$551B` rule, `MULTICUT` | validate_rules 240 / boards 1,573 / F10 332 unchanged; validate_ai_fixes |
+| `simulator/pacing.py`, `planner.py` | `ChainRules.fixes` from `Board.ai_fixes`; `_SHARED` + `ai_fixes` | test_compiler (Balance) |
+| `simulator/raising.py` | code 2 open for every id | `test_s160` (updated), census_raising `--quick` on the demo 0 mismatches |
+| `simulator/validate_ai_fixes.py` (NEW) | the ROM's own bank $57 (`rom_rules.Oracle`) on an original-rules build and a build with switches (`--fixes`) over the S163 corpus + `--mutate N` seeded mutations; the model judged where it is exact for the original rules | all five and each alone: 6,763 / 6,763, 821 differing decisions |
+| `tools/census_skill_clone.py` (`--whole`, `--build`, `--keep`, `--fresh`, `--negative`; the GenerateRNG caller pin) → `extracted/skill_clone_census.json` (regenerated) | the whole-battle twin compare on the S163 engine; `results` + `reclaim` | 138 same / 17 differ / 67 not a skill; `--negative` (the S163 view off): Vivify / Revive differ |
+| `tools/walk_combo.py` (NEW) | combo / one / full / vanilla / universal (`--negative`: the S160 LearnFence06 bytes) | 8 / 8, negative 3 FAIL |
+| `tools/walk_names.py` (NEW) | a hook at `$094F` (every mode-6 lookup of a custom id): battle (5 routed + Tame), menu, learn (`--negative`: TextLevel1Hook's far call off) | 16 / 16, negative 12 FAIL |
+| `tools/walk_aifix.py` (NEW) | lone / dragon / buffed boards; live chain ends vs the model with switches, vs the original rules (`--orig-bank57`), `--negative` | 8 / 8, negative 7 FAIL |
+| `tools/validate_custom_data.py` | accepts the S164 open fence with the scanner's no-prerequisite skip | verify check 6 |
+| `examples/s164_conflux_demo/build_demo.py` (NEW) | the user's project + THE CONFLUX HALL (CONFLUX GUIDE, FUSION KEEPER, TRAINING DUMMY; TACTICIAN, WARDEN; all five AI fixes ON; Fusion from Blaze AND Bang; Finish from Firebal) | the three walks |
+| `editor2/example-project/assets/ts_28_0D.2bpp` | DELETED again (the S163 DELETE was not applied: HEAD's test_compiler failed on it) | `test_s163` |
+| `editor2/tests/test_compiler.py` (`test_s164`, `test_s160` updated, the ns_text tests, the target list + bank $57 / $80, the pin), `test_app.py` (`s164_ai_fixes`) | | ALL PASS |

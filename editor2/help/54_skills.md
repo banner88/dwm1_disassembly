@@ -20,8 +20,10 @@ field back (a new skill: back to what its base gives it).
   empty text in the original game; typing one gives that skill its own.
 
 The bar under the list shows how full the name and text blocks are. A name or
-text that no longer fits its block moves to spare room automatically (names:
-the bank $41 space new monsters' names share; texts: a 2,993-byte spare area).
+text that no longer fits its block moves to spare room automatically (names of
+the original skills: the bank $41 space new monsters' names share; the custom
+and new skills' names: the text banks, no limit — S164; texts: a 2,993-byte
+spare area).
 
 ## MP and learning
 
@@ -36,8 +38,10 @@ the bank $41 space new monsters' names share; texts: a 2,993-byte spare area).
 - **Evolves from** — one skill: a monster that knows it learns this one **in
   its place** (Blaze → Blazemore → Blazemost). Two to five skills: a
   **combination** — the monster must know ALL of them and learns this one beside
-  them (an original skill only: a custom or new skill with two or more is never
-  learned — the game's S75 crash fence; the build warns).
+  them, whatever its species (FireSlash from ChargeUP + Blazemore). Since S164
+  this works for custom and new skills too (until S163 they were never learned
+  that way — the old S75 fence; measured: a new skill from Blaze + Bang learned
+  at the level up, both kept).
 - **Two skills evolving from the same single skill** (S160 / S161, measured): a
   monster gets both only when both qualify at the SAME level up — the first
   takes the old skill's place ("… Blaze becomes Blazemore!"), the second is
@@ -127,6 +131,35 @@ itself 16 times). A "don't" rule still wins — a preference never makes an enem
 cast Sleep at a sleeping party. The built-in custom skills (Repel, LoneWolf,
 Punish, Finish, Rupture, Blunt, Plunder) have their own rules and no
 Preference. The Balance tab simulates all of this.
+
+### Enemy AI fixes… (S164)
+
+Five of the original game's rules do not do what they were written for. The
+button **Enemy AI fixes…** (under the skill list) lets you switch each fix on
+for your project; off (the default) = exactly the original game.
+
+- **Group skills against several foes** — the +20 meant for a group spell
+  (Firebal, Bang, the breaths …) when two or more foes stand looks at the
+  first foe three times: it is given whenever the first foe lives, even
+  against a lone foe. Fixed: only against two or more.
+- **Status skills: counting the foes** — Sleep, poison, Curse, Surround, the
+  MP takers and the DEF / AGL downs compare how many foes they can still
+  affect with how much those resist; the count starts at one and the first
+  foe counts twice. Fixed: each foe once.
+- **Family cuts** — DrakSlash, BeastCut … (and MultiCut) get +20 when a foe
+  is of their family, but only the first foe is looked at. Fixed: any foe.
+- **DeMagic** — it is ruled out unless a foe has a buff to remove, but only
+  the first foe is looked at. Fixed: all three.
+- **Average ATK / DEF** — physical specials (TwinSlash, HighJump …) get +10
+  when the caster's ATK beats the foes' average DEF, and the cleverest enemies
+  get +10 to Surround / Upper / Increase / SandStorm / Radiant / SideStep when
+  the foes hit harder than twice their own average DEF; the original never
+  computes either average. Fixed: the real averages.
+
+Each fix only changes how enemies (and the planner) choose; the effects of the
+skills are untouched. Measured (S164): with all five on, the fixed game chose
+otherwise in 821 of 7,865 test decisions; the Balance tab follows your
+switches exactly.
 
 ## Behaviour
 
@@ -319,9 +352,12 @@ runs the
 effect of an original skill you pick — its **base** — and everything else is
 its own: name, SKIL text, MP, power, targets, monster AI, behaviour, look,
 sounds, element, announce line and learning. Only bases measured to behave
-exactly like the original under a new id are offered (114 of 155 skills: all
-the spells, breaths, slashes and family cuts and many status / support skills;
-skills whose code checks its own number — Beat, Vacuum, the heals … — are not).
+exactly like the original under a new id are offered (138 of 155 skills since
+S164: all the spells, breaths, slashes and family cuts, the heals, Beat /
+Defeat, TwinSlash, HighJump, Cover, Dodge, PoisonGas …; 17 skills whose code
+still checks its own number — Sacrifice, Bounce, Farewell, Massacre, QuadHits,
+Vacuum, PoisonAir, SandStorm, DeMagic, UltraDown, ThickFog, the three
+summons, Guardian, StrongD, BladeD — are not).
 A new skill is learned by **evolving** from a skill the monster knows (Evolves
 from), or given as a natural skill / enemy-row skill on the Monsters tab. New
 skills are battle-only (the field menu knows the original skills only).
@@ -344,10 +380,10 @@ evolve chain — read-only (edit them on the Monsters tab).
   lightweight picker): no rules, no Preference — the same for every skill.
 - The custom skills' EFFECTS are their own code; a new skill reuses an
   original skill's effect. A new effect needs code (a session with Claude).
-- The built-in custom skill names share bank $41 with the new monsters' names:
-  since S155 (and Plunder, S156) about 19 new monsters with 8-letter names AND
-  4-letter nicknames are a few letters too many (the Capacity tab / the build
-  says so).
+- (S164) The custom and new skills' names no longer take the new monsters'
+  name space: the names past their own 94-byte block are read from the text
+  banks (measured: the battle announce, the SKIL list, the level-up line).
 - New animations cannot be drawn; a skill can only borrow an existing look.
-- Custom skills are never learned "by stats alone" (the S75 crash fence): they
-  evolve from a known skill or are a natural skill.
+- No skill — original or custom — is learned "by stats alone": a skill with no
+  "Evolves from" is learned only as a natural skill (the game skips such a row
+  unless the monster's learnable set holds it; measured S164 on Mourn).

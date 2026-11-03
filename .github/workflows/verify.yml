@@ -40,6 +40,32 @@ jobs:
           make
           echo "1ca6579359f21d8e27b446f865bf6b83  game.gbc" | md5sum -c -
 
+      # S164 (ROADMAP "CI gap (S63)"): the byte-perfect clean build IS the original ROM, so CI
+      # gets data/DWM-original.gbc from it (inside the runner only — never committed) and runs
+      # the full verifier + the compiler tests with their ROM builds: a hand edit of a
+      # compiler-owned bank / region, or a moved pin, fails here instead of sessions later.
+      - name: Original ROM from the byte-perfect build (runner only)
+        run: |
+          mkdir -p data
+          cp disassembly/game.gbc data/DWM-original.gbc
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python packages for the censuses (PyBoy) and the editor modules (PySide6, headless)
+        run: |
+          sudo apt-get install -y libegl1 libxkbcommon0 libgl1
+          python3 -m pip install pyboy pillow numpy "PySide6==6.9.1"
+
+      - name: verify_integrity (all checks)
+        run: python3 tools/verify_integrity.py
+
+      - name: Compiler tests with the ROM builds (test_compiler --rom)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python3 editor2/tests/test_compiler.py --rom
+
       - name: Patched build must assemble with custom content
         run: |
           cd disassembly

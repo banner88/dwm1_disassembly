@@ -1817,7 +1817,9 @@ custom ids through `LearnLoopFork`):
   $FF → skip (a no-prereq skill is learned ONLY from the queue); exactly one
   prereq, known → **code 1** upgrade, `$FFDA` = the old id
   (`LearnFoundUpgrade`); 2-5 prereqs all known → **code 2**
-  (`LearnFoundAllPrereqs`; patched builds: `LearnCode2Guard06` bars custom ids).
+  (`LearnFoundAllPrereqs`; patched builds: `LearnCode2Guard06` barred custom ids S75-S163 —
+  **S164: open for every id**, a custom / new skill with 2-5 prerequisites is a combination;
+  its line is `$0B0F` "… by chance, recalls …", BATTLE_SKILL_SYSTEM §13.8 "S75 fences").
   `LearnPrereqKnown` / `LearnKnownScan` scan the 8 KNOWN skills +$29, not
   `$C0D8`.
 

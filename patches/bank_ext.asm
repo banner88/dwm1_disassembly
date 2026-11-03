@@ -8,8 +8,7 @@
 ; rest are one-byte stubs (unused space, $00-filled by rgblink, the tail of
 ; bank $FF padded by rgbfix to 4 MB).
 ; =============================================================================
-SECTION "ROM Bank $080", ROMX[$4000], BANK[$80]
-    db $80                          ; bank self-ID at $4000
+INCLUDE "bank_080.asm"
 SECTION "ROM Bank $081", ROMX[$4000], BANK[$81]
     db $81                          ; bank self-ID at $4000
 SECTION "ROM Bank $082", ROMX[$4000], BANK[$82]

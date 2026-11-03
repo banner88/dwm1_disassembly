@@ -3539,15 +3539,46 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         is gone; eight + two -> the forget menu); `census_raising.py` stub mirrors it (5,073
         level-ups 0 mismatches); the warning reworded (both only at the SAME level up).
         BATTLE_SKILL_SYSTEM §13.12, PROJECT_COMPILER §2.69.
-      - [ ] **"Evolves from" two or more skills on a custom / new skill is never learned** (the
+      - [x] **"Evolves from" two or more skills on a custom / new skill is never learned** (the
         S75 crash fence, `$DA+` and now the 14 ids): help 54 said "knows one of them" (wrong —
         a combination needs ALL, DOC_AUDIT S160); the help is corrected. Lifting the fence for
-        new skills needs the S75 crash re-measured.
-      - [ ] **The clone census re-measure is timing-sensitive:** a 700-frame window flips 8
+        new skills needs the S75 crash re-measured. **FIXED S164 (user: "Do all of B or however
+        much is feasible"; built S164, NOT yet user-tested):** the S75 premise re-read — the scanner
+        skips a row with no prerequisite before code 2 (the S75 crash itself was the echo-RAM slot
+        40, `SlotProbeGuard50`, which stays); bank $06 `LearnFence06` = `ld a, c / and a / ret`
+        (code 2 open for every id); `validate_custom_data.py` accepts it with the scanner's skip
+        present; no compiler warning; `raising.learn_scan` learns it; Skills tab note + help 54.
+        Measured `tools/walk_combo.py` (`examples/s164_conflux_demo`, THE CONFLUX HALL: Fusion from
+        Blaze AND Bang) 8 / 8, negative 3 FAIL; `census_raising.py --quick` 0 mismatches.
+        BATTLE_SKILL_SYSTEM §13.8 "S75 fences" (S164), PROJECT_COMPILER §2.72.
+      - [x] **The clone census re-measure is timing-sensitive:** a 700-frame window flips 8
         bases between runs (34, 36, 38, 61, 89, 108, 129, 213 — BeDragon likely a real
         difference, the rest the window); S160 kept the S111 verdicts and added the reclaim
-        section. Make the census compare whole battles before trusting a re-run.
-- [ ] **E14 — the built-in custom skill names out of bank $41 (S156: banked until it binds).**
+        section. Make the census compare whole battles before trusting a re-run. **FIXED S164:**
+        `census_skill_clone.py --whole` (the S163 twin method: the RNG pinned at every `BattleRNG`
+        call and every `GenerateRNG` call from a ROMX bank, 3 seeds, messages + the board after
+        each over the common prefix, fallen allies for the revives) on the S163 engine: 138 bases
+        a new skill may run (was 114; the heals, Beat / Defeat, TwinSlash, HighJump, Cover, Dodge …
+        — the S163 base view and the heal rig), the reclaimed twins alike; `extracted/
+        skill_clone_census.json` regenerated (the compiler / New skill dialog follow it).
+        BATTLE_SKILL_SYSTEM §13.9 (S164).
+      - [ ] **The 17 bases a copy still cannot run (FOUND S164):** Sacrifice, Bounce (its line 154 vs
+        153), Farewell (MP not zeroed), Massacre (130 vs 120), QuadHits / Vacuum (damage), PoisonAir
+        (208 vs 206), SandStorm (184 vs 162), DeMagic / ThickFog (casts),
+        UltraDown, Tatsu / Diago / SamsiCall (the summon's HP / MP), Guardian / StrongD / BladeD
+        (status bits) — act-time id reads the S163 census missed (copies to other RAM, per-id
+        tables, message numbers built from the id). Next: run `tools/census_act_id_lists.py`'s
+        output compare on these bases' handlers with the copy scan of S163 r2 (every store of the id
+        into other RAM followed), patch each read like S163 (`ActBase…`), re-run the census.
+- [x] **E14 — the built-in custom skill names out of bank $41 (S156: banked until it binds).**
+      **BUILT S164 (user: "Do all of B or however much is feasible"; built S164, NOT yet
+      user-tested):** the names past the 94-B region go to the S150 text banks (`custom_skills
+      .text_slots` → `gametext.resolve` → TextOverride: bank $41 `SkillNamePtrTable` row id) instead
+      of the `ns_text_*` extents; their pointer rows → the empty placeholder. Measured
+      `tools/walk_names.py` (a hook after SaveBankAndSwitch's level-2 read: every mode-6 lookup of a
+      custom id): the battle announce + `$C190` (Punish, Finish, Rupture, Blunt, Plunder; Tame from
+      bank $41), the field SKIL list, the level-up line — 16 / 16, negative (TextLevel1Hook's far
+      call off) 12 FAIL. PROJECT_COMPILER §2.72, TEXT_SYSTEM (S164 note). Original box:
       The 17 built-in names overflow the 94-B `gd_custom_skill_names` region by 36 B (S156;
       27 B S155) into the `ns_text_*` extents the new species' names use — the "19 new
       species, 8-letter names + 4-letter nicknames" fixture is a few letters over. Plan when a
@@ -3680,6 +3711,26 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         later S161: the walk's assumptions, not the ROM (the user's party is three, with high DEF):
         `run(..., two=True)` now makes "a party of two" itself (party list +2 = $FF, `$CA8D` = 2) and
         `_soft_target` holds DEF 1 for "an enemy alone"; 33 / 33 on the user's save.
+      - [x] **The original AI's bugs as project switches (ADDED + BUILT S164 — the S164 audit's B10:
+        "Do all of B"; built S164, NOT yet user-tested).** Five rules of bank $57 that do not do what
+        they were written for (S81 / S130 / S163 decodes): `$4E36` (AoE +20, the first slot thrice),
+        the status-class count (`CallBtlAI_7d4d`, the first slot twice), `$4C41` (family cut, the
+        first slot only), `$6BCB` (DeMagic, the first slot thrice), the averages (`FuncBtlAI_7dc5`
+        never sums; `AIRule_551b` divides by the sum's high byte). `gamedata.ai_fixes`, NEW
+        `editor2/core/ai_fixes.py` (six same-size regions in bank $57, original bytes by default),
+        the Skills tab's **Enemy AI fixes…**, the Balance simulator (`ai_rules.evaluate_chain
+        (fixes=)`); decoded on the way: `AIRule_551b` (new in the model), MultiCut's `$4C41` row.
+        Measured: `simulator/validate_ai_fixes.py` (the ROM's own bank $57 via `rom_rules.Oracle`, the
+        S163 corpus + 4 mutations each) 6,763 / 6,763 for all five and each alone, 821 decisions
+        differ; `tools/walk_aifix.py` (PyBoy, the demo's TACTICIAN / WARDEN) 8 / 8, negative 7 FAIL.
+        BATTLE_SKILL_SYSTEM §15.10.5 "S164", PROJECT_COMPILER §2.72, help 54.
+      - [ ] **The rule model on arbitrary boards (FOUND S164, open):** the S163 model is exact on the
+        captured boards (1,573) but not on mutated ones — 1,102 of 7,865 chain starts differ for the
+        ORIGINAL rules (`validate_ai_fixes.py` prints the rules: `$4AF6` 312, `$5F1F` 203, `$4B3D` 181,
+        `$4A94` 75, `$4890` 74, `$5660` 60, `$6C8C` 49, `$4E76` 44, `$5B4A` 42 …); live in the walk:
+        `$4DF9` (+5 physical specials, S81 "omitted") and `$4B8C` (penalty 20). Next: per rule, the
+        reads (`rom_rules.Oracle(…).chain(reads=True)`) on the mismatching boards, model, re-run
+        `validate_ai_fixes.py` until the original rules are exact there too.
       Original note: An enemy (INT 200, AI
       weights 30 / 250 / 30 / 0) whose only skill is a NEW skill on Bang never cast it in
       23-27 actions — the S158 build too; with Boom beside it the AI cast Boom. Trace which
@@ -3725,6 +3776,7 @@ yields the E6 capacity numbers.
       must come from the MEASURED `extracted/dialogue.json` (the old
       `text_id_map.json` had 62 / 2,061 right). Bank $47's T1 region misses its first
       string `$40C1` (id $03C8) — redo its bounds first (PROJECT_STATE open defects).
+      **DONE S164:** bank $47 re-run from the measured map (`$40C1-$5B74`, 56 strings).
 - [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
       tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
 - [x] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
@@ -3758,6 +3810,11 @@ yields the E6 capacity numbers.
       each word's length; (c) the text window widths of each table (battle window, item page,
       credits) beyond the dialogue box's measured 2 × 18 — the editor warns only for dialogue;
       (d) the debug texts (bank $41 modes 0 / 1, bank $56 mode 0, bank $55's viewer) are left out.
+      **S164 (found, (a)):** the field menu's words are not tile pictures but WINDOW LAYOUT
+      scripts in bank $15 (e.g. `$15:$6855` "INFO" between `$FF $D8` / `$FE` / `$E0` blank /
+      `$EE` / `$EF` border bytes, then "OK", "NO" …) — the same glyph codes as text (A = `$24`, a =
+      `$3E`). Next: decode the layout format (its reader in bank $15 / ROM0), list every window's
+      words, make them editable (same length first) with a measured walk.
 
 ### Arc 2 — Custom skills, then per-skill AI (high value; one real RE gate)
 Skill *effects* are a known pattern (`SkillFunctionTable $52:$4011`, **222 entries** ($00–$DD)
@@ -3912,9 +3969,15 @@ ROM0 `$3466`); banks $61+ hold sparse non-audio data. Owning doc: SOUND_SYSTEM.m
         transience = vanilla SetBGM (SOUND_SYSTEM §8, M3b room-defaults). *Also fixed en route*: S62's silent
         compiler-regression break (bank_060 hand edits folded into the example
         project; pin `168c5f1b…`→`c23beed7…`; DOC_AUDIT S63).
-  - [ ] **CI gap (S63)**: `.github/workflows/verify.yml` runs only
+  - [x] **CI gap (S63)**: `.github/workflows/verify.yml` runs only
         `verify_integrity.py` — add `editor2/tests/test_compiler.py --rom` so
         compiler-owned-bank hand edits fail in CI, not two sessions later.
+        **FIXED S164:** (the S63 note was loose — CI ran the clean + patched builds, not the
+        verifier). The compiler needs the original ROM (`data/DWM-original.gbc`, read by
+        `loot.py` and the censuses) even in its fast mode; CI now copies the byte-perfect clean
+        build to `data/` inside the runner (never committed), installs PyBoy / Pillow / numpy / PySide6 6.9.1 (test_compiler imports editor modules; Qt offscreen), and
+        runs `tools/verify_integrity.py` (all checks) and `test_compiler.py --rom`. Not run on
+        GitHub from here (no push) — the first push is its acceptance.
   - [x] **M3b — USER REQUIREMENTS (S62): song LIBRARY in the editor** — import multiple
         custom songs, assign to rooms/gates/events (SetBGM wiring per assignment).
         **DONE S116 (P3.13b, the Music tab; NOT yet user-tested).**
@@ -4125,9 +4188,15 @@ Beyond 32 needs 16-bit ids everywhere (avoid).
       calibration", PROJECT_COMPILER §"Coherence sets the editor must maintain".
 
 Follow-on candidates (not scheduled):
-- [ ] Editor: enforce the three coherence sets (PROJECT_COMPILER §"Coherence
+- [x] Editor: enforce the three coherence sets (PROJECT_COMPILER §"Coherence
       sets") — regenerate bank `$4D` strings whenever a family recipe changes,
       keep boss fight/join rows in sync, and run `audit_threat.py` in the build.
+      **CLOSED S164 (clean-up; already built):** Set 1 = the compiler region
+      `gd_library_text` (every changed family slot's encyclopedia line regenerated, S103 /
+      S113); Set 2 + Set 3 = `editor2/core/gamedata.py` warnings on an enemy row's species
+      change (the boss FIGHT row's join row, the species-owned resistances / flying / metal);
+      `audit_threat.py` stays the randomizer's gate — the editor's difficulty check is the
+      Balance tab (S130, P3.15a).
 - [ ] Randomizer: option to keep `SpecialRecipeTable` coherent with the family
       defaults so the library's displayed default is not shadowed more often
       than vanilla's 9%.
@@ -4153,7 +4222,8 @@ Follow-on candidates (not scheduled):
 - [ ] Residual `profile_check` failures: 27 growth pairs (all on species whose
       vanilla baseline is ~14 points, where ratio is misleading) and 2 skills
       drifting >8 rows. Needs a per-species absolute clamp.
-- [ ] Combat simulator for pacing/TTK — UNBLOCKED by S78: the full damage
+- [x] Combat simulator for pacing/TTK — **CLOSED S164 (clean-up): built S78-S90 + S130 (the
+      pacing layer S86, every skill family S130; dashboard row "Combat simulator").** UNBLOCKED by S78: the full damage
       layer is traced and differentially validated (698 exact checks, 0
       mismatches; `simulator/damage.py`, BATTLE_SKILL_SYSTEM §15). Spell/DEF
       answered (DEF does NOT reduce spells). Remaining for the simulator
@@ -4264,7 +4334,12 @@ point". EDITOR_DESIGN §11's never-simulate rule superseded by the user.
       BtlActState_/ActPhaseState_/SetupSub_ internals and the unlabeled
       per-skill service bodies ($62BF/$63D6/$634D…) get semantics only
       when future sessions measure them (S70 rule).
-- [ ] S81 — AI residuals + loop validation (**PARTIAL, S81 session 1;
+- [x] S81 — AI residuals + loop validation (**CLOSED S164 (clean-up): the arc was adjudicated
+      done for purpose S90 (user-conferred) and its residuals banked as the S89 boxes below; S88 / S89
+      closed the rider chances, the curse MP, the poison cap and the `$DB06` / `$DB07` writers, S130
+      the `$DB42` setter and the +8/+9 consumers;
+      S163 re-derived the rule model on boards of 1-3 opponents (BATTLE_SKILL_SYSTEM §15.10.5
+      "S163"). Open: the meta-actions box below.** History: **PARTIAL, S81 session 1;
       REMAINDER was BLOCKED behind the S82/S83 annotation gate — GATE CLEARED S83**):
       ✔ evaluator rule chains DONE — per-CATEGORY chains (NOT
       effect_class-indexed; hypothesis falsified), full 160-skill sweep,
@@ -4506,7 +4581,9 @@ custom skills $E4/$E5/$E9).
       deterministic repros — s89_fresh 426/1→426/0 AND the S88 rider
       anomaly 3422/1→3422/0. Model: `battle.db42_boost()` in the physical
       and record damage paths; Board carries `db42`.
-- [ ] `$DB42` bit6 SETTER — the one genuinely open sub-item: observed set
+- [x] `$DB42` bit6 SETTER — **CLOSED S130: the bank $58 command-phase "tension" rolls
+      (`TensionRollA_5a40` / `TensionRollB_5ba1`, party slots only) — BATTLE_SKILL_SYSTEM "The
+      `$DB42` 'tension' roll".** Original note: the one genuinely open sub-item: observed set
       in the command/order phase ($D9EC==5) and cleared in phase 9 (a
       one-round actor mark), but NOT written as `set 6,[hl]` / `or $40` /
       `ld [hl],$40` against a `$DB42` pointer anywhere in banks $50-$5F.
@@ -4527,8 +4604,9 @@ custom skills $E4/$E5/$E9).
       the captured marks (incl. dead-protector fall-through). Full per-
       victim integration into validate_battle's main runner is the
       remaining polish (standalone check green).
-- [ ] +8/+9 defensive-flag CONSUMERS (Imitate/Dodge/SuckAll/defense
-      levels) + the $4BD3 attacker $30 setter.
+- [x] +8/+9 defensive-flag CONSUMERS (Imitate/Dodge/SuckAll/defense
+      levels) + the $4BD3 attacker $30 setter. **CLOSED S130 (§15.11.F6; the record +8 / +9
+      bit tables in BATTLE_SKILL_SYSTEM "record fields").**
 - [ ] Meta-actions real-menu drive (recipe in the [~] box above).
 
 ## S90 — EDITOR_DESIGN v2: UI/use-perspective revision (user-directed; byte-neutral)

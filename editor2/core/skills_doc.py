@@ -319,6 +319,31 @@ class SkillsMixin:
             data.pop('gamedata')
         self._commit_data(data)
 
+    # ------------------------------------------------------------ [S164] the AI's bugs
+    def ai_fixes(self):
+        """The switched-on fixes of the original enemy AI's bugs (editor2/core/ai_fixes.py)."""
+        from . import ai_fixes as AF
+        return AF.fixes_of(self.data)
+
+    def set_ai_fix(self, key, on):
+        """[S164] switch one fix of the original enemy AI's bugs on / off
+        (gamedata.ai_fixes.<key>; off = the key removed = the original bytes)."""
+        from . import ai_fixes as AF
+        if key not in AF.AI_FIXES:
+            raise AF.AIFixError(f'unknown AI fix {key!r} (known: {", ".join(AF.AI_FIXES)})')
+        data = copy.deepcopy(self.data)
+        gd = data.setdefault('gamedata', {})
+        fx = gd.setdefault('ai_fixes', {})
+        if on:
+            fx[key] = True
+        else:
+            fx.pop(key, None)
+        if not fx:
+            gd.pop('ai_fixes')
+        if not gd:
+            data.pop('gamedata')
+        self._commit_data(data)
+
     def _orig(self, sid):
         """(custom default dict, extras) for a custom id."""
         return self._custom_default(int(sid))

@@ -1728,6 +1728,18 @@ ROM is ENFORCED by `tools/validate_custom_data.py` (verify_integrity check
 6 + the editor builder): a universal-qualifier learn row (no prereq +
 all-zero stats, like Tremor's and Mourn's) without the code-2 fence is a
 BUILD ERROR.
+**S164 (ROADMAP E13 note "'Evolves from' two or more skills"): fence (1) OPENED.** Its premise was
+wrong: `SkillLearnScan` skips a row whose FIRST prerequisite is `$FF` before it tests any
+(`inc hl / ld a, [hl] / cp $ff / jr z, jr_006_507c`), so a universal row is learned only from the
+learn queue (code 0) — code 2 needs 2-5 prerequisites ALL known. `LearnFence06` = `ld a, c / and a
+/ ret` (CF clear for every id); a custom / new skill with 2-5 prerequisites is a COMBINATION,
+learned beside them with code 2's own line `$0B0F` "… by chance, recalls …" (FireSlash's).
+Measured (`tools/walk_combo.py`, the user's save, `examples/s164_conflux_demo`): Fusion (a new
+skill from Blaze AND Bang) learned at the level up, both kept, `$0B0F`, C = `$FF`; one of the two
+known -> not learned; eight skills -> the forget menu, the battle ends; FireSlash unchanged; Mourn /
+Tremor (no prerequisite, zero stats) never learned in 4 level ups whose queue lacks them — 8 / 8,
+`--negative` (the S160 bytes) 3 FAIL. `validate_custom_data.py` accepts the open form when the
+scanner's no-prerequisite skip is in the ROM. (2) `SlotProbeGuard50` stays.
 
 
 
@@ -1766,13 +1778,32 @@ the copy's battle lines or HP / MP changes are not the original's. WHY was not t
 is one — and per-id tables outside the forked set); the heal results were not separated
 from the rig, which resets party HP in every command phase. The compiler refuses all 41 (and the
 field-only `$37/$38`) until each is traced.
+**S164 re-measure (`census_skill_clone.py --whole`, ROADMAP E13 note "the clone census
+re-measure is timing-sensitive"):** the S111 compare cut both battles 700 frames after the first
+act with the RNG pinned once a frame — the RNG also steps while the CPU idles, so the copy's few
+extra cycles moved later rolls (8 bases flipped between S111 and S160). Now: the RNG pinned at
+every `BattleRNG` call AND every `GenerateRNG` call from a ROMX bank (the damage rolls of bank
+$53, the AI's — Thordain / SleepAir still drifted at their last message with only `BattleRNG`
+pinned), three seeds, the messages + the board after each message over the common prefix (the
+S163 twin-walk method), Vivify / Revive / Farewell with a fallen ally; on the CURRENT engine (a
+new skill acts as its base, S163 §13.14). Result: 138 same, 17 differ, 67 not a skill — the 24
+newly allowed bases are Beat, Defeat, Transform, Ironize, Heal … HealUsAll, TwinSlash, Ramming,
+Kamikaze, HighJump, BiAttack, PalsyAir, PoisonGas, K.O.Dance, Radiant, Imitate, Cover, Dodge, SuckAll,
+Hustle, LifeSong (the S163 act-time view and the heal rig fixed them); the reclaimed twins at $BC /
+$CC measured alike (the JSON's `reclaim`). Still differ (the compiler refuses them; ROADMAP E13
+note "the 17 bases a copy still cannot run"): Sacrifice, Bounce, Farewell (MP not zeroed),
+Massacre, QuadHits, Vacuum (damage), PoisonAir (message), SandStorm,
+DeMagic, UltraDown, ThickFog (casts), Tatsu / Diago / SamsiCall (the summon's HP / MP), Guardian,
+StrongD, BladeD (status bits) — act-time id reads the S163 census did not reach (copies or
+per-id tables). `extracted/skill_clone_census.json` regenerated.
 
 **Learning.** Bank $06 `LearnLoopFork` scans the custom ids `$E0-$FE` after the 218
 vanilla rows through bank $72 entry 6 `CustomLearnRow72`, which copies the next learnable
 id's 18-B row (level `$FF` = not learnable) into `wLearnRowBuf` ($D10C); the scanner
 reads it there. Code-2 (stat-qualification) rows stay fenced for every custom id
 (`LearnCode2Guard06` `cp $da`; `tools/validate_custom_data.py` checks the fence and the
-rows). Measured: a level-up learning Rumble → … → QuakeMost through prereqs, Scorching →
+rows). **S164: code 2 open for every id (§13.8 "S75 fences" S164) — a custom / new skill with
+2-5 prerequisites is a combination.** Measured: a level-up learning Rumble → … → QuakeMost through prereqs, Scorching →
 FrostBite (a new skill).
 
 **The `{skill}` insert.** Battle lines with `$F9 $10` print the acting skill's name; bank
@@ -2110,7 +2141,7 @@ high ids get from their `$DE+` tables a reclaimed id gets from small new tables 
 | bank $58 `SaveBtlFX_43ff` | `call FxEstimate58 / nop` (same size as `ld hl,$5203 / rst $10`): the AI damage estimate (bank $52 entry 3 `AIDamageEstimate_538f`) runs with `$DB8A` = `RECLAIM_VIEW` ($EF), put back after — its ladder sends `$6D-$D5` (but `$7E`) to rows past its 28-row table (CODE read as a pointer); a high id lands on row `$1B` (CalcSkillDefense). **S161:** the body is `jp EstimateView58` — a new skill is estimated as its BASE (§13.13); `FxEstimate58` stays inside it for an unused reclaimed id |
 | bank $57 `AIRule_4785` | `call SkillView57` (same size as `ld a,[$db8a]`): a reclaimed id is seen as `$EF` — the original rule VETOES `$88-$D9` when every opponent is paralysed. **Retired S161:** the rule reads `$DB8A` again, which holds a new skill's BASE during the chain (§13.13) — a new skill is vetoed exactly when its base is |
 | bank $4C `LoadB4c_Fork_custom` | `$FD` with `$DB8A < $DE`: `ReclaimLine4C` → row 33 + k of `CustomMsgPtrTable` (47 rows since S160, `ASSERT @ == $7476`); other stock ids → `LoadB4c_Fork_stockfd` (the vanilla empty `$FD`, the poison tick's follow-up) |
-| bank $06 `LearnCode2Guard06` | `call LearnFence06 / jp c`: code 2 (two or more prerequisites) fenced for `$DA+` (S75) AND the 14 ids |
+| bank $06 `LearnCode2Guard06` | `call LearnFence06 / jp c`: code 2 (two or more prerequisites) fenced for `$DA+` (S75) AND the 14 ids — **S164: `LearnFence06` = `ld a, c / and a / ret`, open for every id (combinations)** |
 | bank $77 `BattleItemProbe` / `BattleItemPick` | `ReclaimedSkill77`: an item whose battle skill (its BASE's, `BattleSkillOf`) is one of the 14 ids is refused as record +10 = 1 — "Can't use this item in battle!" (`$F200`, bank $50 `jr_050_5199`) — whatever the new skill's record says |
 
 **Where the battle buckets the id (the S160 ladder audit).** Every compare ladder after a read
@@ -2682,10 +2713,11 @@ measured working for the game's own elements too (a Bang caster: 15 of 32 action
 Explosion 0, none of 26 at Explosion 3; the Earth caster's Boom 15 of 33 at Earth 0, none of 27 at Earth 3). Negative control (the original packer in the ROM copy):
 21 checks FAIL.
 
-**Found S159 (not fixed): an enemy whose only skill is a NEW skill on Bang (id 239+) never
-casts it** — 23-27 actions, all attacks, on the S158 build and the S159 build alike (INT
-200, AI weights 30 / 250 / 30 / 0); with Boom beside it the AI casts Boom. Why (the rule
-chains' id tables, the custom ids' category) is not traced — ROADMAP E16 note.
+**Found S159 (FIXED S161 — ROADMAP E17, §13.13): an enemy whose only skill is a NEW skill on Bang
+(id 239+) never cast it** — 23-27 actions, all attacks, on the S158 build and the S159 build alike
+(INT 200, AI weights 30 / 250 / 30 / 0); with Boom beside it the AI cast Boom. The cause: the rule
+chains select by id ladders, so a new id scored +0; since S161 the AI judges a new skill AS ITS BASE
+(`AIViewArm57` → bank $72), and since S163 it also acts as its base (§13.14).
 
 **Who reads which resistance — the full map (S159, `editor2/core/resistances.py`).** Damage
 skills: the census above (`extracted/skill_element_census.json`, 38 skills). Hit rolls (the
@@ -3401,6 +3433,48 @@ boards; the board each chain read captured — `simulator/s163_board_corpus.json
   list), `$4BCC` by chain, `$66FB`, `$6C8C`.
 Without the battle stats (the old fixtures) the S81 approximations remain. validate_rules 240 / F10
 rules 332 / command 6,411 / F10 1,335 / battle s85 6,614 / s86 802 / s89 426 unchanged.
+
+*S164 — the original rules' bugs as project switches (ROADMAP E17 note "the original AI's bugs";
+`gamedata.ai_fixes`, `editor2/core/ai_fixes.py`, PROJECT_COMPILER §2.72; built S164, NOT yet
+user-tested).* Five same-size compiler regions in `patches/bank_057.asm`, the original bytes
+unless the project switches a fix on (each `ASSERT`ed on the next original address):
+
+| key | region | original | fixed |
+|---|---|---|---|
+| `aoe_count` | `gd_ai_fix_aoe` ($4E5D-$4E68) | `$4E36`'s loop `push de / ld a, c / call CheckMonsterSlot / pop de …` never advances C: +20 iff the FIRST opposing slot lives | `ld a, c / call … / jr c / inc e / inc c / dec b / jr nz / nop` (CheckMonsterSlot keeps BC / DE / HL): +20 iff 2+ live |
+| `class_count` | `gd_ai_fix_count` ($7D50-$7D53) | `CallBtlAI_7d4d` `xor a / ld [$db54], a` then FALLS INTO `SetBtlAI_7d54` (count = 1 + n) | `ld [$db54], a / ret` (A = 0 from `LoadBtlAI_7d73`): count = n, and the bonus needs count ≠ 0 |
+| `family_cut` | `gd_ai_fix_cut` ($44CC) | `jr nz, jr_057_44ca` (to itself) | `jr nz, LoadBtlAI_44a7` (back to the test: all three slots) |
+| `demagic_scan` | `gd_ai_fix_demagic` ($6C08-$6C0E) | `AIRuleDeMagicVetoNoBuff_6bcb`'s loop never advances C (the first slot read three times) | `inc c / dec b / jr nz / jp ClearBattleAction` (= `call` / `ret`, a byte shorter) |
+| `averages` | `gd_ai_fix_avgdef` ($7DC5-$7E1F) + `gd_ai_fix_avg` ($5588-$5592) | `FuncBtlAI_7dc5` adds the running sum (0) INTO each DEF entry and divides 0 by the sum's high byte (1-2 live -> 0, else `$FFFF`); `AIRule_551b` divides the opposing ATK sum by its own high byte | `FuncBtlAI_7dc5` rewritten in its own 91 bytes (the sum of the live DEFs / their count via `Div16x8To16`; 0 / 1 live -> the sum) + `OppAvgDiv57` (the ATK sum / `[$DB6C]`), `AIRule_551b` `call OppAvgDiv57` + 8 nops |
+
+**Decoded on the way (S164, byte-read; both trees annotated in the patch):** `AIRule_551b` (chain 2,
+only for an actor with `$DD0B` = 2 — `LoadBtlAI_7c6e`): Surround `$18`, Upper `$1E`, Increase `$1F`,
+SandStorm `$72`, Radiant `$73`, SideStep `$77` +10 when the live opponents that are surrounded (+3
+bit 1) or in a sandstorm (+7 & 3) — summed ATK / their count — exceed twice the own side's average
+DEF (`FuncBtlAI_7dc5` on the own side); the S163 model lacked it (`ai_rules.IDS_551B`). `$4C41`'s
+rst table `$57:$4C65` (rows = id − `$48`, then `$D6-$D8` → 8-10): MetalCut → `Jump_057_4d29`; the
+cuts `$49-$4E` → families 1 / 2 / 3 / 6 / 7 / 8; **MultiCut `$4F` → family 7's block** (+20, and no
+`$6848` veto — it covers `$48-$4E`); `$D6-$D8` → families 0 / 5 / 4 (the S163 model lacked MultiCut:
+`ai_rules.MULTICUT`). `ai_rules.evaluate_chain(…, fixes=)` models each switch; the Balance tab passes
+the project's (`BattleData.ai_fixes` → `Board.ai_fixes` → `pacing.ChainRules`).
+**Measured:** `simulator/validate_ai_fixes.py` (`simulator/rom_rules.Oracle` runs bank $57 of a ROM
+with every switch / with each one alone / with none on the 1,573 captured chain starts of the S163
+corpus + 4 seeded mutations of each — opposing monsters killed / revived, their species and status
+bits, ATK / DEF, the actor's `$DD0B`): on the 6,763 boards where the S163 model is exact for the
+ORIGINAL rules, the fixed ROM == the model with the same switches 6,763 / 6,763 for all five and for
+each alone; the fixed ROM decides otherwise than the original on 821 chains (70 skills; aoe 298, class
+93, cut 48, DeMagic 10, averages 399). In the live game (`tools/walk_aifix.py`, PyBoy, the user's
+save, the demo's TACTICIAN / WARDEN, forced battles): every captured enemy chain where the model is
+exact matches the live chain end; the original rules (bank $57 of a build without switches, run on
+the same WRAM images) decide otherwise on 4 / 6 / 1 chains of the lone / dragon / buffed boards
+(Bang 0 vs 20 against one foe in the first slot; DrakSlash +20 with a dragon in slot 1; Upper /
+Increase without `$551B`'s +10); 8 / 8, `--negative` (bank $57 original) 7 FAIL.
+**Found (not fixed): the S163 model is exact on the captured boards but not on arbitrary ones** —
+1,102 of 7,865 mutated chain starts differ for the ORIGINAL rules; the rules that fired there, most
+often: `$4AF6` 312, `$5F1F` 203, `$4B3D` 181, `$4A94` 75, `$4890` 74, `$5660` 60, `$6C8C` 49, `$4E76`
+44, `$5B4A` 42, `$4BCC` 31, `$6144` 23, `$6C0F` 22; live: `$4DF9` (+5 to physical specials — S81
+"condition untraced, omitted") and `$4B8C` (a penalty 20). ROADMAP E17 note "the rule model on
+arbitrary boards".
 
 **15.10.6 Pick** (AIState5Pick_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →

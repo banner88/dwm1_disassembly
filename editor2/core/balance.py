@@ -160,6 +160,8 @@ class BattleData:
                         for sid, r in enumerate(g.record)}
         self.core_alias = {}
         self.ai_pref = {}           # [S161] a new skill's AI preference (custom_skills)
+        from . import ai_fixes as _AF                       # [S164] the original AI's bugs,
+        self.ai_fixes = _AF.fixes_of(project)               #   switched on by the project
         self.quake_range = dict(B.QUAKE_RANGE)
         self.custom_pcts = {}       # S155: gd_custom_pcts (skillfx/s155_custom.py)
         self.custom_rows = {}       # S155: the bank $58 target rows of the custom ids
@@ -847,6 +849,7 @@ def _board(data, party, enemies, db73):
             b.res[i * 7:(i + 1) * 7] = P.pack_res(m['res'])
     b.core_alias = data.core_alias
     b.ai_pref = getattr(data, 'ai_pref', {})  # [S161] E17
+    b.ai_fixes = getattr(data, 'ai_fixes', frozenset())    # [S164] gamedata.ai_fixes
     b.quake_range = data.quake_range
     b.custom_pcts = data.custom_pcts          # S155
     b.elem_override = getattr(data, 'elem_override', {})    # S159: the skills' elements
@@ -1290,6 +1293,9 @@ def raising_digest(data):
         h.update(b'S161 ai view')                           #   skill as its base (+ its AI
         _ap = getattr(data, 'ai_pref', {}) or {}            #   preference) — a new key for
         h.update(json.dumps(sorted(_ap.items())).encode())  #   projects with new skills only
+    _af = getattr(data, 'ai_fixes', frozenset())            # [S164] the AI fixes: hashed
+    if _af:                                                 #   only when switched on
+        h.update(('S164 ai fixes ' + ','.join(sorted(_af))).encode())
     _eo = getattr(data, 'elem_override', {}) or {}          # S159: hashed only when set,
     _ce = getattr(data, 'custom_elem', {}) or {}            #   so the original game's
     if _eo or _ce:                                          #   digests stay as they were

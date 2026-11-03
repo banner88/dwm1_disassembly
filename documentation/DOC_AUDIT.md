@@ -1144,3 +1144,19 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | (implicit): a census by BRANCHES finds every id decision | ❌ WRONG | SkillLushLicks / SickLick and SandStorm build the MESSAGE number from the id (`add $2F` / `add $30`) — no branch; the census also compares message writes (`$DD70` / `$DD71` / `$C822` / `$C823`) | the S163 census |
 | (implicit, S95): "a failed structural edit leaves no trace" | ⚠ PARTIAL until S163 | the document was restored, but a tileset sheet the op had already written stayed in `assets/` (the example's orphan `ts_28_0D.2bpp`; test_app left `ts_28_04.2bpp`); `SnapshotCommand` now removes the sheets a failed op created | test_app `s163_failed_op_assets` |
 | S163 (first delivery): the census of `$DB8A` / `$DB4F` / `$DCEC` reads found every act-time id decision | ❌ INCOMPLETE | the battle menu's WHO list copies the id into `$DD76` / `$C1C2` when it opens and compares the copy with Vivify / Revive frames later — beyond the census's run from the read; the user found it ("EVivify cannot select [the] dead monster"); fixed S163 r2 | PyBoy, the real menu; `walk_actbase.py` `menu` |
+
+## S164 addendum (2026-11-03; outstanding fixes — ROADMAP clean-up, E13 notes, E14, E17 note)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §13.8 / KEY_LESSONS S75b: "without the code-2 fence any monster at the required level stat-learns a universal custom row" | ❌ WRONG | `SkillLearnScan` skips a row whose first prerequisite is `$FF` before testing any (code 2 needs 2-5 prerequisites all known); the S75 crash was the echo-RAM slot 40 | walk_combo `universal` (Mourn / Tremor never learned off the queue, fence open) |
+| help 54 / the compiler (S160): "a custom or new skill with two or more prerequisites is never learned" | ✅ was true, FIXED S164 | the fence lifted: a combination, learned beside its prerequisites (`$0B0F`) | walk_combo `combo` |
+| BATTLE_SKILL_SYSTEM §13.9 (S111): 41 bases a copy cannot run | ⚠ STALE since S163 | on the S163 engine 17 remain (138 same); the S111 compare also cut battles at a 700-frame window with idle-drifting rolls | `census_skill_clone.py --whole` |
+| BATTLE_SKILL_SYSTEM §15.10.5 (S159): "an enemy never casts a new Bang skill — not fixed" | ❌ STALE | fixed S161 (E17) | §13.13 |
+| ROADMAP S63 "CI runs only verify_integrity.py" | ⚠ INACCURATE | CI ran the clean + patched builds, not the verifier; S164 adds both the verifier and `test_compiler --rom` | `.github/workflows/verify.yml` |
+| TEXT_SYSTEM "Source re-section" (S43): bank $47 = 69 strings / 125 ids, mid-string entry points (`$4248` re-entering `$423e`) | ❌ WRONG (the pre-S108 map) | 56 strings, one per id `$03C8-$03FF` (the bank's single table `$4009`); region `$40C1-$5B74` | `resection_text_bank.py` re-run, `1ca6579…` |
+| ROADMAP: "`$DB42` bit6 SETTER — open", "+8/+9 consumers — open", "combat simulator — open", "S81 PARTIAL" | ❌ STALE | closed S130 / S90 / S130 / S90 | BATTLE_SKILL_SYSTEM tension roll, §15.11.F6 |
+| PROJECT_STATE rows: S148 `$3E` box, S116b player, S84 AI-commit, S121 hook test ROMs "NOT yet user-tested" | ❌ STALE | user-confirmed / user-reported later (Session Index quotes) | PROJECT_STATE Session Index |
+| ai_rules (S163): MultiCut takes no family bonus; `$551B` absent | ⚠ INCOMPLETE | MultiCut → `$4C41` row 7 (family 7, no veto); `$551B` decoded (BATTLE_SKILL_SYSTEM §15.10.5 "S164") | validate_ai_fixes (mutated boards) |
+| (implicit) "the S163 rule model is exact" | ⚠ ON THE CAPTURED BOARDS ONLY | 1,102 of 7,865 mutated chain starts differ for the original rules (ROADMAP E17 note) | validate_ai_fixes |
+

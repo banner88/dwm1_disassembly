@@ -47,6 +47,7 @@ R_6C8C = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 
 CUT_FAMILY = {73: 1, 74: 2, 75: 3, 76: 6, 77: 7, 78: 8,
               214: 0, 215: 5, 216: 4}   # skill -> family id ($4C41/$6848)
 METALCUT = 72
+MULTICUT = 79                  # S164: $4C41 row 7 (family 7), no $6848 veto
 HEAL_SINGLE = {43, 44, 46, 147, 148}
 HEAL_ALL_SET = {43, 44, 45, 46, 47, 147, 148}   # $49B7 veto set
 SLEEP_CLASS = {21, 22, 42, 104, 106, 112, 114, 115, 120, 121, 122,
@@ -100,6 +101,7 @@ IDS_6180 = {103, 108, 109}
 IDS_61BC = {111}
 IDS_6444 = {103, 108, 109}
 IDS_4E36 = {*range(3, 20), 79, 87, *range(89, 103)}
+IDS_551B = {0x18, 0x1E, 0x1F, 0x72, 0x73, 0x77}     # S164: AIRule_551b's id ladder (byte-read)
 IDS_5D8E = {*range(3, 18), 19, 20, 79, 87, *range(89, 103), 113}
 IDS_6C8C = {*range(0, 21), *(set(range(59, 106)) - {65, 67, 84}), 214, 215, 216, 217}
 IDS_66FB = {60, 62}
@@ -113,18 +115,43 @@ def _lvl(view, s, element):
     return view.resist_score(s, element) & 3
 
 
-def _count_rule(view, actor, element, eligible):
+def _count_rule(view, actor, element, eligible, fixed=False):
     """The status-class rules' count (bank $57 CallBtlAI_7d4d + SetBtlAI_7d54, S163): the
     FIRST opposing slot is counted once before the loop whatever it is (CallBtlAI_7d4d falls
     into SetBtlAI_7d54), then every eligible slot of the three (the first again too): count =
-    1 + n, sum = its level + theirs; the bonus when count >= sum."""
+    1 + n, sum = its level + theirs; the bonus when count >= sum (and count != 0 — never 0 in
+    the original). [S164] fixed (gamedata.ai_fixes.class_count, region gd_ai_fix_count):
+    CallBtlAI_7d4d returns before SetBtlAI_7d54 — count = n, sum = theirs."""
     opp = 0 if actor >= 4 else 4
-    cnt, tot = 1, _lvl(view, opp, element)
+    cnt, tot = (0, 0) if fixed else (1, _lvl(view, opp, element))
     for s in range(opp, opp + 3):
         if eligible(s):
             cnt += 1
             tot += _lvl(view, s, element)
-    return cnt >= tot
+    return cnt != 0 and cnt >= tot
+
+
+def _avg16(vals):
+    """[S164 averages] the fixed FuncBtlAI_7dc5: the sum of the live monsters' values / their
+    count (Div16x8To16, integer); none -> 0, one -> its value."""
+    if len(vals) < 2:
+        return sum(vals) & 0xFFFF
+    return (sum(vals) & 0xFFFF) // len(vals)
+
+
+def _avg16_vanilla(n):
+    """The original FuncBtlAI_7dc5 (S163): the running sum is never summed (0); one or two live
+    -> 0; any other count -> Div16x8To16 of 0 by the sum's high byte 0 -> $FFFF."""
+    return 0 if n in (1, 2) else 0xFFFF
+
+
+def _div16x8(hl, a):
+    """bank $00 Div16x8To16: HL // A over 16 shift steps; A = 0 -> $FFFF (each step subtracts
+    0 and sets the bit)."""
+    hl &= 0xFFFF
+    if a == 0:
+        return 0xFFFF
+    return hl // a
 
 
 def _w16(xs, s):
@@ -178,12 +205,14 @@ def _all_live_opposing_have(view, actor, off, mask):
 
 
 def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = record status_id (res pos), S88
-                   rec_flags7, pref=0):
+                   rec_flags7, pref=0, fixes=frozenset()):
     """(delta, veto) for one tag-matched skill, mirroring $78A2/$788B. [S161] `skill` = the id
     the rules see (a NEW skill's BASE, the caller maps it); mp_cost / element / rec_flags7 =
     the acting skill's own record; pref = a new skill's AI preference (-60 … +60), added at
     the chain end like one more rule (bank $72 AIPrefEnd72: > 0 to the bonus, < 0 to the
-    penalty, capped below a veto)."""
+    penalty, capped below a veto). [S164] fixes = the project's switched-on fixes of the
+    original rules' bugs (editor2/core/ai_fixes.AI_FIXES: aoe_count, class_count, family_cut,
+    demagic_scan, averages); empty = the original game."""
     bonus = penalty = 0
 
     # $45F2 universal usability [measured]
@@ -283,7 +312,7 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     # matching every measured board; loop validation will flag if a real
     # battle exercises the pass branch.
     if skill in UTIL_VETO_UNTRACED and view.skills is not None and view.dd0b is not None:
-        v, b_, p_ = f10_rules(skill, actor, view)        # S130 F10
+        v, b_, p_ = f10_rules(skill, actor, view, fixes)  # S130 F10
         if v:
             return 0, True
         bonus += b_; penalty += p_
@@ -299,10 +328,23 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
             # vanilla bug: its loop `inc c / dec b / jr nz` jumps back to itself, never to the
             # test (the $6848 veto's own scan walks all three correctly)
             first = 0 if actor >= 4 else 4
-            if view.alive(first) and view.families[first] == fam:
+            if 'family_cut' in fixes:                     # [S164] all three slots
+                bonus += 20
+            elif view.alive(first) and view.families[first] == fam:
                 bonus += 20
         else:
             return 0, True
+    # S164: MultiCut ($4F) also takes $4C41's +20 — its dispatch row is family 7's (the same
+    # block as $4D, table $57:$4C65 row 7), but the $6848 veto covers $48-$4E only: a bonus,
+    # never a veto (byte-read S164; the S163 model lacked it — the captured boards never had a
+    # family-7 opponent in the first slot)
+    if skill == MULTICUT and _in(category, 0x4C41):
+        first = 0 if actor >= 4 else 4
+        if 'family_cut' in fixes:
+            if any(view.families[s_] == 7 for s_ in view.live_opposing(actor)):
+                bonus += 20
+        elif view.alive(first) and view.families[first] == 7:
+            bonus += 20
     if skill == METALCUT:
         if any(view.traits[s] & 0x01
                for s in view.live_opposing(actor)):
@@ -331,7 +373,8 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
             bonus += 15
         else:
             live = view.live_opposing(actor)
-            avg = 0 if len(live) in (1, 2) else 0xFFFF
+            avg = _avg16([view.dfn[s_] for s_ in live]) if 'averages' in fixes \
+                else _avg16_vanilla(len(live))
             if view.atk[actor] >= avg:
                 bonus += 10
             low = min((view.dfn[s_] for s_ in live), default=0xFFFF)
@@ -348,7 +391,10 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
             bonus += 10
     # $4E36 bugged AoE +20 [instruction-trace verified]
     if (skill in IDS_4E36 and _in(category, 0x4E36)) if category in CHAINS else skill in R_4E36:
-        if view.alive(min(view.opposing(actor))):
+        if 'aoe_count' in fixes:                          # [S164] 2+ live opponents
+            if len(view.live_opposing(actor)) >= 2:
+                bonus += 20
+        elif view.alive(min(view.opposing(actor))):
             bonus += 20
     # $5D8E AoE-vs-lone -20 / RainSlash veto [decoded + measured]
     if (skill in IDS_5D8E and _in(category, 0x5D8E)) if category in CHAINS else skill in R_5D8E:
@@ -362,27 +408,55 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     def alive_and(fn):
         return lambda s_: view.alive(s_) and fn(s_)
     if skill in IDS_5FFD and _in(category, 0x5FFD):                       # +20 incapacitate
-        if _count_rule(view, actor, element, lambda s_: not _incapacitated(view, s_)):
+        if _count_rule(view, actor, element, lambda s_: not _incapacitated(view, s_),
+                       'class_count' in fixes):
             bonus += 20
     if skill in IDS_6180 and _in(category, 0x6180):                       # +10 poison
-        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x03)):
+        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x03),
+                       'class_count' in fixes):
             bonus += 10
     if skill in IDS_61BC and _in(category, 0x61BC):                       # +10 Curse
-        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x20)):
+        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x20),
+                       'class_count' in fixes):
             bonus += 10
     if skill in IDS_604A and _in(category, 0x604A):                       # +10 Surround / SandStorm
         if _count_rule(view, actor, element, alive_and(
-                lambda s_: not view.status[s_][3] & 0x02 and not view.status[s_][7] & 0x03)):
+                lambda s_: not view.status[s_][3] & 0x02 and not view.status[s_][7] & 0x03),
+                'class_count' in fixes):
             bonus += 10
     if skill in IDS_60C8 and _in(category, 0x60C8):                       # +10 MP-takers
-        if _count_rule(view, actor, element, alive_and(lambda s_: view.mp[s_] != 0)):
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.mp[s_] != 0),
+                       'class_count' in fixes):
             bonus += 10
     if skill in IDS_6107 and _in(category, 0x6107) and view.dfn is not None:   # +10 DEF-down
-        if _count_rule(view, actor, element, alive_and(lambda s_: view.dfn[s_] >= 2)):
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.dfn[s_] >= 2),
+                       'class_count' in fixes):
             bonus += 10
     if skill in IDS_6144 and _in(category, 0x6144) and view.agl is not None:   # +10 AGL-down
-        if _count_rule(view, actor, element, alive_and(lambda s_: view.agl[s_] >= 2)):
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.agl[s_] >= 2),
+                       'class_count' in fixes):
             bonus += 10
+    # S164: $551B (chain 2; the cleverest AI only — $DD0B[actor] == 2, LoadBtlAI_7c6e) — a
+    # defensive buff (Surround $18, Upper $1E, Increase $1F, SandStorm $72, Radiant $73,
+    # SideStep $77) +10 when the opponents that are surrounded (+3 bit 1) or in a sandstorm
+    # (+7 & 3) hit harder on average than twice the own side's average DEF. The original
+    # divides their ATK sum by the sum's own high byte (Div16x8To16 with A = [$DB57]) and the
+    # own average is never computed (FuncBtlAI_7dc5, see $4D56); [S164 averages] both real.
+    # Byte-read S164 (bank $57 AIRule_551b); validated on the fixed and the original ROM by
+    # simulator/validate_ai_fixes.py.
+    if skill in IDS_551B and _in(category, 0x551B) and view.dd0b is not None \
+            and view.dd0b[actor] == 2 and view.atk is not None and view.dfn is not None:
+        elig = [s_ for s_ in view.opposing(actor) if view.alive(s_)
+                and (view.status[s_][3] & 0x02 or view.status[s_][7] & 0x03)]
+        if elig:
+            tot = sum(view.atk[s_] for s_ in elig) & 0xFFFF
+            own = view.live_own(actor)
+            if 'averages' in fixes:
+                q, avg = tot // len(elig), _avg16([view.dfn[s_] for s_ in own])
+            else:
+                q, avg = _div16x8(tot, tot >> 8), _avg16_vanilla(len(own))
+            if (avg * 2) & 0xFFFF < q:
+                bonus += 10
     # S163: $66FB (chain 1) — Ramming / Kamikaze +20 when a live opponent's HP exceeds 1.5 x
     # the caster's (16-bit)
     if skill in IDS_66FB and _in(category, 0x66FB):
@@ -443,7 +517,7 @@ def _incapacitated(view, s):
     return bool(st[2] & 0xD0 or st[5] & 0x3F or st[7] & 0xC0)
 
 
-def f10_rules(skill, actor, view):
+def f10_rules(skill, actor, view, fixes=frozenset()):
     """(veto, bonus, penalty) of the DeMagic/ThickFog rules.
 
     DeMagic $80:
@@ -480,9 +554,12 @@ def f10_rules(skill, actor, view):
         if all(_incapacitated(view, s) for s in range(opp, opp + 3)):
             return True, 0, 0                                   # 5f91
         flat = _flat_st(view)
-        o = 8 * opp
-        if not (flat[opp >> 2] & 0x2C or flat[o + 3] & 0x3C or flat[o + 4] & 0x6F
-                or flat[o + 5] & 0x40 or flat[o + 7] & 0xCC or flat[o + 8] & 0x40):
+        # [S164 demagic_scan] the fixed loop reads the three opposing slots; the original reads
+        # the first one three times (its loop never advances c)
+        scan = range(opp, opp + 3) if 'demagic_scan' in fixes else (opp,)
+        if not (flat[opp >> 2] & 0x2C or any(
+                flat[8 * x + 3] & 0x3C or flat[8 * x + 4] & 0x6F or flat[8 * x + 5] & 0x40
+                or flat[8 * x + 7] & 0xCC or flat[8 * x + 8] & 0x40 for x in scan)):
             return True, 0, 0                                   # 6bcb
         for s in range(opp, opp + 3):                           # 69cb
             if view.dd1b[s] != 0:

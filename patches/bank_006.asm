@@ -9734,26 +9734,21 @@ LearnLoopFork:
 .vanilla:
     or a                        ; NZ (C >= 1 here)
     ret
-; [S160] LearnFence06 (ROADMAP E13) — LearnCode2Guard06's test: A := C (the scanned
-; id); CF set when code 2 (all of 2-5 prerequisites known) is closed for it: a custom
-; id ($DA+, the S75 fence) or one of the 14 RECLAIMED ids ($BC-$C1 / $CC-$D3), whose
-; rows are in the vanilla table but which hold new skills — learned like every new skill
-; (a natural slot, or evolving from ONE prerequisite: code 1). Vanilla ids: CF clear.
+; [S160] LearnFence06 (ROADMAP E13) — LearnCode2Guard06's test: A := C (the scanned id);
+; CF set = code 2 (all of 2-5 prerequisites known, not in the learn queue) closed for it.
+; S75-S163 it was closed for every custom id ($DA+) and (S160) the 14 RECLAIMED ids, so a
+; custom / new skill that "evolves from" two or more skills was never learned (ROADMAP E13
+; note). [S164] OPEN for every id: the S75 premise ("a universal row — no prerequisite, zero
+; stats — would be stat-learned by any monster through code 2") is false — SkillLearnScan
+; skips a row whose FIRST prerequisite is $FF before LearnPrereqKnown (`cp $ff / jr z,
+; jr_006_507c`, S130 decode), so a no-prerequisite row is learned only from the queue (code 0);
+; code 2 needs 2-5 prerequisites ALL known, and its caller (bank $51 jr_051_5799) places the id
+; as code 0 does (the first free slot of $C0D8, the forget menu at eight) with code 2's own
+; line $0B0F "… by chance, recalls …" (FireSlash's). Measured S164 (tools/walk_combo.py): a new skill on two prerequisites learned at a
+; level-up beside them; a universal row (Mourn) still never learned off the queue.
 LearnFence06:
     ld a, c
-    cp $da
-    ccf
-    ret c                       ; $DA+
-    cp RECLAIM_A
-    jr c, .open
-    cp RECLAIM_A_END
-    ret c                       ; $BC-$C1
-    cp RECLAIM_B
-    jr c, .open
-    cp RECLAIM_B_END
-    ret                         ; $CC-$D3: CF set; else clear
-.open:
-    and a                       ; CF clear (A = C kept)
+    and a                       ; CF clear: code 2 open (A = C kept)
     ret
     ds $7f7f - @, $FF           ; rst $38 fill (the freed S52/S74 learn tables)
     ASSERT @ == $7f7f

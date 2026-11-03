@@ -413,6 +413,15 @@ row, not by the table's size; `editor2/core/items.py` `text_slots`, appended by
 project == the project's words; the walk's "MegaHerb" in the shop list, its own use line, its
 name in a battle message.
 
+**S164 — the custom skills' names (ROADMAP E14):** the custom / new skills' names that do not fit
+bank $41's 94-B `gd_custom_skill_names` are text slots of bank $41 `SkillNamePtrTable` ($4539, mode
+6) rows `id` ≥ $DE (`custom_skills.text_slots`, source `skill_name`, owner Skills), served by the
+same lookup; their pointer rows name the empty `SkillName_222_Unused_222` (what a build without the
+hook would show). Every reader goes through SaveBankAndSwitch — measured S164 (`tools/walk_names.py`,
+a hook at `$094F` after the level-2 read): the battle announce's COPY into `$C190` (DE = the WRAM copy
+buffer), the field SKIL list's SHOW (DE in text bank $80), the level-up line's COPY into `$C1A0`.
+The example's build now has a text home bank ($80: Plunder, Punish, Finish, Rupture, Blunt).
+
 **Not reached (ROADMAP T-follow):** words drawn as TILES (the field menu's INFO /
 ITEM / SKIL / OPTN, the INFO page's ATK / DEF, the HP / MP bar — no SBAS call draws
 them, measured); how the packed menu-word field messages (`PUT TAKEEXIT`,
@@ -496,13 +505,18 @@ Per-bank text run bounds (string region only; head = loader code, tail = fill):
 
 | Bank | distinct strings | string run | re-sectioned |
 |------|------------------|-----------|--------------|
-| $47 | 69 (125 ids) | `$4174-$5b74` | ✅ T1 keystone |
+| $47 | 56 (ids `$03C8-$03FF`, one string each) | `$40c1-$5b74` | ✅ T1 keystone (S43 `$4174-`; S164 redone from the measured map — the first string `$40C1` / id `$03C8` was still fake code) |
 | $42 | 161 ids | `$4149-~$7dc4` | pending |
 | $43–$46, $48–$4B, $4E | — | (see `text_id_map.json` addrs) | pending |
 
-Note: many ids alias the same addr or are **alternate mid-string entry points**
-(e.g. `$47:$4248` re-enters `$423e` partway) — a real game feature; each listed
-addr gets its own label, all byte-exact. Banks `$4C`/`$4D` are NOT in the corpus
+Note: in the S43 run many ids seemed to alias one addr or to enter a string partway
+(e.g. `$47:$4248` "re-entering" `$423e`) — that was the pre-S108 `text_id_map.json`
+(DOC_AUDIT S108); the measured map gives bank $47 one string per id, which is also the bank's
+structure (mode list `$4007` → one table `$4009` = dispatch entries 4-59 = ids `$03C8-$03FF`).
+S164: the table's `dw`s name the strings (`dw TextStr_47_40c1` …) and the three loader stubs
+are labelled (`LoadB47_4079` show / `TextRunB47_4091` copy / `TextShowRefreshB47_40a9` show +
+refresh; mode 1 → overflow bank $21 entries 0-2). Other corpus banks' mid-string entries must be
+judged from the measured map, not assumed. Banks `$4C`/`$4D` are NOT in the corpus
 (no `text_id_map` entries) — different bank content (e.g. `$4D` lineage text).
 Editing a vanilla string in place is the Arc-1 `T-author` follow-up (ROADMAP
 Phase F). See ROADMAP "Phase F — Authorable subsystems" for the full roll-out.

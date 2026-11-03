@@ -17,6 +17,15 @@ data can produce a crashy patched ROM while assembling cleanly:
      in the built ROM: without it, any monster at the required level
      stat-learns the custom skill through the never-exercised code-2 display
      path.
+     S164 (ROADMAP E13 note): that premise was false — the scanner skips a row
+     whose FIRST prerequisite is $FF before it tests any prerequisite (bank $06
+     SkillLearnScan: `inc hl / ld a, [hl] / cp $ff / jr z` -> the skip path,
+     S130 decode), so a no-prerequisite row is learned only from the learn
+     queue (code 0), and code 2 needs 2-5 prerequisites all known. S164 opened
+     code 2 for every id (LearnFence06 = `ld a, c / and a / ret`); the check
+     now accepts that form when the scanner's no-prerequisite skip is in the
+     ROM (it is what keeps a universal row out of code 2 — measured S164,
+     tools/walk_combo.py `universal`).
 
 2. REPLACEMENT BATTLE-SPRITE STREAMS (bank $36 pointer-table redirects):
    - every redirected pointer-table entry must decode via dwm.sprite_codec
@@ -124,6 +133,13 @@ def check_rom(rom_path, universal, errors):
             f = body[1] | (body[2] << 8)
             fb = rom[b06 + (f - 0x4000):b06 + (f - 0x4000) + 5]
             fence_ok = fb == bytes([0x79, 0xFE, 0xDA, 0x3F, 0xD8])
+            if not fence_ok and fb[:3] == bytes([0x79, 0xA7, 0xC9]):
+                # S164: code 2 open for every id — safe while the scanner skips a row whose
+                # first prerequisite is $FF (`inc hl / ld a, [hl] / cp $ff / jr z, +d /
+                # call` in SkillLearnScan, between the learn-queue loop and LearnPrereqKnown)
+                scan = rom[b06 + 0x0FA0:b06 + 0x10B5]
+                k = scan.find(bytes([0x23, 0x7E, 0xFE, 0xFF, 0x28]))
+                fence_ok = k >= 0 and scan[k + 6] == 0xCD
     if universal and not fence_ok:
         errors.append(
             f"universal-qualifier learn rows {['$%02X' % u for u in universal]} present "

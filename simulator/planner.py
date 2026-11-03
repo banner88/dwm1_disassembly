@@ -98,7 +98,8 @@ MAX_TW = 5.0                      # duration cap (rounds) for lasting effects
 # --------------------------------------------------------------------------
 # board copies + the post-action snapshot
 # --------------------------------------------------------------------------
-_SHARED = ('core_alias', 'ai_pref', 'quake_range', 'custom_pcts', 'custom_rows')   # S155: + the two; S161 ai_pref
+_SHARED = ('core_alias', 'ai_pref', 'quake_range', 'custom_pcts', 'custom_rows',
+           'ai_fixes')   # S155: + the two; S161 ai_pref; S164 ai_fixes
 # ext entries a trial round never changes in place (rebuilt each commit, or
 # only appended to by the menu phase, which a trial does not run)
 _EXT_SHARED = frozenset(('planner', 'f10_optlists', 'command_refused', 'command_ordered'))

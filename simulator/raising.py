@@ -437,9 +437,9 @@ def learn_scan(T, m, policy='casual', score=None, codes=None):
                     break
             if not known_all:
                 continue
-            if n > 1 and (c >= VANILLA_LEARN_ROWS or c in RECLAIMED):
-                continue      # S160: code 2 is fenced for custom ids (bank $06 LearnFence06:
-                              #   $DA+ since S75, + the 14 reclaimed ids) — the scan skips it
+            # S164: code 2 (2-5 prerequisites, all known) is OPEN for every id — bank $06
+            # LearnFence06 fenced the custom ids $DA+ (S75) and the 14 reclaimed ids (S160)
+            # until S164 (ROADMAP E13 note "Evolves from two or more skills").
             hit = (c, 1, pre[0]) if n == 1 else (c, 2, None)
             break
         if hit is None:

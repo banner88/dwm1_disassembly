@@ -1,527 +1,1455 @@
 {
- "_generator": "tools/census_skill_clone.py (S111; S160 --reclaim) on rom.gbc + a real .sav; PyBoy, the stock skill vs its copy at id $EF (results) and at the reclaimed ids $BC / $CC (reclaim), RNG pinned, party slot 0 casting",
+ "_generator": "tools/census_skill_clone.py --whole (S164; S111 method before, S160 --reclaim) on the S163 example build (pin 64ed1699, patched; the CURRENT engine: a new skill acts as its base, S163) + a real .sav; PyBoy, the stock skill vs its copy at id $EF (results) and at the reclaimed ids $BC / $CC (reclaim), party slot 0 casting, the RNG pinned at every BattleRNG call under 3 seeds, messages + the board after each compared \u2014 S164; ROM: data/DWM-original.gbc (1ca6579\u2026) + the patches",
  "results": {
   "0": {
    "name": "Blaze",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "1": {
    "name": "Blazemore",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "2": {
    "name": "Blazemost",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "3": {
    "name": "Firebal",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "4": {
    "name": "Firebane",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "5": {
    "name": "Firebolt",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "6": {
    "name": "Bang",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     7,
+     7
+    ],
+    [
+     7,
+     7
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "7": {
    "name": "Boom",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "8": {
    "name": "Explodet",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "9": {
    "name": "Infernos",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "10": {
    "name": "Infermore",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "11": {
    "name": "Infermost",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "12": {
    "name": "IceBolt",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "13": {
    "name": "SnowStorm",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "14": {
    "name": "Blizzard",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "15": {
    "name": "Bolt",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "16": {
    "name": "Zap",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    27,
+    27,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "17": {
    "name": "Thordain",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "18": {
    "name": "Beat",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
-   "acts": [
-    2,
-    1
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "19": {
    "name": "Defeat",
-   "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
-   "acts": [
-    4,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    37,
+    37,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "20": {
    "name": "Sacrifice",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    3
-   ]
+   "why": "messages differ at 2 of 29: [(184, 0, 20, 4, 12), (133, 0, 20, 6, 396)] vs [(77, 0, 147, 2, 12), (132, 0, 147, 2, 12)]",
+   "casts": [
+    [
+     4,
+     5
+    ],
+    [
+     1,
+     5
+    ],
+    [
+     4,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    25,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "21": {
    "name": "Sleep",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "22": {
    "name": "SleepAll",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     11,
+     11
+    ]
+   ],
+   "messages": [
+    37,
+    27,
+    33
+   ],
+   "method": "whole (S164)"
   },
   "23": {
    "name": "StopSpell",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "24": {
    "name": "Surround",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    31
+   ],
+   "method": "whole (S164)"
   },
   "25": {
    "name": "PanicAll",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    37,
+    29,
+    34
+   ],
+   "method": "whole (S164)"
   },
   "26": {
    "name": "RobMagic",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "27": {
    "name": "TakeMagic",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    30,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "28": {
    "name": "Sap",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "29": {
    "name": "Defence",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    37,
+    33,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "30": {
    "name": "Upper",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "31": {
    "name": "Increase",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    28,
+    27,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "32": {
    "name": "Slow",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    30,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "33": {
    "name": "SlowAll",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     8,
+     8
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    37,
+    30,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "34": {
    "name": "Speed",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "35": {
    "name": "SpeedUp",
    "result": "same",
    "why": "",
-   "acts": [
-    6,
-    6
-   ]
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "36": {
    "name": "Barrier",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "37": {
    "name": "TwinHits",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    30,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "38": {
    "name": "MagicWall",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "39": {
    "name": "MagicBack",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "40": {
    "name": "Bounce",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "messages differ at 2 of 31: [(154, 0, 40, 0, 12), (77, 0, 147, 2, 12)] vs [(153, 0, 40, 0, 0), (77, 0, 147, 2, 0)]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "41": {
    "name": "Transform",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "42": {
    "name": "Ironize",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
-   "acts": [
-    1,
-    1
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     2,
+     2
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     2,
+     2
+    ]
+   ],
+   "messages": [
+    36,
+    36,
+    36
+   ],
+   "method": "whole (S164)"
   },
   "43": {
    "name": "Heal",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "44": {
    "name": "HealMore",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "45": {
    "name": "HealAll",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
-   "acts": [
-    2,
-    1
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "46": {
    "name": "HealUs",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-   "acts": [
-    6,
-    6
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    31
+   ],
+   "method": "whole (S164)"
   },
   "47": {
    "name": "HealUsAll",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
-   "acts": [
-    6,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    31
+   ],
+   "method": "whole (S164)"
   },
   "48": {
    "name": "Vivify",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    32,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "49": {
    "name": "Revive",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "50": {
    "name": "Farewell",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    3
-   ]
+   "why": "board differs after message 1 of 34: [('mp', [(0, 0, 199)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    34,
+    27,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "51": {
    "name": "Antidote",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "52": {
    "name": "NumbOff",
    "result": "same",
    "why": "",
-   "acts": [
-    6,
-    6
-   ]
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    35,
+    35,
+    33
+   ],
+   "method": "whole (S164)"
   },
   "53": {
    "name": "DeChaos",
    "result": "same",
    "why": "",
-   "acts": [
-    6,
-    6
-   ]
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    35,
+    35,
+    33
+   ],
+   "method": "whole (S164)"
   },
   "54": {
    "name": "CurseOff",
    "result": "same",
    "why": "",
-   "acts": [
-    6,
-    6
-   ]
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ]
+   ],
+   "messages": [
+    35,
+    35,
+    33
+   ],
+   "method": "whole (S164)"
   },
   "55": {
    "name": "StepGuard",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "56": {
    "name": "MapMagic",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "57": {
    "name": "Chance",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     2,
+     2
+    ]
+   ],
+   "messages": [
+    29,
+    27,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "58": {
    "name": "Attack",
@@ -529,741 +1457,2053 @@
   },
   "59": {
    "name": "TwinSlash",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "60": {
    "name": "Ramming",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "61": {
    "name": "Beserker",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "62": {
    "name": "Kamikaze",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     3,
+     3
+    ]
+   ],
+   "messages": [
+    27,
+    27,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "63": {
    "name": "Massacre",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x83', '0xe3', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "messages differ at 2 of 26: [(130, 0, 63, 4, 86), (77, 0, 147, 2, 86)] vs [(120, 0, 63, 4, 12), (77, 0, 147, 2, 12)]",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "64": {
    "name": "EvilSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "65": {
    "name": "ChargeUP",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "66": {
    "name": "HighJump",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -375, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -375, 0, 0, 0, 0, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    30,
+    30,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "67": {
    "name": "SuckAir",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "68": {
    "name": "FireSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     3,
+     3
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    22
+   ],
+   "method": "whole (S164)"
   },
   "69": {
    "name": "BoltSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "70": {
    "name": "VacuSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "71": {
    "name": "IceSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "72": {
    "name": "MetalCut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    27,
+    27,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "73": {
    "name": "DrakSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "74": {
    "name": "BeastCut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "75": {
    "name": "BirdBlow",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "76": {
    "name": "DevilCut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "77": {
    "name": "ZombieCut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "78": {
    "name": "CleanCut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    27,
+    27,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "79": {
    "name": "MultiCut",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     7,
+     7
+    ],
+    [
+     7,
+     7
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "80": {
    "name": "BiAttack",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-   "acts": [
-    4,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     10,
+     10
+    ],
+    [
+     10,
+     10
+    ],
+    [
+     8,
+     8
+    ]
+   ],
+   "messages": [
+    34,
+    34,
+    31
+   ],
+   "method": "whole (S164)"
   },
   "81": {
    "name": "QuadHits",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-   "acts": [
-    7,
-    2
-   ]
+   "why": "messages differ at 2 of 37: [(130, 0, 81, 4, 25), (130, 0, 81, 4, 25)] vs [(130, 0, 81, 4, 30), (130, 0, 81, 4, 30)]",
+   "casts": [
+    [
+     16,
+     16
+    ],
+    [
+     16,
+     16
+    ],
+    [
+     16,
+     16
+    ]
+   ],
+   "messages": [
+    37,
+    37,
+    35
+   ],
+   "method": "whole (S164)"
   },
   "82": {
    "name": "CallHelp",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "83": {
    "name": "YellHelp",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "84": {
    "name": "Focus",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "85": {
    "name": "SquallHit",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "86": {
    "name": "PsycheUp",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "87": {
    "name": "RainSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     7,
+     7
+    ],
+    [
+     8,
+     8
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "88": {
    "name": "WindBeast",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "89": {
    "name": "Vacuum",
    "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -6, 0, 0), (0, 0, 0, 0, -38, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, -38, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -6, 0, 0), (0, 0, 0, 0, -41, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, -41, 0, 0, 0, 0, 0)]",
-   "acts": [
-    3,
-    3
-   ]
+   "why": "messages differ at 2 of 31: [(130, 0, 89, 4, 74), (130, 0, 89, 5, 74)] vs [(130, 0, 89, 4, 63), (130, 0, 89, 5, 63)]",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "90": {
    "name": "Lightning",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "91": {
    "name": "RockThrow",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "92": {
    "name": "FireAir",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "93": {
    "name": "BlazeAir",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "94": {
    "name": "Scorching",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "95": {
    "name": "WhiteFire",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     8,
+     8
+    ],
+    [
+     8,
+     8
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    30,
+    30,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "96": {
    "name": "FrigidAir",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    33,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "97": {
    "name": "IceAir",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "98": {
    "name": "IceStorm",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "99": {
    "name": "WhiteAir",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "100": {
    "name": "Hellblast",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "101": {
    "name": "BigBang",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     8,
+     8
+    ],
+    [
+     8,
+     8
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    30,
+    30,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "102": {
    "name": "MegaMagic",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "103": {
    "name": "PoisonHit",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    31
+   ],
+   "method": "whole (S164)"
   },
   "104": {
    "name": "NapAttack",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    27,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "105": {
    "name": "Paralyze",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "106": {
    "name": "SleepAir",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     11,
+     11
+    ]
+   ],
+   "messages": [
+    36,
+    27,
+    33
+   ],
+   "method": "whole (S164)"
   },
   "107": {
    "name": "PalsyAir",
-   "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
-   "acts": [
-    4,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    36,
+    37,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "108": {
    "name": "PoisonGas",
-   "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
-   "acts": [
-    3,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    36,
+    35,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "109": {
    "name": "PoisonAir",
    "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
-   "acts": [
-    3,
-    3
-   ]
+   "why": "messages differ at 2 of 29: [(208, 0, 109, 4, 0), (208, 0, 109, 5, 0)] vs [(206, 0, 109, 4, 0), (206, 0, 109, 5, 0)]",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    36,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "110": {
    "name": "PaniDance",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     8,
+     8
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    33,
+    27,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "111": {
    "name": "Curse",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    36,
+    30,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "112": {
    "name": "Ahhh",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    26,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "113": {
    "name": "K.O.Dance",
-   "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
-   "acts": [
-    4,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     7,
+     7
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "114": {
    "name": "SandStorm",
    "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0x1a']",
-   "acts": [
-    3,
-    3
-   ]
+   "why": "messages differ at 2 of 33: [(184, 0, 114, 4, 0), (184, 0, 114, 5, 0)] vs [(162, 0, 114, 4, 0), (162, 0, 114, 5, 0)]",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "115": {
    "name": "Radiant",
-   "result": "differs",
-   "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0x1a']",
-   "acts": [
-    4,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    33,
+    33,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "116": {
    "name": "EerieLite",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     6,
+     6
+    ]
+   ],
+   "messages": [
+    32,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "117": {
    "name": "OddDance",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "118": {
    "name": "RobDance",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "119": {
    "name": "SideStep",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "120": {
    "name": "LureDance",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     7,
+     7
+    ]
+   ],
+   "messages": [
+    33,
+    25,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "121": {
    "name": "LushLicks",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    26,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "122": {
    "name": "SickLick",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    26,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "123": {
    "name": "LegSweep",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     6,
+     6
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    31,
+    30,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "124": {
    "name": "BigTrip",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    36,
+    35,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "125": {
    "name": "WarCry",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    36,
+    36,
+    32
+   ],
+   "method": "whole (S164)"
   },
   "126": {
    "name": "Whistle",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    31,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "127": {
    "name": "Imitate",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
-   "acts": [
-    3,
-    3
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    34,
+    34,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "128": {
    "name": "DeMagic",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "messages differ at 2 of 25: [(172, 0, 128, 4, 12), (77, 0, 147, 2, 12)] vs [(77, 0, 147, 2, 12), (132, 0, 147, 2, 12)]",
+   "casts": [
+    [
+     4,
+     5
+    ],
+    [
+     4,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "129": {
    "name": "Surge",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    5
-   ]
+   "casts": [
+    [
+     12,
+     12
+    ],
+    [
+     12,
+     12
+    ],
+    [
+     10,
+     10
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "130": {
    "name": "UltraDown",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "messages differ at 2 of 24: [(134, 0, 130, 4, 2), (149, 0, 130, 4, 2)] vs [(77, 0, 147, 2, 0), (132, 0, 147, 2, 0)]",
+   "casts": [
+    [
+     4,
+     5
+    ],
+    [
+     4,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    24,
+    25,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "131": {
    "name": "ThickFog",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
-   "acts": [
-    1,
-    2
-   ]
+   "why": "casts 3 vs 5",
+   "casts": [
+    [
+     3,
+     5
+    ],
+    [
+     3,
+     5
+    ],
+    [
+     3,
+     4
+    ]
+   ],
+   "messages": [
+    24,
+    24,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "132": {
    "name": "TatsuCall",
    "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 32: [('hp', [(3, 200, 700)]), ('mp', [(3, 100, 400)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "133": {
    "name": "DiagoCall",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 32: [('hp', [(3, 300, 700)]), ('mp', [(3, 200, 400)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "134": {
    "name": "SamsiCall",
    "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 32: [('hp', [(3, 450, 700)]), ('mp', [(3, 200, 400)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "135": {
    "name": "BazooCall",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    32,
+    30
+   ],
+   "method": "whole (S164)"
   },
   "136": {
    "name": "Cover",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "137": {
    "name": "Guardian",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 26: [('status', [(0, 16, 0), (16, 16, 0), (24, 16, 0)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "138": {
    "name": "TailWind",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "139": {
    "name": "StormWind",
    "result": "same",
    "why": "",
-   "acts": [
-    3,
-    3
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ]
+   ],
+   "messages": [
+    29,
+    29,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "140": {
    "name": "Dodge",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    27,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "141": {
    "name": "Defence",
@@ -1272,83 +3512,227 @@
   "142": {
    "name": "StrongD",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 26: [('status', [(9, 2, 99)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "143": {
    "name": "SuckAll",
-   "result": "differs",
-   "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "144": {
    "name": "BladeD",
    "result": "differs",
-   "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
-   "acts": [
-    2,
-    2
-   ]
+   "why": "board differs after message 2 of 26: [('status', [(9, 4, 99)])]",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    26,
+    26,
+    24
+   ],
+   "method": "whole (S164)"
   },
   "145": {
    "name": "DanceShut",
    "result": "same",
    "why": "",
-   "acts": [
-    4,
-    4
-   ]
+   "casts": [
+    [
+     9,
+     9
+    ],
+    [
+     9,
+     9
+    ],
+    [
+     7,
+     7
+    ]
+   ],
+   "messages": [
+    33,
+    28,
+    29
+   ],
+   "method": "whole (S164)"
   },
   "146": {
    "name": "MouthShut",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    31,
+    29,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "147": {
    "name": "Meditate",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "148": {
    "name": "Hustle",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-   "acts": [
-    4,
-    4
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     11,
+     11
+    ],
+    [
+     11,
+     11
+    ],
+    [
+     9,
+     9
+    ]
+   ],
+   "messages": [
+    30,
+    30,
+    28
+   ],
+   "method": "whole (S164)"
   },
   "149": {
    "name": "LifeSong",
-   "result": "differs",
-   "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-   "acts": [
-    2,
-    2
-   ]
+   "result": "same",
+   "why": "",
+   "casts": [
+    [
+     5,
+     5
+    ],
+    [
+     5,
+     5
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    27,
+    27,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "150": {
    "name": "LifeDance",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    26,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "151": {
    "name": "Run",
@@ -1602,46 +3986,126 @@
    "name": "BeDragon",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     22,
+     22
+    ],
+    [
+     22,
+     22
+    ],
+    [
+     22,
+     22
+    ]
+   ],
+   "messages": [
+    46,
+    46,
+    46
+   ],
+   "method": "whole (S164)"
   },
   "214": {
    "name": "Smashlime",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "215": {
    "name": "Sheldodge",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    26
+   ],
+   "method": "whole (S164)"
   },
   "216": {
    "name": "Branching",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    28,
+    28,
+    27
+   ],
+   "method": "whole (S164)"
   },
   "217": {
    "name": "GigaSlash",
    "result": "same",
    "why": "",
-   "acts": [
-    2,
-    2
-   ]
+   "casts": [
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    23
+   ],
+   "method": "whole (S164)"
   },
   "218": {
    "name": "LIFE",
@@ -1651,10 +4115,26 @@
    "name": "RUN",
    "result": "same",
    "why": "",
-   "acts": [
-    1,
-    1
-   ]
+   "casts": [
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "messages": [
+    25,
+    25,
+    25
+   ],
+   "method": "whole (S164)"
   },
   "220": {
    "name": "IRONIZE",
@@ -1668,3411 +4148,5521 @@
  "reclaim": {
   "0": {
    "name": "Blaze",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "1": {
    "name": "Blazemore",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "2": {
    "name": "Blazemost",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "3": {
    "name": "Firebal",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "4": {
    "name": "Firebane",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "5": {
    "name": "Firebolt",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "6": {
    "name": "Bang",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      7,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      7,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "7": {
    "name": "Boom",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "8": {
    "name": "Explodet",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "9": {
    "name": "Infernos",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "10": {
    "name": "Infermore",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "11": {
    "name": "Infermost",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "12": {
    "name": "IceBolt",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "13": {
    "name": "SnowStorm",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "14": {
    "name": "Blizzard",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "15": {
    "name": "Bolt",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "16": {
    "name": "Zap",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "17": {
    "name": "Thordain",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "18": {
    "name": "Beat",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
-    "acts": [
-     2,
-     1
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
-    "acts": 1
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xe8', '0xe4', '0xec']",
-    "acts": 1
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "19": {
    "name": "Defeat",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
-    "acts": [
-     4,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
-    "acts": 3
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x23', '0xe8']",
-    "acts": 3
-   },
-   "as_EF": true
-  },
-  "20": {
-   "name": "Sacrifice",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xb8', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "21": {
    "name": "Sleep",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "22": {
    "name": "SleepAll",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      11,
+      11
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      11,
+      11
+     ]
+    ]
    },
    "as_EF": true
   },
   "23": {
    "name": "StopSpell",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "24": {
    "name": "Surround",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "25": {
    "name": "PanicAll",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "26": {
    "name": "RobMagic",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "27": {
    "name": "TakeMagic",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "28": {
    "name": "Sap",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "29": {
    "name": "Defence",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "30": {
    "name": "Upper",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "31": {
    "name": "Increase",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "32": {
    "name": "Slow",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "33": {
    "name": "SlowAll",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "34": {
    "name": "Speed",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x97', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "35": {
    "name": "SpeedUp",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     6,
-     6
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "36": {
    "name": "Barrier",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "37": {
    "name": "TwinHits",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "38": {
    "name": "MagicWall",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": [
-     3,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "39": {
    "name": "MagicBack",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "40": {
-   "name": "Bounce",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x9a', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x99', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "41": {
    "name": "Transform",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0xa0', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (-88, 0, 0, 0, 0, 0, 0, 0, -195, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)]",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (-88, 0, 0, 0, 0, 0, 0, 0, -195, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)]",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
-   "as_EF": false
+   "as_EF": true
   },
   "42": {
    "name": "Ironize",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
-    "acts": [
-     1,
-     1
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      2
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
-    "acts": 1
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x23', '0x93', '0x11', '0x11', '0x28', '0x11', '0x11'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x93', '0x11', '0x11']",
-    "acts": 1
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      2
+     ]
+    ]
    },
    "as_EF": true
   },
   "43": {
    "name": "Heal",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 0), (31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-31, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "44": {
    "name": "HealMore",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-89, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "45": {
    "name": "HealAll",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
-    "acts": [
-     2,
-     1
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
-    "acts": 1
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x28']",
-    "acts": 1
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "46": {
    "name": "HealUs",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     6,
-     6
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 6
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -18, 0, 0), (100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-106, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 6
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "47": {
    "name": "HealUsAll",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
-    "acts": [
-     6,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
-    "acts": 3
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x84'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0xe3', '0x84']",
-    "acts": 3
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "48": {
    "name": "Vivify",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "49": {
    "name": "Revive",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "50": {
-   "name": "Farewell",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      5,
+      5
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x84', '0x84', '0x85'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "51": {
    "name": "Antidote",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "52": {
    "name": "NumbOff",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     6,
-     6
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "53": {
    "name": "DeChaos",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     6,
-     6
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "54": {
    "name": "CurseOff",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     6,
-     6
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 6
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ]
+    ]
    },
    "as_EF": true
   },
   "55": {
    "name": "StepGuard",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "56": {
    "name": "MapMagic",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "57": {
    "name": "Chance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      2,
+      2
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      2,
+      2
+     ]
+    ]
    },
    "as_EF": true
   },
   "59": {
    "name": "TwinSlash",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2b', '0x82', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "60": {
    "name": "Ramming",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x83', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2c', '0x82', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "61": {
    "name": "Beserker",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2d', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2d', '0x82', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
-   },
-   "as_EF": false
-  },
-  "62": {
-   "name": "Kamikaze",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x85', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2e', '0x82', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
-  "63": {
-   "name": "Massacre",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+  "62": {
+   "name": "Kamikaze",
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      3
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x82', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x2f', '0x78', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      3
+     ]
+    ]
    },
    "as_EF": true
   },
   "64": {
    "name": "EvilSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "65": {
    "name": "ChargeUP",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "66": {
    "name": "HighJump",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -5, 0, 0), (0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "67": {
    "name": "SuckAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "68": {
    "name": "FireSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      3
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      3,
+      3
+     ]
+    ]
    },
    "as_EF": true
   },
   "69": {
    "name": "BoltSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "70": {
    "name": "VacuSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "71": {
    "name": "IceSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "72": {
    "name": "MetalCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "73": {
    "name": "DrakSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "74": {
    "name": "BeastCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "75": {
    "name": "BirdBlow",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "76": {
    "name": "DevilCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "77": {
    "name": "ZombieCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "78": {
    "name": "CleanCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "79": {
    "name": "MultiCut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      7,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      7,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "80": {
    "name": "BiAttack",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": [
-     4,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      10,
+      10
+     ],
+     [
+      10,
+      10
+     ],
+     [
+      8,
+      8
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "81": {
-   "name": "QuadHits",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": [
-     7,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      10,
+      10
+     ],
+     [
+      10,
+      10
+     ],
+     [
+      8,
+      8
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x82', '0x82'] vs ['0x0', '0x28', '0x28', '0x28', '0x24', '0x82', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "82": {
    "name": "CallHelp",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "83": {
    "name": "YellHelp",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "84": {
    "name": "Focus",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "85": {
    "name": "SquallHit",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "86": {
    "name": "PsycheUp",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "87": {
    "name": "RainSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      8,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      7,
+      7
+     ],
+     [
+      8,
+      7
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "88": {
    "name": "WindBeast",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "89": {
-   "name": "Vacuum",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
-   },
-   "BC": {
-    "result": "same",
-    "why": "",
-    "acts": 3
-   },
-   "CC": {
-    "result": "same",
-    "why": "",
-    "acts": 3
    },
    "as_EF": true
   },
   "90": {
    "name": "Lightning",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "91": {
    "name": "RockThrow",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "92": {
    "name": "FireAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "93": {
    "name": "BlazeAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "94": {
    "name": "Scorching",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "95": {
    "name": "WhiteFire",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      8,
+      8
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      8,
+      8
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "96": {
    "name": "FrigidAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "97": {
    "name": "IceAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "98": {
    "name": "IceStorm",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "99": {
    "name": "WhiteAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "100": {
    "name": "Hellblast",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "101": {
    "name": "BigBang",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      8,
+      8
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      8,
+      8
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "102": {
    "name": "MegaMagic",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "103": {
    "name": "PoisonHit",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "104": {
    "name": "NapAttack",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "105": {
    "name": "Paralyze",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "106": {
    "name": "SleepAir",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      11,
+      11
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      11,
+      11
+     ]
+    ]
    },
    "as_EF": true
   },
   "107": {
    "name": "PalsyAir",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
-    "acts": [
-     4,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
-    "acts": 3
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xcf']",
-    "acts": 3
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "108": {
    "name": "PoisonGas",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
-   },
-   "as_EF": true
-  },
-  "109": {
-   "name": "PoisonAir",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
-    "acts": [
-     3,
-     3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      6,
+      6
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
-    "acts": 3
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xd0'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x25', '0xce']",
-    "acts": 3
    },
    "as_EF": true
   },
   "110": {
    "name": "PaniDance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      8,
+      8
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "111": {
    "name": "Curse",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "112": {
    "name": "Ahhh",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "113": {
    "name": "K.O.Dance",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
-    "acts": [
-     4,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
-    "acts": 3
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xb8'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x26', '0xe8']",
-    "acts": 3
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
+    ]
    },
    "as_EF": true
   },
-  "114": {
-   "name": "SandStorm",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0x1f']",
-    "acts": [
-     3,
-     3
-    ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xec']",
-    "acts": 3
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xa2'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x42', '0xfc']",
-    "acts": 3
-   },
-   "as_EF": false
-  },
   "115": {
    "name": "Radiant",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0x1f']",
-    "acts": [
-     4,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xec']",
-    "acts": 4
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xa3'] vs ['0x1', '0x28', '0x28', '0x28', '0x28', '0x28', '0x24', '0xfc']",
-    "acts": 4
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
-   "as_EF": false
+   "as_EF": true
   },
   "116": {
    "name": "EerieLite",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      6,
+      6
+     ]
+    ]
    },
    "as_EF": true
   },
   "117": {
    "name": "OddDance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "118": {
    "name": "RobDance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "119": {
    "name": "SideStep",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "120": {
    "name": "LureDance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
+    ]
    },
    "as_EF": true
   },
   "121": {
    "name": "LushLicks",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "122": {
    "name": "SickLick",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "123": {
    "name": "LegSweep",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      6,
+      6
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "124": {
    "name": "BigTrip",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "125": {
    "name": "WarCry",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "126": {
    "name": "Whistle",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "127": {
    "name": "Imitate",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
-    "acts": [
-     3,
-     3
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
-    "acts": 3
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x50', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x50', '0x28', '0x28', '0x28']",
-    "acts": 3
-   },
-   "as_EF": true
-  },
-  "128": {
-   "name": "DeMagic",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      5
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xac', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "129": {
    "name": "Surge",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
-    "acts": [
-     5,
-     5
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      10,
+      10
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
-    "acts": 5
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0xae', '0xae', '0xae']",
-    "acts": 5
-   },
-   "as_EF": true
-  },
-  "130": {
-   "name": "UltraDown",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      12,
+      12
+     ],
+     [
+      12,
+      12
+     ],
+     [
+      10,
+      10
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x27', '0x86', '0x95', '0x98'] vs ['0x0', '0x28', '0x28', '0x28', '0x27', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "131": {
-   "name": "ThickFog",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
-    "acts": [
-     1,
-     2
-    ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x70', '0xac', '0xac', '0xac'] vs ['0x0', '0x28', '0x28', '0x28', '0x70', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "132": {
-   "name": "TatsuCall",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     2,
-     2
-    ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 200, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -45, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "133": {
-   "name": "DiagoCall",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
-    ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x49', '0xaf', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "134": {
-   "name": "SamsiCall",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     2,
-     2
-    ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 450, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -63, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, -87, 0, 0, 0, 0, 0, 0)]",
-    "acts": 2
    },
    "as_EF": true
   },
   "135": {
    "name": "BazooCall",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "136": {
    "name": "Cover",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x51', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x51', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "137": {
-   "name": "Guardian",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x52', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x52', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "138": {
    "name": "TailWind",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "139": {
    "name": "StormWind",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     3,
-     3
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 3
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ]
+    ]
    },
    "as_EF": true
   },
   "140": {
    "name": "Dodge",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x53', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x53', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "142": {
-   "name": "StrongD",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x54', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x54', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "143": {
    "name": "SuckAll",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x56', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x56', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "as_EF": true
-  },
-  "144": {
-   "name": "BladeD",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
-    "acts": [
-     2,
-     2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
-   },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
-    "acts": 2
-   },
-   "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x55', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28'] vs ['0x0', '0x28', '0x28', '0x28', '0x55', '0x28', '0x28', '0x28']",
-    "acts": 2
    },
    "as_EF": true
   },
   "145": {
    "name": "DanceShut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     4,
-     4
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 4
+    "casts": [
+     [
+      9,
+      9
+     ],
+     [
+      9,
+      9
+     ],
+     [
+      7,
+      7
+     ]
+    ]
    },
    "as_EF": true
   },
   "146": {
    "name": "MouthShut",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "147": {
    "name": "Meditate",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "148": {
    "name": "Hustle",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": [
-     4,
-     4
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      11,
+      11
+     ],
+     [
+      11,
+      11
+     ],
+     [
+      9,
+      9
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 4
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (0, 71, 0, 0, 0, 0, 0, 0, 0, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0), (71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), (-71, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)]",
-    "acts": 4
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      11,
+      11
+     ],
+     [
+      11,
+      11
+     ],
+     [
+      9,
+      9
+     ]
+    ]
    },
    "as_EF": true
   },
   "149": {
    "name": "LifeSong",
-   "EF_now": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-    "acts": [
-     2,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "HP / MP changes [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)] vs [(0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0)]",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      5,
+      5
+     ],
+     [
+      5,
+      5
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "150": {
    "name": "LifeDance",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "213": {
    "name": "BeDragon",
-   "EF_now": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
-    "acts": [
-     7,
-     2
+   "BC": {
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      22,
+      22
+     ],
+     [
+      22,
+      22
+     ],
+     [
+      22,
+      22
+     ]
     ]
    },
-   "BC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
-    "acts": 2
-   },
    "CC": {
-    "result": "differs",
-    "why": "battle lines ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x23', '0x91'] vs ['0x0', '0x28', '0x28', '0x28', '0x23', '0x91', '0x28', '0x28']",
-    "acts": 2
+    "result": "same",
+    "why": "",
+    "casts": [
+     [
+      22,
+      22
+     ],
+     [
+      22,
+      22
+     ],
+     [
+      22,
+      22
+     ]
+    ]
    },
    "as_EF": true
   },
   "214": {
    "name": "Smashlime",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "215": {
    "name": "Sheldodge",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "216": {
    "name": "Branching",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "217": {
    "name": "GigaSlash",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     2,
-     2
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 2
+    "casts": [
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      4,
+      4
+     ]
+    ]
    },
    "as_EF": true
   },
   "219": {
    "name": "RUN",
-   "EF_now": {
-    "result": "same",
-    "why": "",
-    "acts": [
-     1,
-     1
-    ]
-   },
    "BC": {
     "result": "same",
     "why": "",
-    "acts": 1
+    "casts": [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
    },
    "CC": {
     "result": "same",
     "why": "",
-    "acts": 1
+    "casts": [
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
    },
    "as_EF": true
   }

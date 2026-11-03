@@ -164,6 +164,13 @@ class SkillsTab(QWidget):
         self.del_btn.clicked.connect(self._delete_skill)
         bh.addWidget(self.del_btn)
         lv.addLayout(bh)
+        self.ai_fix_btn = QPushButton('Enemy AI fixes…')                  # [S164]
+        self.ai_fix_btn.setToolTip('Five rules of the original enemy AI do not do what they '
+                                   'were written for (they look at the first foe only, count '
+                                   'it twice, or divide by the wrong number). Switch each fix '
+                                   'on for this project — off = the original game.')
+        self.ai_fix_btn.clicked.connect(self._ai_fixes)
+        lv.addWidget(self.ai_fix_btn)
         self.meters = QLabel()
         self.meters.setWordWrap(True)
         lv.addWidget(self.meters)
@@ -706,10 +713,11 @@ class SkillsTab(QWidget):
                                         'natural skill slot (Monsters tab) gives it.')
             elif custom:
                 self.learn_note.setText(
-                    'A monster that knows a skill it evolves from learns this one IN ITS PLACE '
-                    'at a level-up (from the level shown); with nothing to evolve from it is '
-                    'learned only as a natural skill. Custom skills are never learned by '
-                    'stats alone (the S75 fence).')
+                    'A monster that knows the ONE skill it evolves from learns this one IN ITS '
+                    'PLACE at a level-up (from the level shown); with two to five, it must know '
+                    'ALL of them and learns this one BESIDE them (a combination, like '
+                    'FireSlash); with nothing to evolve from it is learned only as a natural '
+                    'skill.')
             else:
                 self.learn_note.setText(
                     'No learn row: ids $DA-$DD are code in bank $06 (a monster can still be '
@@ -1524,6 +1532,50 @@ class SkillsTab(QWidget):
         sid = self.sid
         self._push(self._label(key.replace('_', ' ')),
                    lambda doc: doc.set_skill_param(sid, key, value))
+
+    def _ai_fixes(self):
+        """[S164] the original enemy AI's bugs as switches (editor2/core/ai_fixes.py)."""
+        from editor2.core import ai_fixes as AF
+        cur = self.s.doc.ai_fixes()
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Enemy AI fixes')
+        v = QVBoxLayout(dlg)
+        head = QLabel('The enemy AI scores every skill with the original game\'s rules. These '
+                      'five do not do what they were written for. Tick a fix to make the rule '
+                      'work as meant in this project (enemies then choose differently — the '
+                      'Balance tab follows). Unticked = exactly the original game.')
+        head.setWordWrap(True)
+        v.addWidget(head)
+        boxes = {}
+        for key in AF.AI_FIXES:
+            title, orig, fix = AF.TEXT[key]
+            cb = QCheckBox(title)
+            f = cb.font()
+            f.setBold(True)
+            cb.setFont(f)
+            cb.setChecked(key in cur)
+            v.addWidget(cb)
+            t = QLabel(f'Original: {orig}\nFixed: {fix}')
+            t.setWordWrap(True)
+            t.setContentsMargins(24, 0, 0, 6)
+            v.addWidget(t)
+            boxes[key] = cb
+        bb = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        bb.accepted.connect(dlg.accept)
+        bb.rejected.connect(dlg.reject)
+        v.addWidget(bb)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        want = {k for k, cb in boxes.items() if cb.isChecked()}
+        if want == set(cur):
+            return
+
+        def op(doc):
+            for k in AF.AI_FIXES:
+                if (k in want) != (k in cur):
+                    doc.set_ai_fix(k, k in want)
+        on = ', '.join(AF.TEXT[k][0] for k in AF.AI_FIXES if k in want) or 'none'
+        self._push(f'Enemy AI fixes → {on}', op)
 
     def _new_skill(self):
         doc = self.s.doc
