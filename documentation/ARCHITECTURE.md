@@ -509,7 +509,7 @@ checksum (bank 0 only), like banks 1-2. Free in bank 3: `$A002-$A00F`, `$A110-$B
 **S140 (ARC CAP3a, USER-CONFIRMED 2026-10-10):** magic "X2" (`$58,$32`) = "X1" + `$A002` =
 `wMapRegion` (the region the save stands in; "Regions (S140)" above); `ExtFlagsRestore` accepts
 both ("X1" → region 0). Free in bank 3 now: `$A003-$A00F`, `$A110-$BFFF`.
-**S154 (the memorial, built S154, NOT yet user-tested):** `$A003-$A004` = magic "M1" (`$4D,$31`),
+**S154 (the memorial, built S154, USER-CONFIRMED 2026-11-02 22:11 ("S154 confirmed", on the r2 ROM)):** `$A003-$A004` = magic "M1" (`$4D,$31`),
 `$A005` = `wMemCount`, `$A006` = `wMemHead` — bank $73 `MemorialCommit` (after `ExtFlagsCommit`,
 the explicit save; always built, a project without statues saves 0 / 0) / `MemorialRestore`
 (after `ExtFlagsRestore`; no magic = a pre-S154 save = an empty memorial). `$A110` + 8 × ring

@@ -82,12 +82,13 @@ class ReclaimWalk(SkillWalk):
         self.m[REC + RECSZ * k + off] = v
 
     def battle(self, eid, frames, party=DEFEND, enemy=None, caster=None, skill=None, target=4,
-               board=None, hooks=None, paralyse=False, etarget=None):
+               board=None, hooks=None, paralyse=False, etarget=None, seed=(0x5A, 0xA5)):
         """A forced battle against enemy row `eid` (the S110 rig: started from the field
         through $DA03 / $DA09 / $C8EB bit 6, the RNG pinned every frame). The party acts
         `party` (or party slot `caster` acts `skill` on `target`); the enemy's action is
         forced to `enemy` or left to its AI (None). HP held (the foe at 999, the party 900).
-        hooks: {(bank, addr): fn(log)}. -> {'msgs': [(msg, line, skill, subject, $DB56)],
+        hooks: {(bank, addr): fn(log)}; seed: the pinned RNG pair ($C899 / $C89A; S163 —
+        walk_actbase runs each pair under several). -> {'msgs': [(msg, line, skill, subject, $DB56)],
         'acts': [(actor, skill, target, $DB56)], 'text': [(bank, addr)], 'start': bool}."""
         p, m = self.p, self.m
         log = {'msgs': [], 'acts': [], 'text': [], 'start': False, 'est': []}
@@ -121,7 +122,7 @@ class ReclaimWalk(SkillWalk):
                 ph = m[0xD9EC]
                 if ph >= 1:
                     log['start'] = True
-                m[0xC899], m[0xC89A] = 0x5A, 0xA5
+                m[0xC899], m[0xC89A] = seed
                 for k in range(3):
                     m[DCEC + 2 * k] = skill if k == caster else party
                 if enemy is not None:

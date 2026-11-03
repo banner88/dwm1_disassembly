@@ -112,9 +112,11 @@ class SpritePicker(QDialog):
         pv = QVBoxLayout(pw)
         self.show_all = QCheckBox('show boss fragments / empty / glitch ids too')
         self.show_all.toggled.connect(self._fill)
-        pv.addWidget(QLabel('Sprite ids from the vanilla census (S91). Each screen has a '
-                            'sprite-sheet VRAM budget: many DIFFERENT sprites on one screen '
-                            'can render blank — repeats are free.'))
+        lim = QLabel('Sprite ids from the vanilla census (S91). A screen keeps 6 DIFFERENT '
+                     'sprites: a 7th different one is drawn with the first one\'s picture '
+                     '(measured S163) — repeats of a sprite are free.')
+        lim.setWordWrap(True)
+        pv.addWidget(lim)
         pv.addWidget(self.show_all)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)

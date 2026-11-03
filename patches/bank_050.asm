@@ -1989,7 +1989,7 @@ jr_050_4afe:
     cp $01
     ret nz
 
-    ld a, [$db8a]
+    call ActBase50             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $30
     jr z, jr_050_4b20
 
@@ -2156,7 +2156,7 @@ SaveBtl_4ba4:
 ; entry 4 TargetSlotResolver_6379 and $51-$53 -> entry 5: an RNG pick DURING
 ; THE MENU ($6379 is side-blind: measured picking an ally).
 LoadBtl_4bd1:
-    ld a, [$db4f]
+    call MenuBase50            ; [S163] was `ld a, [$db4f]`: a new skill as its base
     cp $14
     jr z, jr_050_4c21
 
@@ -2330,7 +2330,7 @@ SaveBtl_4ca4:
     ld bc, $0201
     rst $38
     rst $38
-    ld a, [$db8a]
+    call ActBase50             ; [S163 r2] was `ld a, [$db8a]`: the TARGET MENU's copy ($DD76 / $C1C2) holds a NEW skill's BASE (the picker lets Vivify / Revive / $BB choose a fallen ally)
     ld [$dd76], a
     ld a, a
     ld [$c1c2], a
@@ -2421,10 +2421,9 @@ jr_050_4d68:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase50            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $30
     jr z, jr_050_4d84
 
@@ -2473,7 +2472,7 @@ jr_050_4d9c:
     ret
 
 
-    ld a, [$db8a]
+    call ActBase50             ; [S163 r2] was `ld a, [$db8a]`: the TARGET MENU's copy ($DD76 / $C1C2) holds a NEW skill's BASE (the picker lets Vivify / Revive / $BB choose a fallen ally)
     ld [$dd76], a
     ld a, a
     ld [$c1c2], a
@@ -4505,10 +4504,9 @@ PersonalityRunTable:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl+]
+    call QueueBaseInc50            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl+]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $4f
     jr z, jr_050_5a19
 
@@ -11364,41 +11362,49 @@ SetBtl_7e1e:
     ret
 
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [S163] ACT-TIME BASE VIEW (ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM
+; §13.14). A NEW skill (ids $EF-$FE and the 14 reclaimed ids) runs its BASE's effect with its
+; own record (S111 / S160), but the original game also decides parts of an effect by comparing
+; the acting id with fixed ids / ranges (Vivify vs Revive, SickLick vs LushLicks, TailWind vs
+; StormWind, the hit ladders of HitCompel / HitDeath / Sleep, the act-state routing, the
+; multi-hit continuations, boss protection, revive targets, turn-order keys, the tension
+; roll …) — a new id matched none of them (tools/census_act_id_lists.py). Those reads (4 in
+; this bank, + S163 r2: the 2 copies the target menu keeps in $DD76 / $C1C2) go through these helpers: a new skill is compared AS ITS BASE (bank $72 entry 13
+; AIBaseOrSelf72, as DupBase53 since S161); every other id — stock skills, the built-ins
+; $DE-$EE, items, empty slots — comes back unchanged, so a project without new skills behaves
+; exactly as before. Names, lines, looks and sounds stay keyed by the real id (their rows are
+; the new skill's own). BC / DE / HL kept; F undefined (each caller compares next).
+; =============================================================================
+ActBase50:                     ; A = [$DB8A] as the act's id rules see it
+    ld a, [$db8a]
+ActBaseA50:                    ; A = an id -> its BASE when it is a new skill, else A unchanged
+    push hl
+    push bc
+    push de
+    ld e, a
+    ld hl, $720D                ; bank $72 entry 13 AIBaseOrSelf72 (E in / E out; RST_10
+    rst $10                     ;   eats A / F and BC — KEY_LESSONS S161)
+    ld a, e
+    pop de
+    pop bc
+    pop hl
+    ret
+MenuBase50:                    ; A = [$DB4F] (the skill picked in the menu) as its base
+    ld a, [$db4f]
+    jr ActBaseA50
+QueueBase50:                   ; the tail of `hl = $DCEC + 2 * actor` (the carry of the caller's
+    ld a, $00                   ;   `add l` is still in F) + the queued id, seen as its base;
+    adc h                       ;   HL = the queue entry as before
+    ld h, a
+    ld a, [hl]
+    jr ActBaseA50
+QueueBaseInc50:                ; the same with `ld a, [hl+]` (HL = the target byte after)
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl+]
+    jr ActBaseA50
     nop
     nop
     nop

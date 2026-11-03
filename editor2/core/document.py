@@ -1812,6 +1812,28 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 if r.get('record') and not r.get('placeholder')
                 and self.tileset_key(r) == tid]
 
+    def unique_tileset_id(self, base):
+        """S163: a tileset id whose sheet file `assets/<id>.2bpp` is new. The three
+        sheet writers (localize / blank / duplicate) checked the project's tileset ids
+        only, so a file already in assets/ that no tileset names (left by an older
+        project, a copied folder, a crashed run) was OVERWRITTEN — and the step's undo
+        then DELETED it (SnapshotCommand records a file the op made as 'absent before').
+        Found S163: test_app's New world removed the example's stray ts_28_0D.2bpp."""
+        items = self.custom.get('tilesets', [])
+        ids = {t.get('id') for t in items}
+        used = {os.path.normpath(str(t.get('raw2bpp'))) for t in items if t.get('raw2bpp')}
+
+        def taken(c):
+            rel = os.path.join('assets', f'{c}.2bpp')
+            return (c in ids or os.path.normpath(rel) in used
+                    or (self.project_dir and
+                        os.path.exists(os.path.join(self.project_dir, rel))))
+        tid, n = base, 2
+        while taken(tid):
+            tid = f'{base}_{n}'
+            n += 1
+        return tid
+
     def localize_tileset(self, room, sheet, name=None):
         """Copy the room's VANILLA tileset into the project (assets/<id>.2bpp
         + custom.tilesets item) and point the record at it. Returns the
@@ -1820,11 +1842,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if 'tileset' in rec:
             return rec['tileset']
         base = name or f"ts_{val(rec['gfx_bank']):02X}_{val(rec['gfx_id']):02X}"
-        ids = {t.get('id') for t in self.custom.get('tilesets', [])}
-        tid, n = base, 2
-        while tid in ids:
-            tid = f'{base}_{n}'
-            n += 1
+        tid = self.unique_tileset_id(base)
         assets = os.path.join(self.project_dir, 'assets')
         os.makedirs(assets, exist_ok=True)
         rel = os.path.join('assets', f'{tid}.2bpp')
@@ -1853,11 +1871,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         from imported PNG art start empty; every slot is free — the room
         is created with animation 'none', S99).
         Returns the tileset id."""
-        ids = {t.get('id') for t in self.custom.get('tilesets', [])}
-        tid, n = base, 2
-        while tid in ids:
-            tid = f'{base}_{n}'
-            n += 1
+        tid = self.unique_tileset_id(base)
         assets = os.path.join(self.project_dir, 'assets')
         os.makedirs(assets, exist_ok=True)
         rel = os.path.join('assets', f'{tid}.2bpp')
@@ -1961,11 +1975,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         origin, released flag and — filtered — metatiles carried over).
         Returns the new id."""
         item = self.tileset_item(tid)
-        ids = {t.get('id') for t in self.custom.get('tilesets', [])}
-        new, n = base, 2
-        while new in ids:
-            new = f'{base}_{n}'
-            n += 1
+        new = self.unique_tileset_id(base)
         rel = os.path.join('assets', f'{new}.2bpp')
         os.makedirs(os.path.join(self.project_dir, 'assets'), exist_ok=True)
         with open(os.path.join(self.project_dir, rel), 'wb') as f:

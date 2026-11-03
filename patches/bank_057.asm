@@ -809,6 +809,10 @@ jr_057_4495:
     ret
 
 
+; [S163] VANILLA BUG: meant to scan the three opposing slots (C = the first, B = 3) for a
+; live monster of the family in $DB4C; after a miss `jr_057_44ca` loops `inc c / dec b /
+; jr nz` onto ITSELF, not back to the test — only the first slot is ever tested
+; (simulator/ai_rules.py models it; BATTLE_SKILL_SYSTEM §15.10.5 "S163").
 LoadBtlAI_44a7:
     ld a, c
     call CheckMonsterSlot
@@ -2240,6 +2244,8 @@ jr_057_4bfe:
 ; defending): the veto works — a boss with Bang never casts it at a party all
 ; Explosion 3 (15 of 32 actions at Explosion 0, none of 26). Element 27 (record +5) = position 27 =
 ; EARTH in patched builds (bank $51 SaveBtlS_4404): an Earth skill is vetoed alike.
+; [S163] Chains 1 / 2: vetoes every cat-1/2 skill when every live opponent resists its
+; record element fully (level 3); element 0 = level 0 for every species (never vetoes).
 AIRule_4c13:
     call LoadBtlAI_4532
 
@@ -2280,6 +2286,8 @@ jr_057_4c34:
 ; Smashlime 0=Slime, Sheldodge 5, Branching 4; MetalCut $DB8B bit0).
 ; Also routes skills $3F/$40 to a $4D29 sub-branch (untraced, S82 bytes).
 ; Inline rst $00 handler table. (S81 sweep)
+; [S163] The +20 goes through LoadBtlAI_44a7, which tests the FIRST opposing slot only
+; (its loop never returns to the test — see there); the $6848 veto scans all three.
 AIRuleFamilyCutBonus_4c41:
     ld a, [$db8a]
     cp $3f
@@ -2477,6 +2485,9 @@ jr_057_4d4c:
 ; +15 physical-special class (TwinSlash/Beserker/HighJump/elemental
 ; slashes/BiAttack/QuadHits/SquallHit/...); no off-condition observed on
 ; any swept board. (S81 sweep)
+; [S163] Decoded: +10 when the caster's ATK >= the "average DEF" of LoadBtlAI_7dbe (0 or
+; $FFFF — see there), then +5 when ATK >= the lowest live opposing DEF; the physical
+; class = LoadBtlAI_7c7e. On S81's one-opponent board both held (+15).
 AIRulePhysSpecialBonus_4d56:
     call LoadBtlAI_7c7e
     ret nc
@@ -5974,6 +5985,12 @@ jr_057_5ff0:
 
 ; +20 incapacitate class (Paralyze/Ahhh/LureDance/LushLicks/LegSweep/
 ; BigTrip/WarCry/...). (S81 sweep)
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; Eligible: not incapacitated. Ladder: 21 22 25 104-107 110 112 120 121 123-125 218.
 AIRuleIncapBonus_5ffd:
     ld a, [$db8a]
     cp $15
@@ -6038,6 +6055,12 @@ jr_057_6033:
     ret
 
 
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; +10. Eligible: alive, +3 bit 1 and +7 & 3 clear. Ladder: 24 114 115.
 AIRule_604a:
     ld a, [$db8a]
     cp $18
@@ -6135,6 +6158,12 @@ jr_057_60b1:
     ret
 
 
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; +10 (MP-takers). Eligible: alive with MP != 0. Ladder: 23 117 118.
 AIRule_60c8:
     ld a, [$db8a]
     cp $17
@@ -6187,6 +6216,12 @@ jr_057_60f0:
     ret
 
 
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; +10 (DEF-down). Eligible: alive with battle DEF ($DBF3) >= 2. Ladder: 28 29 122.
 AIRule_6107:
     ld a, [$db8a]
     cp $7a
@@ -6238,6 +6273,12 @@ jr_057_612d:
     ret
 
 
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; +10 (AGL-down). Eligible: alive with battle AGL ($DC03) >= 2. Ladder: 32 33.
 AIRule_6144:
     ld a, [$db8a]
     cp $20
@@ -6287,6 +6328,12 @@ jr_057_6169:
 
 
 ; +10 poison class PoisonHit/PoisonGas/PoisonAir. (S81 sweep)
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; Eligible: alive and unpoisoned (+2 & 3 clear). Ladder: 103 108 109.
 AIRulePoisonBonus_6180:
     ld a, [$db8a]
     cp $67
@@ -6335,6 +6382,12 @@ jr_057_61a5:
 
 
 ; +10 Curse $6F. (S81 sweep)
+; [S163] Class bonus (BATTLE_SKILL_SYSTEM §15.10.5 "S163"): runs for the ids of its ladder
+; below; counts the eligible live opponents with CallBtlAI_7d4d (the FIRST opposing slot
+; is counted once more — see there) against the sum of their resistance levels to the
+; record element; the bonus when count >= sum. The S81 "(S81 sweep)" id list = the ids
+; seen firing on a one-opponent board, not the ladder.
+; Eligible: alive and not cursed (+2 bit 5 clear). Ladder: 111.
 AIRuleCurseBonus_61bc:
     ld a, [$db8a]
     cp $6f
@@ -6687,6 +6740,8 @@ jr_057_6380:
     ret
 
 
+; [S163] StopSpell (23): vetoed unless a live opponent has a spell (< $3A, or $D5 / $DA /
+; $DC) in its option list, is not sealed (+3 bit 0) and does not resist fully.
 AIRule_6382:
     ld a, [$db8a]
     cp $17
@@ -6849,6 +6904,8 @@ jr_057_643c:
     ret
 
 
+; [S163] PoisonHit / PoisonGas / PoisonAir (103 108 109): vetoed unless a live opponent is
+; unpoisoned (+2 & 3 clear) and does not resist the record element fully (level 3).
 AIRule_6444:
     ld a, [$db8a]
     cp $67
@@ -11834,6 +11891,10 @@ LoadBtlAI_7d37:
     ret
 
 
+; [S163] The status-class rules' counter: LoadBtlAI_7d73 sets up the first opposing slot,
+; then this FALLS INTO SetBtlAI_7d54, which counts that slot (and its resistance level)
+; once before the caller's loop over the three slots counts it again: count = 1 + n,
+; sum = its level + theirs (a vanilla quirk; ai_rules._count_rule, S163).
 CallBtlAI_7d4d:
     call LoadBtlAI_7d73
     xor a
@@ -11906,6 +11967,11 @@ SetBtlAI_7da4:
     ret
 
 
+; [S163] The opponents' "average DEF" for AIRulePhysSpecialBonus_4d56 — NEVER COMPUTED
+; (vanilla): the loop adds the running sum $DB56/$DB57 (0) INTO each live slot's DEF
+; entry and never updates the sum; then 1 live -> 0, 2 live -> 0 >> 1 = 0, any other
+; count -> Div16x8To16 of 0 -> $FFFF. So the +10 always holds against 1-2 live
+; opponents and never against 3 (measured S163, simulator/rom_rules.py).
 LoadBtlAI_7dbe:
     ld a, [wBattleAttackerIdx]
     and $04

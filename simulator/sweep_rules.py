@@ -8,7 +8,15 @@ One pyboy process; boot.state reloaded per batch of 4 skills. Only categories
 Usage:
   python3 simulator/sweep_rules.py --rom R --state S [--cats 1,2,3]
       [--skills 3,4,5] [--board clean|psleep|ppoison|ehurt|allydead|lowmp]
-      [--out FILE] [--limit N]
+      [--out FILE] [--limit N] [--party-live N] [--party-act defend|attack|keep]
+
+S163 (ROADMAP E17 note "the S81 rule model on 3-opponent boards"): the S81 corpus had ONE
+party monster. --party-live N keeps party slots 0..N-1 alive and kills the rest (HP 0,
+$DD1B = 1: processed-dead) every frame; --party-act writes the party's queue each frame
+(DEFEND $8D / ATTACK $3A; keep = the game's own); every captured skill also stores the
+BOARD the rules read at its chain start (HP / MaxHP / MP / MaxMP x8, $DB00-$DB41, $DD1B x8,
+the packed resistances $DD28 x56, $DD0B x8, $DB8B, the option lists $DC64) — the input of
+simulator/validate_rules_boards.py.
 """
 import sys, json, argparse, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,6 +33,9 @@ ap.add_argument('--limit', type=int, default=0)
 ap.add_argument('--eid', type=int, default=7)
 ap.add_argument('--ecount', type=int, default=1)
 ap.add_argument('--frames', type=int, default=700)
+ap.add_argument('--party-live', type=int, default=0)        # S163: 0 = leave the party as is
+ap.add_argument('--party-act', default='keep')               # S163: defend / attack / keep
+ap.add_argument('--wram', action='store_true')               # S163: + the whole WRAM at each chain start
 a = ap.parse_args()
 
 recs = json.load(open(os.path.join(os.path.dirname(__file__), '..',
@@ -66,7 +77,16 @@ def h_skill(_):
         hp=[m[HP + i * 2] | (m[HP + 1 + i * 2] << 8) for i in range(8)],
         mhp=[m[MHP + i * 2] | (m[MHP + 1 + i * 2] << 8) for i in range(8)],
         mp=[m[MP + i * 2] | (m[MP + 1 + i * 2] << 8) for i in range(8)],
-        st=[[m[0xDB00 + s * 8 + k] for k in range(8)] for s in range(8)]))
+        mmp=[m[MMP + i * 2] | (m[MMP + 1 + i * 2] << 8) for i in range(8)],
+        st=[[m[0xDB00 + s * 8 + k] for k in range(8)] for s in range(8)],
+        db40=[m[0xDB40], m[0xDB41]],                                  # S163: the board
+        dd1b=[m[0xDD1B + i] for i in range(8)],
+        res=[m[0xDD28 + i] for i in range(56)],
+        dd0b=[m[0xDD0B + i] for i in range(8)],
+        db8b=m[0xDB8B],
+        opts=[[m[0xDC64 + s * 16 + k] for k in range(16)] for s in range(8)],
+        **({'wram': bytes(m[0xC000 + i] for i in range(0x2000)).hex(),
+            'hram': bytes(m[0xFF80 + i] for i in range(0x7F)).hex()} if a.wram else {})))
 
 
 def h_call(_):
@@ -168,6 +188,14 @@ for batch_start in range(0, len(todo), 4):
                 live = True
             if live:
                 apply_board(m, a.board)
+                if a.party_live:                      # S163: party slots >= N dead
+                    for s_ in range(a.party_live, 3):
+                        if m[0xDD1B + s_] != 0xFF:
+                            m[HP + 2 * s_] = m[HP + 2 * s_ + 1] = 0
+                            m[0xDD1B + s_] = 1
+                if a.party_act != 'keep':             # S163: the party's queued actions
+                    for s_ in range(3):
+                        m[0xDCEC + 2 * s_] = 0x8D if a.party_act == 'defend' else 0x3A
                 for slot in range(4, 4 + a.ecount):
                     base = 0xDC64 + slot * 16
                     for k in range(4):
@@ -203,7 +231,12 @@ for batch_start in range(0, len(todo), 4):
                 key = str(e['skill'])
                 if key not in results:
                     results[key] = dict(cat=e['dd6a'], dd6b=e['dd6b'],
-                                        fired=fir)
+                                        fired=fir, actor=e['ai'],
+                                        board={k_: e[k_] for k_ in ('hp', 'mhp', 'mp', 'mmp', 'st',
+                                                                    'db40', 'dd1b', 'res',
+                                                                    'dd0b', 'db8b', 'opts',
+                                                                    'wram', 'hram')
+                                               if k_ in e})
                 i = j
             else:
                 i += 1
@@ -211,5 +244,6 @@ for batch_start in range(0, len(todo), 4):
         print(f'cat{cat} batch {sids}: captured {done}', flush=True)
 
 out = a.out or f'/home/claude/trace/sweep_{a.board}.json'
-json.dump(dict(board=a.board, results=results), open(out, 'w'))
+json.dump(dict(board=a.board, party_live=a.party_live, party_act=a.party_act,
+               ecount=a.ecount, eid=a.eid, results=results), open(out, 'w'))
 print(f'{len(results)}/{len(todo)} skills -> {out}')

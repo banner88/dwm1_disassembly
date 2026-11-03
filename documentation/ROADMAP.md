@@ -654,7 +654,8 @@ recipes are pure authoring.
       silently corrupts $D8D9+ script state vs control — no crash) + a
       SECOND ceiling found: per-screen distinct-sprite-sheet VRAM budget
       (order-filled; 8 light sheets fit, ~2-3 heavy exhaust; blanks on
-      overflow, no crash). Screens/room: engine 16 (4×4 scroll math),
+      overflow, no crash — S163: wrong for custom rooms; a 6-sheet cache, the 7th+ different
+      sprite drawn with the first one's picture, ROOM_DATA_FORMAT "S163 correction"). Screens/room: engine 16 (4×4 scroll math),
       vanilla max 12-declared/9-valid (mt $54-$59), screen_idx 8 render
       PyBoy-verified; custom schema currently 8 (S145: wrong — custom rooms take 16, measured in the game; DOC_AUDIT S145). Residuals named in
       capacities.json `_deferred_measurement_boxes` (E6 text budget,
@@ -3421,7 +3422,7 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       is byte-checked, not walked; project gate rooms give what their author placed.
 
 - [x] **E10 — The memorial: statues of the monsters that won and have left (ADDED + BUILT
-      S154; built S154, NOT yet user-tested; test ROM `DWM-S154-memorial-test.gbc`).** User:
+      S154; built S154, USER-CONFIRMED 2026-11-02 22:11 ("S154 confirmed", on the r2 ROM); test ROM `DWM-S154-memorial-test.gbc`).** User:
       "A custom room, insertable into gates, where you can place objects that will take on
       sprites (non-moving) and interactables (text when examined) of any monsters the player
       beat a boss OR an arena level with … ONLY if monster is no longer with player (bred or
@@ -3618,19 +3619,49 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       bases (18 / 18, 3 / 3), PBang -60 never, PSnow +60 30 vs 0, Sleep's veto applies to NSleep,
       the new skill's own MP read in the chain, the estimate = the base's. BATTLE_SKILL_SYSTEM
       §13.13, PROJECT_COMPILER §2.69. **Found S161, open:**
-      - [ ] **The S81 rule model is wrong for Sleep / Sap / PsycheUp / BoltSlash on a three-opponent
+      - [x] **The S81 rule model is wrong for Sleep / Sap / PsycheUp / BoltSlash on a three-opponent
         board** (an INT-200 enemy alone vs three defending monsters: Sleep +40 in the ROM vs 0 in
         `ai_rules`, Sap +30 vs 0, BoltSlash +25 / +5 vs +35, PsycheUp vetoed vs +35 — measured S161,
         `walk_mirror.py` `sim_check`: every chain end of the four, stock and new alike). The S81
-        sweep (`s81_sweep_corpus.json`) had ONE party monster. Next: re-sweep the 160 cat-1/2/3
-        skills on boards of 2-3 opponents (+ defending / statuses), find the rules that count
-        opponents, extend `ai_rules`; then the Balance tab is exact for status casters.
-      - [ ] **Act-time id lists outside the AI.** **The duplicate-group conversion FIXED later S161**
+        sweep (`s81_sweep_corpus.json`) had ONE party monster. **FIXED S163 (simulator only — the ROM
+        is unchanged; user: "Do all of A + fix B4 and B5"; built S163, signed off 2026-11-02 22:29 with the S163 r2 ROM ("Sounds good hand off zip") — this editor / simulator change itself not separately user-tested):** the
+        sweep re-run on the user's save with 3 / 2 / 1 party monsters alive, defending or attacking
+        (`simulator/sweep_rules.py --party-live / --party-act --wram`, the board each chain read
+        captured: 10 boards, `simulator/s163_board_corpus.json.gz`); NEW `simulator/rom_rules.py` runs
+        bank $57's own chain walker over a captured RAM image (`tools/sm83run.py`; 160 / 160 chain ends
+        exact) and lists what each rule READS; `ai_rules.py` re-derived from the code: the three
+        chains' rule lists (a rule runs only for a category whose chain holds it), the id ladders read
+        from the rule heads (the S81 sets were the ids SEEN firing on one board), the class bonuses
+        $5FFD / $6180 / $61BC / $604A / $60C8 / $6107 / $6144 (count the eligible live opponents
+        against their resistance; the FIRST opposing slot is counted twice — a vanilla quirk), $4D56
+        (the physical class: the "average DEF" the vanilla code never computes), $6444 / $4C13 /
+        $6382 / $4BCC / $66FB / $6C8C exact, the family cut's +20 on the first opposing slot only (a
+        vanilla loop bug). NEW `simulator/validate_rules_boards.py`: 1,573 / 1,573 chain ends on the
+        ten boards; validate_rules 240 / F10 rules 332 / command 6,411 / F10 1,335 / battle unchanged.
+        BATTLE_SKILL_SYSTEM §15.10.5 "S163".
+      - [x] **Act-time id lists outside the AI.** **FIXED S163 + r2 (engine, patched; built S163, USER-CONFIRMED 2026-11-02 22:29 ("Sounds good hand off zip", on `DWM-S163r2-echo-test.gbc`)):** NEW `tools/census_act_id_lists.py` (8 census builds: every allowed base on a high
+        and a reclaimed id; NEW `tools/sm83run.py` runs each of 363 sites that read `$DB8A` / `$DB4F` /
+        `$DCEC` once as the base and once as the new id, taint-tracked; differing ID TESTS and message
+        numbers = candidates, judged by hand) found 49 act-time reads where a new skill did not act as
+        its base — e.g. a new skill on Vivify acted as Revive (full HP, never fails), one on SickLick as
+        LushLicks, one on TailWind as StormWind, the hit ladders of Sleep / the one-shot dances, the act
+        routing, the multi-hit continuations, boss protection, revive targets, turn-order keys. Each is
+        now `call ActBase…` / `MenuBase50` / `QueueBase…` / `CmpBase53` (banks $50 4 / $52 22 + the
+        bank $57 entry 1 caller `Entry1Base52` / $53 17 / $58 5; same size; a new skill → its base via
+        bank $72 entry 13 `AIBaseOrSelf72`, every other id unchanged). 9 roots left, judged (names keyed
+        by the real id, slot numbers in `$DB4F`, item actions, an equality compare …; `ROOT_VERDICTS`).
+        Walk NEW `tools/walk_actbase.py` (PyBoy, the user's save, `examples/s163_echo_demo` THE ECHO
+        HALL: 14 stock skills and their new twins under three pinned RNGs — the same battle messages and
+        board after each) 44 / 44, negative 16 FAIL. **r2** (the user's test: "EVivify cannot select
+        [the] dead monster"): the battle menu's WHO list keeps a COPY of the id (`$DD76` / `$C1C2`) and
+        compares it with Vivify / Revive later — the two copy sites now copy the base; walk step `menu`
+        (the real menu). BATTLE_SKILL_SYSTEM §13.14, PROJECT_COMPILER §2.71.
+        **History:** The duplicate-group conversion FIXED later S161
         (the user: "fix the issues if not too large"; built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`)): bank $53
         `DupCastSkillListCheck_4ed6` `call DupBase53` + bank $72 entry 13 `AIBaseOrSelf72` — a new
         skill is tested against the 77-id `GroupDupSkillList_4ee4` AS ITS BASE (two NEW MAGES: 21 / 21
-        conversions vs two stock, `walk_mirror.py` `dupcast`; BATTLE_SKILL_SYSTEM §13.13). Still
-        open: a census of the other act-time code that reads `$DB8A` against id lists.
+        conversions vs two stock, `walk_mirror.py` `dupcast`; BATTLE_SKILL_SYSTEM §13.13). The census
+        of the other act-time code: S163, above.
       - [x] **Project enemy rows and `EnemyDupConvFlagTable_41df`** (FOUND later S161; **FIXED S162
         — user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just what I
         have"; built S162, USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended"); test ROM `DWM-S162-volley-test.gbc`):** the per-EID gate

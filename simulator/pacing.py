@@ -270,16 +270,21 @@ class ChainRules:
     def __init__(self, b, actor, records):
         st = [b.st[s * 8:(s + 1) * 8] for s in range(8)]
         # MaxMP is not tracked on the Board; use current MP (affects only
-        # the own-MP-full SuckAir presumption). Families/traits: neutral.
+        # the own-MP-full SuckAir presumption).
         # resist_score PINNED S88: element = record status_id = res pos;
         # level from the Board's live res bytes (loaded per battle).
+        # S163 (ROADMAP E17 note): the rules that compare stats / count opponents / test a
+        # family (ai_rules $4D56, $6107, $6144, the cuts) read the Board's ATK / DEF / AGL, its
+        # families ($DC3C species -> family) and traits ($DB8B: metal bit 0, flying bit 4)
         _res = b.res
         _ol = b.ext.get('f10_optlists')     # S130 F10: $DC64 lists + $DD0B for the
+        fams = [None if f == 0xFF else f for f in getattr(b, 'family', [0xFF] * 8)]
         self.view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, st, b.dd1b,   # DeMagic/ThickFog rules
-                                 [0] * 8, [None] * 8,
+                                 list(getattr(b, 'db8b', [0] * 8)), fams,
                                  lambda s, e: (_res[s*7 + (e >> 2)]
                                                >> ((3 - (e & 3)) * 2)) & 3,
-                                 skills=_ol, dd0b=list(b.dd0b) if _ol else None)
+                                 skills=_ol, dd0b=list(b.dd0b) if _ol else None,
+                                 atk=list(b.atk), dfn=list(b.dfn), agl=list(b.agl))
         self.view.board = b                 # S155: ai_rules.CUSTOM_RULES read the Board
         self.actor = actor
         self.records = records

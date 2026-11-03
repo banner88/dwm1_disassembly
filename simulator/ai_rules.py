@@ -67,6 +67,70 @@ UTIL_VETO_UNTRACED = {128, 131}     # DeMagic/ThickFog: veto measured
                                       # when the view carries skills/dd0b.
 
 
+# ---- S163 (ROADMAP E17 note "the S81 rule model on 3-opponent boards") ----------------
+# The three chains as the ROM lists them ($57:$4302 -> $4308 / $4358 / $4404; S81 byte-read,
+# re-extracted S163): a rule runs only for an option of a category whose chain holds it.
+CHAINS = {
+    1: (0x6784, 0x45F2, 0x4702, 0x4725, 0x4745, 0x4785, 0x4AF6, 0x4B3D, 0x4C13, 0x5D4D, 0x5EE5,
+        0x5F1F, 0x5F91, 0x6267, 0x6444, 0x64FB, 0x6848, 0x6A0D, 0x6A67, 0x6C62, 0x5D8E, 0x4B8C,
+        0x6596, 0x6619, 0x4BCC, 0x4C41, 0x4D56, 0x4DF9, 0x4E18, 0x4E36, 0x4E76, 0x5454, 0x5BAE,
+        0x5FFD, 0x6180, 0x66FB, 0x6810, 0x6B89, 0x6C8C),
+    2: (0x6784, 0x45F2, 0x4685, 0x4702, 0x4725, 0x4745, 0x4785, 0x47D9, 0x47F5, 0x4821, 0x4843,
+        0x4865, 0x4890, 0x4902, 0x4A94, 0x4ACC, 0x4AF6, 0x4B3D, 0x4C13, 0x5493, 0x5B34, 0x5B4A,
+        0x5BCD, 0x5BF5, 0x5C25, 0x5C5D, 0x5CC8, 0x5D4D, 0x5DE0, 0x5DFA, 0x5E10, 0x5E3E, 0x5E7E,
+        0x5EA4, 0x5EBB, 0x5EE5, 0x5F1F, 0x5F91, 0x6267, 0x62A8, 0x6382, 0x63B0, 0x63E3, 0x6414,
+        0x6444, 0x6474, 0x649D, 0x64CC, 0x667B, 0x6757, 0x695E, 0x6975, 0x6A0D, 0x6AB4, 0x6AF5,
+        0x6BCB, 0x6C0F, 0x55C4, 0x55D6, 0x6C62, 0x6CC0, 0x6596, 0x6619, 0x69CB, 0x4BCC, 0x54BE,
+        0x54E4, 0x551B, 0x55F6, 0x5660, 0x5739, 0x57FC, 0x5842, 0x593D, 0x59F7, 0x5FFD, 0x604A,
+        0x608E, 0x60C8, 0x6107, 0x6144, 0x6180, 0x61BC, 0x61F1, 0x622C),
+    3: (0x6784, 0x45F2, 0x4969, 0x4983, 0x499D, 0x49B7, 0x4A5C, 0x4A94, 0x5C25, 0x5D16, 0x5D4D,
+        0x5F1F, 0x5F91, 0x64FB, 0x667B, 0x66D4, 0x67B1, 0x4785, 0x4EB9, 0x4EE4, 0x4F2E, 0x4F61,
+        0x4F94, 0x4FB3, 0x4FD2, 0x502C, 0x50BC, 0x5113, 0x5149, 0x51DA, 0x52DC, 0x536A, 0x53B6,
+        0x53DD, 0x5411, 0x5434, 0x55F6, 0x5A4C, 0x5AEF, 0x67D5),
+}
+# id ladders read from the rule heads (S163; the S81 sets were the ids SEEN firing on one
+# board — a rule whose condition failed there looked like "not a member")
+PHYS_7C7E = {59, 61, 66, *range(68, 79), 80, 81, 85, 86, 87, 103, 104, 105, 214, 215, 216}
+IDS_5FFD = {21, 22, 25, 104, 105, 106, 107, 110, 112, 120, 121, 123, 124, 125, 218}
+IDS_604A = {24, 114, 115}
+IDS_60C8 = {23, 117, 118}
+IDS_6107 = {28, 29, 122}
+IDS_6144 = {32, 33}
+IDS_6180 = {103, 108, 109}
+IDS_61BC = {111}
+IDS_6444 = {103, 108, 109}
+IDS_4E36 = {*range(3, 20), 79, 87, *range(89, 103)}
+IDS_5D8E = {*range(3, 18), 19, 20, 79, 87, *range(89, 103), 113}
+IDS_6C8C = {*range(0, 21), *(set(range(59, 106)) - {65, 67, 84}), 214, 215, 216, 217}
+IDS_66FB = {60, 62}
+
+
+def _in(category, rule):
+    return rule in CHAINS.get(category, ())
+
+
+def _lvl(view, s, element):
+    return view.resist_score(s, element) & 3
+
+
+def _count_rule(view, actor, element, eligible):
+    """The status-class rules' count (bank $57 CallBtlAI_7d4d + SetBtlAI_7d54, S163): the
+    FIRST opposing slot is counted once before the loop whatever it is (CallBtlAI_7d4d falls
+    into SetBtlAI_7d54), then every eligible slot of the three (the first again too): count =
+    1 + n, sum = its level + theirs; the bonus when count >= sum."""
+    opp = 0 if actor >= 4 else 4
+    cnt, tot = 1, _lvl(view, opp, element)
+    for s in range(opp, opp + 3):
+        if eligible(s):
+            cnt += 1
+            tot += _lvl(view, s, element)
+    return cnt >= tot
+
+
+def _w16(xs, s):
+    return xs[s] if xs is not None else None
+
+
 # S155: CUSTOM_RULES[id](skill, actor, view) -> (veto, bonus, penalty) = bank $57
 # CustomAI57 -> bank $72 CustomAIRule72 at the chain end ($78A2), for the
 # romhack's built-in custom ids (simulator/skillfx/s155_custom.py registers;
@@ -76,8 +140,12 @@ CUSTOM_RULES = {}
 
 class BattleView:
     def __init__(self, hp, maxhp, mp, maxmp, status, dd1b, traits,
-                 families, resist_score, skills=None, dd0b=None, db40=(0, 0)):
+                 families, resist_score, skills=None, dd0b=None, db40=(0, 0),
+                 atk=None, dfn=None, agl=None):
         self.hp, self.maxhp, self.mp, self.maxmp = hp, maxhp, mp, maxmp
+        # S163: the battle stats per slot ($DBE3 / $DBF3 / $DC03); None = not known (the old
+        # fixtures) -> the rules that compare them keep their S81 approximation
+        self.atk, self.dfn, self.agl = atk, dfn, agl
         self.status, self.dd1b = status, dd1b
         self.traits, self.families = traits, families
         self.resist_score = resist_score
@@ -143,10 +211,36 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
             return 0, True
 
     # status-already-present vetoes [measured]
-    if skill in HEAVY_TRIO and _all_live_opposing_have(view, actor, 2, 0x02):
-        return 0, True
-    if skill in POISON_PAIR and _all_live_opposing_have(view, actor, 2, 0x03):
-        return 0, True
+    # S163: $6444 (chains 1 / 2) exactly — PoisonHit / PoisonGas / PoisonAir are vetoed unless
+    # a live opponent is unpoisoned (+2 & 3 clear) AND does not resist the record element
+    # fully (level 3). The S81 HEAVY_TRIO / POISON_PAIR status-only vetoes were its shadow.
+    if skill in IDS_6444 and _in(category, 0x6444):
+        opp = 0 if actor >= 4 else 4
+        if not any(view.alive(s_) and not (view.status[s_][2] & 0x03)
+                   and _lvl(view, s_, element) != 3 for s_ in range(opp, opp + 3)):
+            return 0, True
+    # S163: $4C13 (chains 1 / 2) — every cat-1/2 skill is vetoed when every live opponent
+    # resists its record element fully (level 3) — S159 measured it; element 0 = position 0,
+    # level 0 for every species, so it never vetoes (unless no opponent is alive)
+    if _in(category, 0x4C13):
+        if all(_lvl(view, s_, element) == 3 for s_ in view.live_opposing(actor)):
+            return 0, True
+    # S163: $6382 (chain 2) — StopSpell is vetoed unless a live opponent knows a skill < $3A
+    # (or $D5 / $DA / $DC) in its option list, is not sealed (+3 bit 0) and does not resist
+    # fully; needs the option lists (view.skills)
+    if skill == 23 and _in(category, 0x6382) and view.skills is not None:
+        opp = 0 if actor >= 4 else 4
+
+        def spells(s_):
+            for _tg, sk in (view.skills[s_] or [])[:8]:
+                if sk == 0xFF:
+                    return False
+                if sk < 0x3A or sk in (0xD5, 0xDA, 0xDC):
+                    return True
+            return False
+        if not any(view.alive(s_) and spells(s_) and not (view.status[s_][3] & 0x01)
+                   and _lvl(view, s_, element) != 3 for s_ in range(opp, opp + 3)):
+            return 0, True
     if skill in SLEEP_CLASS and _all_live_opposing_have(view, actor, 2, 0x8C):
         return 0, True
     if skill in R_5FFD and _all_live_opposing_have(view, actor, 2, 0xCC):
@@ -201,7 +295,12 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
         fam = CUT_FAMILY[skill]
         if any(view.families[s] == fam
                for s in view.live_opposing(actor)):
-            bonus += 20
+            # S163: the +20 ($4C41 -> LoadBtlAI_44a7) tests the FIRST opposing slot only — a
+            # vanilla bug: its loop `inc c / dec b / jr nz` jumps back to itself, never to the
+            # test (the $6848 veto's own scan walks all three correctly)
+            first = 0 if actor >= 4 else 4
+            if view.alive(first) and view.families[first] == fam:
+                bonus += 20
         else:
             return 0, True
     if skill == METALCUT:
@@ -217,14 +316,27 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     # shift cases; level = (res7[elem>>2] >> ((3-(elem&3))*2)) & 3 =
     # species resistances[elem-1]. The rule SELF-GATES on element == 0
     # ($4BCC: ld a,[$db4c]; or a; ret z). Withheld iff rsum > live count.
-    if skill in R_4BCC and element:
+    if element and (_in(category, 0x4BCC) if category in CHAINS else skill in R_4BCC):
         live = view.live_opposing(actor)
         rsum = sum(view.resist_score(s, element) & 3 for s in live)
         if rsum <= len(live):
             bonus += 20
-    # $4D56 +15 [measured; no off-condition seen on any swept board]
-    if skill in R_4D56:
-        bonus += 15
+    # $4D56 (chain 1) — S163 decoded: the physical class (LoadBtlAI_7c7e); +10 when the
+    # caster's ATK >= the opponents' 'average' DEF — which the vanilla code never computes
+    # (LoadBtlAI_7dbe adds 0 into each DEF entry, so the sum stays 0; 1 or 2 live opponents ->
+    # 0, any other count divides 0 by its high byte 0 -> $FFFF), then +5 when the ATK >= the
+    # lowest DEF of a live opponent. Without the stats: the S81 +15.
+    if skill in PHYS_7C7E and (_in(category, 0x4D56) if category in CHAINS else skill in R_4D56):
+        if view.atk is None or view.dfn is None:
+            bonus += 15
+        else:
+            live = view.live_opposing(actor)
+            avg = 0 if len(live) in (1, 2) else 0xFFFF
+            if view.atk[actor] >= avg:
+                bonus += 10
+            low = min((view.dfn[s_] for s_ in live), default=0xFFFF)
+            if view.atk[actor] >= low:
+                bonus += 5
     # $4DF9 +5 PsycheUp [conditional: fired for FloraMan (EID 35), not
     # for forced-Gremlin -- condition untraced, omitted; loop validation
     # will flag if it matters]
@@ -235,30 +347,58 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
         if view.maxmp[actor] >= view.maxhp[actor]:
             bonus += 10
     # $4E36 bugged AoE +20 [instruction-trace verified]
-    if skill in R_4E36:
+    if (skill in IDS_4E36 and _in(category, 0x4E36)) if category in CHAINS else skill in R_4E36:
         if view.alive(min(view.opposing(actor))):
             bonus += 20
     # $5D8E AoE-vs-lone -20 / RainSlash veto [decoded + measured]
-    if skill in R_5D8E:
+    if (skill in IDS_5D8E and _in(category, 0x5D8E)) if category in CHAINS else skill in R_5D8E:
         if len(view.live_opposing(actor)) == 1:
             if skill == 87:
                 return 0, True
             penalty += 20
-    # class bonuses [measured]
-    if skill in R_5FFD:
-        bonus += 20
-    if skill in R_6180:
-        bonus += 10
-    if skill in R_61BC:
-        bonus += 10
+    # class bonuses — S163 decoded (the S81 sets were the ids seen on one board): each counts
+    # the eligible live opponents against their resistance to the record element
+    # (_count_rule: the first opposing slot counted once more, as the vanilla code does)
+    def alive_and(fn):
+        return lambda s_: view.alive(s_) and fn(s_)
+    if skill in IDS_5FFD and _in(category, 0x5FFD):                       # +20 incapacitate
+        if _count_rule(view, actor, element, lambda s_: not _incapacitated(view, s_)):
+            bonus += 20
+    if skill in IDS_6180 and _in(category, 0x6180):                       # +10 poison
+        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x03)):
+            bonus += 10
+    if skill in IDS_61BC and _in(category, 0x61BC):                       # +10 Curse
+        if _count_rule(view, actor, element, alive_and(lambda s_: not view.status[s_][2] & 0x20)):
+            bonus += 10
+    if skill in IDS_604A and _in(category, 0x604A):                       # +10 Surround / SandStorm
+        if _count_rule(view, actor, element, alive_and(
+                lambda s_: not view.status[s_][3] & 0x02 and not view.status[s_][7] & 0x03)):
+            bonus += 10
+    if skill in IDS_60C8 and _in(category, 0x60C8):                       # +10 MP-takers
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.mp[s_] != 0)):
+            bonus += 10
+    if skill in IDS_6107 and _in(category, 0x6107) and view.dfn is not None:   # +10 DEF-down
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.dfn[s_] >= 2)):
+            bonus += 10
+    if skill in IDS_6144 and _in(category, 0x6144) and view.agl is not None:   # +10 AGL-down
+        if _count_rule(view, actor, element, alive_and(lambda s_: view.agl[s_] >= 2)):
+            bonus += 10
+    # S163: $66FB (chain 1) — Ramming / Kamikaze +20 when a live opponent's HP exceeds 1.5 x
+    # the caster's (16-bit)
+    if skill in IDS_66FB and _in(category, 0x66FB):
+        thr = (view.hp[actor] + (view.hp[actor] >> 1)) & 0xFFFF
+        if any(thr < view.hp[s_] for s_ in view.live_opposing(actor)):
+            bonus += 20
     # $5A4C Cover/Guardian with downed ally [measured]
     if skill in (136, 137):
         if any(view.dd1b[s] != 0xFF and
                (view.hp[s] == 0 or view.dd1b[s] == 1)
                for s in view.own(actor)):
             bonus += 20
-    # $6C8C enemy-side-only +20 [measured; side gate byte-verified]
-    if skill in R_6C8C and actor >= 4 and actor != 7:
+    # $6C8C enemy-side-only +20 [measured; side gate byte-verified] (S163: its id ladder read
+    # from the rule — the cuts $48-$4E, $D7 / $D8 are members too; chain 1 only)
+    if ((skill in IDS_6C8C and _in(category, 0x6C8C)) if category in CHAINS else skill in R_6C8C) \
+            and actor >= 4 and actor != 7:
         bonus += 20
 
     if skill in CUSTOM_RULES:                             # S155: CustomAI57

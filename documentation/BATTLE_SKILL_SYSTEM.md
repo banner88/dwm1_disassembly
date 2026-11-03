@@ -2244,8 +2244,8 @@ HALL, 35 / 35; `--negative` (the view never on + the E13 fix removed) 28 FAIL).*
 §15.10.10: a random skill of its plan) — new and stock alike, no preference. Outside the AI the
 target rows were S111 / S160's (the base's row).
 
-**Later S161 — the duplicate-group-cast conversion tests a new skill as its base** (built S161, NOT yet
-user-tested; the user: "fix the issues if not too large"). An enemy's queued skill becomes Attack
+**Later S161 — the duplicate-group-cast conversion tests a new skill as its base** (built S161,
+USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`); the user: "fix the issues if not too large"). An enemy's queued skill becomes Attack
 when it is in the 77-id `GroupDupSkillList_4ee4`, any enemy acts before it in the round, its EID flag
 is set and `$DD0B` ≠ 2 (§15.8b CLOSED S85; bank $53 `EnemyDupCastConversion_4e63` →
 `DupCastSkillListCheck_4ed6`, the id in C). Until now a new id was tested as itself (never in the
@@ -2262,8 +2262,8 @@ a PROJECT enemy row (EID ≥ 519) read past the per-EID gate `EnemyDupConvFlagTa
 the 3,321 bytes there are non-zero — so whether a project enemy converted was an accident of the code
 after the table.
 
-**S162 — the per-EID gate bounded: "holds back group spells" per project row** (built S162, NOT yet
-user-tested; the user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just
+**S162 — the per-EID gate bounded: "holds back group spells" per project row** (built S162,
+USER-CONFIRMED 2026-11-02 13:27 ("rom works exactly as intended"); the user: "B sounds fine", "make sure in a proper romhack nothing gets messed up not just
 what I have"; ROADMAP E17 note). **The table, re-measured:** `EnemyDupConvFlagTable_41df` is **486
 bytes, EIDs 0-485, 181 set** (not "487 rows" / "182 of 487" — DOC_AUDIT S162): EID 486's read lands on
 `CmpBtlC_43c5`'s first opcode `$FE` (non-zero, so EID 486 "holds back" as the game reads it; it is the
@@ -2291,6 +2291,80 @@ EID 522, 7 conversions. `--negative` (the original read put back): the casting /
 convert like the holders (21 / 21 — their EIDs read code bytes `$C1` / `$CA`) and `DupConvFlag53`
 never runs: 3 FAIL. The Balance simulator reads the project rows' flags (`balance.BattleData.dup`;
 before S162 it gave them 0 where the ROM read the accident). PROJECT_COMPILER §2.70.
+
+### 13.14 Act-time id reads — a NEW skill acts AS ITS BASE (ROADMAP E17 note "Act-time id lists", S163)  [S163, 2026-11-02; PyBoy-verified, built S163 + r2 (the target menu's copy), USER-CONFIRMED 2026-11-02 22:29 ("Sounds good hand off zip", on `DWM-S163r2-echo-test.gbc`)]
+
+**The gap.** A new skill (ids `$EF-$FE`, and since S160 the 14 reclaimed ids `$BC-$C1` / `$CC-$D3`)
+runs its base's EFFECT through bank $72 `FarSkillFork` with its own record (§13.9 / §13.12), and since
+S161 the AI judges it as its base (§13.13). But the original effect code also decides parts of an act
+by comparing the ACTING id (`$DB8A`, the menu's `$DB4F`, the action queue `$DCEC`) with fixed ids and
+ranges. A new id matched none of them, so (measured S163): a new skill on **Vivify acted as Revive**
+(full HP, never fails — the shared routine asks "is this Vivify?"), one on **SickLick as LushLicks**,
+one on **TailWind as StormWind** (the whole side instead of the caster alone — TailWind has no WHO list: it always guards its caster, measured S163 r2 in the menu), and the hit ladders (Sleep,
+HitCompel / HitDeath, the one-shot dances), the act-state routing, the multi-hit continuations, boss
+protection, the revive target, turn-order keys and the tension roll treated it as an unknown id.
+Two reads build the MESSAGE number from the id with no branch at all (SickLick / LushLicks
+`add $2F`, SandStorm `add $30`).
+
+**The census** (`tools/census_act_id_lists.py`, NEW S163; `tools/sm83run.py` NEW: a full SM83
+interpreter with id-level taint marks, far calls through RST_10 and `jp hl` followed): 8 census builds
+of the example project + 30 new skills each (every allowed base once on a high and once on a
+reclaimed id: 112 bases); 363 sites that read `$DB8A` / `$DB4F` / `$DCEC`, each run once as the base
+and once as the new skill; a site whose ID TESTS (branches / table reads whose input is the id, in the
+ORIGINAL game's bytes) or message writes (`$DD70` / `$DD71` / `$C822` / `$C823`) differ is a candidate.
+`$DB4C` (the record index) is seeded too but is not a start (the game reuses it for record fields and
+slot numbers). Result after the fix: 0 unjudged roots; 9 roots judged and kept (`ROOT_VERDICTS`): the
+skill NAME copied by the real id (the new skill's own name), `SaveBtl_5ad2`'s rename of `$DA-$DD`,
+`$DB4F` reused as a SLOT number in the bank $58 target pick, the hero ITEM action, the
+`DupCastQueueCompare_4eb1` EQUALITY test of two queued ids, the field menu's scratch, PoisonGas /
+PoisonAir's line from a record field, and bank $57 entry 1 (CallHelp / YellHelp) — now reached only
+with the base (below). `extracted/act_id_lists_census.json`.
+
+**Patched (same size, 49 sites):** each read → a call to a helper in the same bank: `ld a, [$db8a]` →
+`call ActBase50/52/53` (bank $50 1, $52 22, $53 16); `ld a, [$db4f]` → `call MenuBase50`; the queue
+read `ld a, $00 / adc h / ld h, a / ld a, [hl]` (5 B) → `call QueueBase50/58` (or `QueueBaseInc…` for
+`[hl+]`) + 2 nops (bank $50 2, $58 5); `call CmpBtlC_4b92` → `call CmpBase53` (the bank $53 ladder
+compares the base, `$DB4C` keeps the real id); bank $52 `SetHLBattle_7d77` (the far call of bank $57
+entry 1, `$7C44`: CallHelp / YellHelp → `$DD6D` by the id) → `jp Entry1Base52 / nop / ret` (`ASSERT`
+the 5 bytes), which calls it with `$DB8A` = the base and puts the real id back. Every helper ends in
+`ActBaseA…`: `ld e, a / ld hl, $720D / rst $10` = bank $72 entry 13 `AIBaseOrSelf72` (as `DupBase53`
+since S161): a new skill → its base, every other id (stock skills, the built-ins `$DE-$EE`, items,
+empty slots) unchanged — a project without new skills behaves exactly as before. BC / DE / HL kept
+(RST_10 eats A / F and BC — KEY_LESSONS S161). Stubs: bank $50 / $53 / $58 nop fills; bank $52 the 82
+bytes `$763E-$768F` of the dead `AirborneReachDead_763e` (S160: no reference ROM-wide, re-checked
+S163; `ASSERT @ == $7690`, the live message tail kept). Names, lines, looks and sounds stay keyed by
+the real id (their rows are the new skill's own). The clean tree carries a `[S163]` comment at each
+of the 49 reads (byte-perfect `1ca6579…`).
+
+**Measured** (`tools/walk_actbase.py`, NEW S163; PyBoy, the user's save, `examples/s163_echo_demo`
+THE ECHO HALL — 14 new twins 239-252 of Vivify, Revive, SickLick, LushLicks, TailWind, StormWind,
+Ahhh, Sleep, LegSweep, Barrier, SquallHit, BeDragon, CallHelp, TakeMagic): each stock skill and its
+twin cast by party slot 0 in the S110 forced-battle rig from one saved state, the RNG pinned at every
+`BattleRNG` call under three seeds (so hit rolls both land and miss): the same battle messages and the
+same board (HP, MP, status bytes `$DB00-$DB41`, `$DD1B`) after each message — 42 / 42; the view calls
+are where the census put them (banks $50 4, $52 22 + `Entry1Base52`, $53 17, $58 5); 44 / 44.
+`--negative` (every view call back to the original bytes): 16 FAIL. walk_reclaim 44 / 44, walk_mirror
+37 / 37, walk_skills 33 / 33, walk_holds 13 / 13, walk_plunder 45 / 45, walk_earth 40 / 40 on the
+S163 code. **Lesson:** a same-size replacement needs an `ASSERT` — `SetHLBattle_7d77`'s first
+replacement was one byte long, shifted bank $52 and broke the AI battles of walk_reclaim while
+test_compiler `--rom` stayed green (KEY_LESSONS S163). PROJECT_COMPILER §2.71.
+
+**r2 — the target menu's COPY of the id (the user's test, 2026-11-02: "EVivify cannot select [the] dead
+monster in party"; built S163 r2, USER-CONFIRMED 2026-11-02 22:29 ("Sounds good hand off zip", on `DWM-S163r2-echo-test.gbc`)).** The battle menu (PLAN → COMMAND → SKIL → the
+skill → WHO) decides whether a fallen ally may be chosen by a copy of the id: when the WHO list opens,
+bank $50 copies `$DB8A` into `$DD76` and `$C1C2` (two sites, after the S48-era data bytes — `ld a, [$db8a]
+/ ld [$dd76], a / ld a, a / ld [$c1c2], a`), and `CheckBattlePhase`, `SaveBtl_5bc5` and `LoadBtl_5bd7`
+later compare the copy with Vivify `$30` / Revive `$31` / `$BB`. A new id matched none, so the cursor
+skipped a fallen ally (measured: EVivify's WHO cursor LX → HL, PX blank). The census missed it: the
+copy is taken when the menu opens and compared frames later — beyond its run from the read; and the
+twin walk's S110 rig queues the act directly, bypassing the menu (KEY_LESSONS S163 r2). **Patched:**
+both copy sites `ld a, [$db8a]` → `call ActBase50` (same size). The two other copies (`$DB78`, the
+item path) are items, not skills. A static scan for every store of `$DB8A` / `$DB4F` into other RAM
+(S163 r2): only `$DB4C` (the record index the forks re-derive), `$DB4E` (a cursor scratch in the bank
+$58 target pick) and these two. **Measured (PyBoy, the real menu, party slot 1 fallen):** stock
+Vivify / Revive and their twins all reach the fallen ally, the act is queued on slot 1 with `$DD76` =
+the base; EVivify cast through the menu brought PX back at 13 / 26 HP (Vivify's half, not Revive's
+full); `walk_actbase.py` step `menu` (the negative control puts the copies back: FAIL).
 
 ---
 
@@ -3293,6 +3367,40 @@ S81); any fix is a patch decision, NOT part of the byte-neutral model.
 $6848 handler table misread CleanCut as anti-Slime and produced a false
 "$db4c clobber bug" claim (retracted same session). The family-cut
 bonus/veto pair is correct as shipped.
+
+*S163 — the rules on boards of 1-3 opponents (ROADMAP E17 note; simulator only, the ROM unchanged;
+built S163, signed off 2026-11-02 22:29 with the S163 r2 ROM ("Sounds good hand off zip") — this editor / simulator change itself not separately user-tested).* The S81 sweep had ONE party monster, and its membership sets were
+the ids SEEN firing on that board — a rule whose condition failed there looked like "not a member"
+(S161: Sleep / Sap / PsycheUp / BoltSlash wrong against three opponents). Re-measured:
+`simulator/sweep_rules.py --party-live 3/2/1 --party-act def/atk --wram` on the user's save (10
+boards; the board each chain read captured — `simulator/s163_board_corpus.json.gz`), and NEW
+`simulator/rom_rules.py` runs `AIState7ChainWalker_7865` itself over a captured RAM image
+(`tools/sm83run.py`, 160 / 160 chain ends exact, ~7 ms a chain) and lists what each rule READS. Decoded
+(model `simulator/ai_rules.py`, NEW validator `validate_rules_boards.py` 1,573 / 1,573):
+- **Chains:** a rule runs only for an option whose category's chain lists it (`$4302` → `$4308` /
+  `$4358` / `$4404`; `ai_rules.CHAINS`).
+- **Id ladders** read from the rule heads (`ai_rules.IDS_*`): `$5FFD` +20 incapacitate {21, 22, 25,
+  104-107, 110, 112, 120, 121, 123-125, 218}; `$6180` +10 poison {103, 108, 109}; `$61BC` +10 Curse
+  {111}; `$604A` +10 {24, 114, 115}; `$60C8` +10 MP-takers {23, 117, 118}; `$6107` +10 DEF-down {28,
+  29, 122}; `$6144` +10 AGL-down {32, 33}; the physical class `LoadBtlAI_7c7e`; `$4E36` / `$5D8E` /
+  `$6C8C` / `$66FB` / `$6444` sets.
+- **The class bonuses** count the eligible live opponents (not asleep / unpoisoned / MP ≠ 0 / DEF or
+  AGL ≥ 2 …) against the sum of their resistance levels to the record element; bonus when count ≥
+  sum. **Vanilla quirk:** `CallBtlAI_7d4d` counts the FIRST opposing slot once before the loop
+  (falling into `SetBtlAI_7d54`), so it is counted twice (count = 1 + n).
+- **`$4D56`** (the physical class): +10 when the caster's ATK ≥ the opponents' "average DEF" — **which
+  the vanilla code never computes** (`LoadBtlAI_7dbe` adds 0 into each DEF entry: with 1 or 2 live
+  opponents the average is 0, otherwise 0 divided by its high byte 0 → `$FFFF`) — then +5 when ATK ≥
+  the lowest live DEF. On S81's board both always held (+15).
+- **`$4C41`** (family cut +20): tests the FIRST opposing slot only — **vanilla bug:**
+  `LoadBtlAI_44a7`'s `inc c / dec b / jr nz` jumps back to itself, not to the test (`$6848`'s veto scan
+  walks all three correctly).
+- **Exact:** `$6444` (PoisonHit / PoisonGas / PoisonAir vetoed unless a live opponent is unpoisoned
+  and does not resist fully), `$4C13` (every cat-1/2 skill vetoed when every live opponent resists its
+  element fully — S159), `$6382` (StopSpell needs a live, unsealed opponent with a spell in its option
+  list), `$4BCC` by chain, `$66FB`, `$6C8C`.
+Without the battle stats (the old fixtures) the S81 approximations remain. validate_rules 240 / F10
+rules 332 / command 6,411 / F10 1,335 / battle s85 6,614 / s86 802 / s89 426 unchanged.
 
 **15.10.6 Pick** (AIState5Pick_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →

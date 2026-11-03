@@ -3715,10 +3715,9 @@ jr_058_5543:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $55
     call z, LoadBtlFX_55b9
     cp $56
@@ -3979,10 +3978,9 @@ jr_058_56ab:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $55
     jr nz, jr_058_56c5
 
@@ -4588,10 +4586,9 @@ jr_058_5a63:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $12
     ret c
 
@@ -4884,10 +4881,9 @@ jr_058_5bc4:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $90
     jr z, jr_058_5c07
 
@@ -6537,10 +6533,9 @@ LoadBtlFX_6479:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S163] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id as its base (5 B -> call + 2 nops)
+    nop
     cp $30
     jr z, jr_058_64ac
 
@@ -7685,6 +7680,38 @@ EstimateView58:
     ld [wAIViewId], a
     pop bc
     ret
+; =============================================================================
+; [S163] ACT-TIME BASE VIEW (ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM
+; §13.14). A NEW skill (ids $EF-$FE and the 14 reclaimed ids) runs its BASE's effect with its
+; own record (S111 / S160), but the original game also decides parts of an effect by comparing
+; the acting id with fixed ids / ranges (Vivify vs Revive, SickLick vs LushLicks, TailWind vs
+; StormWind, the hit ladders of HitCompel / HitDeath / Sleep, the act-state routing, the
+; multi-hit continuations, boss protection, revive targets, turn-order keys, the tension
+; roll …) — a new id matched none of them (tools/census_act_id_lists.py). Those reads (5 in
+; this bank) go through these helpers: a new skill is compared AS ITS BASE (bank $72 entry 13
+; AIBaseOrSelf72, as DupBase53 since S161); every other id — stock skills, the built-ins
+; $DE-$EE, items, empty slots — comes back unchanged, so a project without new skills behaves
+; exactly as before. Names, lines, looks and sounds stay keyed by the real id (their rows are
+; the new skill's own). BC / DE / HL kept; F undefined (each caller compares next).
+; =============================================================================
+ActBaseA58:                    ; A = an id -> its BASE when it is a new skill, else A unchanged
+    push hl
+    push bc
+    push de
+    ld e, a
+    ld hl, $720D                ; bank $72 entry 13 AIBaseOrSelf72 (E in / E out; RST_10
+    rst $10                     ;   eats A / F and BC — KEY_LESSONS S161)
+    ld a, e
+    pop de
+    pop bc
+    pop hl
+    ret
+QueueBase58:                   ; the tail of `hl = $DCEC + 2 * actor` (the carry of the caller's
+    ld a, $00                   ;   `add l` is still in F) + the queued id, seen as its base;
+    adc h                       ;   HL = the queue entry as before
+    ld h, a
+    ld a, [hl]
+    jr ActBaseA58
     ds $7959 - @, $00       ; the bank's free run (was a counted nop pad)
     ASSERT @ == $7959
 

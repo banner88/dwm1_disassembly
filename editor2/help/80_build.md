@@ -46,7 +46,8 @@ Messages in the **Build log**:
 Copying from the log: select with the mouse (or click in it and ⌘A / Ctrl+A), then
 ⌘C / Ctrl+C — or right-click → **Copy all**.
 - **WARN** — builds, but read it: e.g. a boss room without a song, too many
-  different sprites on a screen, a joinable enemy without a join version.
+  different sprites on a screen (more than 6 — the 7th draws as the first), a
+  joinable enemy without a join version.
 
 Test with your own save: gate floors appear when you dive the gate; boss
 floors are the last floor of the gate; a **world** is entered through its

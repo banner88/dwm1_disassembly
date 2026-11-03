@@ -7498,3 +7498,55 @@ about where the insert sends the player). **Rule:** a check that is not about a 
 RNG (or retries over fixed seeds) before the code that rolls; an environment change that flips a
 "deterministic" check points at an uncontrolled roll first.
 
+
+### S163 — a same-size replacement needs an `ASSERT`, and `test_compiler --rom` will not catch a shifted bank
+**Symptom:** after the act-time base view, walk_reclaim's AI battles failed (enemies stopped casting /
+the battle went astray) while test_compiler `--rom` passed. **Root cause:** `SetHLBattle_7d77` (5
+bytes: `ld hl, $5701 / rst $10 / ret`) was replaced by `jp Entry1Base52 / nop / nop / ret` = 6 bytes —
+every routine after it in bank $52 moved by one byte, while the far calls into them from other banks
+(`ld hl, $xxxx / rst $10` — literal addresses) still pointed at the old ones. The pin moved (expected for a patch) so nothing flagged it.
+**Fix:** `jp Entry1Base52 / nop / ret` + `ASSERT @ == $7d7c`; the stubs in the dead bytes end with
+`ds $7690 - @, $00 / ASSERT @ == $7690`. **Rule:** every same-size hand patch ends with an `ASSERT` on
+the next original address; a moved pin is not evidence that only the intended bytes moved — diff the
+example ROM against HEAD's (only the sites + stubs may differ).
+
+### S163 — an id census by branches misses ids used as NUMBERS
+**Symptom:** the first census (branch outcomes that depend on the id) was clean for SickLick /
+LushLicks, yet the twins printed different lines. **Root cause:** `SkillLushLicks` builds its message
+number from the id (`ld a, [$db8a] / add $2F`), SandStorm likewise (`add $30`) — arithmetic, no branch.
+**Fix:** the census also compares the message writes (`$DD70` / `$DD71` / `$C822` / `$C823`); three
+more bank $52 sites patched. **Rule:** a "does this code treat X differently" census compares the
+OUTPUTS the code writes (messages, state), not only the branches it takes — and is confirmed by an
+end-to-end twin walk (the same messages and board).
+
+### S163 — twin walks: pin the battle RNG at every `BattleRNG` call, not once a frame
+**Symptom:** stock / new twins drifted apart after a few acts although each act matched. **Root
+cause:** the battle RNG also steps while the CPU idles (S86); a new id's few extra cycles (its far call
+to bank $72) move a later roll within a frame (S161's lesson in another form). **Fix:** hook the
+`BattleRNG` symbol and poke `$C899` / `$C89A` = the seed at each call (`walk_actbase`), or re-seed at
+each stage (`walk_mirror`: also at `TurnOrderKeyRoll_5662`); run each pair under several seeds so
+rolls both land and miss. **Rule:** A/B walks of code that differs in cycle count control the RNG at
+the point it is read.
+
+### S163 — the third time: two builds at once corrupted `disassembly/` (S152 r2, again)
+**Symptom:** a clean `make` failed ("Unable to open included file 'bank_060.asm'"); 38 files of
+`disassembly/` held patched text; test_compiler "the original font still says TERRY"; two regression
+walks failed. **Root cause:** a background regression script (demo builds), a backgrounded test chain
+(`test_compiler --rom` → `test_canvas --rom` → `test_app --rom`) and the session's own comment edits
+ran at the same time — `builder.build_rom` stages over `disassembly/` and restores from a backup taken
+at its start. **Fix:** every process stopped; each modified file restored from HEAD one by one; the
+session's 49 `[S163]` comments re-inserted by label anchors (+1 left out before); verify PASS; every
+build and test re-run strictly in sequence (one script). **Rule (S152 r2, kept):** builds run one at a
+time; killing one step of a `;`-chained background command starts the next — kill the chain's shell
+first; never edit `disassembly/` or `patches/` while a build may be staging.
+
+### S163 r2 — a census from the read misses COPIES compared later; a rig that skips the menu misses the menu
+**Symptom:** the user, on the first S163 ROM: "EVivify cannot select [the] dead monster in party" —
+while the census was clean and the twin walk passed 44 / 44. **Root cause:** the battle menu copies
+`$DB8A` into `$DD76` / `$C1C2` when the WHO list opens; the compares (Vivify `$30` / Revive `$31`) run
+frames later on the copy — the census ran ≤ 900 instructions from each read; and the walk's S110 rig
+writes the act into the queue, so the menu was never shown. **Fix:** both copy sites → `call
+ActBase50`; a static scan of every store of the id into other RAM; `walk_actbase.py` step `menu` drives
+PLAN → COMMAND → SKIL → WHO with a fallen ally. **Rule:** a "the code treats X like Y" census also lists
+every place X is COPIED to other RAM and follows the copy; a walk that measures player-facing behaviour
+goes through the player's own input path (the menu) at least once.

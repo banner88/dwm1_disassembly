@@ -726,6 +726,7 @@ jr_053_46a8:
     ld h, a
     ld a, [hl]
     ld [$db8a], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $55
     jr z, jr_053_4733
@@ -783,6 +784,7 @@ jr_053_4733:
     ld [wBattleTargetIdx], a
     ld hl, $5402
     rst $10
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $14
     jr nz, jr_053_475e
@@ -859,6 +861,7 @@ jr_053_4799:
 ; [S130 F1] dead queued target: single-target (tm bit0) + $DD0B==0 -> `ret z` below:
 ; NO redirect, the action fizzles on the dead slot (measured beat_e_L2).
 jr_053_47b2:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $51
     jr z, jr_053_47d1
@@ -1199,6 +1202,7 @@ SetBtlC_4963:
     ld a, [wBattleTargetIdx]
     ld [$db50], a
     call CmpBtlC_43c5
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $42
     jr z, jr_053_49b3
@@ -1310,6 +1314,7 @@ LoadBtlC_4a04:
 
     ld a, [$db8a]
     ld [$db4c], a
+    ; [S163] patched builds: the ladder compares a NEW skill's base, $DB4C keeps the real id (S163 CmpBase53)
     call CmpBtlC_4b92
     ret c
 
@@ -2800,6 +2805,7 @@ BossProtectionGate_51aa:
     cp $01
     jr nz, jr_053_51dd
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $12
     jr z, jr_053_51e3
@@ -2971,6 +2977,7 @@ jr_053_5289:
     rst $10
     ld a, $18
     ld [$da33], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $14
     jr z, jr_053_52c8
@@ -3630,6 +3637,7 @@ jr_053_5678:
 
 
 jr_053_56a8:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $30
     jr z, jr_053_56e1
@@ -3692,6 +3700,7 @@ jr_053_56e1:
     call LoadBtlC_5844
     jr z, jr_053_5747
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $52
     jr z, jr_053_5715
@@ -3943,6 +3952,7 @@ LoadBtlC_5844:
 ; SKILL $41 ONLY: returns Z (skip the dodge roll) when the attacker's
 ; +6 & $03 == 0; every other skill returns NZ = roll normally.
 LoadBtlC_5857:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $41
     ret nz
@@ -4180,6 +4190,7 @@ jr_053_599a:
     bit 4, a
     jr z, jr_053_59c3
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $5c
     jr c, jr_053_59c3
@@ -4363,6 +4374,7 @@ jr_053_5a6f:
     rst $10
     ld a, $01
     ld [$c1c9], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $1b
     ret nz
@@ -4514,6 +4526,7 @@ jr_053_5b79:
     ld [$c822], a
     ld a, h
     ld [$c823], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $24
     call z, LoadBtlC_5bad
@@ -4639,6 +4652,7 @@ jr_053_5c1f:
     call LoadBtlC_5c8d
     ret nc
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $7d
     jr z, jr_053_5c6e
@@ -4670,6 +4684,7 @@ jr_053_5c44:
     call LoadBtlC_5c8d
     ret nc
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $6b
     ret c
@@ -4756,6 +4771,7 @@ LoadBtlC_5ca1:
     bit 4, a
     ret z
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $43
     ret z
@@ -7058,6 +7074,7 @@ jr_053_69cb:
     jr jr_053_69f2
 
 jr_053_69d7:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $96
     jr z, jr_053_69cb

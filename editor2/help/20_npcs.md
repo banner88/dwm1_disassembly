@@ -68,8 +68,11 @@ The spinning **swirl** objects on gate entrances are NPCs too (sprite
 world) says *after clearing, the swirl turns* a colour, they keep spinning in
 that colour (see *Gates* and *Worlds*).
 
-The engine caps a screen at 8 NPCs; many different sprites on one screen
-can draw blank (sprite memory) — repeats are free.
+The engine caps a screen at 8 NPCs. It also keeps at most **6 different
+sprites** a screen: a 7th different one is drawn with the **first one's
+picture** (in its own colours) — measured in the game (S163). Repeats of a
+sprite are free, and so are the player and party shapes (`$E0`–`$E3`, the
+arena's). The build warns and names the sprites that would be drawn wrong.
 
 **Sprite limits (the Game Boy's own).** It draws at most 10 sprite pieces
 on one line of the screen, and you and your 3 monsters walking in a line

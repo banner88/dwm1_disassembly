@@ -56,11 +56,20 @@ class SnapshotCommand(QUndoCommand):
             # a sheet another command created — its 'before' bytes matter)
             self.assets = sorted(set(self.assets) | set(self._new_assets()))
             self.files_before = self._read_files()
+            pre_files = self._asset_files()
             try:
                 self.result = self.op(self.s.doc)
             except Exception as ex:          # S95: a failed op leaves no trace
                 self.s.doc.restore(self.before)
                 self._write_files(self.files_before)
+                # S163: nor a sheet file it CREATED before failing (a refused walkability
+                # flip localized the room's tileset first — assets/ts_28_0D.2bpp, then
+                # ts_28_04.2bpp, were left behind in the example project that way)
+                for rel in sorted(self._asset_files() - pre_files):
+                    try:
+                        os.remove(os.path.join(self.s.doc.project_dir, rel))
+                    except OSError:
+                        pass
                 self.error = ex
                 self.setObsolete(True)       # the stack drops it after this redo
                 self.s.renderer.invalidate()
@@ -85,6 +94,14 @@ class SnapshotCommand(QUndoCommand):
         self.s.renderer.invalidate()
         self.s.renderer._sheet_cache.clear()
         self.s.structureChanged.emit()
+
+    def _asset_files(self):
+        """S163: the sheet files in the project's assets/ (project-relative)."""
+        d = os.path.join(self.s.doc.project_dir, 'assets')
+        try:
+            return {os.path.join('assets', f) for f in os.listdir(d) if f.endswith('.2bpp')}
+        except OSError:
+            return set()
 
     def _new_assets(self):
         return [t.get('raw2bpp') for t in self.s.doc.custom.get('tilesets', [])

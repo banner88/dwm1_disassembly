@@ -1302,3 +1302,25 @@ edge and the battle waits for input forever.
 - **A record poked in the cartridge:** `p.memory[bank, CustomRecord_F0 + 4] = 255` changes a new skill's
   battle MP for the run (the chain's `$45F2` rule then vetoes it) — proof the chain reads the new
   skill's own record.
+
+## S163 techniques — act-time id reads and the AI rules measured off-line (tools/sm83run.py)
+- **An SM83 interpreter over the ROM image** (`tools/sm83run.py`): seed WRAM / HRAM from a PyBoy
+  snapshot (or a census guess), mark the bytes whose influence you want (`poke(addr, v, mark)`), run
+  from a routine's address with far calls followed (RST_10 bank switches, `jp hl`); the result lists
+  every branch with whether its flags came from a marked byte, every marked table read, the order, and
+  watched writes. A routine that differs between two ids shows up as different marked branches /
+  writes. ~0.1 s for a few thousand instructions.
+- **The AI chain run off-line** (`simulator/rom_rules.py`): capture WRAM + HRAM at a chain start
+  (`sweep_rules.py --wram`), then run `AIState7ChainWalker_7865` in the interpreter: the per-rule
+  `$DD26` / `$DD27` changes and the end (`$78A2`) / veto (`$788B`) — exact against PyBoy (160 / 160)
+  and ~7 ms a chain, so a model can be checked against thousands of boards; `reads=True` lists the RAM
+  each rule reads (the inputs a model needs).
+- **Boards of 1-3 opponents on the user's save:** `sweep_rules.py --party-live N` kills party slots
+  past N (HP 0, `$DD1B` = 1), `--party-act def/atk` sets their queued acts, the forced option list
+  holds each skill in turn.
+- **Twins under a pinned RNG** (`walk_actbase.py`): hook the `BattleRNG` symbol, poke `$C899` /
+  `$C89A` at every call; three seeds; compare the battle messages (message, line, subject, number) and
+  the board after each message (HP / MP / `$DB00-$DB41` / `$DD1B`) over the common prefix.
+- **A negative control by bytes:** copy the ROM, put the original game's bytes back at every call to a
+  view helper (`call` opcode + target in the helper set, original byte an `ld a, [nn]` / `ld a, n` /
+  `call`), and the walk must fail on exactly the bases whose effect asks for the id.

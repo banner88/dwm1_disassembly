@@ -986,7 +986,7 @@ user-tested):**
   `playhere` — a new game / the user's save / a story point into `$276` / `$76` / `$279`, 9 / 9.
 Not built: items / gold for a story point (the new game's); side quests the game leaves to
 the player (farm, library, medals) are not in the story state — flags ON covers them.
-- **Memorial statues (as built S154 — ROADMAP E10; built, NOT yet user-tested;
+- **Memorial statues (as built S154 — ROADMAP E10; built, USER-CONFIRMED 2026-11-02 22:11 ("S154 confirmed", on the r2 ROM);
   PROJECT_COMPILER §2.62, help 77):** a statue is an OBJECT of a screen state like an NPC or
   a spot (`npcs[]` `kind: statue`, marker **M**), not a sprite: Select tool → cell → **＋
   Statue (U)**. **S154 r2 (user: "Pedestal should be its own tile I can edit … Then monster
@@ -1595,7 +1595,7 @@ scaffolding covers the DATA knobs; net-new ASM handlers remain an expert
 escape hatch (patches/), surfaced but not WYSIWYG. The S74 editor-safety
 invariants are hard validators.
 
-**S161 (ROADMAP E17; built S161, NOT yet user-tested):** Monster AI → **Preference** for a NEW
+**S161 (ROADMAP E17; built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`)):** Monster AI → **Preference** for a NEW
 skill only (-60 … +60, step 5, bold when not 0; the note: "Enemies judge X as they judge <base> …
 then add this"), `Document.set_skill_ai_pref`; the AI judges a new skill as its base (BATTLE_SKILL_SYSTEM
 §13.13, PROJECT_COMPILER §2.69).

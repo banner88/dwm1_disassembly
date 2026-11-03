@@ -934,6 +934,7 @@ SkillVivify:
 
     jr z, jr_052_457a
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $30
     jr nz, jr_052_453a
@@ -982,6 +983,7 @@ jr_052_453a:
     ld a, [hl+]
     ld d, [hl]
     ld e, a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $30
     jr nz, jr_052_4552
@@ -1010,6 +1012,7 @@ jr_052_4567:
 
 
 jr_052_456d:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $30
     jr nz, jr_052_4515
@@ -1586,6 +1589,7 @@ SkillCallHelp:
 
     ld hl, $dd69
     inc [hl]
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $52
     ret z
@@ -1846,6 +1850,7 @@ jr_052_49ab:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $6d
     jr z, jr_052_49c1
@@ -1953,6 +1958,7 @@ SkillSandStorm:
     call HL_AddA_x8
     set 1, [hl]
     set 0, [hl]
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     add $30
     ld h, a
@@ -2102,6 +2108,7 @@ SkillLushLicks:
     bit 3, [hl]
     jr nz, jr_052_4b30
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $7a
     jr z, jr_052_4afa
@@ -2117,6 +2124,7 @@ jr_052_4afd:
 
     call GetAttackerBattleSlot
     set 3, [hl]
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $79
     jr z, jr_052_4b1f
@@ -2131,6 +2139,7 @@ jr_052_4afd:
     call SetStatLoweredMark_5377
 
 jr_052_4b1f:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     add $2f
     ld h, a
@@ -2374,6 +2383,7 @@ SkillTailWind:
     ld hl, $db04
     call HL_AddA_x8
     set 6, [hl]
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $8a
     jr z, jr_052_4c6e
@@ -5352,6 +5362,7 @@ BattleCall_5c51:
     swap a
     and $03
     ld [$db4e], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $72
     jr c, jr_052_5c81
@@ -5404,6 +5415,7 @@ SetHLBattle_5c8f:
 
 
 jr_052_5cae:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $15
     ld a, [$db4e]
@@ -5645,6 +5657,7 @@ SapHitRoll_5dcc:
 
 jr_052_5deb:
     ld b, a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $7a
     ld a, b
@@ -6115,6 +6128,7 @@ LoadBattle_6077:
 ; (StoreDamageResult); HP := min(HP + amount, MaxHP); $DB56 = amount.
 HealAmountApply_607d:
 LoadBattle_607d:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $2d
     jr z, jr_052_609d
@@ -7149,6 +7163,7 @@ BattleCall_65e3:
     rrca
     and $03
     ld b, a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $7c
     ld a, b
@@ -8722,6 +8737,7 @@ jr_052_6cf2:
     inc [hl]
     xor a
     ld [$d9ee], a
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $29
     jr z, jr_052_6d20
@@ -8818,6 +8834,7 @@ jr_052_6d77:
     inc [hl]
     ld hl, $d9ed
     inc [hl]
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $1a
     jp z, Jump_052_6df2
@@ -9023,6 +9040,7 @@ Jump_052_6e74:
 ; $80 BiAttack, $95 LifeSong, $AA/$D5 transform); others -> next state.
 Jump_052_6e89:
 jr_052_6e89:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $32
     jr z, jr_052_6ef1
@@ -9354,6 +9372,7 @@ jr_052_702c:
 ; [S130 F8] $52:$7041 multi-hit continuation dispatch on $DB8A (hook point
 ; of simulator/measure_f8_multihit.py 'mh_cont')
 MultiHitContDispatch_7041:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $50
     jp z, Jump_052_6f83
@@ -9454,6 +9473,7 @@ jr_052_70dc:
 
 Jump_052_70e0:
 jr_052_70e0:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $52
     jr c, jr_052_710e
@@ -9637,6 +9657,7 @@ GroupVictimLoopA_71b5:
     ; (measured: ALLREVIVE visits slot 3); every other group skill skips
     ; non-live slots. The loop always continues from wBattleTargetIdx,
     ; which Revive re-targets to the slot it revived.
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $95
     jr z, jr_052_71d7
@@ -11334,6 +11355,7 @@ TransformActionTable_7aff:
 
 
 LoadBattle_7b1a:
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $32
     jr z, jr_052_7b24
@@ -11707,6 +11729,7 @@ jr_052_7d1e:
 
 
 SetHLBattle_7d77:
+    ; [S163] bank $57 entry 1 ($7C44: CallHelp / YellHelp -> $DD6D by the id): patched builds call it with $DB8A = a NEW skill's base (S163 Entry1Base52)
     ld hl, $5701
     rst $10
     ret

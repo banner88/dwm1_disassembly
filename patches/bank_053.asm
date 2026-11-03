@@ -702,7 +702,7 @@ jr_053_46a8:
     ld h, a
     ld a, [hl]
     ld [$db8a], a
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $55
     jr z, jr_053_4733
 
@@ -759,7 +759,7 @@ jr_053_4733:
     ld [wBattleTargetIdx], a
     ld hl, $5402
     rst $10
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $14
     jr nz, jr_053_475e
 
@@ -833,7 +833,7 @@ jr_053_4799:
 ; [S130 F1] dead queued target: single-target (tm bit0) + $DD0B==0 -> `ret z` below:
 ; NO redirect, the action fizzles on the dead slot (measured beat_e_L2).
 jr_053_47b2:
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $51
     jr z, jr_053_47d1
 
@@ -1161,7 +1161,7 @@ SetBtlC_4963:
     ld a, [wBattleTargetIdx]
     ld [$db50], a
     call CmpBtlC_43c5
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $42
     jr z, jr_053_49b3
 
@@ -1271,7 +1271,7 @@ LoadBtlC_4a04:
 
     ld a, [$db8a]
     ld [$db4c], a
-    call CmpBtlC_4b92
+    call CmpBase53             ; [S163] was `call CmpBtlC_4b92`: the ladder sees the base
     ret c
 
     xor a
@@ -2702,7 +2702,7 @@ BossProtectionGate_51aa:
     cp $01
     jr nz, jr_053_51dd
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $12
     jr z, jr_053_51e3
 
@@ -2870,7 +2870,7 @@ jr_053_5289:
     rst $10
     ld a, $18
     ld [$da33], a
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $14
     jr z, jr_053_52c8
 
@@ -3528,7 +3528,7 @@ jr_053_5678:
 
 
 jr_053_56a8:
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $30
     jr z, jr_053_56e1
 
@@ -3585,7 +3585,7 @@ jr_053_56e1:
     call LoadBtlC_5844
     jr z, jr_053_5747
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $52
     jr z, jr_053_5715
 
@@ -3819,7 +3819,7 @@ LoadBtlC_5844:
 
 
 LoadBtlC_5857:
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $41
     ret nz
 
@@ -4055,7 +4055,7 @@ jr_053_599a:
     bit 4, a
     jr z, jr_053_59c3
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $5c
     jr c, jr_053_59c3
 
@@ -4238,7 +4238,7 @@ jr_053_5a6f:
     rst $10
     ld a, $01
     ld [$c1c9], a
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $1b
     ret nz
 
@@ -4389,7 +4389,7 @@ jr_053_5b79:
     ld [$c822], a
     ld a, h
     ld [$c823], a
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $24
     call z, LoadBtlC_5bad
     ld a, [$c823]
@@ -4514,7 +4514,7 @@ jr_053_5c1f:
     call LoadBtlC_5c8d
     ret nc
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $7d
     jr z, jr_053_5c6e
 
@@ -4545,7 +4545,7 @@ jr_053_5c44:
     call LoadBtlC_5c8d
     ret nc
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $6b
     ret c
 
@@ -4631,7 +4631,7 @@ LoadBtlC_5ca1:
     bit 4, a
     ret z
 
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $43
     ret z
 
@@ -6908,7 +6908,7 @@ jr_053_69cb:
     jr jr_053_69f2
 
 jr_053_69d7:
-    ld a, [$db8a]
+    call ActBase53             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $96
     jr z, jr_053_69cb
 
@@ -7712,28 +7712,37 @@ DupConvFlag53:
     pop de
     pop bc
     ret
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+; =============================================================================
+; [S163] ACT-TIME BASE VIEW (ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM
+; §13.14). A NEW skill (ids $EF-$FE and the 14 reclaimed ids) runs its BASE's effect with its
+; own record (S111 / S160), but the original game also decides parts of an effect by comparing
+; the acting id with fixed ids / ranges (Vivify vs Revive, SickLick vs LushLicks, TailWind vs
+; StormWind, the hit ladders of HitCompel / HitDeath / Sleep, the act-state routing, the
+; multi-hit continuations, boss protection, revive targets, turn-order keys, the tension
+; roll …) — a new id matched none of them (tools/census_act_id_lists.py). Those reads (17 in
+; this bank) go through these helpers: a new skill is compared AS ITS BASE (bank $72 entry 13
+; AIBaseOrSelf72, as DupBase53 since S161); every other id — stock skills, the built-ins
+; $DE-$EE, items, empty slots — comes back unchanged, so a project without new skills behaves
+; exactly as before. Names, lines, looks and sounds stay keyed by the real id (their rows are
+; the new skill's own). BC / DE / HL kept; F undefined (each caller compares next).
+; =============================================================================
+ActBase53:                     ; A = [$DB8A] as the act's id rules see it
+    ld a, [$db8a]
+ActBaseA53:                    ; A = an id -> its BASE when it is a new skill, else A unchanged
+    push hl
+    push bc
+    push de
+    ld e, a
+    ld hl, $720D                ; bank $72 entry 13 AIBaseOrSelf72 (E in / E out; RST_10
+    rst $10                     ;   eats A / F and BC — KEY_LESSONS S161)
+    ld a, e
+    pop de
+    pop bc
+    pop hl
+    ret
+CmpBase53:                     ; LoadBtlC_4a04's ladder call: $DB4C keeps the real id (the
+    call ActBaseA53            ;   record), CmpBtlC_4b92 compares the base
+    jp CmpBtlC_4b92
     nop
     nop
     nop

@@ -919,7 +919,7 @@ SkillVivify:
 
     jr z, jr_052_457a
 
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $30
     jr nz, jr_052_453a
 
@@ -967,7 +967,7 @@ jr_052_453a:
     ld a, [hl+]
     ld d, [hl]
     ld e, a
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $30
     jr nz, jr_052_4552
 
@@ -995,7 +995,7 @@ jr_052_4567:
 
 
 jr_052_456d:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $30
     jr nz, jr_052_4515
 
@@ -1553,7 +1553,7 @@ SkillCallHelp:
 
     ld hl, $dd69
     inc [hl]
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $52
     ret z
 
@@ -1809,7 +1809,7 @@ jr_052_49ab:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base (here a MESSAGE number is made from the id)
     cp $6d
     jr z, jr_052_49c1
 
@@ -1916,7 +1916,7 @@ SkillSandStorm:
     call HL_AddA_x8
     set 1, [hl]
     set 0, [hl]
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base (here a MESSAGE number is made from the id)
     add $30
     ld h, a
     ld l, a
@@ -2062,7 +2062,7 @@ SkillLushLicks:
     bit 3, [hl]
     jr nz, jr_052_4b30
 
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $7a
     jr z, jr_052_4afa
 
@@ -2077,7 +2077,7 @@ jr_052_4afd:
 
     call GetAttackerBattleSlot
     set 3, [hl]
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $79
     jr z, jr_052_4b1f
 
@@ -2091,7 +2091,7 @@ jr_052_4afd:
     call SetStatLoweredMark_5377
 
 jr_052_4b1f:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base (here a MESSAGE number is made from the id)
     add $2f
     ld h, a
     ld l, a
@@ -2328,7 +2328,7 @@ SkillTailWind:
     ld hl, $db04
     call HL_AddA_x8
     set 6, [hl]
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $8a
     jr z, jr_052_4c6e
 
@@ -5272,7 +5272,7 @@ BattleCall_5c51:
     swap a
     and $03
     ld [$db4e], a
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $72
     jr c, jr_052_5c81
 
@@ -5316,7 +5316,7 @@ SetHLBattle_5c8f:
 
 
 jr_052_5cae:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $15
     ld a, [$db4e]
     jp z, Jump_052_6710
@@ -5557,7 +5557,7 @@ SapHitRoll_5dcc:
 
 jr_052_5deb:
     ld b, a
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $7a
     ld a, b
     jr z, jr_052_5df8
@@ -6027,7 +6027,7 @@ LoadBattle_6077:
 ; (StoreDamageResult); HP := min(HP + amount, MaxHP); $DB56 = amount.
 HealAmountApply_607d:
 LoadBattle_607d:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $2d
     jr z, jr_052_609d
 
@@ -7030,7 +7030,7 @@ BattleCall_65e3:
     rrca
     and $03
     ld b, a
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $7c
     ld a, b
     jr nc, jr_052_65fb
@@ -8586,7 +8586,7 @@ jr_052_6cf2:
     inc [hl]
     xor a
     ld [$d9ee], a
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $29
     jr z, jr_052_6d20
 
@@ -8673,7 +8673,7 @@ jr_052_6d77:
     inc [hl]
     ld hl, $d9ed
     inc [hl]
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $1a
     jp z, Jump_052_6df2
 
@@ -8877,7 +8877,7 @@ Jump_052_6e74:
 ; $80 BiAttack, $95 LifeSong, $AA/$D5 transform); others -> next state.
 Jump_052_6e89:
 jr_052_6e89:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $32
     jr z, jr_052_6ef1
 
@@ -9214,7 +9214,7 @@ jr_052_702c:
 ; [S130 F8] $52:$7041 multi-hit continuation dispatch on $DB8A (hook point
 ; of simulator/measure_f8_multihit.py 'mh_cont')
 MultiHitContDispatch_7041:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $50
     jp z, Jump_052_6f83
 
@@ -9314,7 +9314,7 @@ jr_052_70dc:
 
 Jump_052_70e0:
 jr_052_70e0:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $52
     jr c, jr_052_710e
 
@@ -9509,7 +9509,7 @@ QSweepAfter52:
     ; (measured: ALLREVIVE visits slot 3); every other group skill skips
     ; non-live slots. The loop always continues from wBattleTargetIdx,
     ; which Revive re-targets to the slot it revived.
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $95
     jr z, jr_052_71d7
 
@@ -10300,73 +10300,56 @@ jr_052_762d:
     ret
 
 
-; [S160] AirborneReachDead_763e — UNREFERENCED (no call / jp / jr / pointer to $763E
+; [S160] AirborneReachDead_763e (S163: its bytes now hold ActBase52 below) — UNREFERENCED (no call / jp / jr / pointer to $763E
 ; anywhere in the ROM; measured: 0 runs in 181 enemy casts of every skill at an AIRBORNE
 ; party monster, +6 & $0C set, PyBoy on the user's save — while the game's own airborne
 ; block, MISS gate 1 (bank $53), answered every physical skill with $C1). Dead code: a
 ; target ironized (+7 & $C0; $80 / $83 / $A5 pass) or airborne (+6 & $0C) would have
 ; refused ids $44-$59, $5B, $67-$7D, $B0-$D4 and $D6-$D9 with message $C1 ("doesn't
 ; reach"). Its item-id window ($B0-$D4) never decides anything (ROADMAP E13).
-AirborneReachDead_763e:
-    ld a, [wBattleTargetIdx]
-    ld hl, $db07
-    call HL_AddA_x8
-    ld a, [hl]
-    and $c0
-    jr z, jr_052_765b
-
+; =============================================================================
+; [S163] ACT-TIME BASE VIEW (ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM
+; §13.14). A NEW skill (ids $EF-$FE and the 14 reclaimed ids) runs its BASE's effect with its
+; own record (S111 / S160), but the original game also decides parts of an effect by comparing
+; the acting id with fixed ids / ranges (Vivify vs Revive, SickLick vs LushLicks, TailWind vs
+; StormWind, the hit ladders of HitCompel / HitDeath / Sleep, the act-state routing, the
+; multi-hit continuations, boss protection, revive targets, turn-order keys, the tension
+; roll …) — a new id matched none of them (tools/census_act_id_lists.py). Those reads (22 in
+; this bank, + bank $57 entry 1's caller SetHLBattle_7d77 -> Entry1Base52) go through these helpers: a new skill is compared AS ITS BASE (bank $72 entry 13
+; AIBaseOrSelf72, as DupBase53 since S161); every other id — stock skills, the built-ins
+; $DE-$EE, items, empty slots — comes back unchanged, so a project without new skills behaves
+; exactly as before. Names, lines, looks and sounds stay keyed by the real id (their rows are
+; the new skill's own). BC / DE / HL kept; F undefined (each caller compares next).
+; =============================================================================
+; The 82 bytes $763E-$768F were AirborneReachDead_763e (S160: no call / jp / jr / pointer
+; to any of them ROM-wide — re-checked S163, the live message tail at $7690 is kept; the
+; original routine stays annotated in disassembly/bank_052.asm).
+ActBase52:                     ; A = [$DB8A] as the act's id rules see it
     ld a, [$db8a]
-    cp $80
-    jr z, jr_052_768e
-
-    cp $83
-    jr z, jr_052_768e
-
-    cp $a5
-    jr z, jr_052_768e
-
-jr_052_765b:
-    dec hl
-    ld a, [hl]
-    and $0c
-    jr z, jr_052_768e
-
-    ld a, [$db8a]
-    cp $3a
-    jr c, jr_052_768e
-
-    cp $29
-    jr c, jr_052_7690
-
-    cp $44
-    jr c, jr_052_768e
-
-    cp $5a
-    jr c, jr_052_7690
-
-    cp $5b
-    jr z, jr_052_7690
-
-    cp $67
-    jr c, jr_052_768e
-
-    cp $7e
-    jr c, jr_052_7690
-
-    cp $b0
-    jr c, jr_052_768e
-
-    cp $d5
-    jr c, jr_052_7690
-
-    jr z, jr_052_768e
-
-    cp $da
-    jr c, jr_052_7690
-
-jr_052_768e:
-    scf
+ActBaseA52:                    ; A = an id -> its BASE when it is a new skill, else A unchanged
+    push hl
+    push bc
+    push de
+    ld e, a
+    ld hl, $720D                ; bank $72 entry 13 AIBaseOrSelf72 (E in / E out; RST_10
+    rst $10                     ;   eats A / F and BC — KEY_LESSONS S161)
+    ld a, e
+    pop de
+    pop bc
+    pop hl
     ret
+Entry1Base52:                   ; bank $57 entry 1 ($7C44: after a CallHelp / YellHelp act, +8
+    ld a, [$db8a]               ;   bit 0 -> $DD6D by the id) with $DB8A = the base for the call
+    push af                     ;   (bank $57 has 5 free bytes: the view is set from here)
+    call ActBaseA52
+    ld [$db8a], a
+    ld hl, $5701
+    rst $10
+    pop af
+    ld [$db8a], a               ; the real id again (names, lines, looks read it later)
+    ret
+    ds $7690 - @, $00           ; the rest of the old dead block
+    ASSERT @ == $7690
 
 
 jr_052_7690:
@@ -11183,7 +11166,7 @@ jr_052_7af6:
 
 
 LoadBattle_7b1a:
-    ld a, [$db8a]
+    call ActBase52             ; [S163] was `ld a, [$db8a]`: a new skill as its base
     cp $32
     jr z, jr_052_7b24
 
@@ -11556,9 +11539,10 @@ jr_052_7d1e:
 
 
 SetHLBattle_7d77:
-    ld hl, $5701
-    rst $10
-    ret
+    jp Entry1Base52             ; [S163] was `ld hl, $5701 / rst $10` (4 B: bank $57 entry 1,
+    nop                         ;   whose $DB8A ladder — CallHelp / YellHelp / $AB -> $DD6D —
+    ret                         ;   now sees a new skill's base; Entry1Base52 puts the real id
+    ASSERT @ == $7d7c           ;   back). The address after is fixed: WindMsgCheck_7d7c.
 
 
 ; [S130 F6] After a TailWind reflection ($DD6D == 2) with the side byte bit5 (StormWind) set: a

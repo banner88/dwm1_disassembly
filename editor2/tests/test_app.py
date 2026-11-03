@@ -3739,6 +3739,37 @@ def s158_hints(app, w):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def s163_failed_op_assets(app, w):
+    """S163 (A4's root): a structural edit that FAILS leaves no trace — not even a tileset sheet
+    it created before failing. A refused walkability flip localized the room's tileset first
+    (assets/ts_28_0D.2bpp, later ts_28_04.2bpp, were left in the example project that way:
+    the document was restored, the file was not)."""
+    from editor2.app.rooms import commands as C
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    adir = os.path.join(doc.project_dir, 'assets')
+    files0 = sorted(os.listdir(adir))
+    room = doc.room('dusk_mirror')
+    assert 'tileset' not in room['record'], 'the probe needs a room on a game tileset'
+    sheet = bytes(s.renderer.room_gfx(room).sheet)
+    made = []
+
+    def op(d):
+        made.append(d.localize_tileset(d.room('dusk_mirror'), sheet))
+        raise RuntimeError('refused after the copy (the probe)')
+    n0 = s.undo.count()
+    cmd = C.SnapshotCommand(s, 'probe', op)
+    s.undo.push(cmd)
+    app.processEvents()
+    assert made and isinstance(cmd.error, RuntimeError), (made, cmd.error)
+    assert sorted(os.listdir(adir)) == files0, \
+        f'a failed op left {sorted(set(os.listdir(adir)) - set(files0))} in assets/'
+    assert doc.dumps() == before and s.undo.count() == n0, 'a failed op leaves no trace'
+    print(f'OK: S163 a failed structural edit removes the sheet it made ({made[0]}.2bpp) — '
+          'assets/ and project.json unchanged')
+
+
 def s159_resistances(app, w):
     """S159 (ROADMAP E16; user: "a proper resistance table visualizer and setter … Make sure
     that I can look up which skills fall where, especially once I start fiddling with skill
@@ -5376,6 +5407,7 @@ def main():
     s154_memorial(app, w)
     s158_hints(app, w)
     s159_resistances(app, w)
+    s163_failed_op_assets(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

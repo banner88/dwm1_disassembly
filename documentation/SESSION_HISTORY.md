@@ -1,5 +1,62 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-10-30 (Session 161 — **ROADMAP E17 BUILT: THE ENEMY AI JUDGES A NEW SKILL AS ITS BASE (THE BASE'S
+> RULES — BONUSES AND VETOES — ON THE NEW SKILL'S OWN RECORD) + A PER-SKILL AI PREFERENCE (-60 … +60, 0 = AS ITS BASE); THE
+> E13 NOTE FIXED: TWO SKILLS EVOLVING FROM ONE SKILL NO LONGER FREEZE THE LEVEL UP (THE SECOND IS LEARNED BESIDE THE FIRST)**
+> (user: "do e17, e13 fix both" → the measured cause + "as base" / "as base + preference" asked → "Yes, with a sane base
+> value" = default 0). **Built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`).**
+> Test ROM **`DWM-S161-mirror-test.gbc`** (`91bb7495…`, patched) = the user's project + THE MIRROR HALL
+> (`examples/s161_mirror_demo/build_demo.py`; way in: the MIRROR GUIDE, Cities_FOUNT (3, 4)): STOCK / NEW / RECL MAGE
+> (Firebal, Bang, Infernos, SnowStorm), STOCK / NEW CASTER (Sleep, Sap, PsycheUp, BoltSlash), the PICKY MAGE (PSnow +60,
+> PBang -60), the SIBLING KEEPER's TWINFLAME (Blaze, level 12 → Blazemore + Flare), the TRAINING DUMMY. Example pin
+> `c8fdb078…` (patched; first S161 build `f4a78bfb…`, historical; was `1855e3a0…`, patched — banks $00 checksum / $51 /
+> $53 / $54 / $57 / $58 / $72). The user tested the first ROM ("Yeah looks good") and asked about the PICKY MAGE
+> ("attacked 80-90% of time physically, the rest is PSnow — normal?"): yes — its weights 30 / 250 / 30 are heal-plan
+> heavy, it has no heal / support skill, so that plan ends in Attack (measured: with damage-plan weights PSnow is
+> 94 / 98 casts); hence **later S161** (the user: "fix the issues if not too large"): the duplicate-group-cast
+> conversion tests a new skill as its base (bank $53 `DupBase53` + bank $72 entry 13 `AIBaseOrSelf72`, §13.13);
+> `walk_skills.py`'s two LoneWolf checks fixed (the walk's save assumptions); the four AI weights NAMED in the editor
+> (`gamedata.AI_WEIGHT_NAMES`: Damage / Heal/support / Status / Obedience — the Enemies dialog's labels, the Monsters /
+> Arena cells' tooltip, help 50 / 52 / 53). Rebuilt test ROM **`DWM-S161-mirror-test-2.gbc`** (`5fb10cd3…`, patched).
+> **Session environment:** the RGBDS build needed the user's OK again ("you have permission"); PySide6 6.9.1 for test_app.
+> **Found (measured, PyBoy, the user's save, the RNG free):** the 131 AI rules select skills BY ID — a new id got +0 where
+> its base gets +40 / +60 (Firebal / Bang), so it never beat plain Attack (60): a stock mage cast Bang 16 / 58, its new twin
+> 0 / 50; S160's "0 casts" was measured with the RNG pinned every frame (the stock twin cast none too — DOC_AUDIT S161); the
+> battle RNG steps in wait loops, so a few more CPU cycles drift every later roll (twin A/Bs re-seed at every stage —
+> KEY_LESSONS S161); the S81 rule model is wrong for Sleep / Sap / PsycheUp / BoltSlash against three opponents (stock and
+> new alike — ROADMAP E17 note); the clean tree's `ld hl, DispatchAboveE2` in `LevelUpS04_LearnScan` is the text id
+> `$0B03`.
+> **Built (engine, patched):** bank $57 state 4 `call AIViewArm57`, `AIChainZeroCell_788b` `call AIViewOff57`,
+> `CustomAI57` for every option, `AIRule_4785` back to `ld a, [$db8a]` (`SkillView57` retired); bank $72 entries 11 / 12
+> `AIViewArm72` / `AIViewOff72` + `AIBaseOf72` / `AIPrefEnd72` / `AIPrefTable` (region `gd_ai_pref`); bank $54
+> `Fork54_RecordIndex` (the view: the base's record read gives the new skill's own); bank $58 `SaveBtlFX_43ff` → `jp
+> EstimateView58`; WRAM `wAIViewId` / `wAIViewBase` $DED5 / $DED6; bank $51 `LearnUpgradeOrAdd51` (26 B). No template
+> re-pin. BATTLE_SKILL_SYSTEM §13.12 ("FIXED S161") / §13.13, PROJECT_COMPILER §2.69.
+> **Built (compiler + editor + simulator):** `gamedata.skills.<id>.ai_preference` (new skills; REGIONS 25), the warning
+> reworded (both children only at the same level up); `set_skill_ai_pref`, the Skills tab's Monster AI → Preference; the
+> simulator's `ChainRules` (the base's id, the own record, `evaluate_chain(..., pref=)`), `BattleData.ai_pref`, the Balance
+> cache key; `census_raising.py`'s stub mirrors the fix; help 54 / 00 / 72, `EDITOR_REVISION` S161.
+> **Measured (PyBoy, the user's save, NEW `tools/walk_mirror.py` on the demo): 35 / 35 (later 37 / 37: + `dupcast` —
+> `DupCastSkillListCheck_4ed6` for ids 0-255 = the base's answer, two NEW MAGES convert 21 / 21 like two stock;
+> negative 30 FAIL)** — twins (RNG re-seeded at every
+> stage, the party's HP / status held): the same 72 / 72 / 81 decisions, 18 / 18 / 3 new-skill casts = the stock's, the
+> chain saw the base's id; PBang -60 0 casts (stock Bang 16), PSnow +60 30 (stock SnowStorm 0), chain end 100 / 60-60;
+> Sleep's veto for NSleep (the veto exit saw $15); NBang's own MP (poked 255) vetoed it; the party estimate = the base's, its
+> own power followed; the simulator == the ROM at 516 chain ends (the caster's gap = the stock's); E13: "Blaze becomes
+> Blazemore!" + "… and learned Flare!", the battle ends; the third child never once Blaze is gone; nine skills → the forget
+> menu; a plain upgrade unchanged. `--negative` **28 FAIL**. walk_reclaim 44 / 44 (negative 33 FAIL), walk_plunder 45 / 45,
+> walk_earth 40 / 40, walk_memorial 60 / 60 (a save copy with "M1" zeroed), walk_skills 31 / 33 → later 33 / 33 (the
+> walk's save assumptions fixed — KEY_LESSONS S161); all re-run on the `c8fdb078…` code.
+> **Annotation (both trees, `1ca6579…`):** bank $57 state 4 / the chain end, bank $54 the record indexers, bank $58 the
+> estimate, bank $52 `AIDamageEstimate_538f`, bank $51 `LevelUpS04_LearnScan` (the lines, the hazard, `$0b03`).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1896 PASSED (+ `test_s161`, + `AIBaseOrSelf72` for ids
+> 0-255); test_app `--rom` PASS (the GUI build = the pin; + the Preference box, the AI-weights tooltip); test_canvas PASS
+> (+ the dialog's weight labels); validate_rules 240 / F10 rules 332 / battle 6,614 /
+> command 6,411 / F10 1,335 — 0 mismatches; census_raising selftest + a shared-parent project 5,073 level-ups 0 mismatches.
+> **Next:** the user's test of `DWM-S161-mirror-test-2.gbc`; the user's decision on project enemy rows and
+> `EnemyDupConvFlagTable_41df` (ROADMAP E17 note); then the rule model on 3-opponent boards (its own session), the census
+> of other act-time id lists, or E14 (names) / the E13 note "combinations for new skills".
+
 > Last verified: 2026-10-29 (Session 160 — **ROADMAP E13 BUILT: 30 NEW SKILLS — AFTER THE 16 HIGH IDS 239-254 A PROJECT'S
 > NEW SKILLS TAKE THE 14 BATTLE-SKILL IDS OF LIFEACORN, MYSTICNUT, THE FOUR SEEDS (188-193), WARPWING, TINYMEDAL AND THE SIX
 > BOOKS (204-211); THOSE 14 ITEMS ARE FIELD-ONLY FOR GOOD (BY THEIR BASE); A RECLAIMED NEW SKILL ACTS EXACTLY LIKE A HIGH

@@ -152,14 +152,17 @@ dummy = d.add_enemy(copy_eid=2, name='Dummy', species=BABBLE, level=1, hp=5, mp=
                     **{'def': 1}, agl=1, int=1, exp=2000, joinability=7, skills=[])
 
 
-def sparrer(name, sp, skills):
+def sparrer(name, sp, skills, **kw):
     return d.add_enemy(copy_eid=2, name=name, species=sp, level=15, hp=400, mp=250,
                        atk=40, **{'def': 50}, agl=40, int=200, joinability=7,
-                       ai_weights=[30, 250, 30, 0], skills=skills)
+                       ai_weights=[30, 250, 30, 0], skills=skills, **kw)
 
 
-smage = sparrer('Stock mage', EYEBALL, [b for b, _ in MAGE])
-nmage = sparrer('New mage', EYEBALL, [N[t] for _, t in MAGE])
+# S163: the STOCK / NEW MAGE rows hold back group spells (S162: a project row's own
+# `holds_group_spells`, absent = casts) — the walk's `dupcast` pair counts the conversions
+# (until S162 these rows read the flag table past its end: "holding" by accident)
+smage = sparrer('Stock mage', EYEBALL, [b for b, _ in MAGE], holds_group_spells=True)
+nmage = sparrer('New mage', EYEBALL, [N[t] for _, t in MAGE], holds_group_spells=True)
 rmage = sparrer('Recl mage', EYEBALL, [R[t] for _, t in MAGE])
 pmage = sparrer('Picky mage', EYEBALL, [P[t] for _, t in MAGE])
 scast = sparrer('Stock caster', SWORDGON, [b for b, _ in CASTER])

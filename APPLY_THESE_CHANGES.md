@@ -1,0 +1,55 @@
+# APPLY_THESE_CHANGES — Session 163 (copy each file to the same path in the repo)
+
+## REPLACE
+- `disassembly/bank_050.asm`
+- `disassembly/bank_052.asm`
+- `disassembly/bank_053.asm`
+- `disassembly/bank_057.asm`
+- `disassembly/bank_058.asm`
+- `documentation/ARCHITECTURE.md`
+- `documentation/BATTLE_SKILL_SYSTEM.md`
+- `documentation/DOC_AUDIT.md`
+- `documentation/EDITOR_DESIGN.md`
+- `documentation/KEY_LESSONS.md`
+- `documentation/PROJECT_COMPILER.md`
+- `documentation/PROJECT_STATE.md`
+- `documentation/PYBOY_DEBUGGING.md`
+- `documentation/ROADMAP.md`
+- `documentation/ROOM_DATA_FORMAT.md`
+- `documentation/SESSION_HISTORY.md`
+- `documentation/TOOLS_AND_DATA.md`
+- `editor2/__init__.py`
+- `editor2/app/rooms/commands.py`
+- `editor2/app/rooms/npc_panel.py`
+- `editor2/core/document.py`
+- `editor2/core/formats.py`
+- `editor2/core/validators.py`
+- `editor2/help/20_npcs.md`
+- `editor2/help/80_build.md`
+- `editor2/help/_revision.md`
+- `editor2/tests/test_app.py`
+- `editor2/tests/test_compiler.py`
+- `examples/s161_mirror_demo/build_demo.py`
+- `patches/bank_050.asm`
+- `patches/bank_052.asm`
+- `patches/bank_053.asm`
+- `patches/bank_057.asm`
+- `patches/bank_058.asm`
+- `simulator/ai_rules.py`
+- `simulator/pacing.py`
+- `simulator/sweep_rules.py`
+- `tools/walk_mirror.py`
+- `tools/walk_reclaim.py`
+
+## ADD
+- `examples/s163_echo_demo/build_demo.py`
+- `extracted/act_id_lists_census.json`
+- `simulator/rom_rules.py`
+- `simulator/s163_board_corpus.json.gz`
+- `simulator/validate_rules_boards.py`
+- `tools/census_act_id_lists.py`
+- `tools/sm83run.py`
+- `tools/walk_actbase.py`
+
+## DELETE
+- `editor2/example-project/assets/ts_28_0D.2bpp`

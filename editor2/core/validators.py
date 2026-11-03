@@ -929,11 +929,16 @@ def validate(prj, generated=None):
                           "exactly 8 db lines')")
             continue
         free1 = bool(pal.get('free_color1'))
-        bad_rows = [ri for ri, row in enumerate(rows)
-                    if (F.val(row[1]) != 0x6BFF and not (free1 and ri < 4))
+        # S163: only slots 0-3 reach the ROM (S137: emitters.palette_slots_asm writes
+        # 32 B a palette, the game loads 4 — CustomPalCheck b = 4 / LoadPal_46a1); slots
+        # 4-7 of the stored 8 are never emitted, so they are not checked (a copy of a game
+        # room keeps zeros there — it warned 6 times on the user's project)
+        loaded = rows[:4]
+        bad_rows = [ri for ri, row in enumerate(loaded)
+                    if (F.val(row[1]) != 0x6BFF and not free1)
                     or F.val(row[3]) & 0x7FFF != 0x0000]
         if free1 and any(F.val(r[1]) & 0x8000 or F.val(r[0]) & 0x8000 or
-                         F.val(r[2]) & 0x8000 for r in rows):
+                         F.val(r[2]) & 0x8000 for r in loaded):
             warnings.append(f"palette {pal.get('id')}: bit 15 set in a colour — "
                             "ignored by the hardware")
         if bad_rows:
@@ -962,23 +967,12 @@ def _validate_state(prj, r, rid, i, v, st, n_states, errors, warnings):
             "a 9th entry silently corrupts $D8D9+ script state — "
             "capacities.json / ROOM_DATA_FORMAT 'NPC capacity')")
     else:
-        # S151 r3: count DIFFERENT sprites (a sheet per distinct sprite / monster — repeats
-        # share it, the NPC panel's own rule); it counted every NPC, so 4 NPCs of 3 sprites
-        # warned (the S151 demo's CURIO HALL)
-        kinds = set()
-        for n in real_npcs:
-            if n.get('kind') == 'raw':
-                kinds.add(('s', F.val(n['bytes'][1])))
-            elif n.get('monster') is not None:
-                kinds.add(('m', F.val(n['monster'])))
-            else:
-                kinds.add(('s', F.val(n.get('sprite', 0))))
-        if len(kinds) > 3:
-            warnings.append(
-                f"{tag}: {len(kinds)} different NPC sprites may exhaust "
-                "the per-screen sprite-sheet VRAM budget (S91: order-filled; "
-                "8 light sheets fit, ~2-3 heavy exhaust; overflow renders "
-                "BLANK, no crash; repeats of a sprite are free) — verify in PyBoy")
+        # S163: the game's own sheet cache (6 different sprites; $E0-$E3 / $FF take none —
+        # measured, formats.sheet_budget). S151 r3 counted different sprites but warned
+        # past 3 (the S91 rule, before S141 moved sheets 4-6 out of the menus' way) and
+        # counted the arena's party shapes $E0-$E3
+        for msg in F.sheet_budget(real_npcs):
+            warnings.append(f"{tag}: {msg}")
     # S117b: the hardware sprite limits (10 per line, 40 on screen) with the
     # player + 3 monsters (formats.sprite_budget; user: "Just warning is fine")
     for msg in F.sprite_budget(st.get('npcs', []), party=F.party_walks(r)):   # S143

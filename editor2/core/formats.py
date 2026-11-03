@@ -376,6 +376,60 @@ def frame_budget(npcs, party=True):
     return []
 
 
+NPC_SHEET_CACHE = 6        # bank $0B Call_00b_4839: the 6-pair cache at $D7BE (ld b, $06)
+NPC_SHARED_SPRITES = (0xE0, 0xE1, 0xE2, 0xE3, 0xFF)   # the player / party shapes, none
+
+
+def npc_sheet_keys(npcs):
+    """S163: the room-load sheet cache as the game fills it (bank $0B `Call_00b_4839`,
+    measured in PyBoy S163): every NPC entry with a sprite (bit 7 clear — hidden ones
+    too, the parser resolves every entry) in list order; `$FF` (none) and `$E0-$E3`
+    (the player's / the party's own shapes, already in VRAM) take no entry; one entry
+    per distinct (sprite, is_monster) pair — a monster NPC (`npc.monster`) is its
+    species. Returns [(key, [entry indices])] in cache order (all of them, even past
+    the 6 the cache holds)."""
+    order, seen = [], {}
+    for i, e in enumerate(npcs or []):
+        k = e.get('kind')
+        if k == 'raw':
+            b = e.get('bytes') or []
+            if not b or val(b[0]) >= 0x80:
+                continue
+            key = ('s', val(b[1]))
+        elif k == 'npc':
+            key = (('m', val(e['monster'])) if e.get('monster') is not None
+                   else ('s', val(e.get('sprite', 0))))
+        else:
+            continue
+        if key[0] == 's' and key[1] in NPC_SHARED_SPRITES:
+            continue
+        if key not in seen:
+            seen[key] = []
+            order.append(key)
+        seen[key].append(i)
+    return [(k_, seen[k_]) for k_ in order]
+
+
+def sheet_budget(npcs):
+    """S163: [warning text] when a screen state has more than 6 different NPC sprites.
+    Measured (PyBoy S163, a custom town room with 8 different sprites): the cache holds
+    6; the 7th and later different sprites get tile base $50 — they are DRAWN WITH THE
+    FIRST SPRITE'S PICTURE (in their own colours). No blank, no crash. The two heavy
+    sheets ($15, $55: two VRAM pages each) never push a sheet into the room's tiles
+    (at most page $8D in a town / $8F on a gate floor; the room's start at $9000).
+    Since S141 a custom room's sheets 4-6 survive every windowed menu (VRAM bank 1),
+    so the old S91 "more than 3 may run out" warning no longer applies."""
+    keys = npc_sheet_keys(npcs)
+    if len(keys) <= NPC_SHEET_CACHE:
+        return []
+    late = keys[NPC_SHEET_CACHE:]
+    names = ', '.join((f"monster {k[1]}" if k[0] == 'm' else f"sprite ${k[1]:02X}")
+                      for k, _ in late)
+    return [f"{len(keys)} different NPC sprites: the game keeps 6 a screen — the later "
+            f"ones in the list ({names}) are drawn with the first one's picture. Repeats "
+            "of a sprite and the player / party shapes ($E0-$E3) are free"]
+
+
 def sprite_budget(npcs, party=True):
     """[warning text] for one screen state's npcs[] entries: rows whose NPCs
     the hardware hides while the party walks along that row, and NPCs past

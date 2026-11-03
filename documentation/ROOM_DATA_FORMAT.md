@@ -575,6 +575,21 @@ pixel-identical crops). Per-sheet tile counts are unmeasured (capacities
 residual). Consequence for tooling: any per-id render census must place ids
 **solo** (tools/dump_npc_sprite_catalog.py).
 
+**S163 correction — the budget is a 6-sheet CACHE, and past it a sprite is drawn with the FIRST
+sheet's picture (not blank).** Measured (PyBoy S163, a custom town room with 8 different sprites;
+code: bank $0B `Call_00b_4839`, `ld b, $06` over the pair cache at `$D7BE`): at room load every NPC
+entry with a sprite (bit 7 clear — hidden ones too; the parser resolves every entry), in list order,
+takes one cache entry per distinct (sprite, is-monster) pair; `$FF` (none) and `$E0-$E3` (the player
+/ party shapes, already in VRAM) take none. The cache holds 6; the 7th and later different sprites
+get tile base `$50` = the first sheet's tiles — they show the first NPC's picture in their own
+colours. No blank, no crash. The two heavy sheets (`$15`, `$55`: two VRAM pages each) never reach the
+room's tiles (at most page `$8D` in a town / `$8F` on a gate floor; room tiles start at `$9000`).
+The S91 "8 distinct light sheets all render" does not hold for a custom room: sprites 7 and 8 are
+drawn, but with sheet 1's picture (DOC_AUDIT S163). Since S141 a
+custom room's sheets 4-6 survive the windowed menus (VRAM bank 1). The editor's warning
+(`formats.sheet_budget`, `NPC_SHEET_CACHE` 6; the NPC panel's wording, help 20 / 80) says this since
+S163 (was S91's "more than 3 different sprites may run out"; built S163, signed off 2026-11-02 22:29 with the S163 r2 ROM ("Sounds good hand off zip") — this editor / simulator change itself not separately user-tested).
+
 **Sprite-id catalog.** `extracted/npc_sprite_catalog.json` (+ thumbnail
 sheet + per-id crops in `extracted/npc_field_sprites/`) is the S91 empirical
 id → appearance census over $00-$7F, $E0-$E3, $F0-$F3, $FF: 72 normal ids,

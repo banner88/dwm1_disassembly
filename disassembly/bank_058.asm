@@ -3783,6 +3783,7 @@ jr_058_5543:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a
@@ -4061,6 +4062,7 @@ jr_058_56ab:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a
@@ -4871,6 +4873,7 @@ jr_058_5a63:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a
@@ -5167,6 +5170,7 @@ jr_058_5bc4:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a
@@ -6845,6 +6849,7 @@ LoadBtlFX_6479:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a

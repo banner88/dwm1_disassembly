@@ -233,6 +233,11 @@ class MirrorWalk(SkillWalk):
                     'AIState3SkillSums_7529', 'AIState4FilterEval_7439',
                     'AIState7ChainWalker_7865'):
             regs.append(S[lab] + (on_state(lab[7:13]),))
+        # S163: the round's turn-order roll too (bank $58 TurnOrderKeyRoll_5662: it steps the
+        # RNG for every actor; the act-time base view's far calls there — ROADMAP E17 note
+        # "Act-time id lists" — add a few cycles, and the RNG also steps while the CPU idles)
+        if 'TurnOrderKeyRoll_5662' in S:
+            regs.append(S['TurnOrderKeyRoll_5662'] + ((lambda _c: (tr('order'), rs(False))),))
         for b, a, fn in regs:
             p.hook_register(b, a, fn, None)
         for j in range(ecount):                     # wTempEnemyId1-3: the same row

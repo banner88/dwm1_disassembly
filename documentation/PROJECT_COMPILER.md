@@ -4848,7 +4848,7 @@ steps) + editor (Cutscenes → Title & ending…, three steps). Help `76_ending.
 
 ## §2.62 S154 — THE MEMORIAL: statues of the monsters that won and have left (ROADMAP E10)
 
-**Built S154, NOT yet user-tested** (user: "A custom room, insertable into gates, where you can
+**Built S154, USER-CONFIRMED 2026-11-02 22:11 ("S154 confirmed", on the r2 ROM)** (user: "A custom room, insertable into gates, where you can
 place objects that will take on sprites (non-moving) and interactables (text when examined) of
 any monsters the player beat a boss OR an arena level with … ONLY if monster is no longer with
 player"; then: "Just get them to roll from shared pool and make sure statue objects in same
@@ -5394,6 +5394,40 @@ messed up not just what I have"). Engine side: BATTLE_SKILL_SYSTEM §13.13 (S162
   `--rom`: `DupConvFlag53` → `EnemyHoldsOf` RUN through MiniSM83 — which gained `sbc a, n` and a
   stubbable `rst $10` — for EIDs 0-529, every row and the edges; the bank $53 site's bytes),
   `test_app` (the Monsters tab column), `test_canvas` (the dialog's tick box).
+
+## §2.71 S163 — ACT-TIME BASE VIEW (ROADMAP E17 note "Act-time id lists") + editor fixes
+
+**Built S163 + r2; the engine part USER-CONFIRMED 2026-11-02 22:29 ("Sounds good hand off zip", on `DWM-S163r2-echo-test.gbc`); the editor fixes signed off 2026-11-02 22:29 with the S163 r2 ROM ("Sounds good hand off zip") — this editor / simulator change itself not separately user-tested** (user: "Do all of A + fix B4 and B5"). Engine side:
+BATTLE_SKILL_SYSTEM §13.14; the simulator side (B4, the AI rule model on 1-3 opponent boards):
+BATTLE_SKILL_SYSTEM §15.10.5 "S163".
+
+- **Engine (hand patches, same size; no schema, no template re-pin):** `patches/bank_050.asm` /
+  `bank_052.asm` / `bank_053.asm` / `bank_058.asm` — 49 act-time reads of the acting id go through
+  `ActBase…` / `MenuBase50` / `QueueBase…` / `CmpBase53` / `Entry1Base52` → bank $72 entry 13
+  `AIBaseOrSelf72` (a new skill → its base; every other id unchanged). A project with no new skill
+  builds the same behaviour as before (only the bytes of the 49 sites + the stubs differ). The bank $52
+  stubs sit in the 82 dead bytes `$763E-$768F` (`ASSERT @ == $7690`); `SetHLBattle_7d77` keeps its 5
+  bytes (`ASSERT @ == $7d7c`).
+- **Validators (A1 / A2):** the palette check reads the 4 slots the ROM loads (`rows[:4]`; slots 4-7 of
+  the stored 8 are never emitted — S137); the NPC sprite warning = `formats.sheet_budget` (more than 6
+  DIFFERENT sprites in a screen state: the 7th+ drawn with the first one's picture — ROOM_DATA_FORMAT
+  "S163 correction"; `npc_sheet_keys`, `NPC_SHEET_CACHE`, `NPC_SHARED_SPRITES` `$E0-$E3` / `$FF`); the
+  NPC panel's label + help 20 / 80 say the same. The user's project: 19 warnings → 7.
+- **Document (A4):** `Document.unique_tileset_id(base)` — localize / new blank / duplicate tileset
+  avoid ids in use, `raw2bpp` paths in use AND files already in `assets/` (a stray `ts_28_0D.2bpp`
+  was taken over, and undo then DELETED it — the orphan is removed from the example project). The
+  orphan's ORIGIN (found S163): a structural edit that FAILS (a refused walkability flip localizes the
+  room's tileset first, then raises) restored the document but left the sheet file it had written —
+  `app/rooms/commands.SnapshotCommand` now removes every `assets/*.2bpp` the failed op created
+  (test_app `s163_failed_op_assets`; test_app's own run had left `ts_28_04.2bpp` the same way).
+- **Pin:** example `64ed1699…` (patched; S163 r2 — the target menu's two copy sites in bank $50,
+  BATTLE_SKILL_SYSTEM §13.14 "r2"; first S163 `1400266e…`, patched, historical; was `97acc081…`,
+  patched): banks $50 / $52 / $53 / $58 (+ the header checksum). `EDITOR_REVISION` S163.
+- **Measured:** `tools/census_act_id_lists.py` (363 sites, 0 unjudged roots), `tools/walk_actbase.py`
+  on the user's `.sav` (`examples/s163_echo_demo/`, THE ECHO HALL): 47 / 47 (r2: + step `menu`, the real battle
+  menu), `--negative` 18 FAIL (first delivery 44 / 44, negative 16 FAIL);
+  the six earlier demo walks re-run on the S163 code. Tests: `test_compiler.test_s163` (the palette
+  slots, the sheet budget, `unique_tileset_id`).
 
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 

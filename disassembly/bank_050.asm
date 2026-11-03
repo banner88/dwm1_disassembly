@@ -1999,6 +1999,7 @@ jr_050_4afe:
     cp $01
     ret nz
 
+    ; [S163] the id read below: patched builds compare a NEW skill as its base here (S163 ActBase, ROADMAP E17 note "Act-time id lists"; BATTLE_SKILL_SYSTEM §13.14)
     ld a, [$db8a]
     cp $30
     jr z, jr_050_4b20
@@ -2167,6 +2168,7 @@ SaveBtl_4ba4:
 ; entry 4 TargetSlotResolver_6379 and $51-$53 -> entry 5: an RNG pick DURING
 ; THE MENU ($6379 is side-blind: measured picking an ally).
 LoadBtl_4bd1:
+    ; [S163] the menu's skill id below: patched builds read it as a NEW skill's base (S163 MenuBase50)
     ld a, [$db4f]
     cp $14
     jr z, jr_050_4c21
@@ -2341,6 +2343,7 @@ SaveBtl_4ca4:
     ld bc, $0201
     rst $38
     rst $38
+    ; [S163] r2: the TARGET MENU's copy of the id below ($DD76 / $C1C2; compared with Vivify $30 / Revive $31 / $BB by CheckBattlePhase / SaveBtl_5bc5 / LoadBtl_5bd7 to let a fallen ally be chosen): patched builds copy a NEW skill's base (S163 r2 ActBase50)
     ld a, [$db8a]
     ld [$dd76], a
     ld a, a
@@ -2432,6 +2435,7 @@ jr_050_4d68:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl]): patched builds read it as a NEW skill's base (S163 QueueBase)
     ld a, $00
     adc h
     ld h, a
@@ -2484,6 +2488,7 @@ jr_050_4d9c:
     ret
 
 
+    ; [S163] r2: the TARGET MENU's copy of the id below ($DD76 / $C1C2; compared with Vivify $30 / Revive $31 / $BB by CheckBattlePhase / SaveBtl_5bc5 / LoadBtl_5bd7 to let a fallen ally be chosen): patched builds copy a NEW skill's base (S163 r2 ActBase50)
     ld a, [$db8a]
     ld [$dd76], a
     ld a, a
@@ -4539,6 +4544,7 @@ PersonalityRunTable:
     add a
     add l
     ld l, a
+    ; [S163] the queued id below (ld a,$00 / adc h / ld h,a / ld a,[hl+]): patched builds read it as a NEW skill's base (S163 QueueBaseInc50)
     ld a, $00
     adc h
     ld h, a
