@@ -100,3 +100,36 @@ class GameTextMixin:
         for src, k in self.game_text_edited(group):
             GT.set_edit(self.data, src, k, None)
         self.touch()
+
+    # ---- [S165] the words drawn in the windows as tiles (editor2/core/window_words.py)
+    def window_words(self):
+        """{slot key: the project's word} (gamedata.window_words)."""
+        v = (self.data.get('gamedata') or {}).get('window_words')
+        return dict(v) if isinstance(v, dict) else {}
+
+    def set_window_word(self, key, word):
+        """One window word: `word` None / '' / == the original = back to the original. Refused
+        (WindowWordsError) when longer than the slot or using a letter the screen's font lacks."""
+        from editor2.core import window_words as WW
+        sl = WW.slots(getattr(self, 'repo_root', None))
+        if key not in sl:
+            raise WW.WindowWordsError(f'no window word {key!r}')
+        gd = self.data.setdefault('gamedata', {})
+        ww = gd.setdefault('window_words', {})
+        if word in (None, '') or word == sl[key]['text']:
+            ww.pop(key, None)
+        else:
+            errs = []
+            WW.validate({'window_words': {key: word}}, errs, getattr(self, 'repo_root', None))
+            if errs:
+                if not ww:
+                    gd.pop('window_words')
+                if not gd:
+                    self.data.pop('gamedata')
+                raise WW.WindowWordsError(errs[0].split(': ', 1)[1])
+            ww[key] = word
+        if not ww:
+            gd.pop('window_words')
+        if not gd:
+            self.data.pop('gamedata')
+        self.touch()

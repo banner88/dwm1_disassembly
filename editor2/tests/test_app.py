@@ -3000,7 +3000,7 @@ def s150_text(app, w):
         w.tabs.setCurrentWidget(tt)
         app.processEvents()
         names = [tt.tabs.tabText(i).replace('&&', '&') for i in range(tt.tabs.count())]
-        assert names == ['Dialogue', 'Battle', 'Items', 'Menus & field', 'Credits', 'Other tabs'], names
+        assert names == ['Dialogue', 'Battle', 'Items', 'Menus & field', 'Credits', 'Window words', 'Other tabs'], names
         pg = tt.pages['dialogue']
         tt.tabs.setCurrentWidget(pg)
         pg.query.setText('Now, head to')
@@ -3815,6 +3815,54 @@ def s164_ai_fixes(app, w):
     assert doc.dumps() == before and doc.ai_fixes() == frozenset(), 'undo restores the project'
     print('OK: S164 Enemy AI fixes… — 5 boxes, one undo step, gamedata.ai_fixes all on, the '
           'compile emits the fixed bank $57 regions; undo restores project.json')
+
+
+def s165_window_words(app, w):
+    """S165 (ROADMAP Phase F T-follow (a)): the Text tab's Window words page — the words drawn in
+    the windows as tiles; an edit = one undo step writing gamedata.window_words; a letter the
+    screen's font lacks / a longer word refused (the project unchanged); the compile emits the
+    run with the new cells; undo restores project.json."""
+    import json
+    from editor2.core import window_words as WW
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    tt = w.dialogue_tab
+    pg = tt.pages['window_words']
+    tt.tabs.setCurrentWidget(pg)
+    pg.fill_kinds()
+    app.processEvents()
+    keys = pg.keys
+    assert len(keys) == len(WW.slots()) and '07:704D/1/2' in keys, len(keys)
+    r = keys.index('07:704D/1/2')
+    assert pg.table.item(r, 1).text() == 'INFO', pg.table.item(r, 1).text()
+    n0 = s.undo.count()
+    pg.table.item(r, 3).setText('STAT')
+    app.processEvents()
+    assert doc.window_words() == {'07:704D/1/2': 'STAT'} and \
+        s.undo.undoText().startswith('Window word INFO'), (doc.window_words(), s.undo.undoText())
+    r = pg.keys.index('07:70F7/3/2')
+    pg.table.item(r, 3).setText('QQQ')                    # no Q in the field font
+    app.processEvents()
+    assert '07:70F7/3/2' not in doc.window_words() and '✗' in pg.status.text(), pg.status.text()
+    r = pg.keys.index('07:70F7/3/2')
+    pg.table.item(r, 3).setText('POWER')                  # 5 letters in a 3-cell slot
+    app.processEvents()
+    assert '07:70F7/3/2' not in doc.window_words() and 'room for 3' in pg.status.text(), \
+        pg.status.text()
+    from editor2.core import compiler as C2
+    from editor2.core.project import Project
+    prj = Project(json.loads(doc.dumps()), doc.project_dir)
+    prj.repo_root = REPO
+    gen, _w = C2._emit_all(prj)
+    txt = gen['region:patches/bank_007.asm#win_words_07_704d']
+    assert '$d6, $0b, $00, $0b' in txt and 'STAT' in txt, txt[:600]
+    s.undo.undo()                                         # the one step of the edit
+    app.processEvents()
+    assert doc.dumps() == before and doc.window_words() == {}, 'undo restores the project'
+    print('OK: S165 Window words — 42 words, INFO -> STAT one undo step (gamedata.window_words), '
+          'a Q / a longer word refused, the compile emits the bank $07 run with the new cells; '
+          'undo restores project.json')
 
 
 def s159_resistances(app, w):
@@ -5456,6 +5504,7 @@ def main():
     s159_resistances(app, w)
     s163_failed_op_assets(app, w)
     s164_ai_fixes(app, w)
+    s165_window_words(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

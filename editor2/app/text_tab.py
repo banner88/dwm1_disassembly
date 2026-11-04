@@ -11,6 +11,8 @@ One sub-tab per kind of text (user S150: "differentiate by tab"):
   Menus & field   field messages and menu words, personalities, the families'
                   default names, Watabou
   Credits         the ending's credits and "TO BE CONTINUED"
+  Window words    (S165) the words drawn in the windows as TILES — the field menu, the INFO
+                  page, ITEM / SKIL / OPTN, the title menu (editor2/core/window_words.py)
   Other tabs      the monster / skill descriptions (read-only here — the
                   Monsters / Skills tabs edit them)
 
@@ -527,6 +529,135 @@ class GroupPage(QWidget):
         self.count.setText(f'Saved {len(self.shown)} texts to {path}')
 
 
+WINDOW_HELP = ('The words of the windows are not texts: each letter is a TILE the screen has '
+               'loaded, so a word keeps its length (a shorter one is filled with blanks) and '
+               'can only use the letters of its screen\'s font — the field menus have A-Y '
+               'without Q (no Z), upper case, and the digits; the title menu has the whole '
+               'text font. A word that appears in several windows (INFO, ITEM, SKIL, MASTER …) '
+               'is changed in each one. Double-click "Your word" to change it; empty = the '
+               'original.')
+
+
+class WindowWordsPage(QWidget):
+    """[S165] the words drawn in the windows as tiles (ROADMAP Phase F T-follow (a))."""
+
+    def __init__(self, tab):
+        super().__init__()
+        self.tab = tab
+        self.s = tab.s
+        self.monster = None
+        self._busy = False
+        v = QVBoxLayout(self)
+        h = QLabel(WINDOW_HELP)
+        h.setWordWrap(True)
+        v.addWidget(h)
+        row = QHBoxLayout()
+        self.kind = QComboBox()               # the screen filter (TextTab checks .kind)
+        self.kind.currentIndexChanged.connect(self.refresh)
+        row.addWidget(QLabel('Window:'))
+        row.addWidget(self.kind, 1)
+        self.edited_only = QCheckBox('Edited only')
+        self.edited_only.toggled.connect(self.refresh)
+        row.addWidget(self.edited_only)
+        self.orig_b = QPushButton('Original')
+        self.orig_b.setToolTip('The selected word back to the game\'s own')
+        self.orig_b.clicked.connect(self._original)
+        row.addWidget(self.orig_b)
+        v.addLayout(row)
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(['Window', 'Original', 'Room', 'Your word',
+                                              'Letters this window has'])
+        self.table.verticalHeader().setVisible(False)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.DoubleClicked |
+                                   QAbstractItemView.EditKeyPressed)
+        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
+        self.table.itemChanged.connect(self._changed)
+        v.addWidget(self.table, 1)
+        self.status = QLabel('')
+        self.status.setWordWrap(True)
+        v.addWidget(self.status)
+        self.keys = []
+        self.fill_kinds()
+
+    def slots(self):
+        from editor2.core import window_words as WW
+        return WW.slots()
+
+    def fill_kinds(self):
+        self.kind.blockSignals(True)
+        self.kind.clear()
+        self.kind.addItem('All windows', None)
+        seen = []
+        for s_ in self.slots().values():
+            if s_['screen'] and s_['screen'] not in seen:
+                seen.append(s_['screen'])
+        for x in seen:
+            self.kind.addItem(x, x)
+        self.kind.blockSignals(False)
+        self.refresh()
+
+    def refresh(self, *_a):
+        cur = self.s.doc.window_words()
+        want = self.kind.currentData()
+        self._busy = True
+        self.table.setRowCount(0)
+        self.keys = []
+        for key, s_ in self.slots().items():
+            if want and s_['screen'] != want:
+                continue
+            mine = cur.get(key)
+            if self.edited_only.isChecked() and mine is None:
+                continue
+            r = self.table.rowCount()
+            self.table.insertRow(r)
+            vals = [s_['screen'] or f"${s_['bank']:02X}:{s_['addr']:04X}", s_['text'],
+                    f"{s_['len']} letters", mine or '', s_['letters'] + ' and space']
+            for c, val in enumerate(vals):
+                it = QTableWidgetItem(val)
+                if c != 3:
+                    it.setFlags(it.flags() & ~Qt.ItemIsEditable)
+                if mine is not None:
+                    it.setForeground(QColor('#1565c0'))
+                self.table.setItem(r, c, it)
+            self.keys.append(key)
+        self.table.resizeColumnsToContents()
+        self._busy = False
+        n = len(cur)
+        self.status.setStyleSheet('')
+        self.status.setText(f'{n} word(s) changed in this project.' if n else
+                            'No window word changed — the game\'s own.')
+
+    def _push(self, key, word):
+        from editor2.core import window_words as WW
+        s_ = self.slots()[key]
+        cmd = C.SnapshotCommand(self.s, f'Window word {s_["text"]} → {word or "original"}',
+                                lambda doc: doc.set_window_word(key, word))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            self.status.setStyleSheet('color: #c62828;')
+            self.status.setText('✗ ' + str(cmd.error))
+            return False
+        return True
+
+    def _changed(self, it):
+        if self._busy or it.column() != 3:
+            return
+        key = self.keys[it.row()]
+        word = it.text()
+        if self._push(key, word) is False:
+            return
+        self.refresh()
+
+    def _original(self):
+        r = self.table.currentRow()
+        if r < 0 or r >= len(self.keys):
+            return
+        self._push(self.keys[r], None)
+        self.refresh()
+
+
 class TextTab(QWidget):
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -540,6 +671,9 @@ class TextTab(QWidget):
             pg = GroupPage(self, group, title)
             self.pages[group] = pg
             self.tabs.addTab(pg, title.replace('&', '&&'))
+        pg = WindowWordsPage(self)                 # [S165]
+        self.pages['window_words'] = pg
+        self.tabs.insertTab(len(PAGES) - 1, pg, 'Window words')
         v.addWidget(self.tabs)
         self.s.undo.indexChanged.connect(self._undo_changed)
 

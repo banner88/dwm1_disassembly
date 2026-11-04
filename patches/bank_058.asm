@@ -4006,10 +4006,9 @@ TurnOrderDefensiveBoost_56cf:
     add a
     add l
     ld l, a
-    ld a, $00
-    adc h
-    ld h, a
-    ld a, [hl]
+    call QueueBase58            ; [S165] was `ld a, $00 / adc h / ld h, a / ld a, [hl]`:
+    nop                         ;   the queued id seen as its base (a new skill on Ironize /
+    nop                         ;   Imitate / Cover / Guardian / Dodge … acts first like it)
     cp $2a
     jr z, jr_058_5705
 

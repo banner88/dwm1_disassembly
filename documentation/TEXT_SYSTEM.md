@@ -451,6 +451,28 @@ the compiler (no slot). The editor counts each at its longest (12 / 12 / 13 / 15
 family at its longest name "Material"). Measured: the inserts == the resolver model for every
 pick; a riddle printed from bank $79 (DATA_STRUCTURES "Breeding hints").
 
+## Window words (S165) {#window-words}
+
+*Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good") (ROADMAP Phase F T-follow (a)).* The words the Text tab could not
+reach (S150: "no SaveBankAndSwitch call draws them") are cells of WINDOW LAYOUT STREAMS
+(DATA_STRUCTURES "Window layout streams (S165)"): each cell is a TILE NUMBER, so a word shows
+whatever letter tiles the screen has loaded. Measured (PyBoy, the example build + the user's save):
+
+* **the field font** (every bank $07 window — the field menu, INFO, ITEM, SKIL, OPTN): VRAM bank 0
+  tiles `$00-$0F` = A C D F H I K M N O R T U W J X, `$11` B, `$D4-$D6` Y E S, `$DD-$DF` G L V,
+  `$E1-$E3` H M P (a second H / M), `$E4` `:`, `$E5` `/`, `$F0-$F9` 0-9, `$E0` a blank cell — no Q,
+  no Z, no lower case (the other tiles of `$00-$FF` are the monsters' pictures and the frames);
+* **the text font** on the title menu (bank $15 `WinLayout_15_647D`): the text glyph numbers
+  (A = `$24`, a = `$3E`, the digits `$00-$09` — the charmap above).
+
+The S164 note that the field menu's words are bank $15 "window layout scripts" was half right:
+the format is the one the S164 session saw at `$15:$6855` ("INFO" / "OK" — bank $15's map /
+arena windows), but the field menu's own streams are in bank **$07** (`WinLayout_07_704D` …,
+DOC_AUDIT S165). Editing: `gamedata.window_words` (PROJECT_COMPILER §2.73) — 42 words, the same
+length at most, the screen font's letters only; the editor: Text → Window words.
+Open: the windows of banks $09 / $0A / $18 / $50 / $51 (shops, breeding, the battle) — streams found
+(`extracted/window_layouts.json`), their fonts not measured, so not editable yet.
+
 ## Monster text blocks (S108)
 
 The three per-species text blocks (all contiguous, id-ordered, one string per

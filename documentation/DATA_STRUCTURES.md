@@ -968,6 +968,41 @@ Renderer: `tools/render_rooms.py`.
 
 ---
 
+### Window layout streams (S165)
+
+*Byte-read + measured S165 (ROADMAP Phase F T-follow (a)).* Every framed window of the game's menus
+is drawn from a LAYOUT STREAM:
+
+    dw <position>     ; the cell offset in the 32-wide map: row * 32 + column
+    db <cell> …       ; a TILE number per cell, left to right
+    db $D8            ; NEWLINE: back to the row's start, one row down
+    db $D9            ; END
+
+by one routine of which the game keeps 8 copies — two entries per bank, banks `$07 $09 $0A $12 $15
+$18 $50 $51` (byte pattern `ld a, [de] / ld l, a / inc de / ld a, [de] / ld h, a / inc de / call
+<position>`): entry A draws into the BG map (`$9800+`; a newline wraps at row 32 — `and $03 / or
+$98`; cells through `Write_gfx_tile`), entry B into the screen buffer (`ld [hl+], a`). Bank $07 =
+`WinLayoutDrawVram07` `$68A0` / `WinLayoutDraw07` `$68DC`; bank $15 = `WinLayoutDrawVram15` `$5D53`
+(unlabelled before S165 — no direct call) / `WinLayoutDraw15` `$5D8F`; bank $12's are
+`ReadPtrFromDE` (`LibWinLayout_*`, the library — the same format, re-sectioned S26 / S27). A caller
+does `ld de, <stream> / call <drawer>`. `tools/census_window_layouts.py` finds 16 entries, 119
+code-referenced streams in 31 contiguous runs (`extracted/window_layouts.json`: position, rows,
+refs, the measured font, the words).
+
+Re-sectioned S165 as labeled `db` in both trees (`tools/resection_window_layouts.py`, byte-neutral
+`1ca6579…`): bank $07 `$704D-$7D97` (36 streams `WinLayout_07_<addr>`: the field menu, the gold box,
+INFO's WHO list / stats / HP-MP / page 2, SKIL, ITEM, OPTN, the tactics, the JOURNAL box …) and bank
+$15 `$647D-$64F3` (the title menu) + `$6716-$694D` (9 map / arena windows: NO, MASTER 0123, WHO,
+INFO / OK, FIGHT / PRIZE / EXIT, BREED / CHECK / EXIT …); every `ld de, <stream>` of the two banks
+names its label (79 sites). In the patched tree each run is a compiler region (`win_words_*`,
+PROJECT_COMPILER §2.73). The cells are tile numbers of the screen's font (TEXT_SYSTEM "Window words
+(S165)"): bank $07's comments read them with the FIELD font, bank $15's title menu with the text
+font; bank $15's other windows are commented "(font not measured)" where letters show.
+
+Measured on screen (PyBoy): the field menu opens with **A** on the field (not START; facing no
+one); the WHO list of INFO / SKIL shows the cursor monster's INFO page 1 (`$70F7` + `$71AF`) beside
+it; A on a monster then draws page 2 (`$724F` / `$727B` / `$7333`).
+
 ### Library / family-tab menu data (bank $12)
 
 The monster-library / family-tab menu lives in bank `$12`. mgbdis decoded its

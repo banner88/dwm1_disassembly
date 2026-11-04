@@ -352,12 +352,13 @@ runs the
 effect of an original skill you pick — its **base** — and everything else is
 its own: name, SKIL text, MP, power, targets, monster AI, behaviour, look,
 sounds, element, announce line and learning. Only bases measured to behave
-exactly like the original under a new id are offered (138 of 155 skills since
-S164: all the spells, breaths, slashes and family cuts, the heals, Beat /
-Defeat, TwinSlash, HighJump, Cover, Dodge, PoisonGas …; 17 skills whose code
-still checks its own number — Sacrifice, Bounce, Farewell, Massacre, QuadHits,
-Vacuum, PoisonAir, SandStorm, DeMagic, UltraDown, ThickFog, the three
-summons, Guardian, StrongD, BladeD — are not).
+exactly like the original under a new id are offered — since S165 that is
+**every one of the 155 battle skills** (S164 had 138: the last 17 — Sacrifice,
+Bounce, Farewell, Massacre, QuadHits, Vacuum, PoisonAir, SandStorm, DeMagic,
+UltraDown, ThickFog, the three summons, Guardian, StrongD, BladeD — checked
+their own number somewhere; the game now answers those checks with the base,
+and a copy of each was measured casting exactly like the original). StepGuard
+and MapMagic stay out: they are field skills.
 A new skill is learned by **evolving** from a skill the monster knows (Evolves
 from), or given as a natural skill / enemy-row skill on the Monsters tab. New
 skills are battle-only (the field menu knows the original skills only).

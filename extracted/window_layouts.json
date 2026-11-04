@@ -1,0 +1,3527 @@
+{
+ "_generator": "tools/census_window_layouts.py (S165) on data/DWM-original.gbc + the PyBoy tour of build (the title + field menus)",
+ "format": "dw position (row*32+col); cells (tile numbers); $D8 newline; $D9 end",
+ "fonts": {
+  "field": {
+   "00": "A",
+   "01": "C",
+   "02": "D",
+   "03": "F",
+   "04": "H",
+   "05": "I",
+   "06": "K",
+   "07": "M",
+   "08": "N",
+   "09": "O",
+   "0A": "R",
+   "0B": "T",
+   "0C": "U",
+   "0D": "W",
+   "0E": "J",
+   "0F": "X",
+   "11": "B",
+   "D4": "Y",
+   "D5": "E",
+   "D6": "S",
+   "DD": "G",
+   "DE": "L",
+   "DF": "V",
+   "E1": "H",
+   "E2": "M",
+   "E3": "P",
+   "E4": ":",
+   "E5": "/",
+   "F0": "0",
+   "F1": "1",
+   "F2": "2",
+   "F3": "3",
+   "F4": "4",
+   "F5": "5",
+   "F6": "6",
+   "F7": "7",
+   "F8": "8",
+   "F9": "9"
+  },
+  "text": {
+   "00": "0",
+   "01": "1",
+   "02": "2",
+   "03": "3",
+   "04": "4",
+   "05": "5",
+   "06": "6",
+   "07": "7",
+   "08": "8",
+   "09": "9",
+   "24": "A",
+   "25": "B",
+   "26": "C",
+   "27": "D",
+   "28": "E",
+   "29": "F",
+   "2A": "G",
+   "2B": "H",
+   "2C": "I",
+   "2D": "J",
+   "2E": "K",
+   "2F": "L",
+   "30": "M",
+   "31": "N",
+   "32": "O",
+   "33": "P",
+   "34": "Q",
+   "35": "R",
+   "36": "S",
+   "37": "T",
+   "38": "U",
+   "39": "V",
+   "3A": "W",
+   "3B": "X",
+   "3C": "Y",
+   "3D": "Z",
+   "3E": "a",
+   "3F": "b",
+   "40": "c",
+   "41": "d",
+   "42": "e",
+   "43": "f",
+   "44": "g",
+   "45": "h",
+   "46": "i",
+   "47": "j",
+   "48": "k",
+   "49": "l",
+   "4A": "m",
+   "4B": "n",
+   "4C": "o",
+   "4D": "p",
+   "4E": "q",
+   "4F": "r",
+   "50": "s",
+   "51": "t",
+   "52": "u",
+   "53": "v",
+   "54": "w",
+   "55": "x",
+   "56": "y",
+   "57": "z"
+  }
+ },
+ "glyphs": {
+  "field": {
+   "/": [
+    "ff00ff02ff04ff08ff10ff20ff40ff80",
+    "ff02ff04ff08ff10ff20ff40ff80ff00"
+   ],
+   "0": [
+    "ff7cff82ff82ff82ff82ff82ff7cff00"
+   ],
+   "1": [
+    "ff10ff30ff10ff10ff10ff10ff7cff00"
+   ],
+   "2": [
+    "ff7cff82ff02ff0cff30ff40fffeff00"
+   ],
+   "3": [
+    "ff7cff82ff02ff3cff02ff82ff7cff00"
+   ],
+   "4": [
+    "ff0cff14ff24ff44ff84fffeff04ff00"
+   ],
+   "5": [
+    "fffcff80ff80fffcff02ff82ff7cff00"
+   ],
+   "6": [
+    "ff7cff82ff80fffcff82ff82ff7cff00"
+   ],
+   "7": [
+    "ff7eff82ff02ff04ff04ff08ff08ff00"
+   ],
+   "8": [
+    "ff7cff82ff82ff7cff82ff82ff7cff00"
+   ],
+   "9": [
+    "ff7cff82ff82ff7eff02ff82ff7cff00"
+   ],
+   ":": [
+    "ff00ff18ff18ff00ff00ff18ff18ff00"
+   ],
+   "A": [
+    "ff10ff28ff28ff44ff7cff82ff82ff00"
+   ],
+   "B": [
+    "fff8ff84ff84fffcff82ff82fffcff00"
+   ],
+   "C": [
+    "ff3cff42ff80ff80ff80ff42ff3cff00"
+   ],
+   "D": [
+    "fff8ff84ff82ff82ff82ff84fff8ff00"
+   ],
+   "E": [
+    "fffeff80ff80fffcff80ff80fffeff00"
+   ],
+   "F": [
+    "fffeff80ff80fffcff80ff80ff80ff00"
+   ],
+   "G": [
+    "ff3cff42ff80ff9eff82ff42ff3cff00"
+   ],
+   "H": [
+    "ff82ff82ff82fffeff82ff82ff82ff00"
+   ],
+   "I": [
+    "ff7cff10ff10ff10ff10ff10ff7cff00"
+   ],
+   "J": [
+    "ff7eff08ff08ff08ff88ff88ff70ff00"
+   ],
+   "K": [
+    "ff84ff88ff90ffb0ffc8ff84ff82ff00"
+   ],
+   "L": [
+    "ff80ff80ff80ff80ff80ff80fffeff00"
+   ],
+   "M": [
+    "ff82ffc6ffaaff92ff82ff82ff82ff00"
+   ],
+   "N": [
+    "ff82ffc2ffa2ff92ff8aff86ff82ff00"
+   ],
+   "O": [
+    "ff38ff44ff82ff82ff82ff44ff38ff00"
+   ],
+   "P": [
+    "fffcff82ff82fffcff80ff80ff80ff00"
+   ],
+   "R": [
+    "fffcff82ff82fffcff88ff84ff82ff00"
+   ],
+   "S": [
+    "ff78ff84ff80ff7cff02ff82ff7cff00"
+   ],
+   "T": [
+    "fffeff10ff10ff10ff10ff10ff10ff00"
+   ],
+   "U": [
+    "ff82ff82ff82ff82ff82ff82ff7cff00"
+   ],
+   "V": [
+    "ff82ff82ff44ff44ff28ff28ff10ff00"
+   ],
+   "W": [
+    "ff82ff92ffaaffaaffc6ffc6ff82ff00"
+   ],
+   "X": [
+    "ffc6ff44ff28ff10ff28ff44ffc6ff00"
+   ],
+   "Y": [
+    "ff82ff44ff28ff10ff10ff10ff10ff00"
+   ]
+  },
+  "text": {
+   "0": [
+    "ff00ff00ff00ff00ff00ff00ff00ff00"
+   ],
+   "1": [
+    "ff00ff00ff00ff00ff00ff00ff00ff00"
+   ],
+   "2": [
+    "ff00ff00ff00ff00ff00ff00ff00ff00"
+   ],
+   "3": [
+    "ff00ff00ff00ff00ff00ff00ff00ff00"
+   ],
+   "4": [
+    "ff7cff82ff82ff82ff82ff82ff7cff00"
+   ],
+   "5": [
+    "ff10ff30ff10ff10ff10ff10ff7cff00"
+   ],
+   "6": [
+    "ff7cff82ff02ff0cff30ff40fffeff00"
+   ],
+   "7": [
+    "ff7cff82ff02ff3cff02ff82ff7cff00"
+   ],
+   "8": [
+    "ff0cff14ff24ff44ff84fffeff04ff00"
+   ],
+   "9": [
+    "fffcff80ff80fffcff02ff82ff7cff00"
+   ],
+   "A": [
+    "ff10ff28ff28ff44ff7cff82ff82ff00"
+   ],
+   "B": [
+    "fff8ff84ff84fffcff82ff82fffcff00"
+   ],
+   "C": [
+    "ff3cff42ff80ff80ff80ff42ff3cff00"
+   ],
+   "D": [
+    "fff8ff84ff82ff82ff82ff84fff8ff00"
+   ],
+   "E": [
+    "fffeff80ff80fffcff80ff80fffeff00"
+   ],
+   "F": [
+    "fffeff80ff80fffcff80ff80ff80ff00"
+   ],
+   "G": [
+    "ff3cff42ff80ff9eff82ff42ff3cff00"
+   ],
+   "H": [
+    "ff82ff82ff82fffeff82ff82ff82ff00"
+   ],
+   "I": [
+    "ff7cff10ff10ff10ff10ff10ff7cff00"
+   ],
+   "J": [
+    "ff7eff08ff08ff08ff88ff88ff70ff00"
+   ],
+   "K": [
+    "ff84ff88ff90ffb0ffc8ff84ff82ff00"
+   ],
+   "L": [
+    "ff80ff80ff80ff80ff80ff80fffeff00"
+   ],
+   "M": [
+    "ff82ffc6ffaaff92ff82ff82ff82ff00"
+   ],
+   "N": [
+    "ff82ffc2ffa2ff92ff8aff86ff82ff00"
+   ],
+   "O": [
+    "ff38ff44ff82ff82ff82ff44ff38ff00"
+   ],
+   "P": [
+    "fffcff82ff82fffcff80ff80ff80ff00"
+   ],
+   "Q": [
+    "ff38ff44ff82ff82ff8aff44ff3aff00"
+   ],
+   "R": [
+    "fffcff82ff82fffcff88ff84ff82ff00"
+   ],
+   "S": [
+    "ff78ff84ff80ff7cff02ff82ff7cff00"
+   ],
+   "T": [
+    "fffeff10ff10ff10ff10ff10ff10ff00"
+   ],
+   "U": [
+    "ff82ff82ff82ff82ff82ff82ff7cff00"
+   ],
+   "V": [
+    "ff82ff82ff44ff44ff28ff28ff10ff00"
+   ],
+   "W": [
+    "ff82ff92ffaaffaaffc6ffc6ff82ff00"
+   ],
+   "X": [
+    "ffc6ff44ff28ff10ff28ff44ffc6ff00"
+   ],
+   "Y": [
+    "ff82ff44ff28ff10ff10ff10ff10ff00"
+   ],
+   "Z": [
+    "fffeff04ff08ff10ff20ff40fffeff00"
+   ],
+   "a": [
+    "ff00ff00ff78ff04ff7cff84ff7eff00"
+   ],
+   "b": [
+    "ff80ff80ff80fff8ff84ff84fff8ff00"
+   ],
+   "c": [
+    "ff00ff00ff78ff84ff80ff84ff78ff00"
+   ],
+   "d": [
+    "ff04ff04ff04ff7cff84ff84ff7cff00"
+   ],
+   "e": [
+    "ff00ff00ff78ff84fffcff80ff7cff00"
+   ],
+   "f": [
+    "ff18ff24ff20fffcff20ff20ff20ff00"
+   ],
+   "g": [
+    "ff00ff00ff7cff84ff84ff7cff04fff8"
+   ],
+   "h": [
+    "ff80ff80ff80fff8ff84ff84ff84ff00"
+   ],
+   "i": [
+    "ff00ff10ff00ff10ff10ff10ff10ff00"
+   ],
+   "j": [
+    "ff00ff10ff00ff10ff10ff10ff10ff60"
+   ],
+   "k": [
+    "ff80ff80ff8cffb0ffc0ffb0ff8cff00"
+   ],
+   "l": [
+    "ff10ff10ff10ff10ff10ff10ff10ff00"
+   ],
+   "m": [
+    "ff00ff00ffecff92ff92ff92ff92ff00"
+   ],
+   "n": [
+    "ff00ff00fff8ff84ff84ff84ff84ff00"
+   ],
+   "o": [
+    "ff00ff00ff78ff84ff84ff84ff78ff00"
+   ],
+   "p": [
+    "ff00ff00fff8ff84ff84fff8ff80ff80"
+   ],
+   "q": [
+    "ff00ff00ff7cff84ff84ff7cff04ff04"
+   ],
+   "r": [
+    "ff00ff00ff9cffa0ffc0ff80ff80ff00"
+   ],
+   "s": [
+    "ff00ff00ff78ff80ff78ff04fff8ff00"
+   ],
+   "t": [
+    "ff00ff20fffcff20ff20ff20ff1cff00"
+   ],
+   "u": [
+    "ff00ff00ff84ff84ff84ff84ff78ff00"
+   ],
+   "v": [
+    "ff00ff00ff84ff84ff84ff48ff30ff00"
+   ],
+   "w": [
+    "ff00ff00ff82ff92ff92ffaaff44ff00"
+   ],
+   "x": [
+    "ff00ff00ff84ff48ff30ff48ff84ff00"
+   ],
+   "y": [
+    "ff00ff00ff84ff84ff84ff7cff04fff8"
+   ],
+   "z": [
+    "ff00ff00fffcff08ff30ff40fffcff00"
+   ]
+  }
+ },
+ "drawers": {
+  "07": [
+   {
+    "entry": "$68A0",
+    "kind": "vram"
+   },
+   {
+    "entry": "$68DC",
+    "kind": "buffer"
+   }
+  ],
+  "09": [
+   {
+    "entry": "$408D",
+    "kind": "vram"
+   },
+   {
+    "entry": "$40C9",
+    "kind": "buffer"
+   }
+  ],
+  "0A": [
+   {
+    "entry": "$4078",
+    "kind": "vram"
+   },
+   {
+    "entry": "$40B4",
+    "kind": "buffer"
+   }
+  ],
+  "12": [
+   {
+    "entry": "$4078",
+    "kind": "vram"
+   },
+   {
+    "entry": "$40B4",
+    "kind": "buffer"
+   }
+  ],
+  "15": [
+   {
+    "entry": "$5D53",
+    "kind": "vram"
+   },
+   {
+    "entry": "$5D8F",
+    "kind": "buffer"
+   }
+  ],
+  "18": [
+   {
+    "entry": "$4F99",
+    "kind": "vram"
+   },
+   {
+    "entry": "$4FD5",
+    "kind": "buffer"
+   }
+  ],
+  "50": [
+   {
+    "entry": "$75AE",
+    "kind": "vram"
+   },
+   {
+    "entry": "$75F0",
+    "kind": "buffer"
+   }
+  ],
+  "51": [
+   {
+    "entry": "$728A",
+    "kind": "vram"
+   },
+   {
+    "entry": "$72CC",
+    "kind": "buffer"
+   }
+  ]
+ },
+ "runs": [
+  {
+   "bank": 7,
+   "start": "$704D",
+   "end": "$7D98",
+   "layouts": 36
+  },
+  {
+   "bank": 9,
+   "start": "$6CDE",
+   "end": "$6E45",
+   "layouts": 1
+  },
+  {
+   "bank": 9,
+   "start": "$6EB0",
+   "end": "$705E",
+   "layouts": 8
+  },
+  {
+   "bank": 9,
+   "start": "$7153",
+   "end": "$7216",
+   "layouts": 3
+  },
+  {
+   "bank": 9,
+   "start": "$74A0",
+   "end": "$7544",
+   "layouts": 1
+  },
+  {
+   "bank": 9,
+   "start": "$7838",
+   "end": "$7872",
+   "layouts": 1
+  },
+  {
+   "bank": 9,
+   "start": "$7CA5",
+   "end": "$7CCB",
+   "layouts": 1
+  },
+  {
+   "bank": 9,
+   "start": "$7DC9",
+   "end": "$7EC7",
+   "layouts": 1
+  },
+  {
+   "bank": 10,
+   "start": "$6F3C",
+   "end": "$6F61",
+   "layouts": 1
+  },
+  {
+   "bank": 10,
+   "start": "$6F86",
+   "end": "$6FA3",
+   "layouts": 1
+  },
+  {
+   "bank": 10,
+   "start": "$70C5",
+   "end": "$70EA",
+   "layouts": 1
+  },
+  {
+   "bank": 10,
+   "start": "$7409",
+   "end": "$7507",
+   "layouts": 3
+  },
+  {
+   "bank": 10,
+   "start": "$75AB",
+   "end": "$770B",
+   "layouts": 5
+  },
+  {
+   "bank": 10,
+   "start": "$7731",
+   "end": "$789F",
+   "layouts": 4
+  },
+  {
+   "bank": 10,
+   "start": "$79BE",
+   "end": "$7A1C",
+   "layouts": 2
+  },
+  {
+   "bank": 18,
+   "start": "$6DCB",
+   "end": "$6DF0",
+   "layouts": 1
+  },
+  {
+   "bank": 18,
+   "start": "$6F54",
+   "end": "$6F79",
+   "layouts": 1
+  },
+  {
+   "bank": 18,
+   "start": "$710C",
+   "end": "$7298",
+   "layouts": 4
+  },
+  {
+   "bank": 18,
+   "start": "$759A",
+   "end": "$75C0",
+   "layouts": 1
+  },
+  {
+   "bank": 18,
+   "start": "$7768",
+   "end": "$77CD",
+   "layouts": 1
+  },
+  {
+   "bank": 18,
+   "start": "$78AB",
+   "end": "$7B9B",
+   "layouts": 6
+  },
+  {
+   "bank": 21,
+   "start": "$647D",
+   "end": "$64F4",
+   "layouts": 1
+  },
+  {
+   "bank": 21,
+   "start": "$6716",
+   "end": "$694E",
+   "layouts": 9
+  },
+  {
+   "bank": 24,
+   "start": "$547A",
+   "end": "$54F9",
+   "layouts": 2
+  },
+  {
+   "bank": 24,
+   "start": "$5523",
+   "end": "$5577",
+   "layouts": 2
+  },
+  {
+   "bank": 24,
+   "start": "$55F7",
+   "end": "$561D",
+   "layouts": 1
+  },
+  {
+   "bank": 80,
+   "start": "$6ED2",
+   "end": "$7177",
+   "layouts": 9
+  },
+  {
+   "bank": 80,
+   "start": "$7213",
+   "end": "$7238",
+   "layouts": 1
+  },
+  {
+   "bank": 80,
+   "start": "$74BA",
+   "end": "$756B",
+   "layouts": 2
+  },
+  {
+   "bank": 81,
+   "start": "$6E78",
+   "end": "$6F98",
+   "layouts": 4
+  },
+  {
+   "bank": 81,
+   "start": "$6FE2",
+   "end": "$717F",
+   "layouts": 5
+  }
+ ],
+ "layouts": {
+  "07:704D": {
+   "bank": 7,
+   "addr": 28749,
+   "pos": 0,
+   "len": 67,
+   "refs": [
+    "$402B",
+    "$4ACE",
+    "$4C67",
+    "$5227",
+    "$539A",
+    "$5CBC"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee005080309e0050bd507ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0d60605dee009e30b08ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 11
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 4,
+     "text": "INFO"
+    },
+    {
+     "row": 1,
+     "col": 7,
+     "len": 4,
+     "text": "ITEM"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 4,
+     "text": "SKIL"
+    },
+    {
+     "row": 3,
+     "col": 7,
+     "len": 4,
+     "text": "OPTN"
+    }
+   ]
+  },
+  "07:7090": {
+   "bank": 7,
+   "addr": 28816,
+   "pos": 12,
+   "len": 29,
+   "refs": [
+    "$4031",
+    "$4AD4",
+    "$4C76",
+    "$522D",
+    "$53A0",
+    "$5CC2"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fedde0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 1
+   },
+   "drawn": true,
+   "words": []
+  },
+  "07:70AD": {
+   "bank": 7,
+   "addr": 28845,
+   "pos": 0,
+   "len": 74,
+   "refs": [
+    "$44E3"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee005080309ff",
+    "ecebebebebebed",
+    "fee020212223ff",
+    "fee0e0e0e0e0ff",
+    "fee024252627ff",
+    "fee0e0e0e0e0ff",
+    "fee028292a2bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 4
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 4,
+     "text": "INFO"
+    }
+   ]
+  },
+  "07:70F7": {
+   "bank": 7,
+   "addr": 28919,
+   "pos": 7,
+   "len": 184,
+   "refs": [
+    "$44E9",
+    "$64C9"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fe3c3d3e3fe0308012e4e0e0ff",
+    "ecebebebebebebebebebebebed",
+    "fee0000b06e0e0e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee002d503e0e0e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee000dddee0e0e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee005080be0e0e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee00dde02e0e0e4e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 11
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 3,
+     "col": 2,
+     "len": 3,
+     "text": "ATK"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "len": 3,
+     "text": "DEF"
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "len": 3,
+     "text": "AGL"
+    },
+    {
+     "row": 9,
+     "col": 2,
+     "len": 3,
+     "text": "INT"
+    },
+    {
+     "row": 11,
+     "col": 2,
+     "len": 3,
+     "text": "WLD"
+    }
+   ]
+  },
+  "07:71AF": {
+   "bank": 7,
+   "addr": 29103,
+   "pos": 423,
+   "len": 72,
+   "refs": [
+    "$44EF",
+    "$64CF"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee0e1e3e4e0e0e0e5e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e2e3e4e0e0e0e5e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 3
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 2,
+     "text": "HP"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 2,
+     "text": "MP"
+    }
+   ]
+  },
+  "07:71F7": {
+   "bank": 7,
+   "addr": 29175,
+   "pos": 341,
+   "len": 44,
+   "refs": [
+    "$4830",
+    "$4A31"
+   ],
+   "rows": [
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7223": {
+   "bank": 7,
+   "addr": 29219,
+   "pos": 53,
+   "len": 44,
+   "refs": [
+    "$49BC"
+   ],
+   "rows": [
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0",
+    "e0e0e0e0e0e0"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:724F": {
+   "bank": 7,
+   "addr": 29263,
+   "pos": 321,
+   "len": 44,
+   "refs": [
+    "$4501",
+    "$465B",
+    "$485D",
+    "$49D5"
+   ],
+   "rows": [
+    "b0b1b2b3b4b5",
+    "b6b7b8b9babb",
+    "bcbdbebfc0c1",
+    "c2c3c4c5c6c7",
+    "c8c9cacbcccd",
+    "cecfd0d1d2d3"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:727B": {
+   "bank": 7,
+   "addr": 29307,
+   "pos": 7,
+   "len": 184,
+   "refs": [
+    "$475E"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fe3c3d3e3fe0308012e4e0e0ff",
+    "ecebebebebebebebebebebebed",
+    "fee0333435363738393a3be0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee04c4d4e4f5051525354e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee05b5c5d5e5f606162e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe0700d60bd50ae455565758ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee013e4e0e0e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 6
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 9,
+     "col": 1,
+     "len": 6,
+     "text": "MASTER"
+    }
+   ]
+  },
+  "07:7333": {
+   "bank": 7,
+   "addr": 29491,
+   "pos": 423,
+   "len": 72,
+   "refs": [
+    "$4764"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee008d50f0be0dedfe0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee013e4e0e0e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 6
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 4,
+     "text": "NEXT"
+    },
+    {
+     "row": 1,
+     "col": 7,
+     "len": 2,
+     "text": "LV"
+    }
+   ]
+  },
+  "07:737B": {
+   "bank": 7,
+   "addr": 29563,
+   "pos": 7,
+   "len": 240,
+   "refs": [
+    "$4839",
+    "$6598"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee065666768696a6b6c6de0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee06e6f70717273747576e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee07778797a7b7c7d7e7fe0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0838485868788898a8be0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee08c8d8e8f9091929394e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee095969798999a9b9c9de0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee09e9fa0a1a2a3a4a5a6e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0a7a8a9aaabacadaeafe0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:746B": {
+   "bank": 7,
+   "addr": 29803,
+   "pos": 7,
+   "len": 240,
+   "refs": [
+    "$48E6",
+    "$4A3A"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:755B": {
+   "bank": 7,
+   "addr": 30043,
+   "pos": 7,
+   "len": 128,
+   "refs": [
+    "$49A3"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fe020002e48c8d8e8fe0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee04c4d4e4f5051525354e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee05e5f606162636465e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe0700d60bd50ae490919293ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:75DB": {
+   "bank": 7,
+   "addr": 30171,
+   "pos": 295,
+   "len": 128,
+   "refs": [
+    "$49A9"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fe070907e494959697e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee055565758595a5b5c5de0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0666768696a6b6c6de0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe0700d60bd50ae498999a9bff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:765B": {
+   "bank": 7,
+   "addr": 30299,
+   "pos": 341,
+   "len": 44,
+   "refs": [
+    "$49DB"
+   ],
+   "rows": [
+    "8c8d8e8f9091",
+    "929394959697",
+    "98999a9b9c9d",
+    "9e9fa0a1a2a3",
+    "a4a5a6a7a8a9",
+    "aaabacadaeaf"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7687": {
+   "bank": 7,
+   "addr": 30343,
+   "pos": 64,
+   "len": 74,
+   "refs": [
+    "$53C4"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0d60605deff",
+    "ecebebebebebed",
+    "fee020212223ff",
+    "fee0e0e0e0e0ff",
+    "fee024252627ff",
+    "fee0e0e0e0e0ff",
+    "fee028292a2bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 4
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 4,
+     "text": "SKIL"
+    }
+   ]
+  },
+  "07:76D1": {
+   "bank": 7,
+   "addr": 30417,
+   "pos": 72,
+   "len": 119,
+   "refs": [
+    "$53BE",
+    "$58F4"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0808182838485868788ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f9091ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999aff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09b9c9d9e9fa0a1a2a3ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7748": {
+   "bank": 7,
+   "addr": 30536,
+   "pos": 72,
+   "len": 145,
+   "refs": [
+    "$4ADA",
+    "$4C94",
+    "$4D74",
+    "$524E"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0707172737475767778ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0808182838485868788ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f9091ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999aff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09b9c9d9e9fa0a1a2a3ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:77D9": {
+   "bank": 7,
+   "addr": 30681,
+   "pos": 416,
+   "len": 107,
+   "refs": [
+    "$4AE0",
+    "$4CA9"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefefeffb",
+    "fe4c4d4e4f505152535455565758595a5b5c5dff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe5e5f606162636465666768696a6b6c6d6e6fff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7844": {
+   "bank": 7,
+   "addr": 30788,
+   "pos": 352,
+   "len": 149,
+   "refs": [
+    "$54C6"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefefeffb",
+    "fe4a4b4c4d4e4f505152535455565758595a5bff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe5c5d5e5f606162636465666768696a6b6c6dff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe6e6f707172737475767778797a7b7c7d7e7fff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:78D9": {
+   "bank": 7,
+   "addr": 30937,
+   "pos": 192,
+   "len": 52,
+   "refs": [
+    "$54CC"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fe0cd6d5e0e2e3e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0e0e0e5e0e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 5
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 1,
+     "len": 3,
+     "text": "USE"
+    },
+    {
+     "row": 1,
+     "col": 5,
+     "len": 2,
+     "text": "MP"
+    }
+   ]
+  },
+  "07:790D": {
+   "bank": 7,
+   "addr": 30989,
+   "pos": 64,
+   "len": 74,
+   "refs": [
+    "$58FA"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee00d0409e0ff",
+    "ecebebebebebed",
+    "fee020212223ff",
+    "fee0e0e0e0e0ff",
+    "fee024252627ff",
+    "fee0e0e0e0e0ff",
+    "fee028292a2bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7957": {
+   "bank": 7,
+   "addr": 31063,
+   "pos": 416,
+   "len": 52,
+   "refs": [
+    "$4E2A",
+    "$5900"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee1e3e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0e0e0e5e0e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:798B": {
+   "bank": 7,
+   "addr": 31115,
+   "pos": 0,
+   "len": 51,
+   "refs": [
+    "$4CAF"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fe050bd507ff",
+    "ecebebebebed",
+    "fee00cd6d5ff",
+    "fee0e0e0e0ff",
+    "fee002d5deff",
+    "fceeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 8
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 1,
+     "len": 4,
+     "text": "ITEM"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 3,
+     "text": "USE"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "len": 3,
+     "text": "DEL"
+    }
+   ]
+  },
+  "07:79BE": {
+   "bank": 7,
+   "addr": 31166,
+   "pos": 128,
+   "len": 74,
+   "refs": [
+    "$4D89"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee00d0409e0ff",
+    "ecebebebebebed",
+    "fee020212223ff",
+    "fee0e0e0e0e0ff",
+    "fee024252627ff",
+    "fee0e0e0e0e0ff",
+    "fee028292a2bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7A08": {
+   "bank": 7,
+   "addr": 31240,
+   "pos": 416,
+   "len": 52,
+   "refs": [
+    "$4E56"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee2e3e4e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0e0e0e5e0e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7A3C": {
+   "bank": 7,
+   "addr": 31292,
+   "pos": 256,
+   "len": 37,
+   "refs": [
+    "$52AB"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee00809e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7A61": {
+   "bank": 7,
+   "addr": 31329,
+   "pos": 5,
+   "len": 134,
+   "refs": [
+    "$5CE0"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee009e30b08e0e0e0e0ff",
+    "ecebebebebebebebebebed",
+    "fee00bd50f0be0d6e302ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee00104e0090a02d50aff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee00104e0e3de0008e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee00e090c0a0800dee0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 15
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 4,
+     "text": "OPTN"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 4,
+     "text": "TEXT"
+    },
+    {
+     "row": 3,
+     "col": 7,
+     "len": 3,
+     "text": "SPD"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "len": 2,
+     "text": "CH"
+    },
+    {
+     "row": 5,
+     "col": 5,
+     "len": 5,
+     "text": "ORDER"
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "len": 2,
+     "text": "CH"
+    },
+    {
+     "row": 7,
+     "col": 5,
+     "len": 4,
+     "text": "PLAN"
+    },
+    {
+     "row": 9,
+     "col": 2,
+     "len": 7,
+     "text": "JOURNAL"
+    }
+   ]
+  },
+  "07:7AE7": {
+   "bank": 7,
+   "addr": 31463,
+   "pos": 354,
+   "len": 97,
+   "refs": [
+    "$5D4D"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefeffb",
+    "fe0300d60be0e0e0e0e0e0e0e0d6de090dff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0f1e0f2e0f3e0f4e0f5e0f6e0f7e0f8ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "07:7B48": {
+   "bank": 7,
+   "addr": 31560,
+   "pos": 356,
+   "len": 65,
+   "refs": [
+    "$5E2E",
+    "$5FA0"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7B89": {
+   "bank": 7,
+   "addr": 31625,
+   "pos": 364,
+   "len": 65,
+   "refs": [
+    "$5E34"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7BCA": {
+   "bank": 7,
+   "addr": 31690,
+   "pos": 0,
+   "len": 122,
+   "refs": [
+    "$60AA"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefeffb",
+    "fe0700d60bd50ae43c3d3e3fe0e0e0e4e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "feda40414243e0db44454647e0dc48494a4bff",
+    "fee012e4e0e0e0e012e4e0e0e0e012e4e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 6
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 1,
+     "len": 6,
+     "text": "MASTER"
+    }
+   ]
+  },
+  "07:7C44": {
+   "bank": 7,
+   "addr": 31812,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$60B0"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee00809e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 5
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 3,
+     "text": "YES"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 2,
+     "text": "NO"
+    }
+   ]
+  },
+  "07:7C69": {
+   "bank": 7,
+   "addr": 31849,
+   "pos": 288,
+   "len": 110,
+   "refs": [
+    "$6396"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee00104000addd5e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee007050fd502e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee001000c0b05090cd6ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee001090707000802e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "field",
+    "letters": "0123456789ABCDEFGHIJKLMNOPRSTUVWXY",
+    "cells": 15
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 6,
+     "text": "CHARGE"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 5,
+     "text": "MIXED"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "len": 8,
+     "text": "CAUTIOUS"
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "len": 7,
+     "text": "COMMAND"
+    }
+   ]
+  },
+  "07:7CD7": {
+   "bank": 7,
+   "addr": 31959,
+   "pos": 192,
+   "len": 23,
+   "refs": [
+    "$639C"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fe3c3d3e3fff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "07:7CEE": {
+   "bank": 7,
+   "addr": 31982,
+   "pos": 160,
+   "len": 170,
+   "refs": [
+    "$4247"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefe0e0e4e0e0fb",
+    "fe0700d60bd50a15151515151515153c3d3e3fff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe0e090508d50215151515151515151515e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe03000a07e0e0e0070908e0e0e0d5dddde0e0ff",
+    "fed6ded5d5e3e016070908e0e016d5dddde0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6CDE": {
+   "bank": 9,
+   "addr": 27870,
+   "pos": 0,
+   "len": 359,
+   "refs": [
+    "$5F38"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefefeffb",
+    "fe38393a3b3c3d3e3f4088898a8b8c8d8e8f90ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe414243444546474849919293949596979899ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe4a4b4c4d4e4f5051529a9b9c9d9e9fa0a1a2ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe535455565758595a5ba3a4a5a6a7a8a9aaabff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe5c5d5e5f6061626364acadaeafb0b1b2b3b4ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe65666768696a6b6c6db5b6b7b8b9babbbcbdff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe6e6f70717273747576bebfc0c1c2c3c4c5c6ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe7778797a7b7c7d7e7fc7c8c9cacbcccdcecfff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6EB0": {
+   "bank": 9,
+   "addr": 28336,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$6775"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee03132e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6ED5": {
+   "bank": 9,
+   "addr": 28373,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$5E14"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6EFA": {
+   "bank": 9,
+   "addr": 28410,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$4A04",
+    "$4E0F"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee0a8a7e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6F1F": {
+   "bank": 9,
+   "addr": 28447,
+   "pos": 12,
+   "len": 29,
+   "refs": [
+    "$4660",
+    "$4F82",
+    "$504F",
+    "$5C62"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fedde0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6F3C": {
+   "bank": 9,
+   "addr": 28476,
+   "pos": 0,
+   "len": 65,
+   "refs": [
+    "$465A"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0a4aad4e0e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0d6d5dedee0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0d5aba5a9e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:6F7D": {
+   "bank": 9,
+   "addr": 28541,
+   "pos": 129,
+   "len": 182,
+   "refs": [
+    "$47AE",
+    "$491B",
+    "$4B43",
+    "$4D0C"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefeffb",
+    "fee0808182838485868788e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f9091e0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999ae0e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee09b9c9d9e9fa0a1a2a3e0e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7033": {
+   "bank": 9,
+   "addr": 28723,
+   "pos": 320,
+   "len": 17,
+   "refs": [
+    "$4933"
+   ],
+   "rows": [
+    "faefeffb",
+    "fee0e0ff",
+    "fceeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7044": {
+   "bank": 9,
+   "addr": 28740,
+   "pos": 320,
+   "len": 26,
+   "refs": [
+    "$4D24",
+    "$52B6",
+    "$5696"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0e0e5e0e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7153": {
+   "bank": 9,
+   "addr": 29011,
+   "pos": 104,
+   "len": 119,
+   "refs": [
+    "$517D",
+    "$52A1",
+    "$557C",
+    "$5681"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0808182838485868788ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f9091ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999aff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09b9c9d9e9fa0a1a2a3ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:71CA": {
+   "bank": 9,
+   "addr": 29130,
+   "pos": 108,
+   "len": 29,
+   "refs": [
+    "$5402",
+    "$57F5"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fedde0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:71E7": {
+   "bank": 9,
+   "addr": 29159,
+   "pos": 326,
+   "len": 47,
+   "refs": [
+    "$5408",
+    "$57FB"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefeffb",
+    "fea0a1a2a3e0dde0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:74A0": {
+   "bank": 9,
+   "addr": 29856,
+   "pos": 128,
+   "len": 164,
+   "refs": [
+    "$5C5C"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefeffb",
+    "fe84e080e0919790d6d6e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe85e081e0919790d6d6e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe86e082e0919790d6d6e0e0e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe87e083e0919790d6d6e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7838": {
+   "bank": 9,
+   "addr": 30776,
+   "pos": 0,
+   "len": 58,
+   "refs": [
+    "$4F7C",
+    "$5049"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0a4a5a6a7ff",
+    "fee0e0e0e0e0ff",
+    "fee0a8a9aaabff",
+    "fee0e0e0e0e0ff",
+    "fee0acadaeafff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7CA5": {
+   "bank": 9,
+   "addr": 31909,
+   "pos": 38,
+   "len": 38,
+   "refs": [
+    "$62E0"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee000010203e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "09:7DC9": {
+   "bank": 9,
+   "addr": 32201,
+   "pos": 160,
+   "len": 254,
+   "refs": [
+    "$62EF"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefefeffb",
+    "fe2425262728292a2b2c2d2e2f30e004050607ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe3132333435363738393a3b3c3de008090a0bff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe3e3f404142434445464748494ae00c0d6364ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe4b4c4d4e4f5051525354555657e02524262eff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe5c5e5f606162e0e0e0e0e0e0e0e0283127e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:6F3C": {
+   "bank": 10,
+   "addr": 28476,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$449D",
+    "$492F",
+    "$49B5",
+    "$69DF"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:6F86": {
+   "bank": 10,
+   "addr": 28550,
+   "pos": 12,
+   "len": 29,
+   "refs": [
+    "$4C4A",
+    "$6107"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fedde0e0e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:70C5": {
+   "bank": 10,
+   "addr": 28869,
+   "pos": 256,
+   "len": 37,
+   "refs": [
+    "$5607"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:7409": {
+   "bank": 10,
+   "addr": 29705,
+   "pos": 0,
+   "len": 90,
+   "refs": [
+    "$45F4",
+    "$4852"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee080818283ff",
+    "fee0e0e0e0e0ff",
+    "fee084858687ff",
+    "fee0e0e0e0e0ff",
+    "fee088898a8bff",
+    "fee0e0e0e0e0ff",
+    "fee08c8d8e8fff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:7463": {
+   "bank": 10,
+   "addr": 29795,
+   "pos": 13,
+   "len": 42,
+   "refs": [
+    "$4867",
+    "$4FF0",
+    "$5325",
+    "$6D32"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0959d939cff",
+    "fee0e0e0e0e0ff",
+    "fee09c96e0e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:748D": {
+   "bank": 10,
+   "addr": 29837,
+   "pos": 0,
+   "len": 122,
+   "refs": [
+    "$498E",
+    "$55E0"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefeffb",
+    "fe9e90d699d598e4a0a1a2a3e0e0e0e4e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fedaa4a5a6a7e0dba8a9aaabe0dcacadaeafff",
+    "fee09fe4e0e0e0e09fe4e0e0e0e09fe4e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:75AB": {
+   "bank": 10,
+   "addr": 30123,
+   "pos": 0,
+   "len": 72,
+   "refs": [
+    "$4C68"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee08a98d5d592e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee09490999194e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee040414243e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:75F3": {
+   "bank": 10,
+   "addr": 30195,
+   "pos": 64,
+   "len": 90,
+   "refs": [
+    "$4DC6",
+    "$4FD2",
+    "$6B19",
+    "$6D1A"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee061626364ff",
+    "fee0e0e0e0e0ff",
+    "fee065666768ff",
+    "fee0e0e0e0e0ff",
+    "fee0696a6b6cff",
+    "fee0e0e0e0e0ff",
+    "fee06d6e6f70ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:764D": {
+   "bank": 10,
+   "addr": 30285,
+   "pos": 64,
+   "len": 90,
+   "refs": [
+    "$5139",
+    "$5307"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee061626364ff",
+    "fee0e0e0e0e0ff",
+    "fee065666768ff",
+    "fee0e0e0e0e0ff",
+    "fee0696a6b6cff",
+    "fee0e0e0e0e0ff",
+    "fee06d6e6f70ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:76A7": {
+   "bank": 10,
+   "addr": 30375,
+   "pos": 265,
+   "len": 62,
+   "refs": [
+    "$4DCC",
+    "$4F3D",
+    "$4F56",
+    "$4FD8",
+    "$513F",
+    "$525A",
+    "$5273",
+    "$530D",
+    "$582F",
+    "$58CE"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e07172737475e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee0e0e0767778797ae0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:76E5": {
+   "bank": 10,
+   "addr": 30437,
+   "pos": 169,
+   "len": 38,
+   "refs": [
+    "$6B1F",
+    "$6C92",
+    "$6D20"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e07172737475e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:7731": {
+   "bank": 10,
+   "addr": 30513,
+   "pos": 320,
+   "len": 38,
+   "refs": [
+    "$45EB",
+    "$4849"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e078797a7b7ce0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:7757": {
+   "bank": 10,
+   "addr": 30551,
+   "pos": 135,
+   "len": 128,
+   "refs": [
+    "$59C0"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee065666768696a6b6c6da0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee06e6f70717273747576a1ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee07778797a7b7c7d7e7fa2ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0808182838485868788a3ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:77D7": {
+   "bank": 10,
+   "addr": 30679,
+   "pos": 0,
+   "len": 72,
+   "refs": [
+    "$6101"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee0d5df9fdee0e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0a8ded5d6d6e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0d5a5a1a3e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:781F": {
+   "bank": 10,
+   "addr": 30751,
+   "pos": 135,
+   "len": 128,
+   "refs": [
+    "$626E",
+    "$674B"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee07071727374757677789bff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee08081828384858687889cff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f90919dff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999a9eff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:79BE": {
+   "bank": 10,
+   "addr": 31166,
+   "pos": 12,
+   "len": 47,
+   "refs": [
+    "$5B81",
+    "$5DFF"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0959d939ce0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee09c96e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "0A:79ED": {
+   "bank": 10,
+   "addr": 31213,
+   "pos": 256,
+   "len": 47,
+   "refs": [
+    "$65F0",
+    "$683E"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0a1a7a9a4e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0a4a2e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:6DCB": {
+   "bank": 18,
+   "addr": 28107,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$6A10"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:6F54": {
+   "bank": 18,
+   "addr": 28500,
+   "pos": 256,
+   "len": 37,
+   "refs": [
+    "$492F",
+    "$4FFA"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:710C": {
+   "bank": 18,
+   "addr": 28940,
+   "pos": 0,
+   "len": 158,
+   "refs": [
+    "$44CB"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee092989ce3e09c9393ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee0e3959196e09ae3e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee09194d59196e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee0d6d5e390989099d5ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee0d697d5d5e3e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee0d5a29599e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:71AA": {
+   "bank": 18,
+   "addr": 29098,
+   "pos": 13,
+   "len": 74,
+   "refs": [
+    "$4627",
+    "$52F4"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee080818283ff",
+    "fee0e0e0e0e0ff",
+    "fee084858687ff",
+    "fee0e0e0e0e0ff",
+    "fee088898a8bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:71F4": {
+   "bank": 18,
+   "addr": 29172,
+   "pos": 13,
+   "len": 90,
+   "refs": [
+    "$49C9",
+    "$4D41",
+    "$5092",
+    "$572B",
+    "$5B7A"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee080818283ff",
+    "fee0e0e0e0e0ff",
+    "fee084858687ff",
+    "fee0e0e0e0e0ff",
+    "fee088898a8bff",
+    "fee0e0e0e0e0ff",
+    "fee08c8d8e8fff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:724E": {
+   "bank": 18,
+   "addr": 29262,
+   "pos": 0,
+   "len": 74,
+   "refs": [
+    "$6941"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee09b949ce0ff",
+    "ecebebebebebed",
+    "fee080818283ff",
+    "fee0e0e0e0e0ff",
+    "fee084858687ff",
+    "fee0e0e0e0e0ff",
+    "fee088898a8bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:759A": {
+   "bank": 18,
+   "addr": 30106,
+   "pos": 329,
+   "len": 38,
+   "refs": [
+    "$462D",
+    "$4766",
+    "$49C0",
+    "$4D38",
+    "$5089",
+    "$52FA",
+    "$5357",
+    "$5722",
+    "$5B71"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e06566676869e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:7768": {
+   "bank": 18,
+   "addr": 30568,
+   "pos": 128,
+   "len": 101,
+   "refs": [
+    "$54EB",
+    "$5703",
+    "$5A0D",
+    "$5B52"
+   ],
+   "rows": [
+    "faefefefefefefefeffb",
+    "fee0e09e9fe0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0ff",
+    "fee0e0a0a1e0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0ff",
+    "fe63e09e9fe0e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0ff",
+    "fe63e0a0a1e0e0e0e0ff",
+    "fceeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:78AB": {
+   "bank": 18,
+   "addr": 30891,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$5E6B"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ce0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:78D0": {
+   "bank": 18,
+   "addr": 30928,
+   "pos": 0,
+   "len": 101,
+   "refs": [
+    "$6157"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee06768696a6bff",
+    "fee0e0e0e0e0e0ff",
+    "fee06c6d6e6f70ff",
+    "fee0e0e0e0e0e0ff",
+    "fee07172737475ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0767778797aff",
+    "fee0e0e0e0e0e0ff",
+    "fee07b7c7d7e7fff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:7935": {
+   "bank": 18,
+   "addr": 31029,
+   "pos": 8,
+   "len": 145,
+   "refs": [
+    "$61B1",
+    "$62B2",
+    "$6353"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0808182838485868788ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0898a8b8c8d8e8f9091ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee092939495969798999aff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09b9c9d9e9fa0a1a2a3ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0a4a5a6a7a8a9aaabacff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:79C6": {
+   "bank": 18,
+   "addr": 31174,
+   "pos": 0,
+   "len": 380,
+   "refs": [
+    "$63C6"
+   ],
+   "rows": [
+    "0102020202020202020202020202020202020203",
+    "0480818283848500001415161718191a1b1c0005",
+    "04868788898a8b000a0b0b0b0b0b0b0b0b0b0c05",
+    "048c8d8e8f909100000000000000000000000005",
+    "049293949596971100001d1e1f20212223242505",
+    "0498999a9b9c9d12000000000000000000000005",
+    "049e9fa0a1a2a3000000262728292a2b2c2d2e05",
+    "040d0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0f05",
+    "04a5a6a7a8a9aa0000002f303132333435363705",
+    "0410101010101010100038393a3b3c3d3e3f4005",
+    "0400000000000000000041424344454647484905",
+    "0400000000000000000000000000000000000005",
+    "044a4b4c4d4e4f505152535455565758595a5b05",
+    "0413131313131313131313131313131313131305",
+    "045c5d5e5f606162636465666768696a6b6c6d05",
+    "0413131313131313131313131313131313131305",
+    "046e6f707172737475767778797a7b7c7d7e7f05",
+    "0607080808080808080808080808080808080809"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:7B42": {
+   "bank": 18,
+   "addr": 31554,
+   "pos": 256,
+   "len": 42,
+   "refs": [
+    "$47D7",
+    "$4AAF",
+    "$4E52",
+    "$5140",
+    "$53C1"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0959d939cff",
+    "fee0e0e0e0e0ff",
+    "fee09c96e0e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "12:7B6C": {
+   "bank": 18,
+   "addr": 31596,
+   "pos": 256,
+   "len": 47,
+   "refs": [
+    "$5C72"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0959d939ce0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee09c96e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:647D": {
+   "bank": 21,
+   "addr": 25725,
+   "pos": 0,
+   "len": 119,
+   "refs": [
+    "$4315"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0263231372c313828e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee031283ae02a243028e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee03936e030322728e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee025352828272c312ae0ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": {
+    "font": "text",
+    "letters": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    "cells": 16
+   },
+   "drawn": true,
+   "words": [
+    {
+     "row": 1,
+     "col": 2,
+     "len": 8,
+     "text": "CONTINUE"
+    },
+    {
+     "row": 3,
+     "col": 2,
+     "len": 3,
+     "text": "NEW"
+    },
+    {
+     "row": 3,
+     "col": 6,
+     "len": 4,
+     "text": "GAME"
+    },
+    {
+     "row": 5,
+     "col": 2,
+     "len": 2,
+     "text": "VS"
+    },
+    {
+     "row": 5,
+     "col": 5,
+     "len": 4,
+     "text": "MODE"
+    },
+    {
+     "row": 7,
+     "col": 2,
+     "len": 8,
+     "text": "BREEDING"
+    }
+   ]
+  },
+  "15:6716": {
+   "bank": 21,
+   "addr": 26390,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$59FC"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee03132e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:673B": {
+   "bank": 21,
+   "addr": 26427,
+   "pos": 288,
+   "len": 122,
+   "refs": [
+    "$4502"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefeffb",
+    "fe302436372835e400010203e0e0e0e4e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "feda04050607e0db08090a0be0dc0c0d0e0fff",
+    "fee065e4e0e0e0e065e4e0e0e0e065e4e0e0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": true
+  },
+  "15:67B5": {
+   "bank": 21,
+   "addr": 26549,
+   "pos": 0,
+   "len": 90,
+   "refs": [
+    "$47E6",
+    "$4D4E",
+    "$554B"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee03a2b32e0ff",
+    "ecebebebebebed",
+    "fee010111213ff",
+    "fee0e0e0e0e0ff",
+    "fee014151617ff",
+    "fee0e0e0e0e0ff",
+    "fee018191a1bff",
+    "fee0e0e0e0e0ff",
+    "fee01c1d1e1fff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:680F": {
+   "bank": 21,
+   "addr": 26639,
+   "pos": 205,
+   "len": 58,
+   "refs": [
+    "$47EC",
+    "$4D54"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fef104050607ff",
+    "fee0e0e0e0e0ff",
+    "fef208090a0bff",
+    "fee0e0e0e0e0ff",
+    "fef30c0d0e0fff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:6849": {
+   "bank": 21,
+   "addr": 26697,
+   "pos": 13,
+   "len": 42,
+   "refs": [
+    "$4A2A",
+    "$4E74",
+    "$5674"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee02c312932ff",
+    "fee0e0e0e0e0ff",
+    "fee0322ee0e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:6873": {
+   "bank": 21,
+   "addr": 26739,
+   "pos": 430,
+   "len": 37,
+   "refs": [
+    "$4B80",
+    "$4C12"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee03132e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:6898": {
+   "bank": 21,
+   "addr": 26776,
+   "pos": 11,
+   "len": 72,
+   "refs": [
+    "$503A"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee0292c2a2b37e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee033352c3d28e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0283b2c37e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:68E0": {
+   "bank": 21,
+   "addr": 26848,
+   "pos": 11,
+   "len": 72,
+   "refs": [
+    "$5850"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fee02535282827e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0262b28262ee0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0283b2c37e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "15:6928": {
+   "bank": 21,
+   "addr": 26920,
+   "pos": 320,
+   "len": 38,
+   "refs": [
+    "$47DD",
+    "$4D45",
+    "$5542"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e00001020320e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "18:547A": {
+   "bank": 24,
+   "addr": 21626,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$4646"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee0a8a9e0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "18:549F": {
+   "bank": 24,
+   "addr": 21663,
+   "pos": 0,
+   "len": 90,
+   "refs": [
+    "$47EA"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee06c6d6ee0ff",
+    "ecebebebebebed",
+    "fee000010203ff",
+    "fee0e0e0e0e0ff",
+    "fee004050607ff",
+    "fee0e0e0e0e0ff",
+    "fee008090a0bff",
+    "fee0e0e0e0e0ff",
+    "fee00c0d0e0fff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "18:5523": {
+   "bank": 24,
+   "addr": 21795,
+   "pos": 12,
+   "len": 47,
+   "refs": [
+    "$4B29"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee06f707172e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee07374e0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "18:5552": {
+   "bank": 24,
+   "addr": 21842,
+   "pos": 14,
+   "len": 37,
+   "refs": [
+    "$4D3B"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0757677ff",
+    "fee0e0e0e0ff",
+    "fee078797aff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "18:55F7": {
+   "bank": 24,
+   "addr": 22007,
+   "pos": 320,
+   "len": 38,
+   "refs": [
+    "$47E1"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee0e0e01011121314e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:6ED2": {
+   "bank": 80,
+   "addr": 28370,
+   "pos": 416,
+   "len": 72,
+   "refs": [
+    "$40FA",
+    "$4448"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee08586878889e086898a8bff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee07c81807fe0e07d7e7fe0ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:6F1A": {
+   "bank": 80,
+   "addr": 28442,
+   "pos": 416,
+   "len": 47,
+   "refs": [
+    "$444F"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee09a829b82e0ff",
+    "fee0e0e0e0e0e0ff",
+    "fee0929394849cff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:6F49": {
+   "bank": 80,
+   "addr": 28489,
+   "pos": 256,
+   "len": 23,
+   "refs": [
+    "$4836"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fe6c6d6e6fff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:6F60": {
+   "bank": 80,
+   "addr": 28512,
+   "pos": 288,
+   "len": 110,
+   "refs": [
+    "$44DD"
+   ],
+   "rows": [
+    "faefefefefefefefefeffb",
+    "fee09688918d878ae0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee08b86948a95e0e0e0ff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee096918e8986908e8cff",
+    "fee0e0e0e0e0e0e0e0e0ff",
+    "fee096908b8b918f95e0ff",
+    "fceeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:6FCE": {
+   "bank": 80,
+   "addr": 28622,
+   "pos": 288,
+   "len": 119,
+   "refs": [
+    "$504F"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee08c8d8e8f9091929394ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee095969798999a9b9c9dff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09e9fa0a1a2a3a4a5a6ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0a7a8a9aaabacadaeafff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:7045": {
+   "bank": 80,
+   "addr": 28741,
+   "pos": 352,
+   "len": 58,
+   "refs": [
+    "$51D5"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0858687e0ff",
+    "ecebebebebebed",
+    "fee07e84e0e0ff",
+    "fee0e0e0e0e0ff",
+    "fee0888789e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:707F": {
+   "bank": 80,
+   "addr": 28799,
+   "pos": 288,
+   "len": 74,
+   "refs": [
+    "$52A1"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0858687e0ff",
+    "ecebebebebebed",
+    "fee070717273ff",
+    "fee0e0e0e0e0ff",
+    "fee074757677ff",
+    "fee0e0e0e0e0ff",
+    "fee078797a7bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:70C9": {
+   "bank": 80,
+   "addr": 28873,
+   "pos": 288,
+   "len": 74,
+   "refs": [
+    "$4CED"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0868887e0ff",
+    "ecebebebebebed",
+    "fee070717273ff",
+    "fee0e0e0e0e0ff",
+    "fee074757677ff",
+    "fee0e0e0e0e0ff",
+    "fee078797a7bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:7113": {
+   "bank": 80,
+   "addr": 28947,
+   "pos": 352,
+   "len": 100,
+   "refs": [
+    "$4DE3",
+    "$5388"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee08c8d8e8f909192939495ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0969798999a9b9c9d9e9fff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0a0a1a2a3a4a5a6a7a8a9ff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:7213": {
+   "bank": 80,
+   "addr": 29203,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$579E"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ee0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:74BA": {
+   "bank": 80,
+   "addr": 29882,
+   "pos": 352,
+   "len": 58,
+   "refs": [
+    "$483F"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0808982e0ff",
+    "fee0e0e0e0e0ff",
+    "fee084828681ff",
+    "fee0e0e0e0e0ff",
+    "fee0838a85e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "50:74F4": {
+   "bank": 80,
+   "addr": 29940,
+   "pos": 288,
+   "len": 119,
+   "refs": [
+    "$49B8"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee08c8d8e8f9091929394ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee095969798999a9b9c9dff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee09e9fa0a1a2a3a4a5a6ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0a7a8a9aaabacadaeafff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:6E78": {
+   "bank": 81,
+   "addr": 28280,
+   "pos": 72,
+   "len": 119,
+   "refs": [
+    "$586E"
+   ],
+   "rows": [
+    "faefefefefefefefefefeffb",
+    "fee0363738393a3b3c3d3eff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee03f4041424344454647ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee048494a4b4c4d4e4f50ff",
+    "fee0e0e0e0e0e0e0e0e0e0ff",
+    "fee0515253545556575859ff",
+    "fceeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:6EEF": {
+   "bank": 81,
+   "addr": 28399,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$5A3D",
+    "$5D7B",
+    "$5E21",
+    "$5E64",
+    "$636A",
+    "$645C"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0d4d5d6ff",
+    "fee0e0e0e0ff",
+    "fee09d9ee0ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:6F14": {
+   "bank": 81,
+   "addr": 28436,
+   "pos": 64,
+   "len": 90,
+   "refs": [
+    "$6486"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee0828384e0ff",
+    "ecebebebebebed",
+    "fee08c8d8e8fff",
+    "fee0e0e0e0e0ff",
+    "fee090919293ff",
+    "fee0e0e0e0e0ff",
+    "fee094959697ff",
+    "fee0e0e0e0e0ff",
+    "fee098999a9bff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:6F6E": {
+   "bank": 81,
+   "addr": 28526,
+   "pos": 269,
+   "len": 42,
+   "refs": [
+    "$6574"
+   ],
+   "rows": [
+    "faefefefefeffb",
+    "fee085868788ff",
+    "fee0e0e0e0e0ff",
+    "fee0898ae0e0ff",
+    "fceeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:6FE2": {
+   "bank": 81,
+   "addr": 28642,
+   "pos": 352,
+   "len": 149,
+   "refs": [
+    "$5874"
+   ],
+   "rows": [
+    "faefefefefefefefefefefefefefefefefefeffb",
+    "fe000102030405060708090a0b0c0d0e0f1011ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe12131415161718191a1b1c1d1e1f20212223ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0ff",
+    "fe2425262728292a2b2c2d2e2f303132333435ff",
+    "fceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:7077": {
+   "bank": 81,
+   "addr": 28791,
+   "pos": 192,
+   "len": 52,
+   "refs": [
+    "$587A"
+   ],
+   "rows": [
+    "faefefefefefefeffb",
+    "fe9cd6d5e0e2e3e0ff",
+    "fee0e0e0e0e0e0e0ff",
+    "fee0e0e0e5e0e0e0ff",
+    "fceeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:70AB": {
+   "bank": 81,
+   "addr": 28843,
+   "pos": 270,
+   "len": 37,
+   "refs": [
+    "$5F1E",
+    "$67DA"
+   ],
+   "rows": [
+    "faefefefeffb",
+    "fee0a0a1a2ff",
+    "fee0e0e0e0ff",
+    "fee0a3a4a5ff",
+    "fceeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:70D0": {
+   "bank": 81,
+   "addr": 28880,
+   "pos": 128,
+   "len": 128,
+   "refs": [
+    "$5FC9",
+    "$62D8"
+   ],
+   "rows": [
+    "faefefefefefefefefefefeffb",
+    "fee02425262728292a2b2c48ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee02d2e2f30313233343549ff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee0363738393a3b3c3d3e4aff",
+    "fee0e0e0e0e0e0e0e0e0e0e0ff",
+    "fee03f40414243444546474bff",
+    "fceeeeeeeeeeeeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  },
+  "51:7150": {
+   "bank": 81,
+   "addr": 29008,
+   "pos": 268,
+   "len": 47,
+   "refs": [
+    "$61D9"
+   ],
+   "rows": [
+    "faefefefefefeffb",
+    "fee0a6a7a8a9aaff",
+    "fee0e0e0e0e0e0ff",
+    "fee0898ae0e0e0ff",
+    "fceeeeeeeeeeeefd"
+   ],
+   "font": null,
+   "drawn": false
+  }
+ }
+}

@@ -1160,3 +1160,14 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | ai_rules (S163): MultiCut takes no family bonus; `$551B` absent | ⚠ INCOMPLETE | MultiCut → `$4C41` row 7 (family 7, no veto); `$551B` decoded (BATTLE_SKILL_SYSTEM §15.10.5 "S164") | validate_ai_fixes (mutated boards) |
 | (implicit) "the S163 rule model is exact" | ⚠ ON THE CAPTURED BOARDS ONLY | 1,102 of 7,865 mutated chain starts differ for the original rules (ROADMAP E17 note) | validate_ai_fixes |
 
+## S165 addendum (2026-11-04; the 17 bases, the window words, the rule model on any board — ROADMAP E13 note, T-follow (a), E17 note)
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| S163: "the census … 0 unjudged roots" (act-time id reads) | ⚠ OVER THE ALLOWED BASES ONLY | the census projects held the 112 (then 138) bases the compiler allowed; with the refused 17 written into a ROM: 40 new roots, 24 reads | `census_act_id_lists.py --refused` |
+| S164: "138 bases a new skill may run" (the whole-battle census) | ⚠ INCOMPLETE | 11 of the 24 newly allowed still had id reads off the rig's path (turn order's defensive list, Imitate's check, the act-state ladder, HighJump / LifeSong / SuckAll / Ramming); fixed S165 — now 155, 0 differ | BATTLE_SKILL_SYSTEM §13.14 "S165" |
+| S164 ROADMAP T-follow: "the field menu's words are … WINDOW LAYOUT scripts in bank $15 (e.g. `$15:$6855` "INFO" …)" | ⚠ WRONG BANK | the field menu's streams are bank $07 (`WinLayout_07_704D` …), in the FIELD font's tile numbers; bank $15's `$6849` is a map / arena window in the text font | DATA_STRUCTURES "Window layout streams (S165)" |
+| ai_rules (S81 / S163): "`$5A4C` Cover / Guardian with a downed ally +20 [measured]"; `$4DF9` / `$4B8C` "omitted" | ⚠ PARTIAL | `$4B8C` modelled S165 (a −20 with a pointer slip); the other rules the corpus never fired (22, BATTLE_SKILL_SYSTEM §15.10.5 "S165") modelled — the mutated boards exact | `simulator/rule_gaps.py` |
+| validate_ai_fixes (S164): the board's traits / families from `monsters_full.json` | ❌ NOT WHAT THE ROM READS | the rules read the trait byte `$DB8B + slot` (made at the battle's start) and the build's own families (a project may move species) | rule_gaps (MetalCut / BirdBlow) |
+| ROADMAP T-follow (a) (S150): the INFO page's words, the HP / MP bar "no SaveBankAndSwitch call draws them" | ✓ CONFIRMED + LOCATED | layout streams `$07:$70F7` / `$71AF` drawn by `WinLayoutDraw07` | walk_window_words |
+

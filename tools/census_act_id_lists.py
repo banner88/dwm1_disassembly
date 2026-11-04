@@ -34,6 +34,14 @@ $58 estimate (EstimateView58) are run but tagged `view`: at run time they see th
 
 Output: extracted/act_id_lists_census.json (sites, per-site differing bases, verdicts
 from ROOT_VERDICTS below; a root not listed there is NEW and the tool exits 1).
+
+S165 (ROADMAP E13 note "the 17 bases a copy still cannot run"): --refused adds the bases the
+compiler REFUSES (the clone census's 'differs'): the compiler will not emit them, so their twins
+are written into build 0's ROM bytes (poke_twins — the rows the compiler would write) and censused
+like the rest. S163 never ran a refused base as a base, so their reads never showed (KEY_LESSONS
+S165). Since S165 no base is refused; --refused then adds nothing.
+
+    python3 tools/census_act_id_lists.py --refused [--keep DIR]
 """
 import argparse
 import json
@@ -178,9 +186,59 @@ def plan(bases):
     return builds
 
 
-def census_build(rom_path, sym_path, pairs, banks, orig):
+def poke_twins(rom, sym, pairs):
+    """[S165] Make each (new id, base) pair a twin in a ROM image the way the compiler would
+    (census_skill_clone.poke_clone / poke_reclaim): the bases the compiler REFUSES (the clone
+    census's 'differs' — S164: 17) cannot be compiled into a census project, so their census
+    ROM is a compiled build with the twins written into its bytes. -> a new bytearray."""
+    rom = bytearray(rom)
+    v = json.load(open(os.path.join(REPO, 'extracted', 'gamedata_vanilla.json')))['tables']
+    mp = [int.from_bytes(bytes.fromhex(r), 'little') for r in v['skill_mp']['rows']]
+    ann = [bytes.fromhex(r)[0] for r in v['skill_announce']['rows']]
+
+    def off(b, a):
+        return b * 0x4000 + a - 0x4000 if a >= 0x4000 else a
+
+    def w(label, k, val):
+        b, a = sym[label]
+        rom[off(b, a) + k] = val & 0xFF
+    nb, na = sym['SkillNamePtrTable']
+    for sid, base in pairs:
+        rec = 0x41CF + 19 * base
+        m_ = mp[base] if mp[base] <= 255 else 0
+        if sid >= 0xDE:
+            i = sid - 0xDE
+            for lab in ('CustomBaseTable', 'CustomTargetBaseTable', 'CustomProxyTable',
+                        'CustomSfxTable'):
+                w(lab, i, base)
+            w('CustomElemTable', i, 0xFF)
+            w('CustomRecordPtrTable', 2 * i, rec)
+            w('CustomRecordPtrTable', 2 * i + 1, rec >> 8)
+            w('CustomMPCostTable', 2 * i, m_)
+            w('CustomMPCostTable', 2 * i + 1, m_ >> 8)
+            w('CustomAnnounceTable', sid - 0xE2, ann[base])
+        else:
+            k = sid - 0xBC
+            w('ReclaimBaseTable', k, base)
+            w('ReclaimTargetTable', k, base)
+            for lab in ('StockPresentTable', 'StockSfxTable'):
+                w(lab, sid, base)
+            w('StockElemTable', sid, 0xFF)
+            w('AnnounceTemplateTable', sid, ann[base])
+            rom[off(0x54, 0x4013) + 2 * sid] = rec & 0xFF
+            rom[off(0x54, 0x4013) + 2 * sid + 1] = rec >> 8
+            rom[off(0x07, 0x570C) + 2 * sid] = m_ & 0xFF
+            rom[off(0x07, 0x570C) + 2 * sid + 1] = m_ >> 8
+        for j in range(2):
+            rom[off(nb, na) + 2 * sid + j] = rom[off(nb, na) + 2 * base + j]
+    return bytes(rom)
+
+
+def census_build(rom_path, sym_path, pairs, banks, orig, poke=False):
     rom = open(rom_path, 'rb').read()
     sym, by_bank = load_sym(sym_path)
+    if poke:
+        rom = poke_twins(rom, sym, pairs)
     def vanilla(at):
         """the instruction at (bank, pc) is the original game's own bytes"""
         b, pc = at
@@ -274,15 +332,38 @@ def main():
     ap.add_argument('--reuse', help='a work dir with b0..b7 already built')
     ap.add_argument('--keep', help='build into this dir and keep it')
     ap.add_argument('--banks', default='00,4c,50,51,52,53,54,55,56,57,58,5f,72,77')
+    ap.add_argument('--refused', action='store_true',
+                    help='S165: also every base the compiler refuses (the clone census\'s '
+                         '"differs"), written into the ROM of the first build (poke_twins)')
+    ap.add_argument('--out', default=OUT)
     args = ap.parse_args()
     from editor2.core import custom_skills as CS
     bases = [b for b, _n in CS.clone_bases(REPO, 0xEF)]
     builds = plan(bases)
+    refused = []
+    if args.refused:
+        cen = json.load(open(os.path.join(REPO, 'extracted', 'skill_clone_census.json')))['results']
+        refused = sorted(int(k) for k, v in cen.items() if v.get('result') == 'differs')
+        for c in range(0, len(refused), len(RECL)):
+            ch = refused[c:c + len(RECL)]
+            builds.append(('poke', ch))
     work = args.reuse or args.keep or tempfile.mkdtemp(prefix='act_ids_')
     banks = [int(x, 16) for x in args.banks.split(',')]
     merged = {}
     orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
     for k, (bh, br) in enumerate(builds):
+        if bh == 'poke':
+            # [S165] a refused-base build: build b0's ROM with the twins written in
+            d = os.path.join(work, 'b0')
+            pairs = list(zip(HIGH, br)) + list(zip(RECL, br))
+            res = census_build(os.path.join(d, 'build', 'rom.gbc'),
+                               os.path.join(d, 'build', 'game.sym'), pairs, banks, orig, poke=True)
+            for key, v in res.items():
+                m = merged.setdefault(key, {kk: vv for kk, vv in v.items() if kk != 'diffs'})
+                m.setdefault('diffs', []).extend(v['diffs'])
+            print(f'refused-base build {k}: {len(pairs)} poked twins, {len(res)} sites, '
+                  f'{sum(1 for v in res.values() if v["diffs"])} with a difference', flush=True)
+            continue
         d = os.path.join(work, f'b{k}')
         if not args.reuse:
             pj = project_for(bh, br, d)
@@ -311,16 +392,19 @@ def main():
                 d_['verdict'] = ROOT_VERDICTS.get(d_['root'], 'NEW - not judged yet')
                 if d_['root'] not in ROOT_VERDICTS:
                     new_roots.add(d_['root'])
-    out = {'_generator': 'tools/census_act_id_lists.py (S163) on census builds of '
+    out = {'_generator': 'tools/census_act_id_lists.py (S163; S165 --refused: the bases the compiler '
+                         'refuses written into build 0\'s ROM) on census builds of '
                          'editor2/example-project + 30 new skills a build (data/DWM-original.gbc)',
-           'bases': bases, 'builds': [{'high': list(zip(HIGH, bh)), 'reclaimed': list(zip(RECL, br))}
-                                      for bh, br in builds],
+           'bases': bases, 'refused_bases': refused,
+           'builds': [{'high': list(zip(HIGH, br if bh == 'poke' else bh)),
+                       'reclaimed': list(zip(RECL, br)), 'poked': bh == 'poke'}
+                      for bh, br in builds],
            'n_sites': len(merged), 'new_roots': sorted(new_roots),
            'root_verdicts': ROOT_VERDICTS, 'candidates': cand,
            'sites_same': sorted(k for k, v in merged.items() if not v['diffs'])}
-    json.dump(out, open(OUT, 'w'), indent=1)
+    json.dump(out, open(args.out, 'w'), indent=1)
     print(f'{len(merged)} sites, {len(cand)} where a new skill differs from its base; '
-          f'roots outside the AI chain not judged: {len(new_roots)} {sorted(new_roots)} -> {OUT}')
+          f'roots outside the AI chain not judged: {len(new_roots)} {sorted(new_roots)} -> {args.out}')
     return 1 if new_roots else 0
     if not (args.reuse or args.keep):
         shutil.rmtree(work, ignore_errors=True)

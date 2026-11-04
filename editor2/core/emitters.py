@@ -1540,6 +1540,18 @@ def _ai_fix_regions():
 REGISTRY += _ai_fix_regions()
 
 
+def _window_word_regions():
+    # S165 (ROADMAP Phase F T-follow (a)): the words drawn in the windows as tiles — each
+    # re-sectioned run of window layout streams (banks $07 / $15) is a same-size region
+    # (editor2/core/window_words.py, PROJECT_COMPILER §2.73). No words == the original bytes.
+    from . import window_words as WW
+    return [(name, "gamedata.window_words", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in WW.REGIONS]
+
+
+REGISTRY += _window_word_regions()
+
+
 def _anim_entries():
     # S112 (P3.11e): the project's NEW battle animations (bank $6F engine +
     # data, bank $70 tile sheets) and every skill's own presentation (bank

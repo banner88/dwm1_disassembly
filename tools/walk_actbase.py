@@ -23,7 +23,11 @@ Sleep, LegSweep, Barrier, SquallHit, BeDragon, CallHelp, TakeMagic.
            census put it (tools/census_act_id_lists.py: 47 + Entry1Base52, + the 2 target-menu copies of r2).
 
   python3 tools/walk_actbase.py --build DEMO/build --project DEMO/project.json \\
-      --sav USER.sav --keep KEEP [--negative] [--steps twins,sites]
+      --sav USER.sav --keep KEEP [--negative] [--steps twins,sites] [--set s165]
+
+S165: --set s165 walks examples/s165_chorus_demo (the C… twins of the 17 bases the S163 census
+never ran — the compiler refused them; patched S165: 23 more reads in banks $52 / $53 + the turn
+order's defensive list in bank $58); the sites step counts the S165 calls too.
 
 --negative: every view call put back to the original bytes in a ROM copy (`ld a, [$db8a]` /
 `ld a, [$db4f]` / the queue tail / `call CmpBtlC_4b92` / SetHLBattle_7d77's far call): the
@@ -54,6 +58,19 @@ TWINS = {
 }
 SEEDS = [(0x5A, 0xA5), (0x08, 0x31), (0xE7, 0x6C)]   # the pinned RNG pairs: a roll that misses
                                                       # under one lands under another
+# S165 (ROADMAP E13 note "the 17 bases a copy still cannot run"; examples/s165_chorus_demo, the
+# twins named C…): the bases the S163 census never ran (the compiler refused them) — target = the
+# record's (a foe for $1x modes, else the caster), Farewell with a fallen ally
+TWINS_S165 = {
+    20: (4, None), 40: (0, None), 50: (0, 'dead1'), 63: (4, None), 81: (4, None), 89: (4, None),
+    109: (4, None), 114: (4, None), 128: (4, None), 130: (4, None), 131: (0, None),
+    132: (0, None), 133: (0, None), 134: (0, None), 137: (0, None), 142: (0, None),
+    144: (0, None),
+}
+NAMES_S165 = {20: 'Sacrifice', 40: 'Bounce', 50: 'Farewell', 63: 'Massacre', 81: 'QuadHits',
+              89: 'Vacuum', 109: 'PoisonAir', 114: 'SandStorm', 128: 'DeMagic', 130: 'UltraDown',
+              131: 'ThickFog', 132: 'TatsuCall', 133: 'DiagoCall', 134: 'SamsiCall',
+              137: 'Guardian', 142: 'StrongD', 144: 'BladeD'}
 NAMES = {48: 'Vivify', 49: 'Revive', 122: 'SickLick', 121: 'LushLicks', 138: 'TailWind',
          139: 'StormWind', 112: 'Ahhh', 21: 'Sleep', 123: 'LegSweep', 36: 'Barrier',
          85: 'SquallHit', 213: 'BeDragon', 82: 'CallHelp', 27: 'TakeMagic'}
@@ -203,9 +220,10 @@ def s_sites(w):
                 t = rom[base + i + 1] | rom[base + i + 2] << 8
                 if (b, t) in targets:
                     per[b] = per.get(b, 0) + 1
-    want = {0x50: 6, 0x52: 23, 0x53: 17, 0x58: 5}
+    want = {0x50: 6, 0x52: 36, 0x53: 27, 0x58: 6}
     w.check(f'the act-time view calls are where the census put them ({per}: banks $50 4 + 2 menu copies, $52 '
-            '22 + Entry1Base52, $53 17, $58 5)', per == want, str(per))
+            '22 + Entry1Base52 + 13 (S165), $53 17 + 10 (S165), $58 5 + 1 (S165: '
+            'TurnOrderDefensiveBoost_56cf))', per == want, str(per))
 
 
 def negative_rom(w):
@@ -240,14 +258,24 @@ def main():
     ap.add_argument('--sav', required=True)
     ap.add_argument('--keep', required=True)
     ap.add_argument('--negative', action='store_true')
-    ap.add_argument('--steps', default='twins,menu,sites')
+    ap.add_argument('--steps', default=None)
+    ap.add_argument('--set', default='s163', choices=('s163', 's165'),
+                    help='s163: the ECHO demo\'s E… twins (14 bases); s165: the CHORUS demo\'s C… '
+                         'twins (the 17 bases S165 opened; steps twins,sites)')
     a = ap.parse_args()
     os.makedirs(a.keep, exist_ok=True)
     w = ReclaimWalk(a.build, a.sav, a.keep)
     d = json.load(open(a.project))
     sk = d['gamedata']['skills']
+    pre = 'E' if a.set == 's163' else 'C'
     w.E = {v['base']: int(k) for k, v in sk.items()
-           if isinstance(v, dict) and str(v.get('name', '')).startswith('E') and 'base' in v}
+           if isinstance(v, dict) and str(v.get('name', '')).startswith(pre) and 'base' in v}
+    if a.set == 's165':
+        TWINS.clear()
+        TWINS.update(TWINS_S165)
+        NAMES.update(NAMES_S165)
+    if a.steps is None:
+        a.steps = 'twins,menu,sites' if a.set == 's163' else 'twins,sites'
     if a.negative:
         negative_rom(w)
     s_continue(w)

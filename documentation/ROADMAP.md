@@ -3562,7 +3562,20 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         — the S163 base view and the heal rig), the reclaimed twins alike; `extracted/
         skill_clone_census.json` regenerated (the compiler / New skill dialog follow it).
         BATTLE_SKILL_SYSTEM §13.9 (S164).
-      - [ ] **The 17 bases a copy still cannot run (FOUND S164):** Sacrifice, Bounce (its line 154 vs
+      - [x] **The 17 bases a copy still cannot run (FOUND S164) — FIXED S165 (built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good");
+        the user: "do 1, 2 and 3 and check things yourself"):** the S163 census ran only
+        the bases the compiler allowed, so a refused base was never run as a base: `census_act_id_lists
+        .py --refused` writes the refused bases' twins into a built ROM's bytes (`poke_twins`) — 40 new
+        roots: the 17 bases' reads AND 11 bases S164 had just allowed (Beat / Defeat, Ironize,
+        TwinSlash, Ramming, Kamikaze, HighJump, Imitate, Cover, Dodge, SuckAll, LifeSong — their id
+        tests sat in paths the whole-battle census never took: the turn order's defensive list, the
+        act-state ladder, Imitate's own check). Patched (same size): 13 reads in bank $52, 10 in bank
+        $53 → `call ActBase52 / ActBase53`, bank $58 `TurnOrderDefensiveBoost_56cf`'s queue read →
+        `call QueueBase58` + 2 nops; the census: 0 unjudged roots (364 sites, every base + the
+        refused); `census_skill_clone.py --whole --reclaim`: **155 same, 0 differ** (every stock skill
+        a new skill may run, high and reclaimed ids alike — `extracted/skill_clone_census.json`);
+        `tools/walk_actbase.py --set s165` (`examples/s165_chorus_demo`, THE CHORUS HALL) — see
+        BATTLE_SKILL_SYSTEM §13.14 "S165". Original note: Sacrifice, Bounce (its line 154 vs
         153), Farewell (MP not zeroed), Massacre (130 vs 120), QuadHits / Vacuum (damage), PoisonAir
         (208 vs 206), SandStorm (184 vs 162), DeMagic / ThickFog (casts),
         UltraDown, Tatsu / Diago / SamsiCall (the summon's HP / MP), Guardian / StrongD / BladeD
@@ -3724,7 +3737,18 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
         S163 corpus + 4 mutations each) 6,763 / 6,763 for all five and each alone, 821 decisions
         differ; `tools/walk_aifix.py` (PyBoy, the demo's TACTICIAN / WARDEN) 8 / 8, negative 7 FAIL.
         BATTLE_SKILL_SYSTEM §15.10.5 "S164", PROJECT_COMPILER §2.72, help 54.
-      - [ ] **The rule model on arbitrary boards (FOUND S164, open):** the S163 model is exact on the
+      - [x] **The rule model on arbitrary boards (FOUND S164) — FIXED S165 (simulator only;
+        byte-neutral):** 22 rules of bank $57 modelled from their bytes (`ai_rules._s165_rules`:
+        $4AF6 / $5EE5 the reflect vetoes, $4B3D the breath veto, $5F1F / $5F91 the capable-foe vetoes,
+        $4A94 / $5B4A / $6C0F the option-list vetoes, $47D9 / $62A8 / $5BCD the already-surrounded /
+        sandstormed / cursed vetoes, $4890 Upper / Increase's DEF cap (the base DEF of BaseStatDEF_424a:
+        x4 party, x2 enemies), $4B8C, $4E76, $54E4, $54BE, $5660, $5739, $59F7) — with the original's
+        slips kept (the slot pointer that lands on the next slot's bytes, the count never reset, the
+        caster read at index 2 x actor, the stale `$DB58` word …); the trait byte the rules read =
+        `$DB8B + slot`. NEW `simulator/rule_gaps.py` (the ROM's chain cached, rule by rule):
+        **0 / 7,865** (seed 164, 4 mutations), **0 / 14,157** (seed 165, 8), **0 / 26,741** (seed 7, 16), **0 / 39,325** (seed 11, 24; BATTLE_SKILL_SYSTEM §15.10.5 "S165"); validate_ai_fixes 7,865 / 7,865 both ROMs. Two rules
+        need board facts the Balance battles do not carry (`view.base_def`, `view.db58`): left out
+        there. Original note: the S163 model is exact on the
         captured boards (1,573) but not on mutated ones — 1,102 of 7,865 chain starts differ for the
         ORIGINAL rules (`validate_ai_fixes.py` prints the rules: `$4AF6` 312, `$5F1F` 203, `$4B3D` 181,
         `$4A94` 75, `$4890` 74, `$5660` 60, `$6C8C` 49, `$4E76` 44, `$5B4A` 42 …); live in the walk:
@@ -3801,7 +3825,22 @@ yields the E6 capacity numbers.
       failed; negative 8 FAIL); clean `1ca6579…` unchanged. *User half:* `DWM-S150-scribe-test.gbc`
       (the throne room's lady, the bag's FairyDew / BayLeaf, "… pours 1 FairyDew on …", THE
       SCRIBE'S HALL / FIELD) + the Text tab in the editor.
-- [ ] **T-follow (S150, open) — what the Text tab does not reach yet.** (a) Words drawn as TILES,
+- [~] **T-follow (S150, open) — what the Text tab does not reach yet.** **S165 ((a), built S165,
+      USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good")): the words drawn in the WINDOWS are editable — the Text tab's Window words
+      page** (`gamedata.window_words`, editor2/core/window_words.py, PROJECT_COMPILER §2.73): the
+      field menus (bank $07: INFO ITEM / SKIL OPTN, the INFO page's ATK DEF AGL INT WLD / HP MP /
+      MASTER / NEXT LV, ITEM's USE / DEL, SKIL's USE MP, OPTN's TEXT SPD / CH ORDER / CH PLAN /
+      JOURNAL, CHARGE / MIXED / CAUTIOUS / COMMAND, YES / NO) and the title menu (bank $15:
+      CONTINUE / NEW GAME / VS MODE / BREEDING) — 42 words, the same length at most, the letters of
+      the screen's measured font. **Correction of the S164 note below:** the field menu's words are
+      window LAYOUT STREAMS in bank **$07** (not $15 — bank $15's are the title / map / arena
+      windows; DOC_AUDIT S165); a stream = `dw position`, cells (TILE numbers: the field keeps a
+      23-letter font in VRAM, no Q / Z / lower case), `$D8` newline, `$D9` end, drawn by 8 copies of
+      one routine (banks $07 $09 $0A $12 $15 $18 $50 $51; DATA_STRUCTURES "Window layout streams
+      (S165)"). Measured: `tools/census_window_layouts.py` (119 streams in 31 runs, 15 drawn in the
+      tour with their font measured), `tools/walk_window_words.py` 36 / 36, negative 5 FAIL.
+      **Open:** the other banks' windows (shops $09, breeding $0A, $18, the battle $50 / $51 — their
+      fonts not measured; their words read as other tiles), (b)-(d) below. (a) Words drawn as TILES,
       not text: the field menu's INFO / ITEM / SKIL / OPTN, the INFO page's ATK / DEF …, the HP / MP
       bar (measured S150: no SaveBankAndSwitch call draws them) — locate the tile strings and their
       readers; (b) the field messages holding several menu words in one line (`PUT TAKEEXIT`,

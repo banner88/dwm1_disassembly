@@ -59,9 +59,14 @@ def view_of_wram(w):
         sp = w[0xDC3C - 0xC000 + s_]
         if sp < len(MF):
             fams[s_] = MF[sp].get('family_id')
-            traits[s_] = (1 if MF[sp].get('is_metal') else 0) | (0x10 if MF[sp].get('can_fly') else 0)
+        if FAMILY_OF is not None and sp in FAMILY_OF:
+            fams[s_] = FAMILY_OF[sp]             # S165: the oracle build's own family byte
+        # S165: the trait byte the rules read ($DB8B + slot: bit 0 metal, bit 4 flying — made
+        # from the species at the battle's start); a mutated board's new species keeps the old
+        # byte, as the ROM would see it
+        traits[s_] = w[0xDB8B - 0xC000 + s_]
     opts = [[w[0xDC64 - 0xC000 + s * 16 + k] for k in range(16)] for s in range(8)]
-    return R.BattleView(words(0xDBA3), words(0xDBB3), words(0xDBC3), words(0xDBD3),
+    v = R.BattleView(words(0xDBA3), words(0xDBB3), words(0xDBC3), words(0xDBD3),
                         [[w[0xDB00 - 0xC000 + s * 8 + k] for k in range(8)] for s in range(8)],
                         [w[0xDD1B - 0xC000 + i] for i in range(8)], traits, fams,
                         lambda s_, e: (res[s_ * 7 + (e >> 2)] >> ((3 - (e & 3)) * 2)) & 3,
@@ -69,6 +74,45 @@ def view_of_wram(w):
                         dd0b=[w[0xDD0B - 0xC000 + i] for i in range(8)],
                         db40=(w[0xDB40 - 0xC000], w[0xDB41 - 0xC000]),
                         atk=words(0xDBE3), dfn=words(0xDBF3), agl=words(0xDC03))
+    v.db58 = _w(w, 0xDB58)                                   # S165: AIRule_5660's stale word
+    v.base_def = base_defs(w)                                # S165: AIRule_4890's caps
+    return v
+
+
+_ENEMY_ROWS = None
+# S165: species -> family as the ORACLE build has it (bank $03 MonsterInfoTable $4461, 43 B a row,
+# +0; a project may move species between families — the example's Spirit family, S104); set by
+# set_rom_families(rom) — None = the vanilla families of monsters_full.json
+FAMILY_OF = None
+
+
+def set_rom_families(rom):
+    global FAMILY_OF
+    FAMILY_OF = {sp: rom[0x03 * 0x4000 + 0x4461 - 0x4000 + 43 * sp] for sp in range(221)}
+
+
+def base_defs(w):
+    """[S165] each slot's BASE DEF as bank $57 entry 7 (BaseStatDEF_424a) reads it from this
+    WRAM image (outside a link battle): party slot k -> the record [$CA8E + k] +$5A; an enemy
+    slot -> its EID row's +11 (EIDs $DA03 + 2 (s - 4)); a helper slot (s & 3 == 3) -> the row
+    $100 + its species ($DC3C + s)."""
+    global _ENEMY_ROWS
+    if _ENEMY_ROWS is None:
+        v = json.load(open(os.path.join(HERE, '..', 'extracted', 'gamedata_vanilla.json')))
+        _ENEMY_ROWS = [bytes.fromhex(r) for r in v['tables']['enemy_stats']['rows']]
+
+    def row_def(eid):
+        return _ENEMY_ROWS[eid][11] | _ENEMY_ROWS[eid][12] << 8 if eid < len(_ENEMY_ROWS) else None
+    out = []
+    for s_ in range(8):
+        if s_ < 3:
+            idx = w[0xCA8E - 0xC000 + s_] & 0x7F
+            out.append(_w(w, 0xCB1B + idx * 0x95))
+        elif s_ & 3 == 3:
+            out.append(row_def(0x100 + w[0xDC3C - 0xC000 + s_]))
+        else:
+            out.append(row_def(_w(w, 0xDA03 + 2 * (s_ - 4))))
+    return out
 
 
 def mutate(w, actor, rnd):
@@ -141,6 +185,7 @@ def main():
     roms = {k: Oracle(open(os.path.join(d, 'rom.gbc'), 'rb').read(),
                       read_sym(os.path.join(d, 'game.sym'))) for k, d in
             (('orig', a.orig), ('fixed', a.fixed))}
+    set_rom_families(roms['orig'].rom)
     with gzip.open(a.corpus, 'rt') as g:
         corpus = {k: v for k, v in json.load(g).items() if not k.startswith('_')}
     rnd = random.Random(a.seed)

@@ -1441,6 +1441,7 @@ jr_057_47c3:
     ret
 
 
+; [S165] chain 2; Surround $18: VETO unless a live foe is not surrounded (+3 bit 1) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_47d9:
     ld a, [$db8a]
     cp $18
@@ -1568,6 +1569,7 @@ jr_057_487a:
     ret
 
 
+; [S165] chain 2; Upper $1E / Increase $1F: VETO unless a live own monster's DEF < its cap and < 999; cap = its base DEF (entry 7 BaseStatDEF_424a) x4 (party slots 0-2) / x2 (the rest) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4890:
     ld a, [$db8a]
     cp $1e
@@ -1928,6 +1930,7 @@ jr_057_4a89:
     ret
 
 
+; [S165] chains 2/3, $DD0B = 2 only; $24/$8A/$8B/$8F/$92: VETO unless a live foe KNOWS a breath (LoadBtlAI_7b7d: its option list before $FF) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4a94:
     call LoadBtlAI_7c6e
     ret nz
@@ -2011,6 +2014,7 @@ jr_057_4af2:
     ret
 
 
+; [S165] chains 1/2; ids $03-$19 but $12/$15, $1D/$21/$DA: VETO when a LIVE foe has +4 & $22 (reflects) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4af6:
     ld a, [$db8a]
     cp $03
@@ -2071,6 +2075,7 @@ jr_057_4b39:
     ret
 
 
+; [S165] chains 1/2; the breaths $5C-$63/$6A-$6D: VETO when the foes' side byte $DB00+side & $60, a live foe's +4 & $48, or bit 1 of the byte 8 past its row (`ld a,[hl+]` + 3 `inc hl` = the NEXT slot's +0 — a slip) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4b3d:
     ld a, [$db8a]
     cp $5c
@@ -2135,6 +2140,7 @@ jr_057_4b88:
     ret
 
 
+; [S165] chain 1, $DD0B = 2, $DD6B bit 7: -20 when a live foe has bit 5 of $DB08+8s or bits 0/2 of $DB09+8s; the pointer steps 8 a live slot, 7 a dead one (the skip jumps past `inc hl` — a slip) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4b8c:
     call LoadBtlAI_7c6e
     ret nz
@@ -2714,6 +2720,7 @@ jr_057_4e66:
     ret
 
 
+; [S165] chain 1; $3F/$40: +10 when a live foe's DEF >= 2 x the ATK of the FIRST foe slot (GetCombatantATK with A = the foes' base, not the caster — a slip) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_4e76:
     ld a, [$db8a]
     cp $3f
@@ -3839,6 +3846,7 @@ jr_057_54b6:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; $25/$7A/$41: the $54E4 test, +20 — on slot foes+3 (62e0 leaves E there), not the caster (a slip) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_54be:
     call LoadBtlAI_7c6e
     ret nz
@@ -3866,6 +3874,7 @@ jr_057_54d0:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; $7A/$82/$25/$1C/$1D: +10 when an own slot (no slot check) has min/2 <= ATK and ATK/2 < min, min = the lowest live foe DEF (LoadBtlAI_62e0: the first foe slot 0 when dead) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_54e4:
     call LoadBtlAI_7c6e
     ret nz
@@ -4161,6 +4170,7 @@ jr_057_5657:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; $20-$23: +10 when a live own monster is slower than the live foes' average AGL; +10 when the own average AGL < [$DB58] (never set here — stale; a slip) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5660:
     call LoadBtlAI_7c6e
     ret nz
@@ -4293,6 +4303,7 @@ jr_057_56d4:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; Transform $29: +20 once the live foes (counted together, never reset) reach 3 of MaxHP/ATK/DEF >= the caster's — read at word index 2 x actor; the MaxMP compare's `jr` is unconditional (slips) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5739:
     ld a, [$db8a]
     cp $29
@@ -4768,6 +4779,7 @@ jr_057_59ee:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; $26/$7F: +10 when a foe's list holds $FF (fewer than 8 options) or $4F/$59/$5B/$64/$65/$D9 (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_59f7:
     call LoadBtlAI_7c6e
     ret nz
@@ -5017,6 +5029,7 @@ AIRule_5b34:
     ret
 
 
+; [S165] chain 2, $DD0B = 2; $27/$28: VETO unless a live, unsealed (+3 bit 0) foe knows a skill < $1B or $1C/$1D/$20/$21/$DA (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5b4a:
     call LoadBtlAI_7c6e
     ret nz
@@ -5124,6 +5137,7 @@ AIRule_5bae:
     ret
 
 
+; [S165] chain 2; Curse $6F: VETO unless a live foe is not cursed (+2 bit 5) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5bcd:
     ld a, [$db8a]
     cp $6f
@@ -5776,6 +5790,7 @@ jr_057_5edd:
     ret
 
 
+; [S165] chains 1/2; ids < $1A, $1C/$1D/$20/$21/$DA: VETO unless a live foe has +4 & $22 clear (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5ee5:
     ld a, [$db8a]
     cp $1a
@@ -5824,6 +5839,7 @@ jr_057_5f17:
     ret
 
 
+; [S165] chains 1/2/3; 41 ids (simulator ai_rules.IDS_5F1F): VETO unless a live foe has +7 & $C0 clear (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5f1f:
     ld a, [$db8a]
     cp $1a
@@ -5919,6 +5935,7 @@ jr_057_5f89:
 
 ; [S130 F10] (also DeMagic $80): veto when every opponent is invalid or incapacitated
 ; [S130 F10] (GetMonsterSlotInfo carry: +2&$D0, +5&$3F, +7&$C0). Measured for $80.
+; [S165] chains 1/2/3; ai_rules.IDS_5F91: VETO unless a foe is capable (GetMonsterSlotInfo NC) (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_5f91:
     ld a, [$db8a]
     cp $15
@@ -6601,6 +6618,7 @@ jr_057_62a0:
     ret
 
 
+; [S165] chain 2; $18/$72/$73: VETO unless a live foe is neither surrounded (+3 bit 1) nor in a sandstorm (+7 & 3) and not at level 3 to the record element (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_62a8:
     ld a, [$db8a]
     cp $18
@@ -6848,6 +6866,7 @@ jr_057_63db:
     ret
 
 
+; [S165] chain 2; $1C/$1D/$7A: VETO unless a live foe has DEF >= 2 and is not at level 3 to the record element (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_63e3:
     ld a, [$db8a]
     cp $1c
@@ -8508,6 +8527,7 @@ jr_057_6bec:
     ASSERT @ == $6c0f
 
 
+; [S165] chain 2, $DD0B = 2; $26: VETO unless a foe's list (NO slot check) holds a skill whose record +6 (damage class) != 0 (BATTLE_SKILL_SYSTEM §15.10.5 "S165"; simulator/ai_rules._s165_rules)
 AIRule_6c0f:
     call LoadBtlAI_7c6e
     ret nz

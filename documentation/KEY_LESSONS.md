@@ -7608,3 +7608,55 @@ the song banks only when battles need a bank — so text vs song order depended 
 lazily-numbered shared space needs a fixed precedence that every allocator enforces itself
 (call all predecessors first), never one inherited through another planner's conditional call.
 
+## S165 — the outstanding fixes (the 17 bases, the window words, the rule model on any board)
+
+### S165 — a census only covers the inputs it was given: the refused bases were never run as bases
+**Symptom:** after S163's "0 unjudged roots" and S164's whole-battle census (138 bases allowed), 17
+bases still made a copy behave differently, and nobody knew where their code asked for the id.
+**Root cause:** `census_act_id_lists.py` built its census projects from `clone_bases()` — the bases
+the compiler ALLOWED; a refused base never ran as a base, so its id tests never appeared. Worse,
+S164 then allowed 24 more bases on the strength of whole battles without re-running the act-id
+census: 11 of them still had id reads in paths a rig battle never takes (the turn order's defensive
+list, Imitate's own check, the act-state ladder, HighJump's airborne turn). **Fix:** `--refused`
+writes the refused bases' twins into a built ROM's bytes (the compiler would refuse to emit them);
+40 new roots, 24 reads patched; then every base re-measured (155 same, 0 differ). **Rule:** a
+census that justifies a fence must run the fenced inputs too (poke them in if the tool chain refuses
+them), and when the allowed set grows, re-run every census whose verdict depends on it — a
+whole-run comparison measures only the paths the run happened to take.
+
+### S165 — a model "exact on the corpus" is exact on the corpus: mutate the boards and cache the oracle
+**Symptom:** the S163 rule model matched the ROM on all 1,573 captured chain starts and missed
+1,102 of 7,865 mutated ones. **Root cause:** rules that never fired on the captured boards (a foe
+that reflects, a breath user, a surrounded foe, a high DEF) were not modelled at all, and several
+rules carry slips (a pointer that walks 7 bytes past a dead slot, a count never reset, the caster
+read at index 2 x actor, a stale `$DB58`, `GetCombatantATK` called with the foes' base). **Fix:**
+`simulator/rule_gaps.py` caches the ROM's chain for the mutated boards and lists the rules that fired
+on each mismatch; each was read from its bytes and modelled WITH its slips — 0 mismatches on 7,865 /
+14,157 / 26,741 / 39,325 boards (four seeds). Two "gaps" were the harness: the trait byte the rules read is
+`$DB8B + slot` (not the species' flags) and the oracle build moves species between families (the
+example's Spirit) — the board view must read what the ROM reads. **Rule:** validate a hand model on
+boards the game never produced (seeded mutations), with the ROM as the oracle and the result cached
+so a rule can be iterated in seconds; when the model and the oracle disagree, check first that the
+view gives the model the same bytes the ROM reads.
+
+### S165 — the words in a window are tile numbers: decode them with the screen's font, measured
+**Symptom:** the field menu's INFO / ITEM / SKIL / OPTN could not be found as text (S150), and the
+S164 note put them in bank $15 because "INFO" appeared there in the text glyph numbers. **Root
+cause:** a window LAYOUT STREAM holds tile numbers; the field keeps its own 23-letter font in VRAM
+(I = `$05`, N = `$08` …), so the field menu's words (bank $07) are invisible to a text-glyph search,
+while bank $15's title / map windows happen to use the text font. **Fix:** the font measured from
+VRAM at draw time (bitmap for bitmap, hooks on all 16 drawer entries during a PyBoy tour), the
+streams decoded per font; editing limited to the measured font's letters. **Rule:** before saying
+where a word is drawn, find the draw call on screen (a hook on the drawer, the BG map cells) — a
+byte search only finds the words that share the searched encoding.
+
+### S165 — `builder.build_rom` stages over `disassembly/`: no edits there while any build runs (again)
+**Symptom:** none this time — caught before damage: a backgrounded `test_compiler --rom` was
+running while the session wrote `[S165]` comments into `disassembly/bank_052.asm` and ran a clean
+`make`. **Root cause:** the S152 r2 / S155 / S163 hazard (the builder stages patched files over
+`disassembly/` and restores its own backup at the end — a restore can overwrite edits made in
+between, and a `make` in between builds the staged text). **Fix:** the test killed, `git status`
+showed only the session's 5 clean-tree files, the clean build `1ca6579…`; tests re-run one at a time
+afterwards. **Rule (kept):** a backgrounded build or test that compiles a ROM owns `disassembly/`
+until it ends — queue clean-tree edits (and `make`) after it, or run them before starting it.
+

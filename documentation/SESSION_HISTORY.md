@@ -5795,6 +5795,59 @@
 
 ## Part 1 — Archived session blocks (verbatim, newest first)
 
+> Last verified: 2026-11-02 (Session 163 — **EDITOR FIXES A1-A4 (THE PALETTE WARNING READS THE 4 LOADED SLOTS; THE NPC
+> SPRITE WARNING = THE GAME'S 6-SPRITE CACHE; STALE STATUS ROWS; A NEW TILESET SHEET NEVER TAKES OVER A FILE IN assets/) +
+> ROADMAP E17 NOTE "ACT-TIME ID LISTS" FIXED: A NEW SKILL ACTS AS ITS BASE WHERE THE EFFECT CODE ASKS FOR THE SKILL'S ID +
+> E17 NOTE "THE S81 RULE MODEL ON 3-OPPONENT BOARDS" FIXED (SIMULATOR)** (the audit of the open items → user: "Do all of A
+> + fix B4 and B5. You are allowed to run"). **Built S163 + r2; the ROM USER-CONFIRMED 2026-11-02 22:29 ("Sounds good
+> hand off zip", on `DWM-S163r2-echo-test.gbc`); the editor / simulator changes signed off with it, not separately
+> user-tested.** User test of the first ROM (2026-11-02 22:11): "Sicklick works"; "EVivify cannot select [the] dead monster"
+> → **r2**: the battle menu's WHO list keeps a COPY of the id (`$DD76` / `$C1C2`) and compares it with Vivify / Revive
+> frames later — the census's run from the read never reached it and the walk's rig bypassed the menu (KEY_LESSONS S163 r2);
+> both copy sites → `call ActBase50`. Then (22:27) "ETailWind does NOT let you pick any monsters" — measured: neither does
+> the stock TailWind (no WHO list, it guards its caster); my "one ally" wording was wrong (docs + the demo's line fixed after
+> the test). S154 USER-CONFIRMED 2026-11-02 22:11 ("S154 confirmed").
+> Test ROMs **`DWM-S163-echo-test.gbc`** (`734b354a…`, patched) and **`DWM-S163r2-echo-test.gbc`** (`8ad99235…`, patched)
+> = the user's project + THE ECHO HALL
+> (`examples/s163_echo_demo/build_demo.py`; way in: the ECHO GUIDE, Cities_FOUNT (3, 4)): the GIFT KEEPER (ORIGINAL — Vivify,
+> SickLick, TailWind, Ahhh — and ECHO — their NEW twins EVivify / ESickLk / ETailWd / EAhhh), the SPARRING SLIME (three
+> gentle slimes); 10 more twins in the project for the walk. Example pin `64ed1699…` (patched; first S163 `1400266e…`,
+> patched, historical; was `97acc081…`, patched — banks $50 / $52 / $53 / $58 + the header checksum).
+> **Session environment:** the RGBDS build needed the user's OK ("You are allowed to run"); PySide6 6.9.1, PyBoy 2.9.0.
+> **Found:** a NEW skill acted as its base's SIBLING where the effect asks for the id — on Vivify as Revive (full HP, never
+> fails), on SickLick as LushLicks, on TailWind as StormWind; hit ladders, routing, multi-hit continuations, boss protection,
+> revive targets, turn-order keys, the tension roll; SickLick / LushLicks / SandStorm build their MESSAGE number from the id
+> (no branch — KEY_LESSONS S163); the S81 AI membership sets were the ids seen firing on one board (DOC_AUDIT S163), and two
+> vanilla AI quirks / bugs (the first opposing slot counted twice by the status-class counter; the family cut's +20 tests the
+> first slot only; the "average DEF" is never computed); the room sheet cache holds 6 different NPC sprites, the 7th+ drawn
+> with the FIRST one's picture (ROOM_DATA_FORMAT "S163 correction"); the palette check read 4 never-emitted slots; a stray
+> `ts_28_0D.2bpp` in the example's assets/ (taken over by a new sheet, then deleted by undo) — left there by a FAILED
+> structural edit (a refused walkability flip localizes first; the document was restored, the file was not — fixed in
+> `SnapshotCommand`).
+> **Built (engine, patched):** 49 same-size act-time reads (+ r2: the 2 target-menu copy sites) → `ActBase50/52/53`, `MenuBase50`, `QueueBase50/58`
+> (`QueueBaseInc…`), `CmpBase53`, bank $52 `SetHLBattle_7d77` → `Entry1Base52` (bank $57 entry 1 with the base) → bank $72
+> entry 13 `AIBaseOrSelf72`; bank $52's stubs in the dead `$763E-$768F`; `ASSERT`s on the 5-byte replacement and the stub end.
+> BATTLE_SKILL_SYSTEM §13.14, PROJECT_COMPILER §2.71.
+> **Built (editor / compiler):** `validators.py` (palette slots 0-3; `formats.sheet_budget`), `formats.npc_sheet_keys` /
+> `sheet_budget`, `Document.unique_tileset_id`, the NPC panel's label, help 20 / 80, `EDITOR_REVISION` S163; the stale S161
+> / S162 status rows corrected; the orphan sheet deleted. The user's project: 19 build warnings → 7.
+> **Built (simulator):** `sweep_rules.py --party-live / --party-act / --wram`, the 10-board corpus
+> `s163_board_corpus.json.gz`, NEW `rom_rules.py` (bank $57's chain run off-line, 160 / 160), NEW
+> `validate_rules_boards.py` (1,573 / 1,573), `ai_rules.py` re-derived (chains, id ladders, class bonuses, $4D56, $4C41, $6444 /
+> $4C13 / $6382 …; BATTLE_SKILL_SYSTEM §15.10.5 "S163").
+> **Measured:** NEW `tools/census_act_id_lists.py` (+ NEW `tools/sm83run.py`): 363 sites, 0 unjudged roots (9 judged); NEW
+> `tools/walk_actbase.py` (PyBoy, the user's save, the demo): 14 twin pairs × 3 pinned RNG seeds — the same messages and board
+> after each — 44 / 44, `--negative` 16 FAIL (r2, + step `menu` — the real battle menu: Vivify / Revive and twins reach a
+> fallen ally, both TailWinds skip WHO onto the caster — 47 / 47, `--negative` 18 FAIL); EVivify cast through the menu revived PX at 13 / 26
+> (Vivify's half); regression walks on the S163 r2 code: walk_reclaim 44 / 44, walk_mirror 37 / 37, walk_skills 33 / 33, walk_holds 13 / 13, walk_plunder 45 / 45, walk_earth 40 / 40.
+> **Annotation (both trees, `1ca6579…`):** a `[S163]` comment at each of the 51 reads (banks $50 / $52 / $53 / $58); bank
+> $57: the class bonuses' ladders, `CallBtlAI_7d4d`'s double count, `LoadBtlAI_44a7`'s loop bug, `LoadBtlAI_7dbe`'s average
+> never computed, $4D56 / $6444 / $4C13 / $6382 decoded.
+> **Checks:** verify_integrity PASS (after the third two-builds-at-once corruption of `disassembly/` — every file restored
+> from HEAD one by one, KEY_LESSONS S163); test_compiler `--rom` ALL 1923 PASSED (+ `test_s163`); test_app `--rom` PASS (66 OK, the GUI build = the pin; + `s163_failed_op_assets`); test_canvas
+> `--rom` PASS; validate_rules 240 / boards 1,573 / F10 rules 332 / command 6,411 / F10 1,335 / battle 6,614 / 802 / 426.
+> **Next:** E14 (names) / the E13 note "combinations for new skills".
+
 > Session 67 (2026-07-19 — **E1: arena / gate-boss opponent-roster format
 > DECODED (byte-neutral). Arena path USER-VERIFIED on HW same session.**
 > Headline: there is NO arena roster table — opcode $1F `ArenaBattleSetup`

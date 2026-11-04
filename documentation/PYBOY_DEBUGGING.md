@@ -1346,3 +1346,25 @@ edge and the battle waits for input forever.
   enemy decision in 5,000 frames (dropped from walk_aifix); poke boards in phases 4-6 when the state
   is one the game sets itself only mid-battle.
 
+## S165 techniques — refused inputs poked into a ROM, the oracle cached, a screen's font by bitmap
+
+- **A census of inputs the tool chain refuses:** the compiler will not emit a new skill on a refused
+  base, so `census_act_id_lists.py --refused` takes a built ROM and writes the twins' rows into its
+  bytes (`poke_twins`: CustomBaseTable / the record pointer / MP / announce / name rows, or a
+  reclaimed id's stock rows) — the same bytes the compiler would write. Runtime equivalent:
+  `census_skill_clone.poke_clone` on the loaded cartridge.
+- **Iterating a model against the ROM:** `simulator/rule_gaps.py` runs `rom_rules.Oracle` once over
+  the mutated boards and pickles the results (keyed by corpus / seed / count / the ROM's mtime);
+  after that a model change is checked in ~1 minute instead of ~3. Print the ROM's fired rules per
+  mismatching board — the rule that fired in the ROM and not in the model is the next one to read.
+- **Which tile is which letter:** hook every drawer entry (`hook_register` on the 16 window-layout
+  entries), snapshot the 256 BG tiles of VRAM bank 0 (`$9000 + 16 t` for t < `$80`, `$8800 +` for
+  the rest) two frames after the draw, compare each cell's tile with a reference glyph bitmap. Keep
+  the reference bitmaps in the census JSON (`window_layouts.json` `glyphs`) so a walk on another
+  build reads its cells through the ORIGINAL build's font, not its own.
+- **The field menu:** opens with **A** on the field (START does nothing there — measured); a key
+  pressed while a menu closes is dropped, so open → wait for the drawer hook → act; the INFO / SKIL
+  WHO list shows the cursor monster's page 1 beside it (A on a monster draws page 2). Read what the
+  screen shows through SCX / SCY (`LCDC` bit 3 picks `$9800` / `$9C00`), not at the stream's
+  position — the INFO page is drawn into a scrolled part of the map.
+

@@ -765,7 +765,7 @@ SkillMagicBack:
     ld a, [wBattleAttackerIdx]
     ld hl, $db04
     call HL_AddA_x8
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $28
     jr z, jr_052_4455
 
@@ -1227,7 +1227,7 @@ SkillMassacre:
     call CheckMonsterSlot
     jr c, jr_052_46b4
 
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $3f
     jr z, jr_052_46a2
 
@@ -1432,7 +1432,7 @@ SkillMultiCut:
 SkillBiAttack:
 
 
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $51
     jr z, jr_052_47ac
 
@@ -1687,7 +1687,7 @@ jr_052_4914:
 SkillWindBeast:
 
 
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $59
     jr z, jr_052_4924
 
@@ -1778,7 +1778,7 @@ SkillPoisonGas:
     ld a, [wBattleTargetIdx]
     ld hl, $db02
     call HL_AddA_x8
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $6d
     jr z, jr_052_4997
 
@@ -2289,7 +2289,7 @@ SkillTatsuCall:
     ld a, $00
     adc h
     ld h, a
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     add $54
     ld [hl], a
     ld a, [$db4c]
@@ -2374,7 +2374,7 @@ SkillBladeD_Defense:
     ld a, [wBattleAttackerIdx]
     ld hl, $db09
     call HL_AddA_x8
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $90
     jr z, jr_052_4c9b
 
@@ -5363,7 +5363,7 @@ SetHLBattle_5cda:
 
 jr_052_5cf4:
     ld b, a
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $72
     ld a, b
     jr z, jr_052_5d01
@@ -7113,7 +7113,7 @@ jr_052_6646:
 ; then the helper slot's 8 status bytes $DB02+8s.. := 0.
 HelperLoad_6648:
 LoadBattle_6648:
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $84
     jr z, jr_052_665d
 
@@ -8702,7 +8702,7 @@ jr_052_6d77:
     jp z, Jump_052_6df2
 
 jr_052_6db0:
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $12
     jp z, Jump_052_6df2
 
@@ -8788,7 +8788,7 @@ jr_052_6e26:
     ret
 
 
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $14
     jr z, jr_052_6e60
 
@@ -9620,7 +9620,7 @@ jr_052_7262:
     ld [$c87e], a
     ld hl, $5005
     rst $10
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $3b
     jr z, jr_052_7274
 
@@ -11632,7 +11632,7 @@ LoadBattle_7dcd:
 ; [S130 F6] imitator PAYS the MP / can be vetoed) : msg $D4. Measured S130 (imitate*, imitate_veto).
 ImitateCheck_7dd7:
 LoadBattle_7dd7:
-    ld a, [$db8a]
+    call ActBase52             ; [S165] was `ld a, [$db8a]`: a new skill as its base
     cp $7f
     jr nz, jr_052_7de0
 

@@ -11,6 +11,8 @@ can be **rewritten, any length**. One sub-tab per kind:
 - **Menus & field** — menu words, field messages, spell messages;
 - **Credits** (once your project has its own credits pages — Cutscenes →
   Title & ending… — their words are edited there; "TO BE CONTINUED" stays here);
+- **Window words** (S165) — the words of the menus' windows that are pictures,
+  not texts (below);
 - **Other tabs** — the monster and skill descriptions (read only here: the
   Monsters and Skills tabs own them).
 
@@ -32,3 +34,30 @@ Limits: item names and personalities at most 9 letters, the families'
 default names at most 4 (the game draws them in fixed fields); anything else
 any length (an edited text sits in a bank of its own). The Capacity tab
 counts the edited texts.
+
+## Window words (S165)
+
+Some words on screen are not texts at all: the field menu's **INFO ITEM /
+SKIL OPTN**, the stats page's **ATK DEF AGL INT WLD**, **HP: / MP:**,
+**MASTER:**, **NEXT LV**, the ITEM window's **USE / DEL**, SKIL's **USE MP**,
+OPTN's **TEXT SPD / CH ORDER / CH PLAN / JOURNAL**, the tactics **CHARGE /
+MIXED / CAUTIOUS / COMMAND**, the save box's **YES / NO**, and the title
+menu's **CONTINUE / NEW GAME / VS MODE / BREEDING**. Each letter is a small
+picture (a tile) the screen keeps loaded, so the **Window words** page edits
+them with two limits:
+
+- **the same length at most** — a shorter word is filled with blank cells (the
+  window's frame never moves; the blank before each menu entry is where the
+  cursor arrow sits, so a word never grows into it);
+- **only the letters that screen has** — the field menus keep **A-Y without Q
+  (no Z), capitals only, and the digits**; the title menu has the whole font
+  (upper and lower case). The last column lists them; a word with another letter
+  is refused with that letter named.
+
+Double-click **Your word** to type; empty (or **Original**) = the game's word.
+A word that sits in several windows is one row per window — the field menu's
+INFO and the INFO list's header are two rows (change both to keep them
+alike). Measured in the game: the new word shows in the window, nothing else
+moves. Not editable yet: the shop, breeding and battle windows (their letters
+are other pictures — not measured).
+

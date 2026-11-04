@@ -41,9 +41,9 @@ label7_4017:
 
 
 SetFld_402b:
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -335,7 +335,7 @@ LoadFld_4226:
     ld de, $ca42
     ld hl, $93c0
     call SaveFld_69ef
-    ld de, $7cee
+    ld de, WinLayout_07_7CEE
     call LoadFld_68dc
     ld b, $00
     ld c, $00
@@ -800,17 +800,17 @@ label7_44a8:
     call SetFld_4469
 
 SetFld_44e3:
-    ld de, $70ad
+    ld de, WinLayout_07_70AD
     call LoadFld_68dc
-    ld de, $70f7
+    ld de, WinLayout_07_70F7
     call LoadFld_68dc
-    ld de, $71af
+    ld de, WinLayout_07_71AF
     call LoadFld_68dc
     ld a, [wOPTN_and_Item_selection]
     ld [$cac0], a
     call SetFld_466d
     call SetFld_4689
-    ld de, $724f
+    ld de, WinLayout_07_724F
     call LoadFld_68dc
     call CallFld_451e
     call ClrFld_6c8f
@@ -1001,7 +1001,7 @@ SetFld_463a:
 CallFld_4655:
     call SetFld_466d
     call SetFld_4689
-    ld de, $724f
+    ld de, WinLayout_07_724F
     call LoadFld_68dc
     call LoadFld_690d
     ld hl, $c90e
@@ -1140,9 +1140,9 @@ jr_007_4704:
     ld d, h
     ld hl, $9550
     call SaveFld_69ef
-    ld de, $727b
+    ld de, WinLayout_07_727B
     call LoadFld_68dc
-    ld de, $7333
+    ld de, WinLayout_07_7333
     call LoadFld_68dc
     ld hl, $cb0c
     call LoadFld_6dba
@@ -1252,10 +1252,10 @@ jr_007_482f:
     ret
 
 
-    ld de, $71f7
+    ld de, WinLayout_07_71F7
     call LoadFld_68a0
     call SetFld_486b
-    ld de, $737b
+    ld de, WinLayout_07_737B
     call LoadFld_68dc
     call LoadFld_690d
     ld hl, $caca
@@ -1274,7 +1274,7 @@ jr_007_482f:
     ld d, [hl]
     ld hl, $8b00
     call WaitDMATransfer
-    ld de, $724f
+    ld de, WinLayout_07_724F
     call LoadFld_68dc
     call LoadFld_690d
     ld hl, $c90e
@@ -1357,7 +1357,7 @@ jr_007_48e5:
 
 
 SetFld_48e6:
-    ld de, $746b
+    ld de, WinLayout_07_746B
     call LoadFld_68dc
     call LoadFld_690d
     call SetFld_48f7
@@ -1443,9 +1443,9 @@ jr_007_497d:
     ld hl, $9550
     ld de, WaitSTATForOverlayB
     call LoadFld_69a5
-    ld de, $755b
+    ld de, WinLayout_07_755B
     call LoadFld_68dc
-    ld de, $75db
+    ld de, WinLayout_07_75DB
     call LoadFld_68dc
     call LoadFld_690d
     ld hl, $cad7
@@ -1453,7 +1453,7 @@ jr_007_497d:
     cp $ff
     jr nz, jr_007_49c6
 
-    ld de, $7223
+    ld de, WinLayout_07_7223
     call LoadFld_68dc
     call LoadFld_690d
     ret
@@ -1472,9 +1472,9 @@ jr_007_49c6:
     ld e, [hl]
     inc hl
     ld d, [hl]
-    ld de, $724f
+    ld de, WinLayout_07_724F
     call LoadFld_68dc
-    ld de, $765b
+    ld de, WinLayout_07_765B
     call LoadFld_68dc
     call LoadFld_690d
     ld hl, $cad6
@@ -1521,10 +1521,10 @@ jr_007_4a1e:
     dec [hl]
     ld hl, $c90e
     dec [hl]
-    ld de, $71f7
+    ld de, WinLayout_07_71F7
     call LoadFld_68dc
     call LoadFld_690d
-    ld de, $746b
+    ld de, WinLayout_07_746B
     call LoadFld_68dc
     call LoadFld_690d
     jr jr_007_4a59
@@ -1624,13 +1624,13 @@ jr_007_4a59:
 
     call FindFirstEmptyInvSlot
     call SetFld_6a8f
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
-    ld de, $7748
+    ld de, WinLayout_07_7748
     call LoadFld_68dc
-    ld de, $77d9
+    ld de, WinLayout_07_77D9
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -1894,12 +1894,12 @@ jr_007_4c4a:
     rst $38
     call SetFld_6a8f
     call ClrFld_6c8f
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
     ld de, $44b4
     ld a, [wMenu_selection]
     call FuncFld_6d4e
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -1910,7 +1910,7 @@ jr_007_4c4a:
     ld hl, $002e
     call LoadFld_6880
     call ConvertNumberToText
-    ld de, $7748
+    ld de, WinLayout_07_7748
     call LoadFld_68dc
     ld de, $4c53
     ld b, $05
@@ -1918,9 +1918,9 @@ jr_007_4c4a:
     ld c, a
     ld hl, wOPTN_and_Item_selection
     call ReadFld_6d2c
-    ld de, $77d9
+    ld de, WinLayout_07_77D9
     call LoadFld_68dc
-    ld de, $798b
+    ld de, WinLayout_07_798B
     call LoadFld_68dc
     ld de, $4d4b
     ld a, [$c8dd]
@@ -2034,7 +2034,7 @@ jr_007_4d6b:
 
 
 jr_007_4d74:
-    ld de, $7748
+    ld de, WinLayout_07_7748
     call LoadFld_68dc
     ld de, $4c53
     ld b, $05
@@ -2042,7 +2042,7 @@ jr_007_4d74:
     ld c, a
     ld hl, wOPTN_and_Item_selection
     call ReadFld_6d2c
-    ld de, $79be
+    ld de, WinLayout_07_79BE
     call LoadFld_68dc
     call LoadFld_4da6
     call ClrFld_6c8f
@@ -2141,7 +2141,7 @@ LoadFld_4da6:
     cp $24
     jp z, Jump_007_4eab
 
-    ld de, $7957
+    ld de, WinLayout_07_7957
     call LoadFld_68dc
     ld hl, $cb11
     ld a, [$c8de]
@@ -2158,7 +2158,7 @@ LoadFld_4da6:
     jr jr_007_4e80
 
 Jump_007_4e56:
-    ld de, $7a08
+    ld de, WinLayout_07_7A08
     call LoadFld_68dc
     ld hl, $cb15
     ld a, [$c8de]
@@ -2781,9 +2781,9 @@ CalcFld_51cb:
     ld hl, $9700
     ld de, WaitSTATForOverlayB
     call LoadFld_69b6
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -2795,7 +2795,7 @@ CalcFld_51cb:
     call LoadFld_6880
     call ConvertNumberToText
     call ClrFld_6c8f
-    ld de, $7748
+    ld de, WinLayout_07_7748
     call LoadFld_68dc
     ld de, $44b4
     ld a, [wMenu_selection]
@@ -2845,7 +2845,7 @@ jr_007_5279:
     call PlaySoundEffect
     ld de, $2e07
     call LoadFld_68dc
-    ld de, $7a3c
+    ld de, WinLayout_07_7A3C
     call LoadFld_68dc
     call ClrFld_6c8f
     ld de, $5331
@@ -2987,9 +2987,9 @@ jr_007_5330:
 
 
     call SetFld_6a8f
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -3000,9 +3000,9 @@ jr_007_5330:
     ld hl, $002e
     call LoadFld_6880
     call ConvertNumberToText
-    ld de, $76d1
+    ld de, WinLayout_07_76D1
     call LoadFld_68dc
-    ld de, $7687
+    ld de, WinLayout_07_7687
     call LoadFld_68dc
     call ClrFld_6c8f
     ld de, $544e
@@ -3151,9 +3151,9 @@ jr_007_54ae:
 
 
     call LoadFld_5504
-    ld de, $7844
+    ld de, WinLayout_07_7844
     call LoadFld_68dc
-    ld de, $78d9
+    ld de, WinLayout_07_78D9
     call LoadFld_68dc
     call LoadFld_558d
     ld hl, $cb15
@@ -3793,11 +3793,11 @@ SkillMPCostTable:  ; $07:$570C — 222 x u16 LE MP cost, skill-id order; $03E7 (
 
 
 jr_007_58f4:
-    ld de, $76d1
+    ld de, WinLayout_07_76D1
     call LoadFld_68dc
-    ld de, $790d
+    ld de, WinLayout_07_790D
     call LoadFld_68dc
-    ld de, $7957
+    ld de, WinLayout_07_7957
     call LoadFld_68dc
     call SetFld_59de
     call ClrFld_6c8f
@@ -4381,9 +4381,9 @@ jr_007_5c7e:
     sub b
     call WaitDMATransfer
     call SetFld_6a8f
-    ld de, $704d
+    ld de, WinLayout_07_704D
     call LoadFld_68dc
-    ld de, $7090
+    ld de, WinLayout_07_7090
     call LoadFld_68dc
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -4394,7 +4394,7 @@ jr_007_5c7e:
     ld hl, $002e
     call LoadFld_6880
     call ConvertNumberToText
-    ld de, $7a61
+    ld de, WinLayout_07_7A61
     call LoadFld_68dc
     call ClrFld_6c8f
     ld de, $5d43
@@ -4460,7 +4460,7 @@ jr_007_5d42:
     ld h, $01
     rst $38
     rst $38
-    ld de, $7ae7
+    ld de, WinLayout_07_7AE7
     call LoadFld_68dc
     call ClrFld_6c8f
     ld de, $5dab
@@ -4597,9 +4597,9 @@ jr_007_5e1f:
     ld [hl+], a
     xor a
     ld [$c913], a
-    ld de, $7b48
+    ld de, WinLayout_07_7B48
     call LoadFld_68dc
-    ld de, $7b89
+    ld de, WinLayout_07_7B89
     call LoadFld_68dc
     call LoadFld_5e51
     call ClrFld_6c8f
@@ -4814,7 +4814,7 @@ jr_007_5f64:
     cp c
     jr nz, jr_007_5fa8
 
-    ld de, $7b48
+    ld de, WinLayout_07_7B48
     call LoadFld_68dc
     jr jr_007_5fbc
 
@@ -4993,9 +4993,9 @@ jr_007_6090:
 jr_007_60a5:
     ld a, $5c
     call PlaySoundEffect
-    ld de, $7bca
+    ld de, WinLayout_07_7BCA
     call LoadFld_68dc
-    ld de, $7c44
+    ld de, WinLayout_07_7C44
     call LoadFld_68dc
     ld de, $2e07
     call LoadFld_68dc
@@ -5408,9 +5408,9 @@ SetFld_6385:
     ld d, h
     ld hl, $93c0
     call SaveFld_69ef
-    ld de, $7c69
+    ld de, WinLayout_07_7C69
     call LoadFld_68dc
-    ld de, $7cd7
+    ld de, WinLayout_07_7CD7
     call LoadFld_68dc
     ld hl, $cacc
     ld a, [$c8e0]
@@ -5597,9 +5597,9 @@ label7_6468:
 
 
 SetFld_64c9:
-    ld de, $70f7
+    ld de, WinLayout_07_70F7
     call LoadFld_68dc
-    ld de, $71af
+    ld de, WinLayout_07_71AF
     call LoadFld_68dc
     call CallFld_451e
     call CallFld_4655
@@ -5744,7 +5744,7 @@ LoadFld_6588:
     jr nz, jr_007_65f9
 
     call SetFld_486b
-    ld de, $737b
+    ld de, WinLayout_07_737B
     call LoadFld_68dc
     call LoadFld_690d
     call SetFld_466d
@@ -6298,6 +6298,8 @@ jr_007_689e:
     ret
 
 
+; [S165] WinLayoutDrawVram07: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the BG map $9800+ (the row wraps at 32: `and $03 / or $98`), cells through Write_gfx_tile. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDrawVram07:
 LoadFld_68a0:
     ld a, [de]
     ld l, a
@@ -6345,6 +6347,8 @@ jr_007_68d4:
     call SaveFld_685d
     jr jr_007_68af
 
+; [S165] WinLayoutDraw07: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the screen buffer (LoadMap_5d33 / the bank's own position helper), cells `ld [hl+], a`. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDraw07:
 LoadFld_68dc:
     ld a, [de]
     ld l, a
@@ -7668,2722 +7672,666 @@ SaveFld_703e:
     ret
 
 
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    dec b
-    ld [$0903], sp
-    ldh [rTIMA], a
-    dec bc
-    push de
-    rlca
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sub $06
-    dec b
-    sbc $e0
-    add hl, bc
-    db $e3
-    dec bc
-    ld [$d8ff], sp
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    inc c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $dd
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    dec b
-    ld [$0903], sp
-    rst $38
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    jr nz, jr_007_70ec
-
-    ld [hl+], a
-    inc hl
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc h
-    dec h
-    ld h, $27
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    jr z, jr_007_7114
-
-    ld a, [hl+]
-
-jr_007_70ec:
-    dec hl
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    rlca
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $3c
-    dec a
-    ld a, $3f
-    ldh [$30], a
-    add b
-    ld [de], a
-    db $e4
-    ldh [$e0], a
-    rst $38
-
-jr_007_7114:
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    nop
-    dec bc
-    ld b, $e0
-    ldh [$e4], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [bc], a
-    push de
-    inc bc
-    ldh [$e0], a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    nop
-    db $dd
-    sbc $e0
-    ldh [$e4], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    dec b
-    ld [$e00b], sp
-    ldh [$e4], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    dec c
-    sbc $02
-    ldh [$e0], a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    and a
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    pop hl
-    db $e3
-    db $e4
-    ldh [$e0], a
-    ldh [$e5], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [c], a
-    db $e3
-    db $e4
-    ldh [$e0], a
-    ldh [$e5], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld d, l
-    ld bc, $e0e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    reti
-
-
-    dec [hl]
-    nop
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ret c
-
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    reti
-
-
-    ld b, c
-    ld bc, $b1b0
-    or d
-    or e
-    or h
-    or l
-    ret c
-
-    or [hl]
-    or a
-    cp b
-    cp c
-    cp d
-    cp e
-    ret c
-
-    cp h
-    cp l
-    cp [hl]
-    cp a
-    ret nz
-
-    pop bc
-    ret c
-
-    jp nz, $c4c3
-
-    push bc
-    add $c7
-    ret c
-
-    ret z
-
-    ret
-
-
-    jp z, $cccb
-
-    call $ced8
-    rst $08
-    ret nc
-
-    pop de
-    jp nc, $d9d3
-
-    rlca
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $3c
-    dec a
-    ld a, $3f
-    ldh [$30], a
-    add b
-    ld [de], a
-    db $e4
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    inc sp
-    inc [hl]
-    dec [hl]
-    ld [hl], $37
-    jr c, jr_007_72e9
-
-    ld a, [hl-]
-    dec sp
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld e, e
-    ld e, h
-    ld e, l
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-
-jr_007_72e9:
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $07
-    nop
-    sub $0b
-    push de
-    ld a, [bc]
-    db $e4
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc de
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    and a
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld [$0fd5], sp
-    dec bc
-    ldh [$de], a
-    rst $18
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc de
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    rlca
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, [hl]
-    ld l, a
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [hl], a
-    ld a, b
-    ld a, c
-    ld a, d
-    ld a, e
-    ld a, h
-    ld a, l
-    ld a, [hl]
-    ld a, a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    adc c
-    adc d
-    adc e
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    sub d
-    sub e
-    sub h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    sbc e
-    sbc h
-    sbc l
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    and h
-    and l
-    and [hl]
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    and a
-    xor b
-    xor c
-    xor d
-    xor e
-    xor h
-    xor l
-    xor [hl]
-    xor a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    rlca
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    rlca
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $02
-    nop
-    ld [bc], a
-    db $e4
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    ld h, l
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $07
-    nop
-    sub $0b
-    push de
-    ld a, [bc]
-    db $e4
-    sub b
-    sub c
-    sub d
-    sub e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    daa
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $07
-    add hl, bc
-    rlca
-    db $e4
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    ld e, c
-    ld e, d
-    ld e, e
-    ld e, h
-    ld e, l
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $07
-    nop
-    sub $0b
-    push de
-    ld a, [bc]
-    db $e4
-    sbc b
-    sbc c
-    sbc d
-    sbc e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld d, l
-    ld bc, $8d8c
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    ret c
-
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    ret c
-
-    sbc b
-    sbc c
-    sbc d
-    sbc e
-    sbc h
-    sbc l
-    ret c
-
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    ret c
-
-    and h
-    and l
-    and [hl]
-    and a
-    xor b
-    xor c
-    ret c
-
-    xor d
-    xor e
-    xor h
-    xor l
-    xor [hl]
-    xor a
-    reti
-
-
-    ld b, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub $06
-    dec b
-    sbc $ff
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    jr nz, jr_007_76c6
-
-    ld [hl+], a
-    inc hl
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc h
-    dec h
-    ld h, $27
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    jr z, @+$2b
-
-    ld a, [hl+]
-
-jr_007_76c6:
-    dec hl
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld c, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc e
-    sbc h
-    sbc l
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld c, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    ld [hl], a
-    ld a, b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc e
-    sbc h
-    sbc l
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    and b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $4c
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    ld e, c
-    ld e, d
-    ld e, e
-    ld e, h
-    ld e, l
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $5e
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    ld l, [hl]
-    ld l, a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld h, b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $4a
-    ld c, e
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    ld e, c
-    ld e, d
-    ld e, e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $5c
-    ld e, l
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $6e
-    ld l, a
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    ld [hl], a
-    ld a, b
-    ld a, c
-    ld a, d
-    ld a, e
-    ld a, h
-    ld a, l
-    ld a, [hl]
-    ld a, a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ret nz
-
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $0c
-    sub $d5
-    ldh [$e2], a
-    db $e3
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    push hl
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld b, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    dec c
-    inc b
-    add hl, bc
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    jr nz, jr_007_794c
-
-    ld [hl+], a
-    inc hl
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc h
-    dec h
-    ld h, $27
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    jr z, @+$2b
-
-    ld a, [hl+]
-
-jr_007_794c:
-    dec hl
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    and b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e1
-    db $e3
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    push hl
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $05
-    dec bc
-    push de
-    rlca
-    rst $38
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    inc c
-    sub $d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld [bc], a
-    push de
-    sbc $ff
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    add b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    dec c
-    inc b
-    add hl, bc
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    jr nz, jr_007_79fd
-
-    ld [hl+], a
-    inc hl
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc h
-    dec h
-    ld h, $27
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    jr z, @+$2b
-
-    ld a, [hl+]
-
-jr_007_79fd:
-    dec hl
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    and b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e2
-    db $e3
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    push hl
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    nop
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld [$e009], sp
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    dec b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add hl, bc
-    db $e3
-    dec bc
-    ld [$e0e0], sp
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    dec bc
-    push de
-    rrca
-    dec bc
-    ldh [$d6], a
-    db $e3
-    ld [bc], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld bc, $e004
-    add hl, bc
-    ld a, [bc]
-    ld [bc], a
-    push de
-    ld a, [bc]
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld bc, $e004
-    db $e3
-    sbc $00
-    ld [$ffe0], sp
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld c, $09
-    inc c
-    ld a, [bc]
-    ld [$de00], sp
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld h, d
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $03
-    nop
-    sub $0b
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    sub $de
-    add hl, bc
-    dec c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    pop af
-    ldh [$f2], a
-    ldh [$f3], a
-    ldh [$f4], a
-    ldh [$f5], a
-    ldh [$f6], a
-    ldh [$f7], a
-    ldh [$f8], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld h, h
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld l, h
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $07
-    nop
-    sub $0b
-    push de
-    ld a, [bc]
-    db $e4
-    inc a
-    dec a
-    ld a, $3f
-    ldh [$e0], a
-    ldh [$e4], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $da
-    ld b, b
-    ld b, c
-    ld b, d
-    ld b, e
-    ldh [$db], a
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    ldh [$dc], a
-    ld c, b
-    ld c, c
-    ld c, d
-    ld c, e
-    rst $38
-    ret c
-
-    cp $e0
-    ld [de], a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    ld [de], a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    ld [de], a
-    db $e4
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld [$e009], sp
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    jr nz, @+$03
-
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld bc, $0004
-    ld a, [bc]
-    db $dd
-    push de
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    rlca
-    dec b
-    rrca
-    push de
-    ld [bc], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld bc, $0c00
-    dec bc
-    dec b
-    add hl, bc
-    inc c
-    sub $ff
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld bc, SetCancelFlag
-    rlca
-    nop
-    ld [$e002], sp
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ret nz
-
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $3c
-    dec a
-    ld a, $3f
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    and b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ldh [$e0], a
-    db $e4
-    ldh [$e0], a
-    ei
-    ret c
-
-    cp $07
-    nop
-    sub $0b
-    push de
-    ld a, [bc]
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    inc a
-    dec a
-    ld a, $3f
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $0e
-    add hl, bc
-    dec b
-    ld [$02d5], sp
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    dec d
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $03
-    nop
-    ld a, [bc]
-    rlca
-    ldh [$e0], a
-    ldh [rTAC], a
-    add hl, bc
-    ld [$e0e0], sp
-    ldh [$d5], a
-    db $dd
-    db $dd
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $d6
-    sbc $d5
-    push de
-    db $e3
-    ldh [rNR21], a
-    rlca
-    add hl, bc
-    ld [$e0e0], sp
-    ld d, $d5
-    db $dd
-    db $dd
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; [S165] window layout streams $704D-$7D97 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; screen's font: bank $07 = the FIELD font, the title menu = the TEXT font), $D8 newline,
+; $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The words are editable
+; (editor2/core/window_words.py).
+WinLayout_07_704D:  ; the field menu; INFO / ITEM / SKIL / OPTN
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $05, $08, $03, $09, $e0, $05, $0b, $d5, $07, $ff  ; . INFO ITEM.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d6, $06, $05, $de, $e0, $09, $e3, $0b, $08, $ff  ; . SKIL OPTN.
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7090:  ; the gold box
+    dw $000c                 ; position: row 0, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $dd, $e0, $e0, $e0, $e0, $e0, $ff  ; .G     .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_70AD:  ; INFO: who; INFO
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $05, $08, $03, $09, $ff  ; . INFO.
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $20, $21, $22, $23, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $24, $25, $26, $27, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $28, $29, $2a, $2b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_70F7:  ; the INFO page: stats; ATK / DEF / AGL / INT / WLD
+    dw $0007                 ; position: row 0, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $3c, $3d, $3e, $3f, $e0, $30, $80, $12, $e4, $e0, $e0, $ff  ; ..... ...:  .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $00, $0b, $06, $e0, $e0, $e4, $e0, $e0, $e0, $e0, $ff  ; . ATK  :    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $02, $d5, $03, $e0, $e0, $e4, $e0, $e0, $e0, $e0, $ff  ; . DEF  :    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $00, $dd, $de, $e0, $e0, $e4, $e0, $e0, $e0, $e0, $ff  ; . AGL  :    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $05, $08, $0b, $e0, $e0, $e4, $e0, $e0, $e0, $e0, $ff  ; . INT  :    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0d, $de, $02, $e0, $e0, $e4, $e0, $e0, $e0, $e0, $ff  ; . WLD  :    .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_71AF:  ; the INFO page: HP / MP; HP / MP
+    dw $01a7                 ; position: row 13, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e1, $e3, $e4, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff  ; . HP:   /   .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e2, $e3, $e4, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff  ; . MP:   /   .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_71F7:
+    dw $0155                 ; position: row 10, column 21
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d9                  ; END
+WinLayout_07_7223:
+    dw $0035                 ; position: row 1, column 21
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d8                  ; NEWLINE
+    db $e0, $e0, $e0, $e0, $e0, $e0
+    db $d9                  ; END
+WinLayout_07_724F:
+    dw $0141                 ; position: row 10, column 1
+    db $b0, $b1, $b2, $b3, $b4, $b5
+    db $d8                  ; NEWLINE
+    db $b6, $b7, $b8, $b9, $ba, $bb
+    db $d8                  ; NEWLINE
+    db $bc, $bd, $be, $bf, $c0, $c1
+    db $d8                  ; NEWLINE
+    db $c2, $c3, $c4, $c5, $c6, $c7
+    db $d8                  ; NEWLINE
+    db $c8, $c9, $ca, $cb, $cc, $cd
+    db $d8                  ; NEWLINE
+    db $ce, $cf, $d0, $d1, $d2, $d3
+    db $d9                  ; END
+WinLayout_07_727B:  ; the INFO page 2: name / family / master; MASTER
+    dw $0007                 ; position: row 0, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $3c, $3d, $3e, $3f, $e0, $30, $80, $12, $e4, $e0, $e0, $ff  ; ..... ...:  .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $33, $34, $35, $36, $37, $38, $39, $3a, $3b, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $4c, $4d, $4e, $4f, $50, $51, $52, $53, $54, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $5b, $5c, $5d, $5e, $5f, $60, $61, $62, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $55, $56, $57, $58, $ff  ; .MASTER:.....
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $13, $e4, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff  ; . .:        .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7333:  ; the INFO page 2: next level; NEXT / LV
+    dw $01a7                 ; position: row 13, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $08, $d5, $0f, $0b, $e0, $de, $df, $e0, $e0, $e0, $ff  ; . NEXT LV   .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $13, $e4, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff  ; . .:        .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_737B:
+    dw $0007                 ; position: row 0, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $65, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6e, $6f, $70, $71, $72, $73, $74, $75, $76, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $77, $78, $79, $7a, $7b, $7c, $7d, $7e, $7f, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $83, $84, $85, $86, $87, $88, $89, $8a, $8b, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $8c, $8d, $8e, $8f, $90, $91, $92, $93, $94, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $95, $96, $97, $98, $99, $9a, $9b, $9c, $9d, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9e, $9f, $a0, $a1, $a2, $a3, $a4, $a5, $a6, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a7, $a8, $a9, $aa, $ab, $ac, $ad, $ae, $af, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_746B:
+    dw $0007                 ; position: row 0, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_755B:  ; DAD / MASTER (font not measured)
+    dw $0007                 ; position: row 0, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $02, $00, $02, $e4, $8c, $8d, $8e, $8f, $e0, $e0, $e0, $ff  ; .DAD:....   .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $4c, $4d, $4e, $4f, $50, $51, $52, $53, $54, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $5e, $5f, $60, $61, $62, $63, $64, $65, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $90, $91, $92, $93, $ff  ; .MASTER:.....
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_75DB:  ; MOM / MASTER (font not measured)
+    dw $0127                 ; position: row 9, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $07, $09, $07, $e4, $94, $95, $96, $97, $e0, $e0, $e0, $ff  ; .MOM:....   .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $55, $56, $57, $58, $59, $5a, $5b, $5c, $5d, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $98, $99, $9a, $9b, $ff  ; .MASTER:.....
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_765B:
+    dw $0155                 ; position: row 10, column 21
+    db $8c, $8d, $8e, $8f, $90, $91
+    db $d8                  ; NEWLINE
+    db $92, $93, $94, $95, $96, $97
+    db $d8                  ; NEWLINE
+    db $98, $99, $9a, $9b, $9c, $9d
+    db $d8                  ; NEWLINE
+    db $9e, $9f, $a0, $a1, $a2, $a3
+    db $d8                  ; NEWLINE
+    db $a4, $a5, $a6, $a7, $a8, $a9
+    db $d8                  ; NEWLINE
+    db $aa, $ab, $ac, $ad, $ae, $af
+    db $d9                  ; END
+WinLayout_07_7687:  ; SKIL: who; SKIL
+    dw $0040                 ; position: row 2, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d6, $06, $05, $de, $ff  ; . SKIL.
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $20, $21, $22, $23, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $24, $25, $26, $27, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $28, $29, $2a, $2b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_76D1:
+    dw $0048                 ; position: row 2, column 8
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $8b, $8c, $8d, $8e, $8f, $90, $91, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $9c, $9d, $9e, $9f, $a0, $a1, $a2, $a3, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7748:
+    dw $0048                 ; position: row 2, column 8
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $70, $71, $72, $73, $74, $75, $76, $77, $78, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $8b, $8c, $8d, $8e, $8f, $90, $91, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $9c, $9d, $9e, $9f, $a0, $a1, $a2, $a3, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_77D9:
+    dw $01a0                 ; position: row 13, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $4c, $4d, $4e, $4f, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $5a
+    db $5b, $5c, $5d, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $5e, $5f, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $6a, $6b, $6c
+    db $6d, $6e, $6f, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7844:
+    dw $0160                 ; position: row 11, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $4a, $4b, $4c, $4d, $4e, $4f, $50, $51, $52, $53, $54, $55, $56, $57, $58
+    db $59, $5a, $5b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $5c, $5d, $5e, $5f, $60, $61, $62, $63, $64, $65, $66, $67, $68, $69, $6a
+    db $6b, $6c, $6d, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $6e, $6f, $70, $71, $72, $73, $74, $75, $76, $77, $78, $79, $7a, $7b, $7c
+    db $7d, $7e, $7f, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_78D9:  ; SKIL: the MP box; USE / MP
+    dw $00c0                 ; position: row 6, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $0c, $d6, $d5, $e0, $e2, $e3, $e0, $ff  ; .USE MP .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff  ; .   /   .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_790D:  ; WHO (font not measured)
+    dw $0040                 ; position: row 2, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0d, $04, $09, $e0, $ff  ; . WHO .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $20, $21, $22, $23, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $24, $25, $26, $27, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $28, $29, $2a, $2b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7957:  ; HP (font not measured)
+    dw $01a0                 ; position: row 13, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e1, $e3, $e4, $e0, $e0, $e0, $e0, $ff  ; .HP:    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff  ; .   /   .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_798B:  ; ITEM: the item window; ITEM / USE / DEL
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $05, $0b, $d5, $07, $ff  ; .ITEM.
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0c, $d6, $d5, $ff  ; . USE.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $02, $d5, $de, $ff  ; . DEL.
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_79BE:  ; WHO (font not measured)
+    dw $0080                 ; position: row 4, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0d, $04, $09, $e0, $ff  ; . WHO .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $20, $21, $22, $23, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $24, $25, $26, $27, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $28, $29, $2a, $2b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7A08:  ; MP (font not measured)
+    dw $01a0                 ; position: row 13, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e2, $e3, $e4, $e0, $e0, $e0, $e0, $ff  ; .MP:    .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff  ; .   /   .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7A3C:  ; YES / NO (font not measured)
+    dw $0100                 ; position: row 8, column 0
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff  ; . YES.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $08, $09, $e0, $ff  ; . NO .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7A61:  ; OPTN; OPTN / TEXT / SPD / CH / ORDER / CH / PLAN / JOURNAL
+    dw $0005                 ; position: row 0, column 5
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $09, $e3, $0b, $08, $e0, $e0, $e0, $e0, $ff  ; . OPTN    .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0b, $d5, $0f, $0b, $e0, $d6, $e3, $02, $ff  ; . TEXT SPD.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $01, $04, $e0, $09, $0a, $02, $d5, $0a, $ff  ; . CH ORDER.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $01, $04, $e0, $e3, $de, $00, $08, $e0, $ff  ; . CH PLAN .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0e, $09, $0c, $0a, $08, $00, $de, $e0, $ff  ; . JOURNAL .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7AE7:  ; FAST / SLOW (font not measured)
+    dw $0162                 ; position: row 11, column 2
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $03, $00, $d6, $0b, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $d6, $de, $09  ; .FAST        SLOW.
+    db $0d, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $f1, $e0, $f2, $e0, $f3, $e0, $f4, $e0, $f5, $e0, $f6, $e0, $f7, $e0  ; . 1 2 3 4 5 6 7 8.
+    db $f8, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7B48:
+    dw $0164                 ; position: row 11, column 4
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7B89:
+    dw $016c                 ; position: row 11, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7BCA:  ; OPTN: JOURNAL (the save box); MASTER
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $3c, $3d, $3e, $3f, $e0, $e0, $e0, $e4  ; .MASTER:....   :  .
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $da, $40, $41, $42, $43, $e0, $db, $44, $45, $46, $47, $e0, $dc, $48, $49
+    db $4a, $4b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $12, $e4, $e0, $e0, $e0, $e0, $12, $e4, $e0, $e0, $e0, $e0, $12, $e4  ; . .:    .:    .:  .
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7C44:  ; OPTN: yes / no; YES / NO
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff  ; . YES.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $08, $09, $e0, $ff  ; . NO .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7C69:  ; OPTN: CH PLAN (the tactics); CHARGE / MIXED / CAUTIOUS / COMMAND
+    dw $0120                 ; position: row 9, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $01, $04, $00, $0a, $dd, $d5, $e0, $e0, $ff  ; . CHARGE  .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $07, $05, $0f, $d5, $02, $e0, $e0, $e0, $ff  ; . MIXED   .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $01, $00, $0c, $0b, $05, $09, $0c, $d6, $ff  ; . CAUTIOUS.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $01, $09, $07, $07, $00, $08, $02, $e0, $ff  ; . COMMAND .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7CD7:
+    dw $00c0                 ; position: row 6, column 0
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $3c, $3d, $3e, $3f, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_07_7CEE:  ; MASTER / JOINED / FARM / MON / EGG / SLEEP / MON / EGG (font not measured)
+    dw $00a0                 ; position: row 5, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $e0, $e0  ; ..............  :  .
+    db $e4, $e0, $e0, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $15, $15, $15, $15, $15, $15, $15, $15, $3c  ; .MASTER.............
+    db $3d, $3e, $3f, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $0e, $09, $05, $08, $d5, $02, $15, $15, $15, $15, $15, $15, $15, $15, $15  ; .JOINED..........  .
+    db $15, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $03, $00, $0a, $07, $e0, $e0, $e0, $07, $09, $08, $e0, $e0, $e0, $d5, $dd  ; .FARM   MON   EGG  .
+    db $dd, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $d6, $de, $d5, $d5, $e3, $e0, $16, $07, $09, $08, $e0, $e0, $16, $d5, $dd  ; .SLEEP .MON  .EGG  .
+    db $dd, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
     rrca
     dec b
     db $fc

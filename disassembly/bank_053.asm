@@ -1169,14 +1169,14 @@ jr_053_494f:
 
 
 jr_053_4951:
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $42
     jr nz, jr_053_494f
 
     jr jr_053_4961
 
 jr_053_495a:
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $95
     jr nz, jr_053_494f
 
@@ -1341,7 +1341,7 @@ LoadBtlC_4a04:
     ld a, [hl]
     sbc $00
     ld [hl], a
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $32
     ret nz
 
@@ -2367,7 +2367,7 @@ jr_053_4f7a:
     bit 4, [hl]
     jr nz, jr_053_4f64
 
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $89
     jr nz, jr_053_4fa2
 
@@ -3052,7 +3052,7 @@ HighJumpTakeoffShortcut_52f4:
 jr_053_52f4:
     ld hl, $5402
     rst $10
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $42
     jr nz, jr_053_5313
 
@@ -3294,7 +3294,7 @@ jr_053_5458:
     or a
     jp nz, Jump_053_5622
 
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $8f
     jp z, Jump_053_5622
 
@@ -3936,7 +3936,7 @@ LoadBtlC_583a:
 ; landing turn of HighJump is exempt from the act-state-9 iron gate.
 HighJumpLandingCheck_5844:
 LoadBtlC_5844:
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $42
     ret nz
 
@@ -4136,7 +4136,7 @@ jr_053_5941:
     ld [$dd71], a
     ld a, [wBattleAttackerIdx]
     call GetCombatantATK
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $51
     call z, FuncBtlC_5973
     call SaveBtlC_5d73
@@ -4315,7 +4315,7 @@ jr_053_5a44:
     bit 7, a
     jr z, jr_053_5a6f
 
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $3c
     jr z, jr_053_5a6f
 
@@ -5775,7 +5775,7 @@ jr_053_6226:
     ld a, [hl]
     and $10
     ld [hl], a
-    ld a, [$db8a]
+    ld a, [$db8a]             ; [S165] patched: `call ActBase53` — a new skill as its base
     cp $83
     jr z, jr_053_6234
 

@@ -4096,7 +4096,9 @@ TurnOrderDefensiveBoost_56cf:
     add a
     add l
     ld l, a
-    ld a, $00
+    ld a, $00                   ; [S165] patched: these 5 bytes -> `call QueueBase58` + 2 nops (the
+                                ;   queued id seen as its base: a new skill on Ironize / Imitate /
+                                ;   Cover / Guardian / Dodge / StrongD … acts first like it)
     adc h
     ld h, a
     ld a, [hl]

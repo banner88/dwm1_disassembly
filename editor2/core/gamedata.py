@@ -49,7 +49,8 @@ SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
             'medals',          # S126: the Medal Man's rewards (services.py)
             'text',            # S150: the game's own texts, edited (gametext.py)
             'item_rules',      # S157: the one-only items' "already has" line (items.py)
-            'ai_fixes')        # S164: the original enemy AI's bugs as switches (ai_fixes.py)
+            'ai_fixes',        # S164: the original enemy AI's bugs as switches (ai_fixes.py)
+            'window_words')    # S165: the words drawn in the windows as tiles (window_words.py)
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every
@@ -485,6 +486,8 @@ class Gamedata:
         from . import ai_fixes as AF                      # [S164]
         _afe = []
         AF.validate(self.gd, _afe)
+        from . import window_words as WW                  # [S165]
+        WW.validate(self.gd, _afe, repo_root)
         if _afe:
             raise GamedataError('; '.join(_afe))
         self.monster = _rows(self.v, 'monster_info')

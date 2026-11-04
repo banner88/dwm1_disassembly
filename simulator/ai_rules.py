@@ -180,6 +180,15 @@ class BattleView:
         # per slot), $DD0B and $DB40/41 (the slot-7 shifted pair). Rules
         # that need them fall back to the old conservative veto when absent.
         self.skills, self.dd0b, self.db40 = skills, dd0b, db40
+        # S165: $DB58 / $DB59 as the board left them (AIRule_5660 compares the own side's
+        # average AGL with this stale word — a vanilla bug); None = not known (the Balance
+        # battles), the rule's second half then left out
+        self.db58 = None
+        # S165: each slot's BASE DEF as bank $57 entry 7 (BaseStatDEF_424a) reads it — a party
+        # monster's record DEF (+$5A), an enemy's row DEF (bank $14 entry 1: row +11, the EID
+        # $DA03 + 2 (s - 4); a helper slot (s & 3 == 3) the row $100 + its species); None = not
+        # known -> AIRule_4890 left out
+        self.base_def = None
 
     def opposing(self, actor):
         base = 0 if actor >= 4 else 4
@@ -197,6 +206,293 @@ class BattleView:
 
     def live_own(self, actor):
         return [s for s in self.own(actor) if self.alive(s)]
+
+
+# ---- S165 (ROADMAP E17 note "the rule model on arbitrary boards") ------------------------
+# Rules the S163 model left out because the captured boards never made them fire; byte-read
+# from bank $57 and validated on the mutated boards (simulator/rule_gaps.py, validate_ai_fixes)
+IDS_4AF6 = (set(range(0x03, 0x1A)) - {0x12, 0x15}) | {0x1D, 0x21, 0xDA}  # veto: a foe reflects
+IDS_5EE5 = set(range(0x00, 0x1A)) | {0x1C, 0x1D, 0x20, 0x21, 0xDA}       # veto: every foe does
+IDS_4B3D = set(range(0x5C, 0x64)) | set(range(0x6A, 0x6E))                # the breaths
+IDS_5F1F = (set(range(0x00, 0x1A)) | {0x1C, 0x1D, 0x20, 0x21, 0x2A} | set(range(0x3B, 0x41))
+            | {0x44, 0x53} | set(range(0x55, 0x80)) | {0x82, 0x88, 0x89}
+            | set(range(0x8C, 0x93)) | set(range(0xD6, 0xDC)) | {0xDD})
+IDS_4A94 = {0x24, 0x8A, 0x8B, 0x8F, 0x92}
+BREATHS_7B7D = IDS_4B3D
+IDS_59F7 = {0x26, 0x7F}
+LIST_59F7 = {0x4F, 0x59, 0x5B, 0x64, 0x65, 0xD9}
+IDS_5B4A = {0x27, 0x28}
+LIST_5B4A = set(range(0x00, 0x1B)) | {0x1C, 0x1D, 0x20, 0x21, 0xDA}
+IDS_54E4 = {0x7A, 0x82, 0x25, 0x1C, 0x1D}
+IDS_4E76 = {0x3F, 0x40}
+IDS_5660 = {0x20, 0x21, 0x22, 0x23}
+IDS_4890 = {0x1E, 0x1F}                                                  # Upper / Increase
+IDS_54BE = {0x25, 0x7A, 0x41}
+IDS_63E3 = {0x1C, 0x1D, 0x7A}                                            # Defence / SickLick
+IDS_62A8 = {0x18, 0x72, 0x73}                                            # Surround / SandStorm / Radiant
+IDS_5F91 = ({0x15, 0x16, 0x19, 0x2A, 0x6A, 0x6B, 0x6E, 0x70, 0x72, 0x73, 0x77, 0x78}
+            | set(range(0x7A, 0x7E)) | {0x80, 0x81, 0x82, 0x88, 0x89, 0x8C}
+            | set(range(0x8E, 0x91)) | {0xDA, 0xDC})
+_DCLASS = {}
+
+
+def damage_class(sid):
+    """A skill record's +6 (damage class: 0 none, 4 spell, 5 breath …) from
+    extracted/skill_records.json; DAMAGE_CLASS_OVERRIDE (a project's new skills) first."""
+    if sid in DAMAGE_CLASS_OVERRIDE:
+        return DAMAGE_CLASS_OVERRIDE[sid]
+    if not _DCLASS:
+        import json
+        import os
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'extracted',
+                            'skill_records.json')
+        for r in json.load(open(path))['records']:
+            raw = (r.get('battle_record') or {}).get('raw')
+            if raw:
+                _DCLASS[r['id']] = bytes.fromhex(raw)[6]
+    return _DCLASS.get(sid, 0)
+
+
+DAMAGE_CLASS_OVERRIDE = {}
+
+
+def _opt_skills(view, s):
+    """Slot s's option list as bank $57 scans it: the skill byte of each of the 8 pairs
+    ($DC65 + 16 s, every second byte); the caller stops at $FF."""
+    return [sk for _tg, sk in (view.skills[s] or [])[:8]]
+
+
+def _w16slot(xs, s):
+    return xs[s] & 0xFFFF if xs is not None and s < len(xs) else 0
+
+
+def _stbyte(view, addr):
+    """The status byte at `addr` ($DB00-$DB41): status[s][k] = $DB00 + 8 s + k, $DB40/41 = db40."""
+    i = addr - 0xDB00
+    if i < 64:
+        return view.status[i >> 3][i & 7]
+    return (view.db40 or (0, 0))[i - 64] if i < 66 else 0
+
+
+def _word_at(view, arr, i):
+    """Word i of the battle arrays laid end to end (0 HP $DBA3, 1 MaxHP, 2 MP, 3 MaxMP, 4 ATK,
+    5 DEF, 6 AGL — 8 words each): index 8+ runs into the next array, as the ROM's reads do."""
+    arrs = (view.hp, view.maxhp, view.mp, view.maxmp, view.atk, view.dfn, view.agl)
+    k, j = arr + i // 8, i % 8
+    a = arrs[k] if k < len(arrs) else None
+    return a[j] & 0xFFFF if a is not None else 0
+
+
+def _min_def_62e0(view, opp):
+    """LoadBtlAI_62e0: the lowest DEF of the live foes — the first foe slot counts as 0 when
+    it is not alive."""
+    lo = _w16slot(view.dfn, opp) if view.alive(opp) else 0
+    for s_ in range(opp + 1, opp + 3):
+        if view.alive(s_) and _w16slot(view.dfn, s_) < lo:
+            lo = _w16slot(view.dfn, s_)
+    return lo
+
+
+def _s165_rules(category, skill, actor, view, element=0, rec_flags7=None):
+    """-> (veto, bonus, penalty) of the S165 rules (each only in the chains that hold it)."""
+    opp = 0 if actor >= 4 else 4
+    own = actor & 4
+    bonus = penalty = 0
+    tier2 = view.dd0b is not None and view.dd0b[actor] == 2       # LoadBtlAI_7c6e: `ret nz`
+    st = view.status
+    # $4AF6 (chains 1 / 2): a spell is vetoed when a LIVE foe reflects (+4 & $22: Bounce /
+    # MagicBack's marks)
+    if skill in IDS_4AF6 and _in(category, 0x4AF6):
+        if any(view.alive(s_) and st[s_][4] & 0x22 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $5EE5 (1 / 2): ... and when NO live foe is without the marks (every foe reflects, or none
+    # is alive)
+    if skill in IDS_5EE5 and _in(category, 0x5EE5):
+        if not any(view.alive(s_) and not st[s_][4] & 0x22 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $4B3D (1 / 2): a breath is vetoed when the foes' side byte ($DB00 + side) has $60, or a
+    # live foe has +4 & $48 — or bit 1 of the byte 8 after its +0 … +4 read: `ld a, [hl+]` then
+    # three `inc hl` land on +8 = the NEXT slot's +0 (slot 7: $DB40) — a vanilla slip
+    if skill in IDS_4B3D and _in(category, 0x4B3D):
+        if st[0][opp >> 2] & 0x60:
+            return True, 0, 0
+        for s_ in range(opp, opp + 3):
+            if not view.alive(s_):
+                continue
+            nxt = st[s_ + 1][0] if s_ + 1 < 8 else (view.db40[0] if view.db40 else 0)
+            if st[s_][4] & 0x48 or nxt & 0x02:
+                return True, 0, 0
+    # $5F1F (1 / 2 / 3): vetoed unless a live foe has +7 & $C0 clear
+    if skill in IDS_5F1F and _in(category, 0x5F1F):
+        if not any(view.alive(s_) and not st[s_][7] & 0xC0 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $4A94 (2 / 3; the cleverest AI): vetoed unless a live foe KNOWS a breath (LoadBtlAI_7b7d:
+    # its option list holds $5C-$63 / $6A-$6D before $FF)
+    if skill in IDS_4A94 and _in(category, 0x4A94) and tier2 and view.skills is not None:
+        def knows(s_):
+            for sk in _opt_skills(view, s_):
+                if sk == 0xFF:
+                    return False
+                if sk in BREATHS_7B7D:
+                    return True
+            return False
+        if not any(view.alive(s_) and knows(s_) for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $5B4A (2; cleverest): vetoed unless a live, unsealed (+3 bit 0) foe knows a skill
+    # < $1B or $1C / $1D / $20 / $21 / $DA before $FF
+    if skill in IDS_5B4A and _in(category, 0x5B4A) and tier2 and view.skills is not None:
+        def casts(s_):
+            for sk in _opt_skills(view, s_):
+                if sk == 0xFF:
+                    return False
+                if sk in LIST_5B4A:
+                    return True
+            return False
+        if not any(view.alive(s_) and not st[s_][3] & 0x01 and casts(s_)
+                   for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $6C0F (2; cleverest; $26): vetoed unless a foe's list (alive or not — no slot check) holds
+    # a skill whose record +6 (damage class) is not 0 before $FF
+    if skill == 0x26 and _in(category, 0x6C0F) and tier2 and view.skills is not None:
+        def hurts(s_):
+            for sk in _opt_skills(view, s_):
+                if sk == 0xFF:
+                    return False
+                if damage_class(sk):
+                    return True
+            return False
+        if not any(hurts(s_) for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $59F7 (2; cleverest; $26 / $7F): +10 when, scanning the foes' lists in slot order (no slot
+    # check), an entry is $FF or one of $4F $59 $5B $64 $65 $D9 — a list of fewer than 8 options
+    # ends in $FF, so nearly always
+    if skill in IDS_59F7 and _in(category, 0x59F7) and tier2 and view.skills is not None:
+        if any(sk == 0xFF or sk in LIST_59F7 for s_ in range(opp, opp + 3)
+               for sk in _opt_skills(view, s_)[:8]):
+            bonus += 10
+    # $4E76 (1; $3F / $40): +10 when a live foe's DEF >= twice the ATK of the FIRST foe slot
+    # (GetCombatantATK is called with A = the foes' base — not the caster; `add hl, hl` wraps)
+    if skill in IDS_4E76 and _in(category, 0x4E76) and view.atk is not None \
+            and view.dfn is not None:
+        two = (_w16slot(view.atk, opp) * 2) & 0xFFFF
+        if any(view.alive(s_) and _w16slot(view.dfn, s_) >= two for s_ in range(opp, opp + 3)):
+            bonus += 10
+    # $54E4 (2; cleverest): +10 when an own slot (any of the three — no slot check) has
+    # min/2 <= ATK and ATK/2 < min, min = the lowest DEF of the live foes, the first foe slot
+    # counting 0 when it is not alive (LoadBtlAI_62e0 / LoadBtlAI_6321)
+    if skill in IDS_54E4 and _in(category, 0x54E4) and tier2 and view.atk is not None \
+            and view.dfn is not None:
+        lo = _min_def_62e0(view, opp)
+        for s_ in range(own, own + 3):
+            a = _w16slot(view.atk, s_)
+            if a >= lo >> 1 and (a >> 1) < lo:
+                bonus += 10
+                break
+    # $5660 (2; cleverest; $20-$23): +10 when a live own monster is slower than the live foes'
+    # average AGL (sum / count; none -> $FFFF); then +10 when the own average AGL < the word
+    # at $DB58 — never set by the rule (a vanilla bug: whatever an earlier routine left there)
+    if skill in IDS_5660 and _in(category, 0x5660) and tier2 and view.agl is not None:
+        def avg(base):
+            live = [s_ for s_ in range(base, base + 3) if view.alive(s_)]
+            return _div16x8(sum(_w16slot(view.agl, s_) for s_ in live) & 0xFFFF, len(live))
+        a_opp = avg(opp)
+        if any(view.alive(s_) and _w16slot(view.agl, s_) < a_opp for s_ in range(own, own + 3)):
+            bonus += 10
+        if view.db58 is not None and avg(own) < view.db58:
+            bonus += 10
+    # $5F91 (1 / 2 / 3): vetoed unless a foe is CAPABLE (GetMonsterSlotInfo NC: valid, alive,
+    # +2 & $D0, +5 & $3F, +7 & $C0 all clear)
+    if skill in IDS_5F91 and _in(category, 0x5F91):
+        if not any(view.alive(s_) and not st[s_][2] & 0xD0 and not st[s_][5] & 0x3F
+                   and not st[s_][7] & 0xC0 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $47D9 (2; Surround $18): vetoed unless a live foe is not surrounded (+3 bit 1)
+    if skill == 0x18 and _in(category, 0x47D9):
+        if not any(view.alive(s_) and not st[s_][3] & 0x02 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $62A8 (2; $18 / $72 / $73): vetoed unless a live foe is neither surrounded (+3 bit 1) nor
+    # in a sandstorm (+7 & 3) and does not resist the record element fully (level 3)
+    if skill in IDS_62A8 and _in(category, 0x62A8):
+        if not any(view.alive(s_) and not st[s_][3] & 0x02 and not st[s_][7] & 0x03
+                   and _lvl(view, s_, element) != 3 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $63E3 (2; $1C / $1D / $7A — the DEF downs): vetoed unless a live foe has DEF >= 2 and
+    # does not resist the record element fully (level 3)
+    if skill in IDS_63E3 and _in(category, 0x63E3) and view.dfn is not None:
+        if not any(view.alive(s_) and _w16slot(view.dfn, s_) >= 2 and _lvl(view, s_, element) != 3
+                   for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $5BCD (2; Curse $6F): vetoed unless a live foe is not cursed (+2 bit 5)
+    if skill == 0x6F and _in(category, 0x5BCD):
+        if not any(view.alive(s_) and not st[s_][2] & 0x20 for s_ in range(opp, opp + 3)):
+            return True, 0, 0
+    # $4B8C (1; cleverest; the record's flags $DD6B bit 7): -20 when a live foe has bit 5 of the
+    # byte at $DB08 + 8 s or bits 0 / 2 of $DB09 + 8 s (the 8 bytes past its $DB00 + 8 s row:
+    # the next row's +0 / +1, $DB40 / $DB41 for slot 7)
+    if _in(category, 0x4B8C) and tier2 and rec_flags7 is not None and rec_flags7 & 0x80:
+        # the pointer walks 8 a live slot (`inc hl` + 7) but 7 a dead one (the skip jumps past
+        # the `inc hl`) — after a dead foe it reads one byte early (a vanilla slip)
+        ptr = 0xDB08 + 8 * opp
+        for s_ in range(opp, opp + 3):
+            if view.alive(s_):
+                if _stbyte(view, ptr) & 0x20 or _stbyte(view, ptr + 1) & 0x05:
+                    penalty += 20
+                    break
+                ptr += 8
+            else:
+                ptr += 7
+    # $54BE (2; cleverest; $25 / $7A / $41): +20 when slot opp + 3 has min/2 <= ATK and
+    # ATK/2 < min (min: as $54E4) — meant for the caster
+    if skill in IDS_54BE and _in(category, 0x54BE) and tier2 and view.atk is not None \
+            and view.dfn is not None:
+        lo = _min_def_62e0(view, opp)
+        # LoadBtlAI_62e0 leaves E = the foes' base + 3 (its loop counter), so LoadBtlAI_6321
+        # reads the ATK of slot opp + 3 (a helper slot) — not the caster's (a vanilla slip)
+        a = _w16slot(view.atk, opp + 3)
+        if a >= lo >> 1 and (a >> 1) < lo:
+            bonus += 20
+    # $5739 (2; cleverest; Transform $29): +20 once the live foes, counted together (the count
+    # is never reset per foe), reach 3 of: MaxHP >= the caster's, ATK >= its, DEF >= its — the
+    # MaxMP compare's `jr` is unconditional, so MaxMP never counts (a vanilla slip)
+    if skill == 0x29 and _in(category, 0x5739) and tier2 and view.atk is not None \
+            and view.dfn is not None:
+        # the caster's four values are read at word index 2 x actor (`add a` before
+        # CalcBtlAI_4567 / the Get… helpers, which double again): for an enemy that lands in the
+        # NEXT array (MaxHP -> MP, MaxMP -> ATK, ATK -> DEF, DEF -> AGL) — a vanilla slip
+        i = 2 * actor
+        c_hp, c_atk, c_def = (_word_at(view, 1, i), _word_at(view, 4, i), _word_at(view, 5, i))
+        n = 0
+        for s_ in range(opp, opp + 3):
+            if not view.alive(s_):
+                continue
+            n += view.maxhp[s_] >= c_hp
+            n += _w16slot(view.atk, s_) >= c_atk
+            n += _w16slot(view.dfn, s_) >= c_def
+            if n >= 3:
+                bonus += 20
+                break
+    # $4890 (2; Upper $1E / Increase $1F): vetoed unless a live own monster's DEF is below its
+    # cap and below 999 — the cap = the base DEF (BaseStatDEF_424a) x 4 for the party's three
+    # (slots 0-2 outside a link battle) and x 2 for the enemies and the helper slot (16-bit,
+    # `sla c / rl b` wraps)
+    if skill in IDS_4890 and _in(category, 0x4890) and view.base_def is not None \
+            and view.dfn is not None:
+        ok = False
+        for s_ in range(own, own + 3):
+            if not view.alive(s_) or view.base_def[s_] is None:
+                continue
+            cap = view.base_def[s_] & 0xFFFF
+            cap = (cap << (2 if s_ < 3 else 1)) & 0xFFFF
+            d = _w16slot(view.dfn, s_)
+            if d < cap and d < 999:
+                ok = True
+                break
+        if not ok and any(view.alive(s_) and view.base_def[s_] is not None
+                          for s_ in range(own, own + 3)):
+            return True, 0, 0
+        if not any(view.alive(s_) for s_ in range(own, own + 3)):
+            return True, 0, 0
+    return False, bonus, penalty
 
 
 def _all_live_opposing_have(view, actor, off, mask):
@@ -474,6 +770,12 @@ def evaluate_chain(category, skill, actor, view, mp_cost, element,  # element = 
     if ((skill in IDS_6C8C and _in(category, 0x6C8C)) if category in CHAINS else skill in R_6C8C) \
             and actor >= 4 and actor != 7:
         bonus += 20
+
+    v_, b_, p_ = _s165_rules(category, skill, actor, view, element, rec_flags7)   # S165
+    if v_:
+        return 0, True
+    bonus += b_
+    penalty += p_
 
     if skill in CUSTOM_RULES:                             # S155: CustomAI57
         v, b_, p_ = CUSTOM_RULES[skill](skill, actor, view)

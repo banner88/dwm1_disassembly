@@ -5481,6 +5481,36 @@ BATTLE_SKILL_SYSTEM §15.10.5 "S163".
   6,763 (all five and each alone), `census_raising.py --quick` on the demo 0 mismatches; tests
   `test_compiler.test_s164`, test_app `s164_ai_fixes`.
 
+## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
+
+*Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good").* **`gamedata.window_words`** = `{"<bank>:<addr>/<row>/<col>":
+"WORD"}` — the words of the game's windows that are TILES, not texts (the field menu's INFO ITEM /
+SKIL OPTN, the INFO page's ATK … WLD / HP MP / MASTER / NEXT LV, ITEM's USE / DEL, SKIL's USE MP,
+OPTN's words and the tactics, the title menu's CONTINUE / NEW GAME / VS MODE / BREEDING; 42 slots).
+Model `editor2/core/window_words.py` (`slots()` from `extracted/window_layouts.json` — a stream
+counts only when its font was MEASURED, `tools/census_window_layouts.py`), Document
+`window_words()` / `set_window_word(key, word)` (gametext_doc.py), the Text tab's **Window words**
+page (`app/text_tab.py WindowWordsPage`). Rules (`validate`, also by the Document before the edit):
+a known slot; at most the slot's length (shorter = blank cells after it: a word never grows into the
+blank before the next one — a menu's cursor arrow is drawn there); only the letters of the
+screen's measured font (the field: A-Y without Q, no Z, upper case, digits; the title: the text
+font). **Emit:** each re-sectioned run of layout streams is a region — `win_words_07_704d`
+(`patches/bank_007.asm`, `$704D-$7D97`, 36 streams), `win_words_15_647d` / `win_words_15_6716`
+(`patches/bank_015.asm`) — written by `run_block` from the census rows with the project's words in
+place; no word = byte for byte the hand patch (test_s165). The same generator wrote the clean
+tree's `db` blocks (`tools/resection_window_layouts.py`), so an unedited `--apply` changes nothing.
+Measured: `tools/walk_window_words.py` (PyBoy, the user's save): the title, the field menu, the WHO
+list's header, the INFO page and OPTN show the new words (read cell by cell through the font tiles
+the census measured), the frame and the other words unchanged — 36 / 36; on the original build 5
+FAIL.
+
+**Every stock skill a base (ROADMAP E13 note "the 17 bases"):** the compiler's `clone_problem`
+reads `extracted/skill_clone_census.json` — re-measured on the S165 engine: 155 same, 0 differ, so
+the New skill dialog offers every battle skill (StepGuard / MapMagic stay field-only). The engine
+side: BATTLE_SKILL_SYSTEM §13.14 "S165" (24 same-size reads in banks $52 / $53 / $58).
+Pin `2fe3faba…` (patched; was `9a4337a9…`, patched, historical — banks $52 / $53 / $58 + the header;
+the window-word re-section is byte-neutral). `EDITOR_REVISION` S165, help 56 (Window words) / 54.
+
 ## §2.12 S94b `custom.entrance_redirects[]` — route a vanilla door into a custom room
 
 The user's "fastest way to test": hook a custom room onto a door the player

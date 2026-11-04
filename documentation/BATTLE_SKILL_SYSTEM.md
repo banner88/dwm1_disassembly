@@ -1796,6 +1796,10 @@ Massacre, QuadHits, Vacuum (damage), PoisonAir (message), SandStorm,
 DeMagic, UltraDown, ThickFog (casts), Tatsu / Diago / SamsiCall (the summon's HP / MP), Guardian,
 StrongD, BladeD (status bits) — act-time id reads the S163 census did not reach (copies or
 per-id tables). `extracted/skill_clone_census.json` regenerated.
+**S165:** those 17 fixed (§13.14 "S165": their act-time id reads, found once the act-id census ran
+the refused bases too) — re-measured on the S165 engine: **155 same, 0 differ, 67 not a skill**;
+the reclaimed twins at `$BC` / `$CC` alike (`as_EF` for all 155). The compiler refuses no stock skill
+as a base any more (the field-only StepGuard / MapMagic aside).
 
 **Learning.** Bank $06 `LearnLoopFork` scans the custom ids `$E0-$FE` after the 218
 vanilla rows through bank $72 entry 6 `CustomLearnRow72`, which copies the next learnable
@@ -2396,6 +2400,39 @@ $58 target pick) and these two. **Measured (PyBoy, the real menu, party slot 1 f
 Vivify / Revive and their twins all reach the fallen ally, the act is queued on slot 1 with `$DD76` =
 the base; EVivify cast through the menu brought PX back at 13 / 26 HP (Vivify's half, not Revive's
 full); `walk_actbase.py` step `menu` (the negative control puts the copies back: FAIL).
+
+**S165 — the bases the census never ran (ROADMAP E13 note "the 17 bases a copy still cannot run";
+built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good")).** The S163 census built its 8 projects from the bases the compiler
+ALLOWED (`custom_skills.clone_bases` — 112 then); a refused base was never run as a base, so its
+handler's id tests never showed, and S164's whole-battle re-measure allowed 24 more bases without
+re-running it. `census_act_id_lists.py --refused` adds the refused bases, their twins written into a
+compiled build's bytes (`poke_twins`: the rows the compiler would emit — CustomBaseTable … / the
+reclaimed ids' stock rows), on the current allowed set (138 bases + 17 refused): **40 new roots**
+— the 17 bases' handlers (`SkillMagicBack` Bounce `cp $28`, `SkillMassacre` `cp $3f`,
+`SkillBiAttack` QuadHits `cp $51`, `SkillWindBeast` Vacuum `cp $59`, `SkillPoisonGas` PoisonAir `cp
+$6d`, `SkillBladeD_Defense` `cp $90` / `sub $8c`, `SkillTatsuCall`'s species `add $54` +
+`LoadBattle_6648`'s `cp $84/$85/$86`, SandStorm's hit ladder `jr_052_5cf4` `cp $72`, the act-state
+ladder `jr_052_6e26` (Sacrifice `$14`, DeMagic `$80`, UltraDown `$82`, ThickFog `$83` / `$A5`, Cover
+`$88`, Guardian `$89`), Farewell's MP `LoadBtlC_4a04` `cp $32`, Guardian `jr_053_4f7a` `cp $89`,
+QuadHits `jr_053_5941`, ThickFog `jr_053_6226`) AND reads of bases S164 had just allowed, in paths
+its battles never took: `BtlActState2Apply`'s Beat / Defeat `cp $12 / $13`, TwinSlash / Kamikaze
+`jr_052_7262`, Imitate's own check `LoadBattle_7dd7` `cp $7f`, HighJump `jr_053_4951` / `_52f4` /
+`LoadBtlC_5844`, LifeSong `jr_053_495a`, SuckAll `jr_053_5458`, Ramming / Kamikaze `jr_053_5a44`,
+and **the turn order's defensive list** (bank $58 `TurnOrderDefensiveBoost_56cf`: Ironize `$2A`,
+Imitate `$7F`, Cover `$88`, Guardian `$89`, Dodge `$8C`, `$8D`-`$90`, `$DC` act first — read
+from the action QUEUE). **Patched (same size, 24 sites):** 13 `ld a, [$db8a]` in bank $52 and 10 in
+bank $53 → `call ActBase52 / ActBase53`; `TurnOrderDefensiveBoost_56cf`'s 5-byte queue tail → `call
+QueueBase58` + 2 nops. Kept as the real id (judged, as S163): the name copy `Jump_052_71f8`, the
+`$DB4C` record-index stores, the item path, bank $50's save / restore of `$DB8A` around a far call
+(`jr_050_4c40` / `_4c72`), the queue writes, the internal ids `$A2` / `$A4` (no base), the
+built-ins' Tame / Quake hooks. The census after: 364 sites, 0 unjudged roots (155 bases + the
+refused), `extracted/act_id_lists_census.json`; `census_skill_clone.py --whole --reclaim` on the
+S165 engine: **155 same, 0 differ**, every reclaimed twin `as_EF`. Each read carries a `[S165]`
+comment in the clean tree (`1ca6579…`). **Measured** (`tools/walk_actbase.py --set s165`, PyBoy,
+the user's save, `examples/s165_chorus_demo` THE CHORUS HALL — the C… twins of the 17, the 17th on
+the reclaimed id 188): 17 pairs x 3 pinned RNG seeds, the same messages and board after each, + the
+sites — 53 / 53; `--negative` (every view call back to the original bytes) 48 FAIL; S163's ECHO set
+re-walked on the S165 code (see KEY_LESSONS S165).
 
 ---
 
@@ -3475,6 +3512,46 @@ often: `$4AF6` 312, `$5F1F` 203, `$4B3D` 181, `$4A94` 75, `$4890` 74, `$5660` 60
 44, `$5B4A` 42, `$4BCC` 31, `$6144` 23, `$6C0F` 22; live: `$4DF9` (+5 to physical specials — S81
 "condition untraced, omitted") and `$4B8C` (a penalty 20). ROADMAP E17 note "the rule model on
 arbitrary boards".
+
+*S165 — the rule model on arbitrary boards (ROADMAP E17 note; simulator only, byte-neutral).* NEW
+`simulator/rule_gaps.py` caches the ROM's chain (`rom_rules.Oracle` on the original-rule build) for
+validate_ai_fixes.py's boards and lists, per mismatch, the rules that fired. The rules missing from
+the S163 model fired only on boards the captured corpus never had (a foe that reflects, a breath
+user, a surrounded foe …); each was read from its bytes and modelled in `ai_rules._s165_rules`,
+**keeping the original's slips**:
+
+| rule | chains | ids | what (byte-read S165) |
+|---|---|---|---|
+| `$4AF6` | 1 / 2 | `$03-$19` but `$12` `$15`, `$1D` `$21` `$DA` | veto when a LIVE foe has +4 & `$22` (reflects) |
+| `$5EE5` | 1 / 2 | `< $1A`, `$1C` `$1D` `$20` `$21` `$DA` | veto unless a live foe has +4 & `$22` clear |
+| `$4B3D` | 1 / 2 | the breaths `$5C-$63`, `$6A-$6D` | veto when the foes' side byte `$DB00 + side` & `$60`, or a live foe's +4 & `$48`, or bit 1 of the byte 8 past its row (`ld a, [hl+]` + 3 `inc hl` = the NEXT slot's +0) |
+| `$5F1F` | 1 / 2 / 3 | 41 ids (`ai_rules.IDS_5F1F`) | veto unless a live foe has +7 & `$C0` clear |
+| `$5F91` | 1 / 2 / 3 | `ai_rules.IDS_5F91` | veto unless a foe is capable (GetMonsterSlotInfo NC) |
+| `$4A94` | 2 / 3, AI tier 2 | `$24` `$8A` `$8B` `$8F` `$92` | veto unless a live foe knows a breath (`LoadBtlAI_7b7d`, its option list before `$FF`) |
+| `$5B4A` | 2, tier 2 | `$27` `$28` | veto unless a live unsealed foe knows `< $1B` / `$1C` `$1D` `$20` `$21` `$DA` |
+| `$6C0F` | 2, tier 2 | `$26` | veto unless a foe's list (no slot check) holds a skill with record +6 ≠ 0 (bank $54 entry 0) |
+| `$47D9` | 2 | Surround `$18` | veto unless a live foe is not surrounded (+3 bit 1; `AIScanSlots_4456`) |
+| `$62A8` | 2 | `$18` `$72` `$73` | veto unless a live foe is neither surrounded nor in a sandstorm (+7 & 3) and not at level 3 to the record element |
+| `$63E3` | 2 | `$1C` `$1D` `$7A` | veto unless a live foe has DEF ≥ 2 and is not at level 3 |
+| `$5BCD` | 2 | Curse `$6F` | veto unless a live foe is not cursed (+2 bit 5) |
+| `$4890` | 2 | Upper `$1E`, Increase `$1F` | veto unless a live own monster's DEF < its cap and < 999 — cap = its BASE DEF (bank $57 entry 7 `BaseStatDEF_424a`: a party record's +$5A, an enemy row's +11 by EID `$DA03 + 2 (s − 4)`, a helper slot the row `$100` + species) x 4 for the party's slots 0-2, x 2 for the rest |
+| `$4B8C` | 1, tier 2 | the record's flags `$DD6B` bit 7 | −20 when a live foe has bit 5 of `$DB08 + 8 s` or bits 0 / 2 of `$DB09 + 8 s`; the pointer steps 8 a live slot but 7 a dead one (the skip jumps past `inc hl`) |
+| `$4E76` | 1 | `$3F` `$40` | +10 when a live foe's DEF ≥ 2 x the ATK of the FIRST foe slot (`GetCombatantATK` called with A = the foes' base) |
+| `$54E4` | 2, tier 2 | `$7A` `$82` `$25` `$1C` `$1D` | +10 when an own slot (no slot check) has min/2 ≤ ATK and ATK/2 < min, min = the lowest live foe DEF, the first foe slot counting 0 when dead (`LoadBtlAI_62e0` / `_6321`) |
+| `$54BE` | 2, tier 2 | `$25` `$7A` `$41` | the same test, +20 — on slot `foes + 3` (62e0 leaves E there), not the caster |
+| `$5660` | 2, tier 2 | `$20-$23` | +10 when a live own monster is slower than the live foes' average AGL; +10 when the own average AGL < the word at `$DB58` (never set by the rule — stale) |
+| `$5739` | 2, tier 2 | Transform `$29` | +20 once the live foes, counted together (never reset per foe), reach 3 of MaxHP / ATK / DEF ≥ the caster's — read at word index 2 x actor (an enemy caster's values come from the NEXT arrays); the MaxMP compare's `jr` is unconditional (never counts) |
+| `$59F7` | 2, tier 2 | `$26` `$7F` | +10 when a foe's list holds `$FF` (fewer than 8 options) or `$4F` `$59` `$5B` `$64` `$65` `$D9` |
+
+The validation harness also reads the trait byte the rules read (`$DB8B + slot`) and the oracle
+build's own families (bank $03 info +0 — a project may move species, S104), not the vanilla JSON.
+**Measured:** `rule_gaps.py` — the ORIGINAL rules exact on **7,865 / 7,865** (seed 164, 4 mutations
+each), **14,157 / 14,157** (seed 165, 8), **26,741 / 26,741** (seed 7, 16), **39,325 / 39,325** (seed 11, 24); validate_ai_fixes 7,865
+/ 7,865 for both ROMs (830 chains the fixes change); validate_rules 240, validate_rules_boards 1,573,
+validate_f10_rules 332, validate_f10 1,335, validate_command 6,411, validate_battle 6,614 / 802 / 426.
+`$4890` and `$5660`'s second half need board facts a Balance battle does not carry (`view.base_def`,
+`view.db58`; None there = the rule left out); `$6C0F` reads a NEW skill's damage class from
+`ai_rules.DAMAGE_CLASS_OVERRIDE` (empty: 0).
 
 **15.10.6 Pick** (AIState5Pick_75a2). Status overrides first (attacker
 block): +2 bit4 (confusion) → force $3A; +6 bit2 → force $42; +7 bit4 →
