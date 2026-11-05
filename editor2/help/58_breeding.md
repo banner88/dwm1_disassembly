@@ -55,7 +55,9 @@ For the selected monster:
 On the right:
 
 - **Try a cross** — pick the pedigree and the mate, their plus and levels:
-  the egg, its plus and which recipe decided.
+  the egg, its plus and which recipe decided, with the three monsters' pictures. **The baby
+  in detail →** opens the
+  **Try a cross** page with these two (below).
 - **Depth** — how many monsters sit at each depth in your project (bars)
   and with the original recipes (dashed).
 - **Problems** — monsters nobody can get, special recipes that never fire,
@@ -80,6 +82,50 @@ can win first). The library page's text follows your change.
 
 The **Hints** page picks which special recipes the game's hint MONUMENTS teach and its
 ARCHIVES list — see *Breeding hints: monuments and archives*.
+
+## Try a cross: the baby
+
+![The Try a cross page](img/sub_breeding_cross.png)
+
+The **Try a cross** page shows what the game makes of two monsters — not only the egg,
+but the baby itself. Every number is the game's own rule (see *Raising monsters*; checked
+against the game on a real save).
+
+**The parents.** For each, pick **a typical one** — a monster of a kind, plus and level,
+made the way a monster that joins you is made (from its lowest battle row that can join)
+and levelled the game's way (with more than 8 skills it keeps the first 8) — or, after
+**Monsters from a save (.sav)…**, one of the party or farm monsters of a battery save of
+your build: its own stats, skills, plus, level and pedigree. The editor remembers the
+save. **Pedigree names that are not yours** is set from the parents (a typical parent is
+yours: 0; a save's monster counts its master and, if it was bred, its parents' two
+names); change it to try another case — every name adds 2 % to each stat.
+
+**The pictures** — the pedigree × the mate → the egg, each as its battle pose the way your
+project draws it: a monster you gave new art or new colours (Monsters tab → Name & art) and
+your new monsters show their own pictures. Under each: its name (a save's monster: its
+nickname and ♂ / ♀), level and plus; the egg's max level. Hover a parent for what it knows.
+The small **Try a cross** box on the By monster page shows the three as they walk in the field.
+
+**The egg** — its kind, plus and which recipe decided; what each parent knows.
+
+**The baby** — level 1 and its **max level** (its kind's cap + 2 × plus) and the chance it
+is female; **Resistances** — which can come out one higher, with the chance (the six most
+likely; hover for all). **Stats at birth**: each parent's stat, (both) ÷ 4 and the baby's (with the
++2 % per name). **AI weights**: the average — a red **wraps (game bug)** marks a weight
+whose sum went past 255 (the original code drops the carry: two 200s give 72).
+
+**Learn queue** — the skills the baby can pick up, in the order the game keeps them,
+where each came from ("the pedigree knew HealMore" = it was turned back into Heal) and
+**the level it learns it**; "not by Lv …" = its level or stats never reach that skill's
+needs before its max level (Skills tab → learning). **Not passed on** lists the parents'
+skills that did not make it: skills the game never passes on, and any past the 25th.
+
+**As it grows** — every skill the game offers the baby, level by level up to its max
+level: from its learn queue, an upgrade (it replaces the skill it evolves from) or a
+combination. **Knows** counts its skills; from the 9th (orange) the game asks which one
+to forget — the list goes on as if you never forgot one. The note under it gives the
+stats it ends with (one typical run: HP and ATK get random bonuses from level 14 when it
+has a plus).
 
 ## Working on the whole table
 

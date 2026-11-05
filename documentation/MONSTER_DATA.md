@@ -1874,6 +1874,24 @@ entry, but `jr jr_016_482b` (an unconditional `18 05`) skips the compare's use �
 a **DEAD "keep this skill by plus" roll** that only steps the RNG 25 times; the
 5 bytes after it are unreachable.
 
+### Measured on real save records — the Try a cross page (S169)
+
+`editor2/core/cross.py` (the Breeding tab's Try a cross page, EDITOR_DESIGN §5.4 "As built S169")
+asks this model for the baby of two parents and explains it. NEW `tools/walk_cross.py` checks it
+against the routines on a REAL save (the user's, 11 monsters, on the user's build): every ordered pair
+staged as the game stages it ($D665 / $D6FA, the player's name from the save at `$CA42`), entry 0
+then entry 4 stub-called — species + plus (the resolver), max level, the six stats, the AI bytes,
+"knows nothing", the hatched learn queue == the panel; resistances + gender == `raising.breed` on the
+same pin; every pair again with the pedigree's master name changed (k + 1) and with the mate given a
+pedigree of strangers (+$15 / +$16 ≠ $FF, +$83 / +$8C ≠ the player: k + 2). k from a save record =
+`cross.names_not_yours` (the player's name = SRAM offset `$017C` = `$CA42 − $C8EA + $24`, 9 bytes,
+`PedigreeNameDiffers`). The first 12 newborns were then levelled IN the game with the panel's RNG
+trace (`cross.timeline(trace=…)`): every skill the learn pass offered == the panel's row, up to a 9th
+known skill (the forget menu). 330 breeds, 384 level-ups: 2,694 OK, 0 FAIL; `--negative` (k forced 0)
+166 FAIL. The timeline lists every OFFER past 8 known (`raising.learn_scan(max_known=255)`, S169 —
+the default stays the game's 8). EID 0 (the all-zero row: species 0, level 0) is never a "typical"
+parent's row (`cross.joinable_rows`; `balance.species_rows` made a picked DrakSlime from it until S169).
+
 ### S130 label map (labels/comments only; both trees; clean build `1ca657…`)
 
 | Bank | Old → new |

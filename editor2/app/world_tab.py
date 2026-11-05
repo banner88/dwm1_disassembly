@@ -206,11 +206,17 @@ class WorldTab(QWidget):
                         '<span style="color:#ff00ff">━ vanilla door → here (one-way)</span> &nbsp; '
                         '<span style="color:#ffd23c">┅ script warp</span> &nbsp; '
                         '<span style="color:#8c8c8c">─ vanilla exit</span>')
-        row.addWidget(legend)
         row.addStretch(1)
-        self.count = QLabel('')
-        row.addWidget(self.count)
         v.addLayout(row)
+        # S169: the legend and the count on their own row (wrapping) — on one row with
+        # the buttons they made the tab 1,666 px wide, wider than a laptop screen
+        row_l = QHBoxLayout()
+        legend.setWordWrap(True)
+        row_l.addWidget(legend, 3)
+        self.count = QLabel('')
+        self.count.setWordWrap(True)
+        row_l.addWidget(self.count, 1)
+        v.addLayout(row_l)
         # S143 (ROADMAP ARC CAP4b): find a room, show one area, or one room and its
         # neighbours — at hundreds of rooms the whole graph is a hairball
         row2 = QHBoxLayout()
@@ -238,6 +244,7 @@ class WorldTab(QWidget):
         self.near_n.valueChanged.connect(lambda _v: self.near.isChecked() and self.refresh())
         row2.addWidget(self.near_n)
         self.focus_lbl = QLabel('')
+        self.focus_lbl.setWordWrap(True)
         row2.addWidget(self.focus_lbl)
         v.addLayout(row2)
         self.focus = None

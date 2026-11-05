@@ -10,6 +10,50 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-05 (Session 169 — **THE WINDOW (NO TAB RESIZES IT ANY MORE; IT REOPENS AS IT WAS CLOSED) + ROADMAP
+> P3.12 RESIDUAL (a): THE BREEDING TAB'S "TRY A CROSS" PAGE — THE BABY ITSELF (MAX LEVEL, STATS, AI, RESISTANCES, GENDER,
+> ITS LEARN QUEUE WITH WHERE EACH SKILL CAME FROM AND THE LEVEL IT LEARNS IT), PARENTS TYPICAL OR FROM A .SAV; THE HELP'S
+> "RAISING MONSTERS"** (the user: "On the editor side, clicking on a different tab resizes the window and I have to make
+> it fullscreen again every time - please fix. But FIRST lets also discuss what is left to implement"; the audit conferred
+> → "Explain the raising stuff?" → "1) Fix window resizing and do the cross stuff, also populate the help tab with
+> relevant info about this. Next session is more than 58 original art."). **Built S169, NOT yet user-tested; byte-neutral
+> (no ROM change: the example pin stays `7aae0e95…`, patched; clean build `1ca6579…`) — no test ROM.**
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (for the user, in chat):** open ROADMAP boxes = P3.17 packaging, P3.11b (optional), CAP5 (as it binds),
+> Phase D annotation; editor residuals (event jingles, the battle's join / party-full window words, master id 239);
+> against the GreatLog outline: varying gate length, the outline's new skill ideas (Echo, Sense, Pedigree, Haunt, Lure,
+> Share, Provoke, Forage), player-set skill priorities, the ≈ 58 re-art budget (banks $7F / $7C / $7A) — **the user
+> chose the re-art budget for S170** ("Next session is more than 58 original art").
+> **The window (measured offscreen on the user's project):** the window's minimum was 1,530 × 911 — the largest page
+> minimum + the tab row (1,669 px of tabs with the macOS style's no-arrows tab bar → 1,696); World 1,526 → 1,666 after its
+> first show, Music 1,477, Cutscenes 1,435; five pages grow on first show, so a tab click re-applied a minimum wider than a
+> laptop screen. NEW `editor2/app/page_tabs.py` (`PageTabs` + `PageScroll`: scrolling tab row, each page in a scroll area
+> sized from its MINIMUM — a `widgetResizable` area scrolled fitting pages: it asks for the height-for-width = the
+> preferred height); `main.py` saves / restores the window geometry + docks; World legend row, three labels wrap. Minimum
+> now 412 × 273; 23 tab switches at 1,440 × 800 leave the window unchanged. EDITOR_DESIGN §5.0 "The window", KEY_LESSONS S169.
+> **Try a cross:** the ROADMAP residual said "not decoded" — stale: S130 decoded and measured breeding / birth / learning
+> (KEY_LESSONS S169). NEW `editor2/core/cross.py` (asks `simulator/raising.py`; `raising.learn_scan(max_known=…)`, default
+> the game's 8) + `editor2/app/cross_page.py` (the Breeding tab's fifth page; the By monster box's **The baby in detail →**).
+> EID 0 (the all-zero row) is skipped as a typical parent's row — `balance.species_rows` too (a picked DrakSlime was made
+> from it). EDITOR_DESIGN §5.4 "As built S169", MONSTER_DATA "Measured on real save records — the Try a cross page (S169)".
+> **Measured:** NEW `tools/walk_cross.py` on the user's save + the user's build: 11 monsters, every ordered pair × 3 (as
+> saved / the pedigree from another master / the mate with a pedigree of strangers), bank $16 entries 0 + 4 stub-called on
+> the staged records == the panel; the first 12 newborns levelled in the game on the panel's RNG trace == its timeline:
+> 330 breeds, 384 level-ups, 2,694 OK / 0 FAIL; `--negative` (k forced 0) 166 FAIL.
+> **Help:** NEW `58_raising.md` "Raising monsters" (joining, level-up order, learning, the egg, the hatch); `58_breeding.md`
+> "Try a cross: the baby" (+ NEW picture `sub_breeding_cross.png`, `tools/help_screenshots.py` SUBTABS); `00_start.md`
+> "The window"; the glossary (Learn queue, Max level, Pedigree names, Raising). `EDITOR_REVISION` S169.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2071 PASSED (+ `test_s169`; REGRESSION == the pin); test_app `--rom`
+> PASS (+ `s169_window_and_cross`; the GUI build == the pin `7aae0e95…`, patched).
+> **S169 r2 — the user: "For try a cross, can you have a picture of the resulting monster (egg) displayed? … Also show
+> the two parents please. … if I modified monster graphics it should reflect that":** pedigree × mate → the egg as battle
+> poses drawn from the project's art (`sprite_qt.species_art`: re-arted / re-coloured originals, new species), the small
+> box's field icons; test_app: pictures == `species_art`, a palette edit redraws (EDITOR_DESIGN §5.4 "S169 r2").
+> `EDITOR_REVISION` S169 r2. Built S169 r2, NOT yet user-tested.
+> **Next:** the user's test (the window in full screen on the Mac across every tab and a restart; Breeding → Try a cross
+> with typical parents and the user's .sav, the pictures); S170 = more than 58 re-arted original monsters (the art banks); P3.17
+> packaging; the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 168 — **ROADMAP P3.3g BUILT: PAGE 2 — A TILESET HOLDS 256 TILES, THE SECOND 128 IN
 > VRAM BANK 1 (ATTRIBUTE BIT 3, GBC ONLY); THE WHOLE-GAME CENSUS (THE ORIGINAL NEVER TOUCHES BANK 1'S TILES), THE ENGINE
 > (PAGE-2 BANKS, A GDMA COPY AT EVERY ROOM-SHEET LOAD, BOXES / WINDOWS CLEAN OVER PAGE 2, ANIMATIONS ON PAGE 2), THE
@@ -69,50 +113,8 @@
 > striped tiles; the editor: import / borrow / draw into a full tileset, the Tileset tab's page 2 and its brown slots);
 > P3.17 packaging; the "Awaiting a user test" list.
 
-> Last verified: 2026-11-05 (Session 167 — **THE OUTSTANDING FIXES F2 + F3 + P3.H: A STALE PYSIDE WRAPPER (THE S166
-> "QStandardItem.triggered" NOTE), THE PATCH-SPACE AUDIT (EVERY BYTE A PATCHED BUILD WRITES INTO A BANK THE GAME USES —
-> ONE LIVE OVERLAP FOUND AND FIXED: ROM0's GROOVE ROW TABLE), THE HELP TAB'S GLOSSARY, "?" BUTTONS AND SCREENSHOTS**
-> (the audit of the open items → user: "Ignore F1, do F2, do F3 - good idea. If Im about to begin the giant romhack I want
-> to make sure there is no dodgy shit happening behind the curtains. F4 dont care. P3.H … I want this. YOU MAY RUN THE
-> REPO TOOLS."). **Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good", on `DWM-S167-audit-test.gbc`); the editor half (F2, P3.H) NOT yet user-tested.**
-> Test ROM **`DWM-S167-audit-test.gbc`** (`a386a504…`, patched) = the user's project built with the S167 engine (no demo
-> rooms: the change is the boss song's vibrato + the room-load clamp at a new address). Example pin `26a4faf1…` (patched;
-> was `fee3147e…`, patched, historical — ROM0 only).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; the sandbox refused the repo's code until the user
-> wrote "YOU MAY RUN THE REPO TOOLS"; HEAD's verify_integrity PASS and test_app `--rom` PASS (no traceback) at start.
-> **F3 (engine, patched; `tools/audit_patch_space.py` → `extracted/patch_space_audit.json`):** every changed byte of the
-> example + the user's build in banks $00-$5F classed EDIT / FILL; 29 FILL runs judged by what ends before them (ARCHITECTURE
-> "The audit of every claimed run (S167)"); 1,775 LZ streams of every bank's `$4001` table — none meets claimed space (the
-> S166 r2 overwrite found as a negative control); raw numbers / labels into claimed space: 5, all mgbdis artifacts.
-> **FOUND + FIXED:** ROM0 `$3BC2-$3BD2` ("17 unreferenced rst $38" since S42 / S63) = row 3 step 15 + row 4 of the GROOVE
-> ROW TABLE `$3B83` (8 × 16 signed steps the sound engine adds to a note, SOUND_SYSTEM §5 `A3`): measured (the editor's
-> sound engine, a read hook) — `$3BC2` read by songs `$0C` and `$12` (the boss song), the S166 build's boss song wrote other
-> sound-register values in 174 frames a minute; `MapIDClampForPalette` moved to the dead vanilla master table `$3466`
-> (8 B + 5 pad), `ClampFamIdx` (no callers since S104) deleted, `$3B83-$3C02` re-sectioned `GrooveRowTable` in both trees
-> (`tools/resection_groove_00.py`; 9 mgbdis labels renamed `GrooveRow<r>_<step>` in banks $00 / $2B / $32 / $33 / $63).
-> **Measured, harmless:** 4 runs after data whose only readers are unreachable (`$01:$7DFF` — its 8th tile-string page's
-> `$FF` is under FollowerArtResolve01; `$02:$7F02` / `$7F2E`; `$11:$752F`, whose `$7777` table would reach `$7976`) —
-> annotated both trees. **Dynamic proof:** the ORIGINAL ROM with every claimed byte poisoned to `$A5` vs the original —
-> the 519-scene cutscene census (68 runs, 31,374 RAM / VRAM / OAM / HRAM hashes, the census JSON equal) and a battle / menu
-> corpus (8 gates, 38 battles won, the field menu; 4,934 hashes) identical; positive control (two title-menu bytes) 55
-> samples differ; the user's project S166 vs S167 code on the user's `.sav` (continue + 10 rooms, 176 hashes) identical.
-> **F2 (editor):** the S166 traceback = a stale Shiboken wrapper — `combo.model().item(i)` kept alive past a `clear()` makes
-> the next C++ object at that address come back as a `QStandardItem` (reproduced); NEW `editor2/app/qt_safe.py` (combo rows
-> by index, `menu_action`), the 3 sites + the Insert menu; test_app `s167_qt_safe`. KEY_LESSONS "S167 — a stale PySide wrapper".
-> **P3.H (editor):** NEW `editor2/app/context_help.py` — a round "?" on the tab bar (the shown tab's topic), on every sub-tab
-> bar (the sub-tab's heading), under the Rooms tab's page column (the page's topic) and on 47 dialogs (DIALOG_TOPICS, added
-> when shown, F1 there too); F1 = the "?" of the tab shown; the Help tab follows topic links (`[x](NN.md#Heading)`), shows
-> pictures (`editor2/help/img/`), "◀ Back to <tab>", "◀ Previous topic", a Glossary button; NEW topics `51_families.md`,
-> `95_glossary.md` (≈ 80 terms, each linked); 22 tab pictures (NEW `tools/help_screenshots.py`) under their topics' titles;
-> `00_start.md` (the stale "Balance not built" line). `EDITOR_REVISION` S167; test_app `s167_context_help` (89 "?" targets,
-> 80 links, 22 pictures resolve).
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2025 PASSED (+ `test_s167`: the groove bytes, the clamp at `$3466`, no `66 34`
-> in ROM0, 0 streams meeting claimed space + the negative, the boss song frame for frame); test_app `--rom` (+ the two S167
-> tests; the GUI build == the pin `26a4faf1…`, patched); clean tree `1ca6579…` after the re-section and annotations.
-> **Next:** the user's test (the editor's "?" / F1 / Glossary / pictures; `DWM-S167-audit-test.gbc` = their project as
-> before); P3.17 packaging (with the user's Mac); the "Awaiting a user test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S169** (2026-11-05): the window + ROADMAP P3.12 residual (a) — no tab resizes the window any more (`editor2/app/page_tabs.py`: a scrolling tab row, every page in a scroll area sized from its minimum; the window minimum 1,530 × 911 → 412 × 273; geometry + docks kept between runs); the Breeding tab's Try a cross page shows the BABY (`editor2/core/cross.py` over the S130 raising model: max level, stats, AI with the dropped carry, resistances, gender, the learn queue with sources + the level each skill is learned; parents typical or from a .sav; `tools/walk_cross.py` 2,694 / 2,694 on the user's save, negative 166 FAIL); help `58_raising.md`; EID 0 skipped as a typical row. Byte-neutral (pin `7aae0e95…`, patched, unchanged). Built S169, NOT yet user-tested. Next: S170 more than 58 re-arted monsters.
 - **S168** (2026-11-05): ROADMAP P3.3g built — PAGE 2: a tileset holds 256 tiles, the second 128 in VRAM bank 1 (attribute bit 3, GBC only). Census `tools/census_vram_bank1.py` (the original never touches bank 1's tiles: title, battles, 519 cutscenes); engine: page-2 banks (the last ext kind; GDMA copy at every room-sheet load via bank $0B's regions → `Page2Room`, tiles $E0-$FF mirrored), boxes / windows clean over page 2 (`wPage2On` → bank $73 / $77; ScreenPush attribute + tile per cell), own animations on page 2; compiler: tile values $100-$17F, derived attr streams; editor: every slot search spills onto page 2, statues keep page 1, Tileset tab / metatile editor show both pages. `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL). PROJECT_COMPILER §2.76. Test ROM `DWM-S168-page2-test.gbc` (patched); pin `7aae0e95…` (patched). **S168 r2** (user report: Grandpa's BREED / HATCH / EXIT words over the floor): rooms with a breeding / farm / egg screen keep the page-1 slots it draws into free (`services.BORROWED_SLOTS`; moved on NPC creation and on open, page 2 first; validator warning); walk 62 / 62; test ROM `DWM-S168r2-page2-test.gbc` (patched). Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested.
 - **S167** (2026-11-05): the outstanding fixes F2 + F3 + P3.H — F3: `tools/audit_patch_space.py` (every byte a patched build writes into a bank the game uses: 29 FILL runs judged, 1,775 LZ streams untouched; dynamic poison A/B of the original ROM over the cutscene census + a battle / menu corpus, identical) found ROM0 `$3BC2-$3BD2` (MapIDClampForPalette since S63) = rows 3 / 4 of the GROOVE ROW TABLE read by the boss song — moved to the dead master table `$3466`, `GrooveRowTable` re-sectioned both trees; 4 runs whose readers are unreachable annotated. F2: the S166 traceback = a stale PySide wrapper (`editor2/app/qt_safe.py`). P3.H: "?" on the tab bar / sub-tab bars / the Rooms page column / 47 dialogs, F1, topic links, the Glossary, a Families topic, 22 tab pictures. Test ROM `DWM-S167-audit-test.gbc` (`a386a504…`, patched); pin `26a4faf1…` (patched). Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"); the editor half NOT yet user-tested.
 - **S166** (2026-11-04): the outstanding fixes A1-A3 + B + C — A1: the window words of the other screens (25 runs of banks $09 $0A $12 $18 $50 $51 re-sectioned both trees + regions; the screens' letters measured by shape on the GLOSSARY HALL tour; 47 more words); A2: the packed rows = text canvases (7 text slots: the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT); A3: the tables' line widths measured (`text_widths`) + warnings; A4 (debug texts) closed by design; B: A′2 superseded, the islands' flag audit (`tools/audit_island_flags.py`, SIDEQUEST_MAP), E3 (b2) the SRAM allocation map; C: T2…Tn — banks $42-$46 / $48-$4B / $4E re-sectioned; walk_window_words `--services` 50 / 50, negative 11 FAIL. PROJECT_COMPILER §2.74. Test ROM `DWM-S166-glossary-test.gbc` (patched); pin `2fe3faba…` (patched, historical) unchanged. Built S166, NOT yet user-tested. **r2:** the join YES / NO's "NO" glitch = S128 `ArenaScriptType51` over the last byte of gfx `$5112` ($51:$7B34) — restored; test ROM `DWM-S166r2-glossary-test.gbc` (patched); pin `fee3147e…` (patched). Built S166 r2, NOT yet user-tested.
@@ -476,6 +478,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | The words of the windows (field menus, the title menu) editable — Text → Window words | 🟢 built S165 (ROADMAP T-follow (a)), USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"): `gamedata.window_words` → regions `win_words_*` (banks $07 / $15, re-sectioned both trees); 42 words, the screen font's letters; walk_window_words 36 / 36. **S166 (built S166, NOT yet user-tested): + the shop, the farm, the Monster Namer, Grandpa, the egg appraiser, the egg page, the battle (47 words, each screen's measured letters; banks $09 $0A $12 $18 $50 $51 re-sectioned) + the words a window cuts out of a text (the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT — gamedata.text) + the tables' measured line widths (warnings); walk_window_words `--services` 50 / 50** | `editor2/core/window_words.py`; DATA_STRUCTURES "Window layout streams (S165)"; TEXT_SYSTEM "Window words (S165)" / "Text canvases (S166)"; PROJECT_COMPILER §2.74; help 56 |
 | Help where you are: the Glossary, a "?" on the tab bar / every sub-tab bar / the Rooms page column / 47 dialogs, F1, topic links, the tab pictures | 🟢 built S167 (ROADMAP P3.H), NOT yet user-tested: `editor2/app/context_help.py` (TAB / SUBTAB / RAIL / DIALOG_TOPICS), `help_tab.py` (links, headings, pictures, Back / Previous), topics `51_families.md` / `95_glossary.md`, `editor2/help/img/` (`tools/help_screenshots.py`); test_app `s167_context_help` | EDITOR_DESIGN §5.11; help 00 / 95 |
 | Page 2 — a tileset of 256 tiles (the second 128 in VRAM bank 1, attribute bit 3; GBC only): every free-slot search spills onto it (imports, borrow, Draw, walkability twins, own animation copies), text boxes / windows / menus clean over it, battles leave it, own animations on it, statues keep page 1 | 🟢 built S168 (ROADMAP P3.3g); r2 (service menus' slots kept free) ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested: `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL); the original game never touches bank 1's tiles (`tools/census_vram_bank1.py`); test ROM `DWM-S168-page2-test.gbc` (patched) | PROJECT_COMPILER §2.76; ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)"; EDITOR_DESIGN §5.1 "As built S168"; help 13 |
+| The window: no tab resizes it (a scrolling tab row, every page in its own scroll area sized from its minimum); its size / place / full screen + docks kept between runs | 🟢 built S169 (user-directed), NOT yet user-tested: the window minimum 1,530 × 911 → 412 × 273 on the user's project (offscreen); test_app `s169_window_and_cross` | EDITOR_DESIGN §5.0 "The window"; KEY_LESSONS S169; help 00 |
+| Try a cross: the BABY (max level, stats, AI weights with the game's dropped carry, resistance / gender chances, the learn queue with each skill's source and the level it is learned, what is not passed on) from typical parents or a .sav's monsters | 🟢 built S169 (ROADMAP P3.12 residual (a)), NOT yet user-tested: `tools/walk_cross.py` on the user's save 2,694 / 2,694 (330 breeds, 384 in-game level-ups; negative 166 FAIL) | EDITOR_DESIGN §5.4 "As built S169"; MONSTER_DATA "Raising a monster (S130)" + "Measured on real save records (S169)"; help 58 / 58_raising |
 | Patched builds write only into space the game never reads (every claimed run judged; LZ streams; the poisoned original ROM A/B) | 🟢 audited S167 (`tools/audit_patch_space.py`, `extracted/patch_space_audit.json`), the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"): one live overlap since S63 fixed (ROM0 GrooveRowTable rows 3 / 4 — the boss song's vibrato); test_compiler `test_s167 --rom` | ARCHITECTURE "The audit of every claimed run (S167)"; KEY_LESSONS S167; SOUND_SYSTEM §5 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; never tested on its own, but every later SRAM-bank feature runs on it and was user-confirmed: the extended flags S117 bank 3 "X1", the regions S140 "X2", the memorial S154, the hints S158 — S164)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual); S117: bank 3 = the extended flags "X1" | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66. S140: `wMapRegion` $D536 (SAVED via SRAM bank 3 "X2"), `wWarpRegion` $D537, `wExitLinks` $D538-$D55F carved from wCustomPool (now $D560-$D5E4) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
@@ -499,6 +503,8 @@ real project starts, so these are best confirmed on the way into it:
 - S167: the editor's "?" buttons / F1 / Glossary / tab pictures (the Help tab) — the ROM USER-CONFIRMED 2026-11-05 ("Rom good").
 - S168: PAGE 2 — the r2 ROM (`DWM-S168r2-page2-test.gbc`, Grandpa's menu over the gallery) USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); still open:
   the editor (import / borrow / draw / flip walkability in a full tileset, the Tileset tab's page 2 and brown slots).
+- S169: the window (full screen on the Mac across every tab and a restart); Breeding → Try a cross (typical parents and the
+  user's .sav: the baby's stats, queue, timeline).
 
 ### Not yet implemented
 

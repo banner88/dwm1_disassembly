@@ -12427,6 +12427,69 @@ def test_s168(with_rom=False):
         test_s168_rom(tmp, rid)
 
 
+def test_s169():
+    """S169 (ROADMAP P3.12 residual (a)): the baby of a cross (editor2/core/cross.py, the
+    Breeding tab's "Try a cross" page) — the S130 raising model asked and explained; the
+    game's routines checked on a real save by tools/walk_cross.py."""
+    from simulator import raising as R
+    from editor2.core import cross as X
+    from editor2.core import savefile as SF
+    T = R.vanilla_tables()
+    # EID 0 is the empty row: a typical DrakSlime is made from a real row
+    m, how = X.typical_parent(T, 0, 10)
+    ok("S169: a typical parent is never made from EID 0 (the empty row)",
+       'row 0 ' not in how and m.stats[0] > 0 and any(m.ai), how)
+    # a hand-made pair: the learn queue explained in the game's order, the 25 cut,
+    # the AI's dropped carry, stats (both) / 4 + k x 2 %
+    p1 = R.Monster(9, 20, 50, 0, [100, 80, 60, 50, 40, 30], [], [], [0] * 27, [200, 10, 0, 255])
+    p2 = R.Monster(88, 20, 50, 0, [101, 81, 61, 51, 41, 31], [], [], [0] * 27, [200, 20, 0, 0])
+    p1.skills = [s for s in range(0, 0xDA) if T.unevolved[s] not in (0xFF,)][:8]
+    p2.skills = [s for s in range(0x40, 0xDA) if T.unevolved[s] not in (0xFF,)][:8]
+    b = X.baby(T, p1, p2, 9, 3, k=2)
+    egg = R.breed(T, p1, p2, 9, 3, R.GameRNG(0), foreign=2)
+    born = R.birth(T, egg.copy(), p1, p2)
+    ok("S169: the baby's stats / max level / queue == raising.breed + birth",
+       [r[4] for r in b['stats']] == egg.stats and b['cap'] == egg.cap and b['queue'] == born.queue,
+       (b['stats'], egg.stats))
+    ok("S169: stats = (both) / 4 + k x 2 % (k = 2: 201 >> 2 = 50 -> 52)",
+       b['stats'][0][3:] == (50, 52), b['stats'][0])
+    dmg = b['ai'][0]
+    ok("S169: the AI weights' dropped carry (200 + 200 -> 72, flagged)",
+       dmg[3] == 72 and dmg[4] is True and b['ai'][1][4] is False, b['ai'])
+    srcs = [r[0] for r in b['sources']]
+    order = [X.SRC_OWN, X.SRC_P1_KIND, X.SRC_P2_KIND, X.SRC_P1_KNEW, X.SRC_P2_KNEW]
+    ok("S169: the queue sources in the game's order (own kind, pedigree's kind, mate's kind, "
+       "pedigree knew, mate knew)", [o for o in order if o in srcs] == order and
+       srcs == sorted(srcs, key=order.index), srcs)
+    added = [r for r in b['sources'] if r[3] == X.ST_ADDED]
+    ok("S169: every added source is in the queue, at most 25",
+       len(b['queue']) <= 25 and set(r[2] for r in added) == set(b['queue']), len(b['queue']))
+    ok("S169: the timeline is ordered by level and every queue skill it learns is in it",
+       [t[0] for t in b['timeline']] == sorted(t[0] for t in b['timeline']) and
+       all(c in b['queue'] for _l, c, how, _o in b['timeline'] if how == 'queue'))
+    ok("S169: the gender / resistance chances are shares (0-1)",
+       0 <= b['female'] <= 1 and all(abs(sum(r[3]) - 1) < 1e-6 for r in b['resist_rises']))
+    # the save's pedigree names: master + a bred parent's two names, 9 bytes each
+    sav = bytearray(fake_sav_s130())
+    player = bytes(sav[X.PLAYER_NAME_OFF:X.PLAYER_NAME_OFF + X.NAME_LEN])
+    r1, r2 = X.save_record(sav, 0), bytearray(X.save_record(sav, 1))
+    k0 = X.pedigree_k_of_records(r1, bytes(r2), player)
+    r2[0x0C] = 0x2D
+    r2[0x15], r2[0x16] = 3, 4
+    r2[0x83] = r2[0x8C] = 0x2E
+    k3 = X.pedigree_k_of_records(r1, bytes(r2), player)
+    ok("S169: PedigreeForeignCount on save records (0 -> 3: master + both parents' names)",
+       (k0, k3) == (0, 3), (k0, k3))
+    # the learn scan's max_known: the game's 8 by default
+    m = R.Monster(9, 98, 99, 0, [999] * 6, [], [s for s in range(0, 0xDA)][:25], [0] * 27, [0] * 4)
+    R.learn_scan(T, m)
+    m2 = R.Monster(9, 98, 99, 0, [999] * 6, [], [s for s in range(0, 0xDA)][:25], [0] * 27, [0] * 4)
+    R.learn_scan(T, m2, max_known=255)
+    ok("S169: learn_scan keeps the game's 8 by default, every offer with max_known",
+       len(m.skills) == 8 and len(m2.skills) > 8 and m2.skills[:8] == m.skills,
+       (len(m.skills), len(m2.skills)))
+
+
 def test_s168r2():
     """S168 r2 (the user: "Breed/hatch/exit menu (talk with breeding NPC) creates visual
     glitches of words on the screen"): the breeding / farm / egg screens draw into page-1 slots
@@ -13493,6 +13556,7 @@ def main():
     test_s166('--rom' in sys.argv)
     test_s168('--rom' in sys.argv)
     test_s168r2()
+    test_s169()
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

@@ -348,6 +348,7 @@ class BreedingTab(QWidget):
         self._build_special()
         self._build_family()
         self._build_hints()
+        self._build_cross()
         self._stale = False
         self._timer = QTimer(self)
         self._timer.setSingleShot(True)
@@ -441,9 +442,33 @@ class BreedingTab(QWidget):
         r2.addWidget(self.t_lv2)
         bf.addRow('Pedigree', r1)
         bf.addRow('Mate', r2)
+        # S169 r2 (user: "have a picture of the resulting monster … Also show the two
+        # parents"): pedigree × mate → egg, each as it walks in the field (the project's art)
+        icons = QHBoxLayout()
+        self.t_icons = []
+        for k, sign in enumerate(('×', '→', None)):
+            lab = QLabel()
+            lab.setFixedSize(36, 36)
+            lab.setAlignment(Qt.AlignCenter)
+            lab.setStyleSheet('background: #F8F8D8; border: 1px solid #b8b098; border-radius: 3px;')
+            icons.addWidget(lab)
+            self.t_icons.append(lab)
+            if sign:
+                icons.addWidget(QLabel(sign))
+        icons.addStretch(1)
+        self.t_icons_row = icons                  # the baby button joins this row (below)
+        bf.addRow(icons)
         self.t_out = QLabel()
         self.t_out.setWordWrap(True)
         bf.addRow(self.t_out)
+        # S169: the baby itself (stats, max level, learn queue, what it learns when) on
+        # the "Try a cross" page (editor2/app/cross_page.py)
+        self.b_baby = QPushButton('The baby in detail →')
+        self.b_baby.setToolTip('Its stats, max level, AI, resistances, the skills it can '
+                               'pick up and the level it learns each — parents from your '
+                               'save too')
+        self.b_baby.clicked.connect(self._baby_detail)
+        self.t_icons_row.addWidget(self.b_baby)
         for w in (self.t_p1, self.t_p2):
             w.currentIndexChanged.connect(lambda *_: self._try())
         for w in (self.t_plus1, self.t_plus2, self.t_lv1, self.t_lv2):
@@ -623,6 +648,24 @@ class BreedingTab(QWidget):
         self.pages.currentChanged.connect(lambda *_: self._fill_hints()
                                           if self.pages.currentWidget() is self.hints_page
                                           else None)
+
+    def _build_cross(self):
+        """S169 (ROADMAP P3.12 residual (a)): the page of the baby of a cross."""
+        from editor2.app.cross_page import CrossPage
+        an = self.s.doc.breeding_analysis()
+        self.cross_page = CrossPage(self.s, an, self.icons)
+        self.pages.addTab(self.cross_page, 'Try a cross')
+        self.pages.currentChanged.connect(lambda *_: self.cross_page.update_baby()
+                                          if self.pages.currentWidget() is self.cross_page
+                                          else None)
+
+    def _baby_detail(self):
+        p1, p2 = self.t_p1.value(), self.t_p2.value()
+        if p1 is None or p2 is None:
+            return
+        self.cross_page.set_parents(p1, p2, self.t_plus1.value(), self.t_plus2.value(),
+                                    self.t_lv1.value(), self.t_lv2.value())
+        self.pages.setCurrentWidget(self.cross_page)
 
     def show_hints(self):
         self.pages.setCurrentWidget(self.hints_page)
@@ -822,6 +865,9 @@ class BreedingTab(QWidget):
         self._fill_family()
         self._fill_hints()
         self._try()
+        cp = getattr(self, 'cross_page', None)
+        if cp is not None and self.pages.currentWidget() is cp:
+            cp.update_baby(keep_k=True)
 
     def _fam_icon(self, s):
         c = self.an.fast.fam(s)
@@ -1058,6 +1104,13 @@ class BreedingTab(QWidget):
         else:
             why = 'no recipe fits — the egg is the pedigree\'s kind'
         self.t_out.setText(f'<b>{an.names.get(c.species, c.species)}</b> +{c.plus}<br>{why}')
+        from editor2.app import sprite_qt as Q
+        for lab, sid in zip(self.t_icons, (p1, p2, c.species)):
+            try:
+                lab.setPixmap(Q.species_icon(self.s.doc, sid, 2))
+            except Exception:                                   # noqa: BLE001
+                lab.clear()
+            lab.setToolTip(an.names.get(sid, str(sid)))
 
     # ------------------------------------------------------------ edits
     def _push(self, label, op):

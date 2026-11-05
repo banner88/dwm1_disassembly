@@ -1995,9 +1995,14 @@ recipes are pure authoring.
       the species × species block; a +2 route (MadCat ×
       BattleRex → GoldSlime +2) and a removed original row (Dragon × BattleRex → Dragon)
       also bred as the model says; the generated tree round-trips through the compiler
-      with zero errors (test_compiler). **Residuals:** (a) the offspring's skills /
+      with zero errors (test_compiler). **Residuals:** (a) ~~the offspring's skills /
       stats in Try a cross (bank $16 entry 4 `label16_474a` + `InheritSkillList`, not
-      decoded); (b) a gender rule — the 15 boss species have female ratio 0 (= always
+      decoded)~~ **DONE S169 (built S169, NOT yet user-tested): the premise was stale — S130 had
+      decoded and measured it all (MONSTER_DATA "Raising a monster (S130)"; entry 4 = the birth
+      finalizer); S169 wired it in: the Breeding tab's Try a cross page (EDITOR_DESIGN §5.4 "As built
+      S169") — parents typical or from a .sav, the baby's max level / stats / AI / resistances /
+      gender, its learn queue with sources and the level each skill is learned; `tools/walk_cross.py`
+      2,694 / 2,694 on the user's save (negative 166 FAIL); KEY_LESSONS S169;** (b) a gender rule — the 15 boss species have female ratio 0 (= always
       male by `BreedGenderThreshold`), yet vanilla recipes pair two of them: ask the user /
       SameBoy; (c) family "last match wins" is code-read (no data exercised it); (d) DONE
       S113b (user: "Goes only to depth 6? What if I want deeper..?"): the generator
@@ -2524,6 +2529,13 @@ recipes are pure authoring.
       meter 2 s → 0.14 s), the side rail (one page at a time), Borrow palette…, the Draw
       tab (everywhere / as a new metatile), ▶ Play here (P3.4 above). EDITOR_DESIGN §5.1
       "As built S132"; help `10_rooms.md`, `16_play_here.md`.
+- [x] **S169 (user-directed, outside the numbered boxes) — the window: "clicking on a different tab
+      resizes the window and I have to make it fullscreen again every time".** Built S169, NOT yet
+      user-tested: the tab row scrolls, every page in its own scroll area sized from its minimum
+      (`editor2/app/page_tabs.py`), the window's size / place / full screen + docks kept between runs;
+      the window's minimum 1,530 × 911 → 412 × 273 on the user's project (EDITOR_DESIGN §5.0 "The
+      window", KEY_LESSONS S169). *Accept (machine):* test_app `s169_window_and_cross` — every tab
+      shown, the window's size unchanged; *user:* full screen on the Mac survives every tab.
 - [ ] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
       signed macOS `.app`. *Accept:* a fresh Mac with no dev tools opens
       the example project, builds, plays.

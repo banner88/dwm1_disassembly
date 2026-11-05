@@ -23,7 +23,7 @@ from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (QApplication, QDockWidget, QFileDialog,
                                QFormLayout, QInputDialog, QLabel, QMainWindow,
                                QMessageBox, QPlainTextEdit, QPushButton,
-                               QStatusBar, QStyle, QTabWidget, QToolBar,
+                               QStatusBar, QStyle, QToolBar,
                                QUndoView, QVBoxLayout, QWidget)
 
 from editor2.app.build_worker import BuildWorker
@@ -111,6 +111,7 @@ class MainWindow(QMainWindow):
         self.rooms_tab = None
         self._build_ui()
         self._build_menu()
+        self._restore_window()
         self._restore_rom_status()
         last = self.settings.value('recent/project')
         if last and os.path.exists(last):
@@ -121,7 +122,10 @@ class MainWindow(QMainWindow):
         from editor2 import EDITOR_REVISION
         self.setWindowTitle(f'DWM1 Editor ({EDITOR_REVISION})')
         self.resize(1500, 900)
-        self.tabs = QTabWidget()
+        # S169: every page in its own scroll area + a scrolling tab row — a tab click
+        # can no longer push the window past the screen (editor2/app/page_tabs.py)
+        from editor2.app.page_tabs import PageTabs
+        self.tabs = PageTabs()
         self.tabs.setDocumentMode(True)
         self.setCentralWidget(self.tabs)
         self._fill_tabs()
@@ -138,6 +142,7 @@ class MainWindow(QMainWindow):
         self.log.setContextMenuPolicy(Qt.CustomContextMenu)
         self.log.customContextMenuRequested.connect(self._log_menu)
         self.log_dock = QDockWidget('Build log', self)
+        self.log_dock.setObjectName('log_dock')          # S169: saveState needs names
         self.log_dock.setWidget(self.log)
         self.log_dock.setFeatures(QDockWidget.DockWidgetMovable
                                   | QDockWidget.DockWidgetClosable)
@@ -146,6 +151,7 @@ class MainWindow(QMainWindow):
 
         self.undo_view = QUndoView()
         self.undo_dock = QDockWidget('History', self)
+        self.undo_dock.setObjectName('undo_dock')
         self.undo_dock.setWidget(self.undo_view)
         self.undo_dock.setFeatures(QDockWidget.DockWidgetMovable
                                    | QDockWidget.DockWidgetClosable)
@@ -552,6 +558,7 @@ class MainWindow(QMainWindow):
         m_help.addAction(a_gl)
 
         tb = QToolBar('Main')
+        tb.setObjectName('main_toolbar')
         tb.setMovable(False)
         tb.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         tb.addAction(self.a_new)
@@ -565,6 +572,22 @@ class MainWindow(QMainWindow):
         tb.addAction(self.a_run)
         tb.addAction(self.a_validate)
         self.addToolBar(tb)
+
+    # ---------------- window size (S169) ----------------
+    def _restore_window(self):
+        """S169 (user: "I have to make it fullscreen again every time"): the window
+        comes back where it was closed — size, position, maximized / full screen — and
+        the docks as they were."""
+        g = self.settings.value('window/geometry')
+        if g:
+            self.restoreGeometry(g)
+        st = self.settings.value('window/state')
+        if st:
+            self.restoreState(st)
+
+    def _save_window(self):
+        self.settings.setValue('window/geometry', self.saveGeometry())
+        self.settings.setValue('window/state', self.saveState())
 
     # ---------------- ROM + emulator preferences ----------------
     def _restore_rom_status(self):
@@ -821,6 +844,7 @@ class MainWindow(QMainWindow):
                     bt.shutdown()
                 except RuntimeError:
                     pass
+            self._save_window()                  # S169
             ev.accept()
         else:
             ev.ignore()

@@ -3978,6 +3978,129 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s169_window_and_cross(app, w):
+    """S169: (1) the user: "clicking on a different tab resizes the window and I have to make
+    it fullscreen again every time" — the tab row scrolls, every page sits in a scroll area
+    (editor2/app/page_tabs.py), so no tab can push the window past the screen; the window
+    comes back as it was closed. (2) ROADMAP P3.12 residual (a): the Breeding tab's "Try a
+    cross" page — the baby (editor2/core/cross.py) from typical parents or a save's."""
+    import tempfile
+    from PySide6.QtCore import QSettings
+    from editor2.app.page_tabs import PageScroll, PageTabs
+    from editor2.core import cross as X
+    from test_compiler import fake_sav_s130
+    tabs = w.tabs
+    assert isinstance(tabs, PageTabs) and tabs.tabBar().usesScrollButtons()
+    for i in range(tabs.count()):                      # every page shown once (the lazy ones grow)
+        tabs.setCurrentIndex(i)
+        app.processEvents()
+        page = tabs.widget(i)
+        assert not isinstance(page, PageScroll) and isinstance(tabs.wrapper(i), PageScroll)
+        assert tabs.indexOf(page) == i and tabs.currentWidget() is page
+    mh = w.minimumSizeHint()
+    assert mh.width() < 900 and mh.height() < 600, mh      # was 1,530 x 911 (1,696 on macOS)
+    w.resize(1440, 860)
+    app.processEvents()
+    for i in range(tabs.count()):
+        tabs.setCurrentIndex(i)
+        app.processEvents()
+        assert w.size().width() == 1440 and w.size().height() == 860, (tabs.tabText(i), w.size())
+    # the window comes back where it was closed (size, place, maximized / full screen, docks)
+    st = QSettings('dwm1_disassembly', 'DWM1Editor')
+    old = st.value('window/geometry'), st.value('window/state')
+    # (a size that fits the offscreen screen: restoreGeometry clamps to the screen, 800 x 800)
+    w.resize(700, 600)
+    app.processEvents()
+    w._save_window()
+    assert st.value('window/geometry') and st.value('window/state')
+    w.resize(500, 400)
+    w._restore_window()
+    app.processEvents()
+    assert (w.size().width(), w.size().height()) == (700, 600), w.size()
+    w.resize(1440, 860)
+    for key, v in zip(('window/geometry', 'window/state'), old):
+        if v is None:
+            st.remove(key)
+        else:
+            st.setValue(key, v)
+    # (2) Try a cross
+    bt = w.breeding_tab
+    tabs.setCurrentWidget(bt)
+    cp = bt.cross_page
+    bt.t_p1.set_value(9)
+    bt.t_p2.set_value(88)
+    bt.t_lv1.setValue(20)
+    bt.t_lv2.setValue(20)
+    bt._baby_detail()
+    app.processEvents()
+    assert bt.pages.currentWidget() is cp and cp.result is not None
+    b = cp.result
+    T = cp.tables()
+    p1, _h = X.typical_parent(T, 9, 20)
+    p2, _h = X.typical_parent(T, 88, 20)
+    an = w.session.doc.breeding_analysis()
+    c = an.br.resolve(9, 88, 0, 0, p1.level, p2.level)
+    want = X.baby(T, p1, p2, c.species, c.plus, 0)
+    assert (b['species'], b['plus'], b['cap'], b['queue']) == \
+        (want['species'], want['plus'], want['cap'], want['queue'])
+    assert cp.queue.topLevelItemCount() >= len(b['queue']) and cp.tl.topLevelItemCount() == len(b['timeline'])
+    assert cp.stats.item(0, 4).text() == str(b['stats'][0][4])
+    # S169 r2: the pictures — pedigree × mate → the egg, each the project's own battle pose
+    from editor2.app import sprite_qt as Qs
+    from editor2.app.rooms import commands as Cm
+    for pic, sid in ((cp.pic1, 9), (cp.pic2, 88), (cp.pic_baby, b['species'])):
+        want_img = Qs.pixmap(Qs.species_art(w.session.doc, sid)[0], 2).toImage()
+        assert pic.sid == sid and pic.pic.pixmap().toImage() == want_img, sid
+    icons = [lab.pixmap().toImage() for lab in bt.t_icons]
+    assert icons[0] == Qs.species_icon(w.session.doc, 9, 2).toImage() and \
+        icons[2] == Qs.species_icon(w.session.doc, b['species'], 2).toImage()
+    before = cp.pic1.pic.pixmap().toImage()
+    pal = list(w.session.doc.original_palettes(9)[0])
+    pal[0] = 0x001F if pal[0] != 0x001F else 0x7C00               # the pedigree re-coloured
+    n0 = w.session.undo.index()
+    w.session.undo.push(Cm.SnapshotCommand(w.session, 'colour', lambda d: d.set_original_art_props(9, battle_palette=pal)))
+    cp.update_baby()
+    app.processEvents()
+    after = cp.pic1.pic.pixmap().toImage()
+    assert after != before and after == Qs.pixmap(Qs.species_art(w.session.doc, 9)[0], 2).toImage(), \
+        'an edited monster must be drawn with its new colours'
+    w.session.undo.setIndex(n0)
+    cp.update_baby()
+    assert cp.pic1.pic.pixmap().toImage() == before
+    # k by hand: +2 % per name
+    base_hp = b['stats'][0][4]
+    cp.k.setValue(5)
+    app.processEvents()
+    s_ = cp.result['stats'][0][3]
+    assert cp.result['k'] == 5 and cp.result['stats'][0][4] == s_ + s_ * 5 // 50 and \
+        'by hand' in cp.k_lbl.text(), (base_hp, cp.result['stats'][0])
+    # a save's monsters as parents
+    tmp = tempfile.mkdtemp()
+    path = os.path.join(tmp, 'party.sav')
+    open(path, 'wb').write(fake_sav_s130())
+    old_sav = st.value('breeding/sav')
+    assert cp.load_sav(path) is None and cp.p1.which.count() == 4
+    assert cp.load_sav(os.path.join(tmp, 'nope.sav'))           # a problem, not a crash
+    cp.p1.which.setCurrentIndex(cp.p1.which.findData(0))
+    cp.p2.which.setCurrentIndex(cp.p2.which.findData(1))
+    app.processEvents()
+    assert cp.p1.kind.value() == 8 and cp.p1.level.value() == 10 and not cp.p1.level.isEnabled()
+    assert cp.result['k'] == 0 and 'from your save' in cp.parents_lbl.text()
+    cp.p1.which.setCurrentIndex(0)                              # back to a typical one
+    app.processEvents()
+    assert cp.p1.level.isEnabled()
+    if old_sav is None:
+        st.remove('breeding/sav')
+    else:
+        st.setValue('breeding/sav', old_sav)
+    # its "?" -> the help's heading
+    from editor2.app import context_help as CH
+    assert CH.subtab_target('Breeding', 'Try a cross') == ('58_breeding.md', 'Try a cross: the baby')
+    print('OK: S169 — no tab resizes the window (min %d x %d), the window state kept; '
+          'Try a cross: the baby (%d queue skills, %d timeline rows), the pictures (the project\'s '
+          'art; a colour edit shows), k by hand, a save\'s monsters as parents' % (mh.width(), mh.height(), len(b['queue']), len(b['timeline'])))
+
+
 def s167_qt_safe(app, w):
     """S167 (the S166 note "talk_editor BoxEditor's Insert menu: QStandardItem.triggered"):
     a Python wrapper of a combo item Qt owns, kept past the combo's clear(), is handed out
@@ -5809,6 +5932,7 @@ def main():
     s166_window_words(app, w)
     s167_qt_safe(app, w)
     s167_context_help(app, w)
+    s169_window_and_cross(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

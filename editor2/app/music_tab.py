@@ -48,6 +48,13 @@ GREY = QColor(140, 140, 140)
 KIND_LABEL = {'music': 'music', 'jingle': 'jingle', 'effect': 'sound effect'}
 
 
+def _wrapped(label):
+    """S169: a long one-line label asks for its whole text width — wrapped, it no longer
+    makes the tab wider than a laptop screen (editor2/app/page_tabs.py)."""
+    label.setWordWrap(True)
+    return label
+
+
 def _np():
     try:
         import numpy   # noqa: F401
@@ -459,10 +466,10 @@ class MusicTab(QWidget):
     def _gates_page(self):
         w = QWidget()
         v = QVBoxLayout(w)
-        v.addWidget(QLabel('A gate\'s song plays on its maze floors, its special rooms and '
+        v.addWidget(_wrapped(QLabel('A gate\'s song plays on its maze floors, its special rooms and '
                            'your rooms served in it that have no song of their own (the floor '
                            'before a VANILLA boss room keeps that boss song). Its battle song '
-                           'plays in the battles there (a boss fight uses the Battles page).'))
+                           'plays in the battles there (a boss fight uses the Battles page).')))
         self.gates_t = QTableWidget(0, 4)
         self.gates_t.setHorizontalHeaderLabels(['gate', 'floors', 'battles', 'by flag (S129)'])
         self.gates_t.horizontalHeaderItem(3).setToolTip(
@@ -479,9 +486,9 @@ class MusicTab(QWidget):
                       'Night final $2B)')
         self.battle_form = QFormLayout(g)
         v.addWidget(g)
-        v.addWidget(QLabel('Most specific wins: a fight\'s own song › the arena › the room\'s '
+        v.addWidget(_wrapped(QLabel('Most specific wins: a fight\'s own song › the arena › the room\'s '
                            '"battles here" › the gate\'s battle song › a boss fight › every '
-                           'other battle. Link battles always keep the game\'s.'))
+                           'other battle. Link battles always keep the game\'s.')))
         fg = QGroupBox('A song for one fight (the first enemy of the battle)')
         fv = QVBoxLayout(fg)
         self.fights_t = QTableWidget(0, 3)

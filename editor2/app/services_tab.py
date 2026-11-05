@@ -51,6 +51,13 @@ INS_PREVIEW = 'xxxx'               # {ins0}..{ins3}: what the menu fills in (a n
                                    # 4 cells, as services.TOKEN_CELLS counts them
 
 
+def _wrapped(label):
+    """S169: a long one-line label asks for its whole text width — wrapped, it no longer
+    makes the tab wider than a laptop screen (editor2/app/page_tabs.py)."""
+    label.setWordWrap(True)
+    return label
+
+
 def _one_line(t):
     return (t or '').replace('\n\n', ' ▸ ').replace('\n', ' ⏎ ')
 
@@ -691,9 +698,9 @@ class ServicesTab(QWidget):
         self.pool_users.setWordWrap(True)
         f.addRow('used by', self.pool_users)
         right.addLayout(f)
-        right.addWidget(QLabel('Bands — the game takes the band NEAREST the player on the '
+        right.addWidget(_wrapped(QLabel('Bands — the game takes the band NEAREST the player on the '
                                'ticked scales (a tie: the upper row). Mates: rows, e.g. '
-                               '"306×3, 305" (row 306 three times as likely as 305).'))
+                               '"306×3, 305" (row 306 three times as likely as 305).')))
         self.bands = QTableWidget(0, 6)
         self.bands.setHorizontalHeaderLabels(['name', 'level', 'arena', 'seen', 'story',
                                               'mates (enemy row × weight)'])

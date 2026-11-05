@@ -394,11 +394,15 @@ def gains(T, m, rng):
     return out, at_cap
 
 
-def learn_scan(T, m, policy='casual', score=None, codes=None):
+def learn_scan(T, m, policy='casual', score=None, codes=None, max_known=SKILLS_MAX):
     """One level-up's learn pass (SkillLearnScan + the bank $51 caller) on
     the PRE-gain stats and NEW level. Mutates m.skills / m.queue. Returns the
     ids learned. More than 8 -> policy: 'casual' keeps the old 8 (the new
-    ones are forgotten), 'strong' keeps the 8 with the best score."""
+    ones are forgotten), 'strong' keeps the 8 with the best score.
+    [S169] max_known (default 8, the game's) — the Breeding tab's "what will it
+    learn" timeline (editor2/core/cross.py) passes a large value: every skill the
+    monster is OFFERED, as if the player never forgot one (the forget menu is the
+    player's choice, not the game's rule)."""
     work = list(m.skills)
     struct_known = set(m.skills)
     learned = []
@@ -460,12 +464,12 @@ def learn_scan(T, m, policy='casual', score=None, codes=None):
             # both only at the same level up).
             work.append(c)
     m.queue = [q for q in m.queue if q != FF]
-    if len(work) > SKILLS_MAX:
+    if len(work) > max_known:
         if policy == 'strong' and score is not None:
-            keep = sorted(work, key=lambda s: -score(s))[:SKILLS_MAX]
+            keep = sorted(work, key=lambda s: -score(s))[:max_known]
             work = [s for s in work if s in keep]
         else:
-            work = work[:SKILLS_MAX]
+            work = work[:max_known]
     m.skills = work
     return learned
 

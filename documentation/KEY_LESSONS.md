@@ -7819,3 +7819,35 @@ attribute unchanged since arrival, slot bytes changed) — it catches any menu d
 slots, whatever bank; and a stress demo must keep out of the slots the game's own screens claim
 (`services.BORROWED_SLOTS`). Measured on the user's breeder room first: clean (its tiles avoided the
 written `$38-$3F` / `$78-$7C`) — one clean room proves nothing about the slot set.
+
+## S169 — the window and the baby of a cross
+
+### S169 — a tab widget is as big as its biggest page (and a scroll area asks for the PREFERRED height)
+
+**Symptom:** (user) "clicking on a different tab resizes the window and I have to make it fullscreen
+again every time." **Root cause (measured offscreen, the user's project):** a QTabWidget's minimum size
+is the largest minimum of ALL its pages plus the tab row, and a QMainWindow never goes below its
+central widget's minimum. The macOS style gives a tab bar no scroll arrows (SH_TabBar_PreferNoArrows),
+so 23 tabs asked for 1,669 px; the World / Music / Cutscenes pages for 1,435-1,666 px; the window's
+minimum was 1,530 × 911 (1,696 wide with the Mac tab bar) — wider than a 1,440 / 1,512 px laptop
+screen. Five pages grow their minimum the first time they are shown, so a tab click re-applied a
+minimum the screen could not hold and the window left full screen. **Fix:** `editor2/app/page_tabs.py`
+— the tab row scrolls, every page sits in a scroll area whose page is sized BY HAND to max(viewport,
+the page's `minimumSizeHint`); the wrapper answers `widget()` / `indexOf()` / `currentWidget()` /
+`setCurrentWidget()` with the page, so no caller changed; window geometry saved / restored. A first
+try with `setWidgetResizable(True)` showed scroll bars on pages that fit: QScrollArea asks a page whose
+layout has height-for-width (any word-wrapped QLabel) for `heightForWidth()` — its PREFERRED height —
+not its minimum. **Rule:** never let a page's minimum reach the main window: wrap the pages, and size a
+scrolled page from its minimum yourself; a long one-line QLabel is a minimum width (`setWordWrap`).
+(S94b met the same mechanism in one label — the Rooms tab's hover line, `QSizePolicy.Ignored`.)
+
+### S169 — "not decoded" in a residual can be stale: grep the owning doc before planning RE
+
+ROADMAP P3.12 residual (a) still said the offspring's skills / stats were "not decoded" (bank $16
+`label16_474a` + `InheritSkillList`); S130 had decoded and measured all of it (MONSTER_DATA "Raising
+a monster (S130)", `simulator/raising.py`, census 0 mismatches) and called the residual's premise
+wrong — in its own doc, not in the ROADMAP line. The S169 work was wiring + one new measurement (the
+pedigree names read from save records, `tools/walk_cross.py`), not reverse engineering. **Rule:** a
+residual's "not decoded" is a claim like any other — grep the subsystem's reference doc and
+TOOLS_AND_DATA for its routine names before scoping RE; and a session that decodes a residual's
+subject closes the residual line in the ROADMAP too.

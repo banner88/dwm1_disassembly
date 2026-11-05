@@ -778,6 +778,10 @@ called by `ScriptCmd3A_ToBreedingScene` and bank $0A): WLD := 0, master := the p
 queue rebuilt (`BirthQueueRebuild`), egg flag := 0 — not "skill/stat inheritance" (ROADMAP P3.12
 residual (a), DOC_AUDIT S130). Its per-entry "keep by plus" roll is dead code (`jr $482B` skips the
 compare; 25 RNG steps only).
+**S169:** the editor shows all of this for any two parents — the Breeding tab's **Try a cross**
+page (`editor2/core/cross.py`; parents typical or from a .sav; the learn queue with its sources and
+the level each skill is learned), checked against these routines on the user's save by
+`tools/walk_cross.py` (MONSTER_DATA "Measured on real save records — the Try a cross page (S169)").
 
 **The resistance tables' missing row (S154, code-read):** `BreedResistLowTable` /
 `BreedResistMidTable` index 7 rows by (parent 1's + parent 2's resistance) **& 7** with `rst

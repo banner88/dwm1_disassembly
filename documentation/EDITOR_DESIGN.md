@@ -172,6 +172,20 @@ project: Document + live renderer + QUndoStack + change signals.)*
   monsters, skills, songs by name/id.
 - Cross-navigation is a first-class rule: anywhere an id appears (a flag
   in a script, a monster in a pool, a song in a room) it is a link.
+- **The window (S169; user: "clicking on a different tab resizes the window and I have to make it
+  fullscreen again every time"):** the tab strip is `editor2/app/page_tabs.py` `PageTabs` — the tab
+  row scrolls (`setUsesScrollButtons(True)`: the macOS style defaults to NO arrows, so 23 tabs asked
+  for 1,669 px), and every page sits in its own `PageScroll` (a QScrollArea, NOT `widgetResizable`:
+  the page is resized by hand to the viewport, never below its `minimumSizeHint` — a resizable area
+  asks a word-wrapping page for its height-for-width, i.e. its PREFERRED height, and scrolled pages that
+  fit). `widget(i)` / `currentWidget()` / `indexOf(page)` / `setCurrentWidget(page)` answer with the
+  PAGE (`wrapper(i)` = the scroll area), so no caller changed. The window's minimum went from 1,530 ×
+  911 (1,696 wide on macOS; 1,670 after the World tab was shown) to 412 × 273 on the user's project;
+  measured offscreen: 23 tab switches at 1,440 × 800 leave the window at 1,440 × 800. The window's
+  geometry (size, place, maximized / full screen) + the docks are saved at close and restored at start
+  (QSettings `window/geometry` / `window/state`; the docks / tool bar have object names). Three long
+  one-line labels (Music ×2, Services) wrap, the World tab's legend + count moved to their own row
+  (World 1,666 → 991 px). KEY_LESSONS "S169 — a tab widget is as big as its biggest page".
 
 **Game text (S127 r3, user: "Use game text box previews. … make that default for all text
 entries in editor this is like the fifth time this comes up").** Every field whose words end up
@@ -1772,6 +1786,48 @@ question), live coherence beyond the library text (the compiler regenerates it).
   Every pool edit pins the numbers (`pin_hint_numbers`). **S158r3:** the table's header is
   `Interactive`, filled with updates off and one `resizeColumnsToContents()` (a `ResizeToContents`
   header froze the editor for minutes on the whole pool — KEY_LESSONS S158r3).
+
+**As built S169 (ROADMAP P3.12 residual (a); built S169, NOT yet user-tested; help `58_breeding.md`
+"Try a cross: the baby" + NEW `58_raising.md` "Raising monsters"):** a fifth page **Try a cross**
+(`editor2/app/cross_page.py` over Qt-free `editor2/core/cross.py`, which only ASKS the S130 raising
+model `simulator/raising.py`). Parents: per parent **a typical one** (`cross.typical_parent`: the
+species' lowest joinable enemy row of level > 0 — EID 0 is the all-zero empty row —, `raising.create`
+then `grow_to` the level; > 8 skills keeps the first 8; no row → grown from level 1 with its curves) or
+a monster of a battery save (**Monsters from a save (.sav)…**, `savefile.read_roster`, remembered in
+QSettings `breeding/sav`; its species / plus / level fields then disabled). **Pedigree names that are
+not yours** (k, 0-6) = `cross.names_not_yours` per save record (bank $16 `PedigreeForeignCount`:
+master +$0C, and +$83 / +$8C when +$15 / +$16 ≠ $FF, 9 bytes each against the save's player name
+SRAM $017C = `$CA42`), 0 for a typical parent; hand-settable ("(set by hand)" until a parent changes).
+Shown: the egg (the resolver, which recipe decided), what each parent knows; the baby — max level
+(cap + 2 × plus), P(female) and the resistances that can rise (counted over 2,000 runs of the game's
+RNG, `cross.chances`), the six stats ((both) ÷ 4, + k × 2 %), the AI weights (a sum over 255 =
+**wraps (game bug)**, the dropped carry of `BreedAIAverage`); the **learn queue** in the hatched
+order (`raising.birth`) with each skill's source (`cross.queue_sources`: own kind / the pedigree's
+kind / the mate's kind / the pedigree knew X / the mate knew Y) and the level it is learned, and
+**Not passed on** (UnevolvedSkillMap $FF, past 25); **As it grows** = `cross.timeline`: the newborn
+raised level by level with the model's own gains → learn scan → apply, every skill OFFERED
+(`raising.learn_scan(max_known=255)` — the 9th+ known orange: the forget menu), with the end stats.
+The By monster page's small box keeps its egg line + **The baby in detail →** (typical parents of its
+kinds / plus / levels). Acceptance: NEW `tools/walk_cross.py` — the user's save's 11 monsters, every
+ordered pair × 3 (as saved / the pedigree from another master / the mate bred by strangers): the
+game's `BreedCreateOffspring` + `BreedBirthFinalize` stub-called on the staged records == the panel
+(species, plus, max level, stats, AI, knows nothing, queue; resistances + gender == raising.breed on the
+same pin), and the first 12 babies levelled IN the game with the panel's RNG trace: every skill offered
+== the timeline until a 9th — 330 breeds, 384 level-ups, 2,694 OK / 0 FAIL; `--negative` (k forced 0)
+166 FAIL.
+**S169 r2 (the user: "can you have a picture of the resulting monster (egg) displayed? … Also show
+the two parents please … if I modified monster graphics it should reflect that"; built S169 r2, NOT
+yet user-tested):** under the parents, `MonPic` × 3 — pedigree × mate → the egg, each its BATTLE POSE
+through `sprite_qt.species_art` (the Monsters tab's own source: `gamedata.art` streams / colours for
+an original monster, `custom.species` art for a new one, else the original game's), scale 2 on the
+battle cream, cached per document revision (an art / colour edit shows at the next update); captions
+name / nickname / ♂ ♀ (a save's monster) / level / plus, the egg's max level; a parent's tooltip =
+what it knows. The By monster page's small box: the three FIELD icons (`sprite_qt.species_icon`),
+the baby button on their row. Layout: the baby's line under the egg's (left), Resistances under the
+AI table (the six likeliest + "… and N more (hover)"); wrapped labels claim line-based minimum heights
+(a word-wrapped QLabel's height is height-for-width, not part of a layout's minimum — KEY_LESSONS S169).
+test_app `s169_window_and_cross`: each picture == `species_art` of its species, the icons ==
+`species_icon`, a battle-palette edit of the pedigree redraws it (undo restores it).
 
 ### 5.5 Encounters tab
 

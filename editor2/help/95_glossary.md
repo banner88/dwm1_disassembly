@@ -125,12 +125,20 @@ joins). [Enemies](50_enemies.md)
 
 ## L
 
+**Learn queue** — the up to 25 skills a monster can still pick up (from its kind, and for
+a bred monster from its parents' kinds and what they knew); it learns each when its level
+and stats are high enough. [Raising monsters](58_raising.md#Breeding:%20the%20egg),
+[Try a cross](58_breeding.md#Try%20a%20cross:%20the%20baby)
+
 **Line set** — the words a service NPC (Vault, farm…) says in its menus; one set
 can serve many NPCs. [Services](67_services.md)
 
 **Locked exit** — a door shut until a check holds. [Doors](11_doors.md#Locked%20doors)
 
 ## M
+
+**Max level** — the level a monster stops gaining exp at: its kind's cap ± 2 when it
+joins, the cap + 2 × plus when bred. [Raising monsters](58_raising.md)
 
 **Make editable** — copy one of the game's rooms into your project so you can
 change it. [Rooms](10_rooms.md)
@@ -172,6 +180,10 @@ is full. [Tilesets, metatiles and palettes](13_tilesets.md#Page%202%20%E2%80%94%
 **Play here** — build and start the game in the room shown, with a game state you
 pick. [Play here](16_play_here.md)
 
+**Pedigree names** — the six names the game keeps of a baby's ancestors (each parent's
+master, and a bred parent's own parents); each one that is not the player's makes the baby
+2 % stronger. [Raising monsters](58_raising.md#Breeding:%20the%20egg)
+
 **Plus** — the "+" of a bred monster: the higher parent's plus + 1, more with high
 levels. [Breeding](58_breeding.md#How%20the%20game%20decides%20an%20egg)
 
@@ -190,6 +202,9 @@ in it. [Getting started](00_start.md)
 [Story checks, quests and the story spine](71_story_quests.md#Quests)
 
 ## R
+
+**Raising** — how the game grows a monster: stat gains per level, the learn check,
+upgrades and combinations, max level. [Raising monsters](58_raising.md)
 
 **Region** — the editor's own group of 128 rooms; it hands them out by itself and
 never shows them. [Limits](90_limits.md)

@@ -1,5 +1,48 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-05 (Session 167 — **THE OUTSTANDING FIXES F2 + F3 + P3.H: A STALE PYSIDE WRAPPER (THE S166
+> "QStandardItem.triggered" NOTE), THE PATCH-SPACE AUDIT (EVERY BYTE A PATCHED BUILD WRITES INTO A BANK THE GAME USES —
+> ONE LIVE OVERLAP FOUND AND FIXED: ROM0's GROOVE ROW TABLE), THE HELP TAB'S GLOSSARY, "?" BUTTONS AND SCREENSHOTS**
+> (the audit of the open items → user: "Ignore F1, do F2, do F3 - good idea. If Im about to begin the giant romhack I want
+> to make sure there is no dodgy shit happening behind the curtains. F4 dont care. P3.H … I want this. YOU MAY RUN THE
+> REPO TOOLS."). **Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good", on `DWM-S167-audit-test.gbc`); the editor half (F2, P3.H) NOT yet user-tested.**
+> Test ROM **`DWM-S167-audit-test.gbc`** (`a386a504…`, patched) = the user's project built with the S167 engine (no demo
+> rooms: the change is the boss song's vibrato + the room-load clamp at a new address). Example pin `26a4faf1…` (patched;
+> was `fee3147e…`, patched, historical — ROM0 only).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; the sandbox refused the repo's code until the user
+> wrote "YOU MAY RUN THE REPO TOOLS"; HEAD's verify_integrity PASS and test_app `--rom` PASS (no traceback) at start.
+> **F3 (engine, patched; `tools/audit_patch_space.py` → `extracted/patch_space_audit.json`):** every changed byte of the
+> example + the user's build in banks $00-$5F classed EDIT / FILL; 29 FILL runs judged by what ends before them (ARCHITECTURE
+> "The audit of every claimed run (S167)"); 1,775 LZ streams of every bank's `$4001` table — none meets claimed space (the
+> S166 r2 overwrite found as a negative control); raw numbers / labels into claimed space: 5, all mgbdis artifacts.
+> **FOUND + FIXED:** ROM0 `$3BC2-$3BD2` ("17 unreferenced rst $38" since S42 / S63) = row 3 step 15 + row 4 of the GROOVE
+> ROW TABLE `$3B83` (8 × 16 signed steps the sound engine adds to a note, SOUND_SYSTEM §5 `A3`): measured (the editor's
+> sound engine, a read hook) — `$3BC2` read by songs `$0C` and `$12` (the boss song), the S166 build's boss song wrote other
+> sound-register values in 174 frames a minute; `MapIDClampForPalette` moved to the dead vanilla master table `$3466`
+> (8 B + 5 pad), `ClampFamIdx` (no callers since S104) deleted, `$3B83-$3C02` re-sectioned `GrooveRowTable` in both trees
+> (`tools/resection_groove_00.py`; 9 mgbdis labels renamed `GrooveRow<r>_<step>` in banks $00 / $2B / $32 / $33 / $63).
+> **Measured, harmless:** 4 runs after data whose only readers are unreachable (`$01:$7DFF` — its 8th tile-string page's
+> `$FF` is under FollowerArtResolve01; `$02:$7F02` / `$7F2E`; `$11:$752F`, whose `$7777` table would reach `$7976`) —
+> annotated both trees. **Dynamic proof:** the ORIGINAL ROM with every claimed byte poisoned to `$A5` vs the original —
+> the 519-scene cutscene census (68 runs, 31,374 RAM / VRAM / OAM / HRAM hashes, the census JSON equal) and a battle / menu
+> corpus (8 gates, 38 battles won, the field menu; 4,934 hashes) identical; positive control (two title-menu bytes) 55
+> samples differ; the user's project S166 vs S167 code on the user's `.sav` (continue + 10 rooms, 176 hashes) identical.
+> **F2 (editor):** the S166 traceback = a stale Shiboken wrapper — `combo.model().item(i)` kept alive past a `clear()` makes
+> the next C++ object at that address come back as a `QStandardItem` (reproduced); NEW `editor2/app/qt_safe.py` (combo rows
+> by index, `menu_action`), the 3 sites + the Insert menu; test_app `s167_qt_safe`. KEY_LESSONS "S167 — a stale PySide wrapper".
+> **P3.H (editor):** NEW `editor2/app/context_help.py` — a round "?" on the tab bar (the shown tab's topic), on every sub-tab
+> bar (the sub-tab's heading), under the Rooms tab's page column (the page's topic) and on 47 dialogs (DIALOG_TOPICS, added
+> when shown, F1 there too); F1 = the "?" of the tab shown; the Help tab follows topic links (`[x](NN.md#Heading)`), shows
+> pictures (`editor2/help/img/`), "◀ Back to <tab>", "◀ Previous topic", a Glossary button; NEW topics `51_families.md`,
+> `95_glossary.md` (≈ 80 terms, each linked); 22 tab pictures (NEW `tools/help_screenshots.py`) under their topics' titles;
+> `00_start.md` (the stale "Balance not built" line). `EDITOR_REVISION` S167; test_app `s167_context_help` (89 "?" targets,
+> 80 links, 22 pictures resolve).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2025 PASSED (+ `test_s167`: the groove bytes, the clamp at `$3466`, no `66 34`
+> in ROM0, 0 streams meeting claimed space + the negative, the boss song frame for frame); test_app `--rom` (+ the two S167
+> tests; the GUI build == the pin `26a4faf1…`, patched); clean tree `1ca6579…` after the re-section and annotations.
+> **Next:** the user's test (the editor's "?" / F1 / Glossary / pictures; `DWM-S167-audit-test.gbc` = their project as
+> before); P3.17 packaging (with the user's Mac); the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 166 + r2 — **THE OUTSTANDING FIXES A1-A3 + B + C: THE WINDOW WORDS OF THE OTHER SCREENS
 > (THE SHOP, THE FARM, THE NAMER, GRANDPA, THE EGG APPRAISER, THE BATTLE — EACH WITH ITS OWN LETTERS), THE WORDS A WINDOW
 > CUTS OUT OF A TEXT (THE VAULT'S PUT / TAKE / EXIT …), THE TABLES' LINE WIDTHS MEASURED; T-FOLLOW (d) CLOSED BY DESIGN;

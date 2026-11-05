@@ -63,6 +63,7 @@ SUBTAB_TOPICS = {
     ('Services', 'Breeding pools'): ('68_breeding_npcs.md', 'Breeding pools'),
     ('Services', 'Medal Man'): ('67_services.md', 'Medal Man'),
     ('Breeding', 'Hints'): ('78_hints.md', None),
+    ('Breeding', 'Try a cross'): ('58_breeding.md', 'Try a cross: the baby'),   # S169
     ('Arena', 'Your arena'): ('69_your_arena.md', None),
     ('Progression & Flags', 'Story'): ('71_story_quests.md', 'The story spine'),
     ('Progression & Flags', 'Story checks'): ('71_story_quests.md', 'Story checks'),

@@ -1174,8 +1174,10 @@ def fight_levels(data, tl, fight, profile='casual', teams=12, battles=8, seed=13
 def species_rows(data, sp):
     """Enemy rows of species `sp` that can join (joinability < 7), lowest
     level first; else every row of it."""
+    # S169: level-0 rows skipped — EID 0 is the empty row (all zero, so "species 0" =
+    # DrakSlime): a picked DrakSlime was made from it (no stats, no AI) until S169
     rows = [(data.T.enemy(e)[4], e) for e in sorted(data.T.enemies)
-            if data.T.enemy(e)[0] == sp and e <= 0x1FF]
+            if data.T.enemy(e)[0] == sp and e <= 0x1FF and data.T.enemy(e)[4] > 0]
     joinable = [r for r in rows if data.T.enemy(r[1])[3] != 7]
     return [e for _l, e in sorted(joinable or rows)]
 

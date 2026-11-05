@@ -2303,3 +2303,27 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `examples/s168_page2_demo/build_demo.py` (updated) | the gallery keeps page-1 `$38-$7F` empty (Grandpa's screens): 168 tiles on screen 0 | the walk |
 | `editor2/help/13_tilesets.md`, `67_services.md` (+ "The room's tiles under a menu"), `68_breeding_npcs.md`; `_revision.md` / `editor2/__init__.py` `S168 r2` | | test_app help check |
 
+
+## S169 rows (the window: no tab resizes it; ROADMAP P3.12 residual (a) — Try a cross: the baby; built S169, NOT yet user-tested)
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/app/page_tabs.py` (NEW) | `PageTabs` (the main tab strip: scrolling tab row; `widget` / `currentWidget` / `indexOf` / `setCurrentWidget` answer with the page, `wrapper(i)` the scroll area) + `PageScroll` (a page sized by hand to max(viewport, its minimum), refit on its LayoutRequest) | test_app `s169_window_and_cross` (every tab shown, the window's size unchanged, minimum < 900 × 600) |
+| `editor2/app/main.py` | `PageTabs`; `_restore_window` / `_save_window` (QSettings `window/geometry`, `window/state`; dock + tool bar object names) | the same |
+| `editor2/app/world_tab.py`, `music_tab.py`, `services_tab.py` | the World tab's legend + count on their own wrapping row; three long one-line labels wrap (`_wrapped`) | offscreen measure: World 1,666 → 991 px, Music 1,477 → 700, Services 1,203 → 954 |
+| `editor2/core/cross.py` (NEW) | the baby of a cross from the S130 model: `typical_parent` / `joinable_rows` (level-0 rows skipped), `save_record` / `player_name` / `names_not_yours` / `pedigree_k_of_records` (bank $16 `PedigreeForeignCount` on records), `queue_sources`, `timeline` (+ `trace`), `chances`, `baby` | `test_compiler test_s169`; `tools/walk_cross.py` |
+| `editor2/app/cross_page.py` (NEW), `breeding_tab.py` | the Breeding tab's **Try a cross** page; the small box's **The baby in detail →** | test_app `s169_window_and_cross` |
+| `simulator/raising.py` | `learn_scan(max_known=SKILLS_MAX)` — default the game's 8 (the census unchanged); the timeline passes 255 | `test_s169`; verifier check 5 (census selftest) |
+| `editor2/core/balance.py` | `species_rows` skips level-0 rows (EID 0, the empty row: a picked DrakSlime was made from it) | test_app Balance tests |
+| `tools/walk_cross.py` (NEW) | PyBoy: a REAL save's monsters, every ordered pair × 3 (as saved / the pedigree's master changed / the mate with a pedigree of strangers) staged at $D665 / $D6FA, bank $16 entries 0 + 4 stub-called (`census_raising` stubs) == `cross.baby` (species, plus, max level, stats, AI, knows nothing, hatched queue; resistances + gender == `raising.breed` on the pin); the first `--timeline` newborns levelled in the game with the panel's RNG trace == `cross.timeline` until a 9th skill; `--negative` (k forced 0) | S169, the user's save on the user's build: 330 breeds, 384 level-ups, 2,694 OK / 0 FAIL; `--negative` 166 FAIL |
+| `tools/help_screenshots.py` | + `SUBTABS` (a sub-tab with content: `sub_breeding_cross.png`); the remembered `breeding/sav` kept out of the pictures | `editor2/help/img/sub_breeding_cross.png` (NEW), `tab_breeding.png`, `tab_world.png` (regenerated) |
+| `editor2/help/58_raising.md` (NEW "Raising monsters"), `58_breeding.md` (+ "Try a cross: the baby"), `00_start.md` (+ "The window"), `95_glossary.md` (+ Learn queue, Max level, Pedigree names, Raising); `context_help.py` (`('Breeding', 'Try a cross')`); `_revision.md` / `editor2/__init__.py` `S169` | | test_app help checks |
+| `editor2/tests/test_compiler.py` (`test_s169`), `test_app.py` (`s169_window_and_cross`) | | ALL PASS |
+
+### S169 r2 rows (the user: "have a picture of the resulting monster (egg) displayed … Also show the two parents"; built S169 r2, NOT yet user-tested)
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/app/cross_page.py` | `MonPic` (a battle pose via `sprite_qt.species_art` + role + caption) × 3 under the parents; `battle_rows` (cached per document revision); the baby's line under the egg's, Resistances under the AI table (six + tooltip); line-based minimum heights | test_app `s169_window_and_cross` (pictures == `species_art`; a palette edit redraws) |
+| `editor2/app/breeding_tab.py` | the small Try a cross box: the three field icons (`species_icon`) with the baby button on their row | the same |
+| `editor2/help/58_breeding.md` ("The pictures"), `img/sub_breeding_cross.png` / `tab_breeding.png` (regenerated); `_revision.md` / `editor2/__init__.py` `S169 r2` | | test_app help checks |

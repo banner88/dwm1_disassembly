@@ -59,7 +59,9 @@ built from it (the original ROM is never changed).
   45, with a playing preview and their sounds.
 - **Breeding** — every monster's breeding depth and how you get it, the
   recipes that make it and what it makes, the special and family recipe
-  tables, "Try a cross", and a tree generator.
+  tables, "Try a cross" (S169: the baby itself — its stats, max level and the skills it
+  learns, from typical parents or your save's monsters; see *Raising monsters*), and a tree
+  generator.
 - **Encounters** — every wild-monster list (the game's 128 and your own),
   which list each gate floor and each room uses, flag variants that switch
   them, and battle rates.
@@ -114,6 +116,12 @@ checks, quests and the story spine*.
 **Your own opening (S152):** NEW GAME → your first room → scenes with no control →
 your King → the first monster from a farm keeper → the first gate, step by step — see
 *Your own opening*.
+
+**The window (S169).** The tab row scrolls (the arrows at its right end) when the tabs do
+not fit; a page bigger than the window gets scroll bars of its own — no tab changes the
+window's size, so a full-screen or zoomed window stays that way. The editor reopens at
+the size, place and full-screen state it was closed in, with the Build log and History
+where you left them.
 
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.
