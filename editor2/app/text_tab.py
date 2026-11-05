@@ -531,15 +531,20 @@ class GroupPage(QWidget):
 
 WINDOW_HELP = ('The words of the windows are not texts: each letter is a TILE the screen has '
                'loaded, so a word keeps its length (a shorter one is filled with blanks) and '
-               'can only use the letters of its screen\'s font — the field menus have A-Y '
-               'without Q (no Z), upper case, and the digits; the title menu has the whole '
-               'text font. A word that appears in several windows (INFO, ITEM, SKIL, MASTER …) '
-               'is changed in each one. Double-click "Your word" to change it; empty = the '
-               'original.')
+               'can only use the letters of its screen — the field menus have A-Y without Q '
+               '(no Z), upper case, and the digits; the title menu has the whole text font; the '
+               'shop, the Vault, the farm, Grandpa, the egg appraiser and the battle each have '
+               'their own letters (the last column). Some words are cut out of a TEXT the game '
+               'draws into the window (the Vault\'s PUT / TAKE / EXIT, ITEM / GOLD / EXIT, '
+               'Grandpa\'s EXIT, the party-full WHO): any letter, the word\'s own cells — the '
+               'text row is rewritten for you. A word that appears in several windows (INFO, '
+               'ITEM, SKIL, MASTER …) is changed in each one. Double-click "Your word" to change '
+               'it; empty = the original.')
 
 
 class WindowWordsPage(QWidget):
-    """[S165] the words drawn in the windows as tiles (ROADMAP Phase F T-follow (a))."""
+    """[S165] the words drawn in the windows as tiles (ROADMAP Phase F T-follow (a)); S166: the
+    other screens' windows + the words a window cuts out of a text (T-follow (b))."""
 
     def __init__(self, tab):
         super().__init__()
@@ -612,8 +617,11 @@ class WindowWordsPage(QWidget):
                 continue
             r = self.table.rowCount()
             self.table.insertRow(r)
+            letters = (s_['letters'] + ' and space' if s_['kind'] == 'tile' else
+                       f"any letter (A-Z a-z 0-9) — a word of the text {s_['source']} row "
+                       f"{s_['index']}, cells {s_['offset'] + 1}-{s_['offset'] + s_['len']}")
             vals = [s_['screen'] or f"${s_['bank']:02X}:{s_['addr']:04X}", s_['text'],
-                    f"{s_['len']} letters", mine or '', s_['letters'] + ' and space']
+                    f"{s_['len']} letters", mine or '', letters]
             for c, val in enumerate(vals):
                 it = QTableWidgetItem(val)
                 if c != 3:

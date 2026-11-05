@@ -7660,3 +7660,57 @@ showed only the session's 5 clean-tree files, the clean build `1ca6579…`; test
 afterwards. **Rule (kept):** a backgrounded build or test that compiles a ROM owns `disassembly/`
 until it ends — queue clean-tree edits (and `make`) after it, or run them before starting it.
 
+## S166 — the outstanding fixes A1-A3 (the other screens' window words, the packed rows, the line widths)
+
+### S166 — "the tile still holds what was drawn" must be checked in the VRAM bank that was drawn to
+**Symptom:** the census attributed the full-party window's INFO / OK to the text `WHOSTROK` (misc 10)
+— cells whose letters were plainly I N F O. **Root cause:** a canvas tile was "live" when its bytes in
+VRAM bank 0 OR bank 1 still equalled the bytes captured after the render; the engine writes ONE bank
+(VBK at the call), and the other bank's untouched bytes equal themselves forever. **Fix:** record VBK
+at the CallTextEngine hook and compare only that bank. **Rule:** an "unchanged since" test over GBC
+VRAM names its bank; comparing a region nothing wrote proves nothing.
+
+### S166 — a window can be drawn into the screen buffer: read the tile map later, and wrapping
+**Symptom:** the walk found every field / farm word but never the battle's FIGHT / ITEM window nor
+Grandpa's menu. **Root cause:** the battle draws its menus into the screen BUFFER (drawer entry B) —
+the tile map holds them only some frames after the draw call; Grandpa's window starts at map column 29
+and continues at column 0 (the map is 32 wide and wraps under the scroll). **Fix:** a second look 30
+frames after every draw (`census_window_layouts._late`), and rows searched around their end.
+**Rule:** to read what a draw routine put on screen, look after the frame that copies the buffer, and
+treat the 32 × 32 map as a torus.
+
+### S166 — a probe label must not split a local label from its parent
+**Symptom:** the re-section tool's probe build failed: "Unknown symbol Lprobe_1430.fill_inventory_loop"
+(bank $09). **Root cause:** the probe inserts a GLOBAL label before every source line; a `.local`
+label after it then belongs to the probe, and the code's `Parent.local` references break. **Fix:**
+after the first global label of the file the probes are local (`.Lprobe_n:`), found in the sym as
+`Parent.Lprobe_n`. **Rule:** instrumentation labels inserted into hand-written RGBDS source are local
+labels unless they precede the first global one.
+
+### S166 — two identical streams decode to identical source text: replace the k-th copy
+**Symptom:** "the patched tree does not hold the run $6F3C verbatim (2 copies)". **Root cause:** bank
+$0A's two YES / NO streams (`$6F3C`, `$70C5`) are the same bytes, so mgbdis wrote the same fake-code
+lines twice. **Fix:** the k-th occurrence in the clean tree (counted before the run's first line) is
+the k-th in the patched tree; checked by the build (the labels' addresses, `WinLayout_0A_70C5` at
+`$70C5`). **Rule:** a text-matching rewrite between two trees must locate by occurrence order (or by a
+line address), never by "the" match.
+
+### S166 — a letter tile "seen" at a draw may be a picture's tiles before the picture loads
+**Symptom:** the egg page's stream `$07:$765B` decoded as the words ARIKT / OXMNBF. **Root cause:** the
+window is a picture (the pedigree) whose tiles `$00-$0F` hold the field font for the frames before the
+picture's stream loads. **Fix:** excluded by name (`window_words.EXCLUDE`) after reading every
+measured word by eye. **Rule:** a measured "word" is a candidate until a human reads it; keep an
+explicit exclusion list with the reason beside each entry.
+
+### S166 r2 — an LZ stream may END in a literal `$00`: free space starts at the decoded end
+**Symptom:** the user: "when the drakslime … given option to join party - YES/NO - the NO has a bit of
+a glitch at the bottom" (on every build since S128). **Root cause:** bank $51's free space was taken
+as "the `$00` fill from `$7B34`"; `$7B34` is the last byte of the LZ stream gfx `$5112` (the U N O
+letters, `$51:$7B0F`, 38 B) — a literal `$00`, the O's bottom row. S128's `ArenaScriptType51` wrote
+`$FA` over it; the O got a tail. **Fix:** `db $00` kept before the routines (they move one byte);
+test_s166 `--rom` compares every gfx stream the code loads (`ld de, id` + `call WaitDMATransfer`,
+40 ids) with the original. **Rule:** before using a `$00` / `$FF` run as free space, decode what
+ends next to it (`dwm.sprite_codec.read_stream` for an LZ stream, the table's length for data):
+the run starts AFTER the last byte a reader consumes, and a run of equal bytes says nothing about
+where the data before it ends.
+

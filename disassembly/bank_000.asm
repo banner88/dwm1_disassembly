@@ -1030,6 +1030,8 @@ CheckScreenTransition:
 ; (text running). Every text the game shows starts here (callers: entry 0 of every
 ; text bank — $18 $1A $1B $1F $21 $22 $3F $41 $42-$4E $4F $56 $59; bank $55's debug
 ; viewer has its own copy) — S150 measured: the 2,560 text ids and every text table.
+; [S166] [$C827/$C828] = where the glyphs go: a menu's TEXT CANVAS (VRAM tiles, set by each menu
+; bank's TextToCanvas helper; [$C829] rows, [$C82A] cells a row) — TEXT_SYSTEM "Text canvases (S166)".
 CallTextEngine:
     push de
 

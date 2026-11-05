@@ -1043,6 +1043,8 @@ CheckScreenTransition:
 ;   Caller passes de = a $4007-style MODE-TABLE base, NOT a text source. The actual
 ;   source is resolved by SaveBankAndSwitch (below) via a two-level [mode][id] lookup.
 ;   Docs: TEXT_SYSTEM.md, ENCYCLOPEDIA_DETAIL_FREEZE.md.
+; [S166] [$C827/$C828] = where the glyphs go: a menu's TEXT CANVAS (VRAM tiles, set by each menu
+; bank's TextToCanvas helper; [$C829] rows, [$C82A] cells a row) — TEXT_SYSTEM "Text canvases (S166)".
 CallTextEngine:
     push de
 

@@ -19,6 +19,16 @@ edits, e.g. the example project): the edited words must NOT be found (FAIL expec
 
     python3 tools/walk_window_words.py --build <built project dir/build> --project <its dir>
         --sav <a real .sav> [--keep DIR] [--negative --expect <the edited project dir>]
+
+S166 (--services, ROADMAP T-follow (a) rest / (b)): a build of examples/s166_glossary_demo — the
+GLOSSARY HALL's services toured as tools/census_window_layouts.py --services does (the shop, the
+Vault, the farm, Grandpa, the egg appraiser, a battle with the join and the full party); at every
+draw of a window that holds an edited word (gamedata.window_words, and the text slots "T:…" whose
+row gamedata.text rewrote) the screen's cells there are read by their 8 x 8 SHAPE (the original
+ROM's text font, bank $4F): the edited word must show, every other word of the window unchanged.
+
+    python3 tools/walk_window_words.py --services --build <demo build> --project <demo dir>
+        --sav <a real .sav> [--negative --expect <the edited demo dir>] [--hall 0x77]
 """
 import argparse
 import json
@@ -59,6 +69,113 @@ def screen_text(m, font, ref, row, col, n):
     return out
 
 
+def services(a):
+    """S166: the GLOSSARY HALL tour; the edited words read on screen by shape."""
+    import tools.census_window_layouts as CW
+    from editor2.core.document import Document
+    want_prj = a.expect if a.negative else a.project
+    doc = Document(os.path.join(want_prj, 'project.json'))
+    edits = doc.window_words()                     # tile words + the text slots' words
+    gd = (doc.data.get('gamedata') or {})
+    slots = WW.slots(REPO)
+    cen = WW.census(REPO)
+    if not edits:
+        sys.exit('the project changes no window word')
+    if a.negative:
+        print("NEGATIVE CONTROL: the original words' build, the edited words expected")
+    edits = {k: v for k, v in edits.items() if k in slots}
+    layouts = {}
+    for k, s_ in slots.items():
+        if s_['kind'] == 'tile' and s_['bank'] in (0x07, 0x15):
+            continue                               # the S165 walk reads these
+        layouts.setdefault((s_['bank'], s_['addr']), []).append(k)
+    ck = Checks()
+    seen = {}                                      # slot -> [what was read each draw]
+    rom0 = open(CW.ROM, 'rb').read()
+    shp = CW.glyph_shapes(rom0)
+
+    def visible(p, m):
+        """Both tile maps, 32 x 32 each ($9800 then $9C00): the battle draws its menus into the
+        map the WINDOW layer shows (LCDC bit 6), the field into the BG's — a window's cells are
+        found wherever the game put them (the screenshots are kept: --keep)."""
+        return [[m[0, base + 32 * r + c] for c in range(32)]
+                for base in (0x9800, 0x9C00) for r in range(32)]
+
+    def read(p, m, t):
+        lc = m[0xFF40]
+        ad = CW._tile_addr(lc, t)
+        v0 = bytes(p.memory[0, 0x8000 + ad:0x8000 + ad + 16])
+        sh = CW.shape(v0)
+        return ' ' if t == WW.BLANK or not any(sh) else shp.get(sh, '?')
+
+    dtab = json.load(open(os.path.join(REPO, 'extracted', 'dialogue.json')))['tables']
+    tabs = {(int(t['bank'][1:], 16), int(t['table'][1:], 16)): t['source'] for t in dtab}
+
+    def canvas_of(p, m, canv, t):
+        """(source, row) of the text canvas the tile shows now (the latest whose captured bytes
+        the tile still holds), else None."""
+        lc = m[0xFF40]
+        ad = CW._tile_addr(lc, t)
+        for _i, ev, tiles, vb in reversed(canv):
+            if t in tiles:
+                b0 = tiles[t][1 + vb]
+                if bytes(p.memory[vb, 0x8000 + ad:0x8000 + ad + 16]) == b0:
+                    tb = CW.table_of(rom0, ev[1], ev[7], ev[2])
+                    return tabs.get((ev[1], tb)), ev[3]
+        return None
+
+    def find(grid, cells):
+        """(row, col) of `cells` in a map row — the row read around its end (a window that
+        starts near column 31 continues at column 0: the map wraps)."""
+        for r, row in enumerate(grid):
+            rr = row + row[:len(cells)]
+            for c in range(len(row)):
+                if rr[c:c + len(cells)] == cells:
+                    return r, c
+        return None
+
+    def rec(p, m, e, canv, draws=None, rom_=None, shapes=None, lays=None):
+        lay = (e[1], e[2])
+        if lay not in layouts:
+            return
+        grid = visible(p, m)
+        want_rows = WW.rows_of(gd.get('window_words') and gd or {}, *lay, REPO)
+        L = cen['layouts'][f'{lay[0]:02X}:{lay[1]:04X}']
+        orig_rows = [list(bytes.fromhex(r)) for r in L['rows']]
+        for k in layouts[lay]:
+            s_ = slots[k]
+            r, c, n = s_['row'], s_['col'], s_['len']
+            row = want_rows[r] if s_['kind'] == 'tile' else orig_rows[r]
+            # the word's cells and the cell after it (the cell before may hold the cursor)
+            cells = row[c:c + n + 1]
+            at = find(grid, cells)
+            if at is None:
+                continue
+            rr, cc = at
+            if s_['kind'] == 'text' and canvas_of(p, m, canv, row[c]) != (s_['source'], s_['index']):
+                continue                       # the window shows another text's cells now
+            g = grid[rr] + grid[rr]
+            seen.setdefault(k, []).append(''.join(read(p, m, t) for t in g[cc:cc + n]))
+    CW._record = rec
+    CW._late = rec
+    CW.measure_services(a.build, a.sav, a.keep, a.hall)
+    for k in sorted(slots):
+        if (slots[k]['bank'], slots[k]['addr']) not in layouts:
+            continue
+        s_ = slots[k]
+        want = (edits.get(k) or s_['text']).ljust(s_['len'])
+        got = seen.get(k)
+        what = f"{s_['screen'] or k}: \"{s_['text']}\"" + (f' -> "{edits[k]}"' if k in edits else
+                                                          ' unchanged')
+        if not got:
+            if k in edits:
+                ck(what + ' — drawn on the tour', False, 'the window was not seen')
+            continue
+        ck(what + ' (read on screen by shape)', want in got, f'shown {sorted(set(got))[:3]}')
+    print(f'{ck.n} checks, {ck.bad} failed' + (' (NEGATIVE: failures expected)' if a.negative else ''))
+    return 1 if ck.bad else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--build', required=True)
@@ -67,8 +184,12 @@ def main():
     ap.add_argument('--keep', default='/tmp/walk_window_words')
     ap.add_argument('--negative', action='store_true')
     ap.add_argument('--expect', help='--negative: the project whose words are expected')
+    ap.add_argument('--services', action='store_true', help='S166: the GLOSSARY HALL tour')
+    ap.add_argument('--hall', type=lambda x: int(x, 0), default=0x77)
     a = ap.parse_args()
     os.makedirs(a.keep, exist_ok=True)
+    if a.services:
+        return services(a)
     from tools.walk_regions import Walk
     from tools.pyboy_harness import tap, GAME_MODE
     want_prj = a.expect if a.negative else a.project

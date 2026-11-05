@@ -11,8 +11,8 @@ can be **rewritten, any length**. One sub-tab per kind:
 - **Menus & field** — menu words, field messages, spell messages;
 - **Credits** (once your project has its own credits pages — Cutscenes →
   Title & ending… — their words are edited there; "TO BE CONTINUED" stays here);
-- **Window words** (S165) — the words of the menus' windows that are pictures,
-  not texts (below);
+- **Window words** (S165 / S166) — the words of the menus' windows that are
+  pictures, not texts, and the words a window cuts out of a text (below);
 - **Other tabs** — the monster and skill descriptions (read only here: the
   Monsters and Skills tabs own them).
 
@@ -35,7 +35,7 @@ default names at most 4 (the game draws them in fixed fields); anything else
 any length (an edited text sits in a bank of its own). The Capacity tab
 counts the edited texts.
 
-## Window words (S165)
+## Window words (S165, S166)
 
 Some words on screen are not texts at all: the field menu's **INFO ITEM /
 SKIL OPTN**, the stats page's **ATK DEF AGL INT WLD**, **HP: / MP:**,
@@ -58,6 +58,35 @@ Double-click **Your word** to type; empty (or **Original**) = the game's word.
 A word that sits in several windows is one row per window — the field menu's
 INFO and the INFO list's header are two rows (change both to keep them
 alike). Measured in the game: the new word shows in the window, nothing else
-moves. Not editable yet: the shop, breeding and battle windows (their letters
-are other pictures — not measured).
+moves.
+
+**The other screens (S166).** The page also lists the windows of the **shop**
+(BUY / SELL / EXIT, YES / NO), the **farm** (DROP OFF … SLEEP / EXIT, WHO,
+INFO / OK), the **Monster Namer**, **Grandpa** (BREED / HATCH, WHO, INFO / OK),
+the **egg appraiser** (EVAL / BLESS / EXIT, INFO / OK), the **egg page** (DAD: /
+MOM: / MASTER:) and the **battle** (FIGHT / ITEM / PLAN / RUN, the tactics,
+ATK / SKIL / DEF). Each screen loads its own small set of letters — the shop has
+no A or C, the battle menu no B or O — so the last column differs per window;
+pick a word from those letters. Use the **Window** list to see one screen.
+
+**Words cut out of a text (S166).** A few windows show a TEXT the game draws
+into the window and cuts at fixed places: the Vault's **PUT / TAKE / EXIT**
+(the text `PUT TAKEEXIT`, four cells a word), its **ITEM / GOLD / EXIT**
+(`ITEMGOLDEXIT`), Grandpa's **EXIT** (`EXIT INFO`). Their rows say *any letter
+— a word of the text …, cells …*: any letter of the font (capitals, small
+letters, digits), at most the word's cells; the editor rewrites the text row
+for you (Text → Menus & field shows it, e.g. `STOWGET EXIT`). Editing such a row
+by hand on Menus & field warns when a word no longer sits in its cells.
+
+Not editable: the naming keyboard (its cells ARE the letters you type), the
+egg page's pedigree picture, the battle's join question and the full-party
+windows (their letters are moved around by a part of the game not decoded
+yet), the link-cable screens (VS MODE / BREEDING: no second Game Boy to reach
+them), and windows no tour has opened.
+
+**Line widths (S166).** On the other Text pages a line longer than the window
+it is drawn in gets a warning — battle messages, level-up and spell lines,
+item descriptions and use lines (18 cells), item names and personalities (9),
+the credits (roles 20, names 11). A name the game fills in ({ins 00} …)
+counts 9 cells; a line no longer than the game's own never warns.
 

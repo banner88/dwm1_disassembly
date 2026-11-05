@@ -145,6 +145,14 @@
    C826     1    Text engine flags 2 [S120]: bit 0 = VOICE on (the per-letter blip;
                  $EA / $EB / $FD set it, $FE clears it), bit 7 = print at once ($ED,
                  or a held button)
+   C827     2    The text's destination [S166, PyBoy]: a menu's TEXT CANVAS = a VRAM tile
+                 address ($8800-$97FF, e.g. $8A40 the Vault's PUT TAKEEXIT, $8B00 the
+                 menus' 2 x 18 message window) the engine draws the glyphs INTO;
+                 set by `ld hl, <addr>` + the bank's helper (bank $09 LoadFld9_412f,
+                 bank $51 LoadBtlS_73a3 …: saves / restores $C827-$C82A around a
+                 bank $41 entry 2 call). TEXT_SYSTEM "Text canvases (S166)"
+   C829     1    The canvas's rows (E of the helper's DE) [S166]
+   C82A     1    The canvas's cells a row (D of the helper's DE) [S166]
    C831     2    Saved text pointer while an insert prints ($F6 / $F9) [S120]
    C840     1    The voice blip's sound id: $5B after $EA, $5A after $EB — bank $00
                  HandleTextCharacter plays it per printed cell [S120, PyBoy-measured]

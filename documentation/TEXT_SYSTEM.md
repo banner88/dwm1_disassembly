@@ -422,11 +422,10 @@ a hook at `$094F` after the level-2 read): the battle announce's COPY into `$C19
 buffer), the field SKIL list's SHOW (DE in text bank $80), the level-up line's COPY into `$C1A0`.
 The example's build now has a text home bank ($80: Plunder, Punish, Finish, Rupture, Blunt).
 
-**Not reached (ROADMAP T-follow):** words drawn as TILES (the field menu's INFO /
-ITEM / SKIL / OPTN, the INFO page's ATK / DEF, the HP / MP bar — no SBAS call draws
-them, measured); how the packed menu-word field messages (`PUT TAKEEXIT`,
-`ITEMGOLDEXIT`, `WHOINFOOKMONEGG`) are cut — NOT measured; the window widths of the
-non-dialogue tables; the debug texts.
+**Not reached (ROADMAP T-follow) — closed S166:** the words drawn as TILES are the "Window words"
+below (S165 / S166); the packed menu-word rows are TEXT CANVASES cut by their windows ("Text
+canvases (S166)" below); the tables' window widths are measured (`text_widths`); the debug texts
+(bank $41 modes 0 / 1, bank $56 mode 0, bank $55's viewer) stay out by design.
 
 
 **S157 (ROADMAP E9, one-only items):** bank $60 `TextOverride` first tests `wOneOnlySay`
@@ -470,8 +469,44 @@ the format is the one the S164 session saw at `$15:$6855` ("INFO" / "OK" — ban
 arena windows), but the field menu's own streams are in bank **$07** (`WinLayout_07_704D` …,
 DOC_AUDIT S165). Editing: `gamedata.window_words` (PROJECT_COMPILER §2.73) — 42 words, the same
 length at most, the screen font's letters only; the editor: Text → Window words.
-Open: the windows of banks $09 / $0A / $18 / $50 / $51 (shops, breeding, the battle) — streams found
-(`extracted/window_layouts.json`), their fonts not measured, so not editable yet.
+**S166 — the other screens (built S166, NOT yet user-tested).** Every other screen keeps the SAME
+typeface at its OWN tile numbers ("NO" = `$31 $32` on the naming screen's YES / NO, `$9D $9C` at
+Grandpa's, `$A8 $A7` at the shop's): the shop / Vault sheet holds `$A4-$AF` + the field font's
+`$D4-$DF`, the battle a sheet of its own. Measured by SHAPE: a VRAM tile is a letter when its 8 × 8
+pixels (colour ≠ the tile's most common colour) equal a text-font glyph (bank $4F `$4010` + 16 · code)
+— `tools/census_window_layouts.py --services` on a tour of the GLOSSARY HALL (the shop, the Vault, the
+farm, the library, the namer, the egg appraiser, the gate list, Grandpa, a battle with a join and a full
+party, the field ITEM page; the user's save). A screen's letters (the editor's limit) = the letter
+tiles it holds at every draw of the window, minus the tiles of a text canvas. Editable now: the shop
+(BUY / SELL / EXIT, YES / NO), the farm (DROP OFF / PICK UP / CHECK / SEPARATE / SLEEP / EXIT, WHO,
+INFO / OK), the Monster Namer (WHO, YES / NO), Grandpa (BREED / HATCH, WHO, INFO / OK), the egg appraiser
+(EVAL / BLESS / EXIT, INFO / OK), the egg page (DAD / MOM / MASTER), the naming screen's YES / NO, the
+battle (FIGHT / ITEM / PLAN / RUN, CHARGE / MIXED / CAUTIOUS / COMMAND, ATK / SKIL / DEF). Not: the
+naming keyboard, the egg page's pedigree picture, the battle's join question and the full-party windows
+(bank $51 — see "Text canvases"), the link windows (banks $15 / $18), the windows no tour opened.
+
+### Text canvases (S166) {#text-canvases}
+
+*Measured S166 (PyBoy: CallTextEngine $05B6 + the level-2 read at $094F hooked).* A menu draws a text
+INTO TILES: `ld hl, <VRAM tile address> / ld de, <D = cells a row, E = rows>` → a helper (bank $09
+`LoadFld9_412f`, bank $51 `LoadBtlS_73a3`, one per menu bank) saves [$C827-$C82A], stores HL →
+[$C827/$C828] (the canvas), E → [$C829] (rows), D → [$C82A] (cells a row) and far-calls bank $41 entry
+2 (show); CallTextEngine renders the glyphs into those tiles (VRAM bank = VBK at the call; a 1-row
+canvas at once, the 2 × 18 message canvas at `$8B00` = tiles `$B0-$D3` typed over many frames). A
+window stream then shows cells of it by tile number. So the "packed" field messages are canvases cut
+by their windows: field 11 `PUT TAKEEXIT` → `$8A40` (tiles `$A4-$AF`, 12 cells) → the Vault's
+PUT / TAKE / EXIT window `$09:$7838` (4 / 4 / 4 cells); field 12 `ITEMGOLDEXIT` → the same tiles / window;
+field 85 `ITEM` → `$8A00` (`$A0-$A3`, the Vault's ITEM box `$09:$71E7`); field 16 `EXIT INFO` → `$9400`
+(tiles `$40-$47`, an 8-cell canvas: its 9th cell is never drawn) → Grandpa's EXIT (`$0A:$75AB` cells 1-4).
+Every table text drawn this way has a measured width (`text_widths`): item names 9 cells, personalities
+9, bank $41 mode 4 (rows 0-10 = the family icons `{slime}` …, row 11 "DrakSlime" — not a Text-tab table) 5 / 8 / 9, the item description `$94C0` 2 × 18, the menus' messages
+`$8B00` 2 × 18, the battle's messages `$8B00` 2 × 18. **Bank $51 (the battle's end):** misc 10 `WHOSTROK`
+→ `$8820` (tiles `$82-$8B`) and misc 27 `    MONEGGINFO` → `$89C0` (`$9C-$AA`) are drawn (the level-2
+read returns `$41:$7340` / `$754D`), yet the full-party window shows WHO / INFO / OK in `$82-$8A`
+(`WHOINFOOK`) — the tiles are re-lettered between the render and the draw by a writer that is not the
+text engine (not decoded; ROADMAP T-follow note). `WHOINFOOKMONEGG` (field 74) is read only by bank $18
+(the link mode, `$18:$4325` / `$4C14`), misc 9 `Who Us Thm` by no code found. Editing: the Window
+words page's text slots (PROJECT_COMPILER §2.74).
 
 ## Monster text blocks (S108)
 
@@ -528,8 +563,24 @@ Per-bank text run bounds (string region only; head = loader code, tail = fill):
 | Bank | distinct strings | string run | re-sectioned |
 |------|------------------|-----------|--------------|
 | $47 | 56 (ids `$03C8-$03FF`, one string each) | `$40c1-$5b74` | ✅ T1 keystone (S43 `$4174-`; S164 redone from the measured map — the first string `$40C1` / id `$03C8` was still fake code) |
-| $42 | 161 ids | `$4149-~$7dc4` | pending |
-| $43–$46, $48–$4B, $4E | — | (see `text_id_map.json` addrs) | pending |
+| $42 | 113 (ids `$0000-$0070`) | `$4142-$7dc4` | ✅ S166 (T2…Tn) |
+| $43 | 142 (`$00E2-$016F`) | `$4193-$772e` | ✅ S166 |
+| $44 | 98 (`$0198-$01F9`) | `$4157-$7f69` | ✅ S166 |
+| $45 | 124 (`$0244-$02BF`) | `$4158-$7a5a` | ✅ S166 |
+| $46 | 144 (`$0300-$038F`) | `$4180-$7de0` | ✅ S166 |
+| $48 | 108 (`$0474-$04DF`) | `$416b-$75f1` | ✅ S166 |
+| $49 | 158 (`$0512-$05AF`) | `$419c-$7c12` | ✅ S166 |
+| $4A | 205 strings / 288 ids (`$05E0-$06FF`; ids share strings) | `$4293-$6c25` | ✅ S166 |
+| $4B | 64 (`$07C0-$07FF`) | `$40d1-$7ffe` | ✅ S166 (the table rows past entry 8 are not `dw $XXXX ; Entry` lines — 5 named) |
+| $4E | 88 (`$0868-$08BF`) | `$4143-$7a0c` | ✅ S166 |
+
+**S166 (ROADMAP T2…Tn, built byte-neutral):** the ten banks re-sectioned from the measured map
+(`text_id_map.json`, derived from `dialogue.json` since S108) by `resection_text_bank.py --apply
+--name-dispatch` — the S164 $47 form: each bank's dispatch rows name the strings (`dw TextStr_42_4142`
+…, 1,268 rows) and the two loader stubs that had no label are labelled `TextRunB<bank>_<addr>` (copy;
+ids past the bank's range go to its overflow bank) / `TextShowRefreshB<bank>_<addr>` (show +
+`RequestScreenUpdate`); each step built `1ca6579…`. The overflow banks (`$1A $1B $1F $21 $22 $3F $18
+$4F`) are not re-sectioned (their strings share the banks with code / data).
 
 Note: in the S43 run many ids seemed to alias one addr or to enter a string partway
 (e.g. `$47:$4248` "re-entering" `$423e`) — that was the pre-S108 `text_id_map.json`

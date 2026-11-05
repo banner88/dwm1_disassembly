@@ -5481,6 +5481,42 @@ BATTLE_SKILL_SYSTEM §15.10.5 "S163".
   6,763 (all five and each alone), `census_raising.py --quick` on the demo 0 mismatches; tests
   `test_compiler.test_s164`, test_app `s164_ai_fixes`.
 
+## §2.74 S166 — the window words of the other screens; words cut out of a text; the tables' line widths (ROADMAP Phase F T-follow (a) / (b) / (c))
+
+*Built S166, NOT yet user-tested (test ROM `DWM-S166-glossary-test.gbc`, patched).* **Regions:** every run
+of window layout streams the census finds is a compiler region now — 28 (`WW.RUNS`): bank $07 (1), $09
+(7), $0A (7), $12 (3: `$6DCB`, `$6F54`, and the library's `$710C-$7B9A` whose 29 streams keep their
+S26 / S27 names `LibWinLayout_<addr>` — `WW.label`), $15 (2), $18 (3), $50 (3), $51 (2); the bodies are
+`WW.run_block` (one generator for both trees: `tools/resection_window_layouts.py` wrote the clean
+tree's `db` with it) — no words = the original cells (test_s166 compares every file). **Fonts:**
+`extracted/window_layouts.json` `font` = `field` / `text` (S165) or `screen` (S166: `map` = the tile an
+edit writes for each letter, `tiles` = every letter tile of that screen — measured; the letters of a
+screen = the static letter tiles held at EVERY draw of that window, a text canvas's tiles excluded).
+`WW.layout_font(L)` → (decode, encode). **Slots:** `WW.slots()` = 89 tile words (`kind` 'tile', key
+`BB:AAAA/row/col`) + 7 text words (`kind` 'text', key `T:<table>:<row>/<offset>`: the Vault's
+field_message 11 / 12 at cells 1-4 / 5-8 / 9-12, Grandpa's field_message 16 cells 1-4); `WW.EXCLUDE`
+(the naming keyboard `09:7DC9`, the pedigree picture `07:765B`, bank $51 `6EEF` / `6F6E` / `6F14`).
+**Text slots** are stored in gamedata.text, not gamedata.window_words (`validate` refuses a `T:` key
+there): Document `set_window_word` composes the row (`WW.compose_text`: the word in its cells, padded
+with spaces, the other cells kept, the row no longer than max(the canvas, the original)) and calls
+`set_game_text(…, only_this=True)`; `window_words()` reports a text slot whose word in the edited row
+differs from the game's (`WW.text_word`). A row holding codes cannot be composed (edited on its Text
+sub-tab). **Line widths (T-follow (c)):** `gametext.line_widths()` = the widest canvas each table was
+drawn into on the tour (`text_widths`: battle_message / item_description / item_use_message /
+misc_message / field_message 18, item_name / personality 9) + `CREDITS_WIDTHS` (S153: 20 / 11);
+`warnings_for(x, raw)` warns a line (`row_lines`: `$F1` a new line, `$F2` `$F7` `$FA` `$EC` a new
+page, `{hero}` 4, a name insert 9) past max(the width, the game's own row's longest line) — no row of
+the game warns (test_s166) — and a packed row (`packed_rows()`) whose length leaves its cuts. Pin
+unchanged (`2fe3faba…`, patched, historical — byte-neutral: regions emit the same bytes; `EDITOR_REVISION` S166,
+help 56).
+
+**S166 r2 (built S166 r2, NOT yet user-tested).** The user's test of the S166 ROM: "the NO has a bit of a
+glitch at the bottom" (the battle's join YES / NO). Not this section's regions: the hand patch of S128
+(`ArenaScriptType51`, §2.41) sat on `$51:$7B34`, the last byte of the LZ stream gfx `$5112` (the U N O
+letters). `patches/bank_051.asm`: `db $00` restored before it, `ArenaScriptType51` / `LearnUpgradeOrAdd51`
+at `$7B35` / `$7B3B`, one `nop` less in the tail fill (`ASSERT @ == $8000`). test_s166 `--rom`: every gfx
+stream the code loads == the original (40). Pin **`fee3147e…`** (patched; was `2fe3faba…`, patched, historical).
+
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 
 *Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good").* **`gamedata.window_words`** = `{"<bank>:<addr>/<row>/<col>":

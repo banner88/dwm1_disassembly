@@ -4387,11 +4387,11 @@ CallBtlS_5867:
     call SetBtlS_768a
     ld hl, $5505
     rst $10
-    ld de, $6e78
+    ld de, WinLayout_51_6E78
     call LoadBtlS_72cc
-    ld de, $6fe2
+    ld de, WinLayout_51_6FE2
     call LoadBtlS_72cc
-    ld de, $7077
+    ld de, WinLayout_51_7077
     call LoadBtlS_72cc
     call SetBtlS_58a9
     ld hl, $cb17
@@ -4660,7 +4660,7 @@ LevelUpS0E_ForgetYesNo:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $5ab6
@@ -5144,7 +5144,7 @@ jr_051_5d20:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $5de4
@@ -5226,7 +5226,7 @@ jr_051_5df7:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     ld de, $5de4
     ld a, [wMenu_selection]
@@ -5274,7 +5274,7 @@ jr_051_5e40:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $5ed1
@@ -5372,7 +5372,7 @@ CallBtlS_5f07:
     ld a, [$da18]
     ld hl, $00c7
     call BtlSFunc_6943
-    ld de, $70ab
+    ld de, WinLayout_51_70AB
     call LoadBtlS_72cc
     ld de, $6823
     ld a, [$c8e4]
@@ -5494,12 +5494,12 @@ jr_051_5f9a:
 SetBtlS_5fbb:
     ld hl, $550c
     rst $10
-    ld de, $6f14
+    ld de, WinLayout_51_6F14
     ld a, [$c8e4]
     and $01
     jr z, jr_051_5fcc
 
-    ld de, $70d0
+    ld de, WinLayout_51_70D0
 
 jr_051_5fcc:
     call LoadBtlS_72cc
@@ -5847,12 +5847,12 @@ jr_051_61a4:
 
 
 SetBtlS_61cf:
-    ld de, $6f6e
+    ld de, WinLayout_51_6F6E
     ld a, [$c8e4]
     and $01
     jr z, jr_051_61dc
 
-    ld de, $7150
+    ld de, WinLayout_51_7150
 
 jr_051_61dc:
     call LoadBtlS_72cc
@@ -6002,7 +6002,7 @@ jr_051_629d:
     push af
     ld hl, $0b1d
     call SetupTilemapTransfer
-    ld de, $70d0
+    ld de, WinLayout_51_70D0
     call LoadBtlS_72cc
     jr jr_051_62f6
 
@@ -6073,7 +6073,7 @@ jr_051_62f6:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $63bc
@@ -6220,7 +6220,7 @@ CallBtlS_643c:
     ld hl, $89c0
     ld de, $5112
     call WaitDMATransfer
-    ld de, $6eef
+    ld de, WinLayout_51_6EEF
     call LoadBtlS_72cc
     ld de, $63bc
     ld a, [$c8de]
@@ -6244,7 +6244,7 @@ CallBtlS_643c:
 SetBtlS_6482:
     ld hl, $550c
     rst $10
-    ld de, $6f14
+    ld de, WinLayout_51_6F14
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $6527
@@ -6374,7 +6374,7 @@ jr_051_6526:
 
 
 SetBtlS_6574:
-    ld de, $6f6e
+    ld de, WinLayout_51_6F6E
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $65d8
@@ -6682,7 +6682,7 @@ CallBtlS_67c3:
     ld a, [$da18]
     ld hl, $00c7
     call BtlSFunc_6943
-    ld de, $70ab
+    ld de, WinLayout_51_70AB
     call LoadBtlS_72cc
     call ClrBtlS_7524
     ld de, $6823
@@ -7943,255 +7943,81 @@ LoadBtlS_6a7e:
     reti
 
 
-    ld c, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld [hl], $37
-    jr c, jr_051_6ec6
-
-    ld a, [hl-]
-    dec sp
-    inc a
-    dec a
-    ld a, $ff
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ccf
-    ld b, b
-    ld b, c
-    ld b, d
-    ld b, e
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld c, b
-    ld c, c
-    ld c, d
-    ld c, e
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-
-jr_051_6ec6:
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    ld e, c
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc l
-    sbc [hl]
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld b, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add d
-    add e
-    add h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub b
-    sub c
-    sub d
-    sub e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc b
-    sbc c
-    sbc d
-    sbc e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    dec c
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add l
-    add [hl]
-    add a
-    adc b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_51_6e78
+; [S166] window layout streams $6E78-$6F97 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_51_6E78:
+    dw $0048                 ; position: row 2, column 8
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $36, $37, $38, $39, $3a, $3b, $3c, $3d, $3e, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $3f, $40, $41, $42, $43, $44, $45, $46, $47, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $48, $49, $4a, $4b, $4c, $4d, $4e, $4f, $50, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $51, $52, $53, $54, $55, $56, $57, $58, $59, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_6EEF:  ; after the battle: yes / no; YES
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff  ; . YES.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9d, $9e, $e0, $ff  ; . N. .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_6F14:  ; the party is full: who; from a text: WHO (misc_message 10 +0)
+    dw $0040                 ; position: row 2, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $82, $83, $84, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $8c, $8d, $8e, $8f, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $90, $91, $92, $93, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $94, $95, $96, $97, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $98, $99, $9a, $9b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_6F6E:  ; the party is full: INFO / OK; INF / OK
+    dw $010d                 ; position: row 8, column 13
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $85, $86, $87, $88, $ff  ; . INF..
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $e0, $e0, $ff  ; . OK  .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_51_6e78
     jr nz, @+$03
 
     ld a, [$efef]
@@ -8260,342 +8086,92 @@ jr_051_6ec6:
     reti
 
 
-    ld h, b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $00
-    ld bc, $0302
-    inc b
-    dec b
-    ld b, $07
-    ld [$0a09], sp
-    dec bc
-    inc c
-    dec c
-    ld c, $0f
-    db $10
-    ld de, $d8ff
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $12
-    inc de
-    inc d
-    dec d
-    ld d, $17
-    jr @+$1b
-
-    ld a, [de]
-    dec de
-    inc e
-    dec e
-    ld e, $1f
-    jr nz, jr_051_7055
-
-    ld [hl+], a
-    inc hl
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $24
-    dec h
-    ld h, $27
-    jr z, jr_051_707d
-
-    ld a, [hl+]
-
-jr_051_7055:
-    dec hl
-    inc l
-    dec l
-    ld l, $2f
-    jr nc, jr_051_708d
-
-    ld [hl-], a
-    inc sp
-    inc [hl]
-    dec [hl]
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ret nz
-
-    nop
-    ld a, [$efef]
-    rst $28
-
-jr_051_707d:
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $9c
-    sub $d5
-    ldh [$e2], a
-    db $e3
-    ldh [rIE], a
-    ret c
-
-jr_051_708d:
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    push hl
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    and b
-    and c
-    and d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    and e
-    and h
-    and l
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    add b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    inc h
-    dec h
-    ld h, $27
-    jr z, @+$2b
-
-    ld a, [hl+]
-    dec hl
-    inc l
-    ld c, b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    dec l
-    ld l, $2f
-    jr nc, jr_051_7134
-
-    ld [hl-], a
-    inc sp
-    inc [hl]
-    dec [hl]
-    ld c, c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [hl], $37
-    jr c, jr_051_7157
-
-    ld a, [hl-]
-    dec sp
-    inc a
-    dec a
-    ld a, $4a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-jr_051_7134:
-    cp $e0
-    ccf
-    ld b, b
-    ld b, c
-    ld b, d
-    ld b, e
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    ld c, e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    inc c
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-
-jr_051_7157:
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    and [hl]
-    and a
-    xor b
-    xor c
-    xor d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_51_6fe2
+; [S166] window layout streams $6FE2-$717E (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_51_6FE2:
+    dw $0160                 ; position: row 11, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
+    db $0f, $10, $11, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $12, $13, $14, $15, $16, $17, $18, $19, $1a, $1b, $1c, $1d, $1e, $1f, $20
+    db $21, $22, $23, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $24, $25, $26, $27, $28, $29, $2a, $2b, $2c, $2d, $2e, $2f, $30, $31, $32
+    db $33, $34, $35, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_7077:
+    dw $00c0                 ; position: row 6, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $9c, $d6, $d5, $e0, $e2, $e3, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e5, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_70AB:
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a0, $a1, $a2, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a3, $a4, $a5, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_70D0:
+    dw $0080                 ; position: row 4, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $24, $25, $26, $27, $28, $29, $2a, $2b, $2c, $48, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $2d, $2e, $2f, $30, $31, $32, $33, $34, $35, $49, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $36, $37, $38, $39, $3a, $3b, $3c, $3d, $3e, $4a, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $3f, $40, $41, $42, $43, $44, $45, $46, $47, $4b, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_51_7150:
+    dw $010c                 ; position: row 8, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a6, $a7, $a8, $a9, $aa, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_51_6fe2
     ret nz
 
     nop
@@ -8833,6 +8409,8 @@ jr_051_7288:
     ret
 
 
+; [S166] WinLayoutDrawVram51: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the BG map $9800+ (the row wraps at 32: `and $03 / or $98`), cells through Write_gfx_tile. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDrawVram51:
     ld a, [de]
     ld l, a
     inc de
@@ -8879,6 +8457,8 @@ jr_051_72c4:
     call SaveBtlS_7247
     jr jr_051_729b
 
+; [S166] WinLayoutDraw51: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the screen buffer, cells `ld [hl+], a`. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDraw51:
 LoadBtlS_72cc:
     ld a, [de]
     ld l, a
@@ -9041,6 +8621,11 @@ jr_051_738e:
     ret
 
 
+; [S166] TextToCanvas: draw a text INTO TILES — HL = the canvas (a VRAM tile address, $8800-$97FF),
+; D = cells a row, E = rows, [$C822] / [$C823] = the text's mode / row; saves [$C827-$C82A], sets them
+; ($C827/8 = HL, $C829 = E, $C82A = D), far-calls bank $41 entry 2 (CallTextEngine renders the glyphs
+; into the tiles), restores them. A window stream then shows cells of it (TEXT_SYSTEM "Text canvases
+; (S166)" — e.g. the Vault's PUT / TAKE / EXIT = field message 11 at $8A40, 12 cells).
 LoadBtlS_73a3:
     ld a, [$c827]
     ld c, a
@@ -10519,10 +10104,17 @@ jr_051_7b11:
     rst $38
     jr c, @+$01
 
+; [S166 r2] the LAST byte of the LZ stream gfx $5112 (the "U N O" letters bank $51 loads to $89C0 for
+; the YES / NO after a battle: `ld hl, $89c0 / ld de, $5112 / call WaitDMATransfer`) — a literal
+; $00 = the O's bottom row. The free-space scan read it as the first byte of the $00 fill; S128 put
+; ArenaScriptType51 over it and the O got a tail (the user: "the NO has a bit of a glitch at the
+; bottom"). The fill starts at $7B35 (ARCHITECTURE free-space table; KEY_LESSONS S166 r2).
+    db $00
+
 ; S128 (ROADMAP P3.14e3): ArenaScriptType51 — A := wScriptMapType through ROM0
 ; ArenaAlias (a project's arena copies read as $06 / $5D). Called by LoadBtlS_43c9
 ; (the battle type $DB73: a battle the arena room's script started = 2, "arena" —
-; BossProtectionGate stays off, as in the original arena). 6 B from the nop fill.
+; BossProtectionGate stays off, as in the original arena). 6 B from the nop fill ($7B35, S166 r2).
 ArenaScriptType51:
     ld a, [wScriptMapType]
     jp ArenaAlias
@@ -11753,5 +11345,4 @@ LearnUpgradeOrAdd51:
     nop
     nop
     nop
-    nop
-    ASSERT @ == $8000
+    ASSERT @ == $8000   ; S166 r2: one nop fewer (the $00 kept at $7B34 for gfx $5112)

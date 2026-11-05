@@ -65,7 +65,7 @@ names beyond banks 01/50/13 are best-effort; entries are ROM-verified.
 | $00 | $3FE8 | 24 | Confirmed safe (FF fill at bank end) |
 | $01 | $7FD5 | 42 | FF fill $7FD5-$7FFE; $7FFF=$01 (NOT free) |
 | $0B | — | ~2 | Essentially FULL |
-| $51 | $7B34 | 1,228 | 00 fill — large, investigate safety |
+| $51 | $7B35 | 1,227 | 00 fill — large, investigate safety. **NOT $7B34** (S166 r2): $7B34 = the LAST byte of the LZ stream gfx `$5112` ($51:$7B0F, 38 B — a literal `$00`, the O's bottom row of the battle YES / NO). A free-space scan must start at the decoded end of every stream, not at the first `$00` (KEY_LESSONS S166 r2) |
 | $54 | $7FC0 | 64 | 00 fill (24B used by join patch) |
 
 **Patched build, S133 (end-of-bank fill, the example overlay `7d136455…`, patched):** ROM0 8 B,
@@ -492,6 +492,32 @@ because the ISR graph neither reads SRAM nor writes RAMB (audited S69:
 vblank audio has zero SRAM literals; LCDC is display-only; timer is reti;
 serial is inactive in save/load contexts and pin-safe regardless). Entry 9
 remains the conservative any-context primitive for future code.
+
+### SRAM banks 1-3: the allocation map (S166 — ROADMAP E3 (b2) closed)
+
+*A summary of the consumers built S69-S158 (each section below / the owning doc is canonical); no new
+byte.* Bank 0 = the original save image (+ the CF3 / FX1 farm, the checksum v3, the reserved tail
+`$BFC8-$BFFF` — "F2" at `$BFC8-$BFC9`).
+
+| SRAM bank | bytes | consumer | magic | written | owning |
+|---|---|---|---|---|---|
+| 1 | `$A000-$BFFF` | the roster snapshot "R4" (dual region `$A1BF` × 95 + `$B124` × 94 chunks) | R4 (R3 upgrades) | the explicit save (`CF3SnapCommit`) | MONSTER_DATA "Persistence model (v3)" |
+| 2 | `$A000-$A001` magic, `$A010` + 40 × `$95` | the farm SLEEP pool | "P1" | sleeping (bank $73 entries 10-12) | MONSTER_DATA "Sleep pool → SRAM bank 2" |
+| 3 | `$A000-$A002`, `$A010-$A10F` | the extended flags `$1000-$17FF` + the region | "X1" / "X2" | the explicit save | below (S117 / S140) |
+| 3 | `$A003-$A006`, `$A110` + 8 × ring | the memorial | "M1" | count / head at the save, entries at a win | DATA_STRUCTURES "The memorial (S154)" |
+| 3 | `$A007-$A008`, `$B000-$B1FF` | the breeding hints (UNLOCKED / BRED bitsets) | "H1" | at once (a read, an egg) | DATA_STRUCTURES "Breeding hints (S158)" |
+
+**Free:** bank 3 `$A009-$A00F` (7 header bytes), `$A110 + 8 × MEM_RING`-`$AFFF` (`$A518-$AFFF` at the
+largest memorial), `$B200-$BFFF` (3.5 KB); bank 2 past the pool's 40 records.
+**The convention (what every consumer above does — the rule for the next one):** a 2-byte ASCII magic in
+bank 3's header (`$A000-$A00F`) per consumer; no magic = a save from before the feature = its state empty
+(and the first use writes the magic, as `HintEnsure`); written only through `CF3SRAMBankedCopy` or a
+no-di RAMB 3 window that restores RAMB 0 (the pin invariant: the ISR graph never reads SRAM nor writes
+RAMB); committed at the explicit save (bank $73 entry 5's detector) unless the player's knowledge must
+survive a reset (the hints: at once); a NEW GAME starts empty — the live state sits in WRAM that
+`CF3NewGameClear` / the load's zero-fill clear and the next save writes (the extended flags, the
+memorial), or, for state written at once, its SRAM is zeroed by the same routine's tail (the hints,
+`HintNewGameClear`); outside the bank-0 checksum.
 
 ### SRAM bank 3 (S117) — the extended event flags "X1"
 

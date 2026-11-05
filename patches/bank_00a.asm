@@ -112,6 +112,8 @@ jr_00a_4076:
     ret
 
 
+; [S166] WinLayoutDrawVram0A: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the BG map $9800+ (the row wraps at 32: `and $03 / or $98`), cells through Write_gfx_tile. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDrawVram0A:
     ld a, [de]
     ld l, a
     inc de
@@ -158,6 +160,8 @@ jr_00a_40ac:
     call SaveFldA_4035
     jr jr_00a_4087
 
+; [S166] WinLayoutDraw0A: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the screen buffer, cells `ld [hl+], a`. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDraw0A:
 LoadFldA_40b4:
     ld a, [de]
     ld l, a
@@ -224,6 +228,11 @@ SayAny0A:
     nop
     ENDR
 
+; [S166] TextToCanvas: draw a text INTO TILES — HL = the canvas (a VRAM tile address, $8800-$97FF),
+; D = cells a row, E = rows, [$C822] / [$C823] = the text's mode / row; saves [$C827-$C82A], sets them
+; ($C827/8 = HL, $C829 = E, $C82A = D), far-calls bank $41 entry 2 (CallTextEngine renders the glyphs
+; into the tiles), restores them. A window stream then shows cells of it (TEXT_SYSTEM "Text canvases
+; (S166)" — e.g. the Vault's PUT / TAKE / EXIT = field message 11 at $8A40, 12 cells).
 LoadFldA_411a:
     ld a, [$c827]
     ld c, a
@@ -907,7 +916,7 @@ label448a:
 
 
 SetFldA_449d:
-    ld de, $6f3c
+    ld de, WinLayout_0A_6F3C
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -1126,10 +1135,10 @@ label45d2:
 CallFldA_45e5:
     call SetFldA_41ef
     call SetFldA_449d
-    ld de, $7731
+    ld de, WinLayout_0A_7731
     call LoadFldA_40b4
     call LoadFldA_474b
-    ld de, $7409
+    ld de, WinLayout_0A_7409
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $481f
@@ -1505,10 +1514,10 @@ label4836:
 CallFldA_4843:
     call SetFldA_41ef
     call SetFldA_449d
-    ld de, $7731
+    ld de, WinLayout_0A_7731
     call LoadFldA_40b4
     call LoadFldA_474b
-    ld de, $7409
+    ld de, WinLayout_0A_7409
     call LoadFldA_40b4
     ld de, $481f
     ld b, $04
@@ -1516,7 +1525,7 @@ CallFldA_4843:
     ld c, a
     ld hl, $c8e2
     call ReadFldA_43c0
-    ld de, $7463
+    ld de, WinLayout_0A_7463
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $4914
@@ -1631,7 +1640,7 @@ label4925:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6f3c
+    ld de, WinLayout_0A_6F3C
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $4988
@@ -1688,7 +1697,7 @@ jr_00a_4987:
 
 
 label498e:
-    ld de, $748d
+    ld de, WinLayout_0A_748D
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -1707,7 +1716,7 @@ label49ab:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6f3c
+    ld de, WinLayout_0A_6F3C
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $4a0a
@@ -2060,7 +2069,7 @@ label4c3c:
 
 
 SetFldA_4c4a:
-    ld de, $6f86
+    ld de, WinLayout_0A_6F86
     call LoadFldA_40b4
     ld a, [wCurrGoldLo]
     ldh [$d5], a
@@ -2071,7 +2080,7 @@ SetFldA_4c4a:
     ld hl, $002e
     call LoadFldA_4058
     call ConvertNumberToText
-    ld de, $75ab
+    ld de, WinLayout_0A_75AB
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -2304,9 +2313,9 @@ label4dad:
 CallFldA_4dc0:
     call SetFldA_41ef
     call SetFldA_4c4a
-    ld de, $75f3
+    ld de, WinLayout_0A_75F3
     call LoadFldA_40b4
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call LoadFldA_4ed3
     call ClrFldA_4323
@@ -2536,7 +2545,7 @@ label4f14:
     jr z, jr_00a_4f49
 
     call CallFldA_4e40
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call LoadFldA_4ed3
     call ScreenPush0A
@@ -2549,7 +2558,7 @@ jr_00a_4f49:
 
     call CallFldA_4e40
     call LoadFldA_4deb
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call LoadFldA_4ed3
     call ScreenPush0A
@@ -2626,9 +2635,9 @@ label4fbf:
 CallFldA_4fcc:
     call SetFldA_41ef
     call SetFldA_4c4a
-    ld de, $75f3
+    ld de, WinLayout_0A_75F3
     call LoadFldA_40b4
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call LoadFldA_4ed3
     ld de, $4fa8
@@ -2637,7 +2646,7 @@ CallFldA_4fcc:
     ld c, a
     ld hl, $c8e2
     call ReadFldA_43c0
-    ld de, $7463
+    ld de, WinLayout_0A_7463
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $509a
@@ -2855,9 +2864,9 @@ label5120:
 CallFldA_5133:
     call SetFldA_41ef
     call SetFldA_4c4a
-    ld de, $764d
+    ld de, WinLayout_0A_764D
     call LoadFldA_40b4
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call SetFldA_51c1
     call ClrFldA_4323
@@ -3018,7 +3027,7 @@ label5231:
     jr z, jr_00a_5266
 
     call LoadFldA_5195
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call SetFldA_51c1
     call ScreenPush0A
@@ -3031,7 +3040,7 @@ jr_00a_5266:
 
     call LoadFldA_5195
     call LoadFldA_515e
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call SetFldA_51c1
     call ScreenPush0A
@@ -3120,9 +3129,9 @@ label52f4:
 CallFldA_5301:
     call SetFldA_41ef
     call SetFldA_4c4a
-    ld de, $764d
+    ld de, WinLayout_0A_764D
     call LoadFldA_40b4
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call SetFldA_51c1
     ld de, $52dd
@@ -3131,7 +3140,7 @@ CallFldA_5301:
     ld c, a
     ld hl, $c8e4
     call ReadFldA_43c0
-    ld de, $7463
+    ld de, WinLayout_0A_7463
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $541f
@@ -3478,7 +3487,7 @@ label55d1:
     ld bc, $ffff
 
 label55e0:
-    ld de, $748d
+    ld de, WinLayout_0A_748D
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -3497,7 +3506,7 @@ label55fd:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $70c5
+    ld de, WinLayout_0A_70C5
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $5659
@@ -3773,7 +3782,7 @@ label57e4:
     call LoadFldA_411a
     call CallFldA_4e40
     call LoadFldA_4deb
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call LoadFldA_4ed3
     call ScreenPush0A
@@ -3847,7 +3856,7 @@ label5893:
     call LoadFldA_411a
     call SetFldA_517c
     call LoadFldA_515e
-    ld de, $76a7
+    ld de, WinLayout_0A_76A7
     call LoadFldA_40b4
     call SetFldA_51c1
     call ScreenPush0A
@@ -4014,7 +4023,7 @@ label59a7:
 CallFldA_59ba:
     call SetFldA_41ef
     call SetFldA_4c4a
-    ld de, $7757
+    ld de, WinLayout_0A_7757
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $5b3a
@@ -4306,7 +4315,7 @@ label5b7c:
     or a
     ret nz
 
-    ld de, $79be
+    ld de, WinLayout_0A_79BE
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $5c46
@@ -4632,7 +4641,7 @@ label5d8d:
     ld hl, $0014
     call ScreenEffectSay0A
     call CallFldA_59ba
-    ld de, $79be
+    ld de, WinLayout_0A_79BE
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $5c46
@@ -5112,9 +5121,9 @@ jr_00a_6100:
 
 
 SetFldA_6101:
-    ld de, $77d7
+    ld de, WinLayout_0A_77D7
     call LoadFldA_40b4
-    ld de, $6f86
+    ld de, WinLayout_0A_6F86
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -5351,7 +5360,7 @@ label6252:
 CallFldA_6268:
     call SetFldA_41ef
     call SetFldA_6101
-    ld de, $781f
+    ld de, WinLayout_0A_781F
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $63eb
@@ -5942,7 +5951,7 @@ label65dd:
 
 
 SetFldA_65f0:
-    ld de, $79ed
+    ld de, WinLayout_0A_79ED
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $6653
@@ -6149,7 +6158,7 @@ label672f:
 CallFldA_6745:
     call SetFldA_41ef
     call SetFldA_6101
-    ld de, $781f
+    ld de, WinLayout_0A_781F
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $67b1
@@ -6298,7 +6307,7 @@ label6829:
 
 
 SetFldA_683e:
-    ld de, $79ed
+    ld de, WinLayout_0A_79ED
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $68a8
@@ -6528,7 +6537,7 @@ label69d1:
 
 
 SetFldA_69df:
-    ld de, $6f3c
+    ld de, WinLayout_0A_6F3C
     call LoadFldA_40b4
     ld de, $2e07
     call LoadFldA_40b4
@@ -6727,9 +6736,9 @@ jr_00a_6afb:
 CallFldA_6b13:
     call SetFldA_41ef
     call SetFldA_69df
-    ld de, $75f3
+    ld de, WinLayout_0A_75F3
     call LoadFldA_40b4
-    ld de, $76e5
+    ld de, WinLayout_0A_76E5
     call LoadFldA_40b4
     call LoadFldA_6b82
     call ClrFldA_4323
@@ -6968,7 +6977,7 @@ jr_00a_6c56:
     jr z, jr_00a_6c9e
 
     call LoadFldA_6bbc
-    ld de, $76e5
+    ld de, WinLayout_0A_76E5
     call LoadFldA_40b4
     call LoadFldA_6b82
     call ScreenPush0A
@@ -7046,15 +7055,15 @@ CallFldA_6d11:
     call LoadFldA_6bbc
     call SetFldA_41ef
     call SetFldA_69df
-    ld de, $75f3
+    ld de, WinLayout_0A_75F3
     call LoadFldA_40b4
-    ld de, $76e5
+    ld de, WinLayout_0A_76E5
     call LoadFldA_40b4
     call LoadFldA_6b82
     ld de, $6cef
     ld a, [wOPTN_and_Item_selection]
     call FuncFldA_43e2
-    ld de, $7463
+    ld de, WinLayout_0A_7463
     call LoadFldA_40b4
     call ClrFldA_4323
     ld de, $6da0
@@ -7384,36 +7393,25 @@ jr_00a_6e52:
     reti
 
 
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc l
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_6f3c
+; [S166] window layout streams $6F3C-$6F60 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_6F3C:
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9d, $9c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_6f3c
     ld c, $01
     ld a, [$efef]
     rst $28
@@ -7444,30 +7442,21 @@ jr_00a_6e52:
     reti
 
 
-    inc c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $dd
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_6f86
+; [S166] window layout streams $6F86-$6FA2 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_6F86:  ; Grandpa / the eggs: the gold box
+    dw $000c                 ; position: row 0, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $dd, $e0, $e0, $e0, $e0, $e0, $ff  ; .G     .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_6f86
     nop
     nop
     ld a, [$efef]
@@ -7691,37 +7680,25 @@ jr_00a_6e52:
     reti
 
 
-    nop
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc l
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_70c5
+; [S166] window layout streams $70C5-$70E9 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_70C5:
+    dw $0100                 ; position: row 8, column 0
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9d, $9c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_70c5
     adc b
     nop
     ld a, [$efef]
@@ -8404,220 +8381,69 @@ jr_00a_6e52:
     reti
 
 
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sbc e
-    sub h
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add h
-    add l
-    add [hl]
-    add a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc b
-    adc c
-    adc d
-    adc e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    dec c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub l
-    sbc l
-    sub e
-    sbc h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc h
-    sub [hl]
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $9e
-    sub b
-    sub $99
-    push de
-    sbc b
-    db $e4
-    and b
-    and c
-    and d
-    and e
-    ldh [$e0], a
-    ldh [$e4], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $da
-    and h
-    and l
-    and [hl]
-    and a
-    ldh [$db], a
-    xor b
-    xor c
-    xor d
-    xor e
-    ldh [$dc], a
-    xor h
-    xor l
-    xor [hl]
-    xor a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    sbc a
-    db $e4
-    ldh [$e0], a
-    ldh [$e0], a
-    sbc a
-    db $e4
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_7409
+; [S166] window layout streams $7409-$7506 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_7409:
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $94, $9c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $84, $85, $86, $87, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $88, $89, $8a, $8b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $8c, $8d, $8e, $8f, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_7463:  ; Grandpa: INFO / OK; INFO / OK
+    dw $000d                 ; position: row 0, column 13
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $95, $9d, $93, $9c, $ff  ; . INFO.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9c, $96, $e0, $e0, $ff  ; . OK  .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_748D:
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $9e, $90, $d6, $99, $d5, $98, $e4, $a0, $a1, $a2, $a3, $e0, $e0, $e0, $e4
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $da, $a4, $a5, $a6, $a7, $e0, $db, $a8, $a9, $aa, $ab, $e0, $dc, $ac, $ad
+    db $ae, $af, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9f, $e4, $e0, $e0, $e0, $e0, $9f, $e4, $e0, $e0, $e0, $e0, $9f, $e4
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_7409
     add b
     nop
     ld a, [$efef]
@@ -8730,312 +8556,97 @@ jr_00a_6e52:
     reti
 
 
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    adc d
-    sbc b
-    push de
-    push de
-    sub d
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub h
-    sub b
-    sbc c
-    sub c
-    sub h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld b, b
-    ld b, c
-    ld b, d
-    ld b, e
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld b, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sbc e
-    sub h
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, l
-    ld l, [hl]
-    ld l, a
-    ld [hl], b
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld b, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sbc e
-    sub h
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, l
-    ld l, [hl]
-    ld l, a
-    ld [hl], b
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    add hl, bc
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    db $76
-    ld [hl], a
-    ld a, b
-    ld a, c
-    ld a, d
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    xor c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_75ab
+; [S166] window layout streams $75AB-$770A (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_75AB:  ; Grandpa: BREED / HATCH / EXIT; BREED / HATCH; from a text: EXIT (field_message 16 +0)
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $8a, $98, $d5, $d5, $92, $e0, $ff  ; . BREED .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $94, $90, $99, $91, $94, $e0, $ff  ; . HATCH .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $40, $41, $42, $43, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_75F3:  ; Grandpa: who; WHO
+    dw $0040                 ; position: row 2, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $94, $9c, $e0, $ff  ; . WHO .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $61, $62, $63, $64, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $65, $66, $67, $68, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $69, $6a, $6b, $6c, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6d, $6e, $6f, $70, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_764D:  ; Grandpa: the mate; WHO
+    dw $0040                 ; position: row 2, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $94, $9c, $e0, $ff  ; . WHO .
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $61, $62, $63, $64, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $65, $66, $67, $68, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $69, $6a, $6b, $6c, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6d, $6e, $6f, $70, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_76A7:  ; Grandpa: the pair
+    dw $0109                 ; position: row 8, column 9
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $71, $72, $73, $74, $75, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $76, $77, $78, $79, $7a, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_76E5:
+    dw $00a9                 ; position: row 5, column 9
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $71, $72, $73, $74, $75, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_75ab
     ld c, c
     ld bc, $effa
     rst $28
@@ -9068,311 +8679,77 @@ jr_00a_6e52:
     reti
 
 
-    ld b, b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ld a, b
-    ld a, c
-    ld a, d
-    ld a, e
-    ld a, h
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    add a
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld h, l
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    and b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld l, [hl]
-    ld l, a
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    and c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [hl], a
-    ld a, b
-    ld a, c
-    ld a, d
-    ld a, e
-    ld a, h
-    ld a, l
-    ld a, [hl]
-    ld a, a
-    and d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    and e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    push de
-    rst $18
-    sbc a
-    sbc $e0
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    xor b
-    sbc $d5
-    sub $d6
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    push de
-    and l
-    and c
-    and e
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    add a
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    ld [hl], a
-    ld a, b
-    sbc e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    sbc h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    sbc l
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    sbc [hl]
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_7731
+; [S166] window layout streams $7731-$789E (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_7731:
+    dw $0140                 ; position: row 10, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $78, $79, $7a, $7b, $7c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_7757:
+    dw $0087                 ; position: row 4, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $65, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $a0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6e, $6f, $70, $71, $72, $73, $74, $75, $76, $a1, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $77, $78, $79, $7a, $7b, $7c, $7d, $7e, $7f, $a2, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $a3, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_77D7:  ; the egg appraiser: EVAL / BLESS / EXIT; EVAL / BLESS / EXIT
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d5, $df, $9f, $de, $e0, $e0, $ff  ; . EVAL  .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a8, $de, $d5, $d6, $d6, $e0, $ff  ; . BLESS .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d5, $a5, $a1, $a3, $e0, $e0, $ff  ; . EXIT  .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_781F:  ; the egg appraiser: the eggs
+    dw $0087                 ; position: row 4, column 7
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $70, $71, $72, $73, $74, $75, $76, $77, $78, $9b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $9c, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $8b, $8c, $8d, $8e, $8f, $90, $91, $9d, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $9e, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_7731
     nop
     nop
     ld a, [$efef]
@@ -9607,84 +8984,37 @@ jr_00a_6e52:
     reti
 
 
-    inc c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    sub l
-    sbc l
-    sub e
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc h
-    sub [hl]
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    nop
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    and c
-    and a
-    xor c
-    and h
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    and h
-    and d
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; @BUILD_PROJECT BEGIN win_words_0a_79be
+; [S166] window layout streams $79BE-$7A1B (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_0A_79BE:
+    dw $000c                 ; position: row 0, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $95, $9d, $93, $9c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9c, $96, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_0A_79ED:  ; the egg appraiser: INFO / OK; INFO / OK
+    dw $0100                 ; position: row 8, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a1, $a7, $a9, $a4, $e0, $ff  ; . INFO .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a4, $a2, $e0, $e0, $e0, $ff  ; . OK   .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+; @BUILD_PROJECT END win_words_0a_79be
     ld c, $01
     ld a, [$efef]
     rst $28

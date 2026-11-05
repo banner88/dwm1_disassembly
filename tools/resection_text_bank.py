@@ -33,6 +33,8 @@ USAGE
   python3 tools/resection_text_bank.py --bank 0x47           # plan only (no write)
   python3 tools/resection_text_bank.py --bank 0x47 --apply   # convert + build + verify
   python3 tools/resection_text_bank.py --bank 0x47 --check   # verify current build byte-perfect
+  python3 tools/resection_text_bank.py --bank 0x42 --apply --name-dispatch   # S166: + the dispatch
+      rows -> TextStr labels, entries 1 / 2 -> TextRunB<bank>_ / TextShowRefreshB<bank>_ labels
 """
 import hashlib
 import json
@@ -181,6 +183,50 @@ def already_done(asm, bank, first_addr):
     return re.search(rf"^TextStr_{bank:02x}_{first_addr:04x}:", open(asm).read(), re.M) is not None
 
 
+def name_dispatch(bank, apply_):
+    """S166 (ROADMAP T2…Tn, the S164 $47 form): the dispatch table's raw `dw $XXXX` rows that point
+    at a string become `dw TextStr_<bank>_<addr>`; entries 1 / 2 (raw `dw`) get the loader-stub
+    labels TextRunB<bank>_<addr> (copy — RunTextHandler) / TextShowRefreshB<bank>_<addr> (show +
+    RequestScreenUpdate). Labels only; the build must stay byte-perfect."""
+    asm = asm_path(bank)
+    text = open(asm).read()
+    labels = set(re.findall(rf"^(TextStr_{bank:02x}_[0-9a-f]{{4}}):", text, re.M))
+    lines = text.split("\n")
+    n_rows = 0
+    stubs = {}
+    for i, l in enumerate(lines):
+        m = re.match(r"^(\s+dw )\$([0-9A-Fa-f]{4})(\s*; Entry (\d+).*)$", l)
+        if not m:
+            if re.match(r"^[A-Za-z_]\w*:", l):
+                break                                    # the table ends at the first label
+            continue
+        a, entry = int(m.group(2), 16), int(m.group(4))
+        lab = f"TextStr_{bank:02x}_{a:04x}"
+        if lab in labels:
+            lines[i] = f"{m.group(1)}{lab}".ljust(37) + m.group(3).lstrip()
+            n_rows += 1
+        elif entry in (1, 2):
+            name = (f"TextRunB{bank:02X}_{a:04x}" if entry == 1 else f"TextShowRefreshB{bank:02X}_{a:04x}")
+            stubs[a] = name
+            lines[i] = f"{m.group(1)}{name}".ljust(37) + m.group(3).lstrip()
+    if stubs:
+        # the stub lines by address (a zero-byte probe build of the file as it is: raw rows)
+        orig_lines, line_addr = build_line_addr_map(asm, bank)
+        at = {}
+        for ln, a in line_addr.items():
+            if a in stubs and (a not in at or ln < at[a]):
+                at[a] = ln
+        for a, ln in sorted(at.items(), key=lambda x: -x[1]):
+            note = ("; [S166] copy a text of this bank (RunTextHandler); ids past the bank's range go "
+                    "to its overflow bank (TEXT_SYSTEM \"Text id resolution\")"
+                    if stubs[a].startswith("TextRun") else
+                    "; [S166] show a text (entry 0) then RequestScreenUpdate")
+            lines[ln:ln] = [note, f"{stubs[a]}:"]
+    if apply_:
+        open(asm, "w").write("\n".join(lines))
+    return n_rows, len(stubs)
+
+
 def main():
     args = sys.argv[1:]
     if "--bank" not in args:
@@ -211,7 +257,9 @@ def main():
           f"({raw_end - raw_start} bytes)")
 
     if already_done(asm, bank, first_addr):
-        print("  already re-sectioned (idempotent) — nothing to do")
+        print("  already re-sectioned (idempotent)")
+        if "--name-dispatch" in args:
+            _dispatch(bank, apply_)
         return
 
     lines, line_addr = build_line_addr_map(asm, bank)
@@ -253,10 +301,26 @@ def main():
         os.remove(backup)
         n = sum(1 for l in block if l.startswith("TextStr_"))
         print(f"  OK: {n} text labels emitted, build byte-perfect ({got})")
+        if "--name-dispatch" in args:
+            _dispatch(bank, apply_)
     except Exception:
         if os.path.exists(backup):
             shutil.move(backup, asm)
         raise
+
+
+def _dispatch(bank, apply_):
+    asm = asm_path(bank)
+    backup = asm + ".bak2"
+    shutil.copy(asm, backup)
+    rows, stubs = name_dispatch(bank, apply_)
+    ok, log = build()
+    got = md5(os.path.join(DIS, "game.gbc")) if ok else None
+    if got != ORIGINAL_MD5:
+        shutil.move(backup, asm)
+        sys.exit(f"dispatch naming NOT byte-perfect ({got}); reverted.\n" + log[-1500:])
+    os.remove(backup)
+    print(f"  dispatch: {rows} rows named, {stubs} loader stubs labelled; build byte-perfect")
 
 
 if __name__ == "__main__":

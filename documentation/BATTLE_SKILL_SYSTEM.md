@@ -2200,7 +2200,7 @@ new skills — e.g. a new skill "from Blaze" beside Blazemore). The compiler WAR
 
 **FIXED S161 (built S161, USER-CONFIRMED 2026-11-02 12:43 ("Test fine I guess", on `DWM-S161-mirror-test-2.gbc`)): `LearnUpgradeOrAdd51`.** The 5 bytes `ldh a, [$da] /
 ld l, a / ld h, $06` of the code-1 path in `LevelUpS04_LearnScan` are `call LearnUpgradeOrAdd51 / jr c,
-jr_051_5799` (26 B in bank $51's free tail after `ArenaScriptType51`, `$7B3A`): the old id `$FFDA` still
+jr_051_5799` (26 B in bank $51's free tail after `ArenaScriptType51`, `$7B3A`; `$7B3B` since S166 r2 — ARCHITECTURE free-space row): the old id `$FFDA` still
 in the working list `$C0D8[0..39]` -> the upgrade as before (HL = `$06xx` for `[INS 30]`); gone -> HL =
 `$0B02` (the plain "… increases to LV … and learned …!" line, bank $41 table `$49CD` row 2) and C = `$FF`
 (the first free slot) — the second skill is learned BESIDE the first; the scanner then finds it in

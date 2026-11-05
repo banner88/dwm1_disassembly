@@ -1003,6 +1003,31 @@ Measured on screen (PyBoy): the field menu opens with **A** on the field (not ST
 one); the WHO list of INFO / SKIL shows the cursor monster's INFO page 1 (`$70F7` + `$71AF`) beside
 it; A on a monster then draws page 2 (`$724F` / `$727B` / `$7333`).
 
+**S166 — every other bank (byte-read + measured; ROADMAP T-follow (a) / (b)).** Re-sectioned as labeled
+`db` in both trees by the same tool (byte-neutral `1ca6579…`), each run a compiler region
+(PROJECT_COMPILER §2.74): bank $09 `$6CDE-$6E44` (the gate list), `$6EB0-$705D` (YES / NO ×3, the
+shop's gold box / BUY SELL EXIT / list / how many, the Vault's how many), `$7153-$7215` (the Vault's
+list / gold box / ITEM G), `$74A0-$7543`, `$7838-$7871` (the Vault's PUT / TAKE / EXIT — cells of a
+text canvas), `$7CA5-$7CCA` (the naming screen's name), `$7DC9-$7EC6` (the naming keyboard); bank $0A
+`$6F3C` / `$70C5` (YES / NO — two streams with the same bytes: the tool keeps their order), `$6F86`
+(gold), `$7409-$7506`, `$75AB-$770A` (Grandpa: BREED / HATCH / EXIT, who, the mate, the pair),
+`$7731-$789E`, `$79BE-$7A1B` (the egg appraiser); bank $12 `$6DCB` / `$6F54` (YES / NO; were raw `ld de,
+$6dcb` in fake code) and the library run `$710C-$7B9A` (the S26 / S27 `LibWinLayout_*` — 29 streams,
+their names kept); bank $18 `$547A-$54F8`, `$5523-$5576`, `$55F7-$561C` (the link mode); bank $50
+`$6ED2-$7176` (the battle: FIGHT ITEM / PLAN RUN, who, the tactics, the items …), `$7213-$7237`,
+`$74BA-$756A` (ATK / SKIL / DEF); bank $51 `$6E78-$6F97`, `$6FE2-$717E` (after the battle: YES / NO, the
+full party's WHO / INFO / OK, MON / EGG, the join). Every `ld de, $<stream>` of these banks names its
+label (116 sites), and the drawers are named in every bank: `WinLayoutDrawVram<BB>` (entry A) /
+`WinLayoutDraw<BB>` (entry B) — $09 `$408D` / `$40C9`, $0A `$4078` / `$40B4`, $12 `$4078` / `$40B4`
+(`ReadPtrFromDE`), $18 `$4F99` / `$4FD5`, $50 `$75AE` / `$75F0` (was `LoadPaletteFromDE` — a misnomer,
+DOC_AUDIT S166), $51 `$728A` / `$72CC`. Four mgbdis labels that FAKE code in the data gaps jumped to
+(`jr_009_7cc9`, `jr_009_7ded`, `jr_018_5605`, `Jump_050_74e0` — inside the runs) became the same
+address as a number. Measured (PyBoy, the GLOSSARY HALL tour): the battle draws its menus into the
+screen BUFFER — they reach the tile map some frames after the draw call (read them ≥ 20 frames later);
+a window near the map's right edge continues at column 0 (the map wraps). Which cells show a TEXT
+CANVAS (the words a window cuts out of a text) and which a screen's letter sheet: TEXT_SYSTEM "Text
+canvases (S166)" / "Window words (S165)".
+
 ### Library / family-tab menu data (bank $12)
 
 The monster-library / family-tab menu lives in bank `$12`. mgbdis decoded its

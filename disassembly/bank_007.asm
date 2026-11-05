@@ -6506,6 +6506,11 @@ jr_007_69ac:
     ld [$c822], a
 
 LoadFld_69b6:
+; [S166] TextToCanvas: draw a text INTO TILES — HL = the canvas (a VRAM tile address, $8800-$97FF),
+; D = cells a row, E = rows, [$C822] / [$C823] = the text's mode / row; saves [$C827-$C82A], sets them
+; ($C827/8 = HL, $C829 = E, $C82A = D), far-calls bank $41 entry 2 (CallTextEngine renders the glyphs
+; into the tiles), restores them. A window stream then shows cells of it (TEXT_SYSTEM "Text canvases
+; (S166)" — e.g. the Vault's PUT / TAKE / EXIT = field message 11 at $8A40, 12 cells).
 jr_007_69b6:
     ld a, [$c827]
     ld c, a
@@ -7911,11 +7916,11 @@ WinLayout_07_746B:
     db $d8                  ; NEWLINE
     db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
     db $d9                  ; END
-WinLayout_07_755B:  ; DAD / MASTER (font not measured)
+WinLayout_07_755B:  ; the egg page: the father; DAD / MASTER
     dw $0007                 ; position: row 0, column 7
     db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
     db $d8                  ; NEWLINE
-    db $fe, $02, $00, $02, $e4, $8c, $8d, $8e, $8f, $e0, $e0, $e0, $ff  ; .DAD:....   .
+    db $fe, $02, $00, $02, $e4, $8c, $8d, $8e, $8f, $e0, $e0, $e0, $ff  ; .DAD.....   .
     db $d8                  ; NEWLINE
     db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
     db $d8                  ; NEWLINE
@@ -7927,15 +7932,15 @@ WinLayout_07_755B:  ; DAD / MASTER (font not measured)
     db $d8                  ; NEWLINE
     db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
     db $d8                  ; NEWLINE
-    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $90, $91, $92, $93, $ff  ; .MASTER:.....
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $90, $91, $92, $93, $ff  ; .MASTER......
     db $d8                  ; NEWLINE
     db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
     db $d9                  ; END
-WinLayout_07_75DB:  ; MOM / MASTER (font not measured)
+WinLayout_07_75DB:  ; the egg page: the mother; MOM / MASTER
     dw $0127                 ; position: row 9, column 7
     db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
     db $d8                  ; NEWLINE
-    db $fe, $07, $09, $07, $e4, $94, $95, $96, $97, $e0, $e0, $e0, $ff  ; .MOM:....   .
+    db $fe, $07, $09, $07, $e4, $94, $95, $96, $97, $e0, $e0, $e0, $ff  ; .MOM.....   .
     db $d8                  ; NEWLINE
     db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
     db $d8                  ; NEWLINE
@@ -7947,11 +7952,11 @@ WinLayout_07_75DB:  ; MOM / MASTER (font not measured)
     db $d8                  ; NEWLINE
     db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
     db $d8                  ; NEWLINE
-    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $98, $99, $9a, $9b, $ff  ; .MASTER:.....
+    db $fe, $07, $00, $d6, $0b, $d5, $0a, $e4, $98, $99, $9a, $9b, $ff  ; .MASTER......
     db $d8                  ; NEWLINE
     db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
     db $d9                  ; END
-WinLayout_07_765B:
+WinLayout_07_765B:  ; ARIKT / OXMNBF
     dw $0155                 ; position: row 10, column 21
     db $8c, $8d, $8e, $8f, $90, $91
     db $d8                  ; NEWLINE
@@ -7959,9 +7964,9 @@ WinLayout_07_765B:
     db $d8                  ; NEWLINE
     db $98, $99, $9a, $9b, $9c, $9d
     db $d8                  ; NEWLINE
-    db $9e, $9f, $a0, $a1, $a2, $a3
+    db $9e, $9f, $a0, $a1, $a2, $a3  ; .ARIKT
     db $d8                  ; NEWLINE
-    db $a4, $a5, $a6, $a7, $a8, $a9
+    db $a4, $a5, $a6, $a7, $a8, $a9  ; OXMNBF
     db $d8                  ; NEWLINE
     db $aa, $ab, $ac, $ad, $ae, $af
     db $d9                  ; END

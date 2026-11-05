@@ -1368,3 +1368,22 @@ edge and the battle waits for input forever.
   screen shows through SCX / SCY (`LCDC` bit 3 picks `$9800` / `$9C00`), not at the stream's
   position — the INFO page is drawn into a scrolled part of the map.
 
+## S166 techniques — every service screen in one tour, a letter by its shape, text canvases
+
+- **One hall, every service:** a demo room with one NPC of each service kind (`Document.make_service_npc`
+  / `make_shopkeeper`, `examples/s166_glossary_demo`) and a sparring monster with joinability 0 (it
+  always joins: the naming screen, then — with a full party — the "back to the farm" WHO window). One
+  save state in the hall; each tour restarts from it (`tools/census_window_layouts.py SERVICE_TOUR`).
+- **A letter by its shape, on any screen:** 2bpp → 64 pixels, 1 where the colour differs from the
+  tile's most common colour; equal to a text-font glyph's shape (bank $4F `$4010` + 16 · code) = that
+  letter, whatever the screen's palette or tile number (`glyph_shapes` / `shape`).
+- **Which text is in a tile:** hook CallTextEngine `$05B6` ([$C822] mode, [$C823] row, [$C827/8] the
+  canvas, [$C829] rows, [$C82A] cells, DE = the bank's mode list → the table, VBK = the VRAM bank), read
+  the canvas 10 frames later (or at the next window draw) and call a tile "that text" only while it
+  still holds those bytes IN THAT BANK. Which string the engine fetched: hook `$094F` (after the level-2
+  read), DE = the string, [$C824] = its bank.
+- **Menus:** the field's A on nothing opens the menu; the battle's PLAN → the tactics per monster
+  (the third A starts the round); `down` ×3 = COMMAND → ATK / SKIL / DEF. Read the battle's windows ≥ 20
+  frames after the draw (buffer). The link-cable menus (VS MODE / BREEDING) answer "Not ready for link
+  up." — PyBoy has no partner: those windows stay unmeasured.
+

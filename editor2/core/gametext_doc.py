@@ -102,21 +102,44 @@ class GameTextMixin:
         self.touch()
 
     # ---- [S165] the words drawn in the windows as tiles (editor2/core/window_words.py)
+    # ---- [S166] + the words a window cuts out of a text (key "T:<table>:<row>/<offset>")
     def window_words(self):
-        """{slot key: the project's word} (gamedata.window_words)."""
+        """{slot key: the project's word}: gamedata.window_words, and (S166) every text slot whose
+        word in the row as edited (gamedata.text) differs from the game's."""
         v = (self.data.get('gamedata') or {}).get('window_words')
-        return dict(v) if isinstance(v, dict) else {}
+        out = dict(v) if isinstance(v, dict) else {}
+        from editor2.core import window_words as WW
+        rows = self._gt_rows()
+        for key, s_ in WW.slots(getattr(self, 'repo_root', None)).items():
+            if s_['kind'] != 'text':
+                continue
+            cur = (rows.get(s_['source']) or {}).get(GT._norm_key(s_['source'], s_['index']))
+            if cur is None:
+                continue
+            w = WW.text_word(cur, s_)
+            if w != s_['text']:
+                out[key] = w
+        return out
 
     def set_window_word(self, key, word):
         """One window word: `word` None / '' / == the original = back to the original. Refused
-        (WindowWordsError) when longer than the slot or using a letter the screen's font lacks."""
+        (WindowWordsError) when longer than the slot or using a letter the screen's font lacks.
+        S166: a text slot rewrites its row in gamedata.text (the slot's cells; the other cells of
+        the row as they are)."""
         from editor2.core import window_words as WW
         sl = WW.slots(getattr(self, 'repo_root', None))
         if key not in sl:
             raise WW.WindowWordsError(f'no window word {key!r}')
+        s_ = sl[key]
+        if s_['kind'] == 'text':
+            x = self.game_text(s_['source'], s_['index'])
+            want = s_['text'] if word in (None, '') else word
+            markup = WW.compose_text(x['markup'], s_, want)
+            self.set_game_text(s_['source'], s_['index'], markup, only_this=True)
+            return
         gd = self.data.setdefault('gamedata', {})
         ww = gd.setdefault('window_words', {})
-        if word in (None, '') or word == sl[key]['text']:
+        if word in (None, '') or word == s_['text']:
             ww.pop(key, None)
         else:
             errs = []

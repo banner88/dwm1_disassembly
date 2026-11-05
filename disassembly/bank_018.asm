@@ -926,7 +926,7 @@ CallAud_463d:
     call LoadAud_4eee
     ld de, $2e07
     call LoadAud_4fd5
-    ld de, $547a
+    ld de, WinLayout_18_547A
     call LoadAud_4fd5
     call ClrAud_5244
     ld de, $4690
@@ -1211,10 +1211,10 @@ CallAud_47d4:
     and $01
     jr nz, jr_018_47ed
 
-    ld de, $55f7
+    ld de, WinLayout_18_55F7
     call LoadAud_4fd5
     call LoadAud_49f8
-    ld de, $549f
+    ld de, WinLayout_18_549F
 
 jr_018_47ed:
     call LoadAud_4fd5
@@ -1749,7 +1749,7 @@ CallAud_4b1c:
     and $01
     jr z, jr_018_4b2c
 
-    ld de, $5523
+    ld de, WinLayout_18_5523
 
 jr_018_4b2c:
     call LoadAud_4fd5
@@ -2057,7 +2057,7 @@ jr_018_4cd8:
 
 CallAud_4d38:
     call CallAud_463d
-    ld de, $5552
+    ld de, WinLayout_18_5552
     call LoadAud_4fd5
     call ClrAud_5244
     ld de, $4d90
@@ -2504,6 +2504,8 @@ jr_018_4f97:
     ret
 
 
+; [S166] WinLayoutDrawVram18: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the BG map $9800+ (the row wraps at 32: `and $03 / or $98`), cells through Write_gfx_tile. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDrawVram18:
     ld a, [de]
     ld l, a
     inc de
@@ -2550,6 +2552,8 @@ jr_018_4fcd:
     call SaveAud_4f56
     jr jr_018_4fa8
 
+; [S166] WinLayoutDraw18: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the screen buffer, cells `ld [hl+], a`. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDraw18:
 LoadAud_4fd5:
     ld a, [de]
     ld l, a
@@ -2636,6 +2640,11 @@ jr_018_5016:
     ret
 
 
+; [S166] TextToCanvas: draw a text INTO TILES — HL = the canvas (a VRAM tile address, $8800-$97FF),
+; D = cells a row, E = rows, [$C822] / [$C823] = the text's mode / row; saves [$C827-$C82A], sets them
+; ($C827/8 = HL, $C829 = E, $C82A = D), far-calls bank $41 entry 2 (CallTextEngine renders the glyphs
+; into the tiles), restores them. A window stream then shows cells of it (TEXT_SYSTEM "Text canvases
+; (S166)" — e.g. the Vault's PUT / TAKE / EXIT = field message 11 at $8A40, 12 cells).
 LoadAud_503b:
     ld a, [$c827]
     ld c, a
@@ -3451,112 +3460,47 @@ SaveAud_546b:
     ret
 
 
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    xor b
-    xor c
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld l, h
-    ld l, l
-    ld l, [hl]
-    ldh [rIE], a
-    ret c
-
-    db $ec
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $eb
-    db $ed
-    ret c
-
-    cp $e0
-    nop
-    ld bc, $0302
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc b
-    dec b
-    ld b, $07
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ld [FormatHundredThousands], sp
-    dec bc
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    inc c
-    dec c
-    ld c, $0f
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; [S166] window layout streams $547A-$54F8 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_18_547A:
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a8, $a9, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_18_549F:
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6c, $6d, $6e, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $ec, $eb, $eb, $eb, $eb, $eb, $ed
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $00, $01, $02, $03, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $04, $05, $06, $07, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $08, $09, $0a, $0b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $0c, $0d, $0e, $0f, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     dec c
     nop
     ld a, [$efef]
@@ -3594,78 +3538,35 @@ SaveAud_546b:
     reti
 
 
-    inc c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld l, a
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld [hl], e
-    ld [hl], h
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld c, $00
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ld [hl], l
-    db $76
-    ld [hl], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld a, b
-    ld a, c
-    ld a, d
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; [S166] window layout streams $5523-$5576 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_18_5523:
+    dw $000c                 ; position: row 0, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $6f, $70, $71, $72, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $73, $74, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_18_5552:
+    dw $000e                 ; position: row 0, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $75, $76, $77, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $78, $79, $7a, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     nop
     nop
     ld a, [$efef]
@@ -3747,7 +3648,7 @@ SaveAud_546b:
     ld e, $1f
 
 jr_018_55e2:
-    jr nz, jr_018_5605
+    jr nz, $5605
 
     ld [hl+], a
     inc hl
@@ -3765,37 +3666,19 @@ jr_018_55e2:
     reti
 
 
-    ld b, b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-jr_018_5605:
-    cp $e0
-    ldh [$e0], a
-    db $10
-    ld de, $1312
-    inc d
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; [S166] window layout streams $55F7-$561C (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_18_55F7:
+    dw $0140                 ; position: row 10, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $10, $11, $12, $13, $14, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     rra
     ld d, [hl]
     sub h

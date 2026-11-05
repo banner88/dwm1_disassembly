@@ -440,7 +440,7 @@ pipeline — never retrofit the overlay.
       bank $71 entry 7's `CustomRoomBattleBGMTable`, CROSSBANK_ROOMS "S120
       burn-down") — **DONE S138 (ARC CAP2e: 256-row tables, no `cp $80`)**; the two exit validators (custom-dest exits gate_flag=0;
       trigger_x≠$FF) exist (`validators.py`, S120 re-check).
-- [ ] **A′2 — bank $0B in-place room emitter** (Layer A of project.json).
+- [x] **A′2 — bank $0B in-place room emitter** (Layer A of project.json). **CLOSED S166 (clean-up): superseded** by the S90 decision "clone-to-custom + Layer A-lite" (EDITOR_DESIGN §6.1 / §6.3: a vanilla room is edited as a custom-room copy — Make editable, S96 / S144 — and only exit repoints stay in place); `world` (Layer A) remains a hard error in the compiler (PROJECT_COMPILER §2.1).
 - [x] **A′3 — bank $60 multi-bank spill** (CLOSED S157, clean-up: superseded by ARC CAP2b, the place banks) (bank_map; 16 KB won't hold 75
       rooms of scripts+dialogue; 13 banks / 208 KB free). **S133: superseded by ARC CAP
       CAP2 (place banks — every custom data class, not only $60; the "13 banks free" was
@@ -497,9 +497,14 @@ pipeline — never retrofit the overlay.
       intercept of `EncounterMonsterSelect`'s pool fetch for custom mapIDs (or
       reuse a verified-unreferenced pool slot). Project fields: up to 5
       `{enemy_stats_id, weight}` + header template. Spec in CROSSBANK_ROOMS.md.
-- [ ] **Preserved-systems flag-dependency audit + orphaned-trigger validator
+- [x] **Preserved-systems flag-dependency audit + orphaned-trigger validator
       (ADDED S72 — EDITOR_DESIGN §1/§6 cite this box, but it had never been
-      created).** The romhack keeps six vanilla islands (Arena, Shrine,
+      created). CLOSED S166 (byte-neutral):** (a) the table per island in SIDEQUEST_MAP
+      "Preserved islands: the flags they read (S166)" (NEW `tools/audit_island_flags.py`, the ROM's
+      own scripts: Arena 51 flags (7 original-story-only), Starry Shrine 13 (4), Library 11 (3),
+      Vault 5 (2), the gate Item Shop 0); (b) the validator = the Progression & Flags tab's Problems
+      "checks waiting for the original game's progress" (problem `game_only`, S124) — the failing
+      fixture is test_compiler `test_s166` (the example's copied rooms test `$0025` / `$001D`). The romhack keeps six vanilla islands (Arena, Shrine,
       Library, Vault, shops — EDITOR_DESIGN §1 table); any island that READS
       a vanilla story flag the new campaign stops SETTING will misbehave.
       Two halves: (a) one-time audit — for each preserved island, list every
@@ -2300,7 +2305,10 @@ recipes are pure authoring.
           words wrapped into boxes; a mate = a species at a level you choose. r3: every text
           box at the bottom (NO no longer splits the box); every text entry is a game box editor. *User half:*
           the test ROM.
-    - [x] **P3.14e3 — Your arena** (S128, USER-CONFIRMED 2026-10-07 09:51): copies of the
+    - [x] **P3.14e3 — Your arena** (S128, USER-CONFIRMED 2026-10-07 09:51; **S166 r2 FIX: its bank $51
+          routine `ArenaScriptType51` sat on $51:$7B34, the last byte of gfx `$5112` — the battle YES / NO's
+          "NO" had a tail; the byte restored, the routine at $7B35 (KEY_LESSONS S166 r2); built S166 r2,
+          NOT yet user-tested**): copies of the
           Arena Lobby AND the Arena Battle room (Arena tab → ★ Your arena → Make your arena)
           the engine treats as `$06` / `$5D` (ROM0 `ArenaMapID` / `ArenaAlias`, 9 sites +
           the bank $71 template); the walk-in, the matches, the crowd, the arena's battle type
@@ -3167,10 +3175,13 @@ is campaign-BLOCKING** — the POV flip cannot ship without it; E8/E9
       spines in custom rooms via generated scripts; keep vanilla intact as
       postgame; arena gating survives as re-authored Arena Lobby scr0.*
 
-- [~] **E3 — New-game initialization + save-schema headroom.
+- [x] **E3 — New-game initialization + save-schema headroom.
       THE 32 KB SRAM EXPANSION IS BUILT (S69, NOT yet user-tested);
       (a2) THE NEW-GAME START IS BUILT (S152; USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3));
-      the story-variable schema (b2) remains open.**
+      (b2) CLOSED S166 (clean-up): the banks 1-3 allocation map + the convention every consumer
+      already follows (a magic per consumer, absent = a pre-feature save = empty, the commit at the
+      explicit save or at once, `CF3NewGameClear` zeroes at NEW GAME) — ARCHITECTURE "SRAM banks 1-3:
+      the allocation map (S166)"; a new story variable takes bank 3's free ranges by that rule.**
       **(a2) as built S152** (owning: PROJECT_COMPILER §2.60; DATA_STRUCTURES "New game
       start (S152)"): `custom.new_game` — the game's intro or one of the project's rooms
       (screen / cell / facing; bank $15 region `newgame_start` → bank $79 entry 2
@@ -3801,8 +3812,12 @@ yields the E6 capacity numbers.
       `text_id_map.json` had 62 / 2,061 right). Bank $47's T1 region misses its first
       string `$40C1` (id $03C8) — redo its bounds first (PROJECT_STATE open defects).
       **DONE S164:** bank $47 re-run from the measured map (`$40C1-$5B74`, 56 strings).
-- [ ] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
-      tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each.
+- [x] **T2…Tn — Roll-out across `$42-$46, $48-$4B, $4E`** (one or two banks/session, same
+      tool). *Accept:* each bank re-sectioned; MD5 stays `1ca6579…` after each. **DONE S166 (the
+      user: "if time allows do C"):** all ten in one session (`resection_text_bank.py --apply
+      --name-dispatch`: 1,244 strings as `TextStr_<bank>_<addr>` `db`, the dispatch rows named, the
+      copy / show-refresh stubs labelled); `1ca6579…` after each bank. TEXT_SYSTEM "Source
+      re-section". Open (not in this box): the overflow banks' strings.
 - [x] **T-author — Edit/replace a vanilla string.** A tool that rewrites a vanilla text id's
       bytes (same-size in place, or relocate to a free bank via its pointer-table entry).
       *Accept:* a known vanilla line shows new text in SameBoy; clean MD5 unchanged. Byproduct:
@@ -3825,7 +3840,7 @@ yields the E6 capacity numbers.
       failed; negative 8 FAIL); clean `1ca6579…` unchanged. *User half:* `DWM-S150-scribe-test.gbc`
       (the throne room's lady, the bag's FairyDew / BayLeaf, "… pours 1 FairyDew on …", THE
       SCRIBE'S HALL / FIELD) + the Text tab in the editor.
-- [~] **T-follow (S150, open) — what the Text tab does not reach yet.** **S165 ((a), built S165,
+- [x] **T-follow (S150) — what the Text tab does not reach yet. CLOSED S166 (built S166, NOT yet user-tested; (d) closed by design; the user's test: "Everything works BUT … the NO has a bit of a glitch" = an S128 fault, fixed S166 r2, built S166 r2, NOT yet user-tested).** **S166 ((a) the other screens, (b), (c); the user: "Do A1-3, close A4"):** (a) rest — the windows of banks $09 (shop, Vault, gate list, naming) / $0A (Grandpa, the egg appraiser) / $12 (the farm, the namer, the library — its S26 / S27 `LibWinLayout_*` run re-emitted, labels kept) / $18 (the link mode) / $50 / $51 (the battle) re-sectioned as labeled `db` in both trees (25 runs, byte-neutral `1ca6579…`; every `ld de, $<stream>` named, the 12 drawer entries named — `LoadPaletteFromDE` $50:$75F0 was a misnomer: DOC_AUDIT S166), each run a compiler region; the screens' letters MEASURED on a PyBoy tour of the GLOSSARY HALL (one NPC of each service + a battle + the ITEM page, the user's save): a cell's letter = its tile's 8 x 8 shape against the text font (bank $4F) — every screen keeps the same typeface at its own tile numbers ("NO" = `$31 $32` / `$9D $9C` / `$A8 $A7`); 47 more editable words (the shop, the farm, the Monster Namer, Grandpa, the egg appraiser, the egg page, the battle) with each screen's own letters; not editable: the naming keyboard, the pedigree picture, the battle's join / party-full windows (bank $51: an UNDECODED writer re-letters tiles $83-$8A / $9C-$9E between the text renders and the draws — measured: misc 10 "WHOSTROK" is drawn, the screen shows "WHO INFO OK"; next: hook VRAM writes to tiles $82-$8A after the misc 27 render to find it), the link-cable windows (banks $15 / $18 — no partner in PyBoy), windows no tour opened (68 of 136 streams). (b) the packed rows ARE text CANVASES: the engine draws a text into tiles (`ld hl, <tile address> / ld de, <cols, rows>` → [$C827-$C82A], bank $09 `LoadFld9_412f` / $51 `LoadBtlS_73a3` …) and the window shows cells of it: the Vault's PUT / TAKE / EXIT = field 11 cut 4 / 4 / 4, ITEM / GOLD / EXIT = field 12, Grandpa's EXIT = field 16 cells 1-4 (8-cell canvas), field 85 = the Vault's ITEM box; `WHOINFOOKMONEGG` (field 74) is read only by bank $18 (the link mode); misc 9 `Who Us Thm` by no code found — the Window words page edits the slots (key `T:<table>:<row>/<offset>`, the row rewritten in gamedata.text). (c) the tables' windows measured on the same tour (`text_widths`): battle messages, level-up lines, item descriptions and use lines 18 cells, item names / personalities 9 (+ the credits 20 / 11, S153) — the Text tab warns past them (never on the game's own rows); not drawn on the tour (no width claimed): spell lines, treats / veils / commands, the BeastTail, the tutorial, Watabou. (d) the debug texts (bank $41 modes 0 / 1, bank $56 mode 0, bank $55's viewer): CLOSED BY DESIGN — the developers' viewers no normal game reaches (the user: "close A4"). PyBoy: `tools/walk_window_words.py --services` 50 / 50, negative 11 FAIL. PROJECT_COMPILER §2.74, TEXT_SYSTEM "Window words (S165)" + "Text canvases (S166)", DATA_STRUCTURES "Window layout streams (S165)". **S165 ((a), built S165,
       USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good")): the words drawn in the WINDOWS are editable — the Text tab's Window words
       page** (`gamedata.window_words`, editor2/core/window_words.py, PROJECT_COMPILER §2.73): the
       field menus (bank $07: INFO ITEM / SKIL OPTN, the INFO page's ATK DEF AGL INT WLD / HP MP /

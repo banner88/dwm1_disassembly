@@ -1,5 +1,49 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-03 (Session 164 — **THE OUTSTANDING FIXES: A (ROADMAP / STATUS CLEAN-UP, CI, BANK $47) + B — A NEW
+> SKILL MAY EVOLVE FROM TWO TO FIVE SKILLS (A COMBINATION; THE S75 FENCE LIFTED), THE CLONE CENSUS RE-MEASURED ON WHOLE
+> BATTLES (138 BASES A NEW SKILL MAY RUN, WAS 114), THE ORIGINAL ENEMY AI'S FIVE BUGS AS PROJECT SWITCHES (ROADMAP E17
+> NOTE), THE CUSTOM SKILL NAMES PAST BANK $41'S REGION FROM THE TEXT BANKS (ROADMAP E14)** (the audit of the open items
+> → user: "My project is not a project … will go into bin", "You have permission to run", "Do all of A", "Do all of B or
+> however much is feasible. We're in the final stretches now"). **Built S164; USER-CONFIRMED 2026-11-04 09:40 ("Yes 164
+> tested", on `DWM-S164-conflux-test.gbc`).**
+> Test ROM **`DWM-S164-conflux-test.gbc`** (patched) = the user's project + THE CONFLUX HALL
+> (`examples/s164_conflux_demo/build_demo.py`; way in: the CONFLUX GUIDE, Cities_FOUNT (3, 4)): the FUSION KEEPER (FUSER,
+> Blaze + Bang, level 9 → Fusion at 10 beside both), the TRAINING DUMMY; screen 1: the TACTICIAN (Bang, Sleep, DeMagic,
+> TwinSlash) and the WARDEN (DrakSlash, Upper, Increase, Surround), the BASE KEEPER (gives MEDIC: NHeal / NTwin / NCover /
+> NHighJ, new skills on Heal / TwinSlash / Cover / HighJump — bases refused before S164); ALL FIVE AI fixes ON in this
+> demo; Finish learnable from Firebal. Example pin `9a4337a9…` (patched; was `64ed1699…`, patched — banks $06 / $41 / $60 / $80 + the header).
+> **Session environment:** the RGBDS build needed the user's OK ("You have permission to run"); PyBoy 2.9.0, PySide6 6.9.1.
+> **A (bookkeeping, byte-neutral):** 6 stale ROADMAP boxes closed (coherence sets, combat simulator, S81, `$DB42` setter,
+> +8/+9 consumers, the CI gap); BATTLE_SKILL_SYSTEM's stale S159 note; 6 status rows corrected from the Session Index's own
+> quotes (S148 `$3E`, S116b player, S84 AI commit, S69 SRAM, S119 cutscenes, S121 hook) + the NEW list "Awaiting a user
+> test" (Status Dashboard); CI: the byte-perfect build → `data/` in the runner, the verifier + `test_compiler --rom`;
+> bank $47's T1 region re-run from the measured map (`$40C1-$5B74`, 56 strings, the dispatch names them — `1ca6579…`).
+> **Found:** HEAD's test_compiler FAILED — the S163 DELETE of `editor2/example-project/assets/ts_28_0D.2bpp` was never
+> applied (deleted again); the S75 fence's premise was false (`SkillLearnScan` skips a no-prerequisite row before code 2);
+> code 2's line is `$0B0F` "… by chance, recalls …"; the clone census drifted on `GenerateRNG` calls from banks $53 / $57 /
+> $58 (pinned now); 17 bases still differ (act-time id reads S163 missed — ROADMAP E13 note); `AIRule_551b` decoded (its
+> own divide bug), MultiCut's `$4C41` row (family 7); the S163 rule model is exact on the captured boards only (1,102 of
+> 7,865 mutated chain starts — ROADMAP E17 note); field-menu words = bank $15 window layout scripts (ROADMAP T-follow);
+> FIXED a latent S150 order bug: the text banks and the song banks past $75 could swap $80+ numbers between planners
+> (`gametext.plan` now plans animations / songs / battles first — PROJECT_COMPILER §2.72).
+> **Built (engine, patched):** bank $06 `LearnFence06` open; bank $57 six compiler regions `gd_ai_fix_*` (original bytes
+> by default, `ASSERT`ed). **Built (compiler / editor / simulator):** NEW `editor2/core/ai_fixes.py` + `gamedata.ai_fixes`,
+> the Skills tab's **Enemy AI fixes…**, `ai_rules.evaluate_chain(fixes=)` + `$551B` + MultiCut, the Balance plumbing;
+> `custom_skills.text_slots` (E14) → `gametext`; no "never learned" warning; `raising` code 2; `validate_custom_data`
+> accepts the open fence; help 54, `EDITOR_REVISION` S164. PROJECT_COMPILER §2.72, BATTLE_SKILL_SYSTEM §13.8 / §13.9 /
+> §15.10.5 "S164".
+> **Measured:** `tools/walk_combo.py` 8 / 8 (negative 3 FAIL); `tools/walk_names.py` 16 / 16 (negative 12 FAIL);
+> `tools/walk_aifix.py` 8 / 8 (negative 7 FAIL); NEW `simulator/validate_ai_fixes.py` 6,763 / 6,763 (all five and each
+> alone; 821 decisions differ); `census_skill_clone.py --whole --reclaim` (`extracted/skill_clone_census.json`
+> regenerated); `census_raising.py --quick` on the demo 0 mismatches; validate_rules 240 / boards 1,573 / F10 332.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1942 PASSED (+ `test_s164`); test_app `--rom` PASS (+
+> `s164_ai_fixes`; the GUI build == the pin `9a4337a9…`, patched); test_canvas `--rom` PASS. The three walks re-run on
+> the final demo build (with the BASE KEEPER): 8 / 8, 16 / 16, 8 / 8; the MEDIC's four new skills cast beside their
+> bases in the S110 rig (ad hoc): the same messages / subjects / amounts, the names read right.
+> **Next:** the 17 bases a copy still cannot run (ROADMAP E13 note), the rule model on arbitrary boards (E17 note),
+> T-follow (a) the bank $15 window words, P3.17 packaging.
+
 > Last verified: 2026-11-02 (Session 162 — **ROADMAP E17 NOTE "PROJECT ENEMY ROWS" FIXED: A PROJECT ENEMY ROW HAS ITS
 > OWN "HOLDS BACK GROUP SPELLS" (THE ORIGINAL RULE: A GROUP SPELL / BREATH BECOMES PLAIN ATTACK WHEN ANOTHER ENEMY ACTED
 > FIRST IN THE ROUND); THE FLAG READ IS BOUNDED — PROJECT ROWS NO LONGER READ THE CODE PAST THE 486-BYTE TABLE** (the

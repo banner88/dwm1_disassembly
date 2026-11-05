@@ -3860,9 +3860,54 @@ def s165_window_words(app, w):
     s.undo.undo()                                         # the one step of the edit
     app.processEvents()
     assert doc.dumps() == before and doc.window_words() == {}, 'undo restores the project'
-    print('OK: S165 Window words — 42 words, INFO -> STAT one undo step (gamedata.window_words), '
+    print('OK: S165 Window words — every slot listed, INFO -> STAT one undo step (gamedata.window_words), '
           'a Q / a longer word refused, the compile emits the bank $07 run with the new cells; '
           'undo restores project.json')
+
+
+def s166_window_words(app, w):
+    """S166 (ROADMAP Phase F T-follow (a) / (b)): the Window words page lists the other screens'
+    windows (the shop, the battle …: the screen's own letters) and the words a window cuts out of
+    a text; BUY -> GET = gamedata.window_words, PUT -> STOW = the row in gamedata.text (one undo
+    step each), a letter the shop lacks refused; undo restores project.json."""
+    from editor2.core import window_words as WW
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    tt = w.dialogue_tab
+    pg = tt.pages['window_words']
+    tt.tabs.setCurrentWidget(pg)
+    pg.fill_kinds()
+    app.processEvents()
+    keys = pg.keys
+    assert '09:6F3C/1/2' in keys and 'T:field_message:11/0' in keys and \
+        len(keys) == len(WW.slots()), len(keys)
+    shops = [pg.kind.itemText(i) for i in range(pg.kind.count())]
+    assert 'the shop: BUY / SELL / EXIT' in shops and 'the Vault: PUT / TAKE / EXIT' in shops, shops
+    r = keys.index('09:6F3C/1/2')
+    pg.table.item(r, 3).setText('GET')
+    app.processEvents()
+    assert doc.window_words() == {'09:6F3C/1/2': 'GET'}, doc.window_words()
+    r = pg.keys.index('09:6F3C/1/2')
+    pg.table.item(r, 3).setText('CAR')                     # no A / C on the shop's sheet
+    app.processEvents()
+    assert doc.window_words() == {'09:6F3C/1/2': 'GET'} and '✗' in pg.status.text(), pg.status.text()
+    r = pg.keys.index('T:field_message:11/0')
+    assert 'any letter' in pg.table.item(r, 4).text(), pg.table.item(r, 4).text()
+    n0 = s.undo.count()
+    pg.table.item(r, 3).setText('STOW')
+    app.processEvents()
+    assert s.undo.count() == n0 + 1 and \
+        (doc.data['gamedata'].get('text') or {}).get('field_message', {}).get('11') == 'STOWTAKEEXIT', \
+        doc.data['gamedata'].get('text')
+    assert doc.window_words().get('T:field_message:11/0') == 'STOW', doc.window_words()
+    s.undo.undo()
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before and doc.window_words() == {}, 'undo restores the project'
+    print('OK: S166 Window words — the other screens listed (the shop, the Vault …), BUY -> GET '
+          '(the shop sheet\'s letters; CAR refused), PUT -> STOW rewrites field_message 11 '
+          '(one undo step); undo restores project.json')
 
 
 def s159_resistances(app, w):
@@ -5505,6 +5550,7 @@ def main():
     s163_failed_op_assets(app, w)
     s164_ai_fixes(app, w)
     s165_window_words(app, w)
+    s166_window_words(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

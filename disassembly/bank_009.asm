@@ -127,6 +127,8 @@ jr_009_408b:
     ret
 
 
+; [S166] WinLayoutDrawVram09: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the BG map $9800+ (the row wraps at 32: `and $03 / or $98`), cells through Write_gfx_tile. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDrawVram09:
     ld a, [de]
     ld l, a
     inc de
@@ -173,6 +175,8 @@ jr_009_40c1:
     call SaveFld9_404a
     jr jr_009_409c
 
+; [S166] WinLayoutDraw09: draw a window LAYOUT STREAM (DE = the stream: dw position, cells, $D8 newline, $D9 end) — the screen buffer, cells `ld [hl+], a`. DATA_STRUCTURES "Window layout streams (S165)".
+WinLayoutDraw09:
 LoadFld9_40c9:
     ld a, [de]
     ld l, a
@@ -267,6 +271,11 @@ jr_009_410a:
     ret
 
 
+; [S166] TextToCanvas: draw a text INTO TILES — HL = the canvas (a VRAM tile address, $8800-$97FF),
+; D = cells a row, E = rows, [$C822] / [$C823] = the text's mode / row; saves [$C827-$C82A], sets them
+; ($C827/8 = HL, $C829 = E, $C82A = D), far-calls bank $41 entry 2 (CallTextEngine renders the glyphs
+; into the tiles), restores them. A window stream then shows cells of it (TEXT_SYSTEM "Text canvases
+; (S166)" — e.g. the Vault's PUT / TAKE / EXIT = field message 11 at $8A40, 12 cells).
 LoadFld9_412f:
     ld a, [$c827]
     ld c, a
@@ -1280,9 +1289,9 @@ ShopOuterStateTable:
 
 
 SetFld9_465a:
-    ld de, $6f3c
+    ld de, WinLayout_09_6F3C
     call LoadFld9_40c9
-    ld de, $6f1f
+    ld de, WinLayout_09_6F1F
     call LoadFld9_40c9
     ld de, $2e07
     call LoadFld9_40c9
@@ -1503,7 +1512,7 @@ jr_009_47a6:
 CallFld9_47a8:
     call SetFld9_4204
     call SetFld9_465a
-    ld de, $6f7d
+    ld de, WinLayout_09_6F7D
     call LoadFld9_40c9
     call ShopDrawPrices
     call ClrFld9_442a
@@ -1755,7 +1764,7 @@ jr_009_48eb:
 CallFld9_4915:
     call SetFld9_4204
     call SetFld9_465a
-    ld de, $6f7d
+    ld de, WinLayout_09_6F7D
     call LoadFld9_40c9
     call ShopDrawPrices
     ld de, $48ec
@@ -1764,7 +1773,7 @@ CallFld9_4915:
     ld c, a
     ld hl, $c8e2
     call ReadFld9_44ff
-    ld de, $7033
+    ld de, WinLayout_09_7033
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $498d
@@ -1876,7 +1885,7 @@ jr_009_498c:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6efa
+    ld de, WinLayout_09_6EFA
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $4a64
@@ -2059,7 +2068,7 @@ jr_009_4b1c:
 CallFld9_4b3d:
     call SetFld9_4204
     call SetFld9_465a
-    ld de, $6f7d
+    ld de, WinLayout_09_6F7D
     call LoadFld9_40c9
     call SetFld9_4b62
     call ClrFld9_442a
@@ -2378,7 +2387,7 @@ jr_009_4cdc:
 CallFld9_4d06:
     call SetFld9_4204
     call SetFld9_465a
-    ld de, $6f7d
+    ld de, WinLayout_09_6F7D
     call LoadFld9_40c9
     call SetFld9_4b62
     ld de, $4cdd
@@ -2387,7 +2396,7 @@ CallFld9_4d06:
     ld c, a
     ld hl, $c8e2
     call ReadFld9_44ff
-    ld de, $7044
+    ld de, WinLayout_09_7044
     call LoadFld9_40c9
     ld hl, $c0d8
     ld a, [$c8e3]
@@ -2515,7 +2524,7 @@ jr_009_4db4:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6efa
+    ld de, WinLayout_09_6EFA
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $4e6d
@@ -2734,9 +2743,9 @@ LoadFld9_4f69:
     ld hl, $8a40
     ld de, $0c01
     call LoadFld9_412f
-    ld de, $7838
+    ld de, WinLayout_09_7838
     call LoadFld9_40c9
-    ld de, $6f1f
+    ld de, WinLayout_09_6F1F
     call LoadFld9_40c9
     ld de, $2e07
     call LoadFld9_40c9
@@ -2840,9 +2849,9 @@ jr_009_501a:
 
 
 SetFld9_5049:
-    ld de, $7838
+    ld de, WinLayout_09_7838
     call LoadFld9_40c9
-    ld de, $6f1f
+    ld de, WinLayout_09_6F1F
     call LoadFld9_40c9
     ld de, $2e07
     call LoadFld9_40c9
@@ -3021,7 +3030,7 @@ jr_009_5158:
 CallFld9_5177:
     call SetFld9_4204
     call SetFld9_5049
-    ld de, $7153
+    ld de, WinLayout_09_7153
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $5272
@@ -3222,7 +3231,7 @@ jr_009_5271:
 CallFld9_529b:
     call SetFld9_4204
     call SetFld9_5049
-    ld de, $7153
+    ld de, WinLayout_09_7153
     call LoadFld9_40c9
     ld de, $5272
     ld b, $04
@@ -3230,7 +3239,7 @@ CallFld9_529b:
     ld c, a
     ld hl, $c8e2
     call ReadFld9_44ff
-    ld de, $7044
+    ld de, WinLayout_09_7044
     call LoadFld9_40c9
     ld hl, $c0d8
     ld a, [$c8e3]
@@ -3419,9 +3428,9 @@ CallFld9_53e9:
     ld hl, $8a00
     ld de, $0401
     call LoadFld9_412f
-    ld de, $71ca
+    ld de, WinLayout_09_71CA
     call LoadFld9_40c9
-    ld de, $71e7
+    ld de, WinLayout_09_71E7
     call LoadFld9_40c9
     ld a, [$ca4e]
     ldh [$d5], a
@@ -3635,7 +3644,7 @@ jr_009_5557:
 CallFld9_5576:
     call SetFld9_4204
     call SetFld9_5049
-    ld de, $7153
+    ld de, WinLayout_09_7153
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $5652
@@ -3805,7 +3814,7 @@ jr_009_5651:
 CallFld9_567b:
     call SetFld9_4204
     call SetFld9_5049
-    ld de, $7153
+    ld de, WinLayout_09_7153
     call LoadFld9_40c9
     ld de, $5652
     ld b, $04
@@ -3813,7 +3822,7 @@ CallFld9_567b:
     ld c, a
     ld hl, $c8e2
     call ReadFld9_44ff
-    ld de, $7044
+    ld de, WinLayout_09_7044
     call LoadFld9_40c9
     ld hl, $c0d8
     ld a, [$c8e3]
@@ -4018,9 +4027,9 @@ CallFld9_57dc:
     ld hl, $8a00
     ld de, $0401
     call LoadFld9_412f
-    ld de, $71ca
+    ld de, WinLayout_09_71CA
     call LoadFld9_40c9
-    ld de, $71e7
+    ld de, WinLayout_09_71E7
     call LoadFld9_40c9
     ld a, [$ca4e]
     ldh [$d5], a
@@ -4764,9 +4773,9 @@ ArenaMenuDraw:
     call SetFld9_4204
     ld de, $2e07
     call LoadFld9_40c9
-    ld de, $74a0
+    ld de, WinLayout_09_74A0
     call LoadFld9_40c9
-    ld de, $6f1f
+    ld de, WinLayout_09_6F1F
     call LoadFld9_40c9
     call ArenaMenuDrawFees
     ld a, [wCurrGoldLo]
@@ -5053,7 +5062,7 @@ ArenaClassMenu_State4:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6ed5
+    ld de, WinLayout_09_6ED5
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, ArenaYesNoCursorTable
@@ -5240,7 +5249,7 @@ GateListScreen:
 
 
 SetFld9_5f38:
-    ld de, $6cde
+    ld de, WinLayout_09_6CDE
     call LoadFld9_40c9
     ld a, [$c8e9]
     cp $09
@@ -5816,14 +5825,14 @@ LoadFld9_627b:
     ld [hl], $af
 
 jr_009_62e0:
-    ld de, $7ca5
+    ld de, WinLayout_09_7CA5
     call LoadFld9_40c9
     ld de, $7ccb
     ld a, [wPLAN_selection]
     or a
     jr nz, jr_009_62f2
 
-    ld de, $7dc9
+    ld de, WinLayout_09_7DC9
 
 jr_009_62f2:
     call LoadFld9_40c9
@@ -6487,7 +6496,7 @@ jr_009_6756:
 
     ld a, $5c
     call PlaySoundEffect
-    ld de, $6eb0
+    ld de, WinLayout_09_6EB0
     call LoadFld9_40c9
     call ClrFld9_442a
     ld de, $67d7
@@ -7337,298 +7346,64 @@ FieldPtrLookupTable:   ; (mgbdis name, kept: referenced by the readers / patches
     dw $3a35   ; [229] species 213 DeathMore
     dw $3a36   ; [230] species 214 Darkdrium
 ; NOTE: unreferenced fake-decode labels removed with this block: jr_009_6b57, jr_009_6b5d, jr_009_6b63, jr_009_6b69, jr_009_6b6f, jr_009_6b75, jr_009_6b7b, jr_009_6b81, jr_009_6b87, jr_009_6b8d, jr_009_6b93, jr_009_6b99, jr_009_6b9f, jr_009_6ba5, jr_009_6bab, jr_009_6bb1, jr_009_6bb7, jr_009_6bbd, jr_009_6bc3, jr_009_6bc9, jr_009_6bcf, jr_009_6bd5, jr_009_6bdb, jr_009_6be1, jr_009_6be7, jr_009_6bea, jr_009_6bf0, jr_009_6bf3, jr_009_6bf6, jr_009_6bf9, jr_009_6bfc, jr_009_6bff, jr_009_6c02, jr_009_6c05, jr_009_6c08, jr_009_6c0b, jr_009_6c0e, jr_009_6c14, jr_009_6c17, jr_009_6c1a, jr_009_6c20, jr_009_6c26, jr_009_6c4b, jr_009_6c5b, jr_009_6c6b, jr_009_6c7b, jr_009_6c8b, jr_009_6cdc
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-
-jr_009_6cec:
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $38
-    add hl, sp
-    ld a, [hl-]
-    dec sp
-    inc a
-    dec a
-
-jr_009_6cfc:
-    ld a, $3f
-    ld b, b
-    adc b
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    rst $38
-    ret c
-
-    cp $e0
-
-jr_009_6d0c:
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $41
-    ld b, d
-    ld b, e
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    ld c, b
-    ld c, c
-    sub c
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $4a
-    ld c, e
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    sbc d
-    sbc e
-    sbc h
-    sbc l
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $53
-    ld d, h
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ld e, b
-    ld e, c
-    ld e, d
-    ld e, e
-    and e
-    and h
-    and l
-    and [hl]
-    and a
-    xor b
-    xor c
-    xor d
-    xor e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $5c
-    ld e, l
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ld h, e
-    ld h, h
-    xor h
-    xor l
-    xor [hl]
-    xor a
-    or b
-    or c
-    or d
-    or e
-    or h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $65
-    ld h, [hl]
-    ld h, a
-    ld l, b
-    ld l, c
-    ld l, d
-    ld l, e
-    ld l, h
-    ld l, l
-    or l
-    or [hl]
-    or a
-    cp b
-    cp c
-    cp d
-    cp e
-    cp h
-    cp l
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $6e
-    ld l, a
-    ld [hl], b
-    ld [hl], c
-    ld [hl], d
-    ld [hl], e
-    ld [hl], h
-    ld [hl], l
-    db $76
-    cp [hl]
-    cp a
-    ret nz
-
-    pop bc
-    jp nz, $c4c3
-
-    push bc
-    add $ff
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $77
-    ld a, b
-    ld a, c
-    ld a, d
-    ld a, e
-    ld a, h
-    ld a, l
-    ld a, [hl]
-    ld a, a
-    rst $00
-    ret z
-
-    ret
-
-
-    jp z, $cccb
-
-    call $cfce
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; [S166] window layout streams $6CDE-$6E44 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_6CDE:  ; the gate guide: the gate list
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $38, $39, $3a, $3b, $3c, $3d, $3e, $3f, $40, $88, $89, $8a, $8b, $8c, $8d
+    db $8e, $8f, $90, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $41, $42, $43, $44, $45, $46, $47, $48, $49, $91, $92, $93, $94, $95, $96
+    db $97, $98, $99, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $4a, $4b, $4c, $4d, $4e, $4f, $50, $51, $52, $9a, $9b, $9c, $9d, $9e, $9f
+    db $a0, $a1, $a2, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $53, $54, $55, $56, $57, $58, $59, $5a, $5b, $a3, $a4, $a5, $a6, $a7, $a8
+    db $a9, $aa, $ab, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $5c, $5d, $5e, $5f, $60, $61, $62, $63, $64, $ac, $ad, $ae, $af, $b0, $b1
+    db $b2, $b3, $b4, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $65, $66, $67, $68, $69, $6a, $6b, $6c, $6d, $b5, $b6, $b7, $b8, $b9, $ba
+    db $bb, $bc, $bd, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $6e, $6f, $70, $71, $72, $73, $74, $75, $76, $be, $bf, $c0, $c1, $c2, $c3
+    db $c4, $c5, $c6, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $77, $78, $79, $7a, $7b, $7c, $7d, $7e, $7f, $c7, $c8, $c9, $ca, $cb, $cc
+    db $cd, $ce, $cf, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
     nop
     nop
     ld a, [$efef]
@@ -7719,342 +7494,116 @@ jr_009_6d0c:
     reti
 
 
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ld sp, $e032
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc l
-    sbc h
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld c, $01
-    ld a, [$efef]
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    call nc, $d6d5
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    xor b
-    and a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    inc c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $dd
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    and h
-    xor d
-    call nc, $e0e0
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sub $d5
-    sbc $de
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    push de
-    xor e
-    and l
-    xor c
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    add c
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    sbc e
-    sbc h
-    sbc l
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
-    ld b, b
-    ld bc, $effa
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    db $fd
-    reti
-
-
-    ld b, b
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    ldh [$e5], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; [S166] window layout streams $6EB0-$705D (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_6EB0:  ; the naming screen: yes / no; YES / NO
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff  ; . YES.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $31, $32, $e0, $ff  ; . NO .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_6ED5:
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9d, $9c, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_6EFA:  ; the shop: yes / no; YES / NO
+    dw $010e                 ; position: row 8, column 14
+    db $fa, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d4, $d5, $d6, $ff  ; . YES.
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a8, $a7, $e0, $ff  ; . NO .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_6F1F:  ; the shop: the gold box
+    dw $000c                 ; position: row 0, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $dd, $e0, $e0, $e0, $e0, $e0, $ff  ; .G     .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_6F3C:  ; the shop: BUY / SELL / EXIT; BUY / SELL / EXIT
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a4, $aa, $d4, $e0, $e0, $ff  ; . BUY  .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d6, $d5, $de, $de, $e0, $ff  ; . SELL .
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $d5, $ab, $a5, $a9, $e0, $ff  ; . EXIT .
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_6F7D:  ; the shop: the list
+    dw $0081                 ; position: row 4, column 1
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $8b, $8c, $8d, $8e, $8f, $90, $91, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $9c, $9d, $9e, $9f, $a0, $a1, $a2, $a3, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_7033:  ; the shop: how many
+    dw $0140                 ; position: row 10, column 0
+    db $fa, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_7044:  ; the Vault: how many
+    dw $0140                 ; position: row 10, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e5, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     nop
     ld bc, $effa
     rst $28
@@ -8265,168 +7814,47 @@ jr_009_6d0c:
     reti
 
 
-    ld l, b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    add b
-    add c
-    add d
-    add e
-    add h
-    add l
-    add [hl]
-    add a
-    adc b
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    adc c
-    adc d
-    adc e
-    adc h
-    adc l
-    adc [hl]
-    adc a
-    sub b
-    sub c
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sub d
-    sub e
-    sub h
-    sub l
-    sub [hl]
-    sub a
-    sbc b
-    sbc c
-    sbc d
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    sbc e
-    sbc h
-    sbc l
-    sbc [hl]
-    sbc a
-    and b
-    and c
-    and d
-    and e
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld l, h
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $dd
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
-    ld b, [hl]
-    ld bc, $effa
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $a0
-    and c
-    and d
-    and e
-    ldh [$dd], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; [S166] window layout streams $7153-$7215 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_7153:  ; the Vault: the list
+    dw $0068                 ; position: row 3, column 8
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $80, $81, $82, $83, $84, $85, $86, $87, $88, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $89, $8a, $8b, $8c, $8d, $8e, $8f, $90, $91, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $92, $93, $94, $95, $96, $97, $98, $99, $9a, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $9b, $9c, $9d, $9e, $9f, $a0, $a1, $a2, $a3, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_71CA:  ; the Vault: the gold box
+    dw $006c                 ; position: row 3, column 12
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $dd, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
+WinLayout_09_71E7:  ; the Vault: ITEM / G
+    dw $0146                 ; position: row 10, column 6
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $a0, $a1, $a2, $a3, $e0, $dd, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     nop
     nop
     ld a, [$efef]
@@ -8982,118 +8410,40 @@ jr_009_6d0c:
     reti
 
 
-    add b
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $84
-    ldh [$80], a
-    ldh [$91], a
-    sub a
-    sub b
-    sub $d6
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $85
-    ldh [$81], a
-    ldh [$91], a
-    sub a
-    sub b
-    sub $d6
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $86
-    ldh [$82], a
-    ldh [$91], a
-    sub a
-    sub b
-    sub $d6
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $87
-    ldh [$83], a
-    ldh [$91], a
-    sub a
-    sub b
-    sub $d6
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; [S166] window layout streams $74A0-$7543 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_74A0:
+    dw $0080                 ; position: row 4, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $fb
+    db $d8                  ; NEWLINE
+    db $fe, $84, $e0, $80, $e0, $91, $97, $90, $d6, $d6, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $85, $e0, $81, $e0, $91, $97, $90, $d6, $d6, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $86, $e0, $82, $e0, $91, $97, $90, $d6, $d6, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fe, $87, $e0, $83, $e0, $91, $97, $90, $d6, $d6, $e0, $e0, $e0, $e0, $e0, $e0
+    db $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $fd
+    db $d9                  ; END
     nop
     nop
     ld a, [$efef]
@@ -9737,58 +9087,27 @@ jr_009_6d0c:
     reti
 
 
-    nop
-    nop
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    and h
-    and l
-    and [hl]
-    and a
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    xor b
-    xor c
-    xor d
-    xor e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    rst $38
-    ret c
-
-    cp $e0
-    xor h
-    xor l
-    xor [hl]
-    xor a
-    rst $38
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $fd
-    reti
-
-
+; [S166] window layout streams $7838-$7871 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_7838:  ; the Vault: PUT / TAKE / EXIT; from a text: PUT (field_message 11 +0) / TAKE (field_message 11 +4) / EXIT (field_message 11 +8) / ITEM (field_message 12 +0) / GOLD (field_message 12 +4) / EXIT (field_message 12 +8)
+    dw $0000                 ; position: row 0, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a4, $a5, $a6, $a7, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $a8, $a9, $aa, $ab, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $ac, $ad, $ae, $af, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     add b
     nop
     ld a, [$efef]
@@ -10739,37 +10058,21 @@ jr_009_7bd4:
     reti
 
 
-    ld h, $00
-    ld a, [$efef]
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $e0
-    nop
-    ld bc, $0302
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-
-jr_009_7cc9:
-    db $fd
-    reti
-
-
+; [S166] window layout streams $7CA5-$7CCA (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_7CA5:  ; the naming screen: the name
+    dw $0026                 ; position: row 1, column 6
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $00, $01, $02, $03, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $fd
+    db $d9                  ; END
     and b
     nop
     ld a, [$efef]
@@ -10795,7 +10098,7 @@ jr_009_7cc9:
     cp $24
     dec h
     ld h, $27
-    jr z, jr_009_7cc9
+    jr z, $7cc9
 
     ld a, $3f
     ld b, b
@@ -10926,7 +10229,7 @@ jr_009_7d6c:
     ld d, l
     ld [hl], $9c
     ldh [$e0], a
-    jr z, jr_009_7ded
+    jr z, $7ded
 
     ld d, b
     ldh [$e0], a
@@ -10959,202 +10262,49 @@ jr_009_7d6c:
     reti
 
 
-    and b
-    nop
-    ld a, [$efef]
-    rst $28
-
-jr_009_7dcf:
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    rst $28
-    ei
-    ret c
-
-    cp $24
-    dec h
-    ld h, $27
-    jr z, jr_009_7e10
-
-    ld a, [hl+]
-    dec hl
-    inc l
-    dec l
-    ld l, $2f
-
-jr_009_7ded:
-    jr nc, jr_009_7dcf
-
-    inc b
-    dec b
-    ld b, $07
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $31
-    ld [hl-], a
-    inc sp
-    inc [hl]
-    dec [hl]
-
-jr_009_7e10:
-    ld [hl], $37
-    jr c, jr_009_7e4d
-
-    ld a, [hl-]
-    dec sp
-    inc a
-    dec a
-    ldh [$08], a
-    add hl, bc
-    ld a, [bc]
-    dec bc
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $3e
-    ccf
-    ld b, b
-    ld b, c
-    ld b, d
-    ld b, e
-    ld b, h
-    ld b, l
-    ld b, [hl]
-    ld b, a
-    ld c, b
-    ld c, c
-    ld c, d
-    ldh [$0c], a
-    dec c
-    ld h, e
-    ld h, h
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-
-jr_009_7e4d:
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $4b
-    ld c, h
-    ld c, l
-    ld c, [hl]
-    ld c, a
-    ld d, b
-    ld d, c
-    ld d, d
-    ld d, e
-    ld d, h
-    ld d, l
-    ld d, [hl]
-    ld d, a
-    ldh [rNR51], a
-    inc h
-    ld h, $2e
-    rst $38
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    cp $5c
-    ld e, [hl]
-    ld e, a
-    ld h, b
-    ld h, c
-    ld h, d
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    jr z, jr_009_7eca
-
-    daa
-    ldh [rIE], a
-    ret c
-
-    cp $e0
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [$e0], a
-    ldh [rIE], a
-    ret c
-
-    db $fc
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    xor $ee
-    db $fd
-    reti
-
-
+; [S166] window layout streams $7DC9-$7EC6 (tools/resection_window_layouts.py;
+; DATA_STRUCTURES "Window layout streams (S165)"): dw position, cells = TILE numbers (the
+; letters = the tiles THIS screen holds, measured — "font not measured" where no tour drew
+; it), $D8 newline, $D9 end; drawn by `ld de, <stream> / call WinLayoutDraw…`. The
+; measured words are editable (editor2/core/window_words.py).
+WinLayout_09_7DC9:  ; the naming keyboard; ABCDEFGHIJKLM / NOPQRSTUVWXYZ / abcdefghijklm / nopqrstuvwxyz / BACK / END
+    dw $00a0                 ; position: row 5, column 0
+    db $fa, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef, $ef
+    db $ef, $ef, $ef, $fb
+    db $d8                  ; NEWLINE
+    db $fe, $24, $25, $26, $27, $28, $29, $2a, $2b, $2c, $2d, $2e, $2f, $30, $e0, $04  ; .ABCDEFGHIJKLM 0123.
+    db $05, $06, $07, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3a, $3b, $3c, $3d, $e0, $08  ; .NOPQRSTUVWXYZ 4567.
+    db $09, $0a, $0b, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $3e, $3f, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $4a, $e0, $0c  ; .abcdefghijklm 89...
+    db $0d, $63, $64, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $4b, $4c, $4d, $4e, $4f, $50, $51, $52, $53, $54, $55, $56, $57, $e0, $25  ; .nopqrstuvwxyz BACK.
+    db $24, $26, $2e, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $5c, $5e, $5f, $60, $61, $62, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $28  ; .......        END .
+    db $31, $27, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fe, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0, $e0
+    db $e0, $e0, $e0, $ff
+    db $d8                  ; NEWLINE
+    db $fc, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee, $ee
+    db $ee, $ee, $ee, $fd
+    db $d9                  ; END
     nop
     nop
     nop

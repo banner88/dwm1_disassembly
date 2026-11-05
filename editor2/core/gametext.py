@@ -260,16 +260,100 @@ def _order(ix):
     return lambda kv: (pos.get(kv[0], 1 << 30), kv[0])
 
 
-def warnings_for(x, raw):
-    """Soft warnings (the editor shows them; the build too): a box line past
-    18 cells. (Tables: no fixed width is known for every window yet.)"""
+# S166 (ROADMAP Phase F T-follow (c)): the window each table is drawn in, MEASURED — the text
+# canvases [rows, cols] the engine drew each table's rows into on the GLOSSARY HALL tour
+# (extracted/window_layouts.json `text_widths`, tools/census_window_layouts.py --services) + the
+# credits (S153: roles a 20-cell row, names an 11-cell row — TEXT_SYSTEM "The credits' texts").
+# A table not listed was not drawn on the tour: no width is claimed for it.
+CREDITS_WIDTHS = {'credits_role': 20, 'credits_name': 11}
+_WIDTHS = {}
+
+
+def line_widths(repo_root=None):
+    """{source: cells a line holds} — the widest canvas measured for the table."""
+    r = _repo(repo_root)
+    if r not in _WIDTHS:
+        import json
+        try:
+            tw = json.load(open(os.path.join(r, 'extracted', 'window_layouts.json'))).get('text_widths', {})
+        except (OSError, ValueError):
+            tw = {}
+        w = {src: max(c for _r, c in v) for src, v in tw.items() if v}
+        w.update(CREDITS_WIDTHS)
+        _WIDTHS[r] = w
+    return _WIDTHS[r]
+
+
+def packed_rows(repo_root=None):
+    """{(source, row): (canvas cells, [(offset, len, word)])} — the rows a window cuts into
+    words (S166, editor2/core/window_words.py text slots)."""
+    from . import window_words as WW
+    out = {}
+    for s_ in WW.slots(repo_root).values():
+        if s_['kind'] == 'text':
+            c, sl = out.get((s_['source'], s_['index']), (0, []))
+            out[(s_['source'], s_['index'])] = (max(c, s_.get('canvas') or 0),
+                                                sl + [(s_['offset'], s_['len'], s_['text'])])
+    return out
+
+
+def warnings_for(x, raw, repo_root=None):
+    """Soft warnings (the editor shows them; the build too): a box line past 18 cells; S166: a
+    table's line past the cells of the window it is drawn in (measured, `line_widths`; a name
+    insert counts 9 cells, {hero} 4), a packed row (a window cuts it into words) whose cells no
+    longer fall where the window cuts."""
     out = []
+    body = raw[:-1] if raw.endswith(b'\xf0') else raw
     if x.style == 'box':
-        cs = TM.cells_per_line(raw[:-1] if raw.endswith(b'\xf0') else raw, 'box')
+        cs = TM.cells_per_line(body, 'box')
         if cs and max(cs) > 18:
             out.append(f"{x.source} {x.key}: a line of {max(cs)} cells — a box line holds 18 "
                        "(the rest is lost or scrolls; TEXT_SYSTEM \"Text boxes\")")
+        return out
+    try:
+        row = int(x.key)
+    except (TypeError, ValueError):
+        row = None
+    pk = packed_rows(repo_root).get((x.source, row))
+    if pk:
+        canvas, slots = pk
+        cells = TM.cells_per_line(body, 'rows')
+        if len(cells) > 1 or (cells and not len(x.raw) <= cells[0] <= max(canvas, len(x.raw))):
+            out.append(f"{x.source} {x.key}: the window draws this row in {canvas} cells, cut into "
+                       + ' / '.join(f'{w} (cells {o + 1}-{o + n})' for o, n, w in sorted(slots))
+                       + ' — keep each word in its cells (Text → Window words edits them one by one)')
+        return out
+    w = line_widths(repo_root).get(x.source)
+    if w:
+        cs = row_lines(body)
+        # the game's own row sets the bar too (its inserts are often shorter than 9 cells; the
+        # credits' last page runs on into the next row): warn only past both
+        limit = max([w] + row_lines(x.raw))
+        if cs and max(cs) > limit:
+            out.append(f"{x.source} {x.key}: a line of {max(cs)} cells — this kind of text is drawn "
+                       f"in a {w}-cell window (measured; a name counts 9 cells)")
     return out
+
+
+PAGE_CODES = (0xF1, 0xF2, 0xF7, 0xFA, 0xEC)
+
+
+def row_lines(raw):
+    """Cells of each line of a table row: a new line at $F1, a new page at $F2 / $F7 / $FA /
+    $EC (the battle window clears there); {hero} 4 cells, a name insert 9."""
+    lines, cur = [], 0
+    for kind, bs in TM._units(bytes(raw)):
+        if kind == 'g':
+            cur += 1
+        elif bs[0] == 0xF6:
+            cur += 4
+        elif bs[0] == 0xF9:
+            cur += 9
+        elif bs[0] in PAGE_CODES:
+            lines.append(cur)
+            cur = 0
+    lines.append(cur)
+    return lines
 
 
 def check(prj):
@@ -277,7 +361,7 @@ def check(prj):
     errors, warns = [], []
     try:
         for x, raw in resolve(prj, getattr(prj, 'repo_root', None)):
-            warns += warnings_for(x, raw)
+            warns += warnings_for(x, raw, getattr(prj, 'repo_root', None))
     except GameTextError as e:
         errors.append(str(e))
     return errors, warns

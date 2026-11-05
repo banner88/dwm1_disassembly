@@ -680,3 +680,119 @@ is hand-wired. Pin `a5a5e0d5…`.
 - **Proven in PyBoy + user play**: cutscene once, re-entry skip, decline
   loop, win → resume → flag → **GoldSlime joins (party 2)**, loss → Castle,
   save persistence (user), walk-on exits, 12-step encounter cadence in $6B.
+
+## Preserved islands: the flags they read (S166)
+
+*Generated S166 by `tools/audit_island_flags.py` from the ROM's own scripts (the S118 decoder —
+op `$00` / `$01` test, `$03` set — plus the engine setters of EVENT_FLAGS "Engine-side flag setters");
+ROADMAP Phase 2 "Preserved-systems flag-dependency audit" (a). The islands = EDITOR_DESIGN §1.* A flag
+marked **ORIGINAL STORY ONLY** is set only by rooms a new campaign may never play: a kept copy of that
+island would wait for it forever — satisfy it (the project sets it), strip the test (Make editable's
+copy, then edit), or re-author. The editor reports the same checks per project on the Progression &
+Flags tab's Problems ("checks waiting for the original game's progress", S124). "Set by another kept
+island" = satisfied as long as that island stays reachable.
+
+### Arena (maps $06 / $07 / $5D / $5E) — 51 flags tested
+
+| flag | tested in | set by the game in | for a new campaign |
+|---|---|---|---|
+| `$000E` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$000F` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$001D` | $06, $07 | $3C Boss: Anger (BattleRex) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0025` | $06, $07 | $45 Boss: Reflection (Durran) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0030` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0031` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0032` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0033` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0034` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0035` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0036` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0037` | $06, $07 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$003C` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$0044` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$0048` | $06, $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$004F` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0058` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0059` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$005A` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$005B` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$0067` | $5D | $1F Queen Room | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0068` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$006B` | $07 | $18 Well | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$007D` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$007E` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$007F` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$0083` | $07 | $19 Goopy Room 1 (scr8) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0089` | $06, $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$008A` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$008B` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0091` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$0094` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$0095` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0096` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0099` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$00A4` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$00A5` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$00B0` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$00B1` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$00F1` | $06, $07 | $00 Castle | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$00FC` | $07 | $05 Stable | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$00FE` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$00FF` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0100` | $07 | $07 Arena Rooms | self-contained (the island sets it) |
+| `$0103` | $06 | $09 Starry Shrine | set by another kept island: Starry Shrine |
+| `$0110` | $06, $07, $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$0111` | $06, $07, $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$0119` | $06 | $06 Arena Lobby | self-contained (the island sets it) |
+| `$0121` | $06, $07 | $5D Arena Battle | self-contained (the island sets it) |
+| `$0122` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+| `$0158` | $5D | $5D Arena Battle | self-contained (the island sets it) |
+
+### Starry Shrine (maps $09 / $08) — 13 flags tested
+
+| flag | tested in | set by the game in | for a new campaign |
+|---|---|---|---|
+| `$001D` | $09 | $3C Boss: Anger (BattleRex) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0025` | $09 | $45 Boss: Reflection (Durran) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0035` | $09 | $06 Arena Lobby | set by another kept island: Arena |
+| `$0045` | $09 | $09 Starry Shrine | self-contained (the island sets it) |
+| `$00E4` | $08, $09 | $5D Arena Battle | set by another kept island: Arena |
+| `$00EE` | $08, $09 | $2F Intro Bedroom (2-screen, crashes) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$00F1` | $09 | $00 Castle | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0101` | $09 | $09 Starry Shrine | self-contained (the island sets it) |
+| `$0102` | $09 | $09 Starry Shrine | self-contained (the island sets it) |
+| `$0103` | $09 | $09 Starry Shrine | self-contained (the island sets it) |
+| `$0110` | $09 | $5D Arena Battle | set by another kept island: Arena |
+| `$0111` | $09 | $5D Arena Battle | set by another kept island: Arena |
+| `$0123` | $09 | $09 Starry Shrine | self-contained (the island sets it) |
+
+### Library (maps $12 / $13) — 11 flags tested
+
+| flag | tested in | set by the game in | for a new campaign |
+|---|---|---|---|
+| `$001D` | $12 | $3C Boss: Anger (BattleRex) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0025` | $12 | $45 Boss: Reflection (Durran) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0032` | $12 | $06 Arena Lobby | set by another kept island: Arena |
+| `$0036` | $12 | $06 Arena Lobby | set by another kept island: Arena |
+| `$0042` | $12 | $12 Library | self-contained (the island sets it) |
+| `$0092` | $12 | $12 Library | self-contained (the island sets it) |
+| `$00F1` | $12 | $00 Castle | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0109` | $12 | $12 Library | self-contained (the island sets it) |
+| `$010A` | $12 | $12 Library | self-contained (the island sets it) |
+| `$011F` | $12 | $12 Library | self-contained (the island sets it) |
+| `$02C1` | $13 | — | never set by a script (engine-set or never true — EVENT_FLAGS) |
+
+### Vault (map $0F) — 5 flags tested
+
+| flag | tested in | set by the game in | for a new campaign |
+|---|---|---|---|
+| `$0025` | $0F | $45 Boss: Reflection (Durran) | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0041` | $0F | $0F Vault | self-contained (the island sets it) |
+| `$00F1` | $0F | $00 Castle | ORIGINAL STORY ONLY — satisfy, strip or re-author |
+| `$0113` | $0F | $0F Vault | self-contained (the island sets it) |
+| `$0124` | $0F | $0F Vault | self-contained (the island sets it) |
+
+### Item Shop (gate floor) (map $50) — 0 flags tested
+
+No flag test: the gate floor's shop depends on nothing the story sets.
+

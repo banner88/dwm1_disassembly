@@ -10,298 +10,298 @@ SECTION "ROM Bank $04a", ROMX[$4000], BANK[$4a]
     ; Cross-bank dispatch table (293 entries)
     ; Called via: ld hl, $4AXX / rst $10
     dw LoadB4a_424b                  ; Entry 0
-    dw $4263                          ; Entry 1
-    dw $427B                          ; Entry 2
+    dw TextRunB4A_4263               ; Entry 1
+    dw TextShowRefreshB4A_427b       ; Entry 2
     dw $400B                          ; Entry 3 — mode 0 -> table $400B (mode list $4007)
     dw $404B                          ; Entry 4 — mode 1 -> table $404B (mode list $4007)
-    dw $4293                          ; Entry 5 — [table $400B]; text $05E0 "*:Humpf, I don't need you!"
-    dw $42B0                          ; Entry 6 — text $05E1 "*:I don't have such a name! Don't…"
-    dw $4339                          ; Entry 7 — text $05E2 "*:Yep. It's Santi. How did you kn…"
-    dw $437E                          ; Entry 8 — text $05E3 "Santi:Wait here for me!"
-    dw $439A                          ; Entry 9 — text $05E4 "Santi:Talk to my Grandpa!!"
-    dw $43B8                          ; Entry 10 — text $05E5 "Santi:C'mon, go talk to my Grandp…"
-    dw $43E5                          ; Entry 11 — text $05E6 "Santi:You talked to my Grandpa, r…"
-    dw $445B                          ; Entry 12 — text $05E7 "Santi:Don't just stand there! Go …"
-    dw $449A                          ; Entry 13 — text $05E8 "Santi:Was the Travelers' Gate use…"
-    dw $44CF                          ; Entry 14 — text $05E9 "Santi:Y...Ya big fool!"
-    dw $44E9                          ; Entry 15 — text $05EA "Santi:I...I'm... happy....blush."
-    dw $450C                          ; Entry 16 — text $05EB "*:Oh our hero [HERO]! Welcome to …"
-    dw $453C                          ; Entry 17 — text $05EC "*:What a good feeling to be the w…"
-    dw $45A7                          ; Entry 18 — text $05ED "*:La la la [HERO] and Milayou La …"
-    dw $460C                          ; Entry 19 — text $05EE "*:I didn't think you could win..."
-    dw $4630                          ; Entry 20 — text $05EF "*:Giggle giggle! Listen listen! *…"
-    dw $46B2                          ; Entry 21 — text $05F0 "*:Well well, Congratulations!! I …"
-    dw $47C1                          ; Entry 22 — text $05F1 "*:Well of course! You're the vict…"
-    dw $47E8                          ; Entry 23 — text $05F2 "*:Hi! *:How about a reward for yo…"
-    dw $4822                          ; Entry 24 — text $05F3 "*:Okay."
-    dw $482E                          ; Entry 25 — text $05F4 "*:...tickle ...tickle, tickle *:t…"
-    dw $4886                          ; Entry 26 — text $05F5 "*:Oh, what a joy! [HERO] won! *:T…"
-    dw $4940                          ; Entry 27 — text $05F6 "*:Oh, the hero of GreatTree, Mast…"
-    dw $49B6                          ; Entry 28 — text $05F7 "*:Yes, of course. The victor woul…"
-    dw $49F5                          ; Entry 29 — text $05F8 "*:The monstrous master was your s…"
-    dw $4AE9                          ; Entry 30 — text $05F9 "*:Hey! Our hero [HERO]! *:The two…"
-    dw $4B52                          ; Entry 31 — text $05FA "*:Missing... Something missing. *…"
-    dw $4C7B                          ; Entry 32 — text $05FB "*:...I wonder if you brought a mo…"
-    dw $4CB5                          ; Entry 33 — text $05FC "*:Oh! You brought it here! Show m…"
-    dw $4CEB                          ; Entry 34 — text $05FD "[INS 00] cast Call! But nothing h…"
-    dw $4D15                          ; Entry 35 — text $05FE "*:What the heck? Nothing happened…"
-    dw $4DD0                          ; Entry 36 — text $05FF "*:You knew it right? This is the …"
-    dw $4E50                          ; Entry 37 — [table $404B]; text $0600 "*:Come to me when you want to bre…"
-    dw $4E8E                          ; Entry 38 — text $0601 "Why not breed with my [INS 00]?"
-    dw $4EAA                          ; Entry 39 — text $0602 "*:Which monster do you want to br…"
-    dw $4EDF                          ; Entry 40 — text $0603 "*:You can't breed low level monst…"
-    dw $4F0D                          ; Entry 41 — text $0604 "*:There will be no monsters to ta…"
-    dw $4F44                          ; Entry 42 — text $0605 "*:Are you okay with this monster?"
-    dw $4F68                          ; Entry 43 — text $0606 "*:Start the breeding ceremony?"
-    dw $4F89                          ; Entry 44 — text $0607 "*:I have no idea what kind of egg…"
-    dw $4FF8                          ; Entry 45 — text $0608 "*:Let's begin the breeding ceremo…"
-    dw $501F                          ; Entry 46 — text $0609 "*:I hope a strong monster will be…"
-    dw $5073                          ; Entry 47 — text $060A "*:My Eyeder loves devils. Want to…"
-    dw $50A4                          ; Entry 48 — text $060B "*:Which monster will you breed wi…"
-    dw $50DB                          ; Entry 49 — text $060C "*:Why not breed with my Yeti?"
-    dw $50FC                          ; Entry 50 — text $060D "*:Which monster will you breed wi…"
-    dw $5131                          ; Entry 51 — text $060E "*:Tut, stingy. Hic..."
-    dw $5131                          ; Entry 52 — text $060F "*:Tut, stingy. Hic..."
-    dw $5131                          ; Entry 53 — text $0610 "*:Tut, stingy. Hic..."
-    dw $514A                          ; Entry 54 — text $0611 "Why don't you breed with my CatFl…"
-    dw $5174                          ; Entry 55 — text $0612 "*:Which monster do you want to br…"
-    dw $51B0                          ; Entry 56 — text $0613 "*:I can't let mine breed with low…"
-    dw $51EA                          ; Entry 57 — text $0614 "*:You won't have any monsters to …"
-    dw $5221                          ; Entry 58 — text $0615 "*:With this monster? Are you sure?"
-    dw $524B                          ; Entry 59 — text $0616 "*:Start the breeding ceremony?"
-    dw $526C                          ; Entry 60 — text $0617 "*:I can't tell what kinda monster…"
-    dw $52D0                          ; Entry 61 — text $0618 "*:Let's begin the breeding ceremo…"
-    dw $52F7                          ; Entry 62 — text $0619 "*:Hope a strong monster will be b…"
-    dw $5349                          ; Entry 63 — text $061A "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 64 — text $061B "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 65 — text $061C "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 66 — text $061D "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 67 — text $061E "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 68 — text $061F "*:Well, if you want to breed agai…"
-    dw $5349                          ; Entry 69 — text $0620 "*:Well, if you want to breed agai…"
-    dw $53B1                          ; Entry 70 — text $0621 "*:Why not breed with my LizardMan?"
-    dw $53DB                          ; Entry 71 — text $0622 "*:Which one are you gonna breed w…"
-    dw $5415                          ; Entry 72 — text $0623 "*:Hey, your monster is weak. That…"
-    dw $546D                          ; Entry 73 — text $0624 "*:Hey! You won't have any monster…"
-    dw $54AA                          ; Entry 74 — text $0625 "*:Are you okay with this monster?"
-    dw $54CE                          ; Entry 75 — text $0626 "*:Start the breeding ceremony?"
-    dw $54EF                          ; Entry 76 — text $0627 "*:I don't know what kind of egg w…"
-    dw $5563                          ; Entry 77 — text $0628 "*:Let's begin the breeding ceremo…"
-    dw $558A                          ; Entry 78 — text $0629 "*:Well, you should be at least ha…"
-    dw $55E4                          ; Entry 79 — text $062A "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 80 — text $062B "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 81 — text $062C "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 82 — text $062D "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 83 — text $062E "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 84 — text $062F "Mick:I'll be on my journey by the…"
-    dw $55E4                          ; Entry 85 — text $0630 "Mick:I'll be on my journey by the…"
-    dw $5627                          ; Entry 86 — text $0631 "Mick:Let's breed with my DeadNite…"
-    dw $564C                          ; Entry 87 — text $0632 "Mick:Who do you want to pick for …"
-    dw $567E                          ; Entry 88 — text $0633 "Mick:Your monster's level is too …"
-    dw $56B4                          ; Entry 89 — text $0634 "Mick:You won't have any monsters …"
-    dw $56EF                          ; Entry 90 — text $0635 "Mick:With this one? Are you sure?"
-    dw $5713                          ; Entry 91 — text $0636 "Mick:Start the breeding ceremony?"
-    dw $5737                          ; Entry 92 — text $0637 "*:I have no idea what kind of egg…"
-    dw $579E                          ; Entry 93 — text $0638 "*:Let's begin the breeding ceremo…"
-    dw $57C5                          ; Entry 94 — text $0639 "*:This egg is the proof of our fr…"
-    dw $5817                          ; Entry 95 — text $063A "*:Please come to me when you want…"
-    dw $5817                          ; Entry 96 — text $063B "*:Please come to me when you want…"
-    dw $5817                          ; Entry 97 — text $063C "*:Please come to me when you want…"
-    dw $5817                          ; Entry 98 — text $063D "*:Please come to me when you want…"
-    dw $5817                          ; Entry 99 — text $063E "*:Please come to me when you want…"
-    dw $5817                          ; Entry 100 — text $063F "*:Please come to me when you want…"
-    dw $5817                          ; Entry 101 — text $0640 "*:Please come to me when you want…"
-    dw $586F                          ; Entry 102 — text $0641 "*:Want to breed with my Rayburn?"
-    dw $5892                          ; Entry 103 — text $0642 "*:Which monster are you picking f…"
-    dw $58C9                          ; Entry 104 — text $0643 "*:I don't want to breed with a lo…"
-    dw $5903                          ; Entry 105 — text $0644 "*:You'll have no monsters to take…"
-    dw $5937                          ; Entry 106 — text $0645 "*:Is this monster okay?"
-    dw $5951                          ; Entry 107 — text $0646 "*:Can I start the breeding ceremo…"
-    dw $5978                          ; Entry 108 — text $0647 "*:I have no idea what kind of egg…"
-    dw $59D2                          ; Entry 109 — text $0648 "*:Let's start the breeding ceremo…"
-    dw $59F9                          ; Entry 110 — text $0649 "*:I hope it'll be a strong monste…"
-    dw $5A43                          ; Entry 111 — text $064A "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 112 — text $064B "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 113 — text $064C "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 114 — text $064D "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 115 — text $064E "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 116 — text $064F "*:Pay me a visit when you want to…"
-    dw $5A43                          ; Entry 117 — text $0650 "*:Pay me a visit when you want to…"
-    dw $5A74                          ; Entry 118 — text $0651 "*:Why not breed with my [INS 00]?"
-    dw $5A92                          ; Entry 119 — text $0652 "*:Which monster are you going to …"
-    dw $5ACB                          ; Entry 120 — text $0653 "*:Cannot breed with a low level m…"
-    dw $5AFD                          ; Entry 121 — text $0654 "*:You'll have no monsters to take…"
-    dw $5B31                          ; Entry 122 — text $0655 "*:This monster? Are you sure?"
-    dw $5B51                          ; Entry 123 — text $0656 "*:Can we start the breeding cerem…"
-    dw $5B79                          ; Entry 124 — text $0657 "*:I can't imagine what kind of eg…"
-    dw $5BF0                          ; Entry 125 — text $0658 "*:Then, let us begin the ceremony."
-    dw $5C1B                          ; Entry 126 — text $0659 "*:Hopefully a strong monster will…"
-    dw $5C72                          ; Entry 127 — text $065A "*:Why not breed with my Metabble!"
-    dw $5C97                          ; Entry 128 — text $065B "*:Which monster do you want to br…"
-    dw $5CD6                          ; Entry 129 — text $065C "Milayou:Come back when you wanna …"
-    dw $5CD6                          ; Entry 130 — text $065D "Milayou:Come back when you wanna …"
-    dw $5CD6                          ; Entry 131 — text $065E "Milayou:Come back when you wanna …"
-    dw $5CD6                          ; Entry 132 — text $065F "Milayou:Come back when you wanna …"
-    dw $5CD6                          ; Entry 133 — text $0660 "Milayou:Come back when you wanna …"
-    dw $5D06                          ; Entry 134 — text $0661 "Milayou:Breed with my Skeletor!"
-    dw $5D28                          ; Entry 135 — text $0662 "Milayou:Which monster will you pi…"
-    dw $5D63                          ; Entry 136 — text $0663 "Milayou:A low level monster can't…"
-    dw $5D94                          ; Entry 137 — text $0664 "Milayou:You won't have any monste…"
-    dw $5DD1                          ; Entry 138 — text $0665 "Milayou:Is this monster okay?"
-    dw $5DF1                          ; Entry 139 — text $0666 "Milayou:I'll start the breeding c…"
-    dw $5E27                          ; Entry 140 — text $0667 "Milayou:I don't know what kind of…"
-    dw $5E8F                          ; Entry 141 — text $0668 "Milayou:Let's breed!"
-    dw $5EA6                          ; Entry 142 — text $0669 "Milayou:I hope it'll be a strong …"
-    dw $5F0B                          ; Entry 143 — text $066A "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 144 — text $066B "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 145 — text $066C "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 146 — text $066D "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 147 — text $066E "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 148 — text $066F "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 149 — text $0670 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 150 — text $0671 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 151 — text $0672 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 152 — text $0673 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 153 — text $0674 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 154 — text $0675 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 155 — text $0676 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 156 — text $0677 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 157 — text $0678 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 158 — text $0679 "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 159 — text $067A "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 160 — text $067B "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 161 — text $067C "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 162 — text $067D "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 163 — text $067E "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 164 — text $067F "*:Item shop. May I help you?"
-    dw $5F0B                          ; Entry 165 — text $0680 "*:Item shop. May I help you?"
-    dw $5F2A                          ; Entry 166 — text $0681 "*:Anything else?"
-    dw $5F3E                          ; Entry 167 — text $0682 "*:Thank you. Come again!"
-    dw $5F5A                          ; Entry 168 — text $0683 "*:What would you like?"
-    dw $5F73                          ; Entry 169 — text $0684 "*:What would you like?"
-    dw $5F8C                          ; Entry 170 — text $0685 "*:How many?"
-    dw $5F9B                          ; Entry 171 — text $0686 "[INS 10] X [INS 00] is [INS 20]G."
-    dw $5FAD                          ; Entry 172 — text $0687 "*:You don't have enough money."
-    dw $5FCF                          ; Entry 173 — text $0688 "*:You can only carry 20 items!"
-    dw $5FF2                          ; Entry 174 — text $0689 "*:Thank you!"
-    dw $6003                          ; Entry 175 — text $068A "*:Which items will you sell to me?"
-    dw $6028                          ; Entry 176 — text $068B "*:You don't have items I can buy."
-    dw $604D                          ; Entry 177 — text $068C "*:How many would you like to sell?"
-    dw $6072                          ; Entry 178 — text $068D "[INS 10] X [INS 00] is [INS 20]G."
-    dw $6084                          ; Entry 179 — text $068E "*:You can only have up to 99999G!"
-    dw $60AF                          ; Entry 180 — text $068F "*:Thanks again!"
-    dw $60C3                          ; Entry 181 — text $0690 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 182 — text $0691 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 183 — text $0692 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 184 — text $0693 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 185 — text $0694 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 186 — text $0695 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 187 — text $0696 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 188 — text $0697 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 189 — text $0698 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 190 — text $0699 "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 191 — text $069A "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 192 — text $069B "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 193 — text $069C "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 194 — text $069D "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 195 — text $069E "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 196 — text $069F "*:Vault. May I help you?"
-    dw $60C3                          ; Entry 197 — text $06A0 "*:Vault. May I help you?"
-    dw $60DE                          ; Entry 198 — text $06A1 "*:Something else?"
-    dw $60F3                          ; Entry 199 — text $06A2 "*:Come again anytime."
-    dw $610C                          ; Entry 200 — text $06A3 "*:What would you like us to store?"
-    dw $6131                          ; Entry 201 — text $06A4 "*:Which one?"
-    dw $6141                          ; Entry 202 — text $06A5 "*:You don't have anything."
-    dw $615F                          ; Entry 203 — text $06A6 "*:Sorry. We can't store anymore."
-    dw $6183                          ; Entry 204 — text $06A7 "*:How many?"
-    dw $6190                          ; Entry 205 — text $06A8 "*:Too much!"
-    dw $619F                          ; Entry 206 — text $06A9 "*:You're in safe hands with us."
-    dw $61C2                          ; Entry 207 — text $06AA "*:How much do you want to deposit?"
-    dw $61E7                          ; Entry 208 — text $06AB "*:Not enough money."
-    dw $61FF                          ; Entry 209 — text $06AC "*:Excuse me but you can only depo…"
-    dw $623B                          ; Entry 210 — text $06AD "*:You're in safe hands with us."
-    dw $625E                          ; Entry 211 — text $06AE "*:What would you like to take out?"
-    dw $6283                          ; Entry 212 — text $06AF "*:We don't have any of your gold."
-    dw $62A8                          ; Entry 213 — text $06B0 "*:Take out items or withdraw gold?"
-    dw $62CD                          ; Entry 214 — text $06B1 "*:We don't have any of your items."
-    dw $62F3                          ; Entry 215 — text $06B2 "*:Too much stuff to store."
-    dw $6312                          ; Entry 216 — text $06B3 "*:Take out how many?"
-    dw $6329                          ; Entry 217 — text $06B4 "*:You have too much to carry!"
-    dw $634B                          ; Entry 218 — text $06B5 "*:Here it is."
-    dw $635E                          ; Entry 219 — text $06B6 "*:Withdraw how much?"
-    dw $6375                          ; Entry 220 — text $06B7 "*:You don't have that much money."
-    dw $639A                          ; Entry 221 — text $06B8 "*:You can't carry that much money."
-    dw $63C0                          ; Entry 222 — text $06B9 "*:Here it is."
-    dw $63D3                          ; Entry 223 — text $06BA "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 224 — text $06BB "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 225 — text $06BC "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 226 — text $06BD "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 227 — text $06BE "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 228 — text $06BF "Pulio:Hey there! Whadayagonnado?"
-    dw $63D3                          ; Entry 229 — text $06C0 "Pulio:Hey there! Whadayagonnado?"
-    dw $63F6                          ; Entry 230 — text $06C1 "Pulio:Anything else?"
-    dw $640D                          ; Entry 231 — text $06C2 "Pulio:Later! We'll be here for ya!"
-    dw $6432                          ; Entry 232 — text $06C3 "Pulio:Drop off which one?"
-    dw $644E                          ; Entry 233 — text $06C4 "Pulio:Hey, you're not gonna have …"
-    dw $648D                          ; Entry 234 — text $06C5 "Pulio:Drop off this one?"
-    dw $64A8                          ; Entry 235 — text $06C6 "Pulio:Stop by once in a while to …"
-    dw $64E7                          ; Entry 236 — text $06C7 "Pulio:Replace it?"
-    dw $64FB                          ; Entry 237 — text $06C8 "Pulio:Replace it with which one?"
-    dw $651E                          ; Entry 238 — text $06C9 "Pulio:Replace it with this one?"
-    dw $6540                          ; Entry 239 — text $06CA "Pulio:I replaced [INS 00] with [I…"
-    dw $6561                          ; Entry 240 — text $06CB "Pulio:Picking up which one, [HERO…"
-    dw $6582                          ; Entry 241 — text $06CC "Pulio:No monsters here to take."
-    dw $65A6                          ; Entry 242 — text $06CD "Pulio:You can't take any more!"
-    dw $65C8                          ; Entry 243 — text $06CE "Pulio:You're gonna pick this one …"
-    dw $65EE                          ; Entry 244 — text $06CF "Pulio:Train it well, [HERO]!"
-    dw $660A                          ; Entry 245 — text $06D0 "Pulio:Replacing a monster, [HERO]?"
-    dw $662A                          ; Entry 246 — text $06D1 "Pulio:Which one are you replacing?"
-    dw $664F                          ; Entry 247 — text $06D2 "Pulio:Replace this one?"
-    dw $6669                          ; Entry 248 — text $06D3 "Pulio:Replace with which one?"
-    dw $6689                          ; Entry 249 — text $06D4 "Pulio:Replace this one?"
-    dw $66A3                          ; Entry 250 — text $06D5 "Pulio:I replaced [INS 00] with [I…"
-    dw $66C4                          ; Entry 251 — text $06D6 "Pulio:Check on which one?"
-    dw $66E0                          ; Entry 252 — text $06D7 "Pulio:Hey, none to check on!"
-    dw $6701                          ; Entry 253 — text $06D8 "Pulio:Check on which one, [HERO]?"
-    dw $6720                          ; Entry 254 — text $06D9 "Pulio:Check on which one, [HERO]?"
-    dw $673F                          ; Entry 255 — text $06DA "Pulio:Separate with which one?"
-    dw $6760                          ; Entry 256 — text $06DB "Pulio:Hey, nothing here!"
-    dw $677D                          ; Entry 257 — text $06DC "Pulio:Separate with which one?"
-    dw $679E                          ; Entry 258 — text $06DD "Pulio:Are you sure? You'll lose i…"
-    dw $67D0                          ; Entry 259 — text $06DE "[INS 00] was returned to the wild."
-    dw $67F5                          ; Entry 260 — text $06DF "Pulio:Are you sure? You'll lose i…"
-    dw $6827                          ; Entry 261 — text $06E0 "[INS 00] was returned to the wild."
-    dw $684C                          ; Entry 262 — text $06E1 "Pulio:Select [PICK UP] to take th…"
-    dw $6887                          ; Entry 263 — text $06E2 "Pulio:You wanna make the monsters…"
-    dw $68D1                          ; Entry 264 — text $06E3 "Pulio:All the monsters here went …"
-    dw $690E                          ; Entry 265 — text $06E4 "Pulio:I put all the monsters not …"
-    dw $6986                          ; Entry 266 — text $06E5 "Pulio:Wanna wake up the sleeping …"
-    dw $69B8                          ; Entry 267 — text $06E6 "Pulio:I woke up the sleeping mons…"
-    dw $69E8                          ; Entry 268 — text $06E7 "*:What can I do for you?"
-    dw $69E8                          ; Entry 269 — text $06E8 "*:What can I do for you?"
-    dw $69E8                          ; Entry 270 — text $06E9 "*:What can I do for you?"
-    dw $69E8                          ; Entry 271 — text $06EA "*:What can I do for you?"
-    dw $69E8                          ; Entry 272 — text $06EB "*:What can I do for you?"
-    dw $69E8                          ; Entry 273 — text $06EC "*:What can I do for you?"
-    dw $69E8                          ; Entry 274 — text $06ED "*:What can I do for you?"
-    dw $69E8                          ; Entry 275 — text $06EE "*:What can I do for you?"
-    dw $69E8                          ; Entry 276 — text $06EF "*:What can I do for you?"
-    dw $69E8                          ; Entry 277 — text $06F0 "*:What can I do for you?"
-    dw $6A03                          ; Entry 278 — text $06F1 "*:Anything else?"
-    dw $6A15                          ; Entry 279 — text $06F2 "*:Create the ultimate monsters!"
-    dw $6A38                          ; Entry 280 — text $06F3 "*:Which monster for the pedigree?"
-    dw $6A5C                          ; Entry 281 — text $06F4 "*:Which monster to breed with?"
-    dw $6A7D                          ; Entry 282 — text $06F5 "*:That one? Are you sure?"
-    dw $6A99                          ; Entry 283 — text $06F6 "*:There will be no monsters left!"
-    dw $6ABF                          ; Entry 284 — text $06F7 "*:Sorry, it's not old enough."
-    dw $6AE0                          ; Entry 285 — text $06F8 "*:The same gender. Cannot breed."
-    dw $6B05                          ; Entry 286 — text $06F9 "*:I bet [INS 20] will be born! *:…"
-    dw $6B4D                          ; Entry 287 — text $06FA "*:Hmm. Seems like a new monster?!"
-    dw $6B73                          ; Entry 288 — text $06FB "*:Can I record this joyful event?"
-    dw $6B97                          ; Entry 289 — text $06FC "*:OK! Wait overnight."
-    dw $6BB0                          ; Entry 290 — text $06FD "[INS 00] & [INS 10] disappeared."
-    dw $6BC8                          ; Entry 291 — text $06FE "*:Wow! It's a rare breed!"
-    dw $6BE5                          ; Entry 292 — text $06FF "*:Inside it is a baby [INS 20]! *…"
+    dw TextStr_4a_4293               ; Entry 5 — [table $400B]; text $05E0 "*:Humpf, I don't need you!"
+    dw TextStr_4a_42b0               ; Entry 6 — text $05E1 "*:I don't have such a name! Don't…"
+    dw TextStr_4a_4339               ; Entry 7 — text $05E2 "*:Yep. It's Santi. How did you kn…"
+    dw TextStr_4a_437e               ; Entry 8 — text $05E3 "Santi:Wait here for me!"
+    dw TextStr_4a_439a               ; Entry 9 — text $05E4 "Santi:Talk to my Grandpa!!"
+    dw TextStr_4a_43b8               ; Entry 10 — text $05E5 "Santi:C'mon, go talk to my Grandp…"
+    dw TextStr_4a_43e5               ; Entry 11 — text $05E6 "Santi:You talked to my Grandpa, r…"
+    dw TextStr_4a_445b               ; Entry 12 — text $05E7 "Santi:Don't just stand there! Go …"
+    dw TextStr_4a_449a               ; Entry 13 — text $05E8 "Santi:Was the Travelers' Gate use…"
+    dw TextStr_4a_44cf               ; Entry 14 — text $05E9 "Santi:Y...Ya big fool!"
+    dw TextStr_4a_44e9               ; Entry 15 — text $05EA "Santi:I...I'm... happy....blush."
+    dw TextStr_4a_450c               ; Entry 16 — text $05EB "*:Oh our hero [HERO]! Welcome to …"
+    dw TextStr_4a_453c               ; Entry 17 — text $05EC "*:What a good feeling to be the w…"
+    dw TextStr_4a_45a7               ; Entry 18 — text $05ED "*:La la la [HERO] and Milayou La …"
+    dw TextStr_4a_460c               ; Entry 19 — text $05EE "*:I didn't think you could win..."
+    dw TextStr_4a_4630               ; Entry 20 — text $05EF "*:Giggle giggle! Listen listen! *…"
+    dw TextStr_4a_46b2               ; Entry 21 — text $05F0 "*:Well well, Congratulations!! I …"
+    dw TextStr_4a_47c1               ; Entry 22 — text $05F1 "*:Well of course! You're the vict…"
+    dw TextStr_4a_47e8               ; Entry 23 — text $05F2 "*:Hi! *:How about a reward for yo…"
+    dw TextStr_4a_4822               ; Entry 24 — text $05F3 "*:Okay."
+    dw TextStr_4a_482e               ; Entry 25 — text $05F4 "*:...tickle ...tickle, tickle *:t…"
+    dw TextStr_4a_4886               ; Entry 26 — text $05F5 "*:Oh, what a joy! [HERO] won! *:T…"
+    dw TextStr_4a_4940               ; Entry 27 — text $05F6 "*:Oh, the hero of GreatTree, Mast…"
+    dw TextStr_4a_49b6               ; Entry 28 — text $05F7 "*:Yes, of course. The victor woul…"
+    dw TextStr_4a_49f5               ; Entry 29 — text $05F8 "*:The monstrous master was your s…"
+    dw TextStr_4a_4ae9               ; Entry 30 — text $05F9 "*:Hey! Our hero [HERO]! *:The two…"
+    dw TextStr_4a_4b52               ; Entry 31 — text $05FA "*:Missing... Something missing. *…"
+    dw TextStr_4a_4c7b               ; Entry 32 — text $05FB "*:...I wonder if you brought a mo…"
+    dw TextStr_4a_4cb5               ; Entry 33 — text $05FC "*:Oh! You brought it here! Show m…"
+    dw TextStr_4a_4ceb               ; Entry 34 — text $05FD "[INS 00] cast Call! But nothing h…"
+    dw TextStr_4a_4d15               ; Entry 35 — text $05FE "*:What the heck? Nothing happened…"
+    dw TextStr_4a_4dd0               ; Entry 36 — text $05FF "*:You knew it right? This is the …"
+    dw TextStr_4a_4e50               ; Entry 37 — [table $404B]; text $0600 "*:Come to me when you want to bre…"
+    dw TextStr_4a_4e8e               ; Entry 38 — text $0601 "Why not breed with my [INS 00]?"
+    dw TextStr_4a_4eaa               ; Entry 39 — text $0602 "*:Which monster do you want to br…"
+    dw TextStr_4a_4edf               ; Entry 40 — text $0603 "*:You can't breed low level monst…"
+    dw TextStr_4a_4f0d               ; Entry 41 — text $0604 "*:There will be no monsters to ta…"
+    dw TextStr_4a_4f44               ; Entry 42 — text $0605 "*:Are you okay with this monster?"
+    dw TextStr_4a_4f68               ; Entry 43 — text $0606 "*:Start the breeding ceremony?"
+    dw TextStr_4a_4f89               ; Entry 44 — text $0607 "*:I have no idea what kind of egg…"
+    dw TextStr_4a_4ff8               ; Entry 45 — text $0608 "*:Let's begin the breeding ceremo…"
+    dw TextStr_4a_501f               ; Entry 46 — text $0609 "*:I hope a strong monster will be…"
+    dw TextStr_4a_5073               ; Entry 47 — text $060A "*:My Eyeder loves devils. Want to…"
+    dw TextStr_4a_50a4               ; Entry 48 — text $060B "*:Which monster will you breed wi…"
+    dw TextStr_4a_50db               ; Entry 49 — text $060C "*:Why not breed with my Yeti?"
+    dw TextStr_4a_50fc               ; Entry 50 — text $060D "*:Which monster will you breed wi…"
+    dw TextStr_4a_5131               ; Entry 51 — text $060E "*:Tut, stingy. Hic..."
+    dw TextStr_4a_5131               ; Entry 52 — text $060F "*:Tut, stingy. Hic..."
+    dw TextStr_4a_5131               ; Entry 53 — text $0610 "*:Tut, stingy. Hic..."
+    dw TextStr_4a_514a               ; Entry 54 — text $0611 "Why don't you breed with my CatFl…"
+    dw TextStr_4a_5174               ; Entry 55 — text $0612 "*:Which monster do you want to br…"
+    dw TextStr_4a_51b0               ; Entry 56 — text $0613 "*:I can't let mine breed with low…"
+    dw TextStr_4a_51ea               ; Entry 57 — text $0614 "*:You won't have any monsters to …"
+    dw TextStr_4a_5221               ; Entry 58 — text $0615 "*:With this monster? Are you sure?"
+    dw TextStr_4a_524b               ; Entry 59 — text $0616 "*:Start the breeding ceremony?"
+    dw TextStr_4a_526c               ; Entry 60 — text $0617 "*:I can't tell what kinda monster…"
+    dw TextStr_4a_52d0               ; Entry 61 — text $0618 "*:Let's begin the breeding ceremo…"
+    dw TextStr_4a_52f7               ; Entry 62 — text $0619 "*:Hope a strong monster will be b…"
+    dw TextStr_4a_5349               ; Entry 63 — text $061A "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 64 — text $061B "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 65 — text $061C "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 66 — text $061D "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 67 — text $061E "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 68 — text $061F "*:Well, if you want to breed agai…"
+    dw TextStr_4a_5349               ; Entry 69 — text $0620 "*:Well, if you want to breed agai…"
+    dw TextStr_4a_53b1               ; Entry 70 — text $0621 "*:Why not breed with my LizardMan?"
+    dw TextStr_4a_53db               ; Entry 71 — text $0622 "*:Which one are you gonna breed w…"
+    dw TextStr_4a_5415               ; Entry 72 — text $0623 "*:Hey, your monster is weak. That…"
+    dw TextStr_4a_546d               ; Entry 73 — text $0624 "*:Hey! You won't have any monster…"
+    dw TextStr_4a_54aa               ; Entry 74 — text $0625 "*:Are you okay with this monster?"
+    dw TextStr_4a_54ce               ; Entry 75 — text $0626 "*:Start the breeding ceremony?"
+    dw TextStr_4a_54ef               ; Entry 76 — text $0627 "*:I don't know what kind of egg w…"
+    dw TextStr_4a_5563               ; Entry 77 — text $0628 "*:Let's begin the breeding ceremo…"
+    dw TextStr_4a_558a               ; Entry 78 — text $0629 "*:Well, you should be at least ha…"
+    dw TextStr_4a_55e4               ; Entry 79 — text $062A "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 80 — text $062B "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 81 — text $062C "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 82 — text $062D "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 83 — text $062E "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 84 — text $062F "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_55e4               ; Entry 85 — text $0630 "Mick:I'll be on my journey by the…"
+    dw TextStr_4a_5627               ; Entry 86 — text $0631 "Mick:Let's breed with my DeadNite…"
+    dw TextStr_4a_564c               ; Entry 87 — text $0632 "Mick:Who do you want to pick for …"
+    dw TextStr_4a_567e               ; Entry 88 — text $0633 "Mick:Your monster's level is too …"
+    dw TextStr_4a_56b4               ; Entry 89 — text $0634 "Mick:You won't have any monsters …"
+    dw TextStr_4a_56ef               ; Entry 90 — text $0635 "Mick:With this one? Are you sure?"
+    dw TextStr_4a_5713               ; Entry 91 — text $0636 "Mick:Start the breeding ceremony?"
+    dw TextStr_4a_5737               ; Entry 92 — text $0637 "*:I have no idea what kind of egg…"
+    dw TextStr_4a_579e               ; Entry 93 — text $0638 "*:Let's begin the breeding ceremo…"
+    dw TextStr_4a_57c5               ; Entry 94 — text $0639 "*:This egg is the proof of our fr…"
+    dw TextStr_4a_5817               ; Entry 95 — text $063A "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 96 — text $063B "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 97 — text $063C "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 98 — text $063D "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 99 — text $063E "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 100 — text $063F "*:Please come to me when you want…"
+    dw TextStr_4a_5817               ; Entry 101 — text $0640 "*:Please come to me when you want…"
+    dw TextStr_4a_586f               ; Entry 102 — text $0641 "*:Want to breed with my Rayburn?"
+    dw TextStr_4a_5892               ; Entry 103 — text $0642 "*:Which monster are you picking f…"
+    dw TextStr_4a_58c9               ; Entry 104 — text $0643 "*:I don't want to breed with a lo…"
+    dw TextStr_4a_5903               ; Entry 105 — text $0644 "*:You'll have no monsters to take…"
+    dw TextStr_4a_5937               ; Entry 106 — text $0645 "*:Is this monster okay?"
+    dw TextStr_4a_5951               ; Entry 107 — text $0646 "*:Can I start the breeding ceremo…"
+    dw TextStr_4a_5978               ; Entry 108 — text $0647 "*:I have no idea what kind of egg…"
+    dw TextStr_4a_59d2               ; Entry 109 — text $0648 "*:Let's start the breeding ceremo…"
+    dw TextStr_4a_59f9               ; Entry 110 — text $0649 "*:I hope it'll be a strong monste…"
+    dw TextStr_4a_5a43               ; Entry 111 — text $064A "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 112 — text $064B "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 113 — text $064C "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 114 — text $064D "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 115 — text $064E "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 116 — text $064F "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a43               ; Entry 117 — text $0650 "*:Pay me a visit when you want to…"
+    dw TextStr_4a_5a74               ; Entry 118 — text $0651 "*:Why not breed with my [INS 00]?"
+    dw TextStr_4a_5a92               ; Entry 119 — text $0652 "*:Which monster are you going to …"
+    dw TextStr_4a_5acb               ; Entry 120 — text $0653 "*:Cannot breed with a low level m…"
+    dw TextStr_4a_5afd               ; Entry 121 — text $0654 "*:You'll have no monsters to take…"
+    dw TextStr_4a_5b31               ; Entry 122 — text $0655 "*:This monster? Are you sure?"
+    dw TextStr_4a_5b51               ; Entry 123 — text $0656 "*:Can we start the breeding cerem…"
+    dw TextStr_4a_5b79               ; Entry 124 — text $0657 "*:I can't imagine what kind of eg…"
+    dw TextStr_4a_5bf0               ; Entry 125 — text $0658 "*:Then, let us begin the ceremony."
+    dw TextStr_4a_5c1b               ; Entry 126 — text $0659 "*:Hopefully a strong monster will…"
+    dw TextStr_4a_5c72               ; Entry 127 — text $065A "*:Why not breed with my Metabble!"
+    dw TextStr_4a_5c97               ; Entry 128 — text $065B "*:Which monster do you want to br…"
+    dw TextStr_4a_5cd6               ; Entry 129 — text $065C "Milayou:Come back when you wanna …"
+    dw TextStr_4a_5cd6               ; Entry 130 — text $065D "Milayou:Come back when you wanna …"
+    dw TextStr_4a_5cd6               ; Entry 131 — text $065E "Milayou:Come back when you wanna …"
+    dw TextStr_4a_5cd6               ; Entry 132 — text $065F "Milayou:Come back when you wanna …"
+    dw TextStr_4a_5cd6               ; Entry 133 — text $0660 "Milayou:Come back when you wanna …"
+    dw TextStr_4a_5d06               ; Entry 134 — text $0661 "Milayou:Breed with my Skeletor!"
+    dw TextStr_4a_5d28               ; Entry 135 — text $0662 "Milayou:Which monster will you pi…"
+    dw TextStr_4a_5d63               ; Entry 136 — text $0663 "Milayou:A low level monster can't…"
+    dw TextStr_4a_5d94               ; Entry 137 — text $0664 "Milayou:You won't have any monste…"
+    dw TextStr_4a_5dd1               ; Entry 138 — text $0665 "Milayou:Is this monster okay?"
+    dw TextStr_4a_5df1               ; Entry 139 — text $0666 "Milayou:I'll start the breeding c…"
+    dw TextStr_4a_5e27               ; Entry 140 — text $0667 "Milayou:I don't know what kind of…"
+    dw TextStr_4a_5e8f               ; Entry 141 — text $0668 "Milayou:Let's breed!"
+    dw TextStr_4a_5ea6               ; Entry 142 — text $0669 "Milayou:I hope it'll be a strong …"
+    dw TextStr_4a_5f0b               ; Entry 143 — text $066A "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 144 — text $066B "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 145 — text $066C "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 146 — text $066D "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 147 — text $066E "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 148 — text $066F "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 149 — text $0670 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 150 — text $0671 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 151 — text $0672 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 152 — text $0673 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 153 — text $0674 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 154 — text $0675 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 155 — text $0676 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 156 — text $0677 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 157 — text $0678 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 158 — text $0679 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 159 — text $067A "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 160 — text $067B "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 161 — text $067C "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 162 — text $067D "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 163 — text $067E "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 164 — text $067F "*:Item shop. May I help you?"
+    dw TextStr_4a_5f0b               ; Entry 165 — text $0680 "*:Item shop. May I help you?"
+    dw TextStr_4a_5f2a               ; Entry 166 — text $0681 "*:Anything else?"
+    dw TextStr_4a_5f3e               ; Entry 167 — text $0682 "*:Thank you. Come again!"
+    dw TextStr_4a_5f5a               ; Entry 168 — text $0683 "*:What would you like?"
+    dw TextStr_4a_5f73               ; Entry 169 — text $0684 "*:What would you like?"
+    dw TextStr_4a_5f8c               ; Entry 170 — text $0685 "*:How many?"
+    dw TextStr_4a_5f9b               ; Entry 171 — text $0686 "[INS 10] X [INS 00] is [INS 20]G."
+    dw TextStr_4a_5fad               ; Entry 172 — text $0687 "*:You don't have enough money."
+    dw TextStr_4a_5fcf               ; Entry 173 — text $0688 "*:You can only carry 20 items!"
+    dw TextStr_4a_5ff2               ; Entry 174 — text $0689 "*:Thank you!"
+    dw TextStr_4a_6003               ; Entry 175 — text $068A "*:Which items will you sell to me?"
+    dw TextStr_4a_6028               ; Entry 176 — text $068B "*:You don't have items I can buy."
+    dw TextStr_4a_604d               ; Entry 177 — text $068C "*:How many would you like to sell?"
+    dw TextStr_4a_6072               ; Entry 178 — text $068D "[INS 10] X [INS 00] is [INS 20]G."
+    dw TextStr_4a_6084               ; Entry 179 — text $068E "*:You can only have up to 99999G!"
+    dw TextStr_4a_60af               ; Entry 180 — text $068F "*:Thanks again!"
+    dw TextStr_4a_60c3               ; Entry 181 — text $0690 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 182 — text $0691 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 183 — text $0692 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 184 — text $0693 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 185 — text $0694 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 186 — text $0695 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 187 — text $0696 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 188 — text $0697 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 189 — text $0698 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 190 — text $0699 "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 191 — text $069A "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 192 — text $069B "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 193 — text $069C "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 194 — text $069D "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 195 — text $069E "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 196 — text $069F "*:Vault. May I help you?"
+    dw TextStr_4a_60c3               ; Entry 197 — text $06A0 "*:Vault. May I help you?"
+    dw TextStr_4a_60de               ; Entry 198 — text $06A1 "*:Something else?"
+    dw TextStr_4a_60f3               ; Entry 199 — text $06A2 "*:Come again anytime."
+    dw TextStr_4a_610c               ; Entry 200 — text $06A3 "*:What would you like us to store?"
+    dw TextStr_4a_6131               ; Entry 201 — text $06A4 "*:Which one?"
+    dw TextStr_4a_6141               ; Entry 202 — text $06A5 "*:You don't have anything."
+    dw TextStr_4a_615f               ; Entry 203 — text $06A6 "*:Sorry. We can't store anymore."
+    dw TextStr_4a_6183               ; Entry 204 — text $06A7 "*:How many?"
+    dw TextStr_4a_6190               ; Entry 205 — text $06A8 "*:Too much!"
+    dw TextStr_4a_619f               ; Entry 206 — text $06A9 "*:You're in safe hands with us."
+    dw TextStr_4a_61c2               ; Entry 207 — text $06AA "*:How much do you want to deposit?"
+    dw TextStr_4a_61e7               ; Entry 208 — text $06AB "*:Not enough money."
+    dw TextStr_4a_61ff               ; Entry 209 — text $06AC "*:Excuse me but you can only depo…"
+    dw TextStr_4a_623b               ; Entry 210 — text $06AD "*:You're in safe hands with us."
+    dw TextStr_4a_625e               ; Entry 211 — text $06AE "*:What would you like to take out?"
+    dw TextStr_4a_6283               ; Entry 212 — text $06AF "*:We don't have any of your gold."
+    dw TextStr_4a_62a8               ; Entry 213 — text $06B0 "*:Take out items or withdraw gold?"
+    dw TextStr_4a_62cd               ; Entry 214 — text $06B1 "*:We don't have any of your items."
+    dw TextStr_4a_62f3               ; Entry 215 — text $06B2 "*:Too much stuff to store."
+    dw TextStr_4a_6312               ; Entry 216 — text $06B3 "*:Take out how many?"
+    dw TextStr_4a_6329               ; Entry 217 — text $06B4 "*:You have too much to carry!"
+    dw TextStr_4a_634b               ; Entry 218 — text $06B5 "*:Here it is."
+    dw TextStr_4a_635e               ; Entry 219 — text $06B6 "*:Withdraw how much?"
+    dw TextStr_4a_6375               ; Entry 220 — text $06B7 "*:You don't have that much money."
+    dw TextStr_4a_639a               ; Entry 221 — text $06B8 "*:You can't carry that much money."
+    dw TextStr_4a_63c0               ; Entry 222 — text $06B9 "*:Here it is."
+    dw TextStr_4a_63d3               ; Entry 223 — text $06BA "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 224 — text $06BB "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 225 — text $06BC "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 226 — text $06BD "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 227 — text $06BE "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 228 — text $06BF "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63d3               ; Entry 229 — text $06C0 "Pulio:Hey there! Whadayagonnado?"
+    dw TextStr_4a_63f6               ; Entry 230 — text $06C1 "Pulio:Anything else?"
+    dw TextStr_4a_640d               ; Entry 231 — text $06C2 "Pulio:Later! We'll be here for ya!"
+    dw TextStr_4a_6432               ; Entry 232 — text $06C3 "Pulio:Drop off which one?"
+    dw TextStr_4a_644e               ; Entry 233 — text $06C4 "Pulio:Hey, you're not gonna have …"
+    dw TextStr_4a_648d               ; Entry 234 — text $06C5 "Pulio:Drop off this one?"
+    dw TextStr_4a_64a8               ; Entry 235 — text $06C6 "Pulio:Stop by once in a while to …"
+    dw TextStr_4a_64e7               ; Entry 236 — text $06C7 "Pulio:Replace it?"
+    dw TextStr_4a_64fb               ; Entry 237 — text $06C8 "Pulio:Replace it with which one?"
+    dw TextStr_4a_651e               ; Entry 238 — text $06C9 "Pulio:Replace it with this one?"
+    dw TextStr_4a_6540               ; Entry 239 — text $06CA "Pulio:I replaced [INS 00] with [I…"
+    dw TextStr_4a_6561               ; Entry 240 — text $06CB "Pulio:Picking up which one, [HERO…"
+    dw TextStr_4a_6582               ; Entry 241 — text $06CC "Pulio:No monsters here to take."
+    dw TextStr_4a_65a6               ; Entry 242 — text $06CD "Pulio:You can't take any more!"
+    dw TextStr_4a_65c8               ; Entry 243 — text $06CE "Pulio:You're gonna pick this one …"
+    dw TextStr_4a_65ee               ; Entry 244 — text $06CF "Pulio:Train it well, [HERO]!"
+    dw TextStr_4a_660a               ; Entry 245 — text $06D0 "Pulio:Replacing a monster, [HERO]?"
+    dw TextStr_4a_662a               ; Entry 246 — text $06D1 "Pulio:Which one are you replacing?"
+    dw TextStr_4a_664f               ; Entry 247 — text $06D2 "Pulio:Replace this one?"
+    dw TextStr_4a_6669               ; Entry 248 — text $06D3 "Pulio:Replace with which one?"
+    dw TextStr_4a_6689               ; Entry 249 — text $06D4 "Pulio:Replace this one?"
+    dw TextStr_4a_66a3               ; Entry 250 — text $06D5 "Pulio:I replaced [INS 00] with [I…"
+    dw TextStr_4a_66c4               ; Entry 251 — text $06D6 "Pulio:Check on which one?"
+    dw TextStr_4a_66e0               ; Entry 252 — text $06D7 "Pulio:Hey, none to check on!"
+    dw TextStr_4a_6701               ; Entry 253 — text $06D8 "Pulio:Check on which one, [HERO]?"
+    dw TextStr_4a_6720               ; Entry 254 — text $06D9 "Pulio:Check on which one, [HERO]?"
+    dw TextStr_4a_673f               ; Entry 255 — text $06DA "Pulio:Separate with which one?"
+    dw TextStr_4a_6760               ; Entry 256 — text $06DB "Pulio:Hey, nothing here!"
+    dw TextStr_4a_677d               ; Entry 257 — text $06DC "Pulio:Separate with which one?"
+    dw TextStr_4a_679e               ; Entry 258 — text $06DD "Pulio:Are you sure? You'll lose i…"
+    dw TextStr_4a_67d0               ; Entry 259 — text $06DE "[INS 00] was returned to the wild."
+    dw TextStr_4a_67f5               ; Entry 260 — text $06DF "Pulio:Are you sure? You'll lose i…"
+    dw TextStr_4a_6827               ; Entry 261 — text $06E0 "[INS 00] was returned to the wild."
+    dw TextStr_4a_684c               ; Entry 262 — text $06E1 "Pulio:Select [PICK UP] to take th…"
+    dw TextStr_4a_6887               ; Entry 263 — text $06E2 "Pulio:You wanna make the monsters…"
+    dw TextStr_4a_68d1               ; Entry 264 — text $06E3 "Pulio:All the monsters here went …"
+    dw TextStr_4a_690e               ; Entry 265 — text $06E4 "Pulio:I put all the monsters not …"
+    dw TextStr_4a_6986               ; Entry 266 — text $06E5 "Pulio:Wanna wake up the sleeping …"
+    dw TextStr_4a_69b8               ; Entry 267 — text $06E6 "Pulio:I woke up the sleeping mons…"
+    dw TextStr_4a_69e8               ; Entry 268 — text $06E7 "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 269 — text $06E8 "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 270 — text $06E9 "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 271 — text $06EA "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 272 — text $06EB "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 273 — text $06EC "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 274 — text $06ED "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 275 — text $06EE "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 276 — text $06EF "*:What can I do for you?"
+    dw TextStr_4a_69e8               ; Entry 277 — text $06F0 "*:What can I do for you?"
+    dw TextStr_4a_6a03               ; Entry 278 — text $06F1 "*:Anything else?"
+    dw TextStr_4a_6a15               ; Entry 279 — text $06F2 "*:Create the ultimate monsters!"
+    dw TextStr_4a_6a38               ; Entry 280 — text $06F3 "*:Which monster for the pedigree?"
+    dw TextStr_4a_6a5c               ; Entry 281 — text $06F4 "*:Which monster to breed with?"
+    dw TextStr_4a_6a7d               ; Entry 282 — text $06F5 "*:That one? Are you sure?"
+    dw TextStr_4a_6a99               ; Entry 283 — text $06F6 "*:There will be no monsters left!"
+    dw TextStr_4a_6abf               ; Entry 284 — text $06F7 "*:Sorry, it's not old enough."
+    dw TextStr_4a_6ae0               ; Entry 285 — text $06F8 "*:The same gender. Cannot breed."
+    dw TextStr_4a_6b05               ; Entry 286 — text $06F9 "*:I bet [INS 20] will be born! *:…"
+    dw TextStr_4a_6b4d               ; Entry 287 — text $06FA "*:Hmm. Seems like a new monster?!"
+    dw TextStr_4a_6b73               ; Entry 288 — text $06FB "*:Can I record this joyful event?"
+    dw TextStr_4a_6b97               ; Entry 289 — text $06FC "*:OK! Wait overnight."
+    dw TextStr_4a_6bb0               ; Entry 290 — text $06FD "[INS 00] & [INS 10] disappeared."
+    dw TextStr_4a_6bc8               ; Entry 291 — text $06FE "*:Wow! It's a rare breed!"
+    dw TextStr_4a_6be5               ; Entry 292 — text $06FF "*:Inside it is a baby [INS 20]! *…"
 
 LoadB4a_424b:
     ld a, [$c822]
@@ -321,6 +321,8 @@ jr_04a_425c:
     ret
 
 
+; [S166] copy a text of this bank (RunTextHandler); ids past the bank's range go to its overflow bank (TEXT_SYSTEM "Text id resolution")
+TextRunB4A_4263:
     ld a, [$c822]
     cp $02
     jr nz, jr_04a_4274
@@ -338,6 +340,8 @@ jr_04a_4274:
     ret
 
 
+; [S166] show a text (entry 0) then RequestScreenUpdate
+TextShowRefreshB4A_427b:
     ld a, [$c822]
     cp $02
     jr nz, jr_04a_428c
@@ -355,9186 +359,1194 @@ jr_04a_428c:
     ret
 
 
-    db $eb
-    sbc a
-    and e
-    dec hl
-    ld d, d
-    ld c, d
-    ld c, l
-    ld b, e
-    ld e, [hl]
-    ld h, d
-
-jr_04a_429d:
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $4b
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    rst $28
-    xor $50
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld a, $62
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld h, e
-    ld a, [$eff7]
-    xor $27
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, e
-    rst $28
-    xor $48
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $37
-    ld c, h
-    ld c, h
-    ld h, d
-    ccf
-    ld a, $41
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld a, $50
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $62
-    ld b, h
-    ld b, [hl]
-    ld d, e
-    ld b, d
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld a, $62
-    ld c, a
-    ld b, d
-    ld d, h
-    ld a, $4f
-    ld b, c
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc a
-    ld b, d
-    ld c, l
-    ld e, a
-    ld h, d
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    ld e, a
-    rst $28
-    xor $2b
-    ld c, h
-    ld d, h
-    ld h, d
-    ld b, c
-    ld b, [hl]
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, h
-    ld a, [$eff7]
-    xor $36
-    ld a, $4b
-    ld d, c
-    ld b, [hl]
-    and e
-    dec hl
-    ld d, d
-    ld c, d
-    ld c, l
-    ld b, l
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $29
-    ld c, h
-    ld c, c
-    ld c, c
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    ld a, [hl-]
-    ld a, $46
-    ld d, c
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    rst $28
-    xor $43
-    ld c, h
-    ld c, a
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    scf
-    ld a, $49
-    ld c, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    rst $28
-    xor $2a
-    ld c, a
-    ld a, $4b
-    ld b, c
-    ld c, l
-    ld a, $63
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    ld h, $6a
-    ld c, h
-    ld c, e
-    ld e, [hl]
-    ld h, d
-    ld b, h
-    ld c, h
-    ld h, d
-    rst $28
-    xor $51
-    ld a, $49
-    ld c, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld a, [$eff7]
-    xor $2a
-    ld c, a
-    ld a, $4b
-    ld b, c
-    ld c, l
-    ld a, $63
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, c
-    ld a, $49
-    ld c, b
-    ld b, d
-    ld b, c
-    ld h, d
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld a, [hl+]
-    ld c, a
-    ld a, $4b
-    ld b, c
-    ld c, l
-    ld a, $5e
-    ld h, d
-    ld a, [$eff7]
-    xor $4f
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, h
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $36
-    ld a, $4b
-    ld d, c
-    ld b, [hl]
-    and e
-    ld [hl], $4c
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $4f
-    ld b, d
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, h
-    ld h, d
-    dec l
-    ld d, d
-    ld d, b
-    ld d, c
-    ld h, d
-    ld b, h
-    ld c, h
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    scf
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    rst $28
-    xor $2a
-    ld a, $51
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    daa
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, a
-    ld d, d
-    ld d, b
-    ld d, c
-    rst $28
-    xor $50
-    ld d, c
-    ld a, $4b
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, e
-    ld a, [$eff7]
-    xor $2a
-    ld c, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $37
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    ld a, [hl-]
-    ld a, $50
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    rst $28
-    xor $37
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld a, [$eff7]
-    xor $52
-    ld d, b
-    ld b, d
-    ld b, e
-    ld d, d
-    ld c, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld a, $64
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    inc a
-    ld e, a
-    ld e, a
-    ld e, a
-    inc a
-    ld a, $ef
-    xor $3f
-    ld b, [hl]
-    ld b, h
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, h
-    ld c, c
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    ld [hl], $3e
-    ld c, e
-    ld d, c
-    ld b, [hl]
-    and e
-    inc l
-    ld e, a
-    ld e, a
-    ld e, a
-    inc l
-    ld l, d
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $45
-    ld a, $4d
-    ld c, l
-    ld d, [hl]
-    ld e, a
-    ld e, a
-    ld e, a
-    ld e, a
-    ccf
-    ld c, c
-    ld d, d
-    ld d, b
-    ld b, l
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld [hl-], a
-    ld b, l
-    ld h, d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld c, h
-    rst $28
-    xor $f6
-    ld h, e
-    ld h, d
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    dec h
-    ld a, $57
-    ld a, $3e
-    ld c, a
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $62
-    ld b, h
-    ld c, h
-    ld c, h
-    ld b, c
-    rst $28
-    xor $43
-    ld b, d
-    ld b, d
-    ld c, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld c, e
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $48
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld b, c
-    ld c, h
-    ld c, d
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld a, $4b
-    ld b, b
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, b
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    inc l
-    ld h, d
-    ld a, $49
-    ld c, d
-    ld c, h
-    ld d, b
-    ld d, c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, b
-    ld d, c
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    cpl
-    ld a, $62
-    ld c, c
-    ld a, $62
-    ld c, c
-    ld a, $ef
-    xor $f6
-    ld h, d
-    ld a, $4b
-    ld b, c
-    ld a, [$eff7]
-    xor $30
-    ld b, [hl]
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    rst $28
-    xor $2f
-    ld a, $62
-    ld c, c
-    ld a, $62
-    ld c, c
-    ld a, $5f
-    ld e, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, l
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $50
-    ld c, h
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, e
-    ld h, d
-    inc l
-    ld d, c
-    ld l, b
-    ld a, [$eff7]
-    xor $3e
-    ccf
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, h
-    ld d, d
-    ld d, [hl]
-    ld d, b
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld b, [hl]
-    ld b, c
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld c, b
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld a, [hl+]
-    ld b, [hl]
-    ld b, h
-    ld b, h
-    ld c, c
-    ld b, d
-    ld h, d
-    ld b, h
-    ld b, [hl]
-    ld b, h
-    ld b, h
-    ld c, c
-    ld b, d
-    ld h, e
-    rst $28
-    xor $2f
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, e
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, e
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ld a, $ef
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, d
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld c, h
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    jr nc, jr_04a_46cf
-
-    ld c, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    or [hl]
-    ld h, d
-    daa
-    ld a, $41
-    ld b, c
-    ld d, [hl]
-    rst $28
-    xor $50
-    ld a, $46
-    ld b, c
-    ld h, d
-    inc l
-    ld h, d
-    ld d, b
-    ld b, l
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    rst $28
-    xor $f6
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, h
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, [hl]
-    rst $28
-    xor $26
-    ld c, h
-    ld c, e
-    ld b, h
-    ld c, a
-    ld a, $51
-    ld d, d
-    ld c, c
-    ld a, $51
-    ld b, [hl]
-    ld c, h
-    ld c, e
-
-jr_04a_46cf:
-    ld d, b
-    ld h, e
-    ld h, e
-    ld a, [$eff7]
-    xor $2c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, e
-    ld b, d
-    ld h, d
-    ld b, e
-    ld b, d
-    ld d, b
-    ld d, c
-    ld b, [hl]
-    ld d, e
-    ld a, $49
-    ld d, b
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, h
-    ld a, $56
-    ld e, [hl]
-    ld h, d
-    inc l
-    ld h, d
-    rst $28
-    xor $45
-    ld b, d
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld a, $62
-    ld c, a
-    ld d, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld c, h
-    ld d, b
-    ld b, d
-    ld h, d
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld c, a
-    ld b, c
-    ld d, b
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    jr nc, @+$58
-
-    ld d, b
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld a, [$eff7]
-    xor $3a
-    ld c, h
-    ld c, a
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    rst $28
-    xor $3f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld c, l
-    ld a, $49
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    dec h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld h, d
-    ld c, c
-    ld c, h
-    ld c, a
-    ld b, c
-    ld d, b
-    sbc h
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, d
-    ld b, b
-    ld c, a
-    ld b, d
-    ld a, $51
-    ld d, d
-    ld c, a
-    ld b, d
-    ld d, b
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld a, [$eff7]
-    xor $3f
-    ld b, d
-    ld h, d
-    ld c, d
-    ld a, $41
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld c, a
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    ld h, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld b, e
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld l, b
-    rst $28
-    xor $4d
-    ld c, h
-    ld d, b
-    ld d, b
-    ld b, [hl]
-    ccf
-    ld c, c
-    ld b, d
-    ld h, h
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, b
-    ld c, h
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ld h, e
-    rst $28
-    xor $3c
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, e
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    dec hl
-    ld b, [hl]
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld a, $ef
-    xor $4f
-    ld b, d
-    ld d, h
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld a, [$eff7]
-    xor $53
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld [hl-], a
-    ld c, b
-    ld a, $56
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld e, a
-    ld e, a
-    ld e, a
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    rst $28
-    xor $5f
-    ld e, a
-    ld e, a
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    rst $28
-    xor $51
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    ld d, c
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld l, $42
-    ld b, d
-    ld c, l
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, d
-    ld c, l
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl-], a
-    ld b, l
-    ld e, [hl]
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld a, $62
-    ld b, a
-    ld c, h
-    ld d, [hl]
-    ld h, e
-    rst $28
-    xor $f6
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, d
-    ld b, d
-    ld c, a
-    ld b, b
-    ld b, l
-    ld a, $4b
-    ld d, c
-    rst $28
-    xor $50
-    ld b, d
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld a, [$eff7]
-    xor $40
-    ld b, l
-    ld a, $4b
-    ld b, h
-    ld b, d
-    ld b, c
-    ld h, d
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    rst $28
-    xor $3e
-    ld d, c
-    ld d, c
-    ld b, [hl]
-    ld d, c
-    ld d, d
-    ld b, c
-    ld b, d
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, l
-    ld c, a
-    ld c, h
-    ccf
-    ld a, $3f
-    ld c, c
-    ld d, [hl]
-    rst $28
-    xor $3f
-    ld b, d
-    ld b, b
-    ld a, $52
-    ld d, b
-    ld b, d
-    ld h, d
-    or $fa
-    rst $30
-    rst $28
-    xor $54
-    ld c, h
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld c, e
-    ld a, $62
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    rst $28
-    xor $3e
-    ccf
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ccf
-    ld c, h
-    ld c, h
-    ld c, b
-    ld d, b
-    ld h, d
-    ld a, [$eff7]
-    xor $45
-    ld b, d
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, c
-    ld c, c
-    ld d, b
-    ld h, h
-    rst $28
-    xor $ff
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl-], a
-    ld b, l
-    ld e, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld c, h
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $2a
-    ld c, a
-    ld b, d
-    ld a, $51
-    scf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    ld a, [$eff7]
-    xor $30
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    or $63
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ccf
-    ld b, d
-    ld d, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld a, $3f
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    ld d, b
-    ld c, h
-    ld c, c
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    rst $28
-    xor $50
-    ld d, c
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, h
-    rst $38
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld b, d
-    ld d, b
-    ld e, [hl]
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, b
-    ld c, h
-    ld d, d
-    ld c, a
-    ld d, b
-    ld b, d
-    ld e, a
-    rst $28
-    xor $37
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, e
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, d
-    ld a, [$eff7]
-    xor $54
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld c, e
-    ld h, a
-    ld h, d
-    ld a, $50
-    ld c, b
-    ld h, d
-    ld d, b
-    ld d, d
-    ld b, b
-    ld b, l
-    rst $28
-    xor $3e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld c, a
-    ld c, h
-    ld d, d
-    ld d, b
-    rst $28
-    xor $4a
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld a, $50
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld a, [$eff7]
-    xor $50
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld a, $4a
-    ld h, d
-    ld b, l
-    ld a, $4d
-    ld c, l
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld a, $51
-    ld h, d
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $3e
-    ccf
-    ld c, c
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    rst $28
-    xor $50
-    ld b, [hl]
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, b
-    ld b, l
-    ld b, d
-    ld d, b
-    rst $28
-    xor $40
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, a
-    ld d, d
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, e
-    ld a, [$eff7]
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    rst $28
-    xor $51
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $4a
-    ld b, d
-    ld c, e
-    ld d, c
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, b
-    ld b, l
-    rst $28
-    xor $40
-    ld a, $4a
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, a
-    ld d, d
-    ld b, d
-    ld h, e
-    ld h, d
-    inc l
-    ld h, d
-    ld a, [$eff7]
-    xor $54
-    ld c, h
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld b, e
-    ld h, d
-    ld c, d
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld c, h
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld h, e
-    ld h, d
-    ld [hl-], a
-    ld d, d
-    ld c, a
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld c, h
-    rst $28
-    xor $f6
-    ld h, e
-    ld a, [$eff7]
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, c
-    ld d, h
-    ld c, h
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld d, d
-    ld d, b
-    rst $28
-    xor $3e
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, d
-    ld a, $51
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $56
-    ld d, d
-    ld c, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld b, d
-    ld a, $51
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $40
-    ld b, d
-    ld c, c
-    ld b, d
-    ccf
-    ld c, a
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld a, [$eff7]
-    xor $53
-    ld b, [hl]
-    ld b, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld d, [hl]
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    jr nc, jr_04a_4b9d
-
-    ld d, b
-    ld d, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $36
-    ld c, h
-    ld c, d
-    ld b, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, d
-    ld b, [hl]
-    ld d, b
-    ld d, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    jr z, jr_04a_4bc6
-
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, c
-    ld a, $46
-    ld c, e
-    ld c, d
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, e
-    rst $28
-    xor $2a
-    ld b, [hl]
-    ld c, d
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, [$eff7]
-    xor $42
-    ld c, e
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, c
-    ld a, $46
-    ld c, e
-    ld c, d
-
-jr_04a_4b9d:
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    jr nc, jr_04a_4bea
-
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    or $5e
-    rst $28
-    xor $27
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-
-jr_04a_4bc6:
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, b
-    ld c, b
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ld h, h
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld d, h
-    ld a, $4b
-
-jr_04a_4bea:
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $50
-    ld b, d
-    ld b, d
-    ld h, d
-    ld a, $62
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, c
-    ld b, l
-    ld a, $51
-    ld a, [$eff7]
-    xor $40
-    ld a, $4b
-    ld h, d
-    ld d, d
-    ld d, b
-    ld b, d
-    ld h, d
-    ld h, $3e
-    ld c, c
-    ld c, c
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld a, $4f
-    ld b, c
-    ld h, d
-    ld h, $3e
-    ld c, c
-    ld c, c
-    rst $28
-    xor $40
-    ld a, $4b
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld d, b
-    ld d, c
-    ld a, $4b
-    ld d, c
-    ld c, c
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $40
-    ld a, $49
-    ld c, c
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld d, c
-    ld b, l
-    ld h, d
-    ld a, $49
-    ld c, c
-    ld d, [hl]
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld d, c
-    ld h, d
-    ld d, b
-    ld c, h
-    ld d, d
-    ld c, e
-    ld b, c
-    ld d, b
-    ld h, d
-    ld b, e
-    ld d, d
-    ld c, e
-    ld h, e
-    rst $28
-    xor $36
-    ld b, l
-    ld c, h
-    ld d, h
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, e
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld e, a
-    ld e, a
-    ld e, a
-    inc l
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld b, e
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld c, a
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, d
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    rst $28
-    xor $26
-    ld a, $49
-    ld c, c
-    ld h, h
-    ld a, [$f0f7]
-    ld [$a39f], a
-    ld [hl-], a
-    ld b, l
-    ld h, e
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld c, a
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    ld d, c
-    rst $28
-    xor $46
-    ld d, c
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, e
-    ld h, d
-    ld [hl], $45
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld a, $44
-    ld b, [hl]
-    ld b, b
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$f9]
-    nop
-    ld h, d
-    ld b, b
-    ld a, $50
-    ld d, c
-    rst $28
-    xor $26
-    ld a, $49
-    ld c, c
-    ld h, e
-    ld a, [$eff7]
-    xor $25
-    ld d, d
-    ld d, c
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $45
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld c, e
-    ld b, d
-    ld b, c
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, l
-    ld b, d
-    ld b, b
-    ld c, b
-    ld h, h
-    rst $28
-    xor $31
-    ld c, h
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, l
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld c, e
-    ld b, d
-    ld b, c
-    ld h, e
-    ld a, [$eff7]
-    xor $3a
-    ld b, l
-    ld a, $51
-    ld l, b
-    ld h, d
-    ld b, h
-    ld c, h
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, h
-    ld c, e
-    rst $28
-    xor $30
-    ld a, $50
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    or $64
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, h
-    ld h, d
-    scf
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, b
-    ld a, $46
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld a, [$eff7]
-    xor $41
-    ld c, h
-    ld b, d
-    ld d, b
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $3f
-    ld b, d
-    ld h, d
-    ld c, l
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld a, $62
-    ld d, b
-    ld b, l
-    ld c, h
-    ld d, h
-    ld h, h
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld e, a
-    ld e, a
-    ld e, a
-    ld [hl-], a
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld [hl], $4c
-    ld c, a
-    ld c, a
-    ld d, [hl]
-    ld h, d
-    or $5f
-    rst $28
-    xor $30
-    ld d, [hl]
-    ld h, d
-    ld a, $4d
-    ld c, h
-    ld c, c
-    ld c, h
-    ld b, h
-    ld b, [hl]
-    ld b, d
-    ld d, b
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, b
-    ld c, e
-    ld b, d
-    ld d, h
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $4f
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, h
-    ld a, [$eff7]
-    xor $37
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $37
-    ld c, a
-    ld a, $53
-    ld b, d
-    ld c, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, h
-    ld h, d
-    ld a, [hl+]
-    ld a, $51
-    ld b, d
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld c, b
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld c, l
-    ld c, a
-    ld b, [hl]
-    ld d, b
-    ld b, d
-    ld b, c
-    ld e, a
-    ld a, [$eff7]
-    xor $25
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld d, b
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld d, h
-    ld a, $56
-    ld h, d
-    ld c, h
-    ld b, e
-    rst $28
-    xor $3e
-    ld c, l
-    ld c, h
-    ld c, c
-    ld c, h
-    ld b, h
-    ld b, [hl]
-    ld d, a
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld h, $4c
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, e
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    rst $28
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld sp, hl
-    nop
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, c
-    ld c, h
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld sp, hl
-    nop
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $49
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, c
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ld c, e
-    ld c, h
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl], $51
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld c, e
-    ld c, h
-    ld h, d
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld a, $ef
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, a
-    ld b, d
-    ld d, b
-    ld d, d
-    ld c, c
-    ld d, c
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $2d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld c, h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld a, $62
-    ld d, b
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld a, [$eff7]
-    xor $3f
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    jr nc, jr_04a_50ce
-
-    ld h, d
-    jr z, @+$58
-
-    ld b, d
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, e
-    ld b, d
-    ld d, b
-    rst $28
-    xor $41
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld d, b
-    ld e, a
-    ld h, d
-    ld a, [hl-]
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, h
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-
-jr_04a_50ce:
-    ld d, [hl]
-    ld h, d
-    jr z, jr_04a_5128
-
-    ld b, d
-    ld b, c
-    ld b, d
-    ld c, a
-    ld h, h
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    inc a
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld h, h
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-
-jr_04a_5128:
-    inc a
-    ld b, d
-    ld d, c
-    ld b, [hl]
-    ld h, h
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld d, d
-    ld d, c
-    ld e, [hl]
-    ld h, d
-    ld d, b
-    ld d, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld d, [hl]
-    ld e, a
-    rst $28
-    xor $2b
-    ld b, [hl]
-    ld b, b
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld a, [$eff7]
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld h, $3e
-    ld d, c
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, c
-    ld c, h
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld h, $3e
-    ld d, c
-    add hl, hl
-    ld c, c
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld h, d
-    ld c, d
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, h
-    ld a, [$eff7]
-    xor $49
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld a, $63
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, h
-    ld a, [$eff7]
-    xor $24
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    ld [hl], $51
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ld d, c
-    ld b, d
-    ld c, c
-    ld c, c
-    rst $28
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $4f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $2d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld a, $62
-    ld d, b
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld a, [$eff7]
-    xor $3f
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, [hl]
-    ld h, d
-    ld b, [hl]
-    ld b, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $3e
-    ld b, h
-    ld a, $46
-    ld c, e
-    ld e, [hl]
-    ld h, d
-    ld d, b
-    ld d, c
-    ld c, h
-    ld c, l
-    ld h, d
-    ccf
-    ld d, [hl]
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    cpl
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    jr nc, @+$40
-
-    ld c, e
-    rst $28
-    xor $50
-    ld a, $56
-    ld d, b
-    ld h, d
-    inc h
-    ld b, h
-    daa
-    ld b, d
-    ld d, e
-    ld b, [hl]
-    ld c, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld d, b
-    ld h, d
-    ld d, c
-    ld d, [hl]
-    ld c, l
-    ld b, d
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $2f
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    jr nc, jr_04a_5414
-
-    ld c, e
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, d
-    ld a, $4f
-    ld b, d
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $62
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $2f
-    ld b, [hl]
-    ld d, a
-    ld a, $4f
-    ld b, c
-    jr nc, jr_04a_5450
-
-    ld c, e
-    ld h, h
-
-jr_04a_5414:
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, d
-    ld a, $48
-    ld e, a
-    ld a, [$eff7]
-    xor $37
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $49
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld d, d
-
-jr_04a_5450:
-    ld d, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, [hl]
-    ld d, d
-    ld b, d
-    ld d, b
-    ld d, c
-    ld b, [hl]
-    ld c, h
-    ld c, e
-    ld e, a
-    ld e, a
-    ld e, a
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld h, e
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $45
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl], $51
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld c, b
-    ld c, e
-    ld c, h
-    ld d, h
-    rst $28
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ccf
-    ld c, h
-    ld c, a
-    ld c, e
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld d, d
-    ld d, c
-    ld h, d
-    inc l
-    ld l, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $ef
-    xor $4f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, a
-    ld b, d
-    ld d, b
-    ld d, d
-    ld c, c
-    ld d, c
-    ld d, b
-    ld a, [$eff7]
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    dec l
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld e, a
-    rst $28
-    xor $32
-    ld c, b
-    ld a, $56
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, [hl]
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld b, l
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    rst $28
-    xor $3f
-    ld b, d
-    ld h, d
-    ld a, $51
-    ld h, d
-    ld c, c
-    ld b, d
-    ld a, $50
-    ld d, c
-    ld h, d
-    ld b, l
-    ld a, $49
-    ld b, e
-    ld a, [$eff7]
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld c, c
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    jr nc, jr_04a_562d
-
-    ld b, b
-    ld c, b
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ld c, h
-    ld c, e
-    rst $28
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld b, a
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld h, d
-    ccf
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, e
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    rst $28
-    xor $26
-    ld h, d
-    ld b, b
-    ld c, c
-    ld a, $50
-    ld d, b
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    jr nc, @+$48
-
-    ld b, b
-    ld c, b
-    and e
-
-jr_04a_562d:
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    daa
-    ld b, d
-    ld a, $41
-    ld sp, $5146
-    ld b, d
-    ld h, e
-    ld h, e
-    ldh a, [$ea]
-    jr nc, jr_04a_5695
-
-    ld b, b
-    ld c, b
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld c, h
-    ld h, d
-    ld b, c
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, l
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld a, [$eff7]
-    xor $27
-    ld b, d
-    ld a, $41
-    ld sp, $5146
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$4630], a
-    ld b, b
-    ld c, b
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld c, a
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld l, b
-    ld h, d
-    ld c, c
-    ld b, d
-
-jr_04a_5695:
-    ld d, e
-    ld b, d
-    ld c, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld c, h
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    jr nc, jr_04a_56fd
-
-    ld b, b
-    ld c, b
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $45
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    jr nc, jr_04a_5738
-
-    ld b, b
-    ld c, b
-    and e
-    ld a, [hl-]
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-
-jr_04a_56fd:
-    ld d, b
-    rst $28
-    xor $4c
-    ld c, e
-    ld b, d
-    ld h, h
-    ld h, d
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    jr nc, @+$48
-
-    ld b, b
-    ld c, b
-    and e
-    ld [hl], $51
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-
-jr_04a_5738:
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld c, e
-    ld c, h
-    ld h, d
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld a, $ef
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld c, a
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    dec l
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ccf
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4d
-    ld c, a
-    ld c, h
-    ld c, h
-    ld b, e
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld a, [$eff7]
-    xor $43
-    ld c, a
-    ld b, [hl]
-    ld b, d
-    ld c, e
-    ld b, c
-    ld d, b
-    ld b, l
-    ld b, [hl]
-    ld c, l
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc sp
-    ld c, c
-    ld b, d
-    ld a, $50
-    ld b, d
-    ld h, d
-    ld b, b
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $4a
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    jr nc, jr_04a_58ad
-
-    ld h, d
-    dec [hl]
-    ld a, $56
-    ccf
-    ld d, d
-    ld c, a
-    ld c, e
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, e
-    ld b, d
-    ld d, b
-    rst $28
-    xor $3f
-    ld b, [hl]
-    ld c, a
-    ld b, c
-    ld d, b
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    dec [hl]
-    ld a, $56
-    ccf
-    ld d, d
-    ld c, a
-    ld c, e
-    ld h, h
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $3e
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, l
-
-jr_04a_58ad:
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $43
-    ld c, h
-    ld c, a
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    dec [hl]
-    ld a, $56
-    ccf
-    ld d, d
-    ld c, a
-    ld c, e
-    ld h, h
-    rst $28
-    xor $f0
-    db $eb
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld a, $62
-    ld c, c
-    ld c, h
-    ld d, h
-    ld a, [$eff7]
-    xor $49
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $4b
-    ld c, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $51
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld d, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $4c
-    ld c, b
-    ld a, $56
-    ld h, h
-    ldh a, [$eb]
-    sbc a
-    and e
-    ld h, $3e
-    ld c, e
-    ld h, d
-    inc l
-    ld h, d
-    ld d, b
-    ld d, c
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld c, e
-    ld c, h
-    ld h, d
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld a, $ef
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    ld h, $3e
-    ld c, e
-    ld h, d
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $46
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    dec l
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    ldh a, [$eb]
-    sbc a
-    and e
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    ld h, d
-    ld d, b
-    ld d, c
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld c, h
-    ld c, l
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    rst $28
-    xor $3e
-    ld h, d
-    ld d, b
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, a
-    ld a, [$eff7]
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc sp
-    ld a, $56
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, $62
-    ld d, e
-    ld b, [hl]
-    ld d, b
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $54
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    ld sp, hl
-    nop
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $3e
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    rst $28
-    xor $f9
-    nop
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld h, $3e
-    ld c, e
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld a, $62
-    ld c, c
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, c
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld c, e
-    ld c, h
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, h
-    rst $28
-    xor $24
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld h, $3e
-    ld c, e
-    ld h, d
-    ld d, h
-    ld b, d
-    ld h, d
-    ld d, b
-    ld d, c
-    ld a, $4f
-    ld d, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, b
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ld b, [hl]
-    ld c, d
-    ld a, $44
-    ld b, [hl]
-    ld c, e
-    ld b, d
-    rst $28
-    xor $54
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld a, [$eff7]
-    xor $46
-    ld d, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    dec h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld a, $4f
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld b, d
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld b, d
-    ld a, [$eff7]
-    xor $4f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld b, d
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $2d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld c, e
-    ld e, [hl]
-    ld h, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld h, d
-    ld d, d
-    ld d, b
-    rst $28
-    xor $3f
-    ld b, d
-    ld b, h
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $40
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld c, l
-    ld b, d
-    ld b, e
-    ld d, d
-    ld c, c
-    ld c, c
-    ld d, [hl]
-    ld h, d
-    ld a, $ef
-    xor $50
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ccf
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, e
-    ld b, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld d, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    jr nc, jr_04a_5cd0
-
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-    ld b, d
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld b, c
-    ld c, h
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    ld h, d
-    jr nc, jr_04a_5d0d
-
-    ld d, c
-    ld a, $3f
-    ccf
-    ld c, c
-
-jr_04a_5cd0:
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    jr nc, @+$48
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    ld h, $4c
-    ld c, d
-    ld b, d
-    ld h, d
-    ccf
-    ld a, $40
-    ld c, b
-    rst $28
-    xor $54
-    ld b, l
-    ld b, d
-    ld c, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld c, e
-    ld a, $fa
-    rst $30
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld e, a
-    rst $28
-    xor $f7
-    ldh a, [$eb]
-    jr nc, jr_04a_5d4f
-
-    ld c, c
-    ld a, $56
-    ld c, h
-
-jr_04a_5d0d:
-    ld d, d
-    and e
-    dec h
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    rst $28
-    xor $4a
-    ld d, [hl]
-    ld h, d
-    ld [hl], $48
-    ld b, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, e
-    ldh a, [$eb]
-    jr nc, jr_04a_5d71
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld a, [$eff7]
-    xor $4d
-    ld b, [hl]
-    ld b, b
-
-jr_04a_5d4f:
-    ld c, b
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld h, d
-    ld c, d
-    ld d, [hl]
-    rst $28
-    xor $36
-    ld c, b
-    ld b, d
-    ld c, c
-    ld b, d
-    ld d, c
-    ld c, h
-    ld c, a
-    ld h, h
-    ldh a, [$eb]
-    jr nc, jr_04a_5dac
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc h
-    ld h, d
-    ld c, c
-    ld c, h
-    ld d, h
-
-jr_04a_5d71:
-    rst $28
-    xor $49
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, c
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $40
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    jr nc, jr_04a_5ddd
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $45
-    ld a, $53
-    ld b, d
-    ld h, d
-
-jr_04a_5dac:
-    ld a, $4b
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    jr nc, jr_04a_5e1a
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc l
-    ld d, b
-    ld h, d
-
-jr_04a_5ddd:
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    ld h, h
-    ldh a, [$eb]
-    jr nc, jr_04a_5e3a
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc l
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ld d, b
-    ld d, c
-    ld a, $4f
-    ld d, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $40
-    ld b, d
-    ld c, a
-    ld b, d
-    ld c, d
-
-jr_04a_5e1a:
-    ld c, h
-    ld c, e
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld c, h
-    ld c, b
-    ld a, $56
-    ld h, h
-    rst $28
-    xor $f0
-    db $eb
-    jr nc, @+$48
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    rst $28
-    xor $48
-    ld c, e
-
-jr_04a_5e3a:
-    ld c, h
-    ld d, h
-    ld h, d
-    ld d, h
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, c
-    ld h, d
-    ld c, h
-    ld b, e
-    ld a, [$eff7]
-    xor $42
-    ld b, h
-    ld b, h
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld e, a
-    ld e, a
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $30
-    ld b, [hl]
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    ld h, $3e
-    ld c, e
-    ld h, d
-    inc l
-    rst $28
-    xor $4f
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $2d
-    ld c, h
-    ld d, d
-    ld c, a
-    ld c, e
-    ld a, $49
-    ld h, h
-    rst $28
-    xor $f0
-    db $eb
-    jr nc, jr_04a_5ed8
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    cpl
-    ld b, d
-    ld d, c
-    ld l, b
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, e
-    rst $30
-    ldh a, [$eb]
-    jr nc, jr_04a_5eef
-
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc l
-    ld h, d
-    ld b, l
-    ld c, h
-    ld c, l
-    ld b, d
-    rst $28
-    xor $46
-    ld d, c
-    ld h, [hl]
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ld a, $62
-    ld d, b
-    ld d, c
-    ld c, a
-    ld c, h
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-
-jr_04a_5ed8:
-    xor $30
-    ld b, [hl]
-    ld c, c
-    ld a, $56
-    ld c, h
-    ld d, d
-    and e
-    inc l
-    ld l, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $ef
-    xor $50
-    ld b, d
-    ld c, e
-    ld b, c
-
-jr_04a_5eef:
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, d
-    ld b, h
-    ld b, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld b, e
-    ld a, $4f
-    ld c, d
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc l
-    ld d, c
-    ld b, d
-    ld c, d
-    ld h, d
-    ld d, b
-    ld b, l
-    ld c, h
-    ld c, l
-    ld e, a
-    rst $28
-    xor $30
-    ld a, $56
-    ld h, d
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, c
-    ld c, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc h
-    ld c, e
-    ld d, [hl]
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, d
-    ld c, c
-    ld d, b
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    scf
-    ld b, l
-    ld a, $4b
-    ld c, b
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld e, a
-    rst $28
-    xor $26
-    ld c, h
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, h
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, h
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$10f9], a
-    ld h, d
-    dec sp
-    ld h, d
-    ld sp, hl
-    nop
-    rst $28
-    xor $46
-    ld d, b
-    ld h, d
-    ld sp, hl
-    jr nz, jr_04a_5fd5
-
-    ld e, a
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $42
-    ld c, e
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-
-jr_04a_5fd5:
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    rst $28
-    xor $40
-    ld a, $4f
-    ld c, a
-    ld d, [hl]
-    ld h, d
-    ld [bc], a
-    nop
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    scf
-    ld b, l
-    ld a, $4b
-    ld c, b
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $46
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    inc l
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ccf
-    ld d, d
-    ld d, [hl]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, d
-    ld d, h
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, b
-    ld b, d
-    ld c, c
-    ld c, c
-    ld h, h
-    ldh a, [$ea]
-    ld sp, hl
-    db $10
-    ld h, d
-    dec sp
-    ld h, d
-    ld sp, hl
-    nop
-    rst $28
-    xor $46
-    ld d, b
-    ld h, d
-    ld sp, hl
-    jr nz, @+$2c
-
-    ld e, a
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    rst $28
-    xor $45
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld d, d
-    ld c, l
-    ld h, d
-    ld d, c
-    ld c, h
-    ld a, [$eff7]
-    xor $09
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld a, [hl+]
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld a, $4b
-    ld c, b
-    ld d, b
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    ld h, e
-    rst $28
-    xor $f7
-    ldh a, [$ea]
-    sbc a
-    and e
-    add hl, sp
-    ld a, $52
-    ld c, c
-    ld d, c
-    ld e, a
-    rst $28
-    xor $30
-    ld a, $56
-    ld h, d
-    inc l
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, c
-    ld c, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl], $4c
-    ld c, d
-    ld b, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, d
-    ld c, c
-    ld d, b
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    ld h, $4c
-    ld c, d
-    ld b, d
-    ld h, d
-    ld a, $44
-    ld a, $46
-    ld c, e
-    rst $28
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld d, c
-    ld b, [hl]
-    ld c, d
-    ld b, d
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, h
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, d
-    ld d, d
-    ld d, b
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    rst $28
-    xor $f0
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    ld [hl], $4c
-    ld c, a
-    ld c, a
-    ld d, [hl]
-    ld e, a
-    ld h, d
-    ld a, [hl-]
-    ld b, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    rst $28
-    xor $50
-    ld d, c
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld a, $4b
-    ld d, [hl]
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld c, h
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, b
-    ld a, $43
-    ld b, d
-    rst $28
-    xor $45
-    ld a, $4b
-    ld b, c
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, d
-    ld d, b
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld b, c
-    ld c, h
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $54
-    ld a, $4b
-    ld d, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, c
-    ld b, d
-    ld c, l
-    ld c, h
-    ld d, b
-    ld b, [hl]
-    ld d, c
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld sp, $514c
-    ld h, d
-    ld b, d
-    ld c, e
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    jr z, jr_04a_6259
-
-    ld b, b
-    ld d, d
-    ld d, b
-    ld b, d
-    ld h, d
-    ld c, d
-    ld b, d
-    ld h, d
-    ccf
-    ld d, d
-    ld d, c
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld c, c
-    ld d, [hl]
-    ld a, [$eff7]
-    xor $41
-    ld b, d
-    ld c, l
-    ld c, h
-    ld d, b
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld d, d
-    ld c, l
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $09
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    add hl, bc
-    ld a, [hl+]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, b
-    ld a, $43
-    ld b, d
-    rst $28
-    xor $45
-    ld a, $4b
-    ld b, c
-    ld d, b
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, d
-
-jr_04a_6259:
-    ld d, b
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld d, h
-    ld c, h
-    ld d, d
-    ld c, c
-    ld b, c
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $49
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, c
-    ld b, c
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    scf
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    rst $28
-    xor $4c
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld b, c
-    ld c, a
-    ld a, $54
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, c
-    ld b, c
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld h, d
-    ld c, h
-    ld b, e
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld c, a
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld b, d
-    ld c, d
-    ld d, b
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    scf
-    ld c, h
-    ld c, h
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld d, b
-    ld d, c
-    ld d, d
-    ld b, e
-    ld b, e
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, b
-    ld d, c
-    ld c, h
-    ld c, a
-    ld b, d
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    scf
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld c, h
-    ld d, d
-    ld d, c
-    ld h, d
-    ld b, l
-    ld c, h
-    ld d, h
-    rst $28
-    xor $4a
-    ld a, $4b
-    ld d, [hl]
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld c, h
-    rst $28
-    xor $4a
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld b, b
-    ld a, $4f
-    ld c, a
-    ld d, [hl]
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld b, c
-    ld c, a
-    ld a, $54
-    rst $28
-    xor $45
-    ld c, h
-    ld d, h
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld c, e
-    ld h, a
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    ld h, d
-    ld b, b
-    ld a, $4f
-    ld c, a
-    ld d, [hl]
-    rst $28
-    xor $51
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, d
-    ld d, d
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld d, [hl]
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, e
-    rst $28
-    xor $3a
-    ld b, l
-    ld a, $41
-    ld a, $56
-    ld a, $44
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $41
-    ld c, h
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc h
-    ld c, e
-    ld d, [hl]
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $42
-    ld c, c
-    ld d, b
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    cpl
-    ld a, $51
-    ld b, d
-    ld c, a
-    ld h, e
-    ld h, d
-    ld a, [hl-]
-    ld b, d
-    ld h, [hl]
-    ld c, c
-    rst $28
-    xor $3f
-    ld b, d
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld h, d
-    ld d, [hl]
-    ld a, $63
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    daa
-    ld c, a
-    ld c, h
-    ld c, l
-    ld h, d
-    ld c, h
-    ld b, e
-    ld b, e
-    rst $28
-    xor $54
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    rst $28
-    xor $4b
-    ld c, h
-    ld d, c
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $62
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld a, [$eff7]
-    xor $3e
-    ld c, e
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld e, a
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    daa
-    ld c, a
-    ld c, h
-    ld c, l
-    ld h, d
-    ld c, h
-    ld b, e
-    ld b, e
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld [hl], $51
-    ld c, h
-    ld c, l
-    ld h, d
-    ccf
-    ld d, [hl]
-    rst $28
-    xor $4c
-    ld c, e
-    ld b, b
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld a, $62
-    ld d, h
-    ld b, l
-    ld b, [hl]
-    ld c, c
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld c, h
-    ld h, d
-    ld d, b
-    ld b, d
-    ld b, d
-    ld h, d
-    ld b, l
-    ld c, h
-    ld d, h
-    ld h, d
-    ld d, h
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, a
-    ld b, d
-    ld h, d
-    ld b, c
-    ld c, h
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    rst $28
-    xor $46
-    ld d, c
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    ld b, c
-    rst $28
-    xor $f9
-    nop
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld sp, hl
-    db $10
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc sp
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld d, d
-    ld c, l
-    rst $28
-    xor $54
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    or $64
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld sp, $624c
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    rst $28
-    xor $45
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld e, a
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, a
-    rst $28
-    xor $51
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld a, $4b
-    ld d, [hl]
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld l, c
-    ld b, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld c, e
-    ld c, e
-    ld a, $ef
-    xor $4d
-    ld b, [hl]
-    ld b, b
-    ld c, b
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, d
-    ld d, d
-    ld c, l
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    scf
-    ld c, a
-    ld a, $46
-    ld c, e
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    rst $28
-    xor $54
-    ld b, d
-    ld c, c
-    ld c, c
-    ld e, [hl]
-    ld h, d
-    or $63
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $3e
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld e, [hl]
-    ld h, d
-    or $64
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    rst $28
-    xor $3e
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld c, a
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec [hl]
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld c, l
-    ld c, c
-    ld a, $40
-    ld b, d
-    ld b, c
-    rst $28
-    xor $f9
-    nop
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld sp, hl
-    db $10
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld h, $45
-    ld b, d
-    ld b, b
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    rst $28
-    xor $54
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld c, e
-    ld b, d
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld b, b
-    ld b, l
-    ld b, d
-    ld b, b
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld h, $45
-    ld b, d
-    ld b, b
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    rst $28
-    xor $54
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    or $64
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld h, $45
-    ld b, d
-    ld b, b
-    ld c, b
-    ld h, d
-    ld c, h
-    ld c, e
-    rst $28
-    xor $54
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld e, [hl]
-    ld h, d
-    or $64
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld [hl], $42
-    ld c, l
-    ld a, $4f
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    dec hl
-    ld b, d
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    rst $28
-    xor $45
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, e
-    ld a, [$f0f7]
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld [hl], $42
-    ld c, l
-    ld a, $4f
-    ld a, $51
-    ld b, d
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, d
-    ld d, h
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $50
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    ld a, [$eff7]
-    xor $49
-    ld c, h
-    ld d, b
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, a
-    ld e, a
-    rst $28
-    xor $f0
-    ld sp, hl
-    nop
-    ld h, d
-    ld d, h
-    ld a, $50
-    rst $28
-    xor $4f
-    ld b, d
-    ld d, c
-    ld d, d
-    ld c, a
-    ld c, e
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc h
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    rst $28
-    xor $50
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    ld h, d
-    inc a
-    ld c, h
-    ld d, d
-    ld h, [hl]
-    ld c, c
-    ld a, [$eff7]
-    xor $49
-    ld c, h
-    ld d, b
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, a
-    ld e, a
-    rst $28
-    xor $f0
-    ld sp, hl
-    nop
-    ld h, d
-    ld d, h
-    ld a, $50
-    rst $28
-    xor $4f
-    ld b, d
-    ld d, c
-    ld d, d
-    ld c, a
-    ld c, e
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld a, [$eff7]
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld b, c
-    ld e, a
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld [hl], $42
-    ld c, c
-    ld b, d
-    ld b, b
-    ld d, c
-    rst $28
-    xor $96
-    inc sp
-    inc l
-    ld h, $2e
-    ld h, d
-    jr c, jr_04a_6896
-
-    sub a
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, c
-    ld a, $48
-    ld b, d
-    ld a, [$eff7]
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    rst $28
-    xor $56
-    ld c, h
-    ld d, d
-    ld e, a
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, h
-    ld a, $4b
-    ld c, e
-
-jr_04a_6896:
-    ld a, $ef
-    xor $4a
-    ld a, $48
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld a, [$eff7]
-    xor $56
-    ld c, h
-    ld d, d
-    ld h, d
-    ld b, l
-    ld a, $53
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $43
-    ld a, $4f
-    ld c, d
-    ld h, d
-    ld b, h
-    ld c, h
-    ld h, d
-    ld d, c
-    ld c, h
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, h
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc h
-    ld c, c
-    ld c, c
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, d
-    ld c, e
-    ld d, c
-    ld a, [$eff7]
-    xor $46
-    ld c, e
-    ld d, c
-    ld c, h
-    ld h, d
-    ld a, $62
-    ld b, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc l
-    ld h, d
-    ld c, l
-    ld d, d
-    ld d, c
-    ld h, d
-    ld a, $49
-    ld c, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    ld a, [$eff7]
-    xor $50
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, [hl]
-    ld c, e
-    ld d, c
-    ld c, h
-    ld h, d
-    ld a, $ef
-    xor $41
-    ld b, d
-    ld b, d
-    ld c, l
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld a, [$eff7]
-    xor $33
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld a, $4b
-    ld b, c
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, b
-    ld b, d
-    rst $28
-    xor $52
-    ld c, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld c, h
-    ld d, b
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, l
-    ld c, h
-    ld a, [$eff7]
-    xor $54
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$eb]
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    ld a, [hl-]
-    ld a, $4b
-    ld c, e
-    ld a, $62
-    ld d, h
-    ld a, $48
-    ld b, d
-    rst $28
-    xor $52
-    ld c, l
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, h
-    rst $28
-    xor $f0
-    db $eb
-    inc sp
-    ld d, d
-    ld c, c
-    ld b, [hl]
-    ld c, h
-    and e
-    inc l
-    ld h, d
-    ld d, h
-    ld c, h
-    ld c, b
-    ld b, d
-    ld h, d
-    ld d, d
-    ld c, l
-    rst $28
-    xor $51
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, b
-    ld c, c
-    ld b, d
-    ld b, d
-    ld c, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld a, [$eff7]
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld b, b
-    ld a, $4b
-    ld h, d
-    inc l
-    ld h, d
-    ld b, c
-    ld c, h
-    rst $28
-    xor $43
-    ld c, h
-    ld c, a
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    inc h
-    ld c, e
-    ld d, [hl]
-    ld d, c
-    ld b, l
-    ld b, [hl]
-    ld c, e
-    ld b, h
-    ld h, d
-    ld b, d
-    ld c, c
-    ld d, b
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld h, $4f
-    ld b, d
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    rst $28
-    xor $52
-    ld c, c
-    ld d, c
-    ld b, [hl]
-    ld c, d
-    ld a, $51
-    ld b, d
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, e
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    rst $28
-    xor $43
-    ld c, h
-    ld c, a
-    ld h, d
-    ld d, c
-    ld b, l
-    ld b, d
-    ld h, d
-    ld c, l
-    ld b, d
-    ld b, c
-    ld b, [hl]
-    ld b, h
-    ld c, a
-    ld b, d
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld b, l
-    ld b, [hl]
-    ld b, b
-    ld b, l
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ld d, c
-    ld c, h
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld d, c
-    ld b, l
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld a, $51
-    ld h, d
-    ld c, h
-    ld c, e
-    ld b, d
-    ld h, h
-    rst $28
-    xor $24
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, [hl]
-    ld c, h
-    ld d, d
-    ld h, d
-    ld d, b
-    ld d, d
-    ld c, a
-    ld b, d
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    scf
-    ld b, l
-    ld b, d
-    ld c, a
-    ld b, d
-    ld h, d
-    ld d, h
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    rst $28
-    xor $4b
-    ld c, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, d
-    ld b, e
-    ld d, c
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    ld [hl], $4c
-    ld c, a
-    ld c, a
-    ld d, [hl]
-    ld e, [hl]
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld l, b
-    ld h, d
-    ld c, e
-    ld c, h
-    ld d, c
-    rst $28
-    xor $4c
-    ld c, c
-    ld b, c
-    ld h, d
-    ld b, d
-    ld c, e
-    ld c, h
-    ld d, d
-    ld b, h
-    ld b, l
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    scf
-    ld b, l
-    ld b, d
-    ld h, d
-    ld d, b
-    ld a, $4a
-    ld b, d
-    ld h, d
-    ld b, h
-    ld b, d
-    ld c, e
-    ld b, c
-    ld b, d
-    ld c, a
-    ld e, a
-    rst $28
-    xor $26
-    ld a, $4b
-    ld c, e
-    ld c, h
-    ld d, c
-    ld h, d
-    ccf
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld e, a
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc l
-    ld h, d
-    ccf
-    ld b, d
-
-jr_04a_6b0c:
-    ld d, c
-    rst $28
-    xor $f9
-    jr nz, jr_04a_6b0c
-
-    rst $30
-    rst $28
-    xor $54
-    ld b, [hl]
-    ld c, c
-    ld c, c
-    ld h, d
-    ccf
-    ld b, d
-    ld h, d
-    ccf
-    ld c, h
-    ld c, a
-    ld c, e
-    ld h, e
-    rst $28
-    xor $fa
-    rst $30
-    rst $28
-    xor $9f
-    and e
-    inc a
-    ld c, h
-    ld d, d
-    ld l, h
-    ld b, d
-    ld h, d
-    ld b, l
-    ld a, $41
-    ld h, d
-    ld d, c
-    ld b, l
-    ld a, $51
-    rst $28
-    xor $4a
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, d
-    ccf
-    ld b, d
-    ld b, e
-    ld c, h
-    ld c, a
-    ld b, d
-    ld h, h
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    dec hl
-    ld c, d
-    ld c, d
-    ld e, a
-    ld h, d
-    ld [hl], $42
-    ld b, d
-    ld c, d
-    ld d, b
-    ld h, d
-    ld c, c
-    ld b, [hl]
-    ld c, b
-    ld b, d
-    rst $28
-    xor $3e
-    ld h, d
-    ld c, e
-    ld b, d
-    ld d, h
-    ld h, d
-    ld c, d
-    ld c, h
-    ld c, e
-    ld d, b
-    ld d, c
-    ld b, d
-    ld c, a
-    ld h, h
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    ld h, $3e
-    ld c, e
-    ld h, d
-    inc l
-    ld h, d
-    ld c, a
-    ld b, d
-    ld b, b
-    ld c, h
-    ld c, a
-    ld b, c
-    rst $28
-    xor $51
-    ld b, l
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld b, a
-    ld c, h
-    ld d, [hl]
-    ld b, e
-    ld d, d
-    ld c, c
-    ld h, d
-    ld b, d
-    ld d, e
-    ld b, d
-    ld c, e
-    ld d, c
-    ld h, h
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld [hl-], a
-    ld l, $63
-    rst $28
-    xor $3a
-    ld a, $46
-    ld d, c
-    ld h, d
-    ld c, h
-    ld d, e
-    ld b, d
-    ld c, a
-    ld c, e
-    ld b, [hl]
-    ld b, h
-    ld b, l
-    ld d, c
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    ld sp, hl
-    nop
-    ld h, d
-    or [hl]
-    ld h, d
-    ld sp, hl
-    db $10
-    rst $28
-    xor $41
-    ld b, [hl]
-    ld d, b
-    ld a, $4d
-    ld c, l
-    ld b, d
-    ld a, $4f
-    ld b, d
-    ld b, c
-    ld e, a
-    rst $30
-    ldh a, [$ea]
-    sbc a
-    and e
-    ld a, [hl-]
-    ld c, h
-    ld d, h
-    ld h, e
-    ld h, d
-    inc l
-    ld d, c
-    ld l, b
-    ld h, d
-    ld a, $62
-    ld c, a
-    ld a, $4f
-    ld b, d
-    rst $28
-    xor $3f
-    ld c, a
-    ld b, d
-    ld b, d
-    ld b, c
-    ld h, e
-    ld a, [$f0f7]
-    ld [$a39f], a
-    inc l
-    ld c, e
-    ld d, b
-    ld b, [hl]
-    ld b, c
-    ld b, d
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld h, d
-    ld b, [hl]
-    ld d, b
-    ld h, d
-    ld a, $ef
-    xor $3f
-    ld a, $3f
-    ld d, [hl]
-    ld h, d
-    ld sp, hl
-    jr nz, jr_04a_6c63
-
-    ld a, [$eff7]
-    xor $9f
-    and e
-    ld h, $4c
-    ld d, b
-    ld d, c
-    ld d, b
-    ld h, d
-    ld sp, hl
-    jr nc, jr_04a_6c39
-
-    rst $28
-    xor $51
-    ld c, h
-    ld h, d
-    ld b, l
-    ld a, $51
-    ld b, b
-    ld b, l
-    ld h, d
-    ld b, [hl]
-    ld d, c
-    ld e, a
-    ld h, d
-    ld [hl-], a
-    ld c, b
-    ld a, $56
-    ld h, h
-    rst $38
-    ldh a, [rP1]
+; --- BEGIN re-sectioned text run (bank $4a: $4293-$6c26) ---
+; DTE-encoded dialogue strings, one label per text id (text_id_map.json).
+; Labels/comments only; bytes are byte-identical to the original ROM.
+TextStr_4a_4293:           ; id $05E0
+    ; "*:Humpf, I don't need you!"
+    db $eb, $9f, $a3, $2b, $52, $4a, $4d, $43, $5e, $62, $2c, $62, $41, $4c, $4b, $67
+    db $ef, $ee, $4b, $42, $42, $41, $62, $56, $4c, $52, $63, $f7, $f0
+TextStr_4a_42b0:           ; id $05E1
+    ; "*:I don't have such a name! / Don't lie to me! / *:You don't even know my name. / Too bad. / *:I was gonna give you a reward."
+    db $eb, $9f, $a3, $2c, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42, $62, $ef
+    db $ee, $50, $52, $40, $45, $62, $3e, $62, $4b, $3e, $4a, $42, $63, $fa, $f7, $ef
+    db $ee, $27, $4c, $4b, $67, $62, $49, $46, $42, $62, $51, $4c, $62, $4a, $42, $63
+    db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52, $62, $41, $4c, $4b, $67
+    db $62, $42, $53, $42, $4b, $ef, $ee, $48, $4b, $4c, $54, $62, $4a, $56, $62, $4b
+    db $3e, $4a, $42, $5f, $fa, $f7, $ef, $ee, $37, $4c, $4c, $62, $3f, $3e, $41, $5f
+    db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $54, $3e, $50, $62, $44, $4c
+    db $4b, $4b, $3e, $62, $44, $46, $53, $42, $ef, $ee, $56, $4c, $52, $62, $3e, $62
+    db $4f, $42, $54, $3e, $4f, $41, $5f, $f7, $f0
+TextStr_4a_4339:           ; id $05E2
+    ; "*:Yep. It's Santi. How did you know? / Santi:Humph... Follow me!"
+    db $eb, $9f, $a3, $3c, $42, $4d, $5f, $62, $2c, $51, $68, $62, $36, $3e, $4b, $51
+    db $46, $5f, $ef, $ee, $2b, $4c, $54, $62, $41, $46, $41, $62, $56, $4c, $52, $62
+    db $48, $4b, $4c, $54, $64, $fa, $f7, $ef, $ee, $36, $3e, $4b, $51, $46, $a3, $2b
+    db $52, $4a, $4d, $45, $5f, $5f, $5f, $ef, $ee, $29, $4c, $49, $49, $4c, $54, $62
+    db $4a, $42, $63, $f7, $f0
+TextStr_4a_437e:           ; id $05E3
+    ; "Santi:Wait here for me!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $3a, $3e, $46, $51, $62, $45, $42, $4f, $42
+    db $62, $ef, $ee, $43, $4c, $4f, $62, $4a, $42, $63, $f7, $f0
+TextStr_4a_439a:           ; id $05E4
+    ; "Santi:Talk to my Grandpa!!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $37, $3e, $49, $48, $62, $51, $4c, $62, $4a
+    db $56, $ef, $ee, $2a, $4f, $3e, $4b, $41, $4d, $3e, $63, $63, $f7, $f0
+TextStr_4a_43b8:           ; id $05E5
+    ; "Santi:C'mon, go talk to my / Grandpa!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $26, $6a, $4c, $4b, $5e, $62, $44, $4c, $62
+    db $ef, $ee, $51, $3e, $49, $48, $62, $51, $4c, $62, $4a, $56, $62, $fa, $f7, $ef
+    db $ee, $2a, $4f, $3e, $4b, $41, $4d, $3e, $63, $ef, $ee, $f7, $f0
+TextStr_4a_43e5:           ; id $05E6
+    ; "Santi:You talked to my Grandpa, / right? / Santi:So what are you doing? Just go / to the Travelers' Gate!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $3c, $4c, $52, $62, $51, $3e, $49, $48, $42
+    db $41, $62, $ef, $ee, $51, $4c, $62, $4a, $56, $62, $2a, $4f, $3e, $4b, $41, $4d
+    db $3e, $5e, $62, $fa, $f7, $ef, $ee, $4f, $46, $44, $45, $51, $64, $ef, $ee, $fa
+    db $f7, $ef, $ee, $36, $3e, $4b, $51, $46, $a3, $36, $4c, $62, $54, $45, $3e, $51
+    db $62, $3e, $4f, $42, $ef, $ee, $56, $4c, $52, $62, $41, $4c, $46, $4b, $44, $64
+    db $62, $2d, $52, $50, $51, $62, $44, $4c, $fa, $f7, $ef, $ee, $51, $4c, $62, $51
+    db $45, $42, $62, $37, $4f, $3e, $53, $42, $49, $42, $4f, $50, $5c, $ef, $ee, $2a
+    db $3e, $51, $42, $63, $f7, $f0
+TextStr_4a_445b:           ; id $05E7
+    ; "Santi:Don't just stand there! / Go to the Travelers' Gate!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $27, $4c, $4b, $67, $62, $47, $52, $50, $51
+    db $ef, $ee, $50, $51, $3e, $4b, $41, $62, $51, $45, $42, $4f, $42, $63, $fa, $f7
+    db $ef, $ee, $2a, $4c, $62, $51, $4c, $62, $51, $45, $42, $ef, $ee, $37, $4f, $3e
+    db $53, $42, $49, $42, $4f, $50, $5c, $62, $2a, $3e, $51, $42, $63, $f7, $f0
+TextStr_4a_449a:           ; id $05E8
+    ; "Santi:Was the Travelers' Gate / useful to ya? [YES/NO]"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $3a, $3e, $50, $62, $51, $45, $42, $62, $ef
+    db $ee, $37, $4f, $3e, $53, $42, $49, $42, $4f, $50, $5c, $62, $2a, $3e, $51, $42
+    db $fa, $f7, $ef, $ee, $52, $50, $42, $43, $52, $49, $62, $51, $4c, $62, $56, $3e
+    db $64, $ef, $ee, $ff, $f0
+TextStr_4a_44cf:           ; id $05E9
+    ; "Santi:Y...Ya big fool!"
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $3c, $5f, $5f, $5f, $3c, $3e, $ef, $ee, $3f
+    db $46, $44, $62, $43, $4c, $4c, $49, $63, $f7, $f0
+TextStr_4a_44e9:           ; id $05EA
+    ; "Santi:I...I'm... happy....blush."
+    db $eb, $36, $3e, $4b, $51, $46, $a3, $2c, $5f, $5f, $5f, $2c, $6a, $5f, $5f, $5f
+    db $ef, $ee, $45, $3e, $4d, $4d, $56, $5f, $5f, $5f, $5f, $3f, $49, $52, $50, $45
+    db $5f, $f7, $f0
+TextStr_4a_450c:           ; id $05EB
+    ; "*:Oh our hero [HERO]! Welcome to / the Bazaar!"
+    db $eb, $9f, $a3, $32, $45, $62, $4c, $52, $4f, $62, $45, $42, $4f, $4c, $ef, $ee
+    db $f6, $63, $62, $3a, $42, $49, $40, $4c, $4a, $42, $62, $51, $4c, $fa, $f7, $ef
+    db $ee, $51, $45, $42, $62, $25, $3e, $57, $3e, $3e, $4f, $63, $ef, $ee, $f7, $f0
+TextStr_4a_453c:           ; id $05EC
+    ; "*:What a good feeling to be / the winning kingdom! / *:I danced so much that I almost lost / it!"
+    db $eb, $9f, $a3, $3a, $45, $3e, $51, $62, $3e, $62, $44, $4c, $4c, $41, $ef, $ee
+    db $43, $42, $42, $49, $46, $4b, $44, $62, $51, $4c, $62, $3f, $42, $fa, $f7, $ef
+    db $ee, $51, $45, $42, $62, $54, $46, $4b, $4b, $46, $4b, $44, $ef, $ee, $48, $46
+    db $4b, $44, $41, $4c, $4a, $63, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $41, $3e
+    db $4b, $40, $42, $41, $62, $50, $4c, $62, $4a, $52, $40, $45, $ef, $ee, $51, $45
+    db $3e, $51, $62, $2c, $62, $3e, $49, $4a, $4c, $50, $51, $62, $49, $4c, $50, $51
+    db $fa, $f7, $ef, $ee, $46, $51, $63, $ef, $ee, $f7, $f0
+TextStr_4a_45a7:           ; id $05ED
+    ; "*:La la la [HERO] and / Milayou La la la... / *:This is the hit song now! It's / about you guys!"
+    db $eb, $9f, $a3, $2f, $3e, $62, $49, $3e, $62, $49, $3e, $ef, $ee, $f6, $62, $3e
+    db $4b, $41, $fa, $f7, $ef, $ee, $30, $46, $49, $3e, $56, $4c, $52, $ef, $ee, $2f
+    db $3e, $62, $49, $3e, $62, $49, $3e, $5f, $5f, $5f, $fa, $f7, $ef, $ee, $9f, $a3
+    db $37, $45, $46, $50, $62, $46, $50, $62, $51, $45, $42, $62, $45, $46, $51, $ef
+    db $ee, $50, $4c, $4b, $44, $62, $4b, $4c, $54, $63, $62, $2c, $51, $68, $fa, $f7
+    db $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $56, $4c, $52, $62, $44, $52, $56, $50
+    db $63, $ef, $ee, $f7, $f0
+TextStr_4a_460c:           ; id $05EE
+    ; "*:I didn't think you could win..."
+    db $eb, $9f, $a3, $2c, $62, $41, $46, $41, $4b, $67, $62, $51, $45, $46, $4b, $48
+    db $ef, $ee, $56, $4c, $52, $62, $40, $4c, $52, $49, $41, $62, $54, $46, $4b, $5f
+    db $5f, $5f, $f7, $f0
+TextStr_4a_4630:           ; id $05EF
+    ; "*:Giggle giggle! Listen listen! / *:I can be a monster master / too! / *:Mommy & Daddy said I should / become like [HERO]!"
+    db $eb, $9f, $a3, $2a, $46, $44, $44, $49, $42, $62, $44, $46, $44, $44, $49, $42
+    db $63, $ef, $ee, $2f, $46, $50, $51, $42, $4b, $62, $49, $46, $50, $51, $42, $4b
+    db $63, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $40, $3e, $4b, $62, $3f, $42, $62
+    db $3e, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $4a, $3e, $50, $51, $42
+    db $4f, $fa, $f7, $ef, $ee, $51, $4c, $4c, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f
+    db $a3, $30, $4c, $4a, $4a, $56, $62, $b6, $62, $27, $3e, $41, $41, $56, $ef, $ee
+    db $50, $3e, $46, $41, $62, $2c, $62, $50, $45, $4c, $52, $49, $41, $fa, $f7, $ef
+    db $ee, $3f, $42, $40, $4c, $4a, $42, $62, $49, $46, $48, $42, $ef, $ee, $f6, $63
+    db $f7, $f0
+TextStr_4a_46b2:           ; id $05F0
+    ; "*:Well well, Congratulations!! / I love festivals! / *:By the way, I heard a rumor. / *:Those evil lords in the Mystic / World will not beco..."
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $62, $54, $42, $49, $49, $5e, $ef, $ee, $26
+    db $4c, $4b, $44, $4f, $3e, $51, $52, $49, $3e, $51, $46, $4c, $4b, $50, $63, $63
+    db $fa, $f7, $ef, $ee, $2c, $62, $49, $4c, $53, $42, $62, $43, $42, $50, $51, $46
+    db $53, $3e, $49, $50, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $56, $62
+    db $51, $45, $42, $62, $54, $3e, $56, $5e, $62, $2c, $62, $ef, $ee, $45, $42, $3e
+    db $4f, $41, $62, $3e, $62, $4f, $52, $4a, $4c, $4f, $5f, $fa, $f7, $ef, $ee, $9f
+    db $a3, $37, $45, $4c, $50, $42, $62, $42, $53, $46, $49, $62, $49, $4c, $4f, $41
+    db $50, $ef, $ee, $46, $4b, $62, $51, $45, $42, $62, $30, $56, $50, $51, $46, $40
+    db $fa, $f7, $ef, $ee, $3a, $4c, $4f, $49, $41, $62, $54, $46, $49, $49, $62, $4b
+    db $4c, $51, $ef, $ee, $3f, $42, $40, $4c, $4a, $42, $62, $56, $4c, $52, $4f, $62
+    db $4d, $3e, $49, $50, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $25, $52, $51, $62, $42
+    db $53, $46, $49, $62, $49, $4c, $4f, $41, $50, $9c, $ef, $ee, $49, $46, $48, $42
+    db $62, $40, $4f, $42, $3e, $51, $52, $4f, $42, $50, $62, $40, $3e, $4b, $fa, $f7
+    db $ef, $ee, $3f, $42, $62, $4a, $3e, $41, $42, $62, $51, $45, $4f, $4c, $52, $44
+    db $45, $62, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $5f, $fa, $f7, $ef
+    db $ee, $9f, $a3, $2c, $62, $54, $4c, $4b, $41, $42, $4f, $62, $46, $43, $62, $46
+    db $51, $68, $ef, $ee, $4d, $4c, $50, $50, $46, $3f, $49, $42, $64, $f7, $f0
+TextStr_4a_47c1:           ; id $05F1
+    ; "*:Well of course! You're the victor!"
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $62, $4c, $43, $62, $40, $4c, $52, $4f, $50
+    db $42, $63, $ef, $ee, $3c, $4c, $52, $69, $42, $62, $51, $45, $42, $62, $53, $46
+    db $40, $51, $4c, $4f, $63, $f7, $f0
+TextStr_4a_47e8:           ; id $05F2
+    ; "*:Hi! / *:How about a reward for your / victory? [YES/NO]"
+    db $eb, $9f, $a3, $2b, $46, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2b, $4c
+    db $54, $62, $3e, $3f, $4c, $52, $51, $62, $3e, $ef, $ee, $4f, $42, $54, $3e, $4f
+    db $41, $62, $43, $4c, $4f, $62, $56, $4c, $52, $4f, $fa, $f7, $ef, $ee, $53, $46
+    db $40, $51, $4c, $4f, $56, $64, $ef, $ee, $ff, $f0
+TextStr_4a_4822:           ; id $05F3
+    ; "*:Okay."
+    db $eb, $9f, $a3, $32, $48, $3e, $56, $5f, $ef, $ee, $f7, $f0
+TextStr_4a_482e:           ; id $05F4
+    ; "*:...tickle ...tickle, tickle / *:tickle, tickle tickle, tickle / *:Keep it up!"
+    db $eb, $9f, $a3, $5f, $5f, $5f, $51, $46, $40, $48, $49, $42, $ef, $ee, $5f, $5f
+    db $5f, $51, $46, $40, $48, $49, $42, $5e, $62, $51, $46, $40, $48, $49, $42, $fa
+    db $f7, $ef, $ee, $9f, $a3, $51, $46, $40, $48, $49, $42, $5e, $62, $51, $46, $40
+    db $48, $49, $42, $ef, $ee, $51, $46, $40, $48, $49, $42, $5e, $62, $51, $46, $40
+    db $48, $49, $42, $fa, $f7, $ef, $ee, $9f, $a3, $2e, $42, $42, $4d, $62, $46, $51
+    db $62, $52, $4d, $63, $ef, $ee, $f7, $f0
+TextStr_4a_4886:           ; id $05F5
+    ; "*:Oh, what a joy! [HERO] won! / *:That merchant seems to have / changed his attitude! / *:This is probably because [HERO] / won! / *:You wan..."
+    db $ea, $9f, $a3, $32, $45, $5e, $62, $54, $45, $3e, $51, $62, $3e, $62, $47, $4c
+    db $56, $63, $ef, $ee, $f6, $62, $54, $4c, $4b, $63, $fa, $f7, $ef, $ee, $9f, $a3
+    db $37, $45, $3e, $51, $62, $4a, $42, $4f, $40, $45, $3e, $4b, $51, $ef, $ee, $50
+    db $42, $42, $4a, $50, $62, $51, $4c, $62, $45, $3e, $53, $42, $62, $fa, $f7, $ef
+    db $ee, $40, $45, $3e, $4b, $44, $42, $41, $62, $45, $46, $50, $62, $ef, $ee, $3e
+    db $51, $51, $46, $51, $52, $41, $42, $63, $fa, $f7, $ef, $ee, $9f, $a3, $37, $45
+    db $46, $50, $62, $46, $50, $62, $4d, $4f, $4c, $3f, $3e, $3f, $49, $56, $ef, $ee
+    db $3f, $42, $40, $3e, $52, $50, $42, $62, $f6, $fa, $f7, $ef, $ee, $54, $4c, $4b
+    db $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52, $62, $54, $3e, $4b
+    db $4b, $3e, $62, $48, $4b, $4c, $54, $ef, $ee, $3e, $3f, $4c, $52, $51, $62, $51
+    db $45, $42, $62, $3f, $4c, $4c, $48, $50, $62, $fa, $f7, $ef, $ee, $45, $42, $62
+    db $50, $42, $49, $49, $50, $64, $ef, $ee, $ff, $f0
+TextStr_4a_4940:           ; id $05F6
+    ; "*:Oh, the hero of GreatTree, / Master [HERO]! / *:I bet you want to know about the / items sold in the store? [YES/NO]"
+    db $ea, $9f, $a3, $32, $45, $5e, $62, $51, $45, $42, $62, $45, $42, $4f, $4c, $62
+    db $4c, $43, $ef, $ee, $2a, $4f, $42, $3e, $51, $37, $4f, $42, $42, $5e, $62, $fa
+    db $f7, $ef, $ee, $30, $3e, $50, $51, $42, $4f, $62, $f6, $63, $ef, $ee, $fa, $f7
+    db $ef, $ee, $9f, $a3, $2c, $62, $3f, $42, $51, $62, $56, $4c, $52, $62, $54, $3e
+    db $4b, $51, $62, $ef, $ee, $51, $4c, $62, $48, $4b, $4c, $54, $62, $3e, $3f, $4c
+    db $52, $51, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $46, $51, $42, $4a, $50, $62
+    db $50, $4c, $49, $41, $62, $46, $4b, $62, $51, $45, $42, $62, $ef, $ee, $50, $51
+    db $4c, $4f, $42, $64, $ff, $f0
+TextStr_4a_49b6:           ; id $05F7
+    ; "*:Yes, of course. The victor / wouldn't ask such a thing!"
+    db $ea, $9f, $a3, $3c, $42, $50, $5e, $62, $4c, $43, $62, $40, $4c, $52, $4f, $50
+    db $42, $5f, $ef, $ee, $37, $45, $42, $62, $53, $46, $40, $51, $4c, $4f, $62, $fa
+    db $f7, $ef, $ee, $54, $4c, $52, $49, $41, $4b, $67, $62, $3e, $50, $48, $62, $50
+    db $52, $40, $45, $ef, $ee, $3e, $62, $51, $45, $46, $4b, $44, $63, $f7, $f0
+TextStr_4a_49f5:           ; id $05F8
+    ; "*:The monstrous master was your / sister!! / *:I am happy that you were finally / able to find your sister! / *:I heard wishes come true whe..."
+    db $eb, $9f, $a3, $37, $45, $42, $62, $4a, $4c, $4b, $50, $51, $4f, $4c, $52, $50
+    db $ef, $ee, $4a, $3e, $50, $51, $42, $4f, $62, $54, $3e, $50, $62, $56, $4c, $52
+    db $4f, $62, $fa, $f7, $ef, $ee, $50, $46, $50, $51, $42, $4f, $63, $63, $ef, $ee
+    db $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $3e, $4a, $62, $45, $3e, $4d, $4d, $56
+    db $62, $51, $45, $3e, $51, $62, $ef, $ee, $56, $4c, $52, $62, $54, $42, $4f, $42
+    db $62, $43, $46, $4b, $3e, $49, $49, $56, $fa, $f7, $ef, $ee, $3e, $3f, $49, $42
+    db $62, $51, $4c, $62, $43, $46, $4b, $41, $62, $56, $4c, $52, $4f, $ef, $ee, $50
+    db $46, $50, $51, $42, $4f, $63, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $45, $42
+    db $3e, $4f, $41, $62, $54, $46, $50, $45, $42, $50, $ef, $ee, $40, $4c, $4a, $42
+    db $62, $51, $4f, $52, $42, $62, $54, $45, $42, $4b, $fa, $f7, $ef, $ee, $56, $4c
+    db $52, $62, $54, $46, $4b, $62, $51, $45, $42, $62, $ef, $ee, $51, $4c, $52, $4f
+    db $4b, $3e, $4a, $42, $4b, $51, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52
+    db $4f, $62, $54, $46, $50, $45, $ef, $ee, $40, $3e, $4a, $42, $62, $51, $4f, $52
+    db $42, $63, $62, $2c, $62, $fa, $f7, $ef, $ee, $54, $4c, $4b, $41, $42, $4f, $62
+    db $46, $43, $62, $4a, $46, $4b, $42, $ef, $ee, $54, $46, $49, $49, $62, $51, $4c
+    db $4c, $5f, $f7, $f0
+TextStr_4a_4ae9:           ; id $05F9
+    ; "*:Hey! Our hero [HERO]! / *:The two of us are eating this / yummy meat to celebrate your / victory!"
+    db $ea, $9f, $a3, $2b, $42, $56, $63, $62, $32, $52, $4f, $62, $45, $42, $4f, $4c
+    db $ef, $ee, $f6, $63, $fa, $f7, $ef, $ee, $9f, $a3, $37, $45, $42, $62, $51, $54
+    db $4c, $62, $4c, $43, $62, $52, $50, $ef, $ee, $3e, $4f, $42, $62, $42, $3e, $51
+    db $46, $4b, $44, $62, $51, $45, $46, $50, $fa, $f7, $ef, $ee, $56, $52, $4a, $4a
+    db $56, $62, $4a, $42, $3e, $51, $62, $51, $4c, $ef, $ee, $40, $42, $49, $42, $3f
+    db $4f, $3e, $51, $42, $62, $56, $4c, $52, $4f, $fa, $f7, $ef, $ee, $53, $46, $40
+    db $51, $4c, $4f, $56, $63, $ef, $ee, $f7, $f0
+TextStr_4a_4b52:           ; id $05FA
+    ; "*:Missing... Something missing. / *:Entertainment! Gimme / entertainment!! / *:Master [HERO], Do you know of / the skill Call? / *:I really ..."
+    db $ea, $9f, $a3, $30, $46, $50, $50, $46, $4b, $44, $5f, $5f, $5f, $ef, $ee, $36
+    db $4c, $4a, $42, $51, $45, $46, $4b, $44, $62, $4a, $46, $50, $50, $46, $4b, $44
+    db $5f, $fa, $f7, $ef, $ee, $9f, $a3, $28, $4b, $51, $42, $4f, $51, $3e, $46, $4b
+    db $4a, $42, $4b, $51, $63, $ef, $ee, $2a, $46, $4a, $4a, $42, $62, $fa, $f7, $ef
+    db $ee, $42, $4b, $51, $42, $4f, $51, $3e, $46, $4b, $4a, $42, $4b, $51, $63, $63
+    db $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $30, $3e, $50, $51, $42, $4f, $62, $f6
+    db $5e, $ef, $ee, $27, $4c, $62, $56, $4c, $52, $62, $48, $4b, $4c, $54, $62, $4c
+    db $43, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $50, $48, $46, $49, $49, $62, $26
+    db $3e, $49, $49, $64, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $4f, $42
+    db $3e, $49, $49, $56, $62, $54, $3e, $4b, $51, $62, $51, $4c, $ef, $ee, $50, $42
+    db $42, $62, $3e, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $51, $45, $3e, $51
+    db $fa, $f7, $ef, $ee, $40, $3e, $4b, $62, $52, $50, $42, $62, $26, $3e, $49, $49
+    db $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $45, $42, $3e, $4f, $41
+    db $62, $26, $3e, $49, $49, $ef, $ee, $40, $3e, $4b, $62, $46, $4b, $50, $51, $3e
+    db $4b, $51, $49, $56, $fa, $f7, $ef, $ee, $40, $3e, $49, $49, $62, $43, $4c, $4f
+    db $51, $45, $62, $3e, $49, $49, $56, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $50, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $51, $62, $50, $4c, $52, $4b, $41
+    db $50, $62, $43, $52, $4b, $63, $ef, $ee, $36, $45, $4c, $54, $62, $46, $51, $62
+    db $51, $4c, $62, $4a, $42, $63, $63, $f7, $f0
+TextStr_4a_4c7b:           ; id $05FB
+    ; "*:...I wonder if you brought a / monster with Call?"
+    db $ea, $9f, $a3, $5f, $5f, $5f, $2c, $62, $54, $4c, $4b, $41, $42, $4f, $62, $46
+    db $43, $ef, $ee, $56, $4c, $52, $62, $3f, $4f, $4c, $52, $44, $45, $51, $62, $3e
+    db $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $54, $46, $51, $45
+    db $ef, $ee, $26, $3e, $49, $49, $64, $fa, $f7, $f0
+TextStr_4a_4cb5:           ; id $05FC
+    ; "*:Oh! You brought it here! Show me / the magic!"
+    db $ea, $9f, $a3, $32, $45, $63, $62, $3c, $4c, $52, $62, $3f, $4f, $4c, $52, $44
+    db $45, $51, $ef, $ee, $46, $51, $62, $45, $42, $4f, $42, $63, $62, $36, $45, $4c
+    db $54, $62, $4a, $42, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $4a, $3e, $44, $46
+    db $40, $63, $ef, $ee, $f7, $f0
+TextStr_4a_4ceb:           ; id $05FD
+    ; "[INS 00] cast Call! / But nothing happened."
+    db $f9, $00, $62, $40, $3e, $50, $51, $ef, $ee, $26, $3e, $49, $49, $63, $fa, $f7
+    db $ef, $ee, $25, $52, $51, $62, $4b, $4c, $51, $45, $46, $4b, $44, $ef, $ee, $45
+    db $3e, $4d, $4d, $42, $4b, $42, $41, $5f, $f7, $f0
+TextStr_4a_4d15:           ; id $05FE
+    ; "*:What the heck? Nothing happened! / What's going on Master [HERO]? / *:What? The monsters said it / doesn't want to be put in a show? / *:...."
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $51, $45, $42, $62, $45, $42, $40, $48
+    db $64, $ef, $ee, $31, $4c, $51, $45, $46, $4b, $44, $62, $45, $3e, $4d, $4d, $42
+    db $4b, $42, $41, $63, $fa, $f7, $ef, $ee, $3a, $45, $3e, $51, $68, $62, $44, $4c
+    db $46, $4b, $44, $62, $4c, $4b, $ef, $ee, $30, $3e, $50, $51, $42, $4f, $62, $f6
+    db $64, $fa, $f7, $ef, $ee, $9f, $a3, $3a, $45, $3e, $51, $64, $62, $37, $45, $42
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $50, $3e, $46, $41, $62
+    db $46, $51, $fa, $f7, $ef, $ee, $41, $4c, $42, $50, $4b, $67, $62, $54, $3e, $4b
+    db $51, $62, $51, $4c, $ef, $ee, $3f, $42, $62, $4d, $52, $51, $62, $46, $4b, $62
+    db $3e, $62, $50, $45, $4c, $54, $64, $fa, $f7, $ef, $ee, $9f, $a3, $5f, $5f, $5f
+    db $32, $45, $62, $54, $42, $49, $49, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3
+    db $36, $4c, $4f, $4f, $56, $62, $f6, $5f, $ef, $ee, $30, $56, $62, $3e, $4d, $4c
+    db $49, $4c, $44, $46, $42, $50, $5f, $5f, $5f, $f7, $f0
+TextStr_4a_4dd0:           ; id $05FF
+    ; "*:You knew it right? / This is the Travelers' Gate. / *:I don't think you're surprised. / But its my way of apologizing."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $48, $4b, $42, $54, $62, $46, $51, $ef, $ee
+    db $4f, $46, $44, $45, $51, $64, $fa, $f7, $ef, $ee, $37, $45, $46, $50, $62, $46
+    db $50, $62, $51, $45, $42, $ef, $ee, $37, $4f, $3e, $53, $42, $49, $42, $4f, $50
+    db $5c, $62, $2a, $3e, $51, $42, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $62, $41
+    db $4c, $4b, $67, $62, $51, $45, $46, $4b, $48, $ef, $ee, $56, $4c, $52, $69, $42
+    db $62, $50, $52, $4f, $4d, $4f, $46, $50, $42, $41, $5f, $fa, $f7, $ef, $ee, $25
+    db $52, $51, $62, $46, $51, $50, $62, $4a, $56, $62, $54, $3e, $56, $62, $4c, $43
+    db $ef, $ee, $3e, $4d, $4c, $49, $4c, $44, $46, $57, $46, $4b, $44, $5f, $f7, $f0
+TextStr_4a_4e50:           ; id $0600
+    ; "*:Come to me when you want to breed / with my monsters!"
+    db $ea, $9f, $a3, $26, $4c, $4a, $42, $62, $51, $4c, $62, $4a, $42, $62, $54, $45
+    db $42, $4b, $ef, $ee, $56, $4c, $52, $62, $54, $3e, $4b, $51, $62, $51, $4c, $62
+    db $3f, $4f, $42, $42, $41, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $4a, $56
+    db $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $63, $ef, $ee, $f7, $f0
+TextStr_4a_4e8e:           ; id $0601
+    ; "Why not breed with my [INS 00]?"
+    db $ea, $3a, $45, $56, $62, $4b, $4c, $51, $62, $3f, $4f, $42, $42, $41, $62, $54
+    db $46, $51, $45, $ef, $ee, $4a, $56, $62, $f9, $00, $64, $f0
+TextStr_4a_4eaa:           ; id $0602
+    ; "*:Which monster do you want to breed / with [INS 00]?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $62, $41, $4c, $ef, $ee, $56, $4c, $52, $62, $54, $3e, $4b, $51, $62, $51, $4c
+    db $62, $3f, $4f, $42, $42, $41, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $f9
+    db $00, $64, $ef, $ee, $f0
+TextStr_4a_4edf:           ; id $0603
+    ; "*:You can't breed low level / monsters!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $40, $3e, $4b, $67, $62, $3f, $4f, $42, $42
+    db $41, $ef, $ee, $49, $4c, $54, $62, $49, $42, $53, $42, $49, $fa, $f7, $ef, $ee
+    db $4a, $4c, $4b, $50, $51, $42, $4f, $50, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_4f0d:           ; id $0604
+    ; "*:There will be no monsters to take / with you!"
+    db $ea, $9f, $a3, $37, $45, $42, $4f, $42, $62, $54, $46, $49, $49, $62, $3f, $42
+    db $62, $4b, $4c, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $51, $4c
+    db $62, $51, $3e, $48, $42, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $56, $4c
+    db $52, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_4f44:           ; id $0605
+    ; "*:Are you okay with this monster?"
+    db $ea, $9f, $a3, $24, $4f, $42, $62, $56, $4c, $52, $62, $4c, $48, $3e, $56, $ef
+    db $ee, $54, $46, $51, $45, $62, $51, $45, $46, $50, $62, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $64, $f0
+TextStr_4a_4f68:           ; id $0606
+    ; "*:Start the breeding ceremony?"
+    db $ea, $9f, $a3, $36, $51, $3e, $4f, $51, $62, $51, $45, $42, $ef, $ee, $3f, $4f
+    db $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42, $4a, $4c, $4b, $56, $64
+    db $f0
+TextStr_4a_4f89:           ; id $0607
+    ; "*:I have no idea what kind of egg / it will be... / *:But can I record the results in the / Journal?"
+    db $ea, $9f, $a3, $2c, $62, $45, $3e, $53, $42, $62, $4b, $4c, $62, $46, $41, $42
+    db $3e, $ef, $ee, $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62, $4c, $43, $62
+    db $42, $44, $44, $fa, $f7, $ef, $ee, $46, $51, $62, $54, $46, $49, $49, $62, $3f
+    db $42, $5f, $5f, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $52, $51, $62
+    db $40, $3e, $4b, $62, $2c, $62, $4f, $42, $40, $4c, $4f, $41, $ef, $ee, $51, $45
+    db $42, $62, $4f, $42, $50, $52, $49, $51, $50, $62, $46, $4b, $62, $51, $45, $42
+    db $fa, $f7, $ef, $ee, $2d, $4c, $52, $4f, $4b, $3e, $49, $64, $ef, $ee, $f0
+TextStr_4a_4ff8:           ; id $0608
+    ; "*:Let's begin the breeding ceremony!"
+    db $ea, $9f, $a3, $2f, $42, $51, $68, $62, $3f, $42, $44, $46, $4b, $62, $51, $45
+    db $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42
+    db $4a, $4c, $4b, $56, $63, $f7, $f0
+TextStr_4a_501f:           ; id $0609
+    ; "*:I hope a strong monster will be / born! / *:I'll send the egg to the farm!"
+    db $ea, $9f, $a3, $2c, $62, $45, $4c, $4d, $42, $62, $3e, $62, $50, $51, $4f, $4c
+    db $4b, $44, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $54, $46, $49, $49
+    db $62, $3f, $42, $fa, $f7, $ef, $ee, $3f, $4c, $4f, $4b, $63, $ef, $ee, $fa, $f7
+    db $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $50, $42, $4b, $41, $62, $51, $45, $42
+    db $ef, $ee, $42, $44, $44, $62, $51, $4c, $62, $51, $45, $42, $62, $43, $3e, $4f
+    db $4a, $63, $f7, $f0
+TextStr_4a_5073:           ; id $060A
+    ; "*:My Eyeder loves devils. Want to / breed?"
+    db $ea, $9f, $a3, $30, $56, $62, $28, $56, $42, $41, $42, $4f, $62, $49, $4c, $53
+    db $42, $50, $ef, $ee, $41, $42, $53, $46, $49, $50, $5f, $62, $3a, $3e, $4b, $51
+    db $62, $51, $4c, $fa, $f7, $ef, $ee, $3f, $4f, $42, $42, $41, $64, $ef, $ee, $f7
+    db $f0
+TextStr_4a_50a4:           ; id $060B
+    ; "*:Which monster will you breed / with my Eyeder?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $ef, $ee, $54, $46, $49, $49, $62, $56, $4c, $52, $62, $3f, $4f, $42, $42, $41
+    db $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $28, $56, $42, $41
+    db $42, $4f, $64, $ef, $ee, $f7, $f0
+TextStr_4a_50db:           ; id $060C
+    ; "*:Why not breed with my Yeti?"
+    db $ea, $9f, $a3, $3a, $45, $56, $62, $4b, $4c, $51, $62, $3f, $4f, $42, $42, $41
+    db $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $3c, $42, $51, $46, $64, $f7
+    db $f0
+TextStr_4a_50fc:           ; id $060D
+    ; "*:Which monster will you breed / with my Yeti?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $ef, $ee, $54, $46, $49, $49, $62, $56, $4c, $52, $62, $3f, $4f, $42, $42, $41
+    db $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $3c, $42, $51, $46
+    db $64, $ef, $ee, $f7, $f0
+TextStr_4a_5131:           ; id $060E $060F $0610
+    ; "*:Tut, stingy. Hic..."
+    db $ea, $9f, $a3, $37, $52, $51, $5e, $62, $50, $51, $46, $4b, $44, $56, $5f, $ef
+    db $ee, $2b, $46, $40, $5f, $5f, $5f, $f7, $f0
+TextStr_4a_514a:           ; id $0611
+    ; "Why don't you breed with / my CatFly?"
+    db $ea, $3a, $45, $56, $62, $41, $4c, $4b, $67, $62, $56, $4c, $52, $ef, $ee, $3f
+    db $4f, $42, $42, $41, $62, $54, $46, $51, $45, $fa, $f7, $ef, $ee, $4a, $56, $62
+    db $26, $3e, $51, $29, $49, $56, $64, $ef, $ee, $f0
+TextStr_4a_5174:           ; id $0612
+    ; "*:Which monster do you want to breed / with my CatFly?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $62, $41, $4c, $ef, $ee, $56, $4c, $52, $62, $54, $3e, $4b, $51, $62, $51, $4c
+    db $62, $3f, $4f, $42, $42, $41, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $4a
+    db $56, $62, $26, $3e, $51, $29, $49, $56, $64, $ef, $ee, $f0
+TextStr_4a_51b0:           ; id $0613
+    ; "*:I can't let mine breed with low / level monsters."
+    db $ea, $9f, $a3, $2c, $62, $40, $3e, $4b, $67, $62, $49, $42, $51, $62, $4a, $46
+    db $4b, $42, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45, $62, $49
+    db $4c, $54, $fa, $f7, $ef, $ee, $49, $42, $53, $42, $49, $62, $4a, $4c, $4b, $50
+    db $51, $42, $4f, $50, $5f, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_51ea:           ; id $0614
+    ; "*:You won't have any monsters / to take with ya!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $54, $4c, $4b, $67, $62, $45, $3e, $53, $42
+    db $ef, $ee, $3e, $4b, $56, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $fa, $f7
+    db $ef, $ee, $51, $4c, $62, $51, $3e, $48, $42, $62, $54, $46, $51, $45, $62, $56
+    db $3e, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_5221:           ; id $0615
+    ; "*:With this monster? / Are you sure?"
+    db $ea, $9f, $a3, $3a, $46, $51, $45, $62, $51, $45, $46, $50, $ef, $ee, $4a, $4c
+    db $4b, $50, $51, $42, $4f, $64, $fa, $f7, $ef, $ee, $24, $4f, $42, $62, $56, $4c
+    db $52, $62, $50, $52, $4f, $42, $64, $ef, $ee, $f0
+TextStr_4a_524b:           ; id $0616
+    ; "*:Start the breeding ceremony?"
+    db $ea, $9f, $a3, $36, $51, $3e, $4f, $51, $62, $51, $45, $42, $ef, $ee, $3f, $4f
+    db $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42, $4a, $4c, $4b, $56, $64
+    db $f0
+TextStr_4a_526c:           ; id $0617
+    ; "*:I can't tell what kinda / monster it'll be. / *:Is it okay to record it in the / Journal?"
+    db $ea, $9f, $a3, $2c, $62, $40, $3e, $4b, $67, $62, $51, $42, $49, $49, $ef, $ee
+    db $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $3e, $fa, $f7, $ef, $ee, $4a, $4c
+    db $4b, $50, $51, $42, $4f, $62, $46, $51, $66, $49, $62, $3f, $42, $5f, $ef, $ee
+    db $fa, $f7, $ef, $ee, $9f, $a3, $2c, $50, $62, $46, $51, $62, $4c, $48, $3e, $56
+    db $62, $51, $4c, $ef, $ee, $4f, $42, $40, $4c, $4f, $41, $62, $46, $51, $62, $46
+    db $4b, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $2d, $4c, $52, $4f, $4b, $3e, $49
+    db $64, $ef, $ee, $f0
+TextStr_4a_52d0:           ; id $0618
+    ; "*:Let's begin the breeding ceremony!"
+    db $ea, $9f, $a3, $2f, $42, $51, $68, $62, $3f, $42, $44, $46, $4b, $62, $51, $45
+    db $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42
+    db $4a, $4c, $4b, $56, $63, $f7, $f0
+TextStr_4a_52f7:           ; id $0619
+    ; "*:Hope a strong monster will be / born! / *:I'll send the egg to the farm!"
+    db $ea, $9f, $a3, $2b, $4c, $4d, $42, $62, $3e, $62, $50, $51, $4f, $4c, $4b, $44
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $54, $46, $49, $49, $62, $3f
+    db $42, $fa, $f7, $ef, $ee, $3f, $4c, $4f, $4b, $63, $ef, $ee, $fa, $f7, $ef, $ee
+    db $9f, $a3, $2c, $66, $49, $62, $50, $42, $4b, $41, $62, $51, $45, $42, $ef, $ee
+    db $42, $44, $44, $62, $51, $4c, $62, $51, $45, $42, $62, $43, $3e, $4f, $4a, $63
+    db $f7, $f0
+TextStr_4a_5349:           ; id $061A $061B $061C $061D $061E $061F $0620
+    ; "*:Well, if you want to breed / again, stop by. / *:The LizardMan says AgDevil is / its type!"
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $5e, $62, $46, $43, $62, $56, $4c, $52, $ef
+    db $ee, $54, $3e, $4b, $51, $62, $51, $4c, $62, $3f, $4f, $42, $42, $41, $fa, $f7
+    db $ef, $ee, $3e, $44, $3e, $46, $4b, $5e, $62, $50, $51, $4c, $4d, $62, $3f, $56
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $37, $45, $42, $62, $2f, $46, $57
+    db $3e, $4f, $41, $30, $3e, $4b, $ef, $ee, $50, $3e, $56, $50, $62, $24, $44, $27
+    db $42, $53, $46, $49, $62, $46, $50, $fa, $f7, $ef, $ee, $46, $51, $50, $62, $51
+    db $56, $4d, $42, $63, $ef, $ee, $f7, $f0
+TextStr_4a_53b1:           ; id $0621
+    ; "*:Why not breed with my / LizardMan?"
+    db $ea, $9f, $a3, $3a, $45, $56, $62, $4b, $4c, $51, $ef, $ee, $3f, $4f, $42, $42
+    db $41, $62, $54, $46, $51, $45, $62, $4a, $56, $fa, $f7, $ef, $ee, $2f, $46, $57
+    db $3e, $4f, $41, $30, $3e, $4b, $64, $ef, $ee, $f0
+TextStr_4a_53db:           ; id $0622
+    ; "*:Which one are you gonna breed / with the LizardMan?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4c, $4b, $42, $62, $3e, $4f, $42
+    db $ef, $ee, $56, $4c, $52, $62, $44, $4c, $4b, $4b, $3e, $62, $3f, $4f, $42, $42
+    db $41, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $51, $45, $42, $ef, $ee, $2f
+    db $46, $57, $3e, $4f, $41, $30, $3e, $4b, $64, $f0
+TextStr_4a_5415:           ; id $0623
+    ; "*:Hey, your monster is weak. / That monster level is out of / the question...!"
+    db $ea, $9f, $a3, $2b, $42, $56, $5e, $62, $56, $4c, $52, $4f, $ef, $ee, $4a, $4c
+    db $4b, $50, $51, $42, $4f, $62, $46, $50, $62, $54, $42, $3e, $48, $5f, $fa, $f7
+    db $ef, $ee, $37, $45, $3e, $51, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $ef, $ee
+    db $49, $42, $53, $42, $49, $62, $46, $50, $62, $4c, $52, $51, $62, $4c, $43, $fa
+    db $f7, $ef, $ee, $51, $45, $42, $62, $4e, $52, $42, $50, $51, $46, $4c, $4b, $5f
+    db $5f, $5f, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_546d:           ; id $0624
+    ; "*:Hey! You won't have any monsters / to take with you!"
+    db $ea, $9f, $a3, $2b, $42, $56, $63, $62, $3c, $4c, $52, $62, $54, $4c, $4b, $67
+    db $ef, $ee, $45, $3e, $53, $42, $62, $3e, $4b, $56, $62, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $50, $fa, $f7, $ef, $ee, $51, $4c, $62, $51, $3e, $48, $42, $62, $54
+    db $46, $51, $45, $62, $56, $4c, $52, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_54aa:           ; id $0625
+    ; "*:Are you okay with this monster?"
+    db $ea, $9f, $a3, $24, $4f, $42, $62, $56, $4c, $52, $62, $4c, $48, $3e, $56, $ef
+    db $ee, $54, $46, $51, $45, $62, $51, $45, $46, $50, $62, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $64, $f0
+TextStr_4a_54ce:           ; id $0626
+    ; "*:Start the breeding ceremony?"
+    db $ea, $9f, $a3, $36, $51, $3e, $4f, $51, $62, $51, $45, $42, $ef, $ee, $3f, $4f
+    db $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42, $4a, $4c, $4b, $56, $64
+    db $f0
+TextStr_4a_54ef:           ; id $0627
+    ; "*:I don't know what kind of egg / will be born. / *:But I'm gonna record the results / in the Journal. Okay?"
+    db $ea, $9f, $a3, $2c, $62, $41, $4c, $4b, $67, $62, $48, $4b, $4c, $54, $ef, $ee
+    db $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62, $4c, $43, $62, $42, $44, $44
+    db $fa, $f7, $ef, $ee, $54, $46, $49, $49, $62, $3f, $42, $62, $3f, $4c, $4f, $4b
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $52, $51, $62, $2c, $6a, $62
+    db $44, $4c, $4b, $4b, $3e, $ef, $ee, $4f, $42, $40, $4c, $4f, $41, $62, $51, $45
+    db $42, $62, $4f, $42, $50, $52, $49, $51, $50, $fa, $f7, $ef, $ee, $46, $4b, $62
+    db $51, $45, $42, $62, $2d, $4c, $52, $4f, $4b, $3e, $49, $5f, $ef, $ee, $32, $48
+    db $3e, $56, $64, $f0
+TextStr_4a_5563:           ; id $0628
+    ; "*:Let's begin the breeding ceremony!"
+    db $ea, $9f, $a3, $2f, $42, $51, $68, $62, $3f, $42, $44, $46, $4b, $62, $51, $45
+    db $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42
+    db $4a, $4c, $4b, $56, $63, $f7, $f0
+TextStr_4a_558a:           ; id $0629
+    ; "*:Well, you should be at least half / my level. / *:I'll send the egg to the farm!"
+    db $ea, $9f, $a3, $3a, $42, $49, $49, $5e, $62, $56, $4c, $52, $62, $50, $45, $4c
+    db $52, $49, $41, $ef, $ee, $3f, $42, $62, $3e, $51, $62, $49, $42, $3e, $50, $51
+    db $62, $45, $3e, $49, $43, $fa, $f7, $ef, $ee, $4a, $56, $62, $49, $42, $53, $42
+    db $49, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $50, $42
+    db $4b, $41, $62, $51, $45, $42, $ef, $ee, $42, $44, $44, $62, $51, $4c, $62, $51
+    db $45, $42, $62, $43, $3e, $4f, $4a, $63, $f7, $f0
+TextStr_4a_55e4:           ; id $062A $062B $062C $062D $062E $062F $0630
+    ; "Mick:I'll be on my journey by the / time you fight in C class."
+    db $ea, $30, $46, $40, $48, $a3, $2c, $66, $49, $62, $3f, $42, $62, $4c, $4b, $ef
+    db $ee, $4a, $56, $62, $47, $4c, $52, $4f, $4b, $42, $56, $62, $3f, $56, $62, $51
+    db $45, $42, $fa, $f7, $ef, $ee, $51, $46, $4a, $42, $62, $56, $4c, $52, $62, $43
+    db $46, $44, $45, $51, $62, $46, $4b, $ef, $ee, $26, $62, $40, $49, $3e, $50, $50
+    db $5f, $f7, $f0
+TextStr_4a_5627:           ; id $0631
+    ; "Mick:Let's breed with my DeadNite!!"
+    db $ea, $30, $46, $40, $48, $a3, $2f, $42, $51, $68, $62, $3f, $4f, $42, $42, $41
+    db $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $27, $42, $3e, $41, $31, $46
+    db $51, $42, $63, $63, $f0
+TextStr_4a_564c:           ; id $0632
+    ; "Mick:Who do you want to pick for / DeadNite?"
+    db $ea, $30, $46, $40, $48, $a3, $3a, $45, $4c, $62, $41, $4c, $62, $56, $4c, $52
+    db $ef, $ee, $54, $3e, $4b, $51, $62, $51, $4c, $62, $4d, $46, $40, $48, $62, $43
+    db $4c, $4f, $fa, $f7, $ef, $ee, $27, $42, $3e, $41, $31, $46, $51, $42, $64, $ef
+    db $ee, $f0
+TextStr_4a_567e:           ; id $0633
+    ; "Mick:Your monster's level is / too low to breed."
+    db $ea, $30, $46, $40, $48, $a3, $3c, $4c, $52, $4f, $ef, $ee, $4a, $4c, $4b, $50
+    db $51, $42, $4f, $68, $62, $49, $42, $53, $42, $49, $62, $46, $50, $fa, $f7, $ef
+    db $ee, $51, $4c, $4c, $62, $49, $4c, $54, $62, $51, $4c, $62, $3f, $4f, $42, $42
+    db $41, $5f, $ef, $ee, $f7, $f0
+TextStr_4a_56b4:           ; id $0634
+    ; "Mick:You won't have any monsters / to take with you!"
+    db $ea, $30, $46, $40, $48, $a3, $3c, $4c, $52, $62, $54, $4c, $4b, $67, $ef, $ee
+    db $45, $3e, $53, $42, $62, $3e, $4b, $56, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $50, $fa, $f7, $ef, $ee, $51, $4c, $62, $51, $3e, $48, $42, $62, $54, $46, $51
+    db $45, $62, $56, $4c, $52, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_56ef:           ; id $0635
+    ; "Mick:With this one? Are you sure?"
+    db $ea, $30, $46, $40, $48, $a3, $3a, $46, $51, $45, $62, $51, $45, $46, $50, $ef
+    db $ee, $4c, $4b, $42, $64, $62, $24, $4f, $42, $62, $56, $4c, $52, $62, $50, $52
+    db $4f, $42, $64, $f0
+TextStr_4a_5713:           ; id $0636
+    ; "Mick:Start the breeding ceremony?"
+    db $ea, $30, $46, $40, $48, $a3, $36, $51, $3e, $4f, $51, $62, $51, $45, $42, $ef
+    db $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42, $4a, $4c
+    db $4b, $56, $64, $f0
+TextStr_4a_5737:           ; id $0637
+    ; "*:I have no idea what kind of egg / it'll be... / *:Is it okay to record it in / the Journal?"
+    db $ea, $9f, $a3, $2c, $62, $45, $3e, $53, $42, $62, $4b, $4c, $62, $46, $41, $42
+    db $3e, $ef, $ee, $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62, $4c, $43, $62
+    db $42, $44, $44, $fa, $f7, $ef, $ee, $46, $51, $66, $49, $62, $3f, $42, $5f, $5f
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $50, $62, $46, $51, $62, $4c
+    db $48, $3e, $56, $ef, $ee, $51, $4c, $62, $4f, $42, $40, $4c, $4f, $41, $62, $46
+    db $51, $62, $46, $4b, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $2d, $4c, $52, $4f
+    db $4b, $3e, $49, $64, $ef, $ee, $f0
+TextStr_4a_579e:           ; id $0638
+    ; "*:Let's begin the breeding ceremony!"
+    db $ea, $9f, $a3, $2f, $42, $51, $68, $62, $3f, $42, $44, $46, $4b, $62, $51, $45
+    db $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42
+    db $4a, $4c, $4b, $56, $63, $f7, $f0
+TextStr_4a_57c5:           ; id $0639
+    ; "*:This egg is the proof of our / friendship. / *:I'll send it to the farm!"
+    db $ea, $9f, $a3, $37, $45, $46, $50, $62, $42, $44, $44, $62, $46, $50, $62, $51
+    db $45, $42, $ef, $ee, $4d, $4f, $4c, $4c, $43, $62, $4c, $43, $62, $4c, $52, $4f
+    db $fa, $f7, $ef, $ee, $43, $4f, $46, $42, $4b, $41, $50, $45, $46, $4d, $5f, $ef
+    db $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $50, $42, $4b, $41, $62
+    db $46, $51, $62, $51, $4c, $ef, $ee, $51, $45, $42, $62, $43, $3e, $4f, $4a, $63
+    db $f7, $f0
+TextStr_4a_5817:           ; id $063A $063B $063C $063D $063E $063F $0640
+    ; "*:Please come to me when you want / to breed again! / *:My Rayburn loves birds!"
+    db $eb, $9f, $a3, $33, $49, $42, $3e, $50, $42, $62, $40, $4c, $4a, $42, $62, $51
+    db $4c, $ef, $ee, $4a, $42, $62, $54, $45, $42, $4b, $62, $56, $4c, $52, $62, $54
+    db $3e, $4b, $51, $fa, $f7, $ef, $ee, $51, $4c, $62, $3f, $4f, $42, $42, $41, $62
+    db $3e, $44, $3e, $46, $4b, $63, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $30, $56
+    db $62, $35, $3e, $56, $3f, $52, $4f, $4b, $62, $49, $4c, $53, $42, $50, $ef, $ee
+    db $3f, $46, $4f, $41, $50, $63, $f7, $f0
+TextStr_4a_586f:           ; id $0641
+    ; "*:Want to breed with my Rayburn?"
+    db $eb, $9f, $a3, $3a, $3e, $4b, $51, $62, $51, $4c, $62, $3f, $4f, $42, $42, $41
+    db $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $35, $3e, $56, $3f, $52, $4f
+    db $4b, $64, $f0
+TextStr_4a_5892:           ; id $0642
+    ; "*:Which monster are you picking / for my Rayburn?"
+    db $eb, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $ef, $ee, $3e, $4f, $42, $62, $56, $4c, $52, $62, $4d, $46, $40, $48, $46, $4b
+    db $44, $fa, $f7, $ef, $ee, $43, $4c, $4f, $62, $4a, $56, $62, $35, $3e, $56, $3f
+    db $52, $4f, $4b, $64, $ef, $ee, $f0
+TextStr_4a_58c9:           ; id $0643
+    ; "*:I don't want to breed with a low / level monster!"
+    db $eb, $9f, $a3, $2c, $62, $41, $4c, $4b, $67, $62, $54, $3e, $4b, $51, $62, $51
+    db $4c, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45, $62, $3e, $62
+    db $49, $4c, $54, $fa, $f7, $ef, $ee, $49, $42, $53, $42, $49, $62, $4a, $4c, $4b
+    db $50, $51, $42, $4f, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_5903:           ; id $0644
+    ; "*:You'll have no monsters to / take with you!"
+    db $eb, $9f, $a3, $3c, $4c, $52, $66, $49, $62, $45, $3e, $53, $42, $ef, $ee, $4b
+    db $4c, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $51, $4c, $fa, $f7, $ef
+    db $ee, $51, $3e, $48, $42, $62, $54, $46, $51, $45, $62, $56, $4c, $52, $63, $ef
+    db $ee, $fa, $f7, $f0
+TextStr_4a_5937:           ; id $0645
+    ; "*:Is this monster okay?"
+    db $eb, $9f, $a3, $2c, $50, $62, $51, $45, $46, $50, $62, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $ef, $ee, $4c, $48, $3e, $56, $64, $f0
+TextStr_4a_5951:           ; id $0646
+    ; "*:Can I start the breeding ceremony?"
+    db $eb, $9f, $a3, $26, $3e, $4b, $62, $2c, $62, $50, $51, $3e, $4f, $51, $62, $51
+    db $45, $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f
+    db $42, $4a, $4c, $4b, $56, $64, $f0
+TextStr_4a_5978:           ; id $0647
+    ; "*:I have no idea what kind of egg / it'll be... / *:Can I record it in the Journal?"
+    db $eb, $9f, $a3, $2c, $62, $45, $3e, $53, $42, $62, $4b, $4c, $62, $46, $41, $42
+    db $3e, $ef, $ee, $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62, $4c, $43, $62
+    db $42, $44, $44, $fa, $f7, $ef, $ee, $46, $51, $66, $49, $62, $3f, $42, $5f, $5f
+    db $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $26, $3e, $4b, $62, $2c, $62, $4f
+    db $42, $40, $4c, $4f, $41, $62, $46, $51, $ef, $ee, $46, $4b, $62, $51, $45, $42
+    db $62, $2d, $4c, $52, $4f, $4b, $3e, $49, $64, $f0
+TextStr_4a_59d2:           ; id $0648
+    ; "*:Let's start the breeding ceremony!"
+    db $eb, $9f, $a3, $2f, $42, $51, $68, $62, $50, $51, $3e, $4f, $51, $62, $51, $45
+    db $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42, $4f, $42
+    db $4a, $4c, $4b, $56, $63, $f7, $f0
+TextStr_4a_59f9:           ; id $0649
+    ; "*:I hope it'll be a strong monster. / *:I'll send the egg to the farm."
+    db $eb, $9f, $a3, $2c, $62, $45, $4c, $4d, $42, $62, $46, $51, $66, $49, $62, $3f
+    db $42, $ef, $ee, $3e, $62, $50, $51, $4f, $4c, $4b, $44, $62, $4a, $4c, $4b, $50
+    db $51, $42, $4f, $5f, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $50, $42
+    db $4b, $41, $62, $51, $45, $42, $ef, $ee, $42, $44, $44, $62, $51, $4c, $62, $51
+    db $45, $42, $62, $43, $3e, $4f, $4a, $5f, $f7, $f0
+TextStr_4a_5a43:           ; id $064A $064B $064C $064D $064E $064F $0650
+    ; "*:Pay me a visit when you want to / breed."
+    db $ea, $9f, $a3, $33, $3e, $56, $62, $4a, $42, $62, $3e, $62, $53, $46, $50, $46
+    db $51, $ef, $ee, $54, $45, $42, $4b, $62, $56, $4c, $52, $62, $54, $3e, $4b, $51
+    db $62, $51, $4c, $fa, $f7, $ef, $ee, $3f, $4f, $42, $42, $41, $5f, $ef, $ee, $f7
+    db $f0
+TextStr_4a_5a74:           ; id $0651
+    ; "*:Why not breed with my [INS 00]?"
+    db $ea, $9f, $a3, $3a, $45, $56, $62, $4b, $4c, $51, $62, $3f, $4f, $42, $42, $41
+    db $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $f9, $00, $64, $f0
+TextStr_4a_5a92:           ; id $0652
+    ; "*:Which monster are you going to / breed with my [INS 00]?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $ef, $ee, $3e, $4f, $42, $62, $56, $4c, $52, $62, $44, $4c, $46, $4b, $44, $62
+    db $51, $4c, $fa, $f7, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45
+    db $62, $4a, $56, $ef, $ee, $f9, $00, $64, $f0
+TextStr_4a_5acb:           ; id $0653
+    ; "*:Cannot breed with a low level / monster."
+    db $ea, $9f, $a3, $26, $3e, $4b, $4b, $4c, $51, $62, $3f, $4f, $42, $42, $41, $ef
+    db $ee, $54, $46, $51, $45, $62, $3e, $62, $49, $4c, $54, $62, $49, $42, $53, $42
+    db $49, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $5f, $ef, $ee, $fa
+    db $f7, $f0
+TextStr_4a_5afd:           ; id $0654
+    ; "*:You'll have no monsters to take / with you!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $66, $49, $62, $45, $3e, $53, $42, $62, $4b, $4c
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $51, $4c, $62, $51, $3e
+    db $48, $42, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $56, $4c, $52, $63, $ef
+    db $ee, $fa, $f7, $f0
+TextStr_4a_5b31:           ; id $0655
+    ; "*:This monster? Are you sure?"
+    db $ea, $9f, $a3, $37, $45, $46, $50, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $64
+    db $ef, $ee, $24, $4f, $42, $62, $56, $4c, $52, $62, $50, $52, $4f, $42, $64, $f0
+TextStr_4a_5b51:           ; id $0656
+    ; "*:Can we start the breeding ceremony?"
+    db $ea, $9f, $a3, $26, $3e, $4b, $62, $54, $42, $62, $50, $51, $3e, $4f, $51, $62
+    db $51, $45, $42, $ef, $ee, $3f, $4f, $42, $42, $41, $46, $4b, $44, $62, $40, $42
+    db $4f, $42, $4a, $4c, $4b, $56, $64, $f0
+TextStr_4a_5b79:           ; id $0657
+    ; "*:I can't imagine what kind of egg / it will be. / *:But are you sure this is to be / recorded in the Journal?"
+    db $ea, $9f, $a3, $2c, $62, $40, $3e, $4b, $67, $62, $46, $4a, $3e, $44, $46, $4b
+    db $42, $ef, $ee, $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62, $4c, $43, $62
+    db $42, $44, $44, $fa, $f7, $ef, $ee, $46, $51, $62, $54, $46, $49, $49, $62, $3f
+    db $42, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $9f, $a3, $25, $52, $51, $62, $3e, $4f
+    db $42, $62, $56, $4c, $52, $62, $50, $52, $4f, $42, $ef, $ee, $51, $45, $46, $50
+    db $62, $46, $50, $62, $51, $4c, $62, $3f, $42, $fa, $f7, $ef, $ee, $4f, $42, $40
+    db $4c, $4f, $41, $42, $41, $62, $46, $4b, $62, $51, $45, $42, $ef, $ee, $2d, $4c
+    db $52, $4f, $4b, $3e, $49, $64, $f0
+TextStr_4a_5bf0:           ; id $0658
+    ; "*:Then, let us begin the / ceremony."
+    db $ea, $9f, $a3, $37, $45, $42, $4b, $5e, $62, $49, $42, $51, $62, $52, $50, $ef
+    db $ee, $3f, $42, $44, $46, $4b, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $40, $42
+    db $4f, $42, $4a, $4c, $4b, $56, $5f, $ef, $ee, $f7, $f0
+TextStr_4a_5c1b:           ; id $0659
+    ; "*:Hopefully a strong monster / will be born! / *:I'll send the egg to the farm!"
+    db $ea, $9f, $a3, $2b, $4c, $4d, $42, $43, $52, $49, $49, $56, $62, $3e, $ef, $ee
+    db $50, $51, $4f, $4c, $4b, $44, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $fa, $f7
+    db $ef, $ee, $54, $46, $49, $49, $62, $3f, $42, $62, $3f, $4c, $4f, $4b, $63, $ef
+    db $ee, $fa, $f7, $ef, $ee, $9f, $a3, $2c, $66, $49, $62, $50, $42, $4b, $41, $62
+    db $51, $45, $42, $ef, $ee, $42, $44, $44, $62, $51, $4c, $62, $51, $45, $42, $62
+    db $43, $3e, $4f, $4a, $63, $f7, $f0
+TextStr_4a_5c72:           ; id $065A
+    ; "*:Why not breed with my Metabble!"
+    db $ea, $9f, $a3, $3a, $45, $56, $62, $4b, $4c, $51, $62, $3f, $4f, $42, $42, $41
+    db $ef, $ee, $54, $46, $51, $45, $62, $4a, $56, $62, $30, $42, $51, $3e, $3f, $3f
+    db $49, $42, $63, $f7, $f0
+TextStr_4a_5c97:           ; id $065B
+    ; "*:Which monster do you want to breed / with my Metabble?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $62, $41, $4c, $ef, $ee, $56, $4c, $52, $62, $54, $3e, $4b, $51, $62, $51, $4c
+    db $62, $3f, $4f, $42, $42, $41, $fa, $f7, $ef, $ee, $54, $46, $51, $45, $62, $4a
+    db $56, $62, $30, $42, $51, $3e, $3f, $3f, $49, $42, $64, $ef, $ee, $f7, $f0
+TextStr_4a_5cd6:           ; id $065C $065D $065E $065F $0660
+    ; "Milayou:Come back when you wanna / breed."
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $26, $4c, $4a, $42, $62, $3f, $3e
+    db $40, $48, $ef, $ee, $54, $45, $42, $4b, $62, $56, $4c, $52, $62, $54, $3e, $4b
+    db $4b, $3e, $fa, $f7, $ef, $ee, $3f, $4f, $42, $42, $41, $5f, $ef, $ee, $f7, $f0
+TextStr_4a_5d06:           ; id $0661
+    ; "Milayou:Breed with my Skeletor!"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $25, $4f, $42, $42, $41, $62, $54
+    db $46, $51, $45, $ef, $ee, $4a, $56, $62, $36, $48, $42, $49, $42, $51, $4c, $4f
+    db $63, $f0
+TextStr_4a_5d28:           ; id $0662
+    ; "Milayou:Which monster will you / pick for my Skeletor?"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $3a, $45, $46, $40, $45, $ef, $ee
+    db $4a, $4c, $4b, $50, $51, $42, $4f, $62, $54, $46, $49, $49, $62, $56, $4c, $52
+    db $fa, $f7, $ef, $ee, $4d, $46, $40, $48, $62, $43, $4c, $4f, $62, $4a, $56, $ef
+    db $ee, $36, $48, $42, $49, $42, $51, $4c, $4f, $64, $f0
+TextStr_4a_5d63:           ; id $0663
+    ; "Milayou:A low level monster / can't breed!"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $24, $62, $49, $4c, $54, $ef, $ee
+    db $49, $42, $53, $42, $49, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $fa, $f7, $ef
+    db $ee, $40, $3e, $4b, $67, $62, $3f, $4f, $42, $42, $41, $63, $ef, $ee, $fa, $f7
+    db $f0
+TextStr_4a_5d94:           ; id $0664
+    ; "Milayou:You won't have any monster / to take with you."
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $3c, $4c, $52, $62, $54, $4c, $4b
+    db $67, $ef, $ee, $45, $3e, $53, $42, $62, $3e, $4b, $56, $62, $4a, $4c, $4b, $50
+    db $51, $42, $4f, $fa, $f7, $ef, $ee, $51, $4c, $62, $51, $3e, $48, $42, $62, $54
+    db $46, $51, $45, $62, $56, $4c, $52, $5f, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_5dd1:           ; id $0665
+    ; "Milayou:Is this monster okay?"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2c, $50, $62, $51, $45, $46, $50
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $4c, $48, $3e, $56, $64, $f0
+TextStr_4a_5df1:           ; id $0666
+    ; "Milayou:I'll start the breeding / ceremony, okay?"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2c, $66, $49, $62, $50, $51, $3e
+    db $4f, $51, $ef, $ee, $51, $45, $42, $62, $3f, $4f, $42, $42, $41, $46, $4b, $44
+    db $fa, $f7, $ef, $ee, $40, $42, $4f, $42, $4a, $4c, $4b, $56, $5e, $62, $4c, $48
+    db $3e, $56, $64, $ef, $ee, $f0
+TextStr_4a_5e27:           ; id $0667
+    ; "Milayou:I don't know what kind of / egg it'll be... / Milayou:Can I record it in the / Journal?"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2c, $62, $41, $4c, $4b, $67, $ef
+    db $ee, $48, $4b, $4c, $54, $62, $54, $45, $3e, $51, $62, $48, $46, $4b, $41, $62
+    db $4c, $43, $fa, $f7, $ef, $ee, $42, $44, $44, $62, $46, $51, $66, $49, $62, $3f
+    db $42, $5f, $5f, $5f, $ef, $ee, $fa, $f7, $ef, $ee, $30, $46, $49, $3e, $56, $4c
+    db $52, $a3, $26, $3e, $4b, $62, $2c, $ef, $ee, $4f, $42, $40, $4c, $4f, $41, $62
+    db $46, $51, $62, $46, $4b, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $2d, $4c, $52
+    db $4f, $4b, $3e, $49, $64, $ef, $ee, $f0
+TextStr_4a_5e8f:           ; id $0668
+    ; "Milayou:Let's breed!"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2f, $42, $51, $68, $ef, $ee, $3f
+    db $4f, $42, $42, $41, $63, $f7, $f0
+TextStr_4a_5ea6:           ; id $0669
+    ; "Milayou:I hope it'll be a strong / monster! / Milayou:I'm gonna send the egg to / the farm!"
+    db $eb, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2c, $62, $45, $4c, $4d, $42, $ef
+    db $ee, $46, $51, $66, $49, $62, $3f, $42, $62, $3e, $62, $50, $51, $4f, $4c, $4b
+    db $44, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $63, $ef, $ee, $fa
+    db $f7, $ef, $ee, $30, $46, $49, $3e, $56, $4c, $52, $a3, $2c, $6a, $62, $44, $4c
+    db $4b, $4b, $3e, $ef, $ee, $50, $42, $4b, $41, $62, $51, $45, $42, $62, $42, $44
+    db $44, $62, $51, $4c, $fa, $f7, $ef, $ee, $51, $45, $42, $62, $43, $3e, $4f, $4a
+    db $63, $ef, $ee, $f7, $f0
+TextStr_4a_5f0b:           ; id $066A $066B $066C $066D $066E $066F $0670 $0671 $0672 $0673 $0674 $0675 $0676 $0677 $0678 $0679 $067A $067B $067C $067D $067E $067F $0680
+    ; "*:Item shop. May I help you?"
+    db $ea, $9f, $a3, $2c, $51, $42, $4a, $62, $50, $45, $4c, $4d, $5f, $ef, $ee, $30
+    db $3e, $56, $62, $2c, $62, $45, $42, $49, $4d, $62, $56, $4c, $52, $64, $f0
+TextStr_4a_5f2a:           ; id $0681
+    ; "*:Anything else?"
+    db $ea, $9f, $a3, $24, $4b, $56, $51, $45, $46, $4b, $44, $62, $42, $49, $50, $42
+    db $64, $ef, $ee, $f0
+TextStr_4a_5f3e:           ; id $0682
+    ; "*:Thank you. Come again!"
+    db $ea, $9f, $a3, $37, $45, $3e, $4b, $48, $62, $56, $4c, $52, $5f, $ef, $ee, $26
+    db $4c, $4a, $42, $62, $3e, $44, $3e, $46, $4b, $63, $f7, $f0
+TextStr_4a_5f5a:           ; id $0683
+    ; "*:What would you like?"
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $54, $4c, $52, $49, $41, $62, $56, $4c
+    db $52, $ef, $ee, $49, $46, $48, $42, $64, $f0
+TextStr_4a_5f73:           ; id $0684
+    ; "*:What would you like?"
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $54, $4c, $52, $49, $41, $62, $56, $4c
+    db $52, $ef, $ee, $49, $46, $48, $42, $64, $f0
+TextStr_4a_5f8c:           ; id $0685
+    ; "*:How many?"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $4a, $3e, $4b, $56, $64, $ef, $ee, $f0
+TextStr_4a_5f9b:           ; id $0686
+    ; "[INS 10] X [INS 00] is [INS 20]G."
+    db $ea, $f9, $10, $62, $3b, $62, $f9, $00, $ef, $ee, $46, $50, $62, $f9, $20, $2a
+    db $5f, $f0
+TextStr_4a_5fad:           ; id $0687
+    ; "*:You don't have enough money."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42
+    db $ef, $ee, $42, $4b, $4c, $52, $44, $45, $62, $4a, $4c, $4b, $42, $56, $5f, $fa
+    db $f7, $f0
+TextStr_4a_5fcf:           ; id $0688
+    ; "*:You can only carry 20 items!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $40, $3e, $4b, $62, $4c, $4b, $49, $56, $ef
+    db $ee, $40, $3e, $4f, $4f, $56, $62, $02, $00, $62, $46, $51, $42, $4a, $50, $63
+    db $fa, $f7, $f0
+TextStr_4a_5ff2:           ; id $0689
+    ; "*:Thank you!"
+    db $ea, $9f, $a3, $37, $45, $3e, $4b, $48, $62, $56, $4c, $52, $63, $ef, $ee, $f7
+    db $f0
+TextStr_4a_6003:           ; id $068A
+    ; "*:Which items will you sell to me?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $46, $51, $42, $4a, $50, $62, $54
+    db $46, $49, $49, $ef, $ee, $56, $4c, $52, $62, $50, $42, $49, $49, $62, $51, $4c
+    db $62, $4a, $42, $64, $f0
+TextStr_4a_6028:           ; id $068B
+    ; "*:You don't have items I can buy."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42
+    db $ef, $ee, $46, $51, $42, $4a, $50, $62, $2c, $62, $40, $3e, $4b, $62, $3f, $52
+    db $56, $5f, $fa, $f7, $f0
+TextStr_4a_604d:           ; id $068C
+    ; "*:How many would you like to sell?"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $4a, $3e, $4b, $56, $62, $54, $4c, $52, $49
+    db $41, $ef, $ee, $56, $4c, $52, $62, $49, $46, $48, $42, $62, $51, $4c, $62, $50
+    db $42, $49, $49, $64, $f0
+TextStr_4a_6072:           ; id $068D
+    ; "[INS 10] X [INS 00] is [INS 20]G."
+    db $ea, $f9, $10, $62, $3b, $62, $f9, $00, $ef, $ee, $46, $50, $62, $f9, $20, $2a
+    db $5f, $f0
+TextStr_4a_6084:           ; id $068E
+    ; "*:You can only have up to / 99999G!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $40, $3e, $4b, $62, $4c, $4b, $49, $56, $ef
+    db $ee, $45, $3e, $53, $42, $62, $52, $4d, $62, $51, $4c, $fa, $f7, $ef, $ee, $09
+    db $09, $09, $09, $09, $2a, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_60af:           ; id $068F
+    ; "*:Thanks again!"
+    db $ea, $9f, $a3, $37, $45, $3e, $4b, $48, $50, $62, $3e, $44, $3e, $46, $4b, $63
+    db $ef, $ee, $f7, $f0
+TextStr_4a_60c3:           ; id $0690 $0691 $0692 $0693 $0694 $0695 $0696 $0697 $0698 $0699 $069A $069B $069C $069D $069E $069F $06A0
+    ; "*:Vault. May I help you?"
+    db $ea, $9f, $a3, $39, $3e, $52, $49, $51, $5f, $ef, $ee, $30, $3e, $56, $62, $2c
+    db $62, $45, $42, $49, $4d, $62, $56, $4c, $52, $64, $f0
+TextStr_4a_60de:           ; id $06A1
+    ; "*:Something else?"
+    db $ea, $9f, $a3, $36, $4c, $4a, $42, $51, $45, $46, $4b, $44, $62, $42, $49, $50
+    db $42, $64, $ef, $ee, $f0
+TextStr_4a_60f3:           ; id $06A2
+    ; "*:Come again anytime."
+    db $ea, $9f, $a3, $26, $4c, $4a, $42, $62, $3e, $44, $3e, $46, $4b, $ef, $ee, $3e
+    db $4b, $56, $51, $46, $4a, $42, $5f, $f7, $f0
+TextStr_4a_610c:           ; id $06A3
+    ; "*:What would you like us to store?"
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $54, $4c, $52, $49, $41, $62, $56, $4c
+    db $52, $ef, $ee, $49, $46, $48, $42, $62, $52, $50, $62, $51, $4c, $62, $50, $51
+    db $4c, $4f, $42, $64, $f0
+TextStr_4a_6131:           ; id $06A4
+    ; "*:Which one?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4c, $4b, $42, $64, $ef, $ee, $f0
+TextStr_4a_6141:           ; id $06A5
+    ; "*:You don't have anything."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42
+    db $ef, $ee, $3e, $4b, $56, $51, $45, $46, $4b, $44, $5f, $fa, $f7, $f0
+TextStr_4a_615f:           ; id $06A6
+    ; "*:Sorry. We can't store anymore."
+    db $ea, $9f, $a3, $36, $4c, $4f, $4f, $56, $5f, $62, $3a, $42, $62, $40, $3e, $4b
+    db $67, $ef, $ee, $50, $51, $4c, $4f, $42, $62, $3e, $4b, $56, $4a, $4c, $4f, $42
+    db $5f, $fa, $f7, $f0
+TextStr_4a_6183:           ; id $06A7
+    ; "*:How many?"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $4a, $3e, $4b, $56, $64, $f0
+TextStr_4a_6190:           ; id $06A8
+    ; "*:Too much!"
+    db $ea, $9f, $a3, $37, $4c, $4c, $62, $4a, $52, $40, $45, $63, $fa, $f7, $f0
+TextStr_4a_619f:           ; id $06A9
+    ; "*:You're in safe hands with us."
+    db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $62, $50, $3e, $43, $42
+    db $ef, $ee, $45, $3e, $4b, $41, $50, $62, $54, $46, $51, $45, $62, $52, $50, $5f
+    db $fa, $f7, $f0
+TextStr_4a_61c2:           ; id $06AA
+    ; "*:How much do you want to deposit?"
+    db $ea, $9f, $a3, $2b, $4c, $54, $62, $4a, $52, $40, $45, $62, $41, $4c, $62, $56
+    db $4c, $52, $ef, $ee, $54, $3e, $4b, $51, $62, $51, $4c, $62, $41, $42, $4d, $4c
+    db $50, $46, $51, $64, $f0
+TextStr_4a_61e7:           ; id $06AB
+    ; "*:Not enough money."
+    db $ea, $9f, $a3, $31, $4c, $51, $62, $42, $4b, $4c, $52, $44, $45, $ef, $ee, $4a
+    db $4c, $4b, $42, $56, $5f, $fa, $f7, $f0
+TextStr_4a_61ff:           ; id $06AC
+    ; "*:Excuse me but you can only / deposit up to 999999G."
+    db $ea, $9f, $a3, $28, $55, $40, $52, $50, $42, $62, $4a, $42, $62, $3f, $52, $51
+    db $ef, $ee, $56, $4c, $52, $62, $40, $3e, $4b, $62, $4c, $4b, $49, $56, $fa, $f7
+    db $ef, $ee, $41, $42, $4d, $4c, $50, $46, $51, $62, $52, $4d, $62, $51, $4c, $ef
+    db $ee, $09, $09, $09, $09, $09, $09, $2a, $5f, $fa, $f7, $f0
+TextStr_4a_623b:           ; id $06AD
+    ; "*:You're in safe hands with us."
+    db $ea, $9f, $a3, $3c, $4c, $52, $69, $42, $62, $46, $4b, $62, $50, $3e, $43, $42
+    db $ef, $ee, $45, $3e, $4b, $41, $50, $62, $54, $46, $51, $45, $62, $52, $50, $5f
+    db $fa, $f7, $f0
+TextStr_4a_625e:           ; id $06AE
+    ; "*:What would you like to take out?"
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $54, $4c, $52, $49, $41, $62, $56, $4c
+    db $52, $ef, $ee, $49, $46, $48, $42, $62, $51, $4c, $62, $51, $3e, $48, $42, $62
+    db $4c, $52, $51, $64, $f0
+TextStr_4a_6283:           ; id $06AF
+    ; "*:We don't have any of your gold."
+    db $ea, $9f, $a3, $3a, $42, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42, $ef
+    db $ee, $3e, $4b, $56, $62, $4c, $43, $62, $56, $4c, $52, $4f, $62, $44, $4c, $49
+    db $41, $5f, $fa, $f7, $f0
+TextStr_4a_62a8:           ; id $06B0
+    ; "*:Take out items or withdraw gold?"
+    db $ea, $9f, $a3, $37, $3e, $48, $42, $62, $4c, $52, $51, $62, $46, $51, $42, $4a
+    db $50, $ef, $ee, $4c, $4f, $62, $54, $46, $51, $45, $41, $4f, $3e, $54, $62, $44
+    db $4c, $49, $41, $64, $f0
+TextStr_4a_62cd:           ; id $06B1
+    ; "*:We don't have any of your items."
+    db $ea, $9f, $a3, $3a, $42, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42, $ef
+    db $ee, $3e, $4b, $56, $62, $4c, $43, $62, $56, $4c, $52, $4f, $62, $46, $51, $42
+    db $4a, $50, $5f, $fa, $f7, $f0
+TextStr_4a_62f3:           ; id $06B2
+    ; "*:Too much stuff to store."
+    db $ea, $9f, $a3, $37, $4c, $4c, $62, $4a, $52, $40, $45, $62, $50, $51, $52, $43
+    db $43, $ef, $ee, $51, $4c, $62, $50, $51, $4c, $4f, $42, $5f, $fa, $f7, $f0
+TextStr_4a_6312:           ; id $06B3
+    ; "*:Take out how many?"
+    db $ea, $9f, $a3, $37, $3e, $48, $42, $62, $4c, $52, $51, $62, $45, $4c, $54, $ef
+    db $ee, $4a, $3e, $4b, $56, $64, $f0
+TextStr_4a_6329:           ; id $06B4
+    ; "*:You have too much to carry!"
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $45, $3e, $53, $42, $62, $51, $4c, $4c, $ef
+    db $ee, $4a, $52, $40, $45, $62, $51, $4c, $62, $40, $3e, $4f, $4f, $56, $63, $fa
+    db $f7, $f0
+TextStr_4a_634b:           ; id $06B5
+    ; "*:Here it is."
+    db $ea, $9f, $a3, $2b, $42, $4f, $42, $62, $46, $51, $62, $46, $50, $5f, $ef, $ee
+    db $fa, $f7, $f0
+TextStr_4a_635e:           ; id $06B6
+    ; "*:Withdraw how much?"
+    db $ea, $9f, $a3, $3a, $46, $51, $45, $41, $4f, $3e, $54, $ef, $ee, $45, $4c, $54
+    db $62, $4a, $52, $40, $45, $64, $f0
+TextStr_4a_6375:           ; id $06B7
+    ; "*:You don't have that much money."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $41, $4c, $4b, $67, $62, $45, $3e, $53, $42
+    db $ef, $ee, $51, $45, $3e, $51, $62, $4a, $52, $40, $45, $62, $4a, $4c, $4b, $42
+    db $56, $5f, $fa, $f7, $f0
+TextStr_4a_639a:           ; id $06B8
+    ; "*:You can't carry that much money."
+    db $ea, $9f, $a3, $3c, $4c, $52, $62, $40, $3e, $4b, $67, $62, $40, $3e, $4f, $4f
+    db $56, $ef, $ee, $51, $45, $3e, $51, $62, $4a, $52, $40, $45, $62, $4a, $4c, $4b
+    db $42, $56, $5f, $fa, $f7, $f0
+TextStr_4a_63c0:           ; id $06B9
+    ; "*:Here it is."
+    db $ea, $9f, $a3, $2b, $42, $4f, $42, $62, $46, $51, $62, $46, $50, $5f, $ef, $ee
+    db $fa, $f7, $f0
+TextStr_4a_63d3:           ; id $06BA $06BB $06BC $06BD $06BE $06BF $06C0
+    ; "Pulio:Hey there! Whadayagonnado?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2b, $42, $56, $62, $51, $45, $42, $4f, $42
+    db $63, $ef, $ee, $3a, $45, $3e, $41, $3e, $56, $3e, $44, $4c, $4b, $4b, $3e, $41
+    db $4c, $64, $f0
+TextStr_4a_63f6:           ; id $06C1
+    ; "Pulio:Anything else?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $24, $4b, $56, $51, $45, $46, $4b, $44, $ef
+    db $ee, $42, $49, $50, $42, $64, $f0
+TextStr_4a_640d:           ; id $06C2
+    ; "Pulio:Later! We'll be here for ya!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2f, $3e, $51, $42, $4f, $63, $62, $3a, $42
+    db $66, $49, $ef, $ee, $3f, $42, $62, $45, $42, $4f, $42, $62, $43, $4c, $4f, $62
+    db $56, $3e, $63, $f7, $f0
+TextStr_4a_6432:           ; id $06C3
+    ; "Pulio:Drop off which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $27, $4f, $4c, $4d, $62, $4c, $43, $43, $ef
+    db $ee, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_644e:           ; id $06C4
+    ; "Pulio:Hey, you're not gonna have / any monsters with you."
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2b, $42, $56, $5e, $62, $56, $4c, $52, $69
+    db $42, $ef, $ee, $4b, $4c, $51, $62, $44, $4c, $4b, $4b, $3e, $62, $45, $3e, $53
+    db $42, $fa, $f7, $ef, $ee, $3e, $4b, $56, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $50, $ef, $ee, $54, $46, $51, $45, $62, $56, $4c, $52, $5f, $fa, $f7, $f0
+TextStr_4a_648d:           ; id $06C5
+    ; "Pulio:Drop off this one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $27, $4f, $4c, $4d, $62, $4c, $43, $43, $ef
+    db $ee, $51, $45, $46, $50, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_64a8:           ; id $06C6
+    ; "Pulio:Stop by once in a while / to see how we are doing!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $36, $51, $4c, $4d, $62, $3f, $56, $ef, $ee
+    db $4c, $4b, $40, $42, $62, $46, $4b, $62, $3e, $62, $54, $45, $46, $49, $42, $fa
+    db $f7, $ef, $ee, $51, $4c, $62, $50, $42, $42, $62, $45, $4c, $54, $62, $54, $42
+    db $ef, $ee, $3e, $4f, $42, $62, $41, $4c, $46, $4b, $44, $63, $fa, $f7, $f0
+TextStr_4a_64e7:           ; id $06C7
+    ; "Pulio:Replace it?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $ef, $ee
+    db $46, $51, $64, $f0
+TextStr_4a_64fb:           ; id $06C8
+    ; "Pulio:Replace it with which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $62, $46
+    db $51, $ef, $ee, $54, $46, $51, $45, $62, $54, $45, $46, $40, $45, $62, $4c, $4b
+    db $42, $64, $f0
+TextStr_4a_651e:           ; id $06C9
+    ; "Pulio:Replace it with this one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $62, $46
+    db $51, $ef, $ee, $54, $46, $51, $45, $62, $51, $45, $46, $50, $62, $4c, $4b, $42
+    db $64, $f0
+TextStr_4a_6540:           ; id $06CA
+    ; "Pulio:I replaced [INS 00] with [INS 10]!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2c, $62, $4f, $42, $4d, $49, $3e, $40, $42
+    db $41, $ef, $ee, $f9, $00, $62, $54, $46, $51, $45, $62, $f9, $10, $63, $fa, $f7
+    db $f0
+TextStr_4a_6561:           ; id $06CB
+    ; "Pulio:Picking up which one, [HERO]?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $33, $46, $40, $48, $46, $4b, $44, $62, $52
+    db $4d, $ef, $ee, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $5e, $62, $f6, $64
+    db $f0
+TextStr_4a_6582:           ; id $06CC
+    ; "Pulio:No monsters here to take."
+    db $eb, $33, $52, $49, $46, $4c, $a3, $31, $4c, $62, $4a, $4c, $4b, $50, $51, $42
+    db $4f, $50, $ef, $ee, $45, $42, $4f, $42, $62, $51, $4c, $62, $51, $3e, $48, $42
+    db $5f, $fa, $f7, $f0
+TextStr_4a_65a6:           ; id $06CD
+    ; "Pulio:You can't take any more!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $3c, $4c, $52, $62, $40, $3e, $4b, $67, $ef
+    db $ee, $51, $3e, $48, $42, $62, $3e, $4b, $56, $62, $4a, $4c, $4f, $42, $63, $fa
+    db $f7, $f0
+TextStr_4a_65c8:           ; id $06CE
+    ; "Pulio:You're gonna pick this one up?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $3c, $4c, $52, $69, $42, $62, $44, $4c, $4b
+    db $4b, $3e, $ef, $ee, $4d, $46, $40, $48, $62, $51, $45, $46, $50, $62, $4c, $4b
+    db $42, $62, $52, $4d, $64, $f0
+TextStr_4a_65ee:           ; id $06CF
+    ; "Pulio:Train it well, [HERO]!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $37, $4f, $3e, $46, $4b, $62, $46, $51, $ef
+    db $ee, $54, $42, $49, $49, $5e, $62, $f6, $63, $fa, $f7, $f0
+TextStr_4a_660a:           ; id $06D0
+    ; "Pulio:Replacing a monster, [HERO]?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $46, $4b, $44
+    db $ef, $ee, $3e, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $5e, $62, $f6, $64, $f0
+TextStr_4a_662a:           ; id $06D1
+    ; "Pulio:Which one are you replacing?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $3a, $45, $46, $40, $45, $62, $4c, $4b, $42
+    db $ef, $ee, $3e, $4f, $42, $62, $56, $4c, $52, $62, $4f, $42, $4d, $49, $3e, $40
+    db $46, $4b, $44, $64, $f0
+TextStr_4a_664f:           ; id $06D2
+    ; "Pulio:Replace this one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $ef, $ee
+    db $51, $45, $46, $50, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_6669:           ; id $06D3
+    ; "Pulio:Replace with which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $ef, $ee
+    db $54, $46, $51, $45, $62, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_6689:           ; id $06D4
+    ; "Pulio:Replace this one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $35, $42, $4d, $49, $3e, $40, $42, $ef, $ee
+    db $51, $45, $46, $50, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_66a3:           ; id $06D5
+    ; "Pulio:I replaced [INS 00] with [INS 10]!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2c, $62, $4f, $42, $4d, $49, $3e, $40, $42
+    db $41, $ef, $ee, $f9, $00, $62, $54, $46, $51, $45, $62, $f9, $10, $63, $fa, $f7
+    db $f0
+TextStr_4a_66c4:           ; id $06D6
+    ; "Pulio:Check on which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $26, $45, $42, $40, $48, $62, $4c, $4b, $ef
+    db $ee, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $64, $f0
+TextStr_4a_66e0:           ; id $06D7
+    ; "Pulio:Hey, none to check on!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2b, $42, $56, $5e, $62, $4b, $4c, $4b, $42
+    db $ef, $ee, $51, $4c, $62, $40, $45, $42, $40, $48, $62, $4c, $4b, $63, $fa, $f7
+    db $f0
+TextStr_4a_6701:           ; id $06D8
+    ; "Pulio:Check on which one, [HERO]?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $26, $45, $42, $40, $48, $62, $4c, $4b, $ef
+    db $ee, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $5e, $62, $f6, $64, $f0
+TextStr_4a_6720:           ; id $06D9
+    ; "Pulio:Check on which one, [HERO]?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $26, $45, $42, $40, $48, $62, $4c, $4b, $ef
+    db $ee, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $5e, $62, $f6, $64, $f0
+TextStr_4a_673f:           ; id $06DA
+    ; "Pulio:Separate with which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $36, $42, $4d, $3e, $4f, $3e, $51, $42, $ef
+    db $ee, $54, $46, $51, $45, $62, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $64
+    db $f0
+TextStr_4a_6760:           ; id $06DB
+    ; "Pulio:Hey, nothing here!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2b, $42, $56, $5e, $62, $4b, $4c, $51, $45
+    db $46, $4b, $44, $ef, $ee, $45, $42, $4f, $42, $63, $fa, $f7, $f0
+TextStr_4a_677d:           ; id $06DC
+    ; "Pulio:Separate with which one?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $36, $42, $4d, $3e, $4f, $3e, $51, $42, $ef
+    db $ee, $54, $46, $51, $45, $62, $54, $45, $46, $40, $45, $62, $4c, $4b, $42, $64
+    db $f0
+TextStr_4a_679e:           ; id $06DD
+    ; "Pulio:Are you sure? You'll / lose it forever."
+    db $eb, $33, $52, $49, $46, $4c, $a3, $24, $4f, $42, $62, $56, $4c, $52, $ef, $ee
+    db $50, $52, $4f, $42, $64, $62, $3c, $4c, $52, $66, $49, $fa, $f7, $ef, $ee, $49
+    db $4c, $50, $42, $62, $46, $51, $62, $43, $4c, $4f, $42, $53, $42, $4f, $5f, $ef
+    db $ee, $f0
+TextStr_4a_67d0:           ; id $06DE
+    ; "[INS 00] was returned to the / wild."
+    db $f9, $00, $62, $54, $3e, $50, $ef, $ee, $4f, $42, $51, $52, $4f, $4b, $42, $41
+    db $62, $51, $4c, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $54, $46, $49, $41, $5f
+    db $ef, $ee, $fa, $f7, $f0
+TextStr_4a_67f5:           ; id $06DF
+    ; "Pulio:Are you sure? You'll / lose it forever."
+    db $eb, $33, $52, $49, $46, $4c, $a3, $24, $4f, $42, $62, $56, $4c, $52, $ef, $ee
+    db $50, $52, $4f, $42, $64, $62, $3c, $4c, $52, $66, $49, $fa, $f7, $ef, $ee, $49
+    db $4c, $50, $42, $62, $46, $51, $62, $43, $4c, $4f, $42, $53, $42, $4f, $5f, $ef
+    db $ee, $f0
+TextStr_4a_6827:           ; id $06E0
+    ; "[INS 00] was returned to the / wild."
+    db $f9, $00, $62, $54, $3e, $50, $ef, $ee, $4f, $42, $51, $52, $4f, $4b, $42, $41
+    db $62, $51, $4c, $62, $51, $45, $42, $fa, $f7, $ef, $ee, $54, $46, $49, $41, $5f
+    db $ef, $ee, $fa, $f7, $f0
+TextStr_4a_684c:           ; id $06E1
+    ; "Pulio:Select [PICK UP] to take / the monster with you."
+    db $eb, $33, $52, $49, $46, $4c, $a3, $36, $42, $49, $42, $40, $51, $ef, $ee, $96
+    db $33, $2c, $26, $2e, $62, $38, $33, $97, $62, $51, $4c, $62, $51, $3e, $48, $42
+    db $fa, $f7, $ef, $ee, $51, $45, $42, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $62
+    db $54, $46, $51, $45, $ef, $ee, $56, $4c, $52, $5f, $f0
+TextStr_4a_6887:           ; id $06E2
+    ; "Pulio:You wanna make the monsters / you have in the farm go to sleep?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $3c, $4c, $52, $62, $54, $3e, $4b, $4b, $3e
+    db $ef, $ee, $4a, $3e, $48, $42, $62, $51, $45, $42, $62, $4a, $4c, $4b, $50, $51
+    db $42, $4f, $50, $fa, $f7, $ef, $ee, $56, $4c, $52, $62, $45, $3e, $53, $42, $62
+    db $46, $4b, $62, $51, $45, $42, $ef, $ee, $43, $3e, $4f, $4a, $62, $44, $4c, $62
+    db $51, $4c, $62, $50, $49, $42, $42, $4d, $64, $f0
+TextStr_4a_68d1:           ; id $06E3
+    ; "Pulio:All the monsters here went / into a deep sleep!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $24, $49, $49, $62, $51, $45, $42, $ef, $ee
+    db $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $45, $42, $4f, $42, $62, $54, $42
+    db $4b, $51, $fa, $f7, $ef, $ee, $46, $4b, $51, $4c, $62, $3e, $62, $41, $42, $42
+    db $4d, $62, $50, $49, $42, $42, $4d, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_690e:           ; id $06E4
+    ; "Pulio:I put all the monsters not / sleeping into a deep sleep / Pulio:and woke up those who / were sleeping!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2c, $62, $4d, $52, $51, $62, $3e, $49, $49
+    db $ef, $ee, $51, $45, $42, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $4b
+    db $4c, $51, $fa, $f7, $ef, $ee, $50, $49, $42, $42, $4d, $46, $4b, $44, $62, $46
+    db $4b, $51, $4c, $62, $3e, $ef, $ee, $41, $42, $42, $4d, $62, $50, $49, $42, $42
+    db $4d, $fa, $f7, $ef, $ee, $33, $52, $49, $46, $4c, $a3, $3e, $4b, $41, $62, $54
+    db $4c, $48, $42, $ef, $ee, $52, $4d, $62, $51, $45, $4c, $50, $42, $62, $54, $45
+    db $4c, $fa, $f7, $ef, $ee, $54, $42, $4f, $42, $62, $50, $49, $42, $42, $4d, $46
+    db $4b, $44, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_6986:           ; id $06E5
+    ; "Pulio:Wanna wake up the sleeping / monsters?"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $3a, $3e, $4b, $4b, $3e, $62, $54, $3e, $48
+    db $42, $ef, $ee, $52, $4d, $62, $51, $45, $42, $62, $50, $49, $42, $42, $4d, $46
+    db $4b, $44, $fa, $f7, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $64, $ef
+    db $ee, $f0
+TextStr_4a_69b8:           ; id $06E6
+    ; "Pulio:I woke up the sleeping / monsters!"
+    db $eb, $33, $52, $49, $46, $4c, $a3, $2c, $62, $54, $4c, $48, $42, $62, $52, $4d
+    db $ef, $ee, $51, $45, $42, $62, $50, $49, $42, $42, $4d, $46, $4b, $44, $fa, $f7
+    db $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $63, $ef, $ee, $fa, $f7, $f0
+TextStr_4a_69e8:           ; id $06E7 $06E8 $06E9 $06EA $06EB $06EC $06ED $06EE $06EF $06F0
+    ; "*:What can I do for you?"
+    db $ea, $9f, $a3, $3a, $45, $3e, $51, $62, $40, $3e, $4b, $62, $2c, $62, $41, $4c
+    db $ef, $ee, $43, $4c, $4f, $62, $56, $4c, $52, $64, $f0
+TextStr_4a_6a03:           ; id $06F1
+    ; "*:Anything else?"
+    db $ea, $9f, $a3, $24, $4b, $56, $51, $45, $46, $4b, $44, $62, $42, $49, $50, $42
+    db $64, $f0
+TextStr_4a_6a15:           ; id $06F2
+    ; "*:Create the ultimate monsters!"
+    db $ea, $9f, $a3, $26, $4f, $42, $3e, $51, $42, $62, $51, $45, $42, $ef, $ee, $52
+    db $49, $51, $46, $4a, $3e, $51, $42, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50
+    db $63, $f7, $f0
+TextStr_4a_6a38:           ; id $06F3
+    ; "*:Which monster for the pedigree?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $ef, $ee, $43, $4c, $4f, $62, $51, $45, $42, $62, $4d, $42, $41, $46, $44, $4f
+    db $42, $42, $64, $f0
+TextStr_4a_6a5c:           ; id $06F4
+    ; "*:Which monster to breed with?"
+    db $ea, $9f, $a3, $3a, $45, $46, $40, $45, $62, $4a, $4c, $4b, $50, $51, $42, $4f
+    db $62, $51, $4c, $ef, $ee, $3f, $4f, $42, $42, $41, $62, $54, $46, $51, $45, $64
+    db $f0
+TextStr_4a_6a7d:           ; id $06F5
+    ; "*:That one? Are you sure?"
+    db $ea, $9f, $a3, $37, $45, $3e, $51, $62, $4c, $4b, $42, $64, $ef, $ee, $24, $4f
+    db $42, $62, $56, $4c, $52, $62, $50, $52, $4f, $42, $64, $f0
+TextStr_4a_6a99:           ; id $06F6
+    ; "*:There will be no monsters left!"
+    db $ea, $9f, $a3, $37, $45, $42, $4f, $42, $62, $54, $46, $49, $49, $62, $3f, $42
+    db $ef, $ee, $4b, $4c, $62, $4a, $4c, $4b, $50, $51, $42, $4f, $50, $62, $49, $42
+    db $43, $51, $63, $fa, $f7, $f0
+TextStr_4a_6abf:           ; id $06F7
+    ; "*:Sorry, it's not old enough."
+    db $ea, $9f, $a3, $36, $4c, $4f, $4f, $56, $5e, $62, $46, $51, $68, $62, $4b, $4c
+    db $51, $ef, $ee, $4c, $49, $41, $62, $42, $4b, $4c, $52, $44, $45, $5f, $fa, $f7
+    db $f0
+TextStr_4a_6ae0:           ; id $06F8
+    ; "*:The same gender. Cannot breed."
+    db $ea, $9f, $a3, $37, $45, $42, $62, $50, $3e, $4a, $42, $62, $44, $42, $4b, $41
+    db $42, $4f, $5f, $ef, $ee, $26, $3e, $4b, $4b, $4c, $51, $62, $3f, $4f, $42, $42
+    db $41, $5f, $fa, $f7, $f0
+TextStr_4a_6b05:           ; id $06F9
+    ; "*:I bet [INS 20] / will be born! / *:You've had that monster before?!"
+    db $ea, $9f, $a3, $2c, $62, $3f, $42, $51, $ef, $ee, $f9, $20, $fa, $f7, $ef, $ee
+    db $54, $46, $49, $49, $62, $3f, $42, $62, $3f, $4c, $4f, $4b, $63, $ef, $ee, $fa
+    db $f7, $ef, $ee, $9f, $a3, $3c, $4c, $52, $6c, $42, $62, $45, $3e, $41, $62, $51
+    db $45, $3e, $51, $ef, $ee, $4a, $4c, $4b, $50, $51, $42, $4f, $62, $3f, $42, $43
+    db $4c, $4f, $42, $64, $63, $fa, $f7, $f0
+TextStr_4a_6b4d:           ; id $06FA
+    ; "*:Hmm. Seems like a new monster?!"
+    db $ea, $9f, $a3, $2b, $4a, $4a, $5f, $62, $36, $42, $42, $4a, $50, $62, $49, $46
+    db $48, $42, $ef, $ee, $3e, $62, $4b, $42, $54, $62, $4a, $4c, $4b, $50, $51, $42
+    db $4f, $64, $63, $fa, $f7, $f0
+TextStr_4a_6b73:           ; id $06FB
+    ; "*:Can I record this joyful event?"
+    db $ea, $9f, $a3, $26, $3e, $4b, $62, $2c, $62, $4f, $42, $40, $4c, $4f, $41, $ef
+    db $ee, $51, $45, $46, $50, $62, $47, $4c, $56, $43, $52, $49, $62, $42, $53, $42
+    db $4b, $51, $64, $f0
+TextStr_4a_6b97:           ; id $06FC
+    ; "*:OK! Wait overnight."
+    db $ea, $9f, $a3, $32, $2e, $63, $ef, $ee, $3a, $3e, $46, $51, $62, $4c, $53, $42
+    db $4f, $4b, $46, $44, $45, $51, $5f, $f7, $f0
+TextStr_4a_6bb0:           ; id $06FD
+    ; "[INS 00] & [INS 10] disappeared."
+    db $ea, $f9, $00, $62, $b6, $62, $f9, $10, $ef, $ee, $41, $46, $50, $3e, $4d, $4d
+    db $42, $3e, $4f, $42, $41, $5f, $f7, $f0
+TextStr_4a_6bc8:           ; id $06FE
+    ; "*:Wow! It's a rare breed!"
+    db $ea, $9f, $a3, $3a, $4c, $54, $63, $62, $2c, $51, $68, $62, $3e, $62, $4f, $3e
+    db $4f, $42, $ef, $ee, $3f, $4f, $42, $42, $41, $63, $fa, $f7, $f0
+TextStr_4a_6be5:           ; id $06FF
+    ; "*:Inside it is a baby [INS 20]! / *:Costs [INS 30]G to hatch it. Okay? [YES/NO]"
+    db $ea, $9f, $a3, $2c, $4b, $50, $46, $41, $42, $62, $46, $51, $62, $46, $50, $62
+    db $3e, $ef, $ee, $3f, $3e, $3f, $56, $62, $f9, $20, $63, $fa, $f7, $ef, $ee, $9f
+    db $a3, $26, $4c, $50, $51, $50, $62, $f9, $30, $2a, $ef, $ee, $51, $4c, $62, $45
+    db $3e, $51, $40, $45, $62, $46, $51, $5f, $62, $32, $48, $3e, $56, $64, $ff, $f0
+    db $00
+; --- END re-sectioned text run (bank $4a) ---
     nop
     nop
     nop
@@ -14621,3 +6633,4 @@ jr_04a_6c63:
     nop
     nop
     nop
+
