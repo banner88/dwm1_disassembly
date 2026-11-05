@@ -39,6 +39,7 @@ from editor2.app.rooms.door_dialog import DoorDialog
 from editor2.app.rooms.tileset_map import TilesetMap
 from editor2.app.rooms.tileset_dialog import TilesetDialog
 from editor2.app.collapsible import Section
+from editor2.app.qt_safe import combo_row_enabled            # S167
 
 
 THEME_KEY = 0x100      # S122: Borrow-list data for gate theme t = THEME_KEY + t
@@ -4235,7 +4236,7 @@ class RoomsTab(QWidget):
         if sel is not None and cv.lid is not None:
             self._draw_cells = (self.room_id, self.key, self.state_idx, cv.lid, sel)
         self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok)
-        self.draw_tab.place.model().item(2).setEnabled(not mt.get('blank'))
+        combo_row_enabled(self.draw_tab.place, 2, not mt.get('blank'))   # S167
 
     def _draw_load_cell(self):
         cell = self.canvas.selected_cell

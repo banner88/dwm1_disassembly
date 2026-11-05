@@ -1,5 +1,7 @@
 # Shops
 
+![The Shops tab](img/tab_shops.png)
+
 The **Shops** tab holds every shop's list and every item's price.
 
 **Shops:** the game's five — the **Bazaar item shop**, the **Starry Night

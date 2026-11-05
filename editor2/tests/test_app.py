@@ -3865,6 +3865,149 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s167_qt_safe(app, w):
+    """S167 (the S166 note "talk_editor BoxEditor's Insert menu: QStandardItem.triggered"):
+    a Python wrapper of a combo item Qt owns, kept past the combo's clear(), is handed out
+    for the next C++ object at that address — QMenu.addAction returned a QStandardItem.
+    No editor code takes such a wrapper any more (combo rows changed by index, the Insert
+    menu's actions made in Python); the hazard itself reproduced, and menu_action immune."""
+    import re as _re
+    from PySide6.QtGui import QAction
+    from PySide6.QtWidgets import QComboBox, QMenu
+    from editor2.app.qt_safe import combo_row_enabled, menu_action
+    app_dir = os.path.join(REPO, 'editor2', 'app')
+    offenders = []
+    for root, _d, files in os.walk(app_dir):
+        for fn in files:
+            if fn.endswith('.py') and fn != 'qt_safe.py':
+                t = open(os.path.join(root, fn), encoding='utf-8').read()
+                if _re.search(r'\.model\(\)\.item\(|\bmodel\.item\(|itemFromIndex\(', t):
+                    offenders.append(fn)
+    assert not offenders, f'Python wrappers of Qt-owned items (use qt_safe): {offenders}'
+    cb = QComboBox()
+    for i in range(4):
+        cb.addItem(f'x{i}')
+    combo_row_enabled(cb, 1, False, 'tip')
+    m = cb.model()
+    from PySide6.QtCore import Qt as _Qt
+    assert not (m.flags(m.index(1, 0)) & _Qt.ItemIsEnabled) and cb.itemData(1, _Qt.ToolTipRole) == 'tip'
+    combo_row_enabled(cb, 1, True)
+    assert m.flags(m.index(1, 0)) & _Qt.ItemIsEnabled
+    # the hazard: keep a wrapper of a Qt-made item, clear the combo -> the next addAction
+    # may come back as that QStandardItem; menu_action never does
+    keep, stale, made = [], 0, 0
+    for _r in range(400):
+        c = QComboBox()
+        for i in range(20):
+            c.addItem(f'y{i}')
+        keep.append(c.model().item(5))           # the pattern S167 removed from the editor
+        c.clear()
+        mn = QMenu()
+        for _k in range(10):
+            if not isinstance(mn.addAction('a'), QAction):
+                stale += 1
+            made += 1
+            assert isinstance(menu_action(mn, 'b'), QAction)
+    keep.clear()
+    print(f'OK: S167 qt_safe — no editor code wraps a Qt-owned item; combo rows by index; the '
+          f'hazard reproduced ({stale} of {made} plain addAction calls returned a stale wrapper), '
+          f'menu_action always a QAction')
+
+
+def s167_context_help(app, w):
+    """S167 (ROADMAP P3.H — user: "a glossary, a '?' button per section, screenshots"): every
+    topic / heading the "?" buttons name exists, every help link / picture resolves; the tab
+    bar's "?" and F1 open the shown tab's topic, a sub-tab's "?" its heading, "Back" returns;
+    a dialog of DIALOG_TOPICS gets its "?" when shown; the Glossary topic is there."""
+    import re as _re
+    from urllib.parse import unquote
+    from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout, QLabel
+    from editor2.app import context_help as CH
+    from editor2.app.help_tab import HELP_DIR, load_topics, topic_headings, _norm
+    topics = {n: md for _t, md, n in load_topics()}
+    assert '95_glossary.md' in topics and '51_families.md' in topics
+
+    def has_heading(f, h):
+        hs = [_norm(x) for x in topic_headings(topics[f])]
+        return any(_norm(h) == x or _norm(h) in x for x in hs)
+    n = 0
+    for name in ('TAB_TOPICS', 'SUBTAB_TOPICS', 'RAIL_TOPICS', 'DIALOG_TOPICS'):
+        for k, (t, h) in getattr(CH, name).items():
+            assert t in topics, (name, k, t)
+            assert not h or has_heading(t, h), (name, k, t, h)
+            n += 1
+    links = pics = 0
+    for f, md in topics.items():
+        for m in _re.finditer(r'\]\(([^)\s]+(?:\([^)]*\))?[^)\s]*)\)', md):
+            u = m.group(1)
+            if u.startswith('http'):
+                continue
+            if u.startswith('img/'):
+                assert os.path.exists(os.path.join(HELP_DIR, u)), (f, u)
+                pics += 1
+                continue
+            path, _, frag = u.partition('#')
+            tgt = path or f
+            assert tgt in topics, (f, u)
+            assert not frag or has_heading(tgt, unquote(frag)), (f, u)
+            links += 1
+    titles = [w.tabs.tabText(i).replace('&&', '&') for i in range(w.tabs.count())]
+    missing = [t for t in titles if t not in CH.TAB_TOPICS]
+    assert not missing, f'tabs without a help topic: {missing}'
+    ht = w.help_tab
+    # the tab bar's "?" — the Music tab's topic, then Back
+    corner = w.tabs.cornerWidget()
+    assert corner is not None and corner.text() == '?'
+    w.tabs.setCurrentWidget(w.music_tab)
+    app.processEvents()
+    corner.click()
+    app.processEvents()
+    assert w.tabs.currentWidget() is ht and ht.topics[ht.current][2] == '61_music.md'
+    assert ht.btn_back_tab.isVisible() and 'Music' in ht.btn_back_tab.text()
+    ht.btn_back_tab.click()
+    assert w.tabs.currentWidget() is w.music_tab
+    # F1 = the same
+    w.tabs.setCurrentWidget(w.items_tab)
+    CH.f1(w)
+    assert w.tabs.currentWidget() is ht and ht.topics[ht.current][2] == '74_items.md'
+    # a sub-tab bar's "?" (the Text tab's Window words page -> its heading, scrolled)
+    w.tabs.setCurrentWidget(w.dialogue_tab)
+    app.processEvents()
+    tw = w.dialogue_tab.tabs
+    assert isinstance(tw, QTabWidget) and tw.cornerWidget() is not None
+    tw.setCurrentWidget(w.dialogue_tab.pages['window_words'])
+    tw.cornerWidget().click()
+    app.processEvents()
+    assert ht.topics[ht.current][2] == '56_text.md' and ht.view.verticalScrollBar().value() > 0
+    # links inside a topic: the glossary's link to Families
+    ht.open_topic('95_glossary.md')
+    from PySide6.QtCore import QUrl
+    ht._link(QUrl('51_families.md'))
+    assert ht.topics[ht.current][2] == '51_families.md'
+    ht._previous()
+    assert ht.topics[ht.current][2] == '95_glossary.md'
+    # the Rooms tab's page column has its "?"
+    rail = w.rooms_tab.rail
+    assert getattr(rail, '_help_btn', None) is not None
+    # a dialog named in DIALOG_TOPICS gets its "?" when shown
+    Dlg = type('MemorialDialog', (QDialog,), {})
+    d = Dlg(w)
+    lay = QVBoxLayout(d)
+    lay.addWidget(QLabel('test'))
+    d.show()
+    app.processEvents()
+    assert getattr(d, '_help_button', None) is not None
+    d._help_button.click()
+    app.processEvents()
+    assert ht.topics[ht.current][2] == '77_memorial.md'
+    d.close()
+    d.deleteLater()
+    w.tabs.setCurrentIndex(0)
+    app.processEvents()
+    print(f'OK: S167 context help — {n} "?" targets, {links} help links, {pics} pictures resolve; '
+          f'tab-bar "?" / F1 / sub-tab "?" / Back / a dialog\'s "?" / topic links work')
+
+
 def s166_window_words(app, w):
     """S166 (ROADMAP Phase F T-follow (a) / (b)): the Window words page lists the other screens'
     windows (the shop, the battle …: the screen's own letters) and the words a window cuts out of
@@ -5551,6 +5694,8 @@ def main():
     s164_ai_fixes(app, w)
     s165_window_words(app, w)
     s166_window_words(app, w)
+    s167_qt_safe(app, w)
+    s167_context_help(app, w)
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

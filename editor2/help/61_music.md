@@ -1,5 +1,7 @@
 # Music
 
+![The Music tab](img/tab_music.png)
+
 The **Music** tab is where songs live: the game's own, the DWM2 songs, MIDI
 files — and where each one plays (rooms, gates, battles).
 

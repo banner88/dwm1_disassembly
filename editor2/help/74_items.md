@@ -1,5 +1,7 @@
 # Items
 
+![The Items tab](img/tab_items.png)
+
 The **Items** tab (S151) holds every item: the game's 43 (Herb … BookMark),
 then your own. Orange = a game item you changed; green = yours.
 

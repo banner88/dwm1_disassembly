@@ -2181,6 +2181,34 @@ Build (deterministic, budget bars, validator gate), Play in SameBoy
 verify_integrity discipline surfaced (the clean-build check stays a
 first-class button).
 
+### 5.11 Help tab + help where you are (as built S167 — ROADMAP P3.H; NOT yet user-tested)
+
+User (S167): "P3.H Help: a glossary, a '?' button per section, screenshots — I want this."
+
+* **Help tab** (`app/help_tab.py`): topics = `editor2/help/NN_*.md` in file order; search;
+  **links** between topics (`[x](11_doors.md)`, `[x](11_doors.md#The%20World%20tab)`,
+  `[x](#Heading)`; http(s) opens the browser); **pictures** (`![…](img/x.png)`, search path
+  `editor2/help/`); `open_topic(file or title part, heading)` scrolls to the heading block
+  (equal, else containing); **◀ Back to <tab>** (the tab a "?" was pressed on), **◀ Previous
+  topic** (a history), **Glossary**.
+* **Context help** (`app/context_help.py`, installed by MainWindow after `_fill_tabs` and on
+  every tab change — idempotent): a round "?" in the tab bar's corner (`TAB_TOPICS`), in the
+  corner of every QTabWidget inside a tab (`SUBTAB_TOPICS`, else the tab's topic at the
+  heading naming the sub-tab), at the bottom of every SideRail column (`RAIL_TOPICS`, the
+  page shown), and on dialogs whose class is in `DIALOG_TOPICS` (an application event filter
+  adds it on the first Show — in the button box when there is one — plus F1 there). F1 in the
+  main window = the "?" of the tab shown (Help → "Help about this tab"); Help → "Editor help
+  (all topics)", "Glossary". A "?" from a modal dialog makes it modeless so the help is
+  reachable.
+* **Topics added:** `51_families.md` (the Families tab had none), `95_glossary.md` (≈ 80
+  terms A-Z, each linked). **Pictures:** `tools/help_screenshots.py` opens the real window
+  offscreen on the example project at 1400 × 860 and saves every tab (scaled to 1000 px,
+  8-bit palette) to `editor2/help/img/tab_*.png`; each tab's topic shows its picture under
+  its title. Re-run after a UI change.
+* **Checked by** test_app `s167_context_help`: every topic / heading the maps name exists,
+  every link / picture in every topic resolves, every tab has a topic; the "?" / F1 / Back /
+  Previous / a dialog's "?" work.
+
 ---
 
 **As built S119 — the cutscene EDITOR (ROADMAP P3.8 parts B / c / d; built, NOT yet

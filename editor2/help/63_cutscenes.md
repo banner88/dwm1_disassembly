@@ -1,5 +1,7 @@
 # Cutscenes
 
+![The Cutscenes tab](img/tab_cutscenes.png)
+
 The **Cutscenes** tab shows every scene the game plays with its scripts —
 the King's speeches, the boss rooms' endings, the arena, the intro — and
 the scenes of **your rooms** exactly as the editor builds them. It also

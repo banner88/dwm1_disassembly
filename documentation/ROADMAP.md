@@ -1256,7 +1256,7 @@ recipes are pure authoring.
       again. Small; annotation-class (DOC_AUDIT S118). S119 adds one more site to
       adjudicate: the bank $60 template's `CutPatchRoute` (`ld a,[wMapID] / cp
       CUSTOM_ROOM_START` — CP_UNSIGNED, the GateAwareDispatch rule).
-- [ ] **P3.H — Editor Help tab** (user S101 r2: "The editor needs a help
+- [x] **P3.H — Editor Help tab — the S101 r3 "to build out" list BUILT S167 (built S167, NOT yet user-tested; user: "a glossary, a '?' button per section, screenshots — I want this"): the Glossary (`95_glossary.md`, ≈ 80 terms linked), a round "?" on the tab bar / every sub-tab bar / the Rooms page column / 47 dialogs + F1 (`editor2/app/context_help.py`), links between topics + headings, "◀ Back to <tab>", 22 tab pictures (`tools/help_screenshots.py`), a Families topic (EDITOR_DESIGN §5.11). The topics still grow with every delivery (SESSION_PROTOCOL wrap-up 7).** (user S101 r2: "The editor needs a help
       tab … needs lookup"; "a) needs to be built out and b) always kept up
       to date as editor progresses"). **Wired S101 r3:** Help tab (topic list,
       search, Markdown topics in `editor2/help/`, Help → Editor help F1),
@@ -3020,8 +3020,16 @@ Driven by what the editor must EDIT, not completionism:
 - [x] Bank $01 encounter pools → `db` ✅ VERIFIED S114 (`EncounterPool_NNN` labeled `db` blocks since an earlier pass; S114 fixed the stale "Weights / Extra" banner and the per-pool comments in the clean tree, comments only).
 - [x] Bank $16 breeding tables → `db` ✅ VERIFIED S51: `SpecialRecipeTable` +
       `FamilyRecipeTable` labeled `db` blocks.
-- [ ] Bank $51: annotate transitions + prove/disprove the 1,228 B
-      free block is reference-free
+- [~] Bank $51: annotate transitions + prove/disprove the 1,228 B
+      free block is reference-free — **the free block PROVEN S166 r2 + S167** (the LZ gfx `$5112` ends at
+      `$7B34`; no reader reaches `$7B35+`: ARCHITECTURE "The audit of every claimed run (S167)"); the transitions'
+      annotation stays open.
+- [x] **Patch-space audit (S167): every byte a patched build writes into a bank the original game uses** —
+      `tools/audit_patch_space.py` (EDIT / FILL, what ends before each claimed run, every LZ stream of every
+      `$4001` table, raw numbers / labels into claimed space, `--poison` = the original ROM with the claimed bytes
+      changed for an A/B). FOUND + FIXED: ROM0 GrooveRowTable rows 3 / 4 (MapIDClampForPalette since S63 — the boss
+      song's vibrato); 4 runs whose readers are unreachable annotated. Re-run it for any new claim (ARCHITECTURE,
+      KEY_LESSONS S167).
 - [ ] Bank $50 event state machine (story events)
 - [ ] Save/SRAM code annotation (supports Phase 0 audit)
 - [~] **Re-section misassembled data tables → labeled `db`/`dw`.** mgbdis rendered

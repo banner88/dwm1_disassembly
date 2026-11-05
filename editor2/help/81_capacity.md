@@ -1,5 +1,7 @@
 # Capacity — how much room is left
 
+![The Capacity tab](img/tab_capacity.png)
+
 The **Capacity** tab (next to *Build & Play*) lists every limit your project can
 reach, in words: how much you use, of how much, and what happens when it is full.
 It is measured from your unsaved project about a second after each edit, the same

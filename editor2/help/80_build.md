@@ -1,5 +1,7 @@
 # Build and test
 
+![The Build & Play tab](img/tab_build_play.png)
+
 **Build & Play** → *Build ROM* (Ctrl+B; saves first) or *Validate project*
 (checks without building). *Play in emulator* (Ctrl+R) runs the last build.
 

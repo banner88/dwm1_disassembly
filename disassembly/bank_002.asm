@@ -10496,6 +10496,9 @@ Jump_002_7ef7:
     jp Jump_000_05e3
 
 
+; S167 (audit_patch_space): $02:$7F02 — unreferenced (no call / jump / pointer in
+; bank $02 or ROM0); it and $7F2E are the only readers of the tile strings at
+; $7F43-$7FC2, so the free run patched builds use from $7FC3 is never read.
     ld bc, $98cc
     ld hl, $7f43
     call TextIdDispatch
@@ -10520,6 +10523,7 @@ jr_002_7f21:
     jp $15f7
 
 
+; S167: $02:$7F2E — unreferenced too (see $7F02 above).
     ld bc, $98ec
     ld hl, $7f4d
     call TextIdDispatch

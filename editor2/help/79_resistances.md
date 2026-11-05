@@ -1,5 +1,7 @@
 # Resistances (and Earth)
 
+![The Resistances tab](img/tab_resistances.png)
+
 The **Resistances** tab shows every monster's 27 resistances at once and, for each
 resistance, what it protects against and which skills test it — including the
 changes you make. (The Monsters tab shows the same levels for one monster.)

@@ -11487,6 +11487,11 @@ jr_011_7365:
     rst $38
     ld a, e
     nop
+; S167 (audit_patch_space): $11:$752F — UNREACHABLE (no call / jump / pointer in
+; ROM0 or bank $11). When [$C723] = 6 it copies 8 bytes a step from $7577 / $7777
+; (by [$FE]) + ([$D095] - 1) * 8, [$D095] = 1-64, to VRAM $8C00+ — the $7777 table
+; would run to $7976, past $792D where patched builds keep NewAttrHandler. Dead, so
+; harmless; a patch that makes it live must move NewAttrHandler first.
     ld a, [$c723]
     cp $06
     ret nz

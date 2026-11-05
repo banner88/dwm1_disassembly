@@ -125,6 +125,8 @@ class MainWindow(QMainWindow):
         self.tabs.setDocumentMode(True)
         self.setCentralWidget(self.tabs)
         self._fill_tabs()
+        # S167: sub-tab bars a tab makes later (on first show) get their "?" too
+        self.tabs.currentChanged.connect(self._help_install_late)
 
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
@@ -318,6 +320,15 @@ class MainWindow(QMainWindow):
         from editor2.app.help_tab import HelpTab      # S101 r2
         self.help_tab = HelpTab()
         self.tabs.addTab(self.help_tab, 'Help')
+        # S167 (ROADMAP P3.H): a "?" on the tab bar, on every sub-tab bar, on the Rooms
+        # tab's page column and on dialogs (editor2/app/context_help.py)
+        from editor2.app import context_help
+        context_help.install(self)
+
+    def _help_install_late(self, _i):
+        from editor2.app import context_help
+        if getattr(self, 'help_tab', None) is not None:
+            context_help.install(self)
 
     def _wire_capacity(self):
         """S145: the status bar's meter feeds the Capacity tab; a click on the meter
@@ -527,10 +538,18 @@ class MainWindow(QMainWindow):
         m_view.addAction(self.a_ids)
 
         m_help = self.menuBar().addMenu('&Help')
-        a_help = QAction('Editor &help', self)
+        a_help = QAction('Help about this tab', self)
         a_help.setShortcut(QKeySequence.HelpContents)          # F1
-        a_help.triggered.connect(lambda: self.tabs.setCurrentWidget(self.help_tab))
+        # S167 (ROADMAP P3.H): F1 = the help of the tab (and sub-tab) shown
+        from editor2.app import context_help
+        a_help.triggered.connect(lambda: context_help.f1(self))
         m_help.addAction(a_help)
+        a_all = QAction('Editor &help (all topics)', self)
+        a_all.triggered.connect(lambda: self.tabs.setCurrentWidget(self.help_tab))
+        m_help.addAction(a_all)
+        a_gl = QAction('&Glossary', self)
+        a_gl.triggered.connect(lambda: context_help.open_help('95_glossary.md', mw=self))
+        m_help.addAction(a_gl)
 
         tb = QToolBar('Main')
         tb.setMovable(False)

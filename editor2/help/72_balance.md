@@ -1,5 +1,7 @@
 # Balance
 
+![The Balance tab](img/tab_balance.png)
+
 The **Balance** tab answers one question for every key fight of the story:
 *how strong does a player's team have to be to win it?* — for the original
 game and for your project, side by side, so you can see whether your gates,

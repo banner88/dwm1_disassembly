@@ -1,5 +1,7 @@
 # Encounters
 
+![The Encounters tab](img/tab_encounters.png)
+
 The **Encounters** tab decides which wild monsters you meet, where, and how
 often. Every answer comes from a copy of the game's own choice and battle
 draw that was checked against the game (for every gate floor and thousands of

@@ -62,11 +62,31 @@ names beyond banks 01/50/13 are best-effort; entries are ROM-verified.
 
 | Bank | Address | Bytes | Notes |
 |------|---------|-------|-------|
-| $00 | $3FE8 | 24 | Confirmed safe (FF fill at bank end) |
+| $00 | $3FE8 | 24 | Confirmed safe (FF fill at bank end) — used by AudioMasterTableExt (S63). S167: the vanilla master table `$3466-$3472` (13 B) is dead in patched builds and holds MapIDClampForPalette |
 | $01 | $7FD5 | 42 | FF fill $7FD5-$7FFE; $7FFF=$01 (NOT free) |
 | $0B | — | ~2 | Essentially FULL |
-| $51 | $7B35 | 1,227 | 00 fill — large, investigate safety. **NOT $7B34** (S166 r2): $7B34 = the LAST byte of the LZ stream gfx `$5112` ($51:$7B0F, 38 B — a literal `$00`, the O's bottom row of the battle YES / NO). A free-space scan must start at the decoded end of every stream, not at the first `$00` (KEY_LESSONS S166 r2) |
+| $51 | $7B35 | 1,227 | 00 fill — S167: the stream before it is measured (LZ gfx `$5112` ends `$7B34`); no other reader reaches it (audit table below). **NOT $7B34** (S166 r2): $7B34 = the LAST byte of the LZ stream gfx `$5112` ($51:$7B0F, 38 B — a literal `$00`, the O's bottom row of the battle YES / NO). A free-space scan must start at the decoded end of every stream, not at the first `$00` (KEY_LESSONS S166 r2) |
 | $54 | $7FC0 | 64 | 00 fill (24B used by join patch) |
+
+**The audit of every claimed run (S167, `tools/audit_patch_space.py` → `extracted/patch_space_audit.json`,
+the example + the user's project).** Every byte a patched build changes in a bank the original game uses
+is EDIT (original bytes replaced on purpose: hooks, regions) or FILL (written into a run of ≥ 8 equal
+`$00` / `$FF`). The 29 FILL runs, by what ends before them (the proof that nothing reads into them):
+
+| Ends before the run | Runs (bank:start) |
+|---------------------|-------------------|
+| code — an unconditional `ret` / `jp` / `jr` | ROM0 `$00F0`, `$3FE8`; `$04:$7FD8`, `$14:$7EAD`, `$50:$7E33`, `$52:$7FED`, `$53:$6C6A`, `$54:$56CA` (10,550 zero bytes from here — the old table's "64 B at $7FC0" was a subset), `$57:$7FD1`, `$58:$6920` |
+| data with an end marker | window layout streams (`$D9`): `$09:$7EC7`, `$12:$7B9B`, `$59:$6728`; texts (`$F0`): `$41:$7E15`, `$4D:$771A`; a string + its `$FF` (kept): `$06:$7F1E` |
+| data of a measured length | `$16:$7C96` (MazeScreenTableB, 512 B), `$17:$6C75` (AnimObjPalettes, 45 × 8 B), `$51:$7B35` (LZ gfx `$5112`, S166 r2), `$56:$7291` (LZ entry 30 ends `$7290`) |
+| data whose ONLY readers are unreachable code (annotated both trees) | `$01:$7FD5` (the 8th tile-string page's `$FF` — reader the screen `$01:$7DFF`), `$02:$7FC3` (`$02:$7F02` / `$7F2E`), `$11:$792D` (`$11:$752F`, whose `$7777` table would reach `$7976`) |
+| data with no reader found (unknown binary) | `$07:$7F58` (`$7D98-$7F57`; the `$FF` at `$7F58` kept), `$4C:$7326` (`$6DFA-$7325`; bank $4C's code reads only its text tables); `$0A:$7F80` / `$18:$7EEF` / `$55:$790F` / `$5F:$6983` with 107-4,854 fill bytes before the first changed one |
+| **LIVE — fixed S167** | ROM0 `$3BC1-$3BD2` = rows 3 / 4 of `GrooveRowTable` (`MapIDClampForPalette` moved to the dead vanilla master table `$3466`; KEY_LESSONS S167) |
+
+Every LZ stream of every bank's `$4001` table (1,775 parse) is untouched by claimed space; the S166 r2
+overwrite put back is found (negative control). The original ROM with every claimed byte poisoned
+behaves identically over the 519-scene cutscene census and a battle / menu corpus (KEY_LESSONS S167).
+**A new claim must pass the same test:** re-run `tools/audit_patch_space.py --patched <rom> --sym <sym>`
+(0 streams meeting a FILL range; a new run's "before" bytes judged as above).
 
 **Patched build, S133 (end-of-bank fill, the example overlay `7d136455…`, patched):** ROM0 8 B,
 $01 1, $04 1, $06 1, **$0B 1**, $50 1, **$16 732**, **$17 3,937** (the custom rooms' palettes +

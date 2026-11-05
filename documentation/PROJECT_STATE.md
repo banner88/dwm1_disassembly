@@ -10,6 +10,49 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-05 (Session 167 — **THE OUTSTANDING FIXES F2 + F3 + P3.H: A STALE PYSIDE WRAPPER (THE S166
+> "QStandardItem.triggered" NOTE), THE PATCH-SPACE AUDIT (EVERY BYTE A PATCHED BUILD WRITES INTO A BANK THE GAME USES —
+> ONE LIVE OVERLAP FOUND AND FIXED: ROM0's GROOVE ROW TABLE), THE HELP TAB'S GLOSSARY, "?" BUTTONS AND SCREENSHOTS**
+> (the audit of the open items → user: "Ignore F1, do F2, do F3 - good idea. If Im about to begin the giant romhack I want
+> to make sure there is no dodgy shit happening behind the curtains. F4 dont care. P3.H … I want this. YOU MAY RUN THE
+> REPO TOOLS."). **Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good", on `DWM-S167-audit-test.gbc`); the editor half (F2, P3.H) NOT yet user-tested.**
+> Test ROM **`DWM-S167-audit-test.gbc`** (`a386a504…`, patched) = the user's project built with the S167 engine (no demo
+> rooms: the change is the boss song's vibrato + the room-load clamp at a new address). Example pin `26a4faf1…` (patched;
+> was `fee3147e…`, patched, historical — ROM0 only).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; the sandbox refused the repo's code until the user
+> wrote "YOU MAY RUN THE REPO TOOLS"; HEAD's verify_integrity PASS and test_app `--rom` PASS (no traceback) at start.
+> **F3 (engine, patched; `tools/audit_patch_space.py` → `extracted/patch_space_audit.json`):** every changed byte of the
+> example + the user's build in banks $00-$5F classed EDIT / FILL; 29 FILL runs judged by what ends before them (ARCHITECTURE
+> "The audit of every claimed run (S167)"); 1,775 LZ streams of every bank's `$4001` table — none meets claimed space (the
+> S166 r2 overwrite found as a negative control); raw numbers / labels into claimed space: 5, all mgbdis artifacts.
+> **FOUND + FIXED:** ROM0 `$3BC2-$3BD2` ("17 unreferenced rst $38" since S42 / S63) = row 3 step 15 + row 4 of the GROOVE
+> ROW TABLE `$3B83` (8 × 16 signed steps the sound engine adds to a note, SOUND_SYSTEM §5 `A3`): measured (the editor's
+> sound engine, a read hook) — `$3BC2` read by songs `$0C` and `$12` (the boss song), the S166 build's boss song wrote other
+> sound-register values in 174 frames a minute; `MapIDClampForPalette` moved to the dead vanilla master table `$3466`
+> (8 B + 5 pad), `ClampFamIdx` (no callers since S104) deleted, `$3B83-$3C02` re-sectioned `GrooveRowTable` in both trees
+> (`tools/resection_groove_00.py`; 9 mgbdis labels renamed `GrooveRow<r>_<step>` in banks $00 / $2B / $32 / $33 / $63).
+> **Measured, harmless:** 4 runs after data whose only readers are unreachable (`$01:$7DFF` — its 8th tile-string page's
+> `$FF` is under FollowerArtResolve01; `$02:$7F02` / `$7F2E`; `$11:$752F`, whose `$7777` table would reach `$7976`) —
+> annotated both trees. **Dynamic proof:** the ORIGINAL ROM with every claimed byte poisoned to `$A5` vs the original —
+> the 519-scene cutscene census (68 runs, 31,374 RAM / VRAM / OAM / HRAM hashes, the census JSON equal) and a battle / menu
+> corpus (8 gates, 38 battles won, the field menu; 4,934 hashes) identical; positive control (two title-menu bytes) 55
+> samples differ; the user's project S166 vs S167 code on the user's `.sav` (continue + 10 rooms, 176 hashes) identical.
+> **F2 (editor):** the S166 traceback = a stale Shiboken wrapper — `combo.model().item(i)` kept alive past a `clear()` makes
+> the next C++ object at that address come back as a `QStandardItem` (reproduced); NEW `editor2/app/qt_safe.py` (combo rows
+> by index, `menu_action`), the 3 sites + the Insert menu; test_app `s167_qt_safe`. KEY_LESSONS "S167 — a stale PySide wrapper".
+> **P3.H (editor):** NEW `editor2/app/context_help.py` — a round "?" on the tab bar (the shown tab's topic), on every sub-tab
+> bar (the sub-tab's heading), under the Rooms tab's page column (the page's topic) and on 47 dialogs (DIALOG_TOPICS, added
+> when shown, F1 there too); F1 = the "?" of the tab shown; the Help tab follows topic links (`[x](NN.md#Heading)`), shows
+> pictures (`editor2/help/img/`), "◀ Back to <tab>", "◀ Previous topic", a Glossary button; NEW topics `51_families.md`,
+> `95_glossary.md` (≈ 80 terms, each linked); 22 tab pictures (NEW `tools/help_screenshots.py`) under their topics' titles;
+> `00_start.md` (the stale "Balance not built" line). `EDITOR_REVISION` S167; test_app `s167_context_help` (89 "?" targets,
+> 80 links, 22 pictures resolve).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2025 PASSED (+ `test_s167`: the groove bytes, the clamp at `$3466`, no `66 34`
+> in ROM0, 0 streams meeting claimed space + the negative, the boss song frame for frame); test_app `--rom` (+ the two S167
+> tests; the GUI build == the pin `26a4faf1…`, patched); clean tree `1ca6579…` after the re-section and annotations.
+> **Next:** the user's test (the editor's "?" / F1 / Glossary / pictures; `DWM-S167-audit-test.gbc` = their project as
+> before); P3.17 packaging (with the user's Mac); the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 166 + r2 — **THE OUTSTANDING FIXES A1-A3 + B + C: THE WINDOW WORDS OF THE OTHER SCREENS
 > (THE SHOP, THE FARM, THE NAMER, GRANDPA, THE EGG APPRAISER, THE BATTLE — EACH WITH ITS OWN LETTERS), THE WORDS A WINDOW
 > CUTS OUT OF A TEXT (THE VAULT'S PUT / TAKE / EXIT …), THE TABLES' LINE WIDTHS MEASURED; T-FOLLOW (d) CLOSED BY DESIGN;
@@ -63,50 +106,8 @@
 > **Next:** the user's test of `DWM-S166r2-glossary-test.gbc` (the join YES / NO); bank $51's re-lettering writer; P3.17 packaging; the "Awaiting a user
 > test" list.
 
-> Last verified: 2026-11-04 (Session 165 — **THE OUTSTANDING FIXES 1-3: EVERY STOCK SKILL A BASE (THE 17 BASES A COPY
-> COULD NOT RUN — ROADMAP E13 NOTE), THE WORDS OF THE WINDOWS EDITABLE (ROADMAP T-FOLLOW (a)), THE AI RULE MODEL EXACT ON
-> ARBITRARY BOARDS (ROADMAP E17 NOTE)** (the audit of the open items → user: "yes, build RGBDS", "Yes 164 tested",
-> "Yes do 1, 2 and 3 and check things yourself"). **Built S165; USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good please hand off", on `DWM-S165-chorus-test.gbc`).**
-> Test ROM **`DWM-S165-chorus-test.gbc`** (patched) = the user's project + THE CHORUS HALL
-> (`examples/s165_chorus_demo/build_demo.py`; way in: the CHORUS GUIDE, Cities_FOUNT (3, 4)): screen 0 the CHORUS GUIDE, the
-> SUMMON KEEPER (ORIGINAL A / CHORUS A: TatsuCall, Guardian, Bounce, Farewell + their new twins), the WORDSMITH; screen 1 the
-> STORM KEEPER (QuadHits, Vacuum, PoisonAir, SandStorm), the HUSH KEEPER (DeMagic, ThickFog, UltraDown, Sacrifice), the
-> SPARRING SLIME; this ROM's window words: the field menu / WHO header INFO → STAT, the stats page ATK → POW, OPTN JOURNAL →
-> DIARY, the title menu CONTINUE → Continue. Example pin `2fe3faba…` (patched; was `9a4337a9…`, patched — banks $52 / $53 /
-> $58 + the header). S164 USER-CONFIRMED 2026-11-04 09:40 ("Yes 164 tested").
-> **Session environment:** the RGBDS build needed the user's OK ("yes, build RGBDS"); PyBoy 2.9.0, PySide6 6.9.1.
-> **1 (engine, patched):** the S163 act-id census only ran the bases the compiler ALLOWED — `census_act_id_lists.py
-> --refused` (the refused bases' twins written into a built ROM) found 40 new roots: the 17 bases' reads AND 11 bases S164
-> had just allowed (Beat / Defeat, Ironize, TwinSlash, Ramming, Kamikaze, HighJump, Imitate, Cover, Dodge, SuckAll,
-> LifeSong — the turn order's defensive list, the act-state ladder, Imitate's check …). Patched: 13 reads bank $52 + 10
-> bank $53 → `call ActBase52 / ActBase53`, bank $58 `TurnOrderDefensiveBoost_56cf` → `call QueueBase58` + 2 nops; census
-> 364 sites 0 unjudged; `census_skill_clone.py --whole --reclaim` **155 same, 0 differ** (`extracted/skill_clone_census.json`):
-> the compiler refuses no battle skill as a base. BATTLE_SKILL_SYSTEM §13.14 "S165".
-> **2 (re-section + compiler + editor):** the field menu's words are WINDOW LAYOUT STREAMS in bank **$07** (not $15 — DOC_AUDIT
-> S165): `dw position`, TILE numbers, `$D8` newline, `$D9` end; 8 copies of the drawer (banks $07 $09 $0A $12 $15 $18 $50
-> $51); the field keeps a 23-letter font in VRAM (no Q / Z / lower case) — measured. NEW `tools/census_window_layouts.py`
-> (`extracted/window_layouts.json`: 119 streams, 31 runs, 15 measured), `tools/resection_window_layouts.py` (bank $07
-> `$704D-$7D97`, bank $15 `$647D-$64F3` / `$6716-$694D` → labeled `db` both trees, 79 `ld de` sites named, the drawers
-> named; `1ca6579…`), `editor2/core/window_words.py` (`gamedata.window_words`, regions `win_words_*`), the Text tab's
-> **Window words** page (42 words). DATA_STRUCTURES "Window layout streams (S165)", TEXT_SYSTEM "Window words (S165)",
-> PROJECT_COMPILER §2.73; help 56 / 54, `EDITOR_REVISION` S165.
-> **3 (simulator, byte-neutral):** 20 bank $57 rules modelled with their slips (`ai_rules._s165_rules`) + the harness reads
-> what the ROM reads (`$DB8B` traits, the build's own families, `base_defs`); NEW `simulator/rule_gaps.py`. BATTLE_SKILL_SYSTEM
-> §15.10.5 "S165".
-> **Measured:** `tools/walk_actbase.py --set s165` (the demo) 53 / 53, `--negative` 48 FAIL; the S163 ECHO set on the S165
-> code 47 / 47; NEW `tools/walk_window_words.py` 36 / 36, negative 5 FAIL; `rule_gaps.py` 0 / 7,865, 0 / 14,157,
-> 0 / 26,741, 0 / 39,325 (four seeds); validate_ai_fixes 7,865 / 7,865; validate_rules 240 / boards 1,573 /
-> F10 rules 332 / F10 1,335 / command 6,411 / battle 6,614 / 802 / 426.
-> **Annotation (both trees, `1ca6579…`):** `[S165]` at the 24 reads (banks $52 / $53 / $58); the 20 rules of bank $57;
-> the window layout runs + drawers (banks $07 / $15).
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1963 PASSED (+ `test_s165`; the S111 / S160 refusal tests on a
-> census entry made to differ — no base differs now; the S163 view-call counts + S165); test_canvas `--rom` PASS; test_app
-> `--rom` PASS (+ `s165_window_words`; the GUI build == the pin `2fe3faba…`, patched). The test ROM (`a7827ab7…`, patched) is
-> the build the walks ran on.
-> **Next:** the windows of banks $09 / $0A / $18 / $50 / $51 (shops, breeding, battle — their fonts), T-follow (b)-(d),
-> P3.17 packaging; the "Awaiting a user test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S167** (2026-11-05): the outstanding fixes F2 + F3 + P3.H — F3: `tools/audit_patch_space.py` (every byte a patched build writes into a bank the game uses: 29 FILL runs judged, 1,775 LZ streams untouched; dynamic poison A/B of the original ROM over the cutscene census + a battle / menu corpus, identical) found ROM0 `$3BC2-$3BD2` (MapIDClampForPalette since S63) = rows 3 / 4 of the GROOVE ROW TABLE read by the boss song — moved to the dead master table `$3466`, `GrooveRowTable` re-sectioned both trees; 4 runs whose readers are unreachable annotated. F2: the S166 traceback = a stale PySide wrapper (`editor2/app/qt_safe.py`). P3.H: "?" on the tab bar / sub-tab bars / the Rooms page column / 47 dialogs, F1, topic links, the Glossary, a Families topic, 22 tab pictures. Test ROM `DWM-S167-audit-test.gbc` (`a386a504…`, patched); pin `26a4faf1…` (patched). Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"); the editor half NOT yet user-tested.
 - **S166** (2026-11-04): the outstanding fixes A1-A3 + B + C — A1: the window words of the other screens (25 runs of banks $09 $0A $12 $18 $50 $51 re-sectioned both trees + regions; the screens' letters measured by shape on the GLOSSARY HALL tour; 47 more words); A2: the packed rows = text canvases (7 text slots: the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT); A3: the tables' line widths measured (`text_widths`) + warnings; A4 (debug texts) closed by design; B: A′2 superseded, the islands' flag audit (`tools/audit_island_flags.py`, SIDEQUEST_MAP), E3 (b2) the SRAM allocation map; C: T2…Tn — banks $42-$46 / $48-$4B / $4E re-sectioned; walk_window_words `--services` 50 / 50, negative 11 FAIL. PROJECT_COMPILER §2.74. Test ROM `DWM-S166-glossary-test.gbc` (patched); pin `2fe3faba…` (patched, historical) unchanged. Built S166, NOT yet user-tested. **r2:** the join YES / NO's "NO" glitch = S128 `ArenaScriptType51` over the last byte of gfx `$5112` ($51:$7B34) — restored; test ROM `DWM-S166r2-glossary-test.gbc` (patched); pin `fee3147e…` (patched). Built S166 r2, NOT yet user-tested.
 - **S165** (2026-11-04): the outstanding fixes 1-3 — 1: every stock skill a base (the 17 bases a copy could not run + 11 S164 had just allowed: `census_act_id_lists.py --refused` 40 roots, 24 same-size reads in banks $52 / $53 / $58 → the act-time base view; clone census 155 same / 0 differ; walk_actbase `--set s165` 53 / 53, negative 48 FAIL); 2: the WINDOW WORDS (window layout streams: bank $07 field menus, bank $15 title; 8 drawer copies; the field font measured; re-sectioned both trees; `gamedata.window_words`, the Text tab's Window words page; walk_window_words 36 / 36, negative 5 FAIL); 3: the AI rule model exact on arbitrary boards (20 rules + their slips, `simulator/rule_gaps.py` 0 mismatches over 3 seeds); FOUND: S163 / S164 censuses covered the allowed bases only, the S164 bank-$15 note was the wrong bank (DOC_AUDIT S165). PROJECT_COMPILER §2.73. Test ROM `DWM-S165-chorus-test.gbc` (patched); pin `2fe3faba…` (patched). Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"). S164 USER-CONFIRMED 2026-11-04 09:40.
 - **S164** (2026-11-03): the outstanding fixes — A: 6 stale ROADMAP boxes closed, 6 status rows corrected + the "Awaiting a user test" list, CI runs the verifier + `test_compiler --rom` (the byte-perfect build as the ROM), bank $47's T1 region from the measured map; HEAD's missed S163 DELETE (`ts_28_0D.2bpp`) applied. B: combinations for new skills (bank $06 `LearnFence06` open; walk_combo 8 / 8), the clone census on whole battles (138 bases, was 114; `extracted/skill_clone_census.json`), the original AI's five bugs as switches (`gamedata.ai_fixes`, NEW `ai_fixes.py`, six bank $57 regions, the Skills tab's Enemy AI fixes…, the Balance model; validate_ai_fixes 6,763 / 6,763, walk_aifix 8 / 8), ROADMAP E14 (the custom names past bank $41's region from the text banks; walk_names 16 / 16); FOUND: 17 bases still differ, the rule model inexact on mutated boards, bank $15 window words. PROJECT_COMPILER §2.72. Test ROM `DWM-S164-conflux-test.gbc` (patched); pin `9a4337a9…` (patched, historical). Built S164, USER-CONFIRMED 2026-11-04 09:40 ("Yes 164 tested").
@@ -465,6 +466,8 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | The original enemy AI's five bugs as project switches (the AoE count, the status-class count, the family cuts, DeMagic's buff check, the ATK / DEF averages) — the Skills tab's Enemy AI fixes…; off = the original game; the Balance tab follows | 🟢 built S164 (ROADMAP E17 note), USER-CONFIRMED 2026-11-04 ("Yes 164 tested"): `gamedata.ai_fixes` → six same-size bank $57 regions; `simulator/validate_ai_fixes.py` (the ROM's own bank $57 run on 7,865 boards) 6,763 / 6,763 where the model is exact, `tools/walk_aifix.py` 8 / 8 on the user's save | `editor2/core/ai_fixes.py`; PROJECT_COMPILER §2.72; BATTLE_SKILL_SYSTEM §15.10.5 "S164"; help 54 |
 | Every stock battle skill a base for a new skill (the last 17 — Sacrifice … BladeD — and 11 S164 had allowed) | 🟢 built S165 (ROADMAP E13 note), USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"): 24 same-size act-time reads (banks $52 / $53 / $58) → the base view; the clone census 155 same / 0 differ; walk_actbase `--set s165` 53 / 53 | BATTLE_SKILL_SYSTEM §13.14 "S165"; PROJECT_COMPILER §2.73; help 54 |
 | The words of the windows (field menus, the title menu) editable — Text → Window words | 🟢 built S165 (ROADMAP T-follow (a)), USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"): `gamedata.window_words` → regions `win_words_*` (banks $07 / $15, re-sectioned both trees); 42 words, the screen font's letters; walk_window_words 36 / 36. **S166 (built S166, NOT yet user-tested): + the shop, the farm, the Monster Namer, Grandpa, the egg appraiser, the egg page, the battle (47 words, each screen's measured letters; banks $09 $0A $12 $18 $50 $51 re-sectioned) + the words a window cuts out of a text (the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT — gamedata.text) + the tables' measured line widths (warnings); walk_window_words `--services` 50 / 50** | `editor2/core/window_words.py`; DATA_STRUCTURES "Window layout streams (S165)"; TEXT_SYSTEM "Window words (S165)" / "Text canvases (S166)"; PROJECT_COMPILER §2.74; help 56 |
+| Help where you are: the Glossary, a "?" on the tab bar / every sub-tab bar / the Rooms page column / 47 dialogs, F1, topic links, the tab pictures | 🟢 built S167 (ROADMAP P3.H), NOT yet user-tested: `editor2/app/context_help.py` (TAB / SUBTAB / RAIL / DIALOG_TOPICS), `help_tab.py` (links, headings, pictures, Back / Previous), topics `51_families.md` / `95_glossary.md`, `editor2/help/img/` (`tools/help_screenshots.py`); test_app `s167_context_help` | EDITOR_DESIGN §5.11; help 00 / 95 |
+| Patched builds write only into space the game never reads (every claimed run judged; LZ streams; the poisoned original ROM A/B) | 🟢 audited S167 (`tools/audit_patch_space.py`, `extracted/patch_space_audit.json`), the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"): one live overlap since S63 fixed (ROM0 GrooveRowTable rows 3 / 4 — the boss song's vibrato); test_compiler `test_s167 --rom` | ARCHITECTURE "The audit of every claimed run (S167)"; KEY_LESSONS S167; SOUND_SYSTEM §5 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; never tested on its own, but every later SRAM-bank feature runs on it and was user-confirmed: the extended flags S117 bank 3 "X1", the regions S140 "X2", the memorial S154, the hints S158 — S164)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual); S117: bank 3 = the extended flags "X1" | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66. S140: `wMapRegion` $D536 (SAVED via SRAM bank 3 "X2"), `wWarpRegion` $D537, `wExitLinks` $D538-$D55F carved from wCustomPool (now $D560-$D5E4) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
 
@@ -484,6 +487,7 @@ real project starts, so these are best confirmed on the way into it:
 - S52 MP charging (10 / 30 / 50), meter tiers, the "!" page-split message (Open defects).
 - S166 the GLOSSARY HALL (`DWM-S166-glossary-test.gbc`): the other screens' window words, the Vault's / Grandpa's
   text words, the Text tab's line-width warnings.
+- S167: the editor's "?" buttons / F1 / Glossary / tab pictures (the Help tab) — the ROM USER-CONFIRMED 2026-11-05 ("Rom good").
 
 ### Not yet implemented
 

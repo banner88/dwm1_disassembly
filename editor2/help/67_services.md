@@ -1,5 +1,7 @@
 # Services (Vault, farm, library, namer, Medal Man, eggs, gate guide, breeding)
 
+![The Services tab](img/tab_services.png)
+
 The game's **service NPCs** work in **any room** — yours too. Rooms tab →
 select an NPC → **Service…** → pick one:
 

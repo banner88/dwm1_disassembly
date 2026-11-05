@@ -3376,7 +3376,7 @@ jr_032_4ecb:
     inc b
     rst $38
     rlca
-    call nc, ScreenTransA
+    call nc, GrooveRow7_2
     ei
     ld [hl], b
     ld [hl], e

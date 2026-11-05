@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame, QGridLayout,
                                QPushButton, QToolButton, QVBoxLayout, QWidget)
 
 from editor2.app.rooms.animate_tab import FramePad
+from editor2.app.qt_safe import combo_row_enabled            # S167
 
 PARTS = ('whole', 0, 1, 2, 3)
 PART_TEXT = {'whole': 'Whole', 0: '◤', 1: '◥', 2: '◣', 3: '◢'}
@@ -198,7 +199,7 @@ class DrawTab(QWidget):
         self.walkable.setChecked(bool(walkable))
         self.walkable.blockSignals(False)
         self.can_place_sel = selection_ok
-        self.place.model().item(1).setEnabled(selection_ok)
+        combo_row_enabled(self.place, 1, selection_ok)      # S167: no item wrapper
         if not selection_ok and self.place.currentData() == 'selection':
             self.place.setCurrentIndex(0)
         tiles = ' '.join(f'${t:02X}' for t in self.mt['tiles'])

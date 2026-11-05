@@ -12239,7 +12239,7 @@ AudioOrB:
 AudioSetEDZero:
     ld e, a
     ld d, $00
-    ld hl, $3b83
+    ld hl, GrooveRowTable  ; $3B83 (S167)
     add hl, de
     ldh a, [$f6]
     add [hl]
@@ -12817,7 +12817,7 @@ AudioStopData_3B3A:
     db $10
     jr nz, AudioStopData_3B67
 
-    jr nc, AudioLookup_3B89
+    jr nc, GrooveRow0_6
 
     ld d, b
     ld h, b
@@ -12852,7 +12852,7 @@ AudioStopData_3B5A:
 
     nop
     db $10
-    jr nz, AudioLookup_3B97
+    jr nz, GrooveRow1_4
 
 AudioStopData_3B67:
     ld b, b
@@ -12875,7 +12875,7 @@ AudioStopData_3B6A:
 DataLookup_3B72:
     ldh [rP1], a
     db $10
-    jr nz, AudioLookup_3BA7
+    jr nz, GrooveRow2_4
 
     ld b, b
     ld d, b
@@ -12894,112 +12894,48 @@ DataLookup_3B7C:
     ret nc
 
     ldh [$f0], a
-    nop
-    nop
-    ld bc, $0001
-    nop
-
-AudioLookup_3B89:
-    rst $38
-    rst $38
-    nop
-    nop
-    ld bc, $0001
-    nop
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-
-AudioLookup_3B97:
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    ld bc, $0102
-
-AudioLookup_3BA7:
-    nop
-    rst $38
-    cp $ff
-    nop
-    ld bc, $0102
-    nop
-    rst $38
-    cp $ff
-    nop
-    nop
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0001
-    nop
-    rst $38
-    rst $38
-    cp $fe
-    rst $38
-
-AudioWavePatternData:
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0202
-
-ScreenTransA:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-ScreenTransB:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-ScreenTransC:
-ScreenTransitionSetup:
-    ld [bc], a
-
-ScreenTransD:
-    ld [bc], a
-    ld [bc], a
+; =============================================================================
+; GrooveRowTable — ROM0 $3B83-$3C02 (S167 re-section; tools/resection_groove_00.py)
+; =============================================================================
+; 8 rows x 16 signed steps. AudioSetEDZero: `ld hl, GrooveRowTable / add hl, de`
+; with E = ([$E5] & $70) | ([$DE22] & $0F) — the row chosen by a channel's $A3
+; command (bits 4-6, $E5 bit 7 = groove on) and the step 0-15 — then adds the byte
+; to the note's frequency ([$F6]). SOUND_SYSTEM §5. Measured S167 (the editor's
+; sound engine, 92 vanilla sounds x 3,600 frames): rows 0-3, 6, 7 are read (row 3
+; by $0C and the boss song $12), rows 4 / 5 by none — ALL rows are live data: never
+; free space (KEY_LESSONS S167). The GrooveRow<r>_<step> labels are only named by
+; misassembled data elsewhere (mgbdis), kept so those bytes stay the same.
+GrooveRowTable:
+; row 0: vibrato +-1, 2-step
+    db $00, $00, $01, $01, $00, $00
+GrooveRow0_6:
+    db $FF, $FF, $00, $00, $01, $01, $00, $00, $FF, $FF
+; row 1: vibrato +-1, 4-step
+    db $00, $00, $00, $00
+GrooveRow1_4:
+    db $01, $01, $01, $01, $00, $00, $00, $00, $FF, $FF, $FF, $FF
+; row 2: vibrato +-2
+    db $00, $01, $02, $01
+GrooveRow2_4:
+    db $00, $FF, $FE, $FF, $00, $01, $02, $01, $00, $FF, $FE, $FF
+; row 3: slow vibrato +-2
+    db $00, $00, $01, $01, $02, $02, $01, $01, $00, $00, $FF, $FF, $FE, $FE, $FF, $FF
+; row 4: constant -1 (flat)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; row 5: constant -2
+    db $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE
+; row 6: constant +1 (sharp)
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+; row 7: constant +2
+    db $02, $02
+GrooveRow7_2:
+    db $02, $02, $02, $02, $02
+GrooveRow7_7:
+    db $02, $02, $02, $02, $02, $02
+GrooveRow7_13:
+    db $02
+GrooveRow7_14:
+    db $02, $02
 
 ScreenTransE:
     ld a, [$de2b]

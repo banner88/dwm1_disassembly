@@ -1,5 +1,48 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-04 (Session 165 — **THE OUTSTANDING FIXES 1-3: EVERY STOCK SKILL A BASE (THE 17 BASES A COPY
+> COULD NOT RUN — ROADMAP E13 NOTE), THE WORDS OF THE WINDOWS EDITABLE (ROADMAP T-FOLLOW (a)), THE AI RULE MODEL EXACT ON
+> ARBITRARY BOARDS (ROADMAP E17 NOTE)** (the audit of the open items → user: "yes, build RGBDS", "Yes 164 tested",
+> "Yes do 1, 2 and 3 and check things yourself"). **Built S165; USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good please hand off", on `DWM-S165-chorus-test.gbc`).**
+> Test ROM **`DWM-S165-chorus-test.gbc`** (patched) = the user's project + THE CHORUS HALL
+> (`examples/s165_chorus_demo/build_demo.py`; way in: the CHORUS GUIDE, Cities_FOUNT (3, 4)): screen 0 the CHORUS GUIDE, the
+> SUMMON KEEPER (ORIGINAL A / CHORUS A: TatsuCall, Guardian, Bounce, Farewell + their new twins), the WORDSMITH; screen 1 the
+> STORM KEEPER (QuadHits, Vacuum, PoisonAir, SandStorm), the HUSH KEEPER (DeMagic, ThickFog, UltraDown, Sacrifice), the
+> SPARRING SLIME; this ROM's window words: the field menu / WHO header INFO → STAT, the stats page ATK → POW, OPTN JOURNAL →
+> DIARY, the title menu CONTINUE → Continue. Example pin `2fe3faba…` (patched; was `9a4337a9…`, patched — banks $52 / $53 /
+> $58 + the header). S164 USER-CONFIRMED 2026-11-04 09:40 ("Yes 164 tested").
+> **Session environment:** the RGBDS build needed the user's OK ("yes, build RGBDS"); PyBoy 2.9.0, PySide6 6.9.1.
+> **1 (engine, patched):** the S163 act-id census only ran the bases the compiler ALLOWED — `census_act_id_lists.py
+> --refused` (the refused bases' twins written into a built ROM) found 40 new roots: the 17 bases' reads AND 11 bases S164
+> had just allowed (Beat / Defeat, Ironize, TwinSlash, Ramming, Kamikaze, HighJump, Imitate, Cover, Dodge, SuckAll,
+> LifeSong — the turn order's defensive list, the act-state ladder, Imitate's check …). Patched: 13 reads bank $52 + 10
+> bank $53 → `call ActBase52 / ActBase53`, bank $58 `TurnOrderDefensiveBoost_56cf` → `call QueueBase58` + 2 nops; census
+> 364 sites 0 unjudged; `census_skill_clone.py --whole --reclaim` **155 same, 0 differ** (`extracted/skill_clone_census.json`):
+> the compiler refuses no battle skill as a base. BATTLE_SKILL_SYSTEM §13.14 "S165".
+> **2 (re-section + compiler + editor):** the field menu's words are WINDOW LAYOUT STREAMS in bank **$07** (not $15 — DOC_AUDIT
+> S165): `dw position`, TILE numbers, `$D8` newline, `$D9` end; 8 copies of the drawer (banks $07 $09 $0A $12 $15 $18 $50
+> $51); the field keeps a 23-letter font in VRAM (no Q / Z / lower case) — measured. NEW `tools/census_window_layouts.py`
+> (`extracted/window_layouts.json`: 119 streams, 31 runs, 15 measured), `tools/resection_window_layouts.py` (bank $07
+> `$704D-$7D97`, bank $15 `$647D-$64F3` / `$6716-$694D` → labeled `db` both trees, 79 `ld de` sites named, the drawers
+> named; `1ca6579…`), `editor2/core/window_words.py` (`gamedata.window_words`, regions `win_words_*`), the Text tab's
+> **Window words** page (42 words). DATA_STRUCTURES "Window layout streams (S165)", TEXT_SYSTEM "Window words (S165)",
+> PROJECT_COMPILER §2.73; help 56 / 54, `EDITOR_REVISION` S165.
+> **3 (simulator, byte-neutral):** 20 bank $57 rules modelled with their slips (`ai_rules._s165_rules`) + the harness reads
+> what the ROM reads (`$DB8B` traits, the build's own families, `base_defs`); NEW `simulator/rule_gaps.py`. BATTLE_SKILL_SYSTEM
+> §15.10.5 "S165".
+> **Measured:** `tools/walk_actbase.py --set s165` (the demo) 53 / 53, `--negative` 48 FAIL; the S163 ECHO set on the S165
+> code 47 / 47; NEW `tools/walk_window_words.py` 36 / 36, negative 5 FAIL; `rule_gaps.py` 0 / 7,865, 0 / 14,157,
+> 0 / 26,741, 0 / 39,325 (four seeds); validate_ai_fixes 7,865 / 7,865; validate_rules 240 / boards 1,573 /
+> F10 rules 332 / F10 1,335 / command 6,411 / battle 6,614 / 802 / 426.
+> **Annotation (both trees, `1ca6579…`):** `[S165]` at the 24 reads (banks $52 / $53 / $58); the 20 rules of bank $57;
+> the window layout runs + drawers (banks $07 / $15).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 1963 PASSED (+ `test_s165`; the S111 / S160 refusal tests on a
+> census entry made to differ — no base differs now; the S163 view-call counts + S165); test_canvas `--rom` PASS; test_app
+> `--rom` PASS (+ `s165_window_words`; the GUI build == the pin `2fe3faba…`, patched). The test ROM (`a7827ab7…`, patched) is
+> the build the walks ran on.
+> **Next:** the windows of banks $09 / $0A / $18 / $50 / $51 (shops, breeding, battle — their fonts), T-follow (b)-(d),
+> P3.17 packaging; the "Awaiting a user test" list.
+
 > Last verified: 2026-11-03 (Session 164 — **THE OUTSTANDING FIXES: A (ROADMAP / STATUS CLEAN-UP, CI, BANK $47) + B — A NEW
 > SKILL MAY EVOLVE FROM TWO TO FIVE SKILLS (A COMBINATION; THE S75 FENCE LIFTED), THE CLONE CENSUS RE-MEASURED ON WHOLE
 > BATTLES (138 BASES A NEW SKILL MAY RUN, WAS 114), THE ORIGINAL ENEMY AI'S FIVE BUGS AS PROJECT SWITCHES (ROADMAP E17

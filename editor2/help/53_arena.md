@@ -1,5 +1,7 @@
 # Arena
 
+![The Arena tab](img/tab_arena.png)
+
 The **Arena** tab edits the arena: the eight classes **G F E D C B A S**,
 the **Starry Night** tournament and **Monster Grandpa's match** (GoldSlime,
 Divinegon, Rosevine).

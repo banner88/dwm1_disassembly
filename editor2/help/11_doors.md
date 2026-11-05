@@ -1,5 +1,7 @@
 # Doors, teleports and the World tab
 
+![The World tab](img/tab_world.png)
+
 A **door** works both ways: step on it and you come out at the door it is
 connected to; step on that one and you come back. A **one-way teleport**
 only goes there. Both work between your rooms and the game's rooms.

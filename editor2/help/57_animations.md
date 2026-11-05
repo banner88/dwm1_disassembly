@@ -1,5 +1,7 @@
 # Animations
 
+![The Animations tab](img/tab_animations.png)
+
 The **Animations** tab makes **new battle animations** from the frames of the
 game's 45 (a "mashup": Zap's bolt, then Bang's burst, then a pause …). The
 game's own 45 animations are never changed; yours get the numbers **$2D** and

@@ -1,5 +1,7 @@
 # Rooms, screens and states
 
+![The Rooms tab](img/tab_rooms.png)
+
 **New room:** Rooms tab → **New** under the room list → name + the game
 room whose tileset it uses — or a **gate theme** (one of the 16 maze looks of
 the gates, in their colours: see *Gate themes*). **Copy / Rename / Area… / Delete** sit next to it. A

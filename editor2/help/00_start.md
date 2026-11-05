@@ -34,7 +34,7 @@ built from it (the original ROM is never changed).
   tab). A portal's swirl spins until its gate's boss is beaten — or, per
   gate, turns another colour instead. A **world** shows here as WORLD.
 - **Families** — which monsters belong to which family, family icons,
-  arena dialogue, Spirit's default names.
+  arena dialogue, Spirit's default names — see [Families](51_families.md).
 - **Monsters** — every monster's species data (family, growth, resistances,
   natural skills …), every battle row it appears in (stats, AI, joining), new
   monsters cut from a sprite sheet, and new art for the original monsters.
@@ -95,9 +95,16 @@ built from it (the original ROM is never changed).
   battle lists, songs … and what happens when each is full (see *Capacity*). The
   two meters under the window (ROM space, rooms) open it.
 - **Build & Play** — build the ROM (Ctrl+B) and run it (Ctrl+R).
-- **Help** — this tab (F1).
+- **Help** — this tab: every topic, a search box and the **Glossary**.
 
-Tabs marked with a roadmap box (Balance) are not built yet.
+**Help where you are (S167).** A round **?** button sits at the right end of the tab
+bar (the help of the tab shown), on every row of sub-tabs inside a tab (the part of
+the topic about the sub-tab shown), under the page buttons on the Rooms tab's right
+side, and in the editor's windows (Door…, Conversation…, Service…, New game… and the
+others). **F1** does the same as the nearest **?**. The help opens at the right
+place; **◀ Back to …** at the top of the Help tab returns to where you were,
+**◀ Previous topic** to the topic before. Links in a topic open the topic they name.
+The **Glossary** explains every word the editor uses, each with a link to its topic.
 
 **Story tools (S129):** story checks (questions the game answers: items, gold,
 monsters, levels…), the story spine, quests (Rooms tab → NPC → Quest…), locked

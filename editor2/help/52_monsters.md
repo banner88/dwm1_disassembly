@@ -1,5 +1,7 @@
 # Monsters
 
+![The Monsters tab](img/tab_monsters.png)
+
 The **Monsters** tab lists every monster: your new species first, then the
 215 original monsters, then the 6 that only exist in battles (the rival
 TERRY?, the four summons, one unused slot). Each shows its walking picture;

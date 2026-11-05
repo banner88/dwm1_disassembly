@@ -43,6 +43,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QWidget)
 
 from editor2.app.collapsible import Section
+from editor2.app.qt_safe import combo_row_enabled, combo_row_tip   # S167
 from editor2.app.rooms import commands as C
 from editor2.core import gamedata as G
 from editor2.core import monster_text as MT
@@ -119,8 +120,7 @@ def _grouped_resists(cb, first):
     from editor2.core import resistances as RZ
     for _k, title, ts in RZ.GROUPS:
         cb.addItem(f'— {title} —', '__group__')
-        it = cb.model().item(cb.count() - 1)
-        it.setEnabled(False)
+        combo_row_enabled(cb, cb.count() - 1, False)       # S167: no QStandardItem wrapper
         for t in ts:
             cb.addItem(f'   {RZ.label(t)}', t + first)
 
@@ -818,7 +818,6 @@ class SkillsTab(QWidget):
                                    f"{names.get(vl, vl)} (#{vl})", vl)
             else:
                 self.looks.addItem(f"its own look ({d['vanilla_name']})", d['id'])
-            model = self.looks.model()
             warn_now = None
             for donor, nm, problem, warn in doc.skill_lend_options(d['id']):
                 if donor == (d['vanilla_looks'] if custom else d['id']):
@@ -827,12 +826,11 @@ class SkillsTab(QWidget):
                 if warn:
                     tag = '   (summon)' if donor in SK.SUMMONS else '   (other side)'
                 self.looks.addItem(f'{donor:3d}  {nm}{tag}', donor)
-                it = model.item(self.looks.count() - 1)
+                row = self.looks.count() - 1           # S167: by index, no item wrapper
                 if problem:
-                    it.setEnabled(False)
-                    it.setToolTip(problem)
+                    combo_row_enabled(self.looks, row, False, problem)
                 elif warn:
-                    it.setToolTip(warn)
+                    combo_row_tip(self.looks, row, warn)
                 if donor == d['looks_like']:
                     warn_now = warn
             self.looks.setCurrentIndex(max(0, self.looks.findData(d['looks_like'])))

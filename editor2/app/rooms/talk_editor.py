@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QDialogButtonBox, QHBoxLayout
                                QToolButton, QVBoxLayout, QWidget)
 
 from editor2.core import textenc as T
+from editor2.app.qt_safe import menu_action                  # S167
 
 # GBC palette 7 as the box shows it: colour 1 = the engine's forced cream
 # ($6BFF), colour 3 = black; 0/2 are not used by the font or the frame.
@@ -252,9 +253,9 @@ class BoxEditor(QWidget):
         from PySide6.QtWidgets import QMenu
         im = QMenu(ins)
         for label, txt, tip in INSERTS:
-            a = im.addAction(label)
-            a.setToolTip(tip)
-            a.triggered.connect(lambda _c=False, t=txt: self._insert(t))
+            # S167: made in Python — `im.addAction(label)` once returned a stale
+            # QStandardItem wrapper (editor2/app/qt_safe.py)
+            menu_action(im, label, lambda _c=False, t=txt: self._insert(t), tip)
         ins.setMenu(im)
         btns.addWidget(ins)
         btns.addStretch(1)

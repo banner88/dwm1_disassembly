@@ -11344,12 +11344,35 @@ AudioRestoreBank:
 ; the id and uses the PREVIOUS row: record = bank:ptr + (id - base) * 4
 ; (SOUND_SYSTEM §2). Sentinel $FF.
 ; Patched builds read the extended copy AudioMasterTableExt @ $3FE8 instead
-; (S63); these 13 bytes stay, unreferenced.
-AudioMasterTable:
-    db $00, $01, $40, $1C       ; ids $00-$20 -> $1C:$4001
-    db $21, $01, $40, $1D       ; ids $21-$36 -> $1D:$4001
-    db $37, $01, $40, $1E       ; ids $37+    -> $1E:$4001
-    db $FF                      ; sentinel
+; (S63): AudioProcess's only `ld hl, $3466` operand ($33D9) points there, no
+; other byte of the ROM names $3466 (S167 scan: `66 34` occurs nowhere in a
+; patched ROM0), and the `ret` above ends the routine before it — so these 13
+; bytes are the one truly dead slot of ROM0.
+;
+; S167 (tools/audit_patch_space.py, KEY_LESSONS S167): MapIDClampForPalette
+; lived at $3BC2-$3BD2 from S63 to S166 — "17 unreferenced rst $38" that are in
+; fact row 3 step 15 + row 4 of the GROOVE ROW TABLE (GrooveRowTable, $3B83):
+; songs $0C and $12 (the boss song) read $3BC2, and played -6 there instead of -1.
+; The clamp moved here (8 B + 5 pad); the groove bytes are the original again.
+; ClampFamIdx (8 B, zero call sites since S104) is gone.
+;
+; MapIDClampForDispatch / MapIDClampForPalette were byte-identical twins
+; (same 8 instructions, authored in different sessions); merged as one body
+; carrying BOTH exported labels — every `call` site links unchanged.
+; Contract: A = wMapID if < CUSTOM_ROOM_START, else A = 0 (Castle: the
+; AttrPtrTable / palette / script fallback). S99: the room-animation dispatch
+; no longer calls it (bank $01 PerRoomVRAMDispatch asks bank $71 entry 3 for
+; each custom room's animation source); MapIDClampForDispatch has zero call
+; sites. Callers: bank $01 (x2), bank $06, bank $17 CustomAttrCheck (`jp`).
+MapIDClampForDispatch::
+MapIDClampForPalette::
+    ld a, [wMapID]              ; 3 bytes: FA 68 C9
+    cp CUSTOM_ROOM_START        ; 2 bytes: FE 6B
+    ret c                       ; 1 byte:  D8 (raw mapID for vanilla rooms)
+    xor a                       ; 1 byte:  AF  A = $00 (Castle) for ALL custom rooms
+    ret                         ; 1 byte:  C9
+    db $FF, $FF, $FF, $FF, $FF  ; pad to the old table's 13 bytes (code below at $3473)
+    ASSERT @ == $3473
 
 ; SaveBankAndAudioState — THE FRAME DRIVER: one tick of all 6 channel states
 ; ($DD80 + 26*k; slots $00/$1A = sound effects, $34/$4E/$68/$82 = music
@@ -12411,7 +12434,7 @@ AudioOrB:
 AudioSetEDZero:
     ld e, a
     ld d, $00
-    ld hl, $3b83
+    ld hl, GrooveRowTable  ; $3B83 (S167)
     add hl, de
     ldh a, [$f6]
     add [hl]
@@ -12989,7 +13012,7 @@ AudioStopData_3B3A:
     db $10
     jr nz, AudioStopData_3B67
 
-    jr nc, AudioLookup_3B89
+    jr nc, GrooveRow0_6
 
     ld d, b
     ld h, b
@@ -13024,7 +13047,7 @@ AudioStopData_3B5A:
 
     nop
     db $10
-    jr nz, AudioLookup_3B97
+    jr nz, GrooveRow1_4
 
 AudioStopData_3B67:
     ld b, b
@@ -13047,7 +13070,7 @@ AudioStopData_3B6A:
 DataLookup_3B72:
     ldh [rP1], a
     db $10
-    jr nz, AudioLookup_3BA7
+    jr nz, GrooveRow2_4
 
     ld b, b
     ld d, b
@@ -13066,130 +13089,48 @@ DataLookup_3B7C:
     ret nc
 
     ldh [$f0], a
-    nop
-    nop
-    ld bc, $0001
-    nop
-
-AudioLookup_3B89:
-    rst $38
-    rst $38
-    nop
-    nop
-    ld bc, $0001
-    nop
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    nop
-
-AudioLookup_3B97:
-    ld bc, $0101
-    ld bc, $0000
-    nop
-    nop
-    rst $38
-    rst $38
-    rst $38
-    rst $38
-    nop
-    ld bc, $0102
-
-AudioLookup_3BA7:
-    nop
-    rst $38
-    cp $ff
-    nop
-    ld bc, $0102
-    nop
-    rst $38
-    cp $ff
-    nop
-    nop
-    ld bc, $0201
-    ld [bc], a
-    ld bc, $0001
-    nop
-    rst $38
-    rst $38
-    cp $fe
-    rst $38
-
-AudioWavePatternData:
-; --- $3BC1 (17 unreferenced rst $38 bytes) — occupancy reworked M3a/S63 ---
-; CustomGFXMapID DELETED: dead since S42 — bank $71 Entry 0
-; (CopyCustomRoomRecord) replaced it at all three consumer sites; zero call
-; sites remained (grep-verified S63). Its 9 bytes + the clamp merge below
-; freed the $3FE8 slot for AudioMasterTableExt (see there).
-;
-; MapIDClampForDispatch / MapIDClampForPalette were byte-identical twins
-; (same 8 instructions, authored in different sessions); merged here as one
-; body carrying BOTH exported labels — every `call` site links unchanged.
-; Contract: A = wMapID if < CUSTOM_ROOM_START, else A = 0 (Castle: the
-; AttrPtrTable / palette / script fallback). S99: the room-animation dispatch
-; no longer calls it (bank $01 PerRoomVRAMDispatch now asks bank $71 entry 3
-; for each custom room's animation source); the MapIDClampForDispatch label
-; is kept on the merged body for history but has zero call sites.
-MapIDClampForDispatch::
-MapIDClampForPalette::
-    ld a, [wMapID]              ; 3 bytes: FA 68 C9
-    cp CUSTOM_ROOM_START        ; 2 bytes: FE 6B
-    ret c                       ; 1 byte:  D8 (raw mapID for vanilla rooms)
-    xor a                       ; 1 byte:  AF  A = $00 (Castle) for ALL custom rooms
-    ret                         ; 1 byte:  C9
-ClampFamIdx::
-; S104: ZERO call sites — the one caller (bank $01 GetActiveMonsterStatus) now
-; far-calls bank $6D FamilyIconGfxActive, which gives Spirit its own icon.
-; Kept (8 B, label-stable). Original B9 note:
-; B9 S29: party-graphics tables $4BAD (family) & $49DF (glyph) have only 10 entries
-; (families 0-9). Spirit (family 10) overflows -> garbage pointer -> runaway VRAM
-; copy corrupts all of VRAM. Clamp the family index to 9 (Spirit borrows family 9 /
-; <???> graphics) at the two bank_01 party-GFX lookups. 8 bytes; family is only 0-10.
-    call ReadActiveMonsterByte  ; A = active monster family (CD 84 22)
-    cp $0a                      ; family < 10?  (FE 0A)
-    ret c                       ;   yes -> unchanged (D8)
-    dec a                       ;   10 -> 9 (3D)
-    ret                         ; C9
-    rst $38                     ; 1 pad byte — region is 17 B ($3BC2-$3BD2): 8+8+1; the $FF @ $3BC1 is untouched vanilla filler (old comments' "$3BC1" was off by one — sym-verified S63: clamp $3BC2, ClampFamIdx $3BCA)
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    cp $fe
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0101
-    ld bc, $0202
-
-ScreenTransA:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-ScreenTransB:
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-
-ScreenTransC:
-ScreenTransitionSetup:
-    ld [bc], a
-
-ScreenTransD:
-    ld [bc], a
-    ld [bc], a
+; =============================================================================
+; GrooveRowTable — ROM0 $3B83-$3C02 (S167 re-section; tools/resection_groove_00.py)
+; =============================================================================
+; 8 rows x 16 signed steps. AudioSetEDZero: `ld hl, GrooveRowTable / add hl, de`
+; with E = ([$E5] & $70) | ([$DE22] & $0F) — the row chosen by a channel's $A3
+; command (bits 4-6, $E5 bit 7 = groove on) and the step 0-15 — then adds the byte
+; to the note's frequency ([$F6]). SOUND_SYSTEM §5. Measured S167 (the editor's
+; sound engine, 92 vanilla sounds x 3,600 frames): rows 0-3, 6, 7 are read (row 3
+; by $0C and the boss song $12), rows 4 / 5 by none — ALL rows are live data: never
+; free space (KEY_LESSONS S167). The GrooveRow<r>_<step> labels are only named by
+; misassembled data elsewhere (mgbdis), kept so those bytes stay the same.
+GrooveRowTable:
+; row 0: vibrato +-1, 2-step
+    db $00, $00, $01, $01, $00, $00
+GrooveRow0_6:
+    db $FF, $FF, $00, $00, $01, $01, $00, $00, $FF, $FF
+; row 1: vibrato +-1, 4-step
+    db $00, $00, $00, $00
+GrooveRow1_4:
+    db $01, $01, $01, $01, $00, $00, $00, $00, $FF, $FF, $FF, $FF
+; row 2: vibrato +-2
+    db $00, $01, $02, $01
+GrooveRow2_4:
+    db $00, $FF, $FE, $FF, $00, $01, $02, $01, $00, $FF, $FE, $FF
+; row 3: slow vibrato +-2
+    db $00, $00, $01, $01, $02, $02, $01, $01, $00, $00, $FF, $FF, $FE, $FE, $FF, $FF
+; row 4: constant -1 (flat)
+    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+; row 5: constant -2
+    db $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE, $FE
+; row 6: constant +1 (sharp)
+    db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+; row 7: constant +2
+    db $02, $02
+GrooveRow7_2:
+    db $02, $02, $02, $02, $02
+GrooveRow7_7:
+    db $02, $02, $02, $02, $02, $02
+GrooveRow7_13:
+    db $02
+GrooveRow7_14:
+    db $02, $02
 
 ScreenTransE:
     ld a, [$de2b]

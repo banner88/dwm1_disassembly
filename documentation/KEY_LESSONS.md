@@ -1462,7 +1462,9 @@ destroy.
 (`cp $fe` = `$FE` samples, `ld bc,$0101` = `$01` samples, NOP runs = rests). Overwriting them
 would corrupt sound, not reclaim space.
 **Rule**: a filler-valued run is only *safe* free space if it is end-of-bank fill or
-explicitly-known padding (e.g. the `$3BC1` "unreferenced rst $38" run prior patches used).
+explicitly-known padding. (**S167 correction:** this lesson used to cite the `$3BC1` "unreferenced
+rst $38" run as such padding — it is row 3 step 15 + row 4 of the ROM0 groove row table, read by
+songs `$0C` / `$12`; see "S167 — unreferenced rst $38 inside a TABLE" below.)
 Verify against labels/section boundaries before trusting a scan; in pinned data banks, a
 `$00`/`$FF` byte may be meaningful. This is what pushed S42 to the empty-bank approach above.
 
@@ -7714,3 +7716,55 @@ ends next to it (`dwm.sprite_codec.read_stream` for an LZ stream, the table's le
 the run starts AFTER the last byte a reader consumes, and a run of equal bytes says nothing about
 where the data before it ends.
 
+
+### S167 — "unreferenced rst $38" inside a TABLE: the ROM0 groove rows ($3B83) were live since S63
+**Symptom:** none reported — found by `tools/audit_patch_space.py` (every byte a patched build changes
+in a bank the original uses, classed EDIT = replaced on purpose / FILL = written into a run of equal
+`$00` / `$FF` bytes, then: what ends before each run, who reads it). **Root cause:** S42 / S63 took ROM0
+`$3BC1-$3BD2` as "17 unreferenced rst $38" (the KEY_LESSONS free-space lesson even cited it as the
+*safe* example) and kept `MapIDClampForPalette` + `ClampFamIdx` at `$3BC2`. Those bytes are row 3 step
+15 + all of row 4 of the GROOVE ROW TABLE (8 × 16 signed steps; `AudioSetEDZero`: `ld hl, $3B83 / add
+hl, de`, E = ([$E5] & $70) | ([$DE22] & $0F) — SOUND_SYSTEM §5 `A3 xx`, which already said "ALL live").
+Measured with the editor's sound engine (92 vanilla sounds × 3,600 frames, a read hook on $3B83-$3C02):
+`$3BC2` read 309 times a minute by songs `$0C` and `$12` (the boss song); the S166 build wrote other
+sound-register values in 174 frames a minute of `$12` (from frame 15) and 24 of `$0C`. **Fix:** the
+clamp moved to the vanilla master sound table `$3466-$3472` (13 B, dead in patched builds: its only
+reader's operand `$33D9` points at `$3FE8`, no byte of a patched ROM0 is `66 34`, and a `ret` ends the
+routine before it); `ClampFamIdx` (no callers since S104) deleted; `$3B83-$3C02` re-sectioned as
+`GrooveRowTable` in both trees (`tools/resection_groove_00.py`) — original bytes; test_compiler
+`test_s167 --rom` (the table, the clamp, $12 frame for frame). **Rule:** a run of `$FF` / `$00` inside
+a bank is space only when (1) code ends before it with an unconditional `ret` / `jp` / `jr`, or the
+data before it has a measured end (a terminator, a reader's bound, a decoded stream), AND (2) no
+reader's index range reaches into it. "mgbdis found no label there" proves nothing about data — a
+table is read by base + index, never by a label on its middle bytes.
+
+### S167 — a free run after DATA is only as free as that data's reader is reachable
+**Symptom:** four claimed runs (`$01:$7FD5`, `$02:$7FC3`, `$11:$792D`, `$4C:$7326`) sit right after data
+with no end marker; at `$01:$7FD5` the patch overwrote the `$FF` that ends the 8th of 8 tile-string
+pages, and bank $11's `$7777` table reader runs to `$7976`, through `NewAttrHandler`. **Root cause:**
+each claim was "the last non-zero byte + 1". **Fix (measured, not changed):** every reader of those
+data is UNREACHABLE — `$01:$7DFF` (a 3-state screen: no call / jump / table entry names it; the only
+`FF 7D` byte pairs in bank $01 are `ld hl, $xxFF / ld a, l`), `$02:$7F02` / `$7F2E`, `$11:$752F` (no
+pointer in ROM0 or their bank); bank $4C's code reads only its text tables (the highest pointer ≈
+`$6944`). Annotated in both trees. Cross-checked dynamically: the ORIGINAL ROM vs the original with
+every claimed byte poisoned to `$A5`, the 519-scene cutscene census (68 runs, 31,374 RAM / VRAM / OAM
+hashes) and a battle / menu corpus — identical (a positive control, two title-menu bytes poisoned,
+differed in 55 samples). **Rule:** to prove a run after data is free, find the data's readers and
+either bound their index or prove them unreachable; then run the original game with the run poisoned
+and compare traces (RAM / VRAM do not show sound — check the sound engine's register writes for audio
+data).
+
+### S167 — a stale PySide wrapper: `QMenu.addAction` returned a `QStandardItem`
+**Symptom:** S166's test_app printed a traceback in the S119 cutscene step test — talk_editor
+`BoxEditor`'s Insert menu, `'QStandardItem' object has no attribute 'triggered'`; not on every run
+(not on S167's baseline run). **Root cause:** Shiboken keeps one Python wrapper per C++ address. A
+wrapper of a `QStandardItem` Qt made itself (`combo.model().item(i)` — a combo's own rows) is not told
+when Qt deletes the item; while it is still alive, the next C++ object at that address is handed to
+Python as that old wrapper. Reproduced: keep `combo.model().item(5)`, `combo.clear()`, then
+`QMenu.addAction` → a `QStandardItem` within ~400 calls. The Insert menu half-built inside a slot (Qt
+printed the traceback; the test went on). **Fix:** `editor2/app/qt_safe.py` — combo rows changed by
+INDEX (flags in role `Qt.UserRole - 1`), actions made in Python (`menu_action`); the three
+`model().item(…)` sites (skills_tab ×2, draw_tab, rooms tab) and the Insert menu use them; test_app
+`s167_qt_safe` fails on any `model().item(` / `itemFromIndex(` in editor2/app. **Rule:** never hold a
+Python wrapper of an object Qt owns and may delete (combo / view items made by Qt); change such items
+through their model by index, and make objects you will connect to in Python.

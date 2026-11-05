@@ -1,5 +1,7 @@
 # Flags
 
+![The Progression & Flags tab](img/tab_progression_flags.png)
+
 A **flag** is an on/off switch saved with the game. Your own flags are
 **named** (e.g. `lord_beaten`, `bridge_repaired`). The flags are what tie your
 story together: a conversation turns a flag ON, a room shows its other state

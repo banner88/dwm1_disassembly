@@ -3235,7 +3235,7 @@ jr_033_4e30:
     db $fc
     ld b, a
     db $fc
-    call nz, ScreenTransB
+    call nz, GrooveRow7_7
     ld h, c
     and a
     pop af

@@ -9139,6 +9139,13 @@ label7de6:
     jp Jump_000_15f4
 
 
+; S167 (tools/audit_patch_space.py): $01:$7DFF = an UNREACHABLE 3-state screen —
+; `call DispatchCD90` then `dw $7E0A, $7E97, $7ECA` (misassembled below); no call,
+; jump or table entry anywhere names $7DFF (the only `FF 7D` byte pairs in bank $01
+; are `ld hl, $xxFF / ld a, l`; none in ROM0). It pages [$CDA5] 0-7 with the sprite
+; rows of $7E6D (LoadSpriteSheetData) and 8 tile-string pages at $7EE7-$7FD5 ([VRAM
+; lo, hi, tiles…], $FE = next line, $FF = end of a page). Patched builds keep
+; FollowerArtResolve01 at $7FD5 = the 8th page's $FF — never read (dead data).
     call DispatchCD90
     ld a, [bc]
     ld a, [hl]

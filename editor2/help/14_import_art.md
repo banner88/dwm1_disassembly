@@ -1,5 +1,7 @@
 # Import art
 
+![The Import art tab](img/tab_import_art.png)
+
 Turn a PNG — a map rip, a mock-up — into tiles, metatiles and screens of a
 room of your own. The editor proposes a grid and colours; your eye decides.
 

@@ -1,5 +1,7 @@
 # Text
 
+![The Text tab](img/tab_text.png)
+
 The **Text** tab (S150) holds every text the game can show — and every one
 can be **rewritten, any length**. One sub-tab per kind:
 

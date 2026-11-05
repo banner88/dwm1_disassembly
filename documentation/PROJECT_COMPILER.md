@@ -5517,6 +5517,17 @@ letters). `patches/bank_051.asm`: `db $00` restored before it, `ArenaScriptType5
 at `$7B35` / `$7B3B`, one `nop` less in the tail fill (`ASSERT @ == $8000`). test_s166 `--rom`: every gfx
 stream the code loads == the original (40). Pin **`fee3147e…`** (patched; was `2fe3faba…`, patched, historical).
 
+## §2.75 S167 — the patch-space audit (the pin moves, ROM0 only)
+
+No region changes. `patches/bank_000.asm` (hand patch): `MapIDClampForPalette` moved from `$3BC2` (row 3 step
+15 + row 4 of ROM0's `GrooveRowTable`, read by the boss song — KEY_LESSONS S167) to the dead vanilla master table
+`$3466` (8 B + 5 pad; `ClampFamIdx` deleted); `GrooveRowTable` = the original bytes. test_compiler `test_s167 --rom`
+(the groove bytes, the clamp's address and bytes, no `66 34` in ROM0, every LZ stream untouched by claimed space via
+`tools/audit_patch_space.py` + the S166 r2 negative, the boss song `$12` frame for frame on the editor's sound engine).
+Pin **`26a4faf1…`** (patched; was `fee3147e…`, patched, historical). Any new hand patch that takes "free" space in
+a bank the game uses: run `tools/audit_patch_space.py --patched <rom> --sym <sym>` (ARCHITECTURE "The audit of every
+claimed run (S167)").
+
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 
 *Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good").* **`gamedata.window_words`** = `{"<bank>:<addr>/<row>/<col>":

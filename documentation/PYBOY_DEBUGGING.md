@@ -1387,3 +1387,24 @@ edge and the battle waits for input forever.
   frames after the draw (buffer). The link-cable menus (VS MODE / BREEDING) answer "Not ready for link
   up." — PyBoy has no partner: those windows stay unmeasured.
 
+## S167 techniques — "is this byte ever read?" by poisoning, a read hook in the sound engine, Qt pictures
+
+- **Poison A/B (`tools/walk_poison_space.py`).** PyBoy has no read watchpoints. Instead run the ORIGINAL ROM
+  and a copy with the bytes in question changed (`$A5`) through the same corpus and compare hashes of WRAM /
+  VRAM / OAM / HRAM every 30 frames: PyBoy is deterministic, so identical traces = never read on that corpus.
+  A `sitecustomize.py` on PYTHONPATH (written by the tool) subclasses `pyboy.PyBoy` — it swaps the ROM of
+  every instance built on `DWM-original.gbc` and writes the trace, so a census's WORKER processes are covered
+  without touching the census. Name a trace by a hash of the process's argv (workers differ by their args).
+  Always run a POSITIVE control (bytes that are surely read: the title menu's NEW GAME letters, 55 samples
+  differ) — the first S167 control (groove rows) showed no difference because sound is invisible to RAM /
+  VRAM hashes.
+- **Trap: a census's very first worker can differ once** (start-up timing — its trace differed from its
+  first sample, both lengths different); re-run that worker alone twice on each ROM before calling it a read.
+- **Sound data: a read hook in the editor's sound engine.** `editor2/core/sound_engine.Machine` runs ROM0's
+  sequencer on `dwm/sm83.py`; replace `m.cpu = SE.CPU(rd, m._wr)` with an `rd` that counts reads of an address
+  range, start every sound of `extracted/sound_catalog.json` (`start_bgm` / `start_se`) and tick 3,600
+  frames. A/B two ROM0 images by comparing `m.frame()`'s register-write lists frame for frame (S167: the S166
+  build's boss song `$12` differed in 174 frames a minute).
+- **The editor's own pictures:** `tools/help_screenshots.py` — the real MainWindow offscreen, `w.grab()` per
+  tab after ~30 `processEvents()`; clear the build log first (it shows the machine's paths).
+

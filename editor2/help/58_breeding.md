@@ -1,5 +1,7 @@
 # Breeding
 
+![The Breeding tab](img/tab_breeding.png)
+
 The **Breeding** tab edits how monsters breed and shows what the game will
 really do with your recipes — every answer comes from a copy of the game's
 own breeding code that was checked against the game for every pair of

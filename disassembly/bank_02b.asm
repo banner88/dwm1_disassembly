@@ -3184,7 +3184,7 @@ jr_02b_4e6f:
     inc b
     dec b
     inc a
-    call z, ScreenTransC
+    call z, GrooveRow7_13
     add $00
     inc a
     call nc, $100a
@@ -3860,7 +3860,7 @@ jr_02b_516d:
     ld [bc], a
     inc bc
     inc a
-    jp z, ScreenTransitionSetup
+    jp z, GrooveRow7_13
 
     ld [$3c00], sp
     ld [$3800], sp

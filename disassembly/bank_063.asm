@@ -10989,7 +10989,7 @@ jr_063_6ee3:
     rra
     rrca
     rlca
-    ld bc, ScreenTransC
+    ld bc, GrooveRow7_13
     jr jr_063_7037
 
     inc a

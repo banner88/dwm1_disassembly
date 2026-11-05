@@ -1,5 +1,7 @@
 # Gates
 
+![The Gates tab](img/tab_gates.png)
+
 The Gates tab lists the 32 vanilla gates and your **new gates** (★ = has
 custom-room rules, ♛ = custom boss floor, ✎ = hand-made, NEW = a gate of
 your own, WORLD = one of your worlds — edited on the World tab, see *Worlds*).

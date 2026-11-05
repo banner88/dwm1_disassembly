@@ -1,5 +1,7 @@
 # Skills
 
+![The Skills tab](img/tab_skills.png)
+
 The **Skills** tab edits the game's 222 original skills, the ten **custom
 skills** built into every build (MagicBurn, Tame / TameMore / TameMost, Anchor,
 Tremor / Quake / QuakeMore / QuakeMost, Mourn) and your project's **new
