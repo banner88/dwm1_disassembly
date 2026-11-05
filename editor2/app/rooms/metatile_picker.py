@@ -24,6 +24,7 @@ from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QMenu, QWidget
 
 from editor2.core.document import metatile_key, metatile_pals
+from editor2.core import page2 as P2
 
 PER_ROW = 8
 S = 2                       # scale
@@ -83,10 +84,10 @@ class MetatilePicker(QWidget):
         self.update()
 
     def _animated(self, sec, mt):
-        return sec in ('found', 'custom') and any((t & 0x7F) in self.anim for t in mt['tiles'])
+        return sec in ('found', 'custom') and any(P2.slot_key(t) in self.anim for t in mt['tiles'])
 
     def _flag(self, mt):
-        f = {self.flags.get(t & 0x7F) for t in mt['tiles']}
+        f = {self.flags.get(P2.slot_key(t)) for t in mt['tiles']}
         return 'changed' if 'changed' in f else 'released' if 'released' in f else None
 
     def set_lists(self, found, custom):
@@ -221,7 +222,7 @@ class MetatilePicker(QWidget):
         if pm is not None:
             p.drawPixmap(r, pm)
         # walkability corner (bottom-right subtile decides — S94 measurement)
-        wall = mt['tiles'][3] < thr
+        wall = (mt['tiles'][3] & 0xFF) < thr
         p.fillRect(QRect(r.right() - 5, r.bottom() - 5, 5, 5),
                    QColor(255, 60, 60) if wall else QColor(60, 220, 90))
         fl = self._flag(mt) if sec == 'found' else None
@@ -256,7 +257,7 @@ class MetatilePicker(QWidget):
                 else:
                     mt = self._list(sec)[i]
                     thr = self.foreign_threshold if sec == 'foreign' else self.threshold
-                    walk = 'WALL' if mt['tiles'][3] < thr else 'walkable'
+                    walk = 'WALL' if (mt['tiles'][3] & 0xFF) < thr else 'walkable'
                     extra = ''
                     fl = self._flag(mt) if sec == 'found' else None
                     if fl == 'changed':

@@ -67,7 +67,9 @@ left than the room has statues.
   tiles show through. Because they hold a copy of the floor behind, the statue looks
   **see-through**. With no monster, the cell just shows the floor.
 - The monster cell's 4 tiles belong to the statue. The Tileset tab marks them
-  **statue**, and nothing else may use them. If you redraw the floor around the statue,
+  **statue**, and nothing else may use them. They are always on page 1 (the game draws
+  the monster there); when page 1 is full, adding a statue first moves a few ordinary
+  tiles to page 2 — nothing changes on screen. If you redraw the floor around the statue,
   redraw those 4 tiles too, or the old floor shows behind the monster.
 - A monster picture is 16 × 16. 194 of the 215 monsters fit exactly; the rest are moved
   to stand centred on the bottom row. None is cut.

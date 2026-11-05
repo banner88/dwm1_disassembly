@@ -934,7 +934,39 @@ recipes are pure authoring.
       per bank); (2) own animations do not run on gate maze floors (same
       dispatch guard as vanilla); (3) per-frame durations (a long frame 1, a
       short blink) are not offered — one speed per animation.
-- [ ] **P3.3g — 128 more tiles per room from VRAM bank 1** — **BANKED S103
+- [x] **P3.3g — 128 more tiles per room from VRAM bank 1** — **BUILT S168 (census +
+      engine + compiler + editor in one session), NOT yet user-tested** (user S168: "This
+      session I want: more tiles per room item"; "Different rooms will have mostly different
+      tilesets … having access to diverse tiles in a given room is the most important
+      thing"; "Walkability per room is completely fine"; "GBC only yes absolutely"; "Include
+      animation"; "I just want it to work"). As built (PROJECT_COMPILER §2.76,
+      ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)", editor2/core/page2.py): a
+      tileset = 256 tiles, PAGE 2 = 128 more in VRAM bank 1 drawn by attribute bit 3; the
+      census (`tools/census_vram_bank1.py`): the original game never writes bank 1's tile
+      area nor sets bit 3 (title, 8 gates' battles + the field menu, 519 cutscenes); page 2
+      stored raw in page-2 banks ($80+, the last kind), copied by GDMA at every room-sheet
+      load (bank $0B regions → `Page2Room`), tiles $E0-$FF mirrored; text boxes / windows
+      take the free-colour attribute path in page-2 rooms (`wPage2On`), ScreenPush writes
+      attribute + tile per cell there; own animations on page-2 slots; the page is a
+      property of the tile value ($100-$17F) and the compiler derives bit 3 per (attr grid,
+      tile grid); walkability = the map byte (page-2 n walks like page-1 n). Editor: every
+      slot search fills page 1 then page 2 (imports, borrow, Draw, twins, own animations),
+      statues keep page 1 (`page1_room`), the Tileset tab / metatile editor show both pages.
+      *Accept MET (machine half):* `tools/walk_page2.py` on the user's save — THE NUMBERED
+      GALLERY (examples/s168_page2_demo): 208 different tiles on one screen, VRAM bank 1 ==
+      page 2, every cell's byte + bank, the page-2 blink, the curator's YES / NO, the shop,
+      Grandpa, the field menu, the Vault, the library, a won battle — no letter read from
+      bank 1 while open, the room whole after; 55 / 55, `--negative` 6 FAIL. *User half:*
+      `DWM-S168-page2-test.gbc` (the gallery via the GALLERY CURATOR in Cities_FOUNT) + the
+      editor on your own rooms. SameBoy not run (PyBoy only) — the GDMA timing is the S102
+      player's, which SameBoy matched frame for frame in S102.
+      **S168 r2** (user: "Breed/hatch/exit menu (talk with breeding NPC) creates visual
+      glitches of words on the screen"): the breeding / farm / egg screens draw into page-1
+      slots while the room shows — rooms with them keep those slots free (moved to page 2 on
+      NPC creation / open; PROJECT_COMPILER §2.76 "S168 r2"); test ROM
+      `DWM-S168r2-page2-test.gbc`. Built S168 r2; the ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT
+      yet user-tested.
+      Was: **BANKED S103
       (user 2026-09-29: "Bank and come back later if tiles become a problem,
       I dont want to burn three sessions on an expansion")** — reopen only
       when the 128-tile sheet actually blocks a room. S103 static audit

@@ -7768,3 +7768,54 @@ INDEX (flags in role `Qt.UserRole - 1`), actions made in Python (`menu_action`);
 `s167_qt_safe` fails on any `model().item(` / `itemFromIndex(` in editor2/app. **Rule:** never hold a
 Python wrapper of an object Qt owns and may delete (combo / view items made by Qt); change such items
 through their model by index, and make objects you will connect to in Python.
+
+## S168 — page 2: the second 128 tiles of a room (ROADMAP P3.3g)
+
+### S168 — the LZ decoder cannot fill VRAM bank 1: copy raw with GDMA
+**Symptom (design, read before building):** the natural loader for a second sheet — `WaitDMATransfer`
+with VBK = 1 — would leave stray bytes in bank 0. **Root cause:** the decoder writes one byte at a time
+with interrupts on between bytes (`Write_gfx_tile_and_inc_HL`) and READS ITS OWN OUTPUT back for the
+copies; the VBlank handler's scroll copy leaves VBK 0 behind it (S141), so every byte after the first
+interrupt goes to (and is read from) bank 0. **Fix:** page 2 is stored RAW (2 KB a tileset) and copied
+by General-Purpose DMA in 64 chunks of 32 B, each started as HBlank begins (the S102 tile-animation
+player's proven timing), VBK 1 only inside the `di` window. **Rule:** any routine that reads back what
+it wrote, or runs with interrupts on, is bound to the VRAM bank the interrupt handlers leave behind —
+target bank 1 only from code that holds VBK itself with interrupts off for every access.
+
+### S168 — a window draws a row's tiles before its attributes: check the frames in between
+**Symptom (PyBoy, `tools/walk_page2.py`):** after wiring `wPage2On` into the box / window attribute
+paths, the shop and the Vault still showed 1-4 cells of letters read from VRAM bank 1 for 2-6 frames
+as their windows opened (the YES / NO box and Grandpa were clean). **Root cause:** bank $77
+ScreenPush (S117b) writes a whole 32-cell row of tiles, then the row's 20 attributes — between the two
+passes a letter stands on the room's attribute (bit 3 = bank 1). In a free-colour room the same gap
+only showed the room's palette for a frame, which nobody saw. **Fix:** in a page-2 room ScreenPush
+writes each cell's attribute and then its tile (`PushRowBoth`) — a cell is between the two for at
+most a scan line; tiles `$E0-$FF` (the blank + window frames, never rewritten by the windows except
+`$E5` / `$E6`, measured) are mirrored into bank 1 at the page load for the field menu's / the gate
+wipe's full-map `$E0` fills. **Rule:** when a layer depends on TWO VRAM writes (tile + attribute),
+sample every couple of frames WHILE the screen builds, not only once it is up; order or pair the writes
+so no frame shows one without the other.
+
+### S168 — a census of "never used" needs a seed, and a negative needs the gate itself
+**Symptom (method):** "VRAM bank 1's tile area is empty in the field" (S102) was 7 screens of zeros —
+a write of zeros (a clear loop) would not show, and battles / cutscenes were never looked at.
+**Fix:** `tools/census_vram_bank1.py` seeds bank 1 with a pattern at power-on and logs every changed
+run (and every screen with attribute bit 3) over the title, 8 gates' battles + the field menu and the
+519-scene cutscene census; a positive control (the hook writes one byte + one bit) must be reported.
+For the window checks the negative control forces the GATE (`wPage2On` := 0 every frame) rather than
+removing code — 6 of the 7 overlays then fail; the field menu stays clean because it fills palette 7
+itself (vanilla), which is exactly what the negative proved. **Rule:** prove "unused" against a seeded
+pattern on the widest corpus available, and make the negative control flip the one condition the fix
+depends on — whatever still passes then was never depending on it.
+
+### S168 r2 — a "use every slot" demo walks into every slot the game borrows
+
+The NUMBERED GALLERY drew all 256 tiles; its Grandpa then wrote "EXIT INFO" over the floor (user
+report). Not a page-2 fault — the breeding screens borrow page-1 slots `$38-$7F` WHILE the room
+shows (S127 knew `$40-$7F`), and no earlier room had used them where a breeding NPC stood. The S168
+walk checked letters read from VRAM BANK 1 only, so it passed. Lesson: an overlay check must also ask
+"does every visible ROOM cell still show its own graphic?" (`walk_page2.room_art_damage`: map tile +
+attribute unchanged since arrival, slot bytes changed) — it catches any menu drawing into the room's
+slots, whatever bank; and a stress demo must keep out of the slots the game's own screens claim
+(`services.BORROWED_SLOTS`). Measured on the user's breeder room first: clean (its tiles avoided the
+written `$38-$3F` / `$78-$7C`) — one clean room proves nothing about the slot set.

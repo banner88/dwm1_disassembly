@@ -15,7 +15,9 @@ imported PNG art)** (*wall | walkable split at* sets where wall slots end).
 project; every PNG you open stays in the *image* list with its panels, masks
 and walls. **Remove** takes it off the list (tiles already imported stay).
 *into room* is the room the art goes to; the line below says how many wall
-and walkable slots its tileset has free.
+and walkable slots its tileset has free, and how many of them are on each
+page (a tileset holds 256 tiles: when page 1 is full the art goes on page 2
+by itself — see *Tilesets, metatiles and palettes*).
 
 On opening, the editor guesses the **key colours** (never art): the commonest
 colour round the edge, plus every colour the Game Boy Color cannot show

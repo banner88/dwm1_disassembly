@@ -28,6 +28,8 @@ Engine facts these encode (all measured S100 unless marked):
 import json
 import os
 
+from editor2.core import page2 as P2
+
 MIN_FLOOR = 2              # user scope S100: the first floor stays vanilla
 MAX_ONCE_PER_GATE = 8      # one bit each in wGateDiveMask
 MAX_TERMS = 8              # same cap as state rules
@@ -1122,10 +1124,10 @@ class GatesMixin:
             raise RuntimeError(f'screen {key} has no layout')
         grid = (self.layout(ref['id'])['tiles'] if 'id' in ref
                 else self.vanilla.layout_grid(ref)[0])
-        cell = [grid[int(y) * 2 + dr][int(x) * 2 + dc] & 0x7F
+        cell = [P2.slot_key(grid[int(y) * 2 + dr][int(x) * 2 + dc])
                 for dr, dc in ((0, 0), (0, 1), (1, 0), (1, 1))]
         tid = rec.get('tileset')
-        sheet = (bytes(self.read_sheet(tid)[:2048]) if tid is not None else
+        sheet = (bytes(self.read_sheet(tid)) if tid is not None else   # S168: + page 2
                  bytes(self.vanilla.rom_sheet(_val(rec['gfx_bank']),
                                               _val(rec['gfx_id']))[:2048]))
         return cell, sheet

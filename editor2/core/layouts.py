@@ -12,7 +12,8 @@ Formats (doc citations):
     (8 attr-rows x 2 half-rows x 10 col-pairs, HIGH nibble = LEFT tile)
     -> LZSS (GATE_GENERATION §7.2; tools/build_gate_room.py gen_attr is the
     proven reference).
-  * Tileset GFX: 2048 bytes (128 tiles x 16 B 2bpp) -> LZSS
+  * Tileset GFX: 2048 bytes (128 tiles x 16 B 2bpp) -> LZSS (S168: a 4096-byte
+    raw2bpp file also holds PAGE 2 — stored raw, editor2/core/page2.py)
     (ROOM_DATA_FORMAT "Tileset Graphics System"; tools/build_combined_tileset.py
     is the proven producer for combined/mashup sheets).
 
@@ -152,13 +153,7 @@ def tileset_bytes(repo_root, ts, project_dir):
           tools/build_combined_tileset.py's cherry-pick core.
     """
     if 'raw2bpp' in ts:
-        path = os.path.join(project_dir, ts['raw2bpp'])
-        data = open(path, 'rb').read()
-        if len(data) != 2048:
-            raise ValueError(
-                f"tileset {ts.get('id')!r}: raw2bpp must be exactly 2048 "
-                f"bytes (128 tiles x 16 B 2bpp), got {len(data)}")
-        return data
+        return tileset_sheet(ts, project_dir)[:2048]
     if 'spec' in ts:
         import json
         bct = _tool(repo_root, 'build_combined_tileset')
@@ -167,6 +162,28 @@ def tileset_bytes(repo_root, ts, project_dir):
         spec = json.load(open(os.path.join(project_dir, ts['spec'])))
         return build_sheet_from_spec(bct, rom, spec)
     raise ValueError(f"tileset {ts.get('id')!r}: needs 'raw2bpp' or 'spec'")
+
+
+def tileset_sheet(ts, project_dir):
+    """S168 (ROADMAP P3.3g): a raw2bpp tileset's whole file — 2048 bytes (page 1
+    only) or 4096 bytes (page 1 + PAGE 2: the 128 more tiles the game copies to VRAM
+    bank 1 $9000, drawn by cells with attribute bit 3; editor2/core/page2.py)."""
+    path = os.path.join(project_dir, ts['raw2bpp'])
+    data = open(path, 'rb').read()
+    if len(data) not in (2048, 4096):
+        raise ValueError(
+            f"tileset {ts.get('id')!r}: raw2bpp must be 2048 bytes (128 tiles x 16 B "
+            f"2bpp) or 4096 (+ page 2, S168), got {len(data)}")
+    return data
+
+
+def tileset_page2(ts, project_dir):
+    """S168: the tileset's page 2 (2048 bytes) — zeros when its file has page 1
+    only or it is not a raw2bpp sheet."""
+    if 'raw2bpp' not in ts:
+        return bytes(2048)
+    data = tileset_sheet(ts, project_dir)
+    return bytes(data[2048:4096]) if len(data) == 4096 else bytes(2048)
 
 
 def build_sheet_from_spec(bct, rom, spec):

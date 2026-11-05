@@ -12,6 +12,7 @@ cells (that is the one thing that costs free tiles on the tileset).
 Pure document logic (no Qt) — mixed into editor2.core.document.Document.
 """
 from editor2.core import tileanim as TA
+from editor2.core import page2 as P2
 
 
 def _val(v):
@@ -82,7 +83,7 @@ class TileAnimMixin:
             used = self.used_tiles(tid) | self.own_anim_slots_tileset(tid)
         except Exception:
             return 0
-        return sum(1 for i in range(128) if i not in used)
+        return sum(1 for i in range(P2.SLOTS) if i not in used)     # S168: + page 2
 
     def _room_positions(self, room):
         """{slot: [(layout id, row, col)]} over every layout this room draws."""
@@ -91,7 +92,7 @@ class TileAnimMixin:
             T = self.layout(lid)['tiles']
             for r, row in enumerate(T):
                 for c, v in enumerate(row):
-                    out.setdefault(v & 0x7F, []).append((lid, r, c))
+                    out.setdefault(P2.slot_key(v), []).append((lid, r, c))
         return out
 
     def _room_sheet_bytes(self, room):
@@ -124,7 +125,7 @@ class TileAnimMixin:
         tid = self.tileset_key(room)
         out['free'] = self._free_anim_tiles(tid)
         thr = _val(room['record']['collision_threshold'])
-        slot = lambda p: T[p[0]][p[1]] & 0x7F
+        slot = lambda p: P2.slot_key(T[p[0]][p[1]])
         cur = {p: bytes(sheet[slot(p) * 16:slot(p) * 16 + 16]) for row in grid for p in row}
         fr = frames or []
         moving = _moving(grid, cur, motion, fr, strip)
@@ -244,7 +245,7 @@ class TileAnimMixin:
         T = self.layout(lid)['tiles']
         grid = self._sel_positions(rect)
         r0, c0 = grid[0][0]
-        slot = lambda p: T[p[0]][p[1]] & 0x7F
+        slot = lambda p: P2.slot_key(T[p[0]][p[1]])
         cur = {p: bytes(sheet[slot(p) * 16:slot(p) * 16 + 16]) for row in grid for p in row}
         moving = info['moving']
         fr = frames or []
@@ -254,7 +255,7 @@ class TileAnimMixin:
         vanilla = self.room_animation(room)['slots']
         taken = self.own_anim_slots(room)
         used = self.used_tiles(tid) | self.own_anim_slots_tileset(tid)
-        free = [i for i in range(128) if i not in used]
+        free = [i for i in range(P2.SLOTS) if i not in used]     # S168: page 1, then page 2
 
         def keyf(p):
             if motion == 'flip':
@@ -276,11 +277,11 @@ class TileAnimMixin:
             if clash or s in vanilla or s in taken or inside_other or (private and outside):
                 ps = [p for p in moving if key_of[p] == k]
                 br = any(p[0] % 2 == 1 and p[1] % 2 == 1 for p in ps)
-                cand = [f for f in free if not br or (f < thr) == (s < thr)]
+                cand = P2.pick_order(free, thr, P2.is_wall(s, thr), br)
                 if not cand:
                     raise RuntimeError('no free tile left on the tileset for an own copy'
                                        + (' on the right wall/walkable side' if br else ''))
-                f = cand[-1] if s < thr else cand[0]
+                f = cand[0]
                 free.remove(f)
                 sheet[f * 16:f * 16 + 16] = sheet[s * 16:s * 16 + 16]
                 new_slot[k] = f
@@ -290,7 +291,7 @@ class TileAnimMixin:
         self.write_sheet(tid, sheet)
         for p in moving:
             v = T[p[0]][p[1]]
-            T[p[0]][p[1]] = (v & 0x80) | new_slot[key_of[p]]
+            T[p[0]][p[1]] = P2.remap_value(v, P2.slot_key(v), new_slot[key_of[p]])
         # the item: rows of slots (selection rows, moving positions, unique)
         rows, seen = [], set()
         for row in grid:

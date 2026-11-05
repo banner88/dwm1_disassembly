@@ -1019,6 +1019,23 @@ the player (farm, library, medals) are not in the story state — flags ON cover
   edit, re-selected afterwards (`_reselect_hint`). Capacity rows: monuments in one room (8),
   hint numbers (2048), the bank $79 hint bytes.
 
+**As built S168 — PAGE 2 (ROADMAP P3.3g; built, NOT yet user-tested):** a tileset holds 256 tiles
+(page 1 + page 2 in VRAM bank 1, GBC only — PROJECT_COMPILER §2.76). There is NO page switch in the
+UI (user: "having access to diverse tiles in a given room is the most important thing"): every
+search for a free slot — Borrow / Import art / Draw "as a new metatile" / Walkability twins / own
+animation copies — fills page 1 first and spills onto page 2 by itself; the Tileset tab's slot map
+shows page 2 below a blue line (the wall | walkable line on both pages: page-2 tile n walks like
+page-1 tile n), the metatile editor's sheet shows both pages (a page-2 tile reads *p2 $NN*), the
+canvas / minimap / previews draw page-2 cells with their own art. Memorial statues keep their
+tiles on page 1 (the editor moves ordinary tiles to page 2 when page 1 is full). In project.json a
+page-2 cell is the tile value `$100 + n`; the compiler writes attribute bit 3 (the attr grid stays
+palettes, so states sharing it stay right).
+**S168 r2:** a room with a breeding NPC, a farm keeper or an egg appraiser keeps the page-1 slots
+that screen draws into while the room shows (breeding `$38-$7F`, farm `$60-$6F`, eggs `$70-$78`)
+EMPTY — brown on the Tileset tab, never offered to any search; making the NPC (Service…) or opening
+an older project moves the tiles placed there to page 2 (same picture, same side of the split); the
+status line / the open log say how many (user report: Grandpa's words over the gallery's floor).
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

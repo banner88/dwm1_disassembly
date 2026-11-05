@@ -1,5 +1,58 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-05 (Session 166 + r2 — **THE OUTSTANDING FIXES A1-A3 + B + C: THE WINDOW WORDS OF THE OTHER SCREENS
+> (THE SHOP, THE FARM, THE NAMER, GRANDPA, THE EGG APPRAISER, THE BATTLE — EACH WITH ITS OWN LETTERS), THE WORDS A WINDOW
+> CUTS OUT OF A TEXT (THE VAULT'S PUT / TAKE / EXIT …), THE TABLES' LINE WIDTHS MEASURED; T-FOLLOW (d) CLOSED BY DESIGN;
+> THREE STALE BOXES CLOSED (A′2, THE ISLANDS' FLAG AUDIT, E3 (b2)); THE TEXT CORPUS RE-SECTIONED (T2…Tn)** (the audit of
+> the open items → user: "can you explain A1-4 in clear words?", "Do A1-3, close A4. Close B and if time allows do C").
+> **Built S166, NOT yet user-tested.**
+> **S166 r2** (the user on `DWM-S166-glossary-test.gbc`: "Everything works BUT when the drakslime gets up and looks at us
+> and given option to join party - YES/NO - the NO has a bit of a glitch at the bottom. This is the only issue"): NOT a
+> window-word fault and older than S166 — S128's `ArenaScriptType51` was placed at $51:$7B34, the LAST byte (a literal
+> `$00`, the O's bottom row) of the LZ stream gfx `$5112` (the U N O letters bank $51 loads to `$89C0` for the YES / NO;
+> the free-space scan took it for the first byte of the `$00` fill). The byte restored in `patches/bank_051.asm` (`db $00`),
+> `ArenaScriptType51` / `LearnUpgradeOrAdd51` one byte later ($7B35 / $7B3B), one `nop` less in the tail fill. All 40 gfx
+> streams the code loads (`ld de, id` + `call WaitDMATransfer`) are the original bytes in the patched build (test_s166
+> `--rom`). PyBoy on the user's save: the join question's `$89C0` tiles == the original stream's decode, the screenshot's
+> NO clean; the S166 ROM (negative control) has the O's last row `$FF $FA`. ARCHITECTURE free-space row `$51` = `$7B35`,
+> 1,227 B; KEY_LESSONS "S166 r2". **Built S166 r2, NOT yet user-tested.** Test ROM **`DWM-S166r2-glossary-test.gbc`**
+> (`e81f931c…`, patched). Example pin `fee3147e…` (patched; was `2fe3faba…`, patched, historical).
+> Test ROM (historical) **`DWM-S166-glossary-test.gbc`** (`058dcc6b…`, patched) = the user's project + THE GLOSSARY HALL
+> (`examples/s166_glossary_demo/build_demo.py`; way in: the GLOSSARY GUIDE, Cities_FOUNT (3, 4)): four screens, one NPC of
+> every service (SHOPKEEPER, VAULT KEEPER, FARM KEEPER, LIBRARIAN, MONSTER NAMER, MEDAL MAN, EGG APPRAISER, GATE GUIDE,
+> GRANDPA), the SPARRING SLIME (always joins) and the WORDSMITH; this ROM's words: the shop GET / OUT, the Vault STOW / GET,
+> the farm REST, Grandpa MATE / BACK, the egg appraiser RATE, the battle HIT / FLY / CAREFUL. Example pin `2fe3faba…`
+> (patched, historical) UNCHANGED by S166 itself (byte-neutral: the regions emit the same bytes; r2 moved it, above).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's test_compiler `--rom` ALL 1963 PASSED at start.
+> **A1 (re-section + compiler + editor):** 25 more window-layout runs (banks $09 $0A $12 $18 $50 $51) as labeled `db` in both
+> trees + compiler regions (28 in all), 116 `ld de` sites named, the drawers named in every bank (`LoadPaletteFromDE` $50:$75F0
+> = a misnomer: entry B of the drawer); bank $12's S26 / S27 `LibWinLayout_*` run re-emitted with its labels. The letters
+> MEASURED (NEW `census_window_layouts.py --services`: the GLOSSARY HALL tour on the user's save; a letter = a tile's 8 × 8
+> shape against the text font): 47 more editable words, each screen its own letters; excluded: the naming keyboard, the
+> pedigree picture, bank $51's join / full-party windows (an undecoded writer re-letters their tiles), the link windows.
+> **A2:** the packed rows are TEXT CANVASES (`ld hl, <tiles> / ld de, <cells, rows>` → [$C827-$C82A] → CallTextEngine draws
+> into the tiles; the 7 helpers named `TextToCanvas` in comments): the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's
+> EXIT = 7 text slots (`T:<table>:<row>/<offset>`, the row composed into gamedata.text). **A3:** `text_widths` measured
+> (18 / 9 cells) + the credits (20 / 11): the Text tab warns past them, never on the game's rows. **A4** closed by design.
+> **B:** A′2 superseded (S90 clone-to-custom); the islands' flag audit (NEW `tools/audit_island_flags.py` → SIDEQUEST_MAP;
+> the validator = S124's `game_only` problem, now a test fixture); E3 (b2) = ARCHITECTURE "SRAM banks 1-3: the allocation
+> map (S166)". **C:** banks $42-$46 / $48-$4B / $4E re-sectioned (1,244 strings, 1,268 dispatch rows named, 20 loader stubs).
+> PROJECT_COMPILER §2.74; TEXT_SYSTEM "Window words (S165)" + "Text canvases (S166)"; DATA_STRUCTURES "Window layout streams".
+> **Measured:** NEW `tools/walk_window_words.py --services` 50 / 50 on the demo (every edited word read on screen by shape,
+> the windows' other words unchanged), `--negative` (the plain build) 11 FAIL; the census on the plain build (136 streams,
+> 68 drawn, 40 fonts).
+> **Found:** the party-full WHO / INFO / OK letters are re-lettered after misc 10 / 27 are drawn (not the text engine;
+> ROADMAP T-follow note); `WHOINFOOKMONEGG` is the link mode's (bank $18) — no field screen reads it; misc 9 has no reader;
+> a test_app traceback (talk_editor `BoxEditor`'s Insert menu: `QStandardItem.triggered`) printed in the S119 cutscene
+> step test (the test still passes; not this session's code — not checked on HEAD).
+> **Annotation (both trees, `1ca6579…`):** the runs + drawers above; the 7 `TextToCanvas` helpers; CallTextEngine's
+> [$C827] note; the ten text banks (clean tree).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` (+ `test_s166`); test_app `--rom` PASS (+ `s166_window_words`;
+> the GUI build == the pin `2fe3faba…`, patched, historical). r2: verify_integrity PASS; test_compiler `--rom` ALL PASS
+> (+ the r2 stream check); the pin `fee3147e…` (patched).
+> **Next:** the user's test of `DWM-S166r2-glossary-test.gbc` (the join YES / NO); bank $51's re-lettering writer; P3.17 packaging; the "Awaiting a user
+> test" list.
+
 > Last verified: 2026-11-04 (Session 165 — **THE OUTSTANDING FIXES 1-3: EVERY STOCK SKILL A BASE (THE 17 BASES A COPY
 > COULD NOT RUN — ROADMAP E13 NOTE), THE WORDS OF THE WINDOWS EDITABLE (ROADMAP T-FOLLOW (a)), THE AI RULE MODEL EXACT ON
 > ARBITRARY BOARDS (ROADMAP E17 NOTE)** (the audit of the open items → user: "yes, build RGBDS", "Yes 164 tested",

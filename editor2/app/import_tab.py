@@ -412,8 +412,8 @@ class ImportTab(QWidget):
         rrow = QHBoxLayout()
         rrow.addWidget(self.room_box, 1)
         nb = QPushButton('New room…')
-        nb.setToolTip('Create a new custom room with its own BLANK tileset (all 128 slots '
-                      'free) for this art and make it the target.')
+        nb.setToolTip('Create a new custom room with its own BLANK tileset (all 256 slots '
+                      'free: page 1 and page 2) for this art and make it the target.')
         nb.clicked.connect(self._new_art_room)
         rrow.addWidget(nb)
         f.addRow('into room', rrow)
@@ -678,7 +678,7 @@ class ImportTab(QWidget):
         fc = self.s.doc.free_counts(tid, gfx.threshold)
         self.room_info.setText(
             f"tileset <b>{tid}</b>: {fc['wall']} wall / {fc['walkable']} walkable slots free "
-            f"(threshold ${gfx.threshold:02X})")
+            f"(page 1 {fc['page1']}, page 2 {fc['page2']}; threshold ${gfx.threshold:02X})")
         self._show_room_palettes(room)
         self._schedule_fit()
 

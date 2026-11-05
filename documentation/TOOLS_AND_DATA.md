@@ -2274,3 +2274,32 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/app/context_help.py` (NEW), `help_tab.py`, `main.py` | the "?" buttons, F1, links, pictures, Back / Previous / Glossary (EDITOR_DESIGN §5.11) | test_app `s167_context_help` |
 | `editor2/help/51_families.md`, `95_glossary.md` (NEW); 22 topics (+ a picture), `00_start.md`; `_revision.md`, `editor2/__init__.py` | `EDITOR_REVISION` S167 | test_app (the stamp; every topic shown to its end) |
 | `editor2/tests/test_compiler.py` (`test_s167`, `REFERENCE_MD5` `26a4faf1…` patched), `test_app.py` (`s167_qt_safe`, `s167_context_help`) | | ALL PASS |
+
+## S168 rows (ROADMAP P3.3g — PAGE 2: the second 128 tiles of a tileset in VRAM bank 1; built S168, NOT yet user-tested)
+
+| File | What | Verified |
+|---|---|---|
+| `tools/census_vram_bank1.py` (NEW) | does the ORIGINAL game ever write VRAM bank 1's tile area ($8000-$97FF) or draw a BG cell from it (attribute bit 3)? A sitecustomize hook seeds bank 1 with a pattern at power-on and logs every changed run + every screen with bit 3, every 15 frames, over walk_poison_space's corpora `title` / `battle` / `cutscenes` (census_cutscenes, 519 scenes); `--positive` (the hook writes one byte + one bit) | S168: 0 writes, 0 cells over all three (68 + 2 PyBoy runs); positive control reported |
+| `extracted/vram_bank1_census.json` (NEW) | its output on the original ROM (per corpus: runs, the corpus output's tail, tile writes, screens with bit 3) | `_generator` key |
+| `tools/walk_page2.py` (NEW) | a build of `examples/s168_page2_demo` walked on a real save: VRAM bank 1 == page 2 (the blinking strip one of its frames), bank 0 == page 1, every cell's byte + bank on both screens, 208+ different tiles, the page-2 blink in bank 1 only; 7 overlays (the curator's YES / NO, the shop, Grandpa, the field menu ITEM, the Vault, the library, a won battle) sampled every 2 frames — no shared tile read from bank 1 where bank 1's bytes differ from bank 0's — and the room whole after each; leaving: `wPage2On` 0, no bit 3; prints the shared tiles the windows rewrote; `--negative` (`wPage2On` forced 0 every frame) | S168: 55 / 55 on the user's save; `--negative` 6 FAIL |
+| `examples/s168_page2_demo/build_demo.py` (NEW) | THE NUMBERED GALLERY on the user's project: two screens of 256 numbered tiles (page 1 plain, page 2 striped), the GALLERY CURATOR / SHOPKEEPER / GRANDPA / VAULT KEEPER / LIBRARIAN / SPARRING SLIME, a blinking page-2 strip; way in: the GALLERY CURATOR in Cities_FOUNT (3, 4) | the walk above |
+| `editor2/core/page2.py` (NEW) | tile values / slots / walls / free-slot order, the derived attr streams, the page-2 banks' plan + emitter, the bank $0B hook text, checks (PROJECT_COMPILER §2.76) | test_compiler `test_s168` (+ `--rom`) |
+| `editor2/core/templates/page2_copy.asm`, `page2_home.asm` (NEW, pinned) | `Page2Copy_P<bank>` / `Page2Dma` / `Page2Mirror`; `Page2Room` | the same + walk_page2 |
+| `editor2/core/templates/bank_077_head.asm`, `tileanim_player.asm` (re-pinned), `patches/bank_073.asm`, `patches/wram.asm`, `patches/bank_06c.asm`, `patches/bank_077.asm` (regenerated) | the engine side (PROJECT_COMPILER §2.76) | the same |
+| `editor2/core/layouts.py`, `project.py`, `emitters.py`, `memorial.py`, `validators.py`, `tileanim.py`, `cutscene_build.py`, `render_project.py`, `document.py`, `animate.py`, `tile_draw.py`, `tileanim_doc.py`, `memorial_doc.py`, `gates.py`, `doors.py` | 256-slot sheets, tile values $100-$17F, page-aware searches / remaps / walls (PROJECT_COMPILER §2.76 "Editor") | test_compiler + test_app |
+| `editor2/app/rooms/tile_picker.py`, `tileset_map.py`, `metatile_editor.py`, `metatile_picker.py`, `canvas.py`, `door_dialog.py`, `tab.py`, `app/import_tab.py` | both pages shown / picked / counted | test_app `s168_page2` |
+| `editor2/help/13_tilesets.md` (+ "Page 2 — the second 128 tiles"), `14_import_art.md`, `15_animated_tiles.md`, `77_memorial.md`, `90_limits.md`, `95_glossary.md` (Page 2); `_revision.md`, `editor2/__init__.py` | `EDITOR_REVISION` S168 | test_app (the stamp) |
+| `disassembly/bank_000.asm`, `bank_007.asm`, `bank_00b.asm` + `patches/bank_000.asm`, `bank_007.asm`, `bank_00b.asm` | comments only: the decoder's VRAM-bank rule, the census, the hook, the $E0 fill | clean build `1ca6579…` |
+| `editor2/tests/test_compiler.py` (`test_s168`, `REFERENCE_MD5` `7aae0e95…` patched; TEMPLATE_SIZE checks), `test_app.py` (`s168_page2`) | | ALL PASS |
+
+### S168 r2 rows (the user: "Breed/hatch/exit menu … creates visual glitches of words on the screen"; built S168 r2; the ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"))
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/services.py` | `BORROWED_SLOTS` (op `$04` type → the page-1 slots its screen writes while the room shows), `borrowing_screens`, `room_script_ids`, `borrowed_problems` (the validator's warning) | test_compiler `test_s168r2` |
+| `editor2/core/document.py`, `services_doc.py`, `animate.py`, `tile_draw.py` | `room_service_screens` / `service_slots` / `vacate_service_slots` / `_migrate_service_slots`; tile_usage status `service`; every slot search and graphic reuse skips the kept-free slots; `make_service_npc` vacates (`last_service_note`) | the same |
+| `editor2/app/rooms/tileset_map.py`, `tab.py` | brown `service` slots + hover text + summary line; the Service… status line says what moved | test_app `--rom` |
+| `tools/walk_page2.py` (updated) | + `room_art_damage` / `room_ref`: every overlay sampled every 2 frames for a visible ROOM cell whose slot lost its graphic (the animated strip skipped); "more than 128 tiles on screen 0" | 62 / 62 on the r2 build; the S168 build FAILS at Grandpa (`$40-$48 $61 …`); `--negative` 6 FAIL |
+| `examples/s168_page2_demo/build_demo.py` (updated) | the gallery keeps page-1 `$38-$7F` empty (Grandpa's screens): 168 tiles on screen 0 | the walk |
+| `editor2/help/13_tilesets.md`, `67_services.md` (+ "The room's tiles under a menu"), `68_breeding_npcs.md`; `_revision.md` / `editor2/__init__.py` `S168 r2` | | test_app help check |
+

@@ -16,6 +16,20 @@ Pure document logic (no Qt) — mixed into editor2.core.document.Document.
 """
 
 from editor2.core import animation as A
+from editor2.core import page2 as P2
+
+# S168 (page 2): a tile value's sheet slot (page-2 tile n = slot 128 + n; the pre-S168
+# `& 0x7F` for every other value), a remap of one value, the stored form of a slot
+_sk = P2.slot_key
+
+
+def _rm(t, mapping):
+    k = _sk(t)
+    return P2.remap_value(t, k, mapping[k]) if k in mapping else t
+
+
+def _tv(t):
+    return P2.value_of(_sk(t))
 
 EFFECTS = ('slide', 'flip')
 
@@ -79,7 +93,7 @@ class AnimateMixin:
         detail = A.handler(mid).get('slot_detail') or {}
         eff, partners = None, {}
         for k, t in enumerate(mt['tiles']):
-            d = detail.get(str(t & 0x7F))
+            d = detail.get(str(_sk(t)))
             if not d:
                 continue
             if d['kind'] == 'swap' and d.get('partner') is not None:
@@ -100,7 +114,7 @@ class AnimateMixin:
     def _cells_of(self, room, mt):
         """[(layout id, cx, cy)] of this room's cells drawing metatile `mt`
         (same 4 subtiles; same palettes when the layout carries attrs)."""
-        want = [t & 0x7F for t in mt['tiles']]
+        want = [_sk(t) for t in mt['tiles']]
         pals = mt.get('pal')
         out = []
         for lid in self._room_layout_ids(room):
@@ -109,8 +123,8 @@ class AnimateMixin:
             for cy in range(len(tiles) // 2):
                 for cx in range(len(tiles[0]) // 2):
                     r, c = cy * 2, cx * 2
-                    cur = [tiles[r][c] & 0x7F, tiles[r][c + 1] & 0x7F,
-                           tiles[r + 1][c] & 0x7F, tiles[r + 1][c + 1] & 0x7F]
+                    cur = [_sk(tiles[r][c]), _sk(tiles[r][c + 1]),
+                           _sk(tiles[r + 1][c]), _sk(tiles[r + 1][c + 1])]
                     if cur != want:
                         continue
                     if attr and pals is not None:
@@ -125,14 +139,14 @@ class AnimateMixin:
     def _cells_touching(self, room, slots, skip=None):
         """Cells (2x2) of this room drawing a subtile in `slots`, except
         cells that draw metatile `skip` (its 4 subtiles)."""
-        skip = [t & 0x7F for t in skip['tiles']] if skip else None
+        skip = [_sk(t) for t in skip['tiles']] if skip else None
         n = 0
         for lid in self._room_layout_ids(room):
             T = self.layout(lid)['tiles']
             for r in range(0, len(T) - 1, 2):
                 for c in range(0, len(T[0]) - 1, 2):
-                    cur = [T[r][c] & 0x7F, T[r][c + 1] & 0x7F,
-                           T[r + 1][c] & 0x7F, T[r + 1][c + 1] & 0x7F]
+                    cur = [_sk(T[r][c]), _sk(T[r][c + 1]),
+                           _sk(T[r + 1][c]), _sk(T[r + 1][c + 1])]
                     if cur != skip and any(t in slots for t in cur):
                         n += 1
         return n
@@ -165,7 +179,7 @@ class AnimateMixin:
         names = {}
         try:
             for m in self.metatiles(tid):
-                names.setdefault(tuple(t & 0x7F for t in m['tiles']), m.get('name'))
+                names.setdefault(tuple(_sk(t) for t in m['tiles']), m.get('name'))
         except Exception:
             pass
         count = {}
@@ -173,8 +187,8 @@ class AnimateMixin:
             T = self.layout(lid)['tiles']
             for r in range(0, len(T) - 1, 2):
                 for c in range(0, len(T[0]) - 1, 2):
-                    cur = (T[r][c] & 0x7F, T[r][c + 1] & 0x7F,
-                           T[r + 1][c] & 0x7F, T[r + 1][c + 1] & 0x7F)
+                    cur = (_sk(T[r][c]), _sk(T[r][c + 1]),
+                           _sk(T[r + 1][c]), _sk(T[r + 1][c + 1]))
                     if any(t in anim for t in cur):
                         count[cur] = count.get(cur, 0) + 1
         out['tiles'] = [(names.get(k) or '', list(k), n) for k, n in
@@ -186,12 +200,12 @@ class AnimateMixin:
         remapped (S99 r6): placed only in this room, only by these cells,
         and not in My metatiles — they count as free for tiles in the way."""
         cells = self._cells_of(room, mt)
-        mine = [t & 0x7F for t in mt['tiles']]
+        mine = [_sk(t) for t in mt['tiles']]
         occ = {}
         for lid in self._room_layout_ids(room):
             for row in self.layout(lid)['tiles']:
                 for t in row:
-                    occ[t & 0x7F] = occ.get(t & 0x7F, 0) + 1
+                    occ[_sk(t)] = occ.get(_sk(t), 0) + 1
         out = set()
         for t in set(mine):
             u = usage[t]
@@ -208,15 +222,15 @@ class AnimateMixin:
             sh = self.read_sheet(rec['tileset'])
         else:
             sh = bytes(self.vanilla.room_gfx(room).sheet)
-        return [bytes(sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16]) for t in mt['tiles']]
+        return [bytes(sh[_sk(t) * 16:_sk(t) * 16 + 16]) for t in mt['tiles']]
 
     @staticmethod
     def _rewritten(mt, need):
         """Slots of `mt` that ONLY moving quarters use (they get new slots);
         slots of still quarters stay as they are."""
         pos = {k for u in need for k in u[0]}
-        return ({mt['tiles'][k] & 0x7F for k in pos}
-                - {mt['tiles'][k] & 0x7F for k in range(4) if k not in pos})
+        return ({_sk(mt['tiles'][k]) for k in pos}
+                - {_sk(mt['tiles'][k]) for k in range(4) if k not in pos})
 
     def animate_candidates(self, room, mt, effect, frames_a, frames_b=None):
         """Every vanilla animation that can host this tile, best first:
@@ -231,10 +245,10 @@ class AnimateMixin:
         need = units_of(mt['tiles'], frames_a, frames_b or frames_a, effect,
                         self._room_art(room, mt))
         mine = self._rewritten(mt, need)
-        still_q = {mt['tiles'][k] & 0x7F for k in range(4)
+        still_q = {_sk(mt['tiles'][k]) for k in range(4)
                    if not any(k in u[0] for u in need)}
         br_unit = next((i for i, u in enumerate(need) if 3 in u[0]), None)
-        br_wall = (mt['tiles'][3] & 0x7F) < thr
+        br_wall = P2.is_wall(_sk(mt['tiles'][3]), thr)
         # animated cells of this room that another source would stop
         stop_cells = self._cells_touching(room, cur['slots'], mt) if cur['slots'] else 0
         released = self._released_by(room, mt, usage) & mine
@@ -290,14 +304,14 @@ class AnimateMixin:
             offer_flat = {x for f in offer for x in ((f,) if effect == 'slide' else f)} \
                 | set(A.slots(mid))
             spare = {True: 0, False: 0}
-            for f in range(128):
+            for f in range(len(usage)):          # S168: page 2 takes tiles in the way too
                 u = usage[f]
                 # this room's OLD animation stops on a switch: its slots are
                 # ordinary ones then (only other rooms' animated slots stay off)
                 if f in offer_flat or f in other_anim or (u['animated'] and current):
                     continue
                 if (not u['placed'] and not u['mine']) or f in released:
-                    spare[f < thr] += 1
+                    spare[P2.is_wall(f, thr)] += 1
             # a SWITCH makes every slot of the new animation move: tiles in
             # use there (other than this one) must leave — count them all
             want = {True: 0, False: 0}
@@ -373,18 +387,21 @@ class AnimateMixin:
         # animated leaves them) — usable targets; the caller rewrites the
         # cells that still point there
         busy = {i for i, u in enumerate(usage) if u['placed'] or u['mine']} - set(release)
+        avoid = set(avoid) | self.service_slots(tid)     # S168 r2: a service menu draws there
         moved = []
         for s in sorted(slots):
             if s in keep or s not in busy:
                 continue
-            side = [f for f in range(128) if f not in busy and f not in avoid
-                    and f not in slots and (f < thr) == (s < thr)]
+            # S168: any free slot on the tile's side — page 1 first, then page 2
+            free = [f for f in range(P2.SLOTS) if f not in busy and f not in avoid
+                    and f not in slots]
+            side = P2.wall_first(free, thr) if P2.is_wall(s, thr) else P2.walk_first(free, thr)
             if not side:
                 raise RuntimeError(
                     f'slot {s} holds a tile in use and there is no free '
-                    f"{'wall' if s < thr else 'walkable'} slot to move it to — free one "
+                    f"{'wall' if P2.is_wall(s, thr) else 'walkable'} slot to move it to — free one "
                     '(Tileset tab: purge / release, or an own tileset copy) and try again')
-            f = side[-1] if s < thr else side[0]
+            f = side[0]
             sheet[f * 16:f * 16 + 16] = sheet[s * 16:s * 16 + 16]
             self._remap_tile(tid, s, f)
             busy.add(f)
@@ -408,12 +425,16 @@ class AnimateMixin:
         usage = self.tile_usage(tid)
         busy = {i for i, u in enumerate(usage) if u['placed'] or u['mine']}
         sheet = self.read_sheet(tid)
+        # S168: page-2 tile n changes side with page-1 tile n — the band is on both pages
+        band = list(band) + [0x80 + x for x in band]
+        if any(x in anim and x not in avoid for x in band):
+            raise RuntimeError('cannot move the wall/walkable split across animated slots')
         if delta > 0:                         # band becomes wall: its tiles stay walkable
-            targets = [f for f in range(new, 128) if f not in busy and f not in anim
-                       and f not in avoid]
+            targets = [f for f in list(range(new, 128)) + list(range(0x80 + new, 0x100))
+                       if f not in busy and f not in anim and f not in avoid]
         else:                                 # band becomes walkable: its tiles stay walls
-            targets = [f for f in range(new - 1, -1, -1) if f not in busy and f not in anim
-                       and f not in avoid]
+            targets = [f for f in list(range(new - 1, -1, -1)) + list(range(0x80 + new - 1, 0x7F, -1))
+                       if f not in busy and f not in anim and f not in avoid]
         moved = {}
         for x in band:
             if x not in busy:
@@ -509,41 +530,43 @@ class AnimateMixin:
         tid = rec['tileset']
         thr = _val(rec['collision_threshold'])
         anim = self.room_animation(room)['slots']
-        hot = sorted({t & 0x7F for t in mt['tiles'] if (t & 0x7F) in anim})
+        hot = sorted({_sk(t) for t in mt['tiles'] if (_sk(t)) in anim})
         if not hot:
             raise RuntimeError('this tile does not move in this room')
         cells = self._cells_of(room, mt)
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        avoid = self.animated_slots(tid)
+        avoid = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
         new_of = {}
         for sl in hot:
             g = bytes(sheet[sl * 16:sl * 16 + 16])
-            same = next((f for f in range(128) if f not in avoid and (f < thr) == (sl < thr)
+            same = next((f for f in range(P2.SLOTS) if f not in avoid
+                         and P2.is_wall(f, thr) == P2.is_wall(sl, thr)
                          and bytes(sheet[f * 16:f * 16 + 16]) == g), None)
             if same is None:
-                side = [f for f in range(128) if f not in used and f not in avoid
-                        and (f < thr) == (sl < thr)]
+                free = [f for f in range(P2.SLOTS) if f not in used and f not in avoid]
+                side = (P2.wall_first(free, thr) if P2.is_wall(sl, thr)
+                        else P2.walk_first(free, thr))          # S168: page 1, then page 2
                 if not side:
                     raise RuntimeError(
                         f"no free {'wall' if sl < thr else 'walkable'} slot for a still copy of "
                         f'slot {sl} — free one (Tileset tab: purge / release) and try again')
-                same = side[-1] if sl < thr else side[0]
+                same = side[0]
                 sheet[same * 16:same * 16 + 16] = g
                 used.add(same)
             new_of[sl] = same
         self.write_sheet(tid, sheet)
-        new_tiles = [(t & 0x80) | new_of.get(t & 0x7F, t & 0x7F) for t in mt['tiles']]
+        new_tiles = [_rm(t, new_of) for t in mt['tiles']]
         for lid, cx, cy in cells:
             T = self.layout(lid)['tiles']
             r, c = cy * 2, cx * 2
             T[r][c], T[r][c + 1], T[r + 1][c], T[r + 1][c + 1] = new_tiles
         nm = f"still {mt.get('name') or 'tile'}"
-        self.add_metatile(tid, nm, [t & 0x7F for t in new_tiles], mt.get('pal', 0))
+        self.add_metatile(tid, nm, [_tv(t) for t in new_tiles], mt.get('pal', 0))
         self.last_import_note = (f"{len(cells)} cell(s) now still: "
                                  + ', '.join(f'{a}->{b}' for a, b in new_of.items()))
         self.touch()
-        return {'name': nm, 'tiles': [t & 0x7F for t in new_tiles], 'pal': mt.get('pal', 0)}
+        return {'name': nm, 'tiles': [_tv(t) for t in new_tiles], 'pal': mt.get('pal', 0)}
 
     # ------------------------------------------------------------ the op
     def make_animated(self, room_id, mt, effect, mid, frames_a, frames_b=None,
@@ -572,7 +595,7 @@ class AnimateMixin:
             offer = {x for f in source_units(mid, effect)
                      for x in ((f,) if effect == 'slide' else f)}
             moved_s, new_thr = self._shift_split(tid, cand['shift'], offer)
-            mt = dict(mt, tiles=[(t & 0x80) | moved_s.get(t & 0x7F, t & 0x7F)
+            mt = dict(mt, tiles=[_rm(t, moved_s)
                                  for t in mt['tiles']])
             split_note = (f"wall/walkable split moved ${thr:02X} -> ${new_thr:02X} to make room"
                           + (' (' + ', '.join(f'{a}->{b}' for a, b in moved_s.items()) + ')'
@@ -593,7 +616,7 @@ class AnimateMixin:
         cells = self._cells_of(room, mt)
         # assign units -> slots; the unit holding the bottom-right subtile
         # prefers a slot on its current side of the threshold (walkability)
-        br_wall = (mt['tiles'][3] & 0x7F) < thr
+        br_wall = P2.is_wall(_sk(mt['tiles'][3]), thr)
         free = list(cand['free'])
 
         def first(x):
@@ -634,7 +657,7 @@ class AnimateMixin:
         # still quarters keep their graphic; follow it if it had to leave an
         # animated slot
         mv = dict(moved)
-        new_tiles = [(t & 0x80) | mv.get(t & 0x7F, t & 0x7F) for t in mt['tiles']]
+        new_tiles = [_rm(t, mv) for t in mt['tiles']]
         for i, (pos, ga, gb) in enumerate(need):
             x = assign[i]
             if effect == 'slide':
@@ -646,7 +669,7 @@ class AnimateMixin:
                 sheet[p * 16:p * 16 + 16] = gb
                 slot = s
             for k in pos:
-                new_tiles[k] = (mt['tiles'][k] & 0x80) | slot
+                new_tiles[k] = P2.remap_value(mt['tiles'][k], _sk(mt['tiles'][k]), slot)
         self.write_sheet(tid, sheet)
         # this room's cells drawing the tile now draw the animated one
         for lid, cx, cy in cells:
@@ -654,8 +677,8 @@ class AnimateMixin:
             r, c = cy * 2, cx * 2
             T[r][c], T[r][c + 1], T[r + 1][c], T[r + 1][c + 1] = new_tiles
         nm = name or f"animated {effect} ({_vn(mid)})"
-        self.add_metatile(tid, nm, [t & 0x7F for t in new_tiles], mt.get('pal', 0))
-        new = {'name': nm, 'tiles': [t & 0x7F for t in new_tiles], 'pal': mt.get('pal', 0)}
+        self.add_metatile(tid, nm, [_tv(t) for t in new_tiles], mt.get('pal', 0))
+        new = {'name': nm, 'tiles': [_tv(t) for t in new_tiles], 'pal': mt.get('pal', 0)}
         note = ([split_note] if split_note else []) + [f"{effect} with {_vn(mid)}'s animation: slots "
                 + A.rng([first(x) for x in assign.values()])
                 + ('' if effect == 'slide' else
@@ -664,9 +687,9 @@ class AnimateMixin:
             note.append(f'{len(cells)} cell(s) of this room updated')
         if moved:
             note.append('moved ' + ', '.join(f'{a}->{b}' for a, b in moved))
-        br = new_tiles[3] & 0x7F
-        if (br < thr) != br_wall:
-            note.append(f"the tile is now {'a WALL' if br < thr else 'WALKABLE'} "
+        br = _sk(new_tiles[3])
+        if P2.is_wall(br, thr) != br_wall:
+            note.append(f"the tile is now {'a WALL' if P2.is_wall(br, thr) else 'WALKABLE'} "
                         f"(slot {br} sits on that side here)")
         if took:
             note.append(f"took over slot(s) {A.rng(took)}: in {took_cells} cell(s) the quarters "

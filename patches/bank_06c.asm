@@ -95,7 +95,7 @@ CustomTileAnimate:
 ;   +3 nslots   tiles this group changes per step (1-TILEANIM_CAP)
 ;   +4 dw seq   seqlen x dw: the 16-aligned frame block of each step
 ;               (nslots x 16 bytes, in the order of the dest list), in THIS bank
-;   +6 nslots x dw  VRAM destination ($9000 + slot*16, VRAM bank 0)
+;   +6 nslots x dw  VRAM destination ($9000 + slot*16; bit 0 = VRAM bank 1, S168)
 ; Step 0 of every sequence is the art the sheet already holds (the room
 ; loads it), so entering a room needs no copy.
 ;
@@ -269,6 +269,9 @@ TileAnimRestart:
 
 ; Copy ONE tile: 16 bytes from wTileAnimSrc (this bank, 16-aligned) to the
 ; VRAM address at [HL] (dw); HL += 2, wTileAnimSrc += 16. B/C/DE kept.
+; S168 (ROADMAP P3.3g): bit 0 of the destination word = VRAM bank 1 (a page-2
+; tile: $9000 + slot * 16 of bank 1); the DMA ignores the low 4 bits, so the
+; address itself is the same; VBK is 0 again before interrupts come back on.
 TileAnimCopy:
     ld a, [wTileAnimSrc + 1]
     ldh [rHDMA1], a
@@ -282,7 +285,9 @@ TileAnimCopy:
     ld [wTileAnimSrc + 1], a
 .srcOk:
     ld a, [hl+]
-    ldh [rHDMA4], a                     ; destination low
+    ldh [rHDMA4], a                     ; destination low (bits 0-3 ignored by the DMA)
+    and $01
+    ld [wTileAnimDstVBK], a             ; S168: bit 0 = a PAGE-2 tile (VRAM bank 1)
     ld a, [hl+]
     ldh [rHDMA3], a                     ; destination high ($90-$97)
 .wait:
@@ -300,13 +305,14 @@ TileAnimCopy:
     ldh a, [rLY]
     cp 127
     jr z, .retry                        ; the LYC=127 status-bar split line
-    xor a
-    ldh [rVBK], a                       ; the room sheet lives in VRAM bank 0
+    ld a, [wTileAnimDstVBK]
+    ldh [rVBK], a                       ; page 1 = VRAM bank 0, page 2 = bank 1 (S168)
 .hblank:
     ldh a, [rSTAT]
     and $03
     jr nz, .hblank                      ; A = 0 as HBlank begins
     ldh [rHDMA5], a                     ; General-Purpose DMA, 1 block of 16 B
+    ldh [rVBK], a                       ; A = 0: VRAM bank 0 again before interrupts
     ei
     ret
 .vblank:
@@ -316,9 +322,11 @@ TileAnimCopy:
     jr nc, .retry                       ; too close to line 0
     cp 144
     jr c, .retry
-    xor a
+    ld a, [wTileAnimDstVBK]
     ldh [rVBK], a
+    xor a
     ldh [rHDMA5], a
+    ldh [rVBK], a
     ei
     ret
 .retry:

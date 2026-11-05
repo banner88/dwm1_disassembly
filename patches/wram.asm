@@ -534,7 +534,16 @@ wHintCursor:: dw ;d5b2 — the archive's next list position
 wHintN:: dw ;d5b4 — candidates counted
 wHintK:: dw ;d5b6 — a hint (scratch)
 wHintTmp:: ds 4 ;d5b8 — the monument's slot / families lo / hi / scratch
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 - 35 ;d5bc-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map; S158 35: the breeding hints)
+; S168 — PAGE 2 (ROADMAP P3.3g; PROJECT_COMPILER §2.76, ROOM_DATA_FORMAT "Page 2: the
+; second 128 tiles (S168)"). wPage2On = 1 while the room on screen draws cells from its
+; tileset's page 2 (VRAM bank 1 $9000-$97FF, attribute bit 3): set at every room sheet
+; load by the page-2 home bank's Page2Room (bank $0B regions memorial_tiles_0 / _1),
+; read by bank $73 BoxAttrActive and bank $77 PushAttrActive (the boxes / windows clear
+; bit 3 under their letters, as in a free-colour room). wTileAnimDstVBK = the VRAM bank
+; of the tile the own-animation player copies (bit 0 of its destination word).
+wPage2On:: db ;d5bc — 1 = this room draws page-2 tiles (transient)
+wTileAnimDstVBK:: db ;d5bd — the tile animation's destination VRAM bank (scratch)
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 - 35 - 2 ;d5be-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map; S158 35: the breeding hints; S168 2: wPage2On + wTileAnimDstVBK)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

@@ -10,6 +10,65 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-05 (Session 168 — **ROADMAP P3.3g BUILT: PAGE 2 — A TILESET HOLDS 256 TILES, THE SECOND 128 IN
+> VRAM BANK 1 (ATTRIBUTE BIT 3, GBC ONLY); THE WHOLE-GAME CENSUS (THE ORIGINAL NEVER TOUCHES BANK 1'S TILES), THE ENGINE
+> (PAGE-2 BANKS, A GDMA COPY AT EVERY ROOM-SHEET LOAD, BOXES / WINDOWS CLEAN OVER PAGE 2, ANIMATIONS ON PAGE 2), THE
+> COMPILER AND THE EDITOR (EVERY SLOT SEARCH SPILLS ONTO PAGE 2)** (the user: "This session I want: more tiles per room
+> item"; the audit conferred → "Different rooms will have mostly different tilesets … having access to diverse tiles in a
+> given room is the most important thing"; "Walkability per room is completely fine"; "GBC only yes absolutely";
+> "Include animation"; "I just want it to work"; "Do it all this session"). **Built S168, NOT yet user-tested.**
+> Test ROM **`DWM-S168-page2-test.gbc`** (`020d8dd2…`, patched) = the user's project + THE NUMBERED GALLERY
+> (`examples/s168_page2_demo/build_demo.py`; way in: the GALLERY CURATOR, Cities_FOUNT (3, 4)): two screens of 256 numbered
+> tiles (page 1 plain, page 2 striped; 208 different on screen 0), the curator's YES / NO, a SHOPKEEPER, GRANDPA, a VAULT
+> KEEPER, a LIBRARIAN, the SPARRING SLIME, a blinking page-2 strip. Example pin `7aae0e95…` (patched; was `26a4faf1…`,
+> patched, historical) — the example has no page 2; the pin moves with the engine (bank $73 / $77 / the animation player).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler
+> `--rom` ALL 2025 PASSED at start (in a worktree of HEAD).
+> **Census (`tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json`):** VRAM bank 1 `$8000-$97FF` seeded at
+> power-on — the title, 8 gates' battles (25 played out) + the field menu, the 519-scene cutscene census (68 runs): no
+> write, no BG cell with attribute bit 3; positive control reported.
+> **Engine:** page-2 banks (ext banks, the LAST kind; `templates/page2_copy.asm` / `page2_home.asm`): bank $0B's
+> room-sheet regions → `Page2Room` (`wPage2On` $D5BC; directory by region + map id) → the RAW sheet by GDMA (64 × 32 B
+> at HBlank) + tiles `$E0-$FF` mirrored; bank $73 `BoxAttrActive` / bank $77 `PushAttrActive` answer in a page-2 room,
+> ScreenPush writes attribute + tile per cell there (`PushRowBoth` — tiles-then-attributes showed 2-6 frames of bank-1
+> letters at the shop / the Vault, KEY_LESSONS S168); the own-animation player copies to the bank in bit 0 of its
+> destination word (`wTileAnimDstVBK` $D5BD). `TEMPLATE_SIZE[$77]` 2889, `[$6C]` 378, `ANIM_TEMPLATE_SIZE` 290.
+> **Compiler / editor:** tile value `$100-$17F` = page-2 tile n; a 4096-byte raw2bpp = page 1 + page 2; the compiler
+> derives bit 3 per (attr grid, tile grid) (`page2.derived_attr_items`, appended last — a project without page 2 compiles
+> as before); every free-slot search covers 256 slots, page 1 first; walkability = the map byte (page-2 n walks like
+> page-1 n); statues keep page 1 (`Document.page1_room`); the Tileset tab / metatile editor show both pages.
+> PROJECT_COMPILER §2.76, ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)". `EDITOR_REVISION` S168.
+> **Measured:** `tools/walk_page2.py` on the user's save 55 / 55 (every cell's byte + bank, bank 1 == page 2, the blink,
+> 7 overlays sampled every 2 frames, the room whole after each, leaving clears `wPage2On`); `--negative` (`wPage2On`
+> forced 0) 6 FAIL. **A / B:** the user's project WITHOUT page 2, built with HEAD vs the S168 engine, on the user's save:
+> all 35 screens of its 12 rooms identical (both tile maps + attributes, VRAM banks 0 / 1, palettes). **Annotation:** comments in both trees (bank $00 WaitDMATransfer's VRAM-bank rule, bank $0B's hook /
+> census, bank $07's `$E0` fill); clean build `1ca6579…`.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2049 PASSED (+ `test_s168` / `--rom`); test_app `--rom` PASS
+> (+ `s168_page2`; S122's borrow into a full theme now lands on page 2 without the "release vocabulary" question; the GUI
+> build == the pin `7aae0e95…`, patched).
+> **S168 r2 — the user tested and reported "Breed/hatch/exit menu (talk with breeding NPC) creates visual glitches of
+> words on the screen"** (Grandpa in the gallery: "EXIT INFO" over the floor). Not a page-2 fault: the breeding / farm /
+> egg screens draw into the ROOM's page-1 slots while the room shows (ROOM_DATA_FORMAT "The game's menus draw into the
+> room's tile slots" — S126 / S127 knew the slots; the gallery placed tiles in all 256). Measured (PyBoy, a new room-art
+> check: a visible room cell whose slot no longer holds its graphic): Grandpa writes `$40-$48` / `$61-$7A`, a master
+> `$38-$3F` / `$78-$7C` while the room shows; code-read sets (`services.BORROWED_SLOTS`): breeding `$38-$7F`, farm
+> `$60-$6F`, eggs `$70-$78`. **Editor fix (no engine change, the pin stays `7aae0e95…`):** a project sheet whose rooms
+> have such a screen (a service NPC's kind, or a raw `op $04 3/5/6/7/11`) keeps those slots free — status `service`
+> (brown on the Tileset tab), out of every slot search / twin / reuse; `make_service_npc` and the project open
+> (`_migrate_service_slots`) move tiles placed there to a free slot on their side (page 2 first, lowest numbers), every
+> layout following; the validator warns (`services.borrowed_problems`, project tilesets only). The user's project: 26
+> tiles of "Boss: Temptation (Servant)" (2 breeders) move to page 2 on open. The gallery keeps page-1 `$38-$7F` empty
+> (168 tiles on screen 0). Test ROM **`DWM-S168r2-page2-test.gbc`** (`7a4edcf9…`, patched). `walk_page2.py` 62 / 62
+> (+ the room-art check per overlay; the S168 build FAILS it at Grandpa = the negative; `--negative` 6 FAIL);
+> test_compiler `test_s168r2`; checks: verify_integrity PASS, test_compiler `--rom` ALL 2061 PASSED (REGRESSION == the
+> pin), test_app `--rom` PASS. Known, unchanged (help 68): while a breeding menu is open, sprites over tiles numbered
+> `$40`+ (Grandpa) hide — on page 2 too (the gallery's Grandpa stands on `p2 $40`). `EDITOR_REVISION` S168 r2.
+> **Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it")** — the editor half (import / borrow / draw into a full tileset, the brown slots,
+> the open-time move in the user's project) NOT yet user-tested.
+> **Next:** the user's test (`DWM-S168r2-page2-test.gbc`: Grandpa's menu over the gallery; the gallery's windows over the
+> striped tiles; the editor: import / borrow / draw into a full tileset, the Tileset tab's page 2 and its brown slots);
+> P3.17 packaging; the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 167 — **THE OUTSTANDING FIXES F2 + F3 + P3.H: A STALE PYSIDE WRAPPER (THE S166
 > "QStandardItem.triggered" NOTE), THE PATCH-SPACE AUDIT (EVERY BYTE A PATCHED BUILD WRITES INTO A BANK THE GAME USES —
 > ONE LIVE OVERLAP FOUND AND FIXED: ROM0's GROOVE ROW TABLE), THE HELP TAB'S GLOSSARY, "?" BUTTONS AND SCREENSHOTS**
@@ -53,60 +112,8 @@
 > **Next:** the user's test (the editor's "?" / F1 / Glossary / pictures; `DWM-S167-audit-test.gbc` = their project as
 > before); P3.17 packaging (with the user's Mac); the "Awaiting a user test" list.
 
-> Last verified: 2026-11-05 (Session 166 + r2 — **THE OUTSTANDING FIXES A1-A3 + B + C: THE WINDOW WORDS OF THE OTHER SCREENS
-> (THE SHOP, THE FARM, THE NAMER, GRANDPA, THE EGG APPRAISER, THE BATTLE — EACH WITH ITS OWN LETTERS), THE WORDS A WINDOW
-> CUTS OUT OF A TEXT (THE VAULT'S PUT / TAKE / EXIT …), THE TABLES' LINE WIDTHS MEASURED; T-FOLLOW (d) CLOSED BY DESIGN;
-> THREE STALE BOXES CLOSED (A′2, THE ISLANDS' FLAG AUDIT, E3 (b2)); THE TEXT CORPUS RE-SECTIONED (T2…Tn)** (the audit of
-> the open items → user: "can you explain A1-4 in clear words?", "Do A1-3, close A4. Close B and if time allows do C").
-> **Built S166, NOT yet user-tested.**
-> **S166 r2** (the user on `DWM-S166-glossary-test.gbc`: "Everything works BUT when the drakslime gets up and looks at us
-> and given option to join party - YES/NO - the NO has a bit of a glitch at the bottom. This is the only issue"): NOT a
-> window-word fault and older than S166 — S128's `ArenaScriptType51` was placed at $51:$7B34, the LAST byte (a literal
-> `$00`, the O's bottom row) of the LZ stream gfx `$5112` (the U N O letters bank $51 loads to `$89C0` for the YES / NO;
-> the free-space scan took it for the first byte of the `$00` fill). The byte restored in `patches/bank_051.asm` (`db $00`),
-> `ArenaScriptType51` / `LearnUpgradeOrAdd51` one byte later ($7B35 / $7B3B), one `nop` less in the tail fill. All 40 gfx
-> streams the code loads (`ld de, id` + `call WaitDMATransfer`) are the original bytes in the patched build (test_s166
-> `--rom`). PyBoy on the user's save: the join question's `$89C0` tiles == the original stream's decode, the screenshot's
-> NO clean; the S166 ROM (negative control) has the O's last row `$FF $FA`. ARCHITECTURE free-space row `$51` = `$7B35`,
-> 1,227 B; KEY_LESSONS "S166 r2". **Built S166 r2, NOT yet user-tested.** Test ROM **`DWM-S166r2-glossary-test.gbc`**
-> (`e81f931c…`, patched). Example pin `fee3147e…` (patched; was `2fe3faba…`, patched, historical).
-> Test ROM (historical) **`DWM-S166-glossary-test.gbc`** (`058dcc6b…`, patched) = the user's project + THE GLOSSARY HALL
-> (`examples/s166_glossary_demo/build_demo.py`; way in: the GLOSSARY GUIDE, Cities_FOUNT (3, 4)): four screens, one NPC of
-> every service (SHOPKEEPER, VAULT KEEPER, FARM KEEPER, LIBRARIAN, MONSTER NAMER, MEDAL MAN, EGG APPRAISER, GATE GUIDE,
-> GRANDPA), the SPARRING SLIME (always joins) and the WORDSMITH; this ROM's words: the shop GET / OUT, the Vault STOW / GET,
-> the farm REST, Grandpa MATE / BACK, the egg appraiser RATE, the battle HIT / FLY / CAREFUL. Example pin `2fe3faba…`
-> (patched, historical) UNCHANGED by S166 itself (byte-neutral: the regions emit the same bytes; r2 moved it, above).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's test_compiler `--rom` ALL 1963 PASSED at start.
-> **A1 (re-section + compiler + editor):** 25 more window-layout runs (banks $09 $0A $12 $18 $50 $51) as labeled `db` in both
-> trees + compiler regions (28 in all), 116 `ld de` sites named, the drawers named in every bank (`LoadPaletteFromDE` $50:$75F0
-> = a misnomer: entry B of the drawer); bank $12's S26 / S27 `LibWinLayout_*` run re-emitted with its labels. The letters
-> MEASURED (NEW `census_window_layouts.py --services`: the GLOSSARY HALL tour on the user's save; a letter = a tile's 8 × 8
-> shape against the text font): 47 more editable words, each screen its own letters; excluded: the naming keyboard, the
-> pedigree picture, bank $51's join / full-party windows (an undecoded writer re-letters their tiles), the link windows.
-> **A2:** the packed rows are TEXT CANVASES (`ld hl, <tiles> / ld de, <cells, rows>` → [$C827-$C82A] → CallTextEngine draws
-> into the tiles; the 7 helpers named `TextToCanvas` in comments): the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's
-> EXIT = 7 text slots (`T:<table>:<row>/<offset>`, the row composed into gamedata.text). **A3:** `text_widths` measured
-> (18 / 9 cells) + the credits (20 / 11): the Text tab warns past them, never on the game's rows. **A4** closed by design.
-> **B:** A′2 superseded (S90 clone-to-custom); the islands' flag audit (NEW `tools/audit_island_flags.py` → SIDEQUEST_MAP;
-> the validator = S124's `game_only` problem, now a test fixture); E3 (b2) = ARCHITECTURE "SRAM banks 1-3: the allocation
-> map (S166)". **C:** banks $42-$46 / $48-$4B / $4E re-sectioned (1,244 strings, 1,268 dispatch rows named, 20 loader stubs).
-> PROJECT_COMPILER §2.74; TEXT_SYSTEM "Window words (S165)" + "Text canvases (S166)"; DATA_STRUCTURES "Window layout streams".
-> **Measured:** NEW `tools/walk_window_words.py --services` 50 / 50 on the demo (every edited word read on screen by shape,
-> the windows' other words unchanged), `--negative` (the plain build) 11 FAIL; the census on the plain build (136 streams,
-> 68 drawn, 40 fonts).
-> **Found:** the party-full WHO / INFO / OK letters are re-lettered after misc 10 / 27 are drawn (not the text engine;
-> ROADMAP T-follow note); `WHOINFOOKMONEGG` is the link mode's (bank $18) — no field screen reads it; misc 9 has no reader;
-> a test_app traceback (talk_editor `BoxEditor`'s Insert menu: `QStandardItem.triggered`) printed in the S119 cutscene
-> step test (the test still passes; not this session's code — not checked on HEAD).
-> **Annotation (both trees, `1ca6579…`):** the runs + drawers above; the 7 `TextToCanvas` helpers; CallTextEngine's
-> [$C827] note; the ten text banks (clean tree).
-> **Checks:** verify_integrity PASS; test_compiler `--rom` (+ `test_s166`); test_app `--rom` PASS (+ `s166_window_words`;
-> the GUI build == the pin `2fe3faba…`, patched, historical). r2: verify_integrity PASS; test_compiler `--rom` ALL PASS
-> (+ the r2 stream check); the pin `fee3147e…` (patched).
-> **Next:** the user's test of `DWM-S166r2-glossary-test.gbc` (the join YES / NO); bank $51's re-lettering writer; P3.17 packaging; the "Awaiting a user
-> test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S168** (2026-11-05): ROADMAP P3.3g built — PAGE 2: a tileset holds 256 tiles, the second 128 in VRAM bank 1 (attribute bit 3, GBC only). Census `tools/census_vram_bank1.py` (the original never touches bank 1's tiles: title, battles, 519 cutscenes); engine: page-2 banks (the last ext kind; GDMA copy at every room-sheet load via bank $0B's regions → `Page2Room`, tiles $E0-$FF mirrored), boxes / windows clean over page 2 (`wPage2On` → bank $73 / $77; ScreenPush attribute + tile per cell), own animations on page 2; compiler: tile values $100-$17F, derived attr streams; editor: every slot search spills onto page 2, statues keep page 1, Tileset tab / metatile editor show both pages. `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL). PROJECT_COMPILER §2.76. Test ROM `DWM-S168-page2-test.gbc` (patched); pin `7aae0e95…` (patched). **S168 r2** (user report: Grandpa's BREED / HATCH / EXIT words over the floor): rooms with a breeding / farm / egg screen keep the page-1 slots it draws into free (`services.BORROWED_SLOTS`; moved on NPC creation and on open, page 2 first; validator warning); walk 62 / 62; test ROM `DWM-S168r2-page2-test.gbc` (patched). Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested.
 - **S167** (2026-11-05): the outstanding fixes F2 + F3 + P3.H — F3: `tools/audit_patch_space.py` (every byte a patched build writes into a bank the game uses: 29 FILL runs judged, 1,775 LZ streams untouched; dynamic poison A/B of the original ROM over the cutscene census + a battle / menu corpus, identical) found ROM0 `$3BC2-$3BD2` (MapIDClampForPalette since S63) = rows 3 / 4 of the GROOVE ROW TABLE read by the boss song — moved to the dead master table `$3466`, `GrooveRowTable` re-sectioned both trees; 4 runs whose readers are unreachable annotated. F2: the S166 traceback = a stale PySide wrapper (`editor2/app/qt_safe.py`). P3.H: "?" on the tab bar / sub-tab bars / the Rooms page column / 47 dialogs, F1, topic links, the Glossary, a Families topic, 22 tab pictures. Test ROM `DWM-S167-audit-test.gbc` (`a386a504…`, patched); pin `26a4faf1…` (patched). Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"); the editor half NOT yet user-tested.
 - **S166** (2026-11-04): the outstanding fixes A1-A3 + B + C — A1: the window words of the other screens (25 runs of banks $09 $0A $12 $18 $50 $51 re-sectioned both trees + regions; the screens' letters measured by shape on the GLOSSARY HALL tour; 47 more words); A2: the packed rows = text canvases (7 text slots: the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT); A3: the tables' line widths measured (`text_widths`) + warnings; A4 (debug texts) closed by design; B: A′2 superseded, the islands' flag audit (`tools/audit_island_flags.py`, SIDEQUEST_MAP), E3 (b2) the SRAM allocation map; C: T2…Tn — banks $42-$46 / $48-$4B / $4E re-sectioned; walk_window_words `--services` 50 / 50, negative 11 FAIL. PROJECT_COMPILER §2.74. Test ROM `DWM-S166-glossary-test.gbc` (patched); pin `2fe3faba…` (patched, historical) unchanged. Built S166, NOT yet user-tested. **r2:** the join YES / NO's "NO" glitch = S128 `ArenaScriptType51` over the last byte of gfx `$5112` ($51:$7B34) — restored; test ROM `DWM-S166r2-glossary-test.gbc` (patched); pin `fee3147e…` (patched). Built S166 r2, NOT yet user-tested.
 - **S165** (2026-11-04): the outstanding fixes 1-3 — 1: every stock skill a base (the 17 bases a copy could not run + 11 S164 had just allowed: `census_act_id_lists.py --refused` 40 roots, 24 same-size reads in banks $52 / $53 / $58 → the act-time base view; clone census 155 same / 0 differ; walk_actbase `--set s165` 53 / 53, negative 48 FAIL); 2: the WINDOW WORDS (window layout streams: bank $07 field menus, bank $15 title; 8 drawer copies; the field font measured; re-sectioned both trees; `gamedata.window_words`, the Text tab's Window words page; walk_window_words 36 / 36, negative 5 FAIL); 3: the AI rule model exact on arbitrary boards (20 rules + their slips, `simulator/rule_gaps.py` 0 mismatches over 3 seeds); FOUND: S163 / S164 censuses covered the allowed bases only, the S164 bank-$15 note was the wrong bank (DOC_AUDIT S165). PROJECT_COMPILER §2.73. Test ROM `DWM-S165-chorus-test.gbc` (patched); pin `2fe3faba…` (patched). Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"). S164 USER-CONFIRMED 2026-11-04 09:40.
@@ -286,6 +293,7 @@
 | Gate damage tiles | Standing-tile id → HRAM `$AA` (`$00:$1E96`); behavior class `$AA>>2`: `$0E` (ids `$38–$3B`) = damage, `$0F` (`$3C–$3F`) = staircase. Amount = `FloorDamageTable` `$01:$5E7D` (16 B by floor type): type 3→5, type 6→10, types $0C/$0E→2, else 0. Applier `ApplyFloorDamage` `$01:$5E23`. (GATE_GENERATION.md §5.1.) |
 | Room palette derivation | A room's runtime BG palette is ROM-derivable: real colours are only indices 0 & 2 of slots 0–3 (`$17:$476F`[mapID] normal / `$17:$51F5`[floortype] gate, scanning past empty screens); engine FORCES idx1=`$6bff`, idx3=`$0000` in every BG palette; slots 4–7 shared system; object palettes global at `$17:$5615`. `tools/derive_room_palette.py`, validated 30/30 dumps + gate. (GATE_GENERATION.md §7.1.) |
 | Script opcodes | **102** (`$00-$65`, rst $00 table after MarkScriptActive `$04:$5613`); arity + branch kind per opcode from the HANDLER code: `extracted/script_param_counts.json` (`tools/script_param_counts.py`, verify check 5). Script data bank by map type: <$06 `$0C`, <$20 `$0D`, <$40 `$0E`, else `$0F` (master table `$41BA` in each). decompile_script's old PARAM_COUNTS is wrong for 36 opcodes (DOC_AUDIT S96). **S148: a script ENDS only at an op whose handler clears wScriptStateFlags — `$0F $3A $3B $43 $4F $58` (`_ends_script` in the JSON = `script_ops.TERMINAL`); `$3E` (change game mode) and `$16` (refresh sprites) yield and go on (BANK04_SCRIPT_ENGINE "Where a script ends"). Banks $0C-$0F annotated from this decoder (`recomment_script_banks.py`).** |
+| Room tiles: page 2 (S168) | a room sheet = 128 tiles in VRAM bank 0 `$9000-$97FF`; patched builds: a project tileset may add **page 2** = 128 more in VRAM BANK 1 `$9000-$97FF`, drawn by attribute bit 3 (the `$C200` nibble carries it unchanged). The original game never writes bank 1's tile area nor sets bit 3 (`tools/census_vram_bank1.py`). Walkability = the map byte (page-2 n like page-1 n). Loaded by the page-2 home bank's `Page2Room` from bank $0B's room-sheet regions; `wPage2On` $D5BC. ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)" |
 | Room tile animation | bank $01 `PerRoomVRAMDispatch` $60E7 → `rst $00` table `$01:$6119`, **112** entries ($00-$6F), per field frame; clock `$C8A6/$C8A7`; the ONLY BG tile animation (none in gates). Custom rooms: bank $71 entry 3 `CustomAnimSource` (S99), which first runs bank $6C `CustomTileAnimate` — the room's OWN animations (S102, `tile_anims`, GDMA frame copies, any slot / speed; S139: a forwarder through `TileAnimDirectory` to the room's animation bank — $6C or $80+, each with its own copy of the player; ARCHITECTURE "Animation banks (S139)"). Census `extracted/room_animations.json`; ROOM_DATA_FORMAT "Animated tiles". |
 | LZ graphics streams | `WaitDMATransfer` `$00:$1577` (DE = gfx-ID, HL = dest): literal / `[marker, lo, hi4:len4]` copies from dest + 12-bit offset, count len4+4 or next byte + $13 (8-bit, 0 = 256); EVERY source byte re-wrapped 4 KB down when at/after the end, written 0 when that lands below dest. No shared pool. Python twin `dwm/sprite_codec.decode` (S106 fix) == the game for all 442 monster streams (`tools/census_lz_decode.py`). |
 | Edited game text (S150) | Every text the game shows (ROM0 CallTextEngine $05B6) or copies into a buffer (RunTextHandler $05F6) is found by SaveBankAndSwitch $092F (level 1 = the mode's TABLE, level 2 = table + 2 · id); a text = its POINTER SLOT (bank, table + 2 · id), measured per text id in `extracted/dialogue.json`. Patched: ROM0 $00F0 `TextLevel1Hook` (the level-1 read + far call bank $60 entry 14 `TextOverride`: the S105 nickname redirect, then `TEXT_OVR_HOME`'s `TextOvrFind`) / $00F8 `SaveBankAndSwitchCopy` (`wTextOvrMode` $D561 = 1); an edited text returns DE = `wTextOvrPtr` ($D562) − 2 · id; show: [$C824] = its bank; copy: its bank's `TextOvrCopy` → [$C837]. `gamedata.text` (editor2/core/gametext.py, textmark.py). TEXT_SYSTEM "Edited game text (S150)", PROJECT_COMPILER §2.58. |
@@ -348,7 +356,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
 | $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
 | **Unallocated** | **none** (S121: $79 = story hooks; S117: $77 = shops; S116: $75 = the second song bank; S114: $76 taken; S107: $7A / $7C are art banks) + reserved $7F. | — |
-| $80-$FF | **S150: + the TEXT BANKS, numbered after the battle banks** (the project's edits of the game's own texts — `gamedata.text`; the first = the HOME bank: `TextOvrFind` + `TextOvrBanks` + `TextOvrDir` + the lists, every one `TextOvrCopy` at entry 1 + texts first fit; `gametext.emit_text_banks`). **S149 (ARC CAP5): + the BATTLE BANKS, numbered after the song banks** (project enemy rows past bank $6B, battle lists past bank $76's first 256; each a self-ID + the pinned copier block `templates/battle_bank.asm` + rows / lists; `battles.emit_battle_banks`). **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). **S135 (ARC CAP2a): the LZ stream overflow banks, allocated from $80 up as needed** (layouts / attr maps / tilesets that do not fit $64 / $67, any kind mixed; `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm). **S136 (ARC CAP2b): the PLACE BANKS, numbered after the stream banks** (rooms' scripts / patches / screens / lists / states / casts (S137: + render rows + palettes) + text sections that do not fit $60; each a self-ID + the reader block at `$4001` + its places; `patches/bank_0xx.asm`). **S139 (ARC CAP2d): the ANIMATION BANKS, numbered after the place banks** (rooms' own animated tiles that do not fit $6C; each a self-ID + `dw TileAnimPlay_A<bank>` + the player + its rooms' records and frames). **S147 (ARC CAP5): the SONG BANKS, numbered after the animation banks** (project songs past $74 / $75 — one bank a song, first fit; each a self-ID + streams; `music.song_ext_banks`). | compiler `ext_banks` (`emit_bank_ext`) + `streams_ext` (`emit_stream_banks`) + `places_ext` (`places.emit_place_banks`) + `anims_ext` (`tileanim.emit_anim_banks`) + `songs_ext` (`music.emit_song_ext_banks`, S147) + `battles_ext` (S149) + `texts_ext` (`gametext.emit_text_banks`, S150) + `mem_pics_ext` (the memorial's picture bank after the text banks — entry 0 `MemPicDraw` + 240 × 64 B standing pictures; only with statues; `memorial.emit_pic_banks`, S154) |
+| $80-$FF | **S168: + the PAGE-2 BANKS, numbered LAST (after the memorial's picture bank)** (the RAW page 2 of every project tileset that uses one; the home bank = entry 0 `Page2Copy_P<bank>` + entry 1 `Page2Room` + `Page2Directory` + sheets, the rest = entry 0 + sheets, ≤ 7 sheets a bank; `editor2/core/page2.py`, PROJECT_COMPILER §2.76). **S150: + the TEXT BANKS, numbered after the battle banks** (the project's edits of the game's own texts — `gamedata.text`; the first = the HOME bank: `TextOvrFind` + `TextOvrBanks` + `TextOvrDir` + the lists, every one `TextOvrCopy` at entry 1 + texts first fit; `gametext.emit_text_banks`). **S149 (ARC CAP5): + the BATTLE BANKS, numbered after the song banks** (project enemy rows past bank $6B, battle lists past bank $76's first 256; each a self-ID + the pinned copier block `templates/battle_bank.asm` + rows / lists; `battles.emit_battle_banks`). **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). **S135 (ARC CAP2a): the LZ stream overflow banks, allocated from $80 up as needed** (layouts / attr maps / tilesets that do not fit $64 / $67, any kind mixed; `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm). **S136 (ARC CAP2b): the PLACE BANKS, numbered after the stream banks** (rooms' scripts / patches / screens / lists / states / casts (S137: + render rows + palettes) + text sections that do not fit $60; each a self-ID + the reader block at `$4001` + its places; `patches/bank_0xx.asm`). **S139 (ARC CAP2d): the ANIMATION BANKS, numbered after the place banks** (rooms' own animated tiles that do not fit $6C; each a self-ID + `dw TileAnimPlay_A<bank>` + the player + its rooms' records and frames). **S147 (ARC CAP5): the SONG BANKS, numbered after the animation banks** (project songs past $74 / $75 — one bank a song, first fit; each a self-ID + streams; `music.song_ext_banks`). | compiler `ext_banks` (`emit_bank_ext`) + `streams_ext` (`emit_stream_banks`) + `places_ext` (`places.emit_place_banks`) + `anims_ext` (`tileanim.emit_anim_banks`) + `songs_ext` (`music.emit_song_ext_banks`, S147) + `battles_ext` (S149) + `texts_ext` (`gametext.emit_text_banks`, S150) + `mem_pics_ext` (the memorial's picture bank after the text banks — entry 0 `MemPicDraw` + 240 × 64 B standing pictures; only with statues; `memorial.emit_pic_banks`, S154) + `page2_ext` (the page-2 banks, last; `page2.emit_banks`, S168) |
 
 ## Iron Rules
 
@@ -467,6 +475,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Every stock battle skill a base for a new skill (the last 17 — Sacrifice … BladeD — and 11 S164 had allowed) | 🟢 built S165 (ROADMAP E13 note), USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"): 24 same-size act-time reads (banks $52 / $53 / $58) → the base view; the clone census 155 same / 0 differ; walk_actbase `--set s165` 53 / 53 | BATTLE_SKILL_SYSTEM §13.14 "S165"; PROJECT_COMPILER §2.73; help 54 |
 | The words of the windows (field menus, the title menu) editable — Text → Window words | 🟢 built S165 (ROADMAP T-follow (a)), USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good"): `gamedata.window_words` → regions `win_words_*` (banks $07 / $15, re-sectioned both trees); 42 words, the screen font's letters; walk_window_words 36 / 36. **S166 (built S166, NOT yet user-tested): + the shop, the farm, the Monster Namer, Grandpa, the egg appraiser, the egg page, the battle (47 words, each screen's measured letters; banks $09 $0A $12 $18 $50 $51 re-sectioned) + the words a window cuts out of a text (the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT, Grandpa's EXIT — gamedata.text) + the tables' measured line widths (warnings); walk_window_words `--services` 50 / 50** | `editor2/core/window_words.py`; DATA_STRUCTURES "Window layout streams (S165)"; TEXT_SYSTEM "Window words (S165)" / "Text canvases (S166)"; PROJECT_COMPILER §2.74; help 56 |
 | Help where you are: the Glossary, a "?" on the tab bar / every sub-tab bar / the Rooms page column / 47 dialogs, F1, topic links, the tab pictures | 🟢 built S167 (ROADMAP P3.H), NOT yet user-tested: `editor2/app/context_help.py` (TAB / SUBTAB / RAIL / DIALOG_TOPICS), `help_tab.py` (links, headings, pictures, Back / Previous), topics `51_families.md` / `95_glossary.md`, `editor2/help/img/` (`tools/help_screenshots.py`); test_app `s167_context_help` | EDITOR_DESIGN §5.11; help 00 / 95 |
+| Page 2 — a tileset of 256 tiles (the second 128 in VRAM bank 1, attribute bit 3; GBC only): every free-slot search spills onto it (imports, borrow, Draw, walkability twins, own animation copies), text boxes / windows / menus clean over it, battles leave it, own animations on it, statues keep page 1 | 🟢 built S168 (ROADMAP P3.3g); r2 (service menus' slots kept free) ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested: `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL); the original game never touches bank 1's tiles (`tools/census_vram_bank1.py`); test ROM `DWM-S168-page2-test.gbc` (patched) | PROJECT_COMPILER §2.76; ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)"; EDITOR_DESIGN §5.1 "As built S168"; help 13 |
 | Patched builds write only into space the game never reads (every claimed run judged; LZ streams; the poisoned original ROM A/B) | 🟢 audited S167 (`tools/audit_patch_space.py`, `extracted/patch_space_audit.json`), the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"): one live overlap since S63 fixed (ROM0 GrooveRowTable rows 3 / 4 — the boss song's vibrato); test_compiler `test_s167 --rom` | ARCHITECTURE "The audit of every claimed run (S167)"; KEY_LESSONS S167; SOUND_SYSTEM §5 |
 | SRAM save layout | ✅ audited S8: custom flags persist (truly-safe pool = 32 flags, S57); collisions mapped; free SRAM tail $BFC8-$BFFF (56 B, reserved). **32 KB expansion BUILT S69 (RAMB pin + CF3SRAMBankedCopy; never tested on its own, but every later SRAM-bank feature runs on it and was user-confirmed: the extended flags S117 bank 3 "X1", the regions S140 "X2", the memorial S154, the hints S158 — S164)** — +24 KB persistent in banks 1-3, uninitialized until a schema exists (E3 residual); S117: bank 3 = the extended flags "X1" | ARCHITECTURE "SRAM banking as built S69"; known_RAM_map |
 | Custom-room WRAM state | ✅ migrated S65 into the CF3-freed window (buffers $CC80/$CD00, counter region $CD80×640, wCustomPool $D001-$D664; TRANSIENT permanently, init-guaranteed zeroed). v7 USER-CONFIRMED S66. S140: `wMapRegion` $D536 (SAVED via SRAM bank 3 "X2"), `wWarpRegion` $D537, `wExitLinks` $D538-$D55F carved from wCustomPool (now $D560-$D5E4) | patches/wram.asm banner; PROJECT_COMPILER §2.6; ROADMAP CF4 |
@@ -488,6 +497,8 @@ real project starts, so these are best confirmed on the way into it:
 - S166 the GLOSSARY HALL (`DWM-S166-glossary-test.gbc`): the other screens' window words, the Vault's / Grandpa's
   text words, the Text tab's line-width warnings.
 - S167: the editor's "?" buttons / F1 / Glossary / tab pictures (the Help tab) — the ROM USER-CONFIRMED 2026-11-05 ("Rom good").
+- S168: PAGE 2 — the r2 ROM (`DWM-S168r2-page2-test.gbc`, Grandpa's menu over the gallery) USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); still open:
+  the editor (import / borrow / draw / flip walkability in a full tileset, the Tileset tab's page 2 and brown slots).
 
 ### Not yet implemented
 

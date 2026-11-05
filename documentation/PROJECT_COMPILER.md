@@ -594,6 +594,7 @@ registering an emitter; nothing existing changes.
 | `hooks79` (S121) + regions `milly_bedroom_script` `milly_shape_04a` `milly_shape_04b` `milly_player_sheet` `milly_naming_icon` `milly_name_tiles` | `custom.milly_hook` (§2.34; editor2/core/milly.py) | `file:patches/bank_079.asm` + `region:` in banks $0E / $04 / $01 / $09 / $4F | `$79` |
 | region `newgame_start` (S152) + bank $79 entry 2 `NewGameStart` / `NewGameData` | `custom.new_game` (§2.60; editor2/core/newgame.py) | `region:patches/bank_015.asm#newgame_start` (+ `hooks79`) | `$15` `$79` |
 | bank $5F regions `title_text` `title_song` `title_song_again` `credits_song` `continue_song` `credits_seconds` `credits_last_a` `credits_last_b` `credits_monster_ptr` `credits_monsters` `credits_after` (S153) + bank $79 entries 3-5 `TitleText` / `CreditsAfter` / `StoryPointApply` | `custom.title` + `custom.credits` + the ending's steps (§2.61; editor2/core/ending.py) | `region:patches/bank_05f.asm#…` (+ `hooks79`) | `$5F` `$79` |
+| `page2_ext` (S168) — the page-2 banks (ext banks $80+, the last kind) + the bank $0B regions `memorial_tiles_0` / `_1` when page 2 is on | `custom.tilesets[].raw2bpp` page 2 + page-2 tile values (§2.76; editor2/core/page2.py) | `multi:page2_banks` (+ `region:patches/bank_00b.asm#memorial_tiles_*`) | ext banks |
 | regions `memorial_battle_start` `memorial_battle_end` (bank $50) `memorial_tiles_0` `memorial_tiles_1` (bank $0B) (S154) + bank $79 entries 6-9 + `mem_pics_ext` (the picture bank, an ext bank $80+) + bank $77 `MemorialRedraw77` | `custom.memorial` + `custom.rooms[].statues` + statue entries (§2.62; editor2/core/memorial.py) | `region:patches/bank_050.asm#…` / `bank_00b.asm#…` (+ `hooks79`, `shops77`, `ext_banks`) | `$50` `$0B` `$77` `$79` + one ext bank |
 | `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
@@ -5527,6 +5528,100 @@ No region changes. `patches/bank_000.asm` (hand patch): `MapIDClampForPalette` m
 Pin **`26a4faf1…`** (patched; was `fee3147e…`, patched, historical). Any new hand patch that takes "free" space in
 a bank the game uses: run `tools/audit_patch_space.py --patched <rom> --sym <sym>` (ARCHITECTURE "The audit of every
 claimed run (S167)").
+
+## §2.76 S168 — PAGE 2: the second 128 tiles of a tileset (ROADMAP P3.3g)
+
+*Built S168, NOT yet user-tested.* User: "more tiles per room"; "Different rooms will have mostly
+different tilesets … having access to diverse tiles in a given room is the most important thing";
+"GBC only yes absolutely"; "Include animation"; "I just want it to work". Hardware + census:
+ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)". Module `editor2/core/page2.py`.
+
+**Schema (no new key):**
+- `custom.tilesets[].raw2bpp` may be **4096 bytes** = page 1 (bytes 0-2047) + page 2 (2048-4095)
+  (`layouts.tileset_sheet` / `tileset_page2`; `tileset_bytes` = page 1 as before). The editor writes
+  page 2 only while it holds art (`page2.trim_sheet`); `Document.read_sheet` always pads to 4096.
+- A layout's **tile value** `$100-$17F` = page-2 tile 0-127 (validators accept it); `$00-$7F` page 1,
+  `$80-$FF` the shared tiles as before. The attr grid keeps palettes 0-7 — the page belongs to the
+  TILE, so states sharing an attr grid stay correct. Metatiles (`custom._editor.metatiles`), cutscene
+  tile steps and `tile_anims[].rows` use the same values / slots (an own animation's slot 128-255 =
+  page 2). Sheet SLOT index in the editor: 0-127 page 1, 128-255 page 2 (`slot_of` / `value_of` /
+  `slot_key` — `slot_key` keeps the pre-S168 `& $7F` for every value below `$100`).
+
+**Emission (a project without page 2 compiles to the same bytes as before S168 —
+`test_s168`):**
+- `page2.active_tilesets`: a raw2bpp tileset whose page 2 holds art, or on which a room draws /
+  animates a page-2 tile (or a cutscene colour patch has bit 3).
+- **Derived attr streams** (`page2.derived_attr_items`, appended to `Project.stream_items` AFTER
+  every other stream): one per (attr source, tile grid) pair with page-2 cells — the attr grid in
+  effect (`attr_source`: Project.state_attr_entry's rule; a game attr stream is decoded from the
+  ROM) with bit 3 on exactly the page-2 cells (`attr_with_pages`). `emitters.render_lines` points
+  that (screen, state) at it (`derived_attr_key`). The tile stream stores `v & $FF`
+  (`pad_layout`). Cutscene tile steps: `cutscene_build.patch_bytes` writes bit 3 into the colour
+  patch for a page-2 tile.
+- **Page-2 banks** (`page2.plan`, the LAST kind of ext bank — taken after the memorial's picture
+  bank, so no other bank moves): the HOME bank (first) = self-ID, `dw Page2Copy_P<bank>` (entry 0),
+  `dw Page2Room` (entry 1), template `page2_copy.asm` ({A} = `_P<bank>`), `PAGE2_HOME EQU`, template
+  `page2_home.asm`, `Page2Chain` (1 = statues / hint monuments: bank $79 entry 8 after the page),
+  `Page2Directory` (`db region, map id, bank, index` per room on a page-2 tileset, `db $FF`), then
+  `SECTION … ALIGN[8]` `Page2Sheets_P<bank>` (the RAW page 2 of each tileset, 2048 B each); up to 7
+  sheets a bank; further banks = entry 0 + the copier + sheets. Emitter `page2_ext`
+  (`multi:page2_banks`); `ext_bank_files` / `Project.ext_bank_owners` ('page 2'); bank_usage counts
+  the copier + home code + `db`s + 255 B of alignment.
+- **The bank $0B hook:** `memorial._region_fn` asks `page2.region_hook` first — with page 2 the
+  regions `memorial_tiles_0` / `_1` are `ld hl, $<home>01 / rst $10` + 3 nop (Page2Room calls the
+  memorial / hints hook itself); else as S154 / S158.
+- **Engine (pin moves for every project):** `patches/wram.asm` `wPage2On` `$D5BC`, `wTileAnimDstVBK`
+  `$D5BD` (carved from wCustomPool); hand patch `patches/bank_073.asm` `BoxAttrActive` answers NZ when
+  `wPage2On`; template `bank_077_head.asm` `PushAttrActive` answers `$80` when `wPage2On`, ScreenPush
+  writes attribute + tile per cell in a page-2 room (`PushRowBoth`; `PushCellAttr` split out of
+  `PushRowAttrs`) — `TEMPLATE_SIZE[$77]` 2889 (was 2785); template `tileanim_player.asm`
+  `TileAnimCopy` sets VBK from bit 0 of the destination word and 0 again before `ei` —
+  `TEMPLATE_SIZE[$6C]` 378 (was 364), `ANIM_TEMPLATE_SIZE` 290 (was 276); `tileanim.room_lines`
+  writes `$9000 + (s & $7F) * 16 + (s >> 7)`. Templates re-pinned (`page2_copy.asm`,
+  `page2_home.asm` new). Example pin **`7aae0e95…`** (patched; was `26a4faf1…`, patched,
+  historical) — the example has no page 2.
+- **Checks:** `page2.problems` — a room drawing page-2 tiles without a project tileset is an
+  error; a directory too big for one bank.
+
+**Editor (`EDITOR_REVISION` S168):** every slot search covers 256 slots, page 1 first
+(`page2.wall_first` / `walk_first` / `pick_order`): `Document.tile_usage` / `used_tiles` /
+`free_counts` (+ `page1` / `page2`), `import_metatile` / `_import_animated`, `import_png_cells`,
+`ensure_twin` (a twin on either page; a threshold shift moves page-2 tiles at the split too),
+`_remap_tile` (`page2.remap_value`), `page1_room` (NEW: moves ordinary tiles to page 2 so page 1
+has room — the memorial statues' tiles must be page 1), `tile_draw.plan_new`, `tileanim_doc`
+(own copies), `animate` (`_vacate` / `_shift_split` / Make still), `gates` (the well over a page-2
+floor); `render_project` decodes 256 blocks (`block_index`), `tileset_sheet` returns the whole
+file; walkability everywhere = `(value & $FF) >= threshold` (`page2.walkable`). App: the Tileset
+tab's slot map 256 slots (page 2 below a blue line, the threshold on both pages, counts per
+page), the metatile editor's sheet both pages (a page-2 tile emitted as `$100 + n`, labelled
+`p2 $NN`), the canvas / previews draw page-2 cells, Import art's free counts per page. Help 13
+(+ "Page 2 — the second 128 tiles"), 14, 15, 77, 90, 95 (Page 2).
+**Tests:** test_compiler `test_s168` (+ `--rom`: the fixture in PyBoy — VRAM bank 1 == page 2,
+320 cells' byte + bank, the page-2 flip, `wPage2On` 0 in a game room); test_app `s168_page2`.
+**Measured:** `tools/walk_page2.py` on the user's save + `examples/s168_page2_demo` 55 / 55,
+`--negative` 6 FAIL; `tools/census_vram_bank1.py` (the original game never touches bank 1's tiles).
+
+**S168 r2 — the slots a service screen borrows stay free (built S168 r2; the ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested).**
+User: "Breed/hatch/exit menu (talk with breeding NPC) creates visual glitches of words on the screen."
+The breeding / farm / egg screens draw into the ROOM's page-1 slots while the room still shows
+(ROOM_DATA_FORMAT "The game's menus draw into the room's tile slots"); the gallery had tiles in all
+of them. `services.BORROWED_SLOTS` (op `$04` type → slots; code-read + PyBoy): 5 / 6 / 11
+(breeding) `$38-$7F`, 3 (farm) `$60-$6F`, 7 (eggs) `$70-$78`. `services.borrowing_screens(scripts)`
+(a service spec's kind — a breeder adds its "Take…" 11 — or a raw `op $04 <type>`) +
+`room_script_ids(room, states)`. Document (`editor2/core/document.py`): `room_service_screens`,
+`service_slots(tid)` (union over the sheet's rooms), `tile_usage` flag / status `service` (after
+placed / mine: a placed tile there stays 'placed'), so `used_tiles` / `free_counts` / `page1_room` /
+`_statue_slots_free` / `tileanim_doc` leave them; the identical-graphic reuse of `import_metatile`,
+`_import_animated`, `import_png_cells`, `ensure_twin`, `tile_draw.plan_new`, `animate._vacate` /
+Make still skip them too. `vacate_service_slots(tid)` moves placed / My-metatile tiles out (same
+side of the threshold, page 2 first, lowest numbers; animated / statue tiles stay), called by
+`make_service_npc` (`last_service_note` → the Rooms tab's status line) and on open
+(`_migrate_service_slots`: a migration note; a full sheet → `migration_warnings`).
+Validator: `services.borrowed_problems` (project tilesets only — a game sheet keeps the game's own
+arrangement) warns per room in words. No engine change: the example pin stays `7aae0e95…`
+(patched). Tests: test_compiler `test_s168r2`; `tools/walk_page2.py` + the room-art check
+(`room_art_damage`: a visible cell still showing the room whose slot lost its graphic, sampled every
+2 frames per overlay) 62 / 62 on the r2 build; the S168 build fails it at Grandpa (`$40-$48 $61 …`).
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

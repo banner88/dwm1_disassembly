@@ -1,5 +1,10 @@
 """tile_picker.py — the room's 128-tile sheet as a brush picker (S93).
 
+S168 (page 2): 256 tiles — page 1 (rows 0-7) above PAGE 2 (rows 8-15, the 128 more
+tiles in VRAM bank 1, editor2/core/page2.py); a page-2 tile is emitted as its tile VALUE
+($100 + n). Page-2 tile n is a wall exactly when page-1 tile n is (the engine compares
+the map byte), so both pages are tinted from the threshold.
+
 Flat order, 16 tiles per row (KEY_LESSONS S6: PNG/2bpp/editor all index
 tiles in flat scan order — never metatile order). Rendered in the palette
 slot currently selected in the palette panel, so what you pick is what
@@ -13,8 +18,10 @@ from PySide6.QtCore import QRect, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QBrush
 from PySide6.QtWidgets import QWidget
 
+from editor2.core import page2 as P2
+
 PER_ROW = 16
-ROWS = 8
+ROWS = 16                  # S168: page 1 (8 rows) + page 2 (8 rows)
 
 
 class TilePicker(QWidget):
@@ -55,14 +62,14 @@ class TilePicker(QWidget):
         self._rebuild()
 
     def set_selected(self, tile):
-        self.selected = int(tile) & 0x7F
+        self.selected = P2.slot_key(tile)
         self.update()
 
     def _rebuild(self):
         if self.renderer is None or self.sheet is None:
             self._pix = None
         else:
-            img = self.renderer.tile_sheet_image(self.sheet, self.pals,
+            img = self.renderer.tile_sheet_image(P2.pad_sheet(self.sheet), self.pals,
                                                  self.pal_idx, PER_ROW,
                                                  self.scale)
             self._pix = QPixmap.fromImage(ImageQt.ImageQt(img))
@@ -87,10 +94,15 @@ class TilePicker(QWidget):
             p.drawText(self.rect(), Qt.AlignCenter, 'no tileset')
             return
         p.drawPixmap(1, 1, self._pix)
-        # wall tint + threshold boundary
+        # wall tint + threshold boundary (both pages: page-2 tile n walks like tile n)
         thr = min(self.threshold, 128)
         for t in range(thr):
             p.fillRect(self._rect(t), QColor(255, 40, 40, 45))
+            p.fillRect(self._rect(0x80 + t), QColor(255, 40, 40, 45))
+        # the page-2 line
+        s8 = 8 * self.scale
+        p.setPen(QPen(QColor(120, 170, 255), 2))
+        p.drawLine(1, 1 + 8 * s8, 1 + PER_ROW * s8, 1 + 8 * s8)
         if 0 < thr < 128:
             pen = QPen(QColor(255, 60, 60))
             pen.setWidth(2)
@@ -124,8 +136,9 @@ class TilePicker(QWidget):
             if t is None:
                 self.hoverInfo.emit('')
             else:
-                walk = 'WALL' if t < self.threshold else 'walkable'
-                self.hoverInfo.emit(f'tile ${t:02X} ({t})  {walk}')
+                walk = 'WALL' if P2.is_wall(t, self.threshold) else 'walkable'
+                page = 'page 2 ' if t >= 0x80 else ''
+                self.hoverInfo.emit(f'{page}tile ${t & 0x7F:02X} ({t & 0x7F})  {walk}')
 
     def leaveEvent(self, ev):
         self._hover = None
@@ -136,4 +149,4 @@ class TilePicker(QWidget):
         if t is not None:
             self.selected = t
             self.update()
-            self.tileSelected.emit(t)
+            self.tileSelected.emit(P2.value_of(t))     # S168: page 2 = $100 + n

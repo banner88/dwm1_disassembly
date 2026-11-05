@@ -14,6 +14,7 @@ SnapshotCommand).
 import copy
 
 from editor2.core import memorial as MM
+from editor2.core import page2 as P2
 from editor2.core.formats import val
 
 # S154 r2 (the user: "Pedestal should be its own tile I can edit (in editor). The whole
@@ -139,7 +140,7 @@ class MemorialMixin:
         for r in self.rooms_using_tileset(tid):
             for s in r.get('statues') or []:
                 for t in s.get('tiles') or []:
-                    out.add(val(t) & 0x7F)
+                    out.add(P2.slot_key(val(t)))
         return out
 
     def statue_places(self, room, sid):
@@ -193,11 +194,11 @@ class MemorialMixin:
             for dc in (0, 1):
                 t = tiles[y * 2 + dr][x * 2 + dc]
                 slot = attr[y * 2 + dr][x * 2 + dc] & 7
-                if t < 0x80:
+                if t < 0x80 or P2.is_page2(t):          # S168: page 2 = blocks 128-255
                     if blocks is None:
                         from editor2.core.render_project import decode_tiles
-                        blocks = decode_tiles(bytes(sheet[:2048]).ljust(2048, b'\0'))
-                    blk = blocks[t]
+                        blocks = decode_tiles(P2.pad_sheet(sheet))
+                    blk = blocks[P2.slot_key(t)]
                 elif self.vanilla is not None and t < 0xB0:
                     if common is None:
                         common = self.vanilla.common_blocks()
@@ -403,6 +404,13 @@ class MemorialMixin:
         VocabReleaseWouldHelp when unused vocabulary would free enough (the editor
         asks, as the metatile import does), else RuntimeError."""
         from editor2.core.document import VocabReleaseWouldHelp
+        # S168: the game draws the monster into VRAM BANK 0 (bank $79 MemRoomTiles) —
+        # a statue's tiles are page-1 slots; when page 1 is full, ordinary tiles move
+        # to page 2 to make room (Document.page1_room — nothing changes on screen)
+        try:
+            self.page1_room(tid, thr, 1, 3, exclude)
+        except RuntimeError:
+            pass
         used = self.used_tiles(tid) | set(exclude)
         free = [i for i in range(128) if i not in used]
         wall = [i for i in free if i < thr]

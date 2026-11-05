@@ -18,6 +18,12 @@ every slot with its graphic and its status from `Document.tile_usage`:
 The yellow step line is the collision threshold: slots before it are WALL
 tiles, slots after it walkable (the bottom-right subtile of a cell decides,
 S94). Hover = who uses the slot; click = highlight it on the canvas.
+
+S168 (page 2): 256 slots — page 1 (rows 0-7) above PAGE 2 (rows 8-15: 128 more tiles
+the game keeps in VRAM bank 1, editor2/core/page2.py; GBC only). Page-2 slot n is on the
+wall / walkable side of page-1 slot n (the engine compares the map byte), so the
+threshold line is drawn on both pages. Imports, borrowed tiles, drawn tiles and
+walkability twins fill page 1 first and spill onto page 2 by themselves.
 """
 
 from PIL import Image, ImageQt
@@ -26,9 +32,13 @@ from PySide6.QtGui import QColor, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushButton,
                                QVBoxLayout, QWidget)
 
+from editor2.core import page2 as P2
+
 COLS = 16
 PITCH = 22
 TILE = 16
+ROWS = 16                   # S168: page 1 + page 2
+GAP = 8                     # the gap between the pages
 
 COLOURS = {
     'placed': QColor(70, 200, 90),
@@ -37,6 +47,7 @@ COLOURS = {
     'released': QColor(255, 150, 40),
     'animated': QColor(40, 170, 185),
     'statue': QColor(205, 205, 225),        # S154: a memorial statue's tiles
+    'service': QColor(150, 120, 70),        # S168 r2: a service menu draws there
     'free': QColor(60, 60, 66),
 }
 
@@ -48,7 +59,7 @@ class SlotGrid(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
-        self.setFixedSize(COLS * PITCH + 2, 8 * PITCH + 2)
+        self.setFixedSize(COLS * PITCH + 2, ROWS * PITCH + GAP + 2)
         self.usage = None
         self.threshold = 0
         self.pix = {}
@@ -60,11 +71,17 @@ class SlotGrid(QWidget):
         self.update()
 
     def _rect(self, i):
-        return QRect(1 + (i % COLS) * PITCH, 1 + (i // COLS) * PITCH, PITCH, PITCH)
+        gap = GAP if i >= 0x80 else 0
+        return QRect(1 + (i % COLS) * PITCH, 1 + (i // COLS) * PITCH + gap, PITCH, PITCH)
 
     def _hit(self, pos):
-        c, r = (pos.x() - 1) // PITCH, (pos.y() - 1) // PITCH
-        if 0 <= c < COLS and 0 <= r < 8:
+        y = pos.y() - 1
+        if y >= 8 * PITCH:
+            y -= GAP
+            if y < 8 * PITCH:
+                return -1
+        c, r = (pos.x() - 1) // PITCH, y // PITCH
+        if 0 <= c < COLS and 0 <= r < ROWS:
             return r * COLS + c
         return -1
 
@@ -105,21 +122,25 @@ class SlotGrid(QWidget):
                 p.setPen(QPen(QColor(255, 255, 255)))
                 p.setBrush(Qt.NoBrush)
                 p.drawRect(rc.adjusted(0, 0, -1, -1))
-        # collision threshold: a step line between slot thr-1 and thr
+        # S168: the page-2 label in the gap
+        p.setPen(QColor(120, 170, 255))
+        p.drawLine(1, 1 + 8 * PITCH + GAP // 2, 1 + COLS * PITCH, 1 + 8 * PITCH + GAP // 2)
+        # collision threshold: a step line between slot thr-1 and thr (both pages)
         thr = self.threshold
         if 0 < thr < 128:
             pen = QPen(QColor(255, 220, 0))
             pen.setWidth(3)
             p.setPen(pen)
-            r, c = divmod(thr, COLS)
-            y = 1 + r * PITCH
-            x = 1 + c * PITCH
-            if c:
-                p.drawLine(x, y, x, y + PITCH)                       # vertical tick
-                p.drawLine(x, y, 1 + COLS * PITCH, y)                # rest of this row top
-                p.drawLine(1, y + PITCH, x, y + PITCH)               # start of next row
-            else:
-                p.drawLine(1, y, 1 + COLS * PITCH, y)
+            for base, gap in ((0, 0), (8, GAP)):
+                r, c = divmod(thr, COLS)
+                y = 1 + (r + base) * PITCH + gap
+                x = 1 + c * PITCH
+                if c:
+                    p.drawLine(x, y, x, y + PITCH)                   # vertical tick
+                    p.drawLine(x, y, 1 + COLS * PITCH, y)            # rest of this row top
+                    p.drawLine(1, y + PITCH, x, y + PITCH)           # start of next row
+                else:
+                    p.drawLine(1, y, 1 + COLS * PITCH, y)
 
     def mouseMoveEvent(self, ev):
         h = self._hit(ev.position().toPoint())
@@ -240,8 +261,9 @@ class TilesetMap(QWidget):
         usage = self.doc.tile_usage(tid)
         pal = int(self.pal_box.currentIndex())
         pix = {}
-        for i in range(128):
-            img = self.renderer.render_tile(self.sheet, i, self.pals, pal)
+        sheet = P2.pad_sheet(self.sheet)
+        for i in range(P2.SLOTS):
+            img = self.renderer.render_tile(sheet, P2.value_of(i), self.pals, pal)
             img = img.resize((TILE, TILE), Image.NEAREST)
             pix[i] = QPixmap.fromImage(ImageQt.ImageQt(img))
         self.usage = usage
@@ -265,9 +287,14 @@ class TilesetMap(QWidget):
         self.summary.setText(
             f"<b>{tid}</b> — {own}<br>"
             f"free: <b>{fc['wall']}</b> wall / <b>{fc['walkable']}</b> walkable "
-            f"(<b>{fc['total']}</b> of 128) · placed {counts.get('placed', 0)} · "
+            f"(<b>{fc['total']}</b> of 256: page 1 {fc['page1']}, page 2 {fc['page2']}) · "
+            f"placed {counts.get('placed', 0)} · "
             f"my metatiles {counts.get('mine', 0)} · vocabulary {counts.get('vocab', 0)}"
-            + anim_line)
+            + anim_line
+            + (f"<br>kept free for a service menu: <b>{sum(1 for u in usage if u.get('service'))}"
+               '</b> slot(s) (brown) — the breeding / farm / egg screen of a room on this sheet '
+               'draws its words there while the room shows'
+               if any(u.get('service') for u in usage) else ''))
         for btn, kind, label in ((self.purge_b, 'borrowed', 'borrowed'),
                                  (self.purge_o, 'own', 'own')):
             try:
@@ -300,11 +327,17 @@ class TilesetMap(QWidget):
             self.hoverInfo.emit('')
             return
         u = self.usage[i]
-        side = 'WALL side' if i < self.threshold else 'walkable side'
-        bits = [f'slot ${i:02X} ({i}) — {side}']
+        side = 'WALL side' if P2.is_wall(i, self.threshold) else 'walkable side'
+        page = 'page 2 ' if i >= 0x80 else ''
+        bits = [f'{page}slot ${i & 0x7F:02X} ({i & 0x7F}) — {side}']
         if u.get('statue'):
             bits.append('a MEMORIAL STATUE\'s tile — the game draws a monster into it; '
                         'imports and twins never use it (help: The memorial)')
+        if u.get('service'):
+            bits.append('KEPT FREE: a service menu (breeding / farm / eggs) of a room on this '
+                        'sheet draws into it while the room shows'
+                        + (' — PLACED here: the menu will show over those cells (Build '
+                           'warns)' if u['placed'] else '; imports, drawing and twins never use it'))
         if u['animated']:
             bits.append('ANIMATED by the animation of a room on this sheet — '
                         + ('shown on screen; its graphic changes in game'

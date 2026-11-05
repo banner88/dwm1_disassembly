@@ -1195,3 +1195,19 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 | ARCHITECTURE "$51 … 00 fill — large, investigate safety" | ✓ CLOSED | the stream before it ends at `$7B34` (S166 r2); nothing reads `$7B35+` | audit + poisoned-ROM A/B |
 | the S166 note "a test_app traceback (talk_editor BoxEditor's Insert menu: `QStandardItem.triggered`)" "not this session's code" | ✓ REAL, ROOT FOUND | Shiboken hands out a kept wrapper of a Qt-owned `QStandardItem` for the next C++ object at that address (`combo.model().item(i)` kept past `clear()`); intermittent | reproduced S167 (a `QStandardItem` from `QMenu.addAction` within ~400 calls); `editor2/app/qt_safe.py` |
 | help `00_start.md`: "Tabs marked with a roadmap box (Balance) are not built yet." | ❌ STALE | Balance built S130 | rewritten S167 |
+
+## S168 addendum (2026-11-05; page 2 — ROADMAP P3.3g)
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| ROOM_DATA_FORMAT (S102) "VRAM bank 1's tile area ($8000-$97FF, 384 tiles) is empty with no BG cell using attribute bit 3 — checked in GreatTree, Castle, … and the menu" (field only) | ✓ HOLDS FOR THE WHOLE GAME (measured) | seeded bank 1 at power-on: no write over the title, 8 gates' battles + the field menu, 519 cutscenes; no cell with bit 3 | `tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json` (positive control reported) |
+| ROADMAP P3.3g (S103) "reuse the bank $73 entries 14-18 attr save/restore … and census every other overlay" | ✓ + ONE MORE | the boxes (bank $73) and every screen push (bank $77) take the free-colour path; the screen push also had to write attribute + tile per cell — tiles-then-attributes showed 2-6 frames of bank-1 letters | `tools/walk_page2.py` (KEY_LESSONS S168) |
+| help 13 / glossary / EDITOR_DESIGN "One room tileset = one 2 KB sheet = 128 slots … engine limit, per ROOM" | ❌ SUPERSEDED S168 | 256 (page 2 in VRAM bank 1, GBC only); the 48 shared tiles unchanged | PROJECT_COMPILER §2.76 |
+| Document code `t & 0x7F` = "the slot of a tile value" | ⚠ A LATENT QUIRK | a shared tile `$80-$AF` was counted as page-1 slot `t - $80` (and a remap of that slot rewrote it); kept for values < `$100` (`page2.slot_key`) so no project's numbers move; page-2 values map to slots 128-255 | test_compiler `test_s168` |
+
+**S168 r2 (the breeding menu's words over the floor):**
+
+| Claim | Status |
+|---|---|
+| ROOM_DATA_FORMAT S126 table "Grandpa (6) / a master (5) / Take… (11) — `$40-$7F`" | ✓ + MORE: the master's party list starts at `$38` (bank $09 `SetFld9_5f4d`, `$9380` + 8 × `$90`); PyBoy while the room shows: Grandpa `$40-$48` / `$61-$7A`, a master `$38-$3F` / `$78-$7C` — the S168 r2 note under the table |
+| PROJECT_STATE S168 "every window of the game opens over page-2 cells … letters and art must stay clean" (walk 55 / 55) | ❌ INCOMPLETE — the walk checked bank-1 letters only; Grandpa drew into page-1 slots the gallery used. r2: the room-art check, 62 / 62 |

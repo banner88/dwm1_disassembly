@@ -26,6 +26,7 @@ from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
 
 from editor2.core import animation as ANIM
+from editor2.core import page2 as P2
 from editor2.core import gates as G
 from editor2.core import place_names as PN
 from editor2.core.document import val, metatile_pals, pal_value, metatile_key
@@ -781,7 +782,7 @@ class RoomCanvas(QGraphicsView):
         if not self.tiles or not self.anim_slots:
             return []
         return [(c, r) for r in range(SCREEN_H) for c in range(SCREEN_W)
-                if (self.tiles[r][c] & 0x7F) in self.anim_slots]
+                if P2.slot_key(self.tiles[r][c]) in self.anim_slots]
 
     def previewing(self):
         return self._player is not None
@@ -837,7 +838,7 @@ class RoomCanvas(QGraphicsView):
 
     def cell_walkable(self, cx, cy):
         """The engine samples the bottom-right subtile (S94 measurement)."""
-        return self.tiles[cy * 2 + 1][cx * 2 + 1] >= self.gfx.threshold
+        return (self.tiles[cy * 2 + 1][cx * 2 + 1] & 0xFF) >= self.gfx.threshold   # S168: the map byte
 
     # ------------------------------------------------------------ geometry
     def _cell_at(self, viewpos):
@@ -933,7 +934,7 @@ class RoomCanvas(QGraphicsView):
             painter.setBrush(QBrush(QColor(255, 230, 0, 70)))
             for r in range(SCREEN_H):
                 for c in range(SCREEN_W):
-                    if (self.tiles[r][c] & 0x7F) == self.highlight:
+                    if P2.slot_key(self.tiles[r][c]) == self.highlight:
                         painter.drawRect(QRectF(c * TILE, r * TILE, TILE, TILE))
         if self.layers['markers']:
             for kind, x, y, spr, label, ref in self.markers:

@@ -832,6 +832,10 @@ def render_lines(prj, r, warnings):
                 f"    db {len(states)}    ; states"]
         for n in range(len(states)):
             ae = prj.state_attr_entry(r, k, n, ctx=f"room {r.get('id')} screen {k} state {n}")
+            from . import page2 as _P2
+            k2 = _P2.derived_attr_key(prj, r, k, n)     # S168: page-2 cells -> attr bit 3
+            if k2 is not None:
+                ae = prj.stream_ref(k2, f"room {r.get('id')} screen {k} state {n}")
             if ae is None:
                 raise ValueError(
                     f"room {r.get('id')} screen {k} state {n}: no attr grid "
@@ -1256,6 +1260,11 @@ def ext_bank_files(prj):
         pass                                           # reported by the validator
     from . import memorial as MM                       # S154: the memorial's picture bank
     out.update(MM.bank_files(prj))
+    from . import page2 as P2                          # S168: the page-2 banks (last)
+    try:
+        out.update(P2.bank_files(prj))
+    except P2.Page2Error:
+        pass                                           # reported by the validator
     return out
 
 
@@ -1646,6 +1655,20 @@ def _hint_entries():
 
 
 REGISTRY += _hint_entries()
+
+
+def _page2_entries():
+    # S168 (ROADMAP P3.3g): PAGE 2 — the second 128 tiles of a tileset, in VRAM bank 1.
+    # The page-2 banks (ext banks $80+, the LAST kind; none without page 2): the copier +
+    # the sheets, the home bank's room-load hook + directory. The bank $0B hook is the
+    # memorial's tile regions (memorial._region_fn asks page2.region_hook first) —
+    # editor2/core/page2.py. No page 2 == the bytes before S168.
+    from . import page2 as P2
+    return [("page2_ext", "custom.tilesets.page2", "multi:page2_banks",
+             P2.emit_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1)))]
+
+
+REGISTRY += _page2_entries()
 
 
 TEXT_SPRITE_VANILLA = """\

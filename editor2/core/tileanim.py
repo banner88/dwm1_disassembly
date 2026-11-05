@@ -138,6 +138,7 @@ def steps(item, sheet):
     list of 16-byte tiles (one per slot, slots_of order) and seq = frame
     index per step (step 0 = frame 0 = the sheet's own art)."""
     sl = slots_of(item)
+    sheet = bytes(sheet) + bytes(max(0, 4096 - len(sheet)))   # S168: slots 128-255 = page 2
     base = [bytes(sheet[s * 16:s * 16 + 16]) for s in sl]
     m = item['motion']
     if m == 'flip':
@@ -296,8 +297,8 @@ def problems(room, items, sheet, vanilla_slots=()):
             errs.append(f'{name}: {len(sl)} tiles — one animation can have at most {MAX_SLOTS}')
         ngroups += -(-len(sl) // CAP)
         for s in sl:
-            if not 0 <= s < 128:
-                errs.append(f'{name}: tile slot {s} outside 0-127')
+            if not 0 <= s < 256:
+                errs.append(f'{name}: tile slot {s} outside 0-255 (128-255 = page 2, S168)')
             elif s in seen and seen[s] is not it:
                 errs.append(f'{name}: tile slot {s} is already animated by '
                             f'{seen[s].get("name") or seen[s].get("id")}')
@@ -342,6 +343,8 @@ class Player:
     same timers, same staggering, same per-frame cap (bank $6C)."""
 
     def __init__(self, items, sheet):
+        if any(sl >= 0x80 for it in items for sl in slots_of(it)) and len(sheet) < 4096:
+            sheet = bytes(sheet) + bytes(4096 - len(sheet))   # S168: page-2 slots, blank page
         self.base = bytes(sheet)
         self.sheet = bytearray(sheet)
         self.groups = []           # [slots, blocks, seq, period, timer, step]
@@ -426,6 +429,8 @@ def room_lines(prj, r):
     ri = F.val(r['mapID']) - 0x6B
     items = prj.tile_anims(r)
     sheet = prj.room_sheet(r) or bytes(2048)
+    if any(sl >= 128 for it in items for sl in slots_of(it)) and len(sheet) < 4096:
+        sheet = bytes(sheet) + bytes(4096 - len(sheet))     # S168: page-2 slots, blank page
     phases = schedule(items)
     lines = [f"TileAnimRoom_{ri}:   ; {r['id']} — {load_words(items)}"]
     seqs, frames = [], []
@@ -437,7 +442,9 @@ def room_lines(prj, r):
                          f"   ; {it.get('name') or it.get('id')}: "
                          f"{MOTION_LABEL[it['motion']].lower()}, {speed_words(speed)}")
             lines.append(f"    dw TileAnimSeq_{tag}")
-            lines.append("    dw " + ", ".join(f"${0x9000 + s * 16:04X}" for s in part)
+            # S168: slot >= 128 = a PAGE-2 tile — the same $9000 address in VRAM bank 1
+            # (bit 0 of the word, which the DMA ignores; tileanim_player.asm)
+            lines.append("    dw " + ", ".join(f"${0x9000 + (s & 0x7F) * 16 + (s >> 7):04X}" for s in part)
                          + "   ; slots " + ", ".join(str(s) for s in part))
             seqs.append((tag, seq))
             for k, b in enumerate(blocks):

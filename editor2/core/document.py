@@ -29,6 +29,7 @@ import re
 import os
 
 from editor2.core import layouts as L
+from editor2.core import page2 as P2
 from editor2.core.doors import DoorsMixin
 from editor2.core.talk import TalkMixin
 from editor2.core.animate import AnimateMixin
@@ -310,6 +311,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         self._migrate_unique_names(notes)
         # S149 r2 (the user: "0 HP should never be possible"): enemy rows' HP >= 2
         self._migrate_enemy_hp(notes)
+        # S168 r2: the slots a breeding / farm / egg menu draws into stay free
+        self._migrate_service_slots(notes)
         # S158: a project with hint monuments / archives keeps every hint's number (its
         # bit in the save) from now on
         try:
@@ -1747,8 +1750,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             g = self.layout(lid)['tiles']
             for r in range(0, len(g) - 1, 2):
                 for c in range(0, len(g[r]) - 1, 2):
-                    out.add((g[r][c] & 0x7F, g[r][c + 1] & 0x7F,
-                             g[r + 1][c] & 0x7F, g[r + 1][c + 1] & 0x7F))
+                    out.add((P2.slot_key(g[r][c]), P2.slot_key(g[r][c + 1]),
+                             P2.slot_key(g[r + 1][c]), P2.slot_key(g[r + 1][c + 1])))
         return out
 
     def unused_metatiles(self, tid, kind):
@@ -1756,7 +1759,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         placed = self.placed_metatile_keys(tid)
         return [i for i, mt in enumerate(self.metatiles(tid))
                 if self.metatile_kind(mt) == kind
-                and tuple(t & 0x7F for t in mt['tiles']) not in placed]
+                and tuple(P2.slot_key(t) for t in mt['tiles']) not in placed]
 
     def purge_preview(self, tid, kind, threshold):
         """(n metatiles, slots freed {'wall', 'walkable'}) — without changing
@@ -1924,7 +1927,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 keep = self._room_tiles(room)
                 rec['tileset'] = self.duplicate_tileset(
                     old, f'ts_{room_id}',
-                    metatile_filter=lambda mt: all((t & 0x7F) in keep for t in mt['tiles']))
+                    metatile_filter=lambda mt: all(P2.slot_key(t) in keep for t in mt['tiles']))
             else:
                 if self.vanilla is None:
                     raise RuntimeError('no renderer bound — cannot read the vanilla sheet')
@@ -1967,7 +1970,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             for ref in refs:
                 if ref and 'id' in ref and self.has_layout(ref['id']):
                     for row in self.layout(ref['id'])['tiles']:
-                        out.update(t & 0x7F for t in row)
+                        out.update(P2.slot_key(t) for t in row)
         return out
 
     def duplicate_tileset(self, tid, base, metatile_filter=None):
@@ -2000,11 +2003,14 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         return os.path.join(self.project_dir, self.tileset_item(tid)['raw2bpp'])
 
     def read_sheet(self, tid):
-        return bytearray(open(self.sheet_path(tid), 'rb').read())
+        """S168: always 4096 bytes — page 1 (slots 0-127) + page 2 (slots 128-255,
+        blank while the file holds page 1 only; page2.py)."""
+        return bytearray(P2.pad_sheet(open(self.sheet_path(tid), 'rb').read()))
 
     def write_sheet(self, tid, sheet):
+        """S168: the file keeps page 2 only when it holds art (page2.trim_sheet)."""
         with open(self.sheet_path(tid), 'wb') as f:
-            f.write(bytes(sheet))
+            f.write(P2.trim_sheet(sheet))
         self.touch()
 
     def layouts_using_tileset(self, tid):
@@ -2020,7 +2026,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
 
     # ---------------------------------------------- tileset usage (S96 P3.3c)
     # One room tileset = one 2 KB sheet = 128 slots (ids >= 128 are the
-    # font/HUD half of VRAM — engine limit, per ROOM). A slot is:
+    # font/HUD half of VRAM — engine limit, per ROOM). S168: + PAGE 2 — 128 more
+    # slots (128-255; VRAM bank 1, attribute bit 3, page2.py): 256 in all. A slot is:
     #   PLACED      on some screen/state of a room drawing with this sheet
     #   MINE        in an author metatile for this sheet
     #   VOCABULARY  used by the vanilla room the sheet came from (the picker
@@ -2112,6 +2119,109 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # kept away from every tile search the same way
         out |= self.statue_slots(tid)
         return out
+
+    # ---------------------------------- service screens' borrowed slots (S168 r2)
+    def room_service_screens(self, room):
+        """op $04 screen types the room's scripts open that draw into the room's own sheet
+        slots while it shows (services.BORROWED_SLOTS): a service NPC's kind, or a raw
+        `op $04 <type>` in one of its scripts (a copied game script)."""
+        from editor2.core import services as SV
+        states = [st for k in self.screen_keys(room) for st in self.states(room, k)]
+        ids = SV.room_script_ids(room, states)
+        return SV.borrowing_screens(s for s in self.custom.get('scripts', [])
+                                    if s.get('id') in ids)
+
+    def service_slots(self, tid):
+        """Page-1 slots of sheet `tid` a service screen of a room drawing with it writes
+        while the room shows (S168 r2) — kept free: a room cell drawn with one would show
+        the menu's words / icons."""
+        from editor2.core import services as SV
+        out = set()
+        for r in self.rooms_using_tileset(tid):
+            for t in self.room_service_screens(r):
+                out |= set(SV.BORROWED_SLOTS[t])
+        return out
+
+    def service_conflicts(self, tid):
+        """{slot: [(room id, screen, state)]} — placed cells in service slots."""
+        svc = self.service_slots(tid)
+        if not svc:
+            return {}
+        return {i: u['placed'] for i, u in enumerate(self.tile_usage(tid))
+                if i in svc and u['placed']}
+
+    def vacate_service_slots(self, tid):
+        """Move every tile placed (or in My metatiles) in a service slot of project sheet
+        `tid` to a free slot on its own side of the collision threshold — page 2 first, then
+        page 1 — with its graphic; every layout and metatile on the sheet follows, so nothing
+        changes on screen (S168 r2). Animated / statue tiles there stay (reported by the
+        validator). Returns ([(old, new)], [slots that could not move])."""
+        svc = self.service_slots(tid)
+        if not svc or ':' in str(tid):
+            return [], []
+        rooms = self.rooms_using_tileset(tid)
+        thr = val(rooms[0]['record']['collision_threshold']) if rooms else 0
+        usage = self.tile_usage(tid)
+        movable = [i for i in sorted(svc) if usage[i]['status'] in ('placed', 'mine')]
+        if not movable:
+            return [], []
+        busy = {i for i, u in enumerate(usage) if u['status'] != 'free'} | svc
+        free = [i for i in sorted(range(P2.SLOTS), key=lambda i: (i < 0x80, i))
+                if i not in busy]
+        sheet = self.read_sheet(tid)
+        moved, stuck = [], []
+        for a in movable:
+            side = P2.is_wall(a, thr)
+            dst = next((i for i in free if P2.is_wall(i, thr) == side), None)
+            if dst is None:
+                stuck.append(a)
+                continue
+            free.remove(dst)
+            sheet[dst * 16:dst * 16 + 16] = bytes(sheet[a * 16:a * 16 + 16])
+            self._remap_tile(tid, a, dst)
+            moved.append((a, dst))
+        if moved:
+            self.write_sheet(tid, sheet)
+            self.touch()
+        return moved, stuck
+
+    def vacate_room_service_slots(self, room):
+        """vacate_service_slots for the room's own project sheet; a one-line note or ''."""
+        tid = (room.get('record') or {}).get('tileset')
+        if tid is None:
+            return ''
+        moved, stuck = self.vacate_service_slots(tid)
+        out = ''
+        if moved:
+            out = (f'{len(moved)} tile{"s" if len(moved) != 1 else ""} of {tid!r} moved out of the '
+                   'slots the service menu draws into (nothing changes on screen)')
+        if stuck:
+            out += ('; ' if out else '') + (f'{len(stuck)} could not move (the sheet is full) — '
+                                            'the menu will show over those cells')
+        return out
+
+    def _migrate_service_slots(self, notes):
+        """S168 r2: rooms with a service whose screen borrows sheet slots keep them free."""
+        done = set()
+        for r in self.rooms:
+            tid = (r.get('record') or {}).get('tileset')
+            if r.get('placeholder') or tid is None or tid in done:
+                continue
+            done.add(tid)
+            try:
+                moved, _stuck = self.vacate_service_slots(tid)
+            except Exception as e:                               # noqa: BLE001
+                self.migration_warnings.append(f'service slots of {tid!r}: {e}')
+                continue
+            if _stuck:
+                self.migration_warnings.append(
+                    f'tileset {tid}: {len(_stuck)} tile(s) sit in the slots a service menu draws '
+                    'into and the sheet has no free slot to move them to — the menu shows over '
+                    'those cells (free some tiles: Tileset tab)')
+            if moved:
+                notes.append(f'tileset {tid}: {len(moved)} tile(s) moved out of the slots a '
+                             'service menu (breeding / farm / eggs) draws into while the room '
+                             'shows — S168 r2, nothing changes on screen')
 
     def room_animation(self, room):
         """{'value', 'kind', 'map', 'slots', 'shown', 'text', 'error'} for
@@ -2289,14 +2399,18 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         return self._rom_cache or None
 
     def tile_usage(self, tid):
-        """128 dicts: placed [(room_id, screen, state)], mine [names],
-        vocab bool, animated bool, changed bool (graphic differs from the
-        origin sheet), status (animated/placed/mine/vocab/free)."""
+        """256 dicts (S168: slots 0-127 = page 1, 128-255 = page 2): placed
+        [(room_id, screen, state)], mine [names], vocab bool, animated bool,
+        changed bool (graphic differs from the origin sheet), status
+        (statue/animated/placed/mine/service/vocab/free; S168 r2 'service' = a
+        service menu of a room on the sheet draws there while the room shows)."""
         statue = self.statue_slots(tid)                  # S154: memorial statues
         anim = self.animated_slots(tid) - statue
+        svc = self.service_slots(tid)                    # S168 r2: a service menu draws there
         out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in anim,
-                'statue': i in statue, 'changed': False} for i in range(128)]
-        seen = [set() for _ in range(128)]      # S142: `w not in list` was O(n^2) at scale
+                'statue': i in statue, 'service': i in svc, 'changed': False}
+               for i in range(P2.SLOTS)]
+        seen = [set() for _ in range(P2.SLOTS)]  # S142: `w not in list` was O(n^2) at scale
         for r in self.rooms_using_tileset(tid):
             for k, scr in (r.get('screens') or {}).items():
                 refs = [(None, scr.get('layout'))] + [
@@ -2308,7 +2422,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     if i is None and scr.get('states'):
                         continue
                     w = (r['id'], int(k), i or 0)
-                    for t in {t & 0x7F for row in self.layout(ref['id'])['tiles'] for t in row}:
+                    for t in {P2.slot_key(t) for row in self.layout(ref['id'])['tiles'] for t in row}:
                         if w not in seen[t]:
                             seen[t].add(w)
                             out[t]['placed'].append(w)
@@ -2316,7 +2430,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 out[t]['vocab'] = True
         for mt in self.metatiles(tid):
             for t in mt['tiles']:
-                out[t & 0x7F]['mine'].append(mt.get('name', 'metatile'))
+                out[P2.slot_key(t)]['mine'].append(mt.get('name', 'metatile'))
         for t in self._protected.get(tid, ()):
             out[t]['vocab'] = True
         origin = self.tileset_origin(tid)
@@ -2333,7 +2447,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             u['released'] = rel and u['vocab']
             u['status'] = ('statue' if u['statue'] else
                            'animated' if u['animated'] else 'placed' if u['placed']
-                           else 'mine' if u['mine']
+                           else 'mine' if u['mine'] else 'service' if u['service']
                            else 'vocab' if (u['vocab'] and not rel) else 'free')
         return out
 
@@ -2347,17 +2461,20 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
 
     def free_counts(self, tid, threshold):
         """{'wall': n, 'walkable': n, 'total': n} free slots per side of the
-        collision threshold (tile < thr = WALL)."""
+        collision threshold (tile < thr = WALL) — S168: both pages (page-2 tile n is
+        on the side of page-1 tile n); + 'page1' / 'page2' totals."""
         used = self.used_tiles(tid)
-        w = sum(1 for i in range(min(threshold, 128)) if i not in used)
-        k = sum(1 for i in range(min(threshold, 128), 128) if i not in used)
-        return {'wall': w, 'walkable': k, 'total': w + k}
+        free = [i for i in range(P2.SLOTS) if i not in used]
+        w = sum(1 for i in free if P2.is_wall(i, threshold))
+        return {'wall': w, 'walkable': len(free) - w, 'total': len(free),
+                'page1': sum(1 for i in free if i < 0x80),
+                'page2': sum(1 for i in free if i >= 0x80)}
 
     def protect_tiles(self, tid, indices):
         """Register extra vocabulary indices (session-scoped). S96: the
         vocabulary is derived by `tile_usage` from the source room; this
         stays for callers without a renderer."""
-        self._protected.setdefault(tid, set()).update(t & 0x7F for t in indices)
+        self._protected.setdefault(tid, set()).update(P2.slot_key(t) for t in indices)
 
     def tile_used(self, tid, t):
         return t in self.used_tiles(tid)
@@ -2390,7 +2507,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         if anim_src is not None:
             from editor2.core import animation as A
             src_slots = A.slots(anim_src)
-            if any((t & 0x7F) in src_slots for t in mt['tiles']):
+            if any(P2.slot_key(t) in src_slots for t in mt['tiles']):
                 return self._import_animated(room, mt, src_sheet, src_threshold,
                                              own_sheet, name, anim_src, switch_ok)
         rec = room['record']
@@ -2402,28 +2519,28 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         sheet = self.read_sheet(tid)
         thr = val(rec['collision_threshold'])
         used = self.used_tiles(tid)
-        anim = self.animated_slots(tid)
-        free = [i for i in range(128) if i not in used]
+        anim = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        free = [i for i in range(P2.SLOTS) if i not in used]   # S168: both pages
+        src_sheet = P2.pad_sheet(src_sheet)
         out = []
-        for pos, t in enumerate(mt['tiles']):
-            t &= 0x7F
+        for pos, tv in enumerate(mt['tiles']):
+            t = P2.slot_key(tv)
             gfx = bytes(src_sheet[t * 16:t * 16 + 16])
-            want_wall = t < src_threshold
+            want_wall = P2.is_wall(t, src_threshold)
             strict = pos == 3                       # bottom-right decides
             cand = None
-            for i in range(128):
+            for i in range(P2.SLOTS):
                 if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != gfx:
                     continue
-                if not strict or (i < thr) == want_wall:
+                if not strict or P2.is_wall(i, thr) == want_wall:
                     cand = i
                     break
             if cand is None:
-                side = [i for i in free if (i < thr) == want_wall]
-                pool = side or ([] if strict else free)
+                pool = P2.pick_order(free, thr, want_wall, strict)
                 if not pool:
-                    nw = sum(1 for i in free if i < thr)
+                    nw = sum(1 for i in free if P2.is_wall(i, thr))
                     spare = [i for i, u in enumerate(self.tile_usage(tid))
-                             if u['status'] == 'vocab' and (i < thr) == want_wall]
+                             if u['status'] == 'vocab' and P2.is_wall(i, thr) == want_wall]
                     if spare:
                         raise VocabReleaseWouldHelp(
                             f"The {'wall' if want_wall else 'walkable'} side of "
@@ -2438,10 +2555,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                         f"{nw} wall / {len(free) - nw} walkable free. Open the "
                         "Tileset tab: release unused vocabulary, delete unused "
                         "author metatiles, or pick a room with a roomier tileset")
-                cand = pool[-1] if want_wall else pool[0]
+                cand = pool[0]
                 free.remove(cand)
                 sheet[cand * 16:cand * 16 + 16] = gfx
-            out.append(cand)
+            out.append(P2.value_of(cand))
         self.write_sheet(tid, sheet)
         new = {'name': name or mt.get('name') or 'imported',
                'tiles': out, 'pal': mt.get('pal', 0), 'src': 'borrowed'}
@@ -2471,7 +2588,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # hidden partner frame of each swapped one
         need = []
         for t in mt['tiles']:
-            t &= 0x7F
+            t = P2.slot_key(t)
             if t in src_slots and t not in need:
                 need.append(t)
                 d = detail.get(str(t)) or {}
@@ -2483,7 +2600,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             self.room(room['id'])['animation'] = ('source' if room.get('source_mapID') is not None
                                                   and val(room['source_mapID']) == src
                                                   else f'0x{src:02X}')
-        anim_after = self.animated_slots(tid)
+        anim_after = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
         # tiles in use in the slots we write — and, on a switch, in EVERY slot
         # the new animation moves — leave (unrelated tiles must not start moving)
         vac = set(need) | (set(src_slots) if switching else set())
@@ -2497,34 +2614,34 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         # already in the sheet, else a free slot (never an animated one); the
         # bottom-right keeps its source side of the threshold (walkability)
         used = self.used_tiles(tid) | set(need)
-        free = [i for i in range(128) if i not in used and i not in anim_after]
+        free = [i for i in range(P2.SLOTS) if i not in used and i not in anim_after]
+        src_sheet = P2.pad_sheet(src_sheet)
         out = []
         for pos, t in enumerate(mt['tiles']):
-            t &= 0x7F
+            t = P2.slot_key(t)
             if t in src_slots:
                 out.append(t)
                 continue
             gfx = bytes(src_sheet[t * 16:t * 16 + 16])
-            want_wall = t < src_threshold
+            want_wall = P2.is_wall(t, src_threshold)
             strict = pos == 3
-            cand = next((i for i in range(128) if i not in anim_after
+            cand = next((i for i in range(P2.SLOTS) if i not in anim_after
                          and bytes(sheet[i * 16:i * 16 + 16]) == gfx
-                         and (not strict or (i < thr) == want_wall)), None)
+                         and (not strict or P2.is_wall(i, thr) == want_wall)), None)
             if cand is None:
-                side = [i for i in free if (i < thr) == want_wall]
-                pool = side or ([] if strict else free)
+                pool = P2.pick_order(free, thr, want_wall, strict)
                 if not pool:
                     raise RuntimeError(f"tileset {tid!r} has no free "
                                        f"{'wall' if want_wall else 'walkable'} slot")
-                cand = pool[-1] if want_wall else pool[0]
+                cand = pool[0]
                 free.remove(cand)
                 sheet[cand * 16:cand * 16 + 16] = gfx
-            out.append(cand)
+            out.append(P2.value_of(cand))
         self.write_sheet(tid, sheet)
         new = {'name': name or mt.get('name') or 'imported', 'tiles': out,
                'pal': mt.get('pal', 0), 'src': 'borrowed'}
         self.add_metatile(tid, new['name'], out, new['pal'], src='borrowed')
-        br = mt['tiles'][3] & 0x7F
+        br = P2.slot_key(mt['tiles'][3])
         note = [f"animated like {_vn(src)}: slots {A.rng(need)} hold its graphics"]
         if cur['map'] != src:
             note.append(f"this room's animation is now {_vn(src)}'s")
@@ -2577,14 +2694,14 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         thr = val(rec['collision_threshold'])
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        anim = self.animated_slots(tid)
-        free = [i for i in range(128) if i not in used and i not in anim]
+        anim = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        free = [i for i in range(P2.SLOTS) if i not in used and i not in anim]   # S168: + page 2
 
         def existing(g, side):
-            for i in range(128):
+            for i in range(P2.SLOTS):
                 if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != g:
                     continue
-                if side == 'any' or (i < thr) == (side == 'wall'):
+                if side == 'any' or P2.is_wall(i, thr) == (side == 'wall'):
                     return i
             return None
 
@@ -2599,15 +2716,17 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     want.append((g, side))
         want.sort(key=lambda gs: gs[1] == 'any')
         alloc = {}
-        free_w = [i for i in free if i < thr]
-        free_k = [i for i in free if i >= thr]
+        # S168: pop() takes the wall side from the top of page 1 down, then page 2;
+        # pop(0) the walkable side from page 1 upward, then page 2
+        free_w = list(reversed(P2.wall_first(free, thr)))
+        free_k = P2.walk_first(free, thr)
         new_w = new_k = new_a = 0
         pending = []
         planned = {}                                  # gfx -> [(side, 'new'|index)]
         for g, side in want:
             hit = existing(g, side)
             if hit is not None:
-                alloc[(g, side)] = hit
+                alloc[(g, side)] = P2.value_of(hit)
                 continue
             prior = planned.get(g, [])
             if side in ('any', 'any_br') and prior:
@@ -2627,19 +2746,24 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                 'Select fewer cells, release unused vocabulary (Rooms tab → '
                 'Tileset tab), or give the room a blank tileset (inspector → '
                 'tileset → Change… → New blank tileset).')
+        def p1(lst):
+            return sum(1 for i in lst if i < 0x80)
         for g, side in pending:
             if side == 'wall':
                 i = free_w.pop()                       # walls from the top down
             elif side == 'walk':
                 i = free_k.pop(0)
-            elif side == 'any_br':                     # walkable side first
-                i = free_k.pop(0) if free_k else free_w.pop()
+            elif side == 'any_br':                     # walkable side first (page 1 first)
+                i = free_k.pop(0) if free_k and (free_k[0] < 0x80 or not p1(free_w)) \
+                    else free_w.pop()
+            elif p1(free_k) or p1(free_w):             # page 1 while it has room
+                i = free_k.pop(0) if p1(free_k) >= p1(free_w) else free_w.pop()
             elif len(free_k) >= len(free_w):
                 i = free_k.pop(0)
             else:
                 i = free_w.pop()
             sheet[i * 16:i * 16 + 16] = g
-            alloc[(g, side)] = i
+            alloc[(g, side)] = P2.value_of(i)
         for k, v in list(alloc.items()):
             if isinstance(v, tuple):
                 alloc[k] = alloc[(k[0], v[1])]
@@ -2774,46 +2898,51 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         for lid in self.layouts_using_tileset(tid):
             for row in self.layout(lid)['tiles']:
                 for c, v in enumerate(row):
-                    if (v & 0x7F) == old:
-                        row[c] = (v & 0x80) | new
+                    if P2.slot_key(v) == old:
+                        row[c] = P2.remap_value(v, old, new)     # S168: slots 0-255
         for mt in self.metatiles(tid):
-            mt['tiles'] = [((x & 0x80) | new) if (x & 0x7F) == old else x for x in mt['tiles']]
+            mt['tiles'] = [P2.remap_value(x, old, new) for x in mt['tiles']]
 
     def ensure_twin(self, tid, t, want_wall, shift_ok=False):
-        """Return an index whose graphic equals subtile `t` on the wanted
+        """Return a TILE VALUE whose graphic equals tile `t` on the wanted
         side of the collision threshold (tile < thr = WALL, KEY_LESSONS S6),
         creating one if needed. Never touches the slots an animation of a
         room on this sheet changes at runtime (S99 `animated_slots`; was the
-        fixed 77/78 of KEY_LESSONS S7). Falls back to moving the threshold by one (the
-        first walkable tile is relocated to a free slot and every layout on
-        this tileset is remapped) when no free slot exists on the wall side.
-        Raises RuntimeError when the sheet has no free slot at all."""
+        fixed 77/78 of KEY_LESSONS S7). S168: both pages — page-2 tile n is on
+        the side of page-1 tile n (the engine compares the map byte); a twin is
+        made on page 1 first, then page 2. Falls back to moving the threshold by
+        one (the tiles at the split move to free slots on their own side, every
+        layout on this tileset is remapped) when no free slot exists on the wanted
+        side. Raises RuntimeError when the sheet has no free slot at all."""
         sheet = self.read_sheet(tid)
         rooms = self.rooms_using_tileset(tid)
         thr = val(rooms[0]['record']['collision_threshold']) if rooms else 0
-        gfx = bytes(sheet[t * 16:t * 16 + 16])
-        side = range(0, thr) if want_wall else range(thr, 128)
+        k = P2.slot_key(t)
+        gfx = bytes(sheet[k * 16:k * 16 + 16])
         anim = self.animated_slots(tid)
-        for i in side:
-            if i in anim:
+        svc = self.service_slots(tid)                    # S168 r2: never reuse those
+        for i in sorted(range(P2.SLOTS), key=lambda i: (i >= 0x80, i)):
+            if i in anim or i in svc or P2.is_wall(i, thr) != want_wall:
                 continue
             if bytes(sheet[i * 16:i * 16 + 16]) == gfx:
-                return i, thr
+                return P2.value_of(i), thr
         used = self.used_tiles(tid)
-        free = [i for i in range(128) if i not in anim and i not in used]
-        on_side = [i for i in free if (i < thr) == want_wall]
+        free = [i for i in range(P2.SLOTS) if i not in anim and i not in used]
+        on_side = P2.wall_first(free, thr) if want_wall else P2.walk_first(free, thr)
         if on_side:
-            i = on_side[-1] if want_wall else on_side[0]
+            i = on_side[0]
             sheet[i * 16:i * 16 + 16] = gfx
             self.write_sheet(tid, sheet)
-            return i, thr
+            return P2.value_of(i), thr
         if not want_wall:
             # S98 r2 (user option): walkable side full -> move the split DOWN
             # one slot: the last wall slot (thr-1) becomes the first walkable
             # one; its graphic (if in use) moves to a free wall slot below
+            # (S168: page-2 slot 128 + thr - 1 changes side too)
             s_idx = thr - 1
-            below = [i for i in free if i < s_idx]
-            if s_idx < 1 or s_idx in anim or (s_idx in used and not below):
+            below = [i for i in P2.wall_first(free, thr) if (i & 0x7F) < s_idx]
+            moving = [x for x in (s_idx, 0x80 + s_idx) if x in used]
+            if s_idx < 1 or s_idx in anim or (0x80 + s_idx) in anim or len(below) < len(moving):
                 raise RuntimeError(
                     f'tileset {tid} is full on both sides (walkable side: no free slot; '
                     'wall side: none to move a tile into) — release unused vocabulary '
@@ -2825,13 +2954,13 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     f'{len(below) + (0 if s_idx in used else 1)} free slot(s). Move the '
                     f'wall/walkable split down one slot (${thr:02X} -> ${s_idx:02X})? '
                     f'Slot ${s_idx:02X} becomes walkable'
-                    + (f'; the wall tile there moves to free slot ${below[-1]:02X} (every '
+                    + (f'; the wall tile there moves to free slot ${below[0]:02X} (every '
                        'room on this tileset is updated, nothing changes on screen)'
                        if s_idx in used else ' (it is free)') + '.')
-            if s_idx in used:
-                f = below[-1]
-                sheet[f * 16:f * 16 + 16] = bytes(sheet[s_idx * 16:s_idx * 16 + 16])
-                self._remap_tile(tid, s_idx, f)
+            for x in moving:
+                f = below.pop(0)
+                sheet[f * 16:f * 16 + 16] = bytes(sheet[x * 16:x * 16 + 16])
+                self._remap_tile(tid, x, f)
             sheet[s_idx * 16:s_idx * 16 + 16] = gfx
             self.write_sheet(tid, sheet)
             for r in rooms:
@@ -2839,20 +2968,65 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             self.touch()
             return s_idx, s_idx
         # wall side full: relocate the first walkable tile (index thr) to a
-        # free slot above, put the twin at thr, threshold += 1
-        above = [i for i in free if i > thr]
-        if not above or thr in anim:
+        # free slot above, put the twin at thr, threshold += 1 (S168: page-2
+        # slot 128 + thr becomes a wall too — its tile moves to a walkable slot)
+        above = [i for i in P2.walk_first(free, thr) if (i & 0x7F) > thr]
+        moving = [x for x in (thr, 0x80 + thr) if x in used and x != thr] + [thr]
+        if len(above) < len(moving) or thr in anim or (0x80 + thr) in anim:
             raise RuntimeError('tileset has no free slot for a wall twin')
-        f = above[0]
-        moved = bytes(sheet[thr * 16:thr * 16 + 16])
-        sheet[f * 16:f * 16 + 16] = moved
+        for x in moving:
+            f = above.pop(0)
+            sheet[f * 16:f * 16 + 16] = bytes(sheet[x * 16:x * 16 + 16])
+            self._remap_tile(tid, x, f)
         sheet[thr * 16:thr * 16 + 16] = gfx
         self.write_sheet(tid, sheet)
-        self._remap_tile(tid, thr, f)
         for r in rooms:
             r['record']['collision_threshold'] = hexs(thr + 1)
         self.touch()
         return thr, thr + 1
+
+    def page1_room(self, tid, thr, n_wall, n_any, exclude=()):
+        """S168: make page 1 of sheet `tid` hold at least `n_wall` free wall slots and
+        `n_any` more free slots of either side, by moving ordinary tiles (placed / in My
+        metatiles — never animated, statue or vocabulary slots) to free page-2 slots on
+        their own side; every layout and metatile on the sheet follows, so nothing
+        changes on screen. For what must live on page 1 (a memorial statue's tiles: the
+        game draws into VRAM bank 0). Returns [(old, new)]; RuntimeError when page 2
+        has no room either."""
+        usage = self.tile_usage(tid)
+        busy = {i for i, u in enumerate(usage) if u['status'] != 'free'} | set(exclude)
+        free1 = [i for i in range(0x80) if i not in busy]
+        need_w = max(0, n_wall - sum(1 for i in free1 if P2.is_wall(i, thr)))
+        need_a = max(0, n_wall + n_any - len(free1) - need_w)
+        if not need_w and not need_a:
+            return []
+        free2 = [i for i in range(0x80, P2.SLOTS) if i not in busy]
+        movable = [i for i in range(0x80) if usage[i]['status'] in ('placed', 'mine')
+                   and i not in exclude]
+        sheet = self.read_sheet(tid)
+        moved = []
+
+        def move(side_wall):
+            src = [i for i in movable if P2.is_wall(i, thr) == side_wall and i not in dict(moved)]
+            dst = [i for i in free2 if P2.is_wall(i, thr) == side_wall]
+            if not src or not dst:
+                raise RuntimeError(f'page 2 of {tid!r} has no free '
+                                   f"{'wall' if side_wall else 'walkable'} slot to move a tile to")
+            a, b = src[-1], dst[0]
+            free2.remove(b)
+            sheet[b * 16:b * 16 + 16] = bytes(sheet[a * 16:a * 16 + 16])
+            self._remap_tile(tid, a, b)
+            moved.append((a, b))
+        for _ in range(need_w):
+            move(True)
+        for _ in range(need_a):
+            try:
+                move(False)
+            except RuntimeError:
+                move(True)
+        self.write_sheet(tid, sheet)
+        self.touch()
+        return moved
 
     def set_cell_walkable(self, lid, tid, cx, cy, walkable, shift_ok=False):
         """Flip one placed cell: only its BOTTOM-RIGHT subtile decides

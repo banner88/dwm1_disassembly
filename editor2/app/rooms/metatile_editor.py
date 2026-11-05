@@ -19,13 +19,16 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
 from editor2.core.document import metatile_pals, pal_value
 
 from editor2.app.rooms.tile_picker import TilePicker
+from editor2.core import page2 as P2
 
 
 class MetatileEditor(QDialog):
     def __init__(self, renderer, sheet, pals, threshold, seed=None, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Metatile editor')
-        self.renderer, self.sheet, self.pals, self.threshold = renderer, sheet, pals, threshold
+        from editor2.core import page2 as P2
+        self.renderer, self.pals, self.threshold = renderer, pals, threshold
+        self.sheet = P2.pad_sheet(sheet) if sheet is not None else sheet   # S168: + page 2
         seed = seed or {'tiles': [0, 0, 0, 0], 'pal': 0, 'name': ''}
         self.tiles = list(seed['tiles'])
         self.pals4 = metatile_pals(seed) or [0] * 4
@@ -117,8 +120,8 @@ class MetatileEditor(QDialog):
         img = img.resize((96, 96), Image.NEAREST)
         self.preview.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
         for i, b in enumerate(self.slot_btns):
-            b.setText(f"{('TL', 'TR', 'BL', 'BR')[i]}\n${self.tiles[i]:02X} p{self.pals4[i]}")
-        wall = self.tiles[3] < self.threshold
+            b.setText(f"{('TL', 'TR', 'BL', 'BR')[i]}\n{P2.label(self.tiles[i])} p{self.pals4[i]}")
+        wall = (self.tiles[3] & 0xFF) < self.threshold      # S168: the map byte
         self.walk_lbl.setText('WALL (bottom-right subtile < threshold)' if wall
                               else 'walkable')
         self.walk_lbl.setStyleSheet('color:#ff6060;' if wall else 'color:#60d060;')

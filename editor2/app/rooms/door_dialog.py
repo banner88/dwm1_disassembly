@@ -250,7 +250,7 @@ class DoorDialog(QDialog):
                          for dx, dy, _l in vanilla_doors(self.rend, there['mapID'], there['screen'])]
 
             def walk(cx, cy):
-                return 0 <= cx <= 9 and 0 <= cy <= 7 and grid[cy * 2 + 1][cx * 2 + 1] >= thr
+                return 0 <= cx <= 9 and 0 <= cy <= 7 and (grid[cy * 2 + 1][cx * 2 + 1] & 0xFF) >= thr
         except Exception:
             pass
         self.prev.set_image(img)

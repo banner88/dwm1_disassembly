@@ -114,11 +114,14 @@ jr_00b_4037:
     inc hl
     push hl
     ld hl, $9000
-    call WaitDMATransfer
+    call WaitDMATransfer            ; the room sheet: 128 tiles -> VRAM bank 0 $9000-$97FF (BG ids $00-$7F).
+                                    ; S168: the original game never writes VRAM BANK 1's tile area nor sets
+                                    ; attribute bit 3 (tools/census_vram_bank1.py: title, 8 gates' battles + the
+                                    ; field menu, 519 cutscenes) — patched builds keep a room's PAGE 2 there
     ld a, [wMapID]
     ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
                                     ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
-    jr nz, jr_00b_4076              ; [S154] these 7 dead bytes = patched region memorial_tiles_0 (bank $79 entry 8: the memorial statues over the sheet)
+    jr nz, jr_00b_4076              ; [S154] these 7 dead bytes = patched region memorial_tiles_0 (bank $79 entry 8: the memorial statues over the sheet; S168: or the page-2 home bank's Page2Room, which loads the room's page 2 into VRAM bank 1 then calls entry 8)
 
     ld de, $291d
     ld hl, $8800
@@ -186,7 +189,7 @@ jr_00b_4094:
     ld a, [wMapID]
     ld a, $08                       ; S123 r3: NOT a compare (bytes 3E 08): Z still comes from WaitDMATransfer (ends xor a), so
                                     ; the jr nz never branches: sheet $29:$1D -> $8800 (BG tiles $80-$AF) in EVERY room (PyBoy)
-    jr nz, jr_00b_40c0              ; [S154] these 7 dead bytes = patched region memorial_tiles_1 (bank $79 entry 8)
+    jr nz, jr_00b_40c0              ; [S154] these 7 dead bytes = patched region memorial_tiles_1 (bank $79 entry 8; S168: or Page2Room, as entry 0)
 
     ld de, $291d
     ld hl, $8800

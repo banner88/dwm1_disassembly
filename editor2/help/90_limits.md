@@ -100,6 +100,11 @@
   loads again unless its *shown when* flags say otherwise (Make boss sets this
   up).
 - Maze size (S122): 3-15 per battle list (1-2 can freeze the game).
+- Tiles (S168): a tileset holds **256 tiles** — page 1 (128, the game's sheet) and
+  page 2 (128 more, filled when page 1 is full). Page 2 is **GBC only** (on an original
+  Game Boy a page-2 tile shows the page-1 tile with the same number) and costs 2 KB of
+  ROM per tileset that uses it; page-2 tile n is a wall exactly when page-1 tile n is.
+  The 48 shared tiles (ids 128-175) are the same in every room, as before.
 - Gate themes (S122): the 16 maze looks only (their sheet slots $00-$3F; $40-$7F
   free); theme rooms do not animate; the damage floors do not hurt in your
   rooms. Per-gate lists per floor, rooms' own lists inside and

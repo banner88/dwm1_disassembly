@@ -456,6 +456,8 @@ gfx_bank is $67 or an overflow bank $80+.)
 Result: 2048 bytes = 128 tiles (8×8 pixels, 2bpp GBC format) → VRAM $9000.
 
 All tilesets decompress to exactly 128 tiles. The same 9 tileset banks are used.
+(S168: a PROJECT tileset may add a page 2 — 128 more tiles in VRAM bank 1, stored raw and
+copied by the page-2 banks; "Page 2: the second 128 tiles (S168)" below.)
 
 ## GBC Attribute Buffer ($C200)
 
@@ -472,6 +474,8 @@ GBC-only. Contains tile palette/attribute data for the background map.
 - 256 bytes total, 16 bytes per row (10 used + 6 padding)
 - Each byte = 2 nibbles = 2 palette indices (0-15, 4 bits each); vanilla
   uses only 0-3 (S96 census over every vanilla screen/step: values {0,1,2,3}).
+  The nibble IS the GBC attribute's low half: bit 3 = VRAM bank 1 (S168 page 2 — the
+  compiler writes it from the tile values, PROJECT_COMPILER §2.76).
 - The palette is per 8×8 SUBTILE, and vanilla really mixes slots inside a
   16×16 walk cell: 3,156 of 42,080 vanilla cells (7.5%; boss rooms, Arena,
   Bazaar …). The editor's metatile therefore carries one slot per subtile
@@ -959,7 +963,55 @@ its VBlank handler finishes its VRAM work at LY 148, leaving ~5 lines of
 VBlank; and **VRAM bank 1's tile area ($8000-$97FF, 384 tiles) is empty**
 with no BG cell using attribute bit 3 — checked in GreatTree, Castle, the
 Zoma room, Room of Beginning, a Farm room, a custom room and the menu. A
-room could draw up to 128 more tiles from there (ROADMAP P3.3g).
+room could draw up to 128 more tiles from there (ROADMAP P3.3g — built S168:
+"Page 2" below; S168's census over the whole game confirmed both facts).
+
+### Page 2: the second 128 tiles (S168 — PyBoy-measured; built, NOT yet user-tested)
+
+A project tileset holds **256 tiles**: page 1 = the room sheet the game always loads to
+VRAM bank 0 `$9000-$97FF` (BG ids `$00-$7F`), **page 2** = 128 more in **VRAM bank 1**
+`$9000-$97FF`, drawn by every BG cell whose GBC attribute has **bit 3** (the attribute
+nibble 8-15 = bank 1 + palette 0-7). GBC only (DMG: no bank 1 — a page-2 cell shows the
+page-1 tile of the same number).
+- **The attribute path needs no change:** the `$C200` nibble is written into the attribute
+  byte as it is (bank $0B `jr_00b_4165`, ROM0 `CopyRowAttrGBCLoop` / `CopyColAttrGBCLoop`),
+  so bit 3 reaches the map at room loads and scrolls.
+- **The census (S168, `tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json`):**
+  VRAM bank 1 `$8000-$97FF` seeded with a pattern at power-on, then the title + new game,
+  8 gates' battles (25 to the end) + the field menu, and the 519-scene cutscene census
+  (68 PyBoy runs): **no write** to the bank-1 tile area, **no** cell with attribute bit 3.
+  Positive control (the hook writes one byte + one bit): both reported.
+- **Walkability is the map BYTE** (`TileBuffer_1E96` reads `$C300`, S94): page-2 tile n is
+  a wall exactly when page-1 tile n is — page 2 is split at the same threshold.
+- **Loading** (patched builds; PROJECT_COMPILER §2.76): bank $0B's room-sheet regions
+  `memorial_tiles_0` / `_1` (right after RoomEntry0 / RoomEntry1 decode the room sheet: every
+  room load and every reload after a full screen / a battle) far-call the page-2 HOME bank's
+  `Page2Room`: `wPage2On` := 0; on GBC, for a project room (map id ≥ `$6B`; `$6B-$6F` only
+  outside a gate) with a `Page2Directory` row (region, map id → bank, index): `wPage2On` := 1
+  and the sheet (stored RAW, 2048 B, `ALIGN[8]`) is copied to VRAM bank 1 by General-Purpose
+  DMA (`Page2Copy_P<bank>`: 64 × 2 blocks, each started as HBlank begins or in VBlank lines
+  144-151, line 127 skipped; LCD off = at once — about 64 scan lines), then tiles `$E0-$FF`
+  of bank 0 (the blank tile, the window frames) are copied to bank 1 byte by byte
+  (`Page2Mirror`). The LZ decoder cannot fill bank 1 (KEY_LESSONS S168). A room without a row
+  leaves bank 1 as it was (none of its cells has bit 3).
+- **Windows over page-2 cells:** a text box / window writes letter tiles (`$80-$FF`) into the
+  map; over a bit-3 cell they would read VRAM bank 1 (NPC sheets 3-5 since S141, or zeros).
+  `wPage2On` makes bank $73 `BoxAttrActive` (the dialog / YES-NO boxes) and bank $77
+  `PushAttrActive` (every screen push: shops, the Vault, Grandpa, the library …) take the
+  free-colour path — palette 7 + bank 0 under the box, the room's own attribute (from
+  `$C200`, bit 3 included) back at the close; in a page-2 room ScreenPush writes each cell's
+  attribute then its tile (`PushRowBoth`), so a letter never stands on a bank-1 attribute
+  for a frame (tiles-then-attributes showed 2-6 frames of wrong letters at the shop / the
+  Vault — measured). The field menu fills palette 7 itself (vanilla). Measured
+  (`tools/walk_page2.py`, the user's save, THE NUMBERED GALLERY): the curator's YES / NO,
+  the shop, Grandpa, the field menu's ITEM page, the Vault, the library (a full screen) and
+  a won battle — sampled every 2 frames, no letter read from bank 1; the room whole after
+  each; `--negative` (`wPage2On` forced 0) fails 6 of the 7.
+- **Own tile animations** reach page-2 slots: bit 0 of the destination word = VRAM bank 1
+  (`tileanim_player.asm`; the DMA ignores the low 4 bits).
+- **Memorial statues** draw into VRAM bank 0 (bank $79): a statue's monster tiles are page-1
+  slots — the editor moves ordinary tiles to page 2 when page 1 is full
+  (`Document.page1_room`).
 
 ## Text boxes and sprites (S121 — PyBoy-measured)
 
@@ -997,6 +1049,15 @@ slots (VRAM `$9000-$97FF`, ids `$00-$7F`) and the game puts back only some of th
 | gate list (13) | `$38-$7F` the gate names as a bitmap | yes (room reload) |
 | naming screen (15) | the room sheet | yes (room reload) |
 | Grandpa (6) / a master (5) / "Take…" (11) — S127 | `$40-$7F` (the menu's icons); `$FFD4` := `$40` / `$78` / `$40` | no — S127: bank $77 `BreedClose` reloads the room sheet and sets `$80` in custom rooms |
+
+**S168 r2 — while the room still shows (PyBoy, the room-art check of `tools/walk_page2.py`):** Grandpa
+wrote `$40-$48` (the BREED / HATCH / EXIT / INFO word bitmap, bank $0A `$9400` 8 × 1) and `$61-$7A`
+(the monster names / marks, `$9610` / `$9710-$97A0`); a master `$38-$3F` and `$78-$7C` (bank $09
+`SetFld9_5f4d` writes the party list from `$9380`, 8 × `$90` B = `$38-$7F` in all). A room cell drawn
+with one of those slots showed the menu's words ("EXIT INFO" over the gallery's floor — the user's
+S168 report). The editor keeps the slots of `services.BORROWED_SLOTS` (breeding `$38-$7F`, farm
+`$60-$6F`, eggs `$70-$78`) free in a project sheet whose rooms have such a screen (PROJECT_COMPILER
+§2.76 "S168 r2").
 
 **NPC sprite sheets (S141):** the room's NPC sprite sheets live at `$8500 + c·$100` (one per
 distinct NPC sprite / monster in list order, cache `$D7BE`, tile base `$50 + 16c`) — sheets 3-5 at

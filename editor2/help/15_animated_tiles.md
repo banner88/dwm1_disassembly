@@ -48,8 +48,9 @@ tiles show their first frame again). Everything is one undo step.
 - **Load** — how much the room changes per game frame compared with what
   the game safely does (8 tiles a frame). Under 100 %: everything runs at
   the speed you set. Over 100 %: the busiest steps wait a frame or two.
-- **Free tiles on this tileset** — only *only the selected cells* uses them.
-  Frames never use tileset space.
+- **Free tiles on this tileset** — only *only the selected cells* uses them
+  (both pages of the tileset count). Frames never use tileset space. Tiles on
+  page 2 animate exactly like page-1 tiles.
 - **Frame storage** — your frames live in ROM banks of their own, not on the
   tileset. One room's animations must fit one bank (about 15.8 KB); the whole
   project has no limit of its own — when bank $6C is full, the next rooms'

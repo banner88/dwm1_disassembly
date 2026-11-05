@@ -427,7 +427,8 @@ def s122_gate_themes(app, w):
     lid = rt.current_room()['screens']['0']['layout']['id']
     assert doc.layout(lid)['tiles'] == tiles and doc.layout(lid)['attr'] == attr
     # borrow a Library WALL metatile: the theme's wall slots are all vocabulary ->
-    # the editor offers to release the unused vocabulary (S122), Yes -> borrowed
+    # S122: the editor offered to release the unused vocabulary; S168: page 2 has free
+    # wall slots, so the tiles land there without a question (the vocabulary stays)
     rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x12))
     app.processEvents()
     lib = [m for m in rt._vanilla_vocab(0x12)
@@ -442,9 +443,12 @@ def s122_gate_themes(app, w):
         RT.QMessageBox.question = q_keep
     app.processEvents()
     room = rt.current_room()
-    assert asked and 'Release' in asked[0], asked
-    assert doc.released(doc.tileset_key(room)) and doc.gate_theme(room) == 4
-    assert any(m.get('src') == 'borrowed' for m in doc.metatiles(doc.tileset_key(room)))
+    assert not asked, asked
+    from editor2.core import page2 as _P2
+    bor = [m for m in doc.metatiles(doc.tileset_key(room)) if m.get('src') == 'borrowed']
+    assert not doc.released(doc.tileset_key(room)) and doc.gate_theme(room) == 4
+    assert bor and _P2.is_page2(bor[-1]['tiles'][3]) and \
+        not _P2.walkable(bor[-1]['tiles'][3], 0x30), bor[-1]
     td = TilesetDialog(doc, s.renderer, doc.room('dusk_mirror'), rt.canvas.pals, rt)
     td.rb_g.setChecked(True)
     td.g_box.setCurrentIndex(9)
@@ -458,7 +462,7 @@ def s122_gate_themes(app, w):
         assert word in hlp, f'help 12_gate_themes.md lacks "{word}"'
     print('OK: S122 — gate themes: New room on theme 4 (maze metatiles in the picker), the 16 '
           'themes in Borrow, the Maze screen dialog (254 screens, openings filter) stamping a '
-          'screen, a Library wall borrowed after "release unused vocabulary", Change tileset -> '
+          'screen, a Library wall borrowed onto page 2 (S168; was: after "release unused vocabulary"), Change tileset -> '
           'a gate theme + colours; undo restores project.json')
 
 
@@ -3770,6 +3774,115 @@ def s163_failed_op_assets(app, w):
           'assets/ and project.json unchanged')
 
 
+def s168_page2(app, w):
+    """S168 (ROADMAP P3.3g, the user: "more tiles per room"): PAGE 2 in the editor — a full
+    page 1 spills a borrowed metatile onto page 2, the Tileset tab shows 256 slots, the
+    metatile editor's sheet offers page 2 (a click emits $100 + n), the canvas draws a
+    page-2 cell with page 2's art, Walkability flips a page-2 cell (its twin keeps the
+    picture), every edit is one undo step and undone."""
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QMouseEvent
+    from PySide6.QtCore import QEvent
+    from editor2.app.rooms import commands as C
+    from editor2.app.rooms.metatile_editor import MetatileEditor
+    from editor2.core import page2 as P2
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    before = doc.dumps()
+    adir = os.path.join(doc.project_dir, 'assets')
+    files0 = sorted(os.listdir(adir))
+    start = s.undo.index()
+    made = {}
+
+    def mk(d):
+        rid = d.new_room('S168 PAGES PROBE', 0x00, s.renderer, blank_tileset=True)
+        room = d.room(rid)
+        tid = room['record']['tileset']
+        room['record']['collision_threshold'] = '0x10'
+        d.write_sheet(tid, bytes((k * 37 + (k >> 4) * 11 + 1) & 0xFF for k in range(2048)))
+        lid = room['screens']['0']['layout']['id']
+        g = d.layout(lid)['tiles']
+        for k in range(128):                     # every page-1 slot placed
+            r, c = divmod(k, 20)
+            g[r][c] = k
+        made.update(rid=rid, tid=tid, lid=lid)
+    s.undo.push(C.SnapshotCommand(s, 'S168 probe room', mk))
+    app.processEvents()
+    rid, tid, lid = made['rid'], made['tid'], made['lid']
+    fc = doc.free_counts(tid, 0x10)
+    assert fc['page1'] == 0 and fc['page2'] == 128, fc
+    # a borrowed metatile: page 1 is full -> its four tiles land on page 2
+    src = bytearray(2048)
+    for k in range(4):
+        src[(0x20 + k) * 16:(0x21 + k) * 16] = bytes([0xA0 + k] * 16)
+    got = {}
+
+    def borrow(d):
+        got['mt'] = d.import_metatile(d.room(rid), {'tiles': [0x20, 0x21, 0x22, 0x23], 'pal': 1},
+                                      bytes(src), 0x10, name='probe')
+    s.undo.push(C.SnapshotCommand(s, 'S168 borrow', borrow))
+    app.processEvents()
+    tiles = got['mt']['tiles']
+    assert all(P2.is_page2(t) for t in tiles) and not P2.is_wall(P2.slot_key(tiles[3]), 0x10), tiles
+    sheet = doc.read_sheet(tid)
+    assert all(sheet[P2.slot_key(t) * 16] == 0xA0 + k for k, t in enumerate(tiles)), tiles
+    assert os.path.getsize(doc.sheet_path(tid)) == 4096, 'the sheet file grew a page 2'
+    # paint it on cell (8, 7) and show the room
+    g = doc.layout(lid)['tiles']
+    for j, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+        g[14 + dr][16 + dc] = tiles[j]
+    doc.touch()
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(Qt.UserRole) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.room_id == rid, rt.room_id
+    s.renderer._sheet_cache.clear()
+    rt._show()
+    app.processEvents()
+    cv = rt.canvas
+    img = cv.screenshot()
+    want = s.renderer.render_tile(P2.pad_sheet(sheet), tiles[0], cv.pals, cv.attr[14][16] & 7)
+    cell = img.crop((128, 112, 136, 120))
+    assert list(cell.getdata()) == list(want.getdata()), 'the canvas draws the page-2 tile'
+    # the Tileset tab: 256 slots, page 2 counted
+    rt.tileset_map.refresh()
+    assert len(rt.tileset_map.usage) == 256 and 'page 2' in rt.tileset_map.summary.text()
+    assert rt.tileset_map.usage[P2.slot_key(tiles[0])]['status'] == 'placed'
+    # the metatile editor's sheet: a click on page 2 emits $100 + n
+    ed = MetatileEditor(s.renderer, cv.gfx.sheet, cv.pals, 0x10)
+    pk = ed.picker
+    emitted = []
+    pk.tileSelected.connect(emitted.append)
+    sc = 8 * pk.scale
+    pos = QPointF(1 + 5 * sc + 2, 1 + 9 * sc + 2)          # row 9 = page 2, slot 16 + 5
+    ev = QMouseEvent(QEvent.MouseButtonPress, pos, pos, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+    pk.mousePressEvent(ev)
+    assert emitted == [0x100 + 0x15], emitted
+    ed.deleteLater()
+    # walkability: the page-2 cell (8, 7) is walkable; flip it to a wall
+    assert cv.cell_walkable(8, 7)
+    rt._flip_walk(8, 7)
+    app.processEvents()
+    br = doc.layout(lid)['tiles'][15][17]
+    sh2 = doc.read_sheet(tid)
+    assert not P2.walkable(br, 0x10), hex(br)
+    assert sh2[P2.slot_key(br) * 16:P2.slot_key(br) * 16 + 16] == \
+        sh2[P2.slot_key(tiles[3]) * 16:P2.slot_key(tiles[3]) * 16 + 16], 'the twin keeps the picture'
+    # undo everything
+    while s.undo.index() > start:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo restores project.json'
+    assert sorted(os.listdir(adir)) == files0, 'undo removes the probe tileset'
+    print(f'OK: S168 page 2 — a full page 1 spills a borrowed metatile to page 2 '
+          f'({", ".join(P2.label(t) for t in tiles)}), the canvas draws it, 256 slots on the '
+          f'Tileset tab, the sheet offers page 2 ($115), a page-2 cell flipped to a wall '
+          f'(BR {P2.label(br)}), undone')
+
+
 def s164_ai_fixes(app, w):
     """S164 (ROADMAP E17 note "the original AI's bugs"): the Skills tab's Enemy AI fixes…
     dialog — five tick boxes (off = the original game), OK = one undo step writing
@@ -5696,6 +5809,7 @@ def main():
     s166_window_words(app, w)
     s167_qt_safe(app, w)
     s167_context_help(app, w)
+    s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:
         from editor2.app.build_worker import BuildWorker  # noqa: E402

@@ -112,3 +112,16 @@ those NPCs' pictures in the Game Boy Color's second picture bank, so up to six
 different NPC looks stay intact while such a menu is open and after it (before,
 one NPC could vanish and another show letters). The game's own rooms are as they
 were. Nothing to do on your side.
+
+## The room's tiles under a menu
+
+Grandpa's and a breeder's screens (BREED / HATCH / EXIT, the monster lists),
+the farm's family icons and the egg appraiser's eggs are drawn into some of
+the ROOM's own tile slots while the room still shows — a floor or wall tile
+in those slots would show the menu's words (*"EXIT INFO"* over the floor).
+So a room with such an NPC keeps them empty: breeding $38-$7F, farm $60-$6F,
+eggs $70-$78. Making the NPC moves any tile placed there to a free slot —
+page 2 first — with the same picture, and opening an older project does it
+for you (a line in the log). The Tileset tab shows those slots brown. If the
+sheet is completely full, Build warns which room still has cells there.
+

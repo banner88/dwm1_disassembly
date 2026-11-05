@@ -210,7 +210,9 @@ class ServicesMixin:
         None. S152: first_monster (a farm keeper only) = {"enemy": <enemy row>,
         "flag": <name>, "boxes": [[line, line], …] or None} — the first talk puts
         that monster into the farm and opens the farm menu (Pulio's way).
-        Returns the script id."""
+        Returns the script id. S168 r2: when the kind's screen draws into the room's
+        sheet slots (services.BORROWED_SLOTS), the tiles placed there move to free slots
+        (`self.last_service_note` says how many)."""
         if kind not in SV.KINDS:
             raise ValueError(f'unknown service {kind!r}')
         if lines is not None:
@@ -290,6 +292,9 @@ class ServicesMixin:
                 e['script'] = sid
         if not e.get('actor') and e.get('kind') != 'raw':
             e['actor'] = SV.KINDS[kind]['name']
+        # S168 r2: the breeding / farm / egg screens draw into some of the room's sheet
+        # slots while it shows — tiles drawn there move to other slots (same picture)
+        self.last_service_note = self.vacate_room_service_slots(room)
         self.touch()
         return sid
 

@@ -105,10 +105,15 @@ are said by the ceremony and keep the game's words.
 - One breeding NPC per script (the Service… dialog makes one per NPC).
 - A pool: 1-16 bands, 1-16 mates a band, the weights of a band add up to at
   most 255; up to 16 milestones.
+- The breeding screens draw into 56 of the room's tile slots while the room
+  shows; the editor keeps them empty (see *Services* → *The room's tiles
+  under a menu*).
 - While a breeding menu is open, the player or an NPC standing on some room
   tiles can be hidden (the game hides sprites over the menu's own icons —
-  tiles numbered from 64 for Grandpa, 120 for a breeder). Everything is back
-  when the menu closes.
+  tiles numbered from 64 for Grandpa, 120 for a breeder — on page 2 too:
+  *p2 $40* and up for Grandpa). Everything is back when the menu closes. Tiles
+  the editor moves out of the menu's slots go to the lowest free page-2
+  numbers, so they rarely reach 64.
 - A random breeder's "done" is not saved: after a reset and Continue in that
   room it offers again (a new roll).
 - Placing people: the Game Boy draws at most 10 sprite pieces on one line and

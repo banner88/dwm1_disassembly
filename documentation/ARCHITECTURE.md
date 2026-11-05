@@ -172,6 +172,16 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   reads every byte from bank `[$C824]`, which the hook sets to the text's bank, so a text in
   bank $80-$FF shows — measured S150 (`tools/census_text_override.py`: 17 text banks, every
   slot; `tools/walk_text.py` in game). TEXT_SYSTEM "Edited game text (S150)".
+- **S168 (ROADMAP P3.3g) — page-2 banks:** the RAW page 2 of every project tileset that uses
+  one goes to banks $80+ too, numbered LAST (after the memorial's picture bank —
+  `editor2/core/page2.py` `plan`, `Project._take_ext_bank('page 2')`). The first is the HOME
+  bank: self-ID + entry 0 `Page2Copy_P<bank>` + entry 1 `Page2Room` (pinned
+  `templates/page2_copy.asm` / `page2_home.asm`) + `Page2Directory` + up to 7 sheets
+  (`ALIGN[8]`); the rest: self-ID + entry 0 + sheets. The copy is General-Purpose DMA, which
+  reads its source from the bank mapped at that moment — so every page-2 bank carries its own
+  copier (the animation banks' rule, S139). Reached from bank $0B's room-sheet regions
+  (`memorial_tiles_0` / `_1`) by `rst $10`. ROOM_DATA_FORMAT "Page 2: the second 128 tiles
+  (S168)".
 
 ## LZ stream banks (S135 — ROADMAP ARC CAP2a)
 

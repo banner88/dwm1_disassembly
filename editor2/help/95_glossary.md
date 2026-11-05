@@ -163,6 +163,9 @@ name and arrival room. [The Milly hook](64_milly_hook.md)
 
 ## P
 
+**Page 2** — the second 128 tiles of a tileset (GBC only); used by itself when page 1
+is full. [Tilesets, metatiles and palettes](13_tilesets.md#Page%202%20%E2%80%94%20the%20second%20128%20tiles)
+
 **Palette** — the colours of a room (BG palettes) — your own or borrowed.
 [Tilesets, metatiles and palettes](13_tilesets.md#BG%20palettes%20(the%20Palettes%20page))
 
@@ -237,7 +240,7 @@ back. [Doors](11_doors.md#One-way%20teleports,%20step-on%20triggers,%20stairs)
 **Text** — every text of the game, editable on the Text tab; any length.
 [Text](56_text.md)
 
-**Tileset** — the sheet of 128 small tiles a room is painted from.
+**Tileset** — the sheet of small tiles a room is painted from: 256 in two pages of 128.
 [Tilesets, metatiles and palettes](13_tilesets.md)
 
 **Trigger** — what starts a cutscene: entering the room, talking to someone, a

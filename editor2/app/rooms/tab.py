@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
                                QToolBar, QToolButton, QVBoxLayout, QWidget)
 
 from editor2.core.animation import rng as ANIMR
+from editor2.core import page2 as P2
 from editor2.core.animation import slots as ANIM_slots
 from editor2.core import tileanim as TA
 from editor2.core import place_names as PN
@@ -60,7 +61,7 @@ class NewRoomDialog(QDialog):
         f.addRow('Tileset / palette from', self.src)
         from PySide6.QtWidgets import QCheckBox
         self.blank = QCheckBox('start with a BLANK tileset (for imported PNG art)')
-        self.blank.setToolTip('The room gets its own empty 128-slot sheet; palette and '
+        self.blank.setToolTip('The room gets its own empty 256-slot sheet (page 1 + page 2); palette and '
                               'engine source still come from the room above.')
         f.addRow('', self.blank)
         # S122: a maze floor type of the gates as the room's tiles + colours
@@ -512,7 +513,7 @@ class RoomsTab(QWidget):
         fscroll.setWidget(self.picker_foreign)
         bl.addWidget(fscroll, 1)
         self.picker_tabs.addTab(btab, 'Borrow')
-        # tab 3 — the tileset's 128 slots (P3.3c, S96)
+        # tab 3 — the tileset's 256 slots (P3.3c, S96; S168: page 1 + page 2)
         self.tileset_map = TilesetMap()
         self.tileset_map.hoverInfo.connect(self._hover)
         self.tileset_map.highlightTile.connect(self._highlight_tile)
@@ -1177,7 +1178,7 @@ class RoomsTab(QWidget):
             # the same slots and the room plays that room's animation
             e = ANIM.map_entry(mid)
             anim = mid if (e.get('slots') and not e.get('inert_in_vanilla')
-                           and any((t & 0x7F) in ANIM.slots(mid) for t in mt['tiles'])) else None
+                           and any(P2.slot_key(t) in ANIM.slots(mid) for t in mt['tiles'])) else None
         src_sheet, src_thr = bytes(gfx.sheet[:2048]), gfx.threshold
         own = bytes(self.canvas.gfx.sheet[:2048])
         name = f"{src_name} {mt['tiles']}"
@@ -1583,7 +1584,7 @@ class RoomsTab(QWidget):
             slots = ANIM.slots(mid)
             info = self.s.doc.room_animation(room)
             if e.get('slots') and not e.get('inert_in_vanilla') and info['map'] != mid \
-                    and any((t & 0x7F) in slots for t in mt['tiles']):
+                    and any(P2.slot_key(t) in slots for t in mt['tiles']):
                 stop = (f" The current animation ({PN.vanilla_name(info['map'])}: {info['text']}) stops."
                         if info['slots'] else '')
                 if QMessageBox.question(
@@ -2942,9 +2943,10 @@ class RoomsTab(QWidget):
         if self._npc_op('Service NPC', op) is not None:
             self._after_npc_edit(idx)
             from editor2.core import services as SV
+            note = getattr(self.s.doc, 'last_service_note', '')     # S168 r2
             self.status_line.setText(f"This NPC is now the {SV.KINDS[kind]['name']}"
                                      + (". Edit its lines on the Services tab." if (lines or new_set)
-                                        else '.'))
+                                        else '.') + (f' {note[0].upper()}{note[1:]}.' if note else ''))
 
     def _npc_edit_talk(self):
         idx = self._sel_npc
@@ -3532,11 +3534,11 @@ class RoomsTab(QWidget):
         own = []
         if room is not None:
             for t in mt['tiles']:
-                it = self.s.doc.anim_of_slot(room, t & 0x7F)
+                it = self.s.doc.anim_of_slot(room, P2.slot_key(t))
                 if it is not None and it.get('name') not in own:
                     own.append(it.get('name') or it.get('id'))
-        van = [t & 0x7F for t in mt['tiles']
-               if (t & 0x7F) in ANIM_slots(self.canvas.anim_mid)]
+        van = [P2.slot_key(t) for t in mt['tiles']
+               if P2.slot_key(t) in ANIM_slots(self.canvas.anim_mid)]
         bits = []
         if own:
             bits.append('yes — ' + ', '.join(own))
@@ -3577,7 +3579,7 @@ class RoomsTab(QWidget):
         art, pals, slots = [], [], []
         for r in range(r0 * 2, r1 * 2 + 2):
             for c in range(c0 * 2, c1 * 2 + 2):
-                t = cv.tiles[r][c] & 0x7F
+                t = P2.slot_key(cv.tiles[r][c])
                 art.append(bytes(sheet[t * 16:t * 16 + 16]))
                 slots.append(t)
                 p = (cv.attr[r][c] & 7) if cv.attr else 0
@@ -3631,7 +3633,7 @@ class RoomsTab(QWidget):
         mt = self.canvas.cell_metatile(rect[0], rect[1])
         van = doc.room_animation(room)['slots']
         self.animate_tab.set_still_candidate(
-            mt if any((t & 0x7F) in van for t in mt['tiles']) else None)
+            mt if any(P2.slot_key(t) in van for t in mt['tiles']) else None)
 
     def _tanim_run(self, label, op):
         room = self.current_room()
@@ -4255,7 +4257,7 @@ class RoomsTab(QWidget):
             return
         thr = self.canvas.gfx.threshold if self.canvas.gfx else 0
         self._draw_open(mt, f"the brush ({mt.get('name') or 'metatile'})",
-                        mt['tiles'][3] >= thr, selection_ok=self.canvas.is_editable())
+                        (mt['tiles'][3] & 0xFF) >= thr, selection_ok=self.canvas.is_editable())
 
     def _draw_blank(self, pal):
         thr = self.canvas.gfx.threshold if self.canvas.gfx else 0
@@ -4282,7 +4284,7 @@ class RoomsTab(QWidget):
         self.status_line.setText('Draw: ' + str(cmd.result))
         self._show()
         mt = dict(req['mt'])
-        self._draw_open(mt, 'redrawn tile', mt['tiles'][3] >= thr,
+        self._draw_open(mt, 'redrawn tile', (mt['tiles'][3] & 0xFF) >= thr,
                         selection_ok=self.canvas.is_editable())
 
     def _draw_new(self, req):

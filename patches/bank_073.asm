@@ -1766,6 +1766,9 @@ BoxAttrActive:                       ; -> NZ when attrs must be handled; clobber
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
     jr c, .no
+    ld a, [wPage2On]                 ; S168 (ROADMAP P3.3g): a room drawing PAGE-2 tiles — a
+    or a                             ;   box letter over a cell with attribute bit 3 would read
+    ret nz                           ;   VRAM bank 1; palette 7 + bank 0 under the box, as here
     ld a, [$c79e]                    ; colour 3 high bytes of slots 0-3
     ld b, a
     ld a, [$c7a6]

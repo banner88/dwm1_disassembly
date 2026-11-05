@@ -566,6 +566,15 @@ def _region_fn(name):
     def fn(prj, warnings):
         on = active(prj.custom)
         if name in ('memorial_tiles_0', 'memorial_tiles_1'):
+            # S168: with page 2 the hook calls the page-2 home bank, which loads the
+            # room's page 2 and then calls bank $79 entry 8 itself (page2.py)
+            from . import page2 as _P2
+            try:
+                hook = _P2.region_hook(prj)
+            except _P2.Page2Error:
+                hook = None
+            if hook:
+                return hook
             # S158: the room-load hook is also the breeding hints' visit (bank $79
             # MemRoomTiles -> HintRoomNote): on with statues OR hint monuments
             from . import hints as _HT

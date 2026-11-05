@@ -109,7 +109,7 @@ class DoorsMixin:
         except Exception:
             return None
         return lambda cx, cy: (0 <= cx <= 9 and 0 <= cy <= 7
-                               and grid[cy * 2 + 1][cx * 2 + 1] >= thr)
+                               and (grid[cy * 2 + 1][cx * 2 + 1] & 0xFF) >= thr)
 
     def default_arrival(self, end):
         """(screen_byte, spawn_x, spawn_y) the player gets when arriving

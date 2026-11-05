@@ -90,6 +90,22 @@ LINE_KIND_NAMES = {'arena': 'Arena desk'}
 FIXED_LINES = {'grandpa': {0x0D: 'the ceremony says it ("… & … disappeared.")',
                            0x16: 'the ceremony says it ("… was born. Give it a name.")'}}
 GATES_ASK, GATES_BYE = 0x0066, 0x047E     # the Gate Hub guide's question / farewell
+# S168 r2 (the user: "Breed/hatch/exit menu (talk with breeding NPC) creates visual glitches
+# of words on the screen"): the screens that draw into the ROOM's own sheet slots (VRAM bank 0
+# $9000-$97FF) WHILE THE ROOM STILL SHOWS — a cell of the room drawn with such a slot shows the
+# menu's words / icons until the screen closes (ROOM_DATA_FORMAT "The game's menus draw into
+# the room's tile slots"). op $04 screen type -> page-1 slots. Code-read: the breeding screens'
+# word bitmap $9400 (bank $0A $4C2F …, 8 x 1 at $0801), the monster names $9610 / $9650 /
+# $9710-$97C0 (bank $0A SaveFldA_4e05 / LoadFldA_4e55 / CallFldA_4e40), the party list
+# $9380 + 8 x $90 (bank $09 SetFld9_5f4d) = $38-$7F; the farm's icons $9600 ($60-$6F), the
+# egg appraiser's $9700 ($70-$78). PyBoy S168 (the gallery): Grandpa wrote $40-$48 /
+# $61-$7A, a master $38-$3F / $78-$7C while the room showed. The editor keeps these slots of
+# a sheet free when a room drawing with it has such a screen (Document.service_slots).
+BORROWED_SLOTS = {3: range(0x60, 0x70),      # farm
+                  7: range(0x70, 0x79),      # egg appraiser
+                  5: range(0x38, 0x80),      # a master (breeder) — "Take…" is 11
+                  6: range(0x38, 0x80),      # Grandpa
+                  11: range(0x38, 0x80)}
 TOKENS = {'{hero}': [0xF6], '{ins0}': [0xF9, 0x00], '{ins1}': [0xF9, 0x10],
           '{ins2}': [0xF9, 0x20], '{ins3}': [0xF9, 0x30]}
 # cells the checks count for an insert: {hero} = the 4-letter default; {insN} =
@@ -752,6 +768,83 @@ REGIONS = [('gd_medal_rewards', 'patches/bank_012.asm', emit_medal_rewards, 0x12
 
 
 # -------------------------------------------------------------- validation
+def borrowing_screens(scripts):
+    """S168 r2: the op $04 screen types of BORROWED_SLOTS that these script dicts open — a
+    service spec's kind (a breeder's "Take…" too) or a raw `op $04 <type>`."""
+    out = set()
+    for s in scripts:
+        sv = s.get('service')
+        if isinstance(sv, dict):
+            scr = KINDS.get(sv.get('kind'), {}).get('screen')
+            if scr in BORROWED_SLOTS:
+                out.add(scr)
+            if sv.get('kind') == 'breeder':
+                out.add(11)
+        for op in s.get('ops') or []:
+            if isinstance(op, list) and len(op) > 2 and op[0] == 'op' \
+                    and str(op[1]).lower() in ('0x04', '4', '$04'):
+                try:
+                    t = F.val(op[2]) if isinstance(op[2], str) else int(op[2])
+                except Exception:                                # noqa: BLE001
+                    continue
+                if t in BORROWED_SLOTS:
+                    out.add(t)
+    return out
+
+
+def room_script_ids(room, states):
+    """Script ids a room's table and its NPC entries name (`states` = every state dict)."""
+    table = room.get('scripts') or {}
+    out = {v for v in table.values() if isinstance(v, str)}
+    for st in states:
+        for e in st.get('npcs') or []:
+            if not isinstance(e, dict):
+                continue
+            s_ = e.get('script')
+            if isinstance(s_, int):
+                s_ = table.get(str(s_))
+            if isinstance(s_, str):
+                out.add(s_)
+    return out
+
+
+def borrowed_problems(prj):
+    """S168 r2: warnings for room cells drawn with a slot a service screen of that room
+    writes while the room shows (the menu's words / icons appear there)."""
+    from . import page2 as P2
+    warns = []
+    by_id = {s.get('id'): s for s in prj.custom.get('scripts', [])}
+    for r in prj.rooms:
+        # a game sheet's rooms keep the game's own arrangement (its rooms never show these
+        # slots where the menus open); only a project tileset can be rearranged
+        if r.get('placeholder') or not (r.get('record') or {}).get('tileset'):
+            continue
+        states = [st for _k, s_ in sorted(prj.room_screens(r).items())
+                  for st in prj.screen_states(s_)]
+        ids = room_script_ids(r, states)
+        scr = borrowing_screens(by_id[i] for i in ids if i in by_id)
+        if not scr:
+            continue
+        slots = set()
+        for t in scr:
+            slots |= set(BORROWED_SLOTS[t])
+        hit = set()
+        for _k, _n, lid in P2.state_tile_lids(prj, r):
+            lay = P2._layout(prj, lid)
+            for row in (lay or {}).get('tiles') or []:
+                for v in row:
+                    if v < 0x80 and v in slots:
+                        hit.add(v)
+        if hit:
+            lo, hi = min(hit), max(hit)
+            warns.append(f"room {r.get('name') or r.get('id')}: {len(hit)} tile(s) of its screens "
+                         f"(${lo:02X}-${hi:02X}) sit in the sheet slots its breeding / farm / egg "
+                         "menu draws into while the room shows — the menu's words appear over "
+                         "those cells (opening the project in the editor moves them to free "
+                         "slots, page 2 first; S168 r2)")
+    return warns
+
+
 def validate(prj):
     """(errors, warnings) — the lowering's error, line-format problems,
     sets nobody uses, two "everywhere" sets for one kind."""
@@ -763,6 +856,7 @@ def validate(prj):
         r = resolve(prj)
     except ServiceError as ex:
         return [str(ex)], warnings
+    warnings += borrowed_problems(prj)                   # S168 r2
     repo = getattr(prj, 'repo_root', None)
     used = set()
     for s in prj.custom.get('scripts', []):

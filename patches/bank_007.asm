@@ -6652,7 +6652,10 @@ jr_007_6a95:
 ; Write_gfx_tile — takes ~8 frames, and the ROOM's attrs stay live until the
 ; $17 entry 10 fill that follows in label7_6aaf. Vanilla shows a cream wipe
 ; because every BG colour 1 is cream (LoadPal_4102); a free-colour custom
-; room needs bank $73 MenuOpenFreePal (S96 r4) to look the same.
+; room needs bank $73 MenuOpenFreePal (S96 r4) to look the same. S168: a page-2
+; cell (attribute bit 3) draws tile $E0 from VRAM bank 1 meanwhile — patched
+; builds copy tiles $E0-$FF (blank, window frames; the windows never rewrite them
+; but $E5 / $E6, measured) to bank 1 with the room's page 2.
 SetFld_6a9e:
     ld hl, $9800
     ld bc, $0400

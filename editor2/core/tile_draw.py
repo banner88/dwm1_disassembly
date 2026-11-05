@@ -22,6 +22,7 @@ rewritten by the game every few frames — edit those in the Animate tab.
 """
 
 from .document import metatile_key, metatile_pals, val
+from . import page2 as P2
 
 QUARTERS = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
 COMMON_FIRST, COMMON_END = 0x80, 0xB0
@@ -65,8 +66,8 @@ def metatile_pixels(sheet, mt, common_blocks=None):
             blk = (common_blocks or [])[t - COMMON_FIRST] if common_blocks else bytes(64)
             out.append(list(blk))
         else:
-            t &= 0x7F
-            out.append(decode_tile(bytes(sheet[t * 16:t * 16 + 16])))
+            t = P2.slot_key(t)                       # S168: page-2 tile n = slot 128 + n
+            out.append(decode_tile(bytes(P2.pad_sheet(sheet)[t * 16:t * 16 + 16])))
     return out
 
 
@@ -100,7 +101,7 @@ def places_drawing(doc, rooms, slots):
                 continue
             seen.add(lid)
             for _cx, _cy, q in _cells_of_layout(doc.layout(lid)['tiles']):
-                if any((t & 0x7F) in slots and not COMMON_FIRST <= t < COMMON_END for t in q):
+                if any(P2.slot_key(t) in slots and not COMMON_FIRST <= t < COMMON_END for t in q):
                     n += 1
         if n:
             out[room['id']] = n
@@ -138,7 +139,7 @@ def report(doc, room, mt, old_px, new_px, threshold, walkable=None, own_sheet=No
         ev.update(ok=False, why='Nothing drawn yet — the tile is unchanged.')
     common = [i for i in ch if COMMON_FIRST <= tiles[i] < COMMON_END]
     anim = doc.animated_slots(tid) if on_project_sheet else _room_anim_slots(doc, room)
-    animq = [i for i in ch if (tiles[i] & 0x7F) in anim and i not in common]
+    animq = [i for i in ch if P2.slot_key(tiles[i]) in anim and i not in common]
     # the same slot drawn twice with different pixels cannot be "everywhere"
     clash = []
     for i in ch:
@@ -157,7 +158,7 @@ def report(doc, room, mt, old_px, new_px, threshold, walkable=None, own_sheet=No
         ev.update(ok=False, why='Two quarters share one tile but are drawn differently — '
                                 'draw it as a new metatile instead.')
     if ch:
-        slots = sorted({tiles[i] & 0x7F for i in ch})
+        slots = sorted({P2.slot_key(tiles[i]) for i in ch})
         rooms = doc.rooms_using_tileset(tid) if on_project_sheet else [room]
         per = places_drawing(doc, rooms, slots)
         ev['slots'] = slots
@@ -204,9 +205,15 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
     on_project = 'tileset' in rec
     used = doc.used_tiles(tid) if on_project else _vanilla_used(doc, room)
     anim = doc.animated_slots(tid) if on_project else _room_anim_slots(doc, room)
-    free = [i for i in range(128) if i not in used and i not in anim]
+    if on_project:
+        anim = anim | doc.service_slots(tid)       # S168 r2: a service menu draws there
+    # S168: page 1, then page 2 (a game tileset's copy has page 1 only until a tile
+    # spills: the copy is written as 4096 bytes then)
+    free = [i for i in range(P2.SLOTS) if i not in used and i not in anim]
+    if sheet is not None:
+        sheet = bytearray(P2.pad_sheet(sheet))
     if walkable is None:
-        walkable = (mt['tiles'][3] & 0xFF) >= threshold if mt['tiles'][3] < 0x80 else True
+        walkable = (mt['tiles'][3] & 0xFF) >= threshold if not P2.is_common(mt['tiles'][3]) else True
     gfx = [encode_tile(p) for p in new_px]
     tiles, reuse, take = [None] * 4, 0, 0
     taken = {}
@@ -215,32 +222,33 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
         g = gfx[q]
         need_wall = (q == 3) and not walkable
         cand = None
-        if g in taken and (q != 3 or ((taken[g] < threshold) == need_wall)):
+        if g in taken and (q != 3 or (P2.is_wall(taken[g], threshold) == need_wall)):
             cand = taken[g]
         if cand is None and sheet is not None:
-            for i in range(128):
+            for i in sorted(range(P2.SLOTS), key=lambda i: (i >= 0x80, i)):
                 if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != g:
                     continue
-                if q == 3 and ((i < threshold) != need_wall):
+                if q == 3 and (P2.is_wall(i, threshold) != need_wall):
                     continue
                 cand = i
                 reuse += 1
                 break
         if cand is None:
-            pool = [i for i in free if (i < threshold) == need_wall] if q == 3 else (
-                [i for i in free if (i >= threshold) == bool(walkable)] or free)
+            pool = P2.pick_order(free, threshold, need_wall if q == 3 else not walkable, q == 3,
+                                 walls_down=(q == 3))
             if not pool:
                 side = 'wall' if need_wall else 'walkable'
                 why = (f'The tileset has no free {side if q == 3 else ""} slot for the '
                        f'{QUARTERS[q]} quarter — free some on the Tileset tab (Purge unused), '
                        'or draw over an existing tile with "everywhere".').replace('  ', ' ')
                 break
-            cand = pool[-1] if need_wall else pool[0]
+            cand = pool[0]
             free.remove(cand)
             take += 1
         taken.setdefault(g, cand)
         tiles[q] = cand
-    nwall = sum(1 for i in free if i < threshold)
+    nwall = sum(1 for i in free if P2.is_wall(i, threshold))
+    tiles = [P2.value_of(t) if t is not None else None for t in tiles]   # S168: tile values
     return {'ok': not why, 'why': why, 'tiles': tiles if not why else None, 'reuse': reuse,
             'take': take, 'free': {'wall': nwall, 'walkable': len(free) - nwall},
             'walkable': walkable}
@@ -252,7 +260,7 @@ def _vanilla_used(doc, room):
     out = set()
     for _k, _n, lid in _layout_refs(doc, room):
         for row in doc.layout(lid)['tiles']:
-            out.update(t & 0x7F for t in row if not COMMON_FIRST <= t < COMMON_END)
+            out.update(P2.slot_key(t) for t in row if not COMMON_FIRST <= t < COMMON_END)
     try:
         out |= set(doc.room_sources_vocab(room))
     except Exception:                                            # noqa: BLE001
@@ -276,7 +284,7 @@ def apply_everywhere(doc, room_id, mt, old_px, new_px, threshold, own_sheet=None
         tid = doc.localize_tileset(room, own_sheet)
     sheet = doc.read_sheet(tid)
     for q in rep['changed']:
-        t = mt['tiles'][q] & 0x7F
+        t = P2.slot_key(mt['tiles'][q])
         sheet[t * 16:t * 16 + 16] = encode_tile(new_px[q])
     doc.write_sheet(tid, sheet)
     return (f"redrew slot(s) {', '.join(f'${t:02X}' for t in ev['slots'])} — "
@@ -303,6 +311,7 @@ def apply_new(doc, room_id, mt, new_px, threshold, walkable=None, own_sheet=None
             raise RuntimeError(plan['why'])
     sheet = doc.read_sheet(tid)
     for q, t in enumerate(plan['tiles']):
+        t = P2.slot_key(t)
         sheet[t * 16:t * 16 + 16] = encode_tile(new_px[q])
     doc.write_sheet(tid, sheet)
     p = pal if pal is not None else (mt.get('pal', 0) if mt.get('pal') is not None else 0)
@@ -329,7 +338,7 @@ def apply_new(doc, room_id, mt, new_px, threshold, walkable=None, own_sheet=None
         if alid and 'attr' in doc.layout(alid):
             doc.set_cells(alid, 'attr', ach)
     doc.touch()
-    msg = (f"new metatile '{name}' (slots {', '.join(f'${t:02X}' for t in new['tiles'])}; "
+    msg = (f"new metatile '{name}' (slots {', '.join(P2.label(t) for t in new['tiles'])}; "
            f"{plan['reuse']} reused, {plan['take']} taken)")
     if cells:
         msg += f' placed on {len(cells)} cell(s)'

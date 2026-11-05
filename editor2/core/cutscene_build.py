@@ -1450,7 +1450,10 @@ def patch_bytes(cell, rows):
                 pal = c.get('pal', 0)
                 pl = [F.val(v) for v in pal] if isinstance(pal, list) else [F.val(pal)] * 4
                 lt += tl[half * 2: half * 2 + 2]
-                la += [p & 0xFF for p in pl[half * 2: half * 2 + 2]]
+                # S168: a page-2 tile ($100-$17F) = map byte + attribute bit 3 (VRAM bank 1)
+                tv = [F.val(v) for v in c['tiles']][half * 2: half * 2 + 2]
+                la += [(p & 0xF7) | (8 if 0x100 <= t < 0x180 else 0)
+                       for p, t in zip(pl[half * 2: half * 2 + 2], tv)]
             lines_t.append(lt)
             lines_a.append(la)
     for i, (lt, la) in enumerate(zip(lines_t, lines_a)):

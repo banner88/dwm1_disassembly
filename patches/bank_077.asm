@@ -446,6 +446,15 @@ ScreenPush:
     ld de, $c500
     ld c, $12                           ; 18 rows
 .row:
+    ld a, [wPage2On]                    ; S168: a page-2 room — each cell's attribute and
+    or a                                ;   tile together (PushRowBoth), never a letter
+    jr z, .tilesFirst                   ;   over a bank-1 attribute between the two passes
+    ld a, [wPushAttrOn]
+    or a
+    jr z, .tilesFirst
+    call PushRowBoth
+    jr .rowDone
+.tilesFirst:
     push hl                             ; the row's map address
     push de                             ; the row's buffer address
     ld b, $20
@@ -461,6 +470,7 @@ ScreenPush:
     ld a, [wPushAttrOn]
     or a
     call nz, PushRowAttrs               ; keeps HL / DE / C
+.rowDone:
     push bc
     ld a, e
     add $20
@@ -499,6 +509,10 @@ PushAttrActive:                         ; A = $80 in a free-colour custom room o
     ld a, [wMapID]
     cp CUSTOM_ROOM_START
     jr c, .no
+    ld a, [wPage2On]                    ; S168 (ROADMAP P3.3g): a room drawing PAGE-2 tiles —
+    or a                                ;   a window letter over a bit-3 cell would read VRAM
+    ld a, $80                           ;   bank 1: the attributes are written, as in a
+    ret nz                              ;   free-colour room
     ld a, [$c79e]                       ; colour 3 high bytes of BG slots 0-3
     ld b, a
     ld a, [$c7a6]
@@ -526,6 +540,96 @@ PushRowAttrs:
     ld [wPushAttrRow], a
     ld c, $00                           ; C = column
 .col:
+    call PushCellAttr
+    jr c, .skip
+    di
+.w:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w                           ; mode 0/1 (VRAM free; mode 2 follows)
+    ld a, $01
+    ldh [rVBK], a
+    ld [hl], b
+    xor a
+    ldh [rVBK], a
+    ei
+.skip:
+    push bc
+    call PushNextCol
+    pop bc
+    inc de
+    inc c
+    ld a, c
+    cp $14
+    jr nz, .col
+    pop bc
+    pop de
+    pop hl
+    ret
+
+; S168 (ROADMAP P3.3g): a row of a page-2 room — per cell (32 map cells, the attribute
+; of the 20 visible ones as PushRowAttrs computes it) the attribute, then at once the
+; tile (each after its own STAT wait, as ROM0 Write_gfx_tile does): a cell is between
+; the two for at most one scanline, never a frame — a window letter never shows over a
+; bank-1 (page-2) attribute (measured S168: tiles-then-attributes showed 2-6 frames of
+; letters read from VRAM bank 1 at the shop / the Vault). HL / DE / C as PushRowAttrs;
+; keeps them.
+PushRowBoth:
+    push hl
+    push de
+    push bc
+    ld a, $12
+    sub c
+    ld [wPushAttrRow], a
+    ld c, $00                           ; C = column
+.cell:
+    ld a, c
+    cp $14
+    ld b, $ff                           ; $FF = no attribute (columns 20-31 / a kept HUD cell)
+    jr nc, .go
+    call PushCellAttr
+    jr nc, .go
+    ld b, $ff
+.go:
+    ld a, b
+    inc a
+    jr z, .tileOnly
+    di
+.w:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w
+    ld a, $01
+    ldh [rVBK], a
+    ld [hl], b
+    xor a
+    ldh [rVBK], a
+    ei
+.tileOnly:
+    di
+.w2:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w2
+    ld a, [de]
+    ld [hl], a
+    ei
+    push bc
+    call PushNextCol
+    pop bc
+    inc de
+    inc c
+    ld a, c
+    cp $20
+    jr nz, .cell
+    pop bc
+    pop de
+    pop hl
+    ret
+
+; The attribute of the cell at DE (column C, row [wPushAttrRow]) -> B, or carry = keep
+; the cell's attribute (a room tile of a HUD row). Keeps C / DE / HL.
+PushCellAttr:
     ld b, $07
     ld a, [wPushAttrOn]
     rra
@@ -564,29 +668,10 @@ PushRowAttrs:
     and $0f
     ld b, a
 .put:
-    di
-.w:
-    ldh a, [rSTAT]
-    bit 1, a
-    jr nz, .w                           ; mode 0/1 (VRAM free; mode 2 follows)
-    ld a, $01
-    ldh [rVBK], a
-    ld [hl], b
-    xor a
-    ldh [rVBK], a
-    ei
+    and a                               ; no carry: write B
+    ret
 .skip:
-    push bc
-    call PushNextCol
-    pop bc
-    inc de
-    inc c
-    ld a, c
-    cp $14
-    jr nz, .col
-    pop bc
-    pop de
-    pop hl
+    scf
     ret
 
 ; -----------------------------------------------------------------------------

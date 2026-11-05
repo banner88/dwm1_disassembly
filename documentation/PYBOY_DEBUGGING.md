@@ -1408,3 +1408,33 @@ edge and the battle waits for input forever.
 - **The editor's own pictures:** `tools/help_screenshots.py` — the real MainWindow offscreen, `w.grab()` per
   tab after ~30 `processEvents()`; clear the build log first (it shows the machine's paths).
 
+
+## S168 techniques — VRAM bank 1 seeded, visible cells with their bank, a gate-flip negative
+
+- **A census of a never-used area needs a seed.** `tools/census_vram_bank1.py`: a sitecustomize
+  hook (temp dir on PYTHONPATH — census worker processes too) writes a pattern into
+  `p.memory[1, 0x8000:0x9800]` on the first tick and diffs every 15 frames; a write of zeros
+  or of the game's own bytes shows. Positive control: the hook itself writes one byte + one
+  attribute bit 3 — both must be reported.
+- **Trap — a slice may not end at `$A000`.** `p.memory[1, 0x9C00:0xA000]` raises
+  `PyBoyOutOfBoundsException` ("Out of bounds for reading VRAM bank"); read `[..:0x9FFF]` +
+  `[0x9FFF]`.
+- **What the LCD shows, cell by cell (`tools/walk_page2.py visible_cells`):** the BG map at
+  SCX / SCY (21 × 19 cells for the fine scroll) minus the cells the WINDOW covers (LCDC bit 5,
+  WX / WY), plus the window's own map (LCDC bit 6); a cell's tile from `m[0, a]`, its
+  attribute from `m[1, a]` (bit 3 = the tile comes from VRAM bank 1). A letter is wrong only
+  when bank 1's bytes of that tile differ from bank 0's (`_tile16`) — a mirrored tile is fine.
+- **Sample WHILE the screen builds:** the windows draw a row's tiles before its attributes; a
+  check made once the window is up missed 2-6 bad frames (KEY_LESSONS S168). Sample every 2
+  frames through each overlay's key sequence (`run(n)`).
+- **The negative control flips the gate, not the code:** `--negative` writes `wPage2On` := 0
+  every frame (the hook sets it once per room load) — every overlay that depends on it fails;
+  one that does not (the field menu fills palette 7 itself) stays clean, which is information.
+
+**S168 r2 — the room-art check.** Snapshot at arrival: the BG map (tile + attribute, both banks)
+and both VRAM banks' `$9000-$97FF`. While a window is open, every 2 frames: a visible cell (minus
+the window) whose map tile + attribute still equal the snapshot but whose slot (`$00-$7F`, bank by
+attribute bit 3) no longer holds the snapshot bytes = a menu drew into a slot the room shows
+(`walk_page2.room_art_damage`; skip the room's own animated slots — the first run flagged the
+gallery's blinking strip). Counting only frames with ≥ 60 room cells keeps full-screen menus out.
+The same snapshot gives "slots written while the room showed" — how the breeding sets were measured.

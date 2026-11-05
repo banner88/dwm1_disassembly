@@ -2677,6 +2677,11 @@ class Project:
                 return L.compress(repo, L.tileset_bytes(repo, ts, self.root))
             out.append((('tileset', tid), TILESET_HOME_BANK, f"TilesetGFX_{tid}",
                         tsdata, ts.get('comment')))
+        # S168 (ROADMAP P3.3g): the attr maps with the PAGE-2 bits, one per (attr grid,
+        # tile grid) with page-2 cells — last, so a project without page 2 keeps its plan
+        from . import page2 as _P2
+        self._page2_tids = None
+        out += _P2.derived_attr_items(self)
         return out
 
     def stream_plan(self):
@@ -2698,6 +2703,7 @@ class Project:
         self._battle_plan = None       # S149: the battle banks after the songs
         self._text_plan = None         # S150: the text banks after the battles
         self._mem_plan = None          # S154: the memorial's picture bank after the texts
+        self._page2_plan = None        # S168: the page-2 banks after everything else
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2765,6 +2771,11 @@ class Project:
             pass                           # reported by the validator
         from . import memorial as _MM
         _MM.plan(self)                     # S154: the memorial's picture bank
+        from . import page2 as _P2
+        try:
+            _P2.plan(self)                 # S168: the page-2 banks (last)
+        except _P2.Page2Error:
+            pass                           # reported by the validator
         return dict(getattr(self, '_ext_taken', None) or [])
 
     def place_plan(self):
@@ -3484,13 +3495,18 @@ class Project:
 
     def room_sheet(self, room):
         """S102: the 2048-byte sheet a room draws with (its own tileset copy),
-        or None for a room on a vanilla sheet."""
+        or None for a room on a vanilla sheet. S168: 4096 bytes when the tileset has
+        a page 2 (slot s >= 128 = page-2 tile s - 128)."""
         tid = (room.get('record') or {}).get('tileset')
         if tid is None or tid not in self._tileset_entry:
             return None
         from . import layouts as L
         ts = self.tilesets[self._tileset_entry[tid]]
-        return bytes(L.tileset_bytes(self.repo_root or '.', ts, self.root))
+        p1 = bytes(L.tileset_bytes(self.repo_root or '.', ts, self.root))
+        # S168: + page 2 (tiles 128-255 of the sheet) when the tileset has one
+        if 'raw2bpp' in ts and len(L.tileset_sheet(ts, self.root)) == 4096:
+            return p1 + L.tileset_page2(ts, self.root)
+        return p1
 
     def tile_anims(self, room):
         """S102: custom.rooms[].tile_anims (the room's own animated tiles)."""

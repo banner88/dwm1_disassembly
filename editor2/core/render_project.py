@@ -82,9 +82,10 @@ _PAL_TABLES = [bytes([(p * 4 + (i if i < 4 else 0)) & 0xFF for i in range(256)])
 
 
 def decode_tiles(sheet2048):
-    """2bpp sheet -> 128 x 64-byte colour-index blocks (row-major 8x8)."""
+    """2bpp sheet -> 128 x 64-byte colour-index blocks (row-major 8x8). S168: a
+    4096-byte sheet (page 1 + page 2) -> 256 blocks (block 128 + n = page-2 tile n)."""
     out = []
-    for t in range(128):
+    for t in range(256 if len(sheet2048) >= 4096 else 128):
         base = t * 16
         blk = bytearray(64)
         for py in range(8):
@@ -96,9 +97,20 @@ def decode_tiles(sheet2048):
     return out
 
 
+def block_index(t, n_blocks):
+    """S168: the decoded block of tile value t — page 1 ($00-$7F) as itself, a page-2
+    value ($100-$17F) as block 128 + n when the sheet has page 2 (else block 0: a
+    sheet without page 2 shows its page-2 cells blank-ish, never crashes)."""
+    if 0 <= t < 128:
+        return t
+    if 0x100 <= t < 0x180 and n_blocks > 128:
+        return 128 + (t - 0x100)
+    return 0
+
+
 @dataclass
 class RoomGfx:
-    sheet: bytes            # 2048-byte 2bpp
+    sheet: bytes            # 2048-byte 2bpp (S168: 4096 with page 2)
     gfx_bank: int
     gfx_id: int
     threshold: int          # collision threshold (tile < thr = WALL)
@@ -173,10 +185,17 @@ class ProjectRenderer:
         return self._sheet_cache[key]
 
     def tileset_sheet(self, tileset_id):
+        """The sheet a room draws with — S168: + page 2 (4096 bytes) when the
+        tileset's file holds one."""
         key = ('id', tileset_id)
         if key not in self._sheet_cache:
-            self._sheet_cache[key] = L.tileset_bytes(
-                self.repo, self.tileset_by_id[tileset_id], self.project_dir)
+            ts = self.tileset_by_id[tileset_id]
+            data = L.tileset_bytes(self.repo, ts, self.project_dir)
+            if 'raw2bpp' in ts:
+                full = L.tileset_sheet(ts, self.project_dir)
+                if len(full) == 4096:
+                    data = full
+            self._sheet_cache[key] = data
         return self._sheet_cache[key]
 
     def room_gfx(self, room):
@@ -380,7 +399,7 @@ class ProjectRenderer:
                     if COMMON_FIRST <= t < COMMON_END:      # S123 r3: $29:$1D at $8800
                         src = self.common_blocks()[t - COMMON_FIRST]
                     else:
-                        src = blocks[t if 0 <= t < 128 else 0]
+                        src = blocks[block_index(t, len(blocks))]
                     blk = src.translate(tables[p])
                     strips = sc[key] = [blk[i:i + 8] for i in range(0, 64, 8)]
                 o = ty * 8 * w + tx * 8
@@ -406,7 +425,7 @@ class ProjectRenderer:
                 if COMMON_FIRST <= t < COMMON_END:
                     src = self.common_blocks()[t - COMMON_FIRST]
                 else:
-                    src = blocks[t if 0 <= t < 128 else 0]
+                    src = blocks[block_index(t, len(blocks))]
                 blk = Image.frombytes('P', (8, 8), src.translate(tables[p]))
                 img.paste(blk, (tx * 8, ty * 8))
         img.putpalette(self._p_palette(pals))
@@ -419,7 +438,7 @@ class ProjectRenderer:
         if COMMON_FIRST <= tile < COMMON_END:              # S123 r3: $29:$1D
             src = self.common_blocks()[tile - COMMON_FIRST]
         else:
-            src = blocks[tile if 0 <= tile < 128 else 0]
+            src = blocks[block_index(tile, len(blocks))]
         img = Image.frombytes('P', (8, 8), src.translate(table))
         img.putpalette(self._p_palette(pals))
         img = img.convert('RGB')
@@ -428,11 +447,13 @@ class ProjectRenderer:
         return img
 
     def tile_sheet_image(self, sheet, pals, pal_idx=0, per_row=16, scale=2):
-        """All 128 tiles, flat order (KEY_LESSONS S6), 16 per row."""
-        rows = 128 // per_row
+        """All 128 tiles, flat order (KEY_LESSONS S6), 16 per row. S168: a sheet with
+        page 2 -> 256 (page 2 below page 1)."""
+        n = 256 if len(sheet) >= 4096 else 128
+        rows = n // per_row
         img = Image.new('RGB', (per_row * 8, rows * 8))
-        for t in range(128):
-            img.paste(self.render_tile(sheet, t, pals, pal_idx),
+        for t in range(n):
+            img.paste(self.render_tile(sheet, t if t < 128 else 0x100 + t - 128, pals, pal_idx),
                       ((t % per_row) * 8, (t // per_row) * 8))
         if scale != 1:
             img = img.resize((img.width * scale, img.height * scale),

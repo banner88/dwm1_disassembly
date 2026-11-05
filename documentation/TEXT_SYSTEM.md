@@ -171,6 +171,12 @@ $EA $9F $A3 line1_text $EF $EE line2_text $F7 $F0
   `ClearTextBitsRedraw` restores) write tile ids only — the room's attrs
   stay under them. Vanilla looks cream only because colour 1 is forced to
   $6BFF; free-colour custom rooms need bank $73 entries 14-18 (S97 r2).
+- **S168 — rooms drawing PAGE-2 tiles** (attribute bit 3 = VRAM bank 1; ROOM_DATA_FORMAT
+  "Page 2: the second 128 tiles (S168)") take the same path (`wPage2On` →
+  `BoxAttrActive` / bank $77 `PushAttrActive`): under a box the cells get palette 7 + bank 0,
+  else the box's letters ($B0-$D3) and frame ($E0-$FF) would read bank 1. The frame tiles
+  $E0-$FF are also mirrored into bank 1 at the page load (the windows never rewrite them but
+  $E5 / $E6; the canvas tiles $80-$DC they do rewrite).
 
 ### YES/NO Choice (two-part system, verified)
 Text ends with `$EF $EE $E7 $F0` (the S2 custom form) or — the vanilla form, PyBoy S97 r2 — the question's last line directly followed by `$E7 $F0` (both lines stay, YES/NO opens; `$13:$67F7` "…again?" `$E7 $F0`). Script then checks `$C83C` via opcode `$15`:

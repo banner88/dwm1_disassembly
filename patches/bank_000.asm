@@ -4384,6 +4384,12 @@ RestoreBankFromSprite:
 ; are this decompressor, not text code (S106, ROADMAP P3.10; format +
 ; Python twin: dwm/sprite_codec.decode, tools/decompress_tiles.py; proven equal
 ; to this routine for all 442 monster streams by tools/census_lz_decode.py).
+; S168: it writes AND reads back (the copies) the CURRENT VRAM bank one byte at a
+; time with interrupts on between bytes (Write_gfx_tile_and_inc_HL: di / STAT
+; wait / write / ei); the VBlank handler's scroll copy leaves VBK 0 behind it, so a
+; stream can only be decoded into VRAM bank 0 — page 2 (patched builds' second 128
+; room tiles in VRAM bank 1) is copied raw with General-Purpose DMA instead
+; (ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)").
 WaitDMATransfer:
 jr_000_1577:
     ld a, [$da78]
