@@ -2559,7 +2559,7 @@ recipes are pure authoring.
       what the editor loads, PyBoy, RGBDS v0.6.1, SameBoy v1.0.5, the editor's files read-only;
       the original ROM never inside — asked for once, kept in Application Support);
       `editor2/packaging/launch.py` (a workspace of links + a real data/), `selftest.py`;
-      `.github/workflows/editor-app.yml` (macos-14 → pre-release `editor-latest`); the builder
+      `.github/workflows/editor-app.yml` (macos-15 → pre-release `editor-latest`); the builder
       without `make`, out of tree (PROJECT_COMPILER §3 S171). EDITOR_DESIGN §4.1. Machine accept:
       the Linux build of the same layout, no system Python / RGBDS, a failing `make` on PATH —
       self-check ALL PASSED. *User accept:* download from Releases, `xattr -cr`, open, locate the

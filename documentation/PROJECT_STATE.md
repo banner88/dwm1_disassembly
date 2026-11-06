@@ -40,7 +40,7 @@
 > the repo's runtime folders, .pyc, ad hoc signature, zip; never a ROM — checked), NEW `editor2/packaging/launch.py` (a
 > workspace of links + a real `data/` in Application Support; the log file), `selftest.py`, `make_icon.py` (+
 > `editor2/app/icon.png`, `AppIcon.icns`: a cracked pixel-art egg), NEW `editor2/app/appmode.py` (the ROM copy, the
-> first-start prompt, the bundled SameBoy / RGBDS), NEW `.github/workflows/editor-app.yml` (macos-14 → the pre-release
+> first-start prompt, the bundled SameBoy / RGBDS), NEW `.github/workflows/editor-app.yml` (macos-15 → the pre-release
 > `editor-latest` on every push to master). Not PyInstaller: the editor's helper processes use `sys.executable`.
 > **Measured (Linux build of the same layout):** the self-check with no system Python / RGBDS and a failing `make` first
 > on PATH: ALL PASSED (own RGBDS v0.6.1; the clean disassembly assembled by it = `1ca6579…`; the example = the pin;

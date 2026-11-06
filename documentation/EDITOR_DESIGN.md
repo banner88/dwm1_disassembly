@@ -192,7 +192,7 @@ the menu; an icon drawn.
   app started on the user's project and their ROM (taken from the shared settings) ran 25 s
   without an error in its log; the user's project built with the app's Python and RGBDS =
   `e0acf026…` (patched) — the checkout's build of it.
-- **Getting it:** `.github/workflows/editor-app.yml` (macos-14, Apple Silicon): RGBDS 0.6.1 built
+- **Getting it:** `.github/workflows/editor-app.yml` (macos-15, Apple Silicon — S171 r2: the first push hit "The configuration 'macos-14-arm64-us-default' is not supported": GitHub retired the macos-14 image 2026-11-02): RGBDS 0.6.1 built
   from source (brew bison; rgbasm / rgblink / rgbfix only, cached), `package_app.py --selftest`,
   the zip as an artifact and as the pre-release **editor-latest** (remade by every push to master;
   a tag `app-…` makes its own release). Or on the Mac: `python3 tools/package_app.py`.
