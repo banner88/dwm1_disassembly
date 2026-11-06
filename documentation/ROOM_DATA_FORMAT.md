@@ -763,6 +763,11 @@ NPCs one row above / below the cells the player stands on, the arrival first.
 
 ## Monster NPCs — any species drawn as its follower (S101, PyBoy-measured)
 
+> S170: the game's OWN monster NPCs (the farm's) are not these — they are plain NPC ids `$3A-$4C`,
+> sheets from ROM0 `$2ADF`, which shares the ORIGINAL walking streams of 19 monsters; re-art does
+> not reach them (MONSTER_DATA "S170 — all 215 can be re-arted"). Only `$E1-$E3` / `$F0-$F3`
+> NPCs follow a species' (re-arted) art.
+
 The bank $0B NPC sheet resolver (`Call_00b_4839`, annotated S101) maps an NPC
 entry's sprite id: $FF none; $E0 the player shape (frame id $5E = Terry's NPC frames over the player's VRAM sheet; S128 r3: $14 = Milayou's with the Milly hook on, patches/ `MillyE0Type`); **$E1-$E3 = the party
 monster in party slot 0-2** (the follower sheets already in VRAM);

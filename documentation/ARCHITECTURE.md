@@ -182,6 +182,12 @@ The ROM is MBC5, 2 MB (`$0148` = `$06`). A 4 MB ROM (256 banks) needs no engine 
   copier (the animation banks' rule, S139). Reached from bank $0B's room-sheet regions
   (`memorial_tiles_0` / `_1`) by `rst $10`. ROOM_DATA_FORMAT "Page 2: the second 128 tiles
   (S168)".
+- **S170 — monster-art banks:** new art for the original monsters past the three art banks
+  $7F / $7C / $7A goes to banks $80+, numbered LAST (after the page-2 banks — `editor2/core/art.py`
+  `place`, `Project._take_ext_bank('monster art')`): self-ID + `ArtPtrs_xx` at $4001 + LZ streams,
+  the layout every gfx-ID resolver reads (`$<bank>:$4001 + 2 · index`). No code in them: the
+  game's readers hand the gfx-ID to `DecompressTileLayout`, which maps any bank (measured,
+  `tools/walk_art.py`). PROJECT_COMPILER §2.77.
 
 ## LZ stream banks (S135 — ROADMAP ARC CAP2a)
 

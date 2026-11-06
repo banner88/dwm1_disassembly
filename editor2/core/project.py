@@ -2704,6 +2704,8 @@ class Project:
         self._text_plan = None         # S150: the text banks after the battles
         self._mem_plan = None          # S154: the memorial's picture bank after the texts
         self._page2_plan = None        # S168: the page-2 banks after everything else
+        self._art_plan = None          # S170: monster art past $7F/$7C/$7A, after page 2
+        self._art_ext = None
         banks = {LAYOUT_HOME_BANK: [], TILESET_HOME_BANK: []}
         used = {LAYOUT_HOME_BANK: 1, TILESET_HOME_BANK: 1}      # the self-ID byte
         overflow = []
@@ -2773,8 +2775,13 @@ class Project:
         _MM.plan(self)                     # S154: the memorial's picture bank
         from . import page2 as _P2
         try:
-            _P2.plan(self)                 # S168: the page-2 banks (last)
+            _P2.plan(self)                 # S168: the page-2 banks
         except _P2.Page2Error:
+            pass                           # reported by the validator
+        from . import art as _AR
+        try:
+            _AR.place(self)                # S170: the monster-art banks (last)
+        except _AR.ArtError:
             pass                           # reported by the validator
         return dict(getattr(self, '_ext_taken', None) or [])
 

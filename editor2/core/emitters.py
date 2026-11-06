@@ -1260,10 +1260,15 @@ def ext_bank_files(prj):
         pass                                           # reported by the validator
     from . import memorial as MM                       # S154: the memorial's picture bank
     out.update(MM.bank_files(prj))
-    from . import page2 as P2                          # S168: the page-2 banks (last)
+    from . import page2 as P2                          # S168: the page-2 banks
     try:
         out.update(P2.bank_files(prj))
     except P2.Page2Error:
+        pass                                           # reported by the validator
+    from . import art as AR                            # S170: the monster-art banks (last)
+    try:
+        out.update(AR.ext_bank_files(prj))
+    except AR.ArtError:
         pass                                           # reported by the validator
     return out
 
@@ -1669,6 +1674,19 @@ def _page2_entries():
 
 
 REGISTRY += _page2_entries()
+
+
+def _art_ext_entries():
+    # S170: MONSTER ART past the three art banks $7F / $7C / $7A — the 4 MB ROM's banks
+    # $80+, taken LAST (after the page-2 banks; none while the art fits) —
+    # editor2/core/art.py, PROJECT_COMPILER §2.23. A project whose art fits == the
+    # bytes before S170 (+ S170's compression of the streams).
+    from . import art as AR
+    return [("art_ext", "gamedata.art", "multi:art_banks",
+             AR.emit_ext_banks, list(range(EXT_BANK_FIRST, EXT_BANK_LAST + 1)))]
+
+
+REGISTRY += _art_ext_entries()
 
 
 TEXT_SPRITE_VANILLA = """\

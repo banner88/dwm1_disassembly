@@ -3978,6 +3978,60 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s170_art_space(app, w):
+    """S170 (the user: "expand the monster graphics"): new battle poses for all 215 originals —
+    more than the three art banks hold — is no error any more: the Monsters tab's meter and
+    the Capacity tab say how much went on into the ROM space; the build plan takes banks
+    $80+ for it (last)."""
+    import copy
+    import json
+    from editor2.core import art as A
+    from editor2.core import capacity as CP
+    from editor2.core.sheet_import import literal_stream
+    from dwm import sprite_codec as SC
+    doc = w.session.doc
+    before = copy.deepcopy(doc.data)
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    adir = os.path.join(doc.project_dir, 'assets', 'art')
+    os.makedirs(adir, exist_ok=True)
+    made = []
+    art = doc.data.setdefault('gamedata', {}).setdefault('art', {})
+    for sid in range(215):
+        b = bytes.fromhex(ms[str(sid)]['battle']['tile_bytes_hex'])
+        g = SC.tiles_to_indices(b, 6, 6)
+        b = SC.indices_to_tiles([r[::-1] for r in g], 6, 6)
+        rel = f'assets/art/s170_{sid}_battle.bin'
+        open(os.path.join(doc.project_dir, rel), 'wb').write(literal_stream(b))
+        made.append(os.path.join(doc.project_dir, rel))
+        art[str(sid)] = {'battle': {'art': rel}}
+    doc.bump()
+    used, cap = doc.art_capacity()
+    assert used > cap, (used, cap)
+    mt = w.monsters_tab
+    mt._meters()
+    assert 'in the ROM space' in mt.meters.text(), mt.meters.text()
+    rep = CP.measure(doc.data, doc.project_dir, REPO)
+    row = next(r for r in rep['rows'] if r['key'] == 'art')
+    assert row['level'] == 'ok' and 'in the ROM space' in row['shown'], row
+    prj = doc.model_project()
+    owners = prj.ext_bank_owners()
+    artb = [b for b, k in owners.items() if k == 'monster art']
+    assert artb and all(b > o for b in artb for o, k in owners.items() if k != 'monster art'), owners
+    A._PACKED.clear()
+    doc.data.clear()
+    doc.data.update(before)
+    doc.bump()
+    for f in made:
+        os.remove(f)
+    if not os.listdir(adir):
+        os.rmdir(adir)
+    mt._meters()
+    assert 'in the ROM space' not in mt.meters.text()
+    print(f'OK: S170 art space — 215 re-arted battle poses ({used:,} B as stored, {cap:,} in '
+          f'the three banks): the meter and the Capacity row say "in the ROM space", art banks '
+          f'{" ".join(f"${b:02X}" for b in artb)} taken last')
+
+
 def s169_window_and_cross(app, w):
     """S169: (1) the user: "clicking on a different tab resizes the window and I have to make
     it fullscreen again every time" — the tab row scrolls, every page sits in a scroll area
@@ -5933,6 +5987,7 @@ def main():
     s167_qt_safe(app, w)
     s167_context_help(app, w)
     s169_window_and_cross(app, w)
+    s170_art_space(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

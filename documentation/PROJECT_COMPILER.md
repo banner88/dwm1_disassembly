@@ -1977,7 +1977,8 @@ boxes for "New art from a sprite sheet…" to reopen the cut); never read here.
 
 **Placement** (`art.place`, `dwm/sprite_bank.SpriteOverflowAllocator`): first fit
 over $7F, $7C, $7A in species order, battle stream before walking stream —
-deterministic. Capacity 3 × 16,383 = 49,149 B (user S107: "I probably WONT edit
+deterministic. **S170 (§2.77): past the three banks the art spills into banks $80+
+(taken last), every stream compressed — the "58 / refused at 60" below is history.** Capacity 3 × 16,383 = 49,149 B (user S107: "I probably WONT edit
 more than 50 monsters"; a literal battle + walking pair costs 838 B + 4 B of
 pointers → 58 fully re-arted monsters; test_compiler proves 50 fit and 60 are
 refused with the byte count).
@@ -5622,6 +5623,73 @@ arrangement) warns per room in words. No engine change: the example pin stays `7
 (patched). Tests: test_compiler `test_s168r2`; `tools/walk_page2.py` + the room-art check
 (`room_art_damage`: a visible cell still showing the room whose slot lost its graphic, sampled every
 2 frames per overlay) 62 / 62 on the r2 build; the S168 build fails it at Grandpa (`$40-$48 $61 …`).
+
+## §2.77 S170 — monster ART past the three art banks: banks $80+ (last) + compressed streams
+
+*Built S170, NOT yet user-tested.* User: "This session: I want to expand the monster graphics"
+(S169: "Next session is more than 58 original art"); "Compression is fine for me"; batch re-art not
+wanted ("I will be replacing monster graphics 1 by 1"); the 8 shared walking palettes "not an
+issue". Module `editor2/core/art.py` (§2.23 is the S107 base this extends). No engine change.
+
+**Why no engine change (code-read + measured).** Every reader of a monster's art — the 13
+battle-pose sites over ROM0 `MonsterBattleGfxTable` (bank $07 has two MORE reads whose DE is
+overwritten unused — annotated S170, both trees) and the eight walking gfx-ID copies — hands the
+table word straight to ROM0 `WaitDMATransfer` / `WaitLCDTransfer` → `DecompressTileLayout`, which
+maps ANY bank $01-$FF (S135 proved it for room streams). Measured on the user's save
+(`tools/walk_art.py`, below): 430 streams in banks $7A-$86 unpacked by the game == their pictures.
+
+**Placement (`art.place`, cached on the Project as `_art_plan`; `Project.stream_plan` drops it).**
+First fit in species order (battle before walking) over $7F, $7C, $7A, then banks opened from the
+4 MB ROM's $80-$FF one at a time (`Project._take_ext_bank('monster art')`). The art banks are the
+LAST kind: before taking the first, `art._number_earlier_kinds` runs every other planner in the
+fixed order (streams, places, animations, songs, battles, texts, the memorial's picture bank,
+page 2 — the S164 rule: a planner numbers its predecessors ALWAYS), so no other kind's bank moves.
+A project whose art fits $7F / $7C / $7A takes no bank $80+. `Project.ext_bank_owners` /
+`emitters.ext_bank_files` list them; `bank_ext.asm` INCLUDEs `bank_0xx.asm`; registry entry
+`art_ext` (`multi:art_banks`, `art.emit_ext_banks`). An ext art bank = `SECTION "ROM Bank $0xx"`,
+self-ID, `ArtPtrs_xx` at $4001, the streams — no `ds` pad (rgblink fills $00; the space meter
+counts the payload, `validators.bank_usage`). No bank left → `ArtError` "the ROM is full …".
+
+**Compression (`art.pack`, cached by content per process).** Every stream is stored as the SMALLEST
+of (the file as given, its literal copy, `sprite_codec.encode_safe` of its picture) — the decoded
+picture asserted equal. The asset files are untouched. Measured: the 430 original pictures 30.6 %
+smaller than literal (test_compiler `test_s170`); the S170 demo (all 215 re-arted) 125,089 B stored
+vs 180,170 B literal = 69 % → the three banks hold ≈ 84 monsters, all 215 need 5 banks $80+.
+Load speed (the walk's stub: LY sampled before and after `WaitDMATransfer` into VRAM $8800, 430
+streams): avg 411 scan lines (max 582) vs 409 (579) for the same monsters' ORIGINAL streams and
+397 (548) for the literal form — the game's own speed (≈ 2.7 frames an unpack, battle and walking together).
+**Encoder speed:** `sprite_codec._find_match` searches only the offsets that share the next 4
+bytes (an index built by `encode`) — the same (offset, length) whenever the length is ≥ 4, i.e.
+byte-identical output (test_s170: 462 payloads == the full scan `_find_match_scan`), ≈ 11× faster
+(430 pictures 12.3 s → 1.1 s). Every other user of the encoder (battle animation sheets, the title
+screen, the sheet import's fallback) gets the same bytes — the example pin is unchanged.
+
+**Not reached by re-art — by design (user: "monster NPCs on farm have not been affected (which is
+GREAT!)"):** the game's decorative monster NPCs are plain NPC ids `$3A-$4C` whose sheets ROM0 `$2ADF`
+names — the ORIGINAL walking streams of 19 monsters (the streams stay in the ROM). MONSTER_DATA
+"S170 — all 215 can be re-arted" lists them; `tools/walk_art.py` step `farm` measures it.
+
+**Editor.** `MonstersMixin.art_capacity` = (bytes as stored + pointers, the three banks' 49,149);
+the Monsters tab's meter adds "(+ N in the ROM space)", the Name & art note says all 215 can be
+re-drawn; the Capacity tab's `art` row has no limit any more ("the ROM space row: the ROM is
+full"), shown "N of 48 KB (then the ROM space)" / "… in its own banks, … in the ROM space"; help
+52 / 90. `EDITOR_REVISION` S170.
+
+**Tests.** test_compiler `test_s170` (+ `--rom`): the encoder equality, `pack` never larger and the
+same picture, the example takes no art bank, the 215-monster fixture (the demo's transform) →
+art banks after every other kind, ≤ 6 of them, whole files INCLUDEd, all 430 emitted streams
+decode to their pictures, the battle table's banks in placement order, `usage`, a full ROM →
+the error; `--rom`: every battle-table row and every row of the eight walking copies → the BUILT
+ROM's stream == the picture, self-IDs. The S107 budget case now builds 60 monsters (was refused).
+test_app `s170_art_space`. **PyBoy:** `tools/walk_art.py` on the user's save + the user's project
++ `examples/s170_mirror_demo` (every monster's pose mirrored, its walking colours 1 / 2 swapped):
+static 5 checks, CONTINUE's followers, the party swapped to three monsters in banks $80+ and the
+room re-entered (followers' VRAM), the field menu's pages (callers $07:43C7 / $4688 / $485D / $66C7),
+three forced battles (a pose from $83 / $86 / $7C, caller $51:6A7C), the farm (its monster
+NPCs unpack their ORIGINAL streams — by design — while the followers show the new art), the 430-stream stub +
+speed: **47 / 47**; `--negative` (each art bank $80+'s pointer table rotated by one within its
+kind — every gfx-ID there names another monster's picture, no crash) **25 FAIL**, the $7C monster,
+the home-bank followers and the farm's NPC sheets still pass. Pin unchanged `7aae0e95…` (patched): the example has no art.
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

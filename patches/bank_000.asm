@@ -9239,6 +9239,16 @@ Data_2AD5:
     ld [bc], a
     jr nc, Data_2ADD
 
+; S170: ROM0 $2ADF (2 bytes into Data_2ADD; disassembled as code — the bytes are
+; data) = the NPC SHEET gfx-ID table: one word per plain NPC sprite id (96 words up
+; to MonsterBattleGfxTable), read by bank $0B Call_00b_4839 (the room load) and bank
+; $06 ReloadNPCSheets. Ids $3A-$4C name the ORIGINAL walking streams of 19 monsters
+; (one stream shared by two tables): $3A Slime, $3B DragonKid, $3C MadCat, $3D Wyvern,
+; $3E Toadstool, $3F ArmyAnt, $40 Demonite, $41 Hork, $42 BombCrag, $43 Hargon,
+; $44 Dracky, $45 Trumpeter, $46 FloraMan, $47 Florajay, $48 BoneSlave, $49 SpikyBoy,
+; $4A CactiBall, $4B HammerMan, $4C Metaly — the game's own decorative monster NPCs
+; (the farm's). gamedata.art repoints only the species tables, so these keep the
+; original art (measured on the farm, tools/walk_art.py step `farm`).
 Data_2ADD:
     nop
     nop
@@ -9360,7 +9370,10 @@ Data_2B91:
 ;     gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2 -> LZ stream -> VRAM
 ;     $8B00. ONE table, 13 readers (battle, library, menus, breeding …), no
 ;     copies (ROM search S107). Ids 0-214 = the compiler region art_battle_gfx
-;     (gamedata.art, S107: a re-arted monster points at an art bank $7F/$7C/$7A);
+;     (gamedata.art, S107: a re-arted monster points at an art bank $7F/$7C/$7A;
+;     S170: then at the art's banks $80+ — every reader hands the word to
+;     WaitDMATransfer / WaitLCDTransfer -> DecompressTileLayout, any bank $01-$FF,
+;     measured by tools/walk_art.py);
 ;     215-220 below (TERRY? + the summons — PROJECT_STATE Iron Rule 8) and
 ;     221-239 (ns_battle_gfx, custom.species) further down. The labels inside
 ;     the region are fake-decode anchors other bytes point at (kept at their

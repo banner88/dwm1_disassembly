@@ -130,9 +130,11 @@
   keeps only for monsters of the other half (0-127 / 128 and up, plus your
   new species) is copied — about 60-80 bytes each of a 1.4 KB / 1.6 KB
   reserve, so roughly 20 different copied styles per half; a battle picture has 2 free
-  colours plus black and the cream (which also draws white parts). The art
-  of re-drawn original monsters shares three banks (about 49 KB): about 58
-  monsters with new battle AND walking art fit.
+  colours plus black and the cream (which also draws white parts). S170: all
+  215 original monsters can be re-drawn — the art is stored compressed (about a
+  third smaller, as fast to load as the game's own); three banks of its own
+  (about 49 KB, ≈ 84 monsters with battle AND walking art), then the ROM space
+  (all 215 ≈ 125 KB). The build stops only when the 4 MB ROM is full.
 - TERRY? and the summons (Tatsu, Diago, Samsi, Bazoo, the empty slot) are
   not monsters: only their moves and stats can change — no art, name or
   family.

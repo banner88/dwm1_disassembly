@@ -1698,6 +1698,20 @@ recipes are pure authoring.
           wisp, stub calls of both routines return). *User half:* MET (the demo ROM).
           (The white-vs-cream background defect of G-P is RESOLVED — user S106 r2
           "background colour is perfect".)
+    - [x] **2d — art past the three art banks (all 215 originals)** — **built S170; ROM half
+          user-tested S170 r2 ("Great everything works"; the farm's monster NPCs — plain NPC
+          ids $3A-$4C, ROM0 `$2ADF` — keep their original art, "which is GREAT!")** (user S169: "Next session is more than 58 original art"; S170: "expand
+          the monster graphics", compression OK, one-by-one re-art — no batch tool; the 8 shared
+          walking palettes "not an issue"). As built (PROJECT_COMPILER §2.77, MONSTER_DATA "S170
+          — all 215 can be re-arted", EDITOR_DESIGN §5.2 "As built S170"): past $7F / $7C / $7A the
+          art spills into banks $80+ (the LAST ext kind), every stream stored compressed
+          (`art.pack`, ≈ 31 % smaller; the game's own unpack speed, measured); no engine change
+          (every reader → `DecompressTileLayout`, any bank — measured). *Accept (machine half):*
+          test_compiler `test_s170` + `--rom`, test_app `s170_art_space`, `tools/walk_art.py`
+          47 / 47 on the user's save (negative 25 FAIL). *User half:* `DWM-S170-mirror-test.gbc`
+          (patched) — every monster mirrored / its walking colours swapped. Residual (S107 2a's
+          (a)) now only for a picture whose compressed AND literal forms both fail (all 256 byte
+          patterns and no copy covers the marker) — the dialog's plain message stands.
   - [x] **P3.10 part 3 — renaming original species + descriptions** — **built S108,
         test ROM r2 USER-CONFIRMED 2026-10-01 21:07 ("COnfirrmed")** (user 2026-10-01 19:03 on the audit: "need to be able to
         rename everything"; default nickname "1-4 like new species"; "pull all dialogue

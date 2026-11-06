@@ -595,9 +595,10 @@ class MonstersTab(QWidget):
             ou, oc = self.s.doc.art_capacity()
         except Exception:                           # noqa: BLE001
             ou, oc = 0, 0
+        more = (f' (+ {ou - oc:,} in the ROM space)' if ou > oc else '')
         self.meters.setText(f'New species: <b>{u} / {n}</b> slots · names {nu} / {nn} bytes '
                             f'· art {au} / {an} bytes<br>New art for original monsters: '
-                            f'{ou:,} / {oc:,} bytes')
+                            f'{min(ou, oc):,} / {oc:,} bytes{more}')
 
     def select(self, sid):
         for i in range(self.list.count()):
@@ -800,7 +801,9 @@ class MonstersTab(QWidget):
                 f'{what} New art replaces this monster everywhere the game draws it: battles, '
                 'the menus and the library, and following you in the field (it walks with '
                 'the walk style you pick). '
-                f'Art space used: {used:,} / {cap:,} bytes (banks $7F, $7C, $7A).')
+                'All 215 original monsters can have new art (stored compressed). '
+                f'Art space used: {used:,} bytes — {cap:,} fit its own three banks, the rest '
+                'goes into the ROM space.')
             self.orig_reset.setEnabled(bool(e))
         for k, btn in enumerate(self.a_sw):
             btn.setStyleSheet(f'background:{QColor(*S.rgb888(pal[k])).name()}; border:1px solid #444')

@@ -10,6 +10,47 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-05 (Session 170 — **MONSTER ART PAST THE THREE ART BANKS: ALL 215 ORIGINAL MONSTERS CAN BE
+> RE-ARTED — THE ART SPILLS INTO THE 4 MB ROM'S BANKS $80+ (THE LAST KIND), EVERY STREAM STORED COMPRESSED (≈ 31 %
+> SMALLER, THE GAME'S OWN SPEED); NO ENGINE CHANGE (EVERY READER MAPS ANY BANK — MEASURED)** (the user: "This session: I
+> want to expand the monster graphics"; the audit conferred → "1) Yes sounds good. Compression is fine for me … 2) I will
+> be replacing monster graphics 1 by 1 … 3) Thats fine not an issue 4) Thats fine"). **Built S170; user-tested S170 r2 ("everything works").**
+> Test ROM **`DWM-S170-mirror-test.gbc`** (`c2a899d7…`, patched) = the user's project + `examples/s170_mirror_demo`: EVERY
+> original monster re-arted — its battle pose MIRRORED, its walking art with colours 1 / 2 SWAPPED, its own walk style and
+> colours; 129 of the 215 poses live in banks $82-$86. Example pin unchanged `7aae0e95…` (patched; the example has no art).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler `--rom`
+> ALL 2071 PASSED at start.
+> **The audit (for the user, in chat):** outstanding fixes = none reported broken (S168 editor half, S169 await the user's
+> test); the re-art budget: 3 banks, literal streams (838 B a monster) → ≈ 58; every reader (13 battle sites — bank $07's
+> two more reads are DEAD, annotated — and the eight walking copies) hands the gfx-ID to ROM0 `DecompressTileLayout`, any
+> bank $01-$FF; the user's project uses 2 of the 128 banks $80+; our encoder on the 215 originals 581 vs 838 B a monster.
+> **Built (PROJECT_COMPILER §2.77):** `editor2/core/art.py` — `place`: $7F / $7C / $7A first, then banks $80+ taken LAST
+> (after page 2; `_number_earlier_kinds` runs every other planner first — the S164 rule), cached `_art_plan`; `pack`: the
+> smallest of the file / its literal / a compressed re-encode (the picture asserted equal; assets untouched); the ext art
+> banks as whole files (`art_ext`, `bank_ext.asm` INCLUDEs them); a full ROM → an art error in words.
+> `dwm/sprite_codec._find_match` indexed by 4-byte keys — byte-identical output (462 payloads == `_find_match_scan`), ≈ 11×
+> faster (every other encoder user unchanged; the pin proves it). Editor: the Monsters tab's meter "(+ N in the ROM space)",
+> the Name & art note, the Capacity row without a limit of its own; help 52 / 90; `EDITOR_REVISION` S170.
+> **Measured:** NEW `tools/walk_art.py` on the user's save + the demo: static (all 215 battle rows and all eight walking
+> copies → the BUILT ROM's streams == the pictures), a decode log on `WaitDMATransfer` / `WaitLCDTransfer` (every unpack
+> of a monster's art == its picture, no original stream unpacked), followers after CONTINUE and after a party swap to three
+> monsters in banks $80+, the field menu's pages, three forced battles ($83 / $86 / $7C poses), all 430 streams unpacked
+> by the game's own `WaitDMATransfer` == their pictures: **47 / 47**; `--negative` (each art bank $80+'s pointer table
+> rotated within its kind) **25 FAIL**, the home-bank monsters pass. Speed (LY sampled by the stub): avg 411 scan lines
+> an unpack vs 409 for the original streams and 397 literal. Stored: 125,089 B vs 180,170 B literal (69 %).
+> **Annotation:** `MonsterBattleGfxTable` header (both trees: any bank, measured), bank $07's two dead parent reads (both
+> trees); clean build `1ca6579…`.
+> **A / B:** the user's project (no re-art) built with HEAD and with S170: the same ROM (`958869db…`, patched).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2090 PASSED (+ `test_s170`; the S107 budget case now builds
+> 60; REGRESSION == the pin); test_app `--rom` PASS (+ `s170_art_space`; the GUI build == the pin `7aae0e95…`, patched).
+> **User test (S170 r2):** "Great everything works. Interestingly monster NPCs on farm have not been affected (which is
+> GREAT!)" — traced: the farm's monsters are PLAIN NPC ids `$3A-$4C` whose sheets ROM0 `$2ADF` names (19 monsters'
+> ORIGINAL walking streams, shared); re-art repoints only the species tables. Measured (walk step `farm`, 47 / 47),
+> annotated ROM0 `$2ADF` (both trees), MONSTER_DATA / ROOM_DATA_FORMAT / PROJECT_COMPILER §2.77.
+> **Next:** the user's test (`DWM-S170-mirror-test.gbc`: any monster anywhere faces the other way / walks in swapped
+> colours — battles, the party menu and INFO, the library, breeding, followers, monster NPCs); P3.17 packaging; the
+> "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 169 — **THE WINDOW (NO TAB RESIZES IT ANY MORE; IT REOPENS AS IT WAS CLOSED) + ROADMAP
 > P3.12 RESIDUAL (a): THE BREEDING TAB'S "TRY A CROSS" PAGE — THE BABY ITSELF (MAX LEVEL, STATS, AI, RESISTANCES, GENDER,
 > ITS LEARN QUEUE WITH WHERE EACH SKILL CAME FROM AND THE LEVEL IT LEARNS IT), PARENTS TYPICAL OR FROM A .SAV; THE HELP'S
@@ -54,66 +95,8 @@
 > with typical parents and the user's .sav, the pictures); S170 = more than 58 re-arted original monsters (the art banks); P3.17
 > packaging; the "Awaiting a user test" list.
 
-> Last verified: 2026-11-05 (Session 168 — **ROADMAP P3.3g BUILT: PAGE 2 — A TILESET HOLDS 256 TILES, THE SECOND 128 IN
-> VRAM BANK 1 (ATTRIBUTE BIT 3, GBC ONLY); THE WHOLE-GAME CENSUS (THE ORIGINAL NEVER TOUCHES BANK 1'S TILES), THE ENGINE
-> (PAGE-2 BANKS, A GDMA COPY AT EVERY ROOM-SHEET LOAD, BOXES / WINDOWS CLEAN OVER PAGE 2, ANIMATIONS ON PAGE 2), THE
-> COMPILER AND THE EDITOR (EVERY SLOT SEARCH SPILLS ONTO PAGE 2)** (the user: "This session I want: more tiles per room
-> item"; the audit conferred → "Different rooms will have mostly different tilesets … having access to diverse tiles in a
-> given room is the most important thing"; "Walkability per room is completely fine"; "GBC only yes absolutely";
-> "Include animation"; "I just want it to work"; "Do it all this session"). **Built S168, NOT yet user-tested.**
-> Test ROM **`DWM-S168-page2-test.gbc`** (`020d8dd2…`, patched) = the user's project + THE NUMBERED GALLERY
-> (`examples/s168_page2_demo/build_demo.py`; way in: the GALLERY CURATOR, Cities_FOUNT (3, 4)): two screens of 256 numbered
-> tiles (page 1 plain, page 2 striped; 208 different on screen 0), the curator's YES / NO, a SHOPKEEPER, GRANDPA, a VAULT
-> KEEPER, a LIBRARIAN, the SPARRING SLIME, a blinking page-2 strip. Example pin `7aae0e95…` (patched; was `26a4faf1…`,
-> patched, historical) — the example has no page 2; the pin moves with the engine (bank $73 / $77 / the animation player).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler
-> `--rom` ALL 2025 PASSED at start (in a worktree of HEAD).
-> **Census (`tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json`):** VRAM bank 1 `$8000-$97FF` seeded at
-> power-on — the title, 8 gates' battles (25 played out) + the field menu, the 519-scene cutscene census (68 runs): no
-> write, no BG cell with attribute bit 3; positive control reported.
-> **Engine:** page-2 banks (ext banks, the LAST kind; `templates/page2_copy.asm` / `page2_home.asm`): bank $0B's
-> room-sheet regions → `Page2Room` (`wPage2On` $D5BC; directory by region + map id) → the RAW sheet by GDMA (64 × 32 B
-> at HBlank) + tiles `$E0-$FF` mirrored; bank $73 `BoxAttrActive` / bank $77 `PushAttrActive` answer in a page-2 room,
-> ScreenPush writes attribute + tile per cell there (`PushRowBoth` — tiles-then-attributes showed 2-6 frames of bank-1
-> letters at the shop / the Vault, KEY_LESSONS S168); the own-animation player copies to the bank in bit 0 of its
-> destination word (`wTileAnimDstVBK` $D5BD). `TEMPLATE_SIZE[$77]` 2889, `[$6C]` 378, `ANIM_TEMPLATE_SIZE` 290.
-> **Compiler / editor:** tile value `$100-$17F` = page-2 tile n; a 4096-byte raw2bpp = page 1 + page 2; the compiler
-> derives bit 3 per (attr grid, tile grid) (`page2.derived_attr_items`, appended last — a project without page 2 compiles
-> as before); every free-slot search covers 256 slots, page 1 first; walkability = the map byte (page-2 n walks like
-> page-1 n); statues keep page 1 (`Document.page1_room`); the Tileset tab / metatile editor show both pages.
-> PROJECT_COMPILER §2.76, ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)". `EDITOR_REVISION` S168.
-> **Measured:** `tools/walk_page2.py` on the user's save 55 / 55 (every cell's byte + bank, bank 1 == page 2, the blink,
-> 7 overlays sampled every 2 frames, the room whole after each, leaving clears `wPage2On`); `--negative` (`wPage2On`
-> forced 0) 6 FAIL. **A / B:** the user's project WITHOUT page 2, built with HEAD vs the S168 engine, on the user's save:
-> all 35 screens of its 12 rooms identical (both tile maps + attributes, VRAM banks 0 / 1, palettes). **Annotation:** comments in both trees (bank $00 WaitDMATransfer's VRAM-bank rule, bank $0B's hook /
-> census, bank $07's `$E0` fill); clean build `1ca6579…`.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2049 PASSED (+ `test_s168` / `--rom`); test_app `--rom` PASS
-> (+ `s168_page2`; S122's borrow into a full theme now lands on page 2 without the "release vocabulary" question; the GUI
-> build == the pin `7aae0e95…`, patched).
-> **S168 r2 — the user tested and reported "Breed/hatch/exit menu (talk with breeding NPC) creates visual glitches of
-> words on the screen"** (Grandpa in the gallery: "EXIT INFO" over the floor). Not a page-2 fault: the breeding / farm /
-> egg screens draw into the ROOM's page-1 slots while the room shows (ROOM_DATA_FORMAT "The game's menus draw into the
-> room's tile slots" — S126 / S127 knew the slots; the gallery placed tiles in all 256). Measured (PyBoy, a new room-art
-> check: a visible room cell whose slot no longer holds its graphic): Grandpa writes `$40-$48` / `$61-$7A`, a master
-> `$38-$3F` / `$78-$7C` while the room shows; code-read sets (`services.BORROWED_SLOTS`): breeding `$38-$7F`, farm
-> `$60-$6F`, eggs `$70-$78`. **Editor fix (no engine change, the pin stays `7aae0e95…`):** a project sheet whose rooms
-> have such a screen (a service NPC's kind, or a raw `op $04 3/5/6/7/11`) keeps those slots free — status `service`
-> (brown on the Tileset tab), out of every slot search / twin / reuse; `make_service_npc` and the project open
-> (`_migrate_service_slots`) move tiles placed there to a free slot on their side (page 2 first, lowest numbers), every
-> layout following; the validator warns (`services.borrowed_problems`, project tilesets only). The user's project: 26
-> tiles of "Boss: Temptation (Servant)" (2 breeders) move to page 2 on open. The gallery keeps page-1 `$38-$7F` empty
-> (168 tiles on screen 0). Test ROM **`DWM-S168r2-page2-test.gbc`** (`7a4edcf9…`, patched). `walk_page2.py` 62 / 62
-> (+ the room-art check per overlay; the S168 build FAILS it at Grandpa = the negative; `--negative` 6 FAIL);
-> test_compiler `test_s168r2`; checks: verify_integrity PASS, test_compiler `--rom` ALL 2061 PASSED (REGRESSION == the
-> pin), test_app `--rom` PASS. Known, unchanged (help 68): while a breeding menu is open, sprites over tiles numbered
-> `$40`+ (Grandpa) hide — on page 2 too (the gallery's Grandpa stands on `p2 $40`). `EDITOR_REVISION` S168 r2.
-> **Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it")** — the editor half (import / borrow / draw into a full tileset, the brown slots,
-> the open-time move in the user's project) NOT yet user-tested.
-> **Next:** the user's test (`DWM-S168r2-page2-test.gbc`: Grandpa's menu over the gallery; the gallery's windows over the
-> striped tiles; the editor: import / borrow / draw into a full tileset, the Tileset tab's page 2 and its brown slots);
-> P3.17 packaging; the "Awaiting a user test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S170** (2026-11-05): monster art past the three art banks — all 215 originals re-artable: the art spills into banks $80+ (the LAST kind, after page 2), every stream stored compressed (`art.pack`, ≈ 31 % smaller, the game's own unpack speed); no engine change (every reader maps any bank — `tools/walk_art.py` 47 / 47, negative 25 FAIL); `sprite_codec` encoder indexed (same bytes, ≈ 11× faster); the meters / Capacity row; bank $07's two dead parent reads annotated. PROJECT_COMPILER §2.77. Test ROM `DWM-S170-mirror-test.gbc` (patched); pin `7aae0e95…` (patched) unchanged. Built S170, NOT yet user-tested.
 - **S169** (2026-11-05): the window + ROADMAP P3.12 residual (a) — no tab resizes the window any more (`editor2/app/page_tabs.py`: a scrolling tab row, every page in a scroll area sized from its minimum; the window minimum 1,530 × 911 → 412 × 273; geometry + docks kept between runs); the Breeding tab's Try a cross page shows the BABY (`editor2/core/cross.py` over the S130 raising model: max level, stats, AI with the dropped carry, resistances, gender, the learn queue with sources + the level each skill is learned; parents typical or from a .sav; `tools/walk_cross.py` 2,694 / 2,694 on the user's save, negative 166 FAIL); help `58_raising.md`; EID 0 skipped as a typical row. Byte-neutral (pin `7aae0e95…`, patched, unchanged). Built S169, NOT yet user-tested. Next: S170 more than 58 re-arted monsters.
 - **S168** (2026-11-05): ROADMAP P3.3g built — PAGE 2: a tileset holds 256 tiles, the second 128 in VRAM bank 1 (attribute bit 3, GBC only). Census `tools/census_vram_bank1.py` (the original never touches bank 1's tiles: title, battles, 519 cutscenes); engine: page-2 banks (the last ext kind; GDMA copy at every room-sheet load via bank $0B's regions → `Page2Room`, tiles $E0-$FF mirrored), boxes / windows clean over page 2 (`wPage2On` → bank $73 / $77; ScreenPush attribute + tile per cell), own animations on page 2; compiler: tile values $100-$17F, derived attr streams; editor: every slot search spills onto page 2, statues keep page 1, Tileset tab / metatile editor show both pages. `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL). PROJECT_COMPILER §2.76. Test ROM `DWM-S168-page2-test.gbc` (patched); pin `7aae0e95…` (patched). **S168 r2** (user report: Grandpa's BREED / HATCH / EXIT words over the floor): rooms with a breeding / farm / egg screen keep the page-1 slots it draws into free (`services.BORROWED_SLOTS`; moved on NPC creation and on open, page 2 first; validator warning); walk 62 / 62; test ROM `DWM-S168r2-page2-test.gbc` (patched). Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested.
 - **S167** (2026-11-05): the outstanding fixes F2 + F3 + P3.H — F3: `tools/audit_patch_space.py` (every byte a patched build writes into a bank the game uses: 29 FILL runs judged, 1,775 LZ streams untouched; dynamic poison A/B of the original ROM over the cutscene census + a battle / menu corpus, identical) found ROM0 `$3BC2-$3BD2` (MapIDClampForPalette since S63) = rows 3 / 4 of the GROOVE ROW TABLE read by the boss song — moved to the dead master table `$3466`, `GrooveRowTable` re-sectioned both trees; 4 runs whose readers are unreachable annotated. F2: the S166 traceback = a stale PySide wrapper (`editor2/app/qt_safe.py`). P3.H: "?" on the tab bar / sub-tab bars / the Rooms page column / 47 dialogs, F1, topic links, the Glossary, a Families topic, 22 tab pictures. Test ROM `DWM-S167-audit-test.gbc` (`a386a504…`, patched); pin `26a4faf1…` (patched). Built S167; the ROM USER-CONFIRMED 2026-11-05 13:06 ("Rom good"); the editor half NOT yet user-tested.
@@ -282,7 +265,7 @@
 | ROM size | 2 MB, 128 banks ($00–$7F) |
 | Custom content bank | $60 (verifier check 2 prints current usage — 1,393 B as of S51) |
 | Monster battle palette table | `MonsterBattlePalettes` @ `$17:$62FD`, 8 B/species, 4 RGB555 `[c0, c1=$6bff, c2, c3=$0000]`; loaded by bank $17 entry 6 (`$1706`). Was mislabeled `RoomAttrDataBlocks`. |
-| Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A`; S121: `$79` = story hooks) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. |
+| Monster sprite overflow banks | `$7E,$7F` (then `$7C,$7A`; S121: `$79` = story hooks) — cross-bank sprite streams (`dwm/sprite_bank.py`); EDITOR_DESIGN §8. Resolver reads `$<bank>:$4001+index*2`, no bank gating. **S170: re-art of the originals past $7F / $7C / $7A spills into banks $80+ (the last ext kind; every reader maps any bank — measured, `tools/walk_art.py`); streams stored compressed. PROJECT_COMPILER §2.77.** |
 | Follower gfx-ID table | `ScreenTransDataTable` @ `$01:$49DF`, 231 `dw`, indexed `species+$10`; loader `GetActiveMonsterStatus` @ `$01:$4986`; family table `FollowerFamilyGfxTable` @ `$01:$4BAD` (10; twin `FamilyIconGfxTable0A` @ `$0A:$46B5`; both dead in the patched build since S104 — bank $6D entries 0/1). 16 tiles / 256 B per follower, DMA'd to VRAM `$8200`/`$8300`/`$8400` (party slot 0/1/2). **8 parallel copies of this gfx-ID table exist** (`$01 $06 $07 $09 $0b $12 $18 $59`, one per UI context: `$18`=menu/`TextDataPtrLookup`@`$4123` indexed `species`, `$12`=library); a complete art swap repoints ALL 8. |
 | Follower layout dispatch (GFX-4) | Level-1 tables at FIXED `$10:$407f` (species 0–127) / `$11:$407f` (species 128+), indexed by species; `$ffc7=species+$10` routed by bank-`$04` entry 2 (`$10–$8F`→bank `$10`, `≥$90`→bank `$11`). Per-species attr/palette byte at `$10:$417f` / `$11:$412d` (bit6=Y-flip, bit5=X-flip, low3=OBJ palette). `[$caca]` = SPECIES (party +$09), not a "sprite-class" byte. Bank `$05` `$407f`-style table is the ObjTest viewer, NOT the follower path. `extracted/monster_follower_layouts.json`. |
 | Follower render engine | `SaveScr_40cd` @ `$04:$40cd` (GBC variant of ROM0 `$0d91`). Metasprite list = 4-byte entries **(dy, dx, tile_offset, attr)**, `$80`-terminated; OAM tile = `tile_offset + [$ffc9]` (base `$20/$30/$40`); OAM attr = `[$ffca] XOR attr` (X-flip bit5). 2-level table: sprite-type `$ffc7`(=`[$ca91]`) → frame/dir `$ffc8`. **OBJ idx0 = hardware-transparent** (battle BG used idx1). 8 OBJ palettes @ `$17:$5615`. |
@@ -356,9 +339,9 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $77 | Shops (S117, P3.13c; S117b: entry 2 `ScreenPush` = bank $09's screen push with palette attributes in free-colour rooms, `ShopClose` → `ShopBoxBottom`): entry 0 `ShopFill` (far-called by bank $09 `ShopBuyStockFill`'s same-size stub; `wShopID` list or the vanilla room rule) / entry 1 `ShopClose` (the shop's close tail) + `SHOP_COUNT`, `ShopPtrTable`, `ShopList_n` (the five vanilla lists, then `custom.shops`); template 438 B (S117b; 93 B S117); S126: entries 3-6 (service lines, closes, tile save); S127 (P3.14e2): entries 7 `BreedClose` (bank $0A's type 5/6/11 close tails), 8 `BreedSlotEID` + `BreedRoll` (bank $14 `LoadEnemyStatsExt` slot rows), 9 `PartyAvgLevel`, 10 `ScriptCommand` (op `$24 $FFxx` via bank $60) + `BreedPoolPtrs` (`custom.breeding_pools`); S129 (P3.14b-d): entry 11 `StoryCheck` (the virtual flags `$18xx`) + `StoryCheckPtrs`, `StoryCommand` (op `$24 $FF01+`) + `StoryCmdPtrs`, `ShopSetPick` + `ShopSetTable`; S141: entries 12-15 `NpcSheetLoad0B` / `NpcSheetLoad06` / `NpcDrawPlain` / `NpcDrawMonster` (a custom room's NPC sprite sheets 3-5 in VRAM bank 1); S151 (E9): entries 16 `ItemRecordCopy` (every item record + `wItemBase`), 17 `BattleItemProbe`, 18 `BattleItemPick` + `ITEM_COUNT` / `ItemTable` / `ItemBaseTable`; S152 (E3 a2): `StoryCommand` kind 4 `name_given`; S153 (E5): kinds 5 `story_point` (→ bank $79 entry 5) / 6 `credits_after` (→ `wCreditsAfter`); S154 (E10): kind 7 `memorial` (→ bank $79 entry 9) + `BreedClose` ends in `MemorialRedraw77`; template 2241 B (was 2229 B); S157 (E9, one-only items): entries 19 `GiveOne` / 20 `BagFullCheck` / 21 `BuyQtyMax` / 22 `OneOnlySay` + `ShopDropHeld77` and the story give test, data `OneOnlyLine` / `ScriptArity77`; template 2730 B; S158 (E15, breeding hints): `StoryCommand` kind 8 `hint` [sub, arg] (→ bank $79 entry 10); template 2741 B | compiler-generated `patches/bank_077.asm` (`shops77`, editor2/core/shops.py) |
 | $79 | Story hooks (S121, ROADMAP P3.16 + E7): the Milly hook — entry 0 `MillyShapeTable` (bank $04 entries 2 / 3, same-size regions `milly_shape_04a/b`), entry 1 `MillyPlayerSheet` (bank $01 `LoadFieldTilesDMA`, region `milly_player_sheet`) + Milayou's palette / sheet / frame-table image (copied to WRAM `wMillyLayout`); S152 (E3 a2): entry 2 `NewGameStart` + `NewGameData` (`custom.new_game`: bank $15 region `newgame_start` far-calls it — the start room / cell via the warp mailbox, extended flags); S153 (E5): entries 3 `TitleText` (bank $5F region `title_text`; `TitleTextData`), 4 `CreditsAfter` (region `credits_after`; `wCreditsAfter`), 5 `StoryPointApply` (`STORY_POINT_COUNT` / `StoryPointPtrs` / `StoryPoint_n` rows) + bank $5F's eleven regions (`custom.title` / `custom.credits`, editor2/core/ending.py); S154 (E10, the memorial): entries 6 `MemBattleStart` / 7 `MemBattleEnd` (bank $50 regions `memorial_battle_start` / `_end`), 8 `MemRoomTiles` (bank $0B regions `memorial_tiles_0` / `_1`, bank $77 `MemorialRedraw77`), 9 `MemSay` (story command 7) + `MemRoomTable` / `MemBossEids` / `MemPicBank` (`custom.rooms[].statues`, editor2/core/memorial.py; the list in SRAM bank 3 $A110+); S158 (E15, breeding hints): entries 10 `HintCommand` (story command 8: pick / riddle / archive start / next), 11 `HintBreed` (bank $16 region `hint_breed_16` → `HintBreed16`), 12 `HintSay` (bank $60 `TextOverride`), `MemRoomTiles` → `HintRoomNote` (the visit) + `HintTable` / `HintRiddles` / `HintMonTable` / `HintFamLists` / the words (`custom.hints`, editor2/core/hints.py; SRAM bank 3 "H1" $A007, UNLOCKED $B000, BRED $B100); the empty vanilla bank when the hook is off, the new game is the game's own and there is no title / ending step or statue; S159 (E16): the memorial's tag = record +$82 & `$F8` (bits 0-1 = Earth) | compiler-generated `patches/bank_079.asm` (`hooks79`, template `bank_079_head.asm`, editor2/core/milly.py) |
 | $7E | The project's NEW-SPECIES art streams (38-word pointer table: index (id-221)*2 follower, +1 battle; S105: compiler-owned, all zero without `custom.species`) | compiler-generated `patches/bank_07e.asm` (`species7e`, editor2/core/species.py; streams from `bake_follower_overflow.py --stream-dir`) |
-| $7F | RESERVED next sprite-overflow bank (then $7C, $7A) | `dwm/sprite_bank.py` order |
+| $7F | RESERVED next sprite-overflow bank (then $7C, $7A) — S107: the first ART bank (new art for the original monsters, `gamedata.art`), then $7C, $7A; S170: then banks $80+ (last) | compiler-generated `patches/bank_07f.asm` / `07c` / `07a` (`art7f` …, editor2/core/art.py) |
 | **Unallocated** | **none** (S121: $79 = story hooks; S117: $77 = shops; S116: $75 = the second song bank; S114: $76 taken; S107: $7A / $7C are art banks) + reserved $7F. | — |
-| $80-$FF | **S168: + the PAGE-2 BANKS, numbered LAST (after the memorial's picture bank)** (the RAW page 2 of every project tileset that uses one; the home bank = entry 0 `Page2Copy_P<bank>` + entry 1 `Page2Room` + `Page2Directory` + sheets, the rest = entry 0 + sheets, ≤ 7 sheets a bank; `editor2/core/page2.py`, PROJECT_COMPILER §2.76). **S150: + the TEXT BANKS, numbered after the battle banks** (the project's edits of the game's own texts — `gamedata.text`; the first = the HOME bank: `TextOvrFind` + `TextOvrBanks` + `TextOvrDir` + the lists, every one `TextOvrCopy` at entry 1 + texts first fit; `gametext.emit_text_banks`). **S149 (ARC CAP5): + the BATTLE BANKS, numbered after the song banks** (project enemy rows past bank $6B, battle lists past bank $76's first 256; each a self-ID + the pinned copier block `templates/battle_bank.asm` + rows / lists; `battles.emit_battle_banks`). **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). **S135 (ARC CAP2a): the LZ stream overflow banks, allocated from $80 up as needed** (layouts / attr maps / tilesets that do not fit $64 / $67, any kind mixed; `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm). **S136 (ARC CAP2b): the PLACE BANKS, numbered after the stream banks** (rooms' scripts / patches / screens / lists / states / casts (S137: + render rows + palettes) + text sections that do not fit $60; each a self-ID + the reader block at `$4001` + its places; `patches/bank_0xx.asm`). **S139 (ARC CAP2d): the ANIMATION BANKS, numbered after the place banks** (rooms' own animated tiles that do not fit $6C; each a self-ID + `dw TileAnimPlay_A<bank>` + the player + its rooms' records and frames). **S147 (ARC CAP5): the SONG BANKS, numbered after the animation banks** (project songs past $74 / $75 — one bank a song, first fit; each a self-ID + streams; `music.song_ext_banks`). | compiler `ext_banks` (`emit_bank_ext`) + `streams_ext` (`emit_stream_banks`) + `places_ext` (`places.emit_place_banks`) + `anims_ext` (`tileanim.emit_anim_banks`) + `songs_ext` (`music.emit_song_ext_banks`, S147) + `battles_ext` (S149) + `texts_ext` (`gametext.emit_text_banks`, S150) + `mem_pics_ext` (the memorial's picture bank after the text banks — entry 0 `MemPicDraw` + 240 × 64 B standing pictures; only with statues; `memorial.emit_pic_banks`, S154) + `page2_ext` (the page-2 banks, last; `page2.emit_banks`, S168) |
+| $80-$FF | **S170: + the MONSTER-ART BANKS, numbered LAST (after the page-2 banks; only when `gamedata.art` outgrows $7F / $7C / $7A): self-ID + `ArtPtrs_xx` + streams (`art.emit_ext_banks`, PROJECT_COMPILER §2.77).** **S168: + the PAGE-2 BANKS, numbered after the memorial's picture bank** (the RAW page 2 of every project tileset that uses one; the home bank = entry 0 `Page2Copy_P<bank>` + entry 1 `Page2Room` + `Page2Directory` + sheets, the rest = entry 0 + sheets, ≤ 7 sheets a bank; `editor2/core/page2.py`, PROJECT_COMPILER §2.76). **S150: + the TEXT BANKS, numbered after the battle banks** (the project's edits of the game's own texts — `gamedata.text`; the first = the HOME bank: `TextOvrFind` + `TextOvrBanks` + `TextOvrDir` + the lists, every one `TextOvrCopy` at entry 1 + texts first fit; `gametext.emit_text_banks`). **S149 (ARC CAP5): + the BATTLE BANKS, numbered after the song banks** (project enemy rows past bank $6B, battle lists past bank $76's first 256; each a self-ID + the pinned copier block `templates/battle_bank.asm` + rows / lists; `battles.emit_battle_banks`). **S134 (ARC CAP1): the 4 MB ROM — a self-ID stub per bank** (`patches/bank_ext.asm`, compiler-generated). **S135 (ARC CAP2a): the LZ stream overflow banks, allocated from $80 up as needed** (layouts / attr maps / tilesets that do not fit $64 / $67, any kind mixed; `patches/bank_0xx.asm`, INCLUDEd by bank_ext.asm). **S136 (ARC CAP2b): the PLACE BANKS, numbered after the stream banks** (rooms' scripts / patches / screens / lists / states / casts (S137: + render rows + palettes) + text sections that do not fit $60; each a self-ID + the reader block at `$4001` + its places; `patches/bank_0xx.asm`). **S139 (ARC CAP2d): the ANIMATION BANKS, numbered after the place banks** (rooms' own animated tiles that do not fit $6C; each a self-ID + `dw TileAnimPlay_A<bank>` + the player + its rooms' records and frames). **S147 (ARC CAP5): the SONG BANKS, numbered after the animation banks** (project songs past $74 / $75 — one bank a song, first fit; each a self-ID + streams; `music.song_ext_banks`). | compiler `ext_banks` (`emit_bank_ext`) + `art_ext` (`art.emit_ext_banks`, S170, last) + `streams_ext` (`emit_stream_banks`) + `places_ext` (`places.emit_place_banks`) + `anims_ext` (`tileanim.emit_anim_banks`) + `songs_ext` (`music.emit_song_ext_banks`, S147) + `battles_ext` (S149) + `texts_ext` (`gametext.emit_text_banks`, S150) + `mem_pics_ext` (the memorial's picture bank after the text banks — entry 0 `MemPicDraw` + 240 × 64 B standing pictures; only with statues; `memorial.emit_pic_banks`, S154) + `page2_ext` (the page-2 banks, before the art banks; `page2.emit_banks`, S168) |
 
 ## Iron Rules
 
@@ -505,6 +488,7 @@ real project starts, so these are best confirmed on the way into it:
   the editor (import / borrow / draw / flip walkability in a full tileset, the Tileset tab's page 2 and brown slots).
 - S169: the window (full screen on the Mac across every tab and a restart); Breeding → Try a cross (typical parents and the
   user's .sav: the baby's stats, queue, timeline).
+- S170: the Monsters tab's art meter and the Capacity row past the three banks (the ROM half: user-tested S170 r2).
 
 ### Not yet implemented
 

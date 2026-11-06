@@ -714,6 +714,18 @@ colours-only Dracky with its own art in the new colours; the Slime joins. In the
 patched build bank $0B's copy sits at `$4914` (the patched bank is laid out
 differently since S14) — address it by label (`FollowerGfxTable0B`).
 
+**S170 — all 215 can be re-arted (PROJECT_COMPILER §2.77).** Past the three art banks the
+streams go into the 4 MB ROM's banks $80+ (taken last), each stored compressed when that is
+smaller (the game's own format; ≈ 31 % smaller on the original pictures). Measured on the user's
+save (`tools/walk_art.py`, every monster re-arted, 129 of them in banks $82-$86): followers,
+the field menu's pages, forced battles, and all 430 streams unpacked by the game's own
+`WaitDMATransfer` == the pictures; an unpack takes ≈ 411 scan lines on average vs 409 for the
+original streams and 397 literal. Code read S170: every reader passes the table word straight to
+`WaitDMATransfer` / `WaitLCDTransfer` (bank $18's copy reaches `DecompressTileLayout` through
+`WaitLCDTransfer` into WRAM); bank $07's two INFO-page reads of the parents' battle gfx-IDs
+(`jr_007_49c6`, after `LoadFld_690d`) are DEAD — DE is overwritten unused (annotated, both trees).
+**The game's own decorative monster NPCs keep their original art (S170, user-observed on the farm, then measured).** They are PLAIN NPCs: sprite ids `$3A-$4C` whose sheets come from ROM0 `$2ADF` (the NPC sheet table), which names the ORIGINAL walking streams of 19 monsters ($3A Slime, $3B DragonKid, $3C MadCat, $3D Wyvern, $3E Toadstool, $3F ArmyAnt, $40 Demonite, $41 Hork, $42 BombCrag, $43 Hargon, $44 Dracky, $45 Trumpeter, $46 FloraMan, $47 Florajay, $48 BoneSlave, $49 SpikyBoy, $4A CactiBall, $4B HammerMan, $4C Metaly). `gamedata.art` repoints only the species tables (battle + the eight walking copies), so these NPCs stay as they were — the user: "monster NPCs on farm have not been affected (which is GREAT!)". On the farm (`tools/walk_art.py` step `farm`): $3A / $45 / $47 / $48 unpack the original Slime / Trumpeter / Florajay / BoneSlave pictures while the followers on the same screens show the new art. A monster NPC that SHOULD follow re-art is a `$F0-$F3` one (`npc.monster` in a custom room) — it reads the follower table.
+
 **Walking layouts as project data (S107, ROADMAP P3.10 part 2b; PROJECT_COMPILER
 §2.23 "Walking layouts"; `editor2/core/walk_layouts.py`).** User on the 2a ROM: a
 re-arted monster's library parent icon "is STILL. Vanilla behaviour is MOVING" —

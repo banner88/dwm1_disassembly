@@ -1438,3 +1438,18 @@ attribute bit 3) no longer holds the snapshot bytes = a menu drew into a slot th
 (`walk_page2.room_art_damage`; skip the room's own animated slots — the first run flagged the
 gallery's blinking strip). Counting only frames with ≥ 60 room cells keeps full-screen menus out.
 The same snapshot gives "slots written while the room showed" — how the breeding sets were measured.
+
+## S170 techniques — every unpack the game makes, its speed in scan lines (tools/walk_art.py)
+
+- **The decode log:** hook ROM0 `WaitDMATransfer` / `WaitLCDTransfer` at their entry (DE = gfx-ID,
+  HL = destination, `[$FF4F] & 1` = the VRAM bank written, `[$4000]` + the word at SP = the caller)
+  and at entry + 13 (the `xor a` after `call TextScrollWindow` / `LoadSpriteFrame`: the unpack is
+  done) — read the destination there (`p.memory[vbk, dest:dest + n]`, WRAM directly). The entry
+  label is also the lock's busy-wait loop (`jr nz, WaitDMATransfer`): keep the first entry's
+  values while one is pending. Registers: `register_file.D / .E / .HL / .SP` (there is no `.H`).
+- **Timing below a frame:** the stub reads LY itself before and after the call (`ldh a, [$44]`)
+  and the driver counts the ticks to the marker: lines = (ticks − 1) · 154 + LY₁ − LY₀. (A hook
+  on a WRAM address is not available in PyBoy 2.9 — the stub's own samples replace it.)
+- **A reference in the ROM copy:** the literal form of the 430 pictures staged in empty banks
+  `$F0+` of the walk's ROM copy (refused unless those banks are empty) gives literal / compressed
+  / original timings of the same pictures in one run.

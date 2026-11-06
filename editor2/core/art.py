@@ -266,48 +266,129 @@ def resolve(prj, with_art=True):
 # placement + effective tables
 # ---------------------------------------------------------------------------
 
+# S170: every stream is stored as the SMALLER of (the file as given, its literal
+# copy, a compressed re-encode of the same picture — dwm/sprite_codec.encode, the
+# game's own format; the game's own art is compressed the same way). Same picture,
+# fewer bytes (≈ 31 % on the 215 original pictures). Cached by content per process.
+_PACKED = {}
+
+
+def pack(stream):
+    """The bytes the compiler stores for an art stream (see above). Decodes to
+    exactly the same picture (asserted)."""
+    got = _PACKED.get(stream)
+    if got is not None:
+        return got
+    from dwm.sprite_codec import decode, encode_safe, _MarkerCollision
+    pic = decode(stream)
+    best = stream
+    for lit in (True, False):
+        try:
+            cand = encode_safe(pic, literal_only=lit)
+        except (ValueError, _MarkerCollision):
+            continue
+        if len(cand) < len(best):
+            best = cand
+    if decode(best) != pic:                           # never: the codec's contract
+        raise ArtError("internal: a re-encoded art stream does not decode back")
+    _PACKED[stream] = best
+    return best
+
+
+def _number_earlier_kinds(prj):
+    """S170: the art ext banks come LAST — every other kind numbers its banks
+    $80+ first, always in the same order (KEY_LESSONS S164: a planner that numbers
+    its predecessors only when IT needs a bank makes the numbers depend on who ran
+    first). Mirrors Project.ext_bank_owners."""
+    from . import places as PL, tileanim as TA, music as MU, battles as BT
+    from . import gametext as GT, memorial as MM, page2 as P2
+    prj.stream_plan()
+    PL.plan(prj)
+    TA.plan(prj)
+    MU.song_ext_banks(prj)
+    BT.plan(prj)
+    try:
+        GT.plan(prj)
+    except GT.GameTextError:
+        pass                                          # reported by the validator
+    MM.plan(prj)
+    try:
+        P2.plan(prj)
+    except P2.Page2Error:
+        pass                                          # reported by the validator
+
+
 def place(prj):
     """-> (resolved, {sid: (battle gid | None, follower gid | None)},
     {bank: [(label, stream)]}). First fit over ART_BANKS in species order,
-    battle before walking (deterministic)."""
-    from dwm.sprite_bank import SpriteOverflowAllocator
+    battle before walking (deterministic); S170: the streams that do not fit
+    spill into the 4 MB ROM's banks $80+ (taken after every other kind — the
+    LAST tenant), opened one at a time as needed. A stream = `pack(file)`.
+    Cached on the Project (Project.stream_plan drops it with the other plans)."""
+    got = getattr(prj, '_art_plan', None)
+    if got is not None:
+        return got
     res = resolve(prj)
-    alloc = SpriteOverflowAllocator(list(ART_BANKS))
+    order = list(ART_BANKS)
+    banks = {b: [] for b in ART_BANKS}
+    used = {b: 1 for b in ART_BANKS}                  # the self-ID byte
+    ext = []
     gids = {}
+
+    def add(stream, label):
+        need = len(stream) + 2
+        for b in order:
+            if used[b] + need <= BANK_SIZE and len(banks[b]) < 256:
+                break
+        else:
+            if not ext:
+                _number_earlier_kinds(prj)
+            try:
+                b = prj._take_ext_bank('monster art')
+            except Exception as ex:                   # noqa: BLE001 (ProjectError)
+                raise ArtError(f"gamedata.art: {ex}")
+            ext.append(b)
+            order.append(b)
+            banks[b], used[b] = [], 1
+        banks[b].append((label, stream))
+        used[b] += need
+        return (b << 8) | (len(banks[b]) - 1)
+
     for sid in sorted(res):
         r = res[sid]
         bg = fg = None
-        try:
-            if r['battle_art'] is not None:
-                bg = alloc.add(r['battle_art'], f'ArtBattle_{sid}')
-            if r['follower_art'] is not None:
-                fg = alloc.add(r['follower_art'], f'ArtWalk_{sid}')
-        except RuntimeError:
-            used = sum(len(x['battle_art'] or b'') + len(x['follower_art'] or b'')
-                       for x in res.values())
-            raise ArtError(f"gamedata.art: the art streams ({used} bytes) do not fit the "
-                           f"{len(ART_BANKS)} art banks (${', $'.join(f'{b:02X}' for b in ART_BANKS)}"
-                           f", {capacity()} bytes) — fewer re-arted monsters, or a "
-                           "compressed re-encode (dwm/sprite_codec.encode)")
+        if r['battle_art'] is not None:
+            bg = add(pack(r['battle_art']), f'ArtBattle_{sid}')
+        if r['follower_art'] is not None:
+            fg = add(pack(r['follower_art']), f'ArtWalk_{sid}')
         gids[sid] = (bg, fg)
-    banks = {b: list(alloc.placed[b]) for b in ART_BANKS}
-    return res, gids, banks
+    prj._art_plan = (res, gids, banks)
+    prj._art_ext = ext
+    return prj._art_plan
+
+
+def ext_banks(prj):
+    """S170: the banks $80+ the art spilled into (in order; [] = none)."""
+    place(prj)
+    return list(getattr(prj, '_art_ext', None) or [])
 
 
 def capacity():
-    """Stream bytes the art banks hold (each: 1 self-ID byte; every stream
-    also costs a 2-byte pointer)."""
+    """Stream bytes the three art banks hold (each: 1 self-ID byte; every stream
+    also costs a 2-byte pointer). S170: past them the art spills into the ROM
+    space (banks $80+) — this is no longer where the build stops."""
     return len(ART_BANKS) * (BANK_SIZE - 1)
 
 
 def usage(prj):
-    """(bytes used incl. pointers, capacity) for the editor's meter."""
+    """(bytes used incl. pointers — as stored, i.e. packed —, capacity of the
+    three art banks) for the editor's meter. Past the capacity = in banks $80+."""
     res = resolve(prj)
     used = 0
     for r in res.values():
         for k in ('battle_art', 'follower_art'):
             if r[k] is not None:
-                used += len(r[k]) + 2
+                used += len(pack(r[k])) + 2
     return used, capacity()
 
 
@@ -462,35 +543,64 @@ def _emit_attr(bank):
     return emit
 
 
+def bank_text(prj, bank):
+    """The whole file of art bank `bank` ($7F / $7C / $7A, or an ext bank $80+)."""
+    t = tables(prj)
+    entries_ = t['banks'].get(bank) or []
+    ext = bank >= 0x80
+    who = (f"; by editor2 `art_ext` (S170: art past $7F / $7C / $7A spills into the 4 MB ROM's"
+           "\n; banks $80+, taken LAST) — PROJECT_COMPILER §2.23." if ext else
+           f"; by editor2 `art{bank:02x}`, S107 P3.10 part 2a — PROJECT_COMPILER §2.23).")
+    head = [f"; ART BANK ${bank:02X} — new art for ORIGINAL monsters (gamedata.art; generated",
+            who,
+            "; S170: every stream = the smaller of its literal copy and a compressed re-encode",
+            "; (art.pack; the game's own art format).",
+            "; Self-ID byte, pointer table at $4001 (the resolver reads",
+            "; $<bank>:$4001 + index*2), the LZ streams. A re-arted species' gfx-ID",
+            "; (bank<<8 | index) is written into ROM0 MonsterBattleGfxTable (battle) /",
+            "; the eight follower gfx-ID tables (walking). No art = an all-zero bank,",
+            "; exactly like the original ROM.", "",
+            (f'SECTION "ROM Bank ${bank:03X}", ROMX[$4000], BANK[${bank:02X}]' if ext else
+             f'SECTION "Art Bank ${bank:02X}", ROMX[$4000], BANK[${bank:02X}]')]
+    if not entries_:
+        return "\n".join(head + ["    ds $4000, $00", ""])
+    out = head + [f"    db ${bank:02X}                          ; bank self-ID at $4000",
+                  "", f"ArtPtrs_{bank:02X}:                  ; pointer table @ $4001"]
+    for i, (label, _s) in enumerate(entries_):
+        out.append(f"    dw {label:<20} ; index {i} (gfx-ID ${bank:02X}{i:02X})")
+    out.append("")
+    used = 1 + 2 * len(entries_)
+    for label, s in entries_:
+        out.append(f"{label}:   ; {len(s)} B")
+        for o in range(0, len(s), 16):
+            out.append("    db " + ", ".join(f"${x:02x}" for x in s[o:o + 16]))
+        used += len(s)
+    if ext:      # like every bank $80+: rgblink fills the rest with $00 (the space meter
+        out += ["", f"; used {used} of {BANK_SIZE} (the rest $00)", ""]   # counts the payload)
+    else:
+        out += ["", f"    ds $8000 - @, $00   ; zero pad (used {used} of {BANK_SIZE})", ""]
+    return "\n".join(out)
+
+
 def _emit_bank(bank):
     def emit(prj, warnings):
-        t = tables(prj)
-        entries_ = t['banks'][bank]
-        head = [f"; ART BANK ${bank:02X} — new art for ORIGINAL monsters (gamedata.art; generated",
-                f"; by editor2 `art{bank:02x}`, S107 P3.10 part 2a — PROJECT_COMPILER §2.23).",
-                "; Self-ID byte, pointer table at $4001 (the resolver reads",
-                "; $<bank>:$4001 + index*2), the LZ streams. A re-arted species' gfx-ID",
-                "; (bank<<8 | index) is written into ROM0 MonsterBattleGfxTable (battle) /",
-                "; the eight follower gfx-ID tables (walking). No art = an all-zero bank,",
-                "; exactly like the original ROM.", "",
-                f'SECTION "Art Bank ${bank:02X}", ROMX[$4000], BANK[${bank:02X}]']
-        if not entries_:
-            return "\n".join(head + ["    ds $4000, $00", ""])
-        out = head + [f"    db ${bank:02X}                          ; bank self-ID at $4000",
-                      "", f"ArtPtrs_{bank:02X}:                  ; pointer table @ $4001"]
-        for i, (label, _s) in enumerate(entries_):
-            out.append(f"    dw {label:<20} ; index {i} (gfx-ID ${bank:02X}{i:02X})")
-        out.append("")
-        used = 1 + 2 * len(entries_)
-        for label, s in entries_:
-            out.append(f"{label}:   ; {len(s)} B")
-            for o in range(0, len(s), 16):
-                out.append("    db " + ", ".join(f"${x:02x}" for x in s[o:o + 16]))
-            used += len(s)
-        out += ["", f"    ds $8000 - @, $00   ; zero pad (used {used} of {BANK_SIZE})", ""]
-        return "\n".join(out)
+        return bank_text(prj, bank)
     emit.__name__ = f"emit_bank_{bank:02x}"
     return emit
+
+
+def ext_bank_file(bank):
+    return f"bank_{bank:03x}.asm"
+
+
+def ext_bank_files(prj):
+    """{bank: file} of the art's ext banks (S170; {} = none)."""
+    return {b: ext_bank_file(b) for b in ext_banks(prj)}
+
+
+def emit_ext_banks(prj, warnings):
+    """{target: text} for the multi emitter (none while the art fits $7F/$7C/$7A)."""
+    return {f'file:patches/{ext_bank_file(b)}': bank_text(prj, b) for b in ext_banks(prj)}
 
 
 REGIONS = ([('art_battle_gfx', 'patches/bank_000.asm', emit_battle_gfx, 0x00),

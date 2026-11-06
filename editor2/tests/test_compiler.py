@@ -1446,11 +1446,16 @@ def test_art_s107():
        'ArtBattle_9' in b7f and 'ArtWalk_9' in b7f and 'ArtWalk_214' in b7f
        and b7f.index('ArtBattle_9:') < b7f.index('ArtWalk_9:') < b7f.index('ArtWalk_214:')
        and 'ds $4000, $00' in outa['patches/bank_07c.asm'])
-    # -- budget: more than the three banks hold
+    # -- budget: more than the three banks hold (S170: it spills into banks $80+, last)
     many = {str(i): {'battle': {'art': 'assets/art/t_b.bin'}, 'follower': {'art': 'assets/art/t_f.bin'}}
             for i in range(60)}
-    expect_error("S107 art: art over the three art banks is refused (with the byte count)",
-                 _art_fixture(many, fx), 'do not fit')
+    try:
+        out60, _, _ = compile_data(_art_fixture(many, fx))
+        fit = True
+    except C.CompileError as e:
+        fit = str(e)
+    ok("S107 art (S170): 60 fully re-arted monsters build (no longer refused at the three banks)",
+       fit is True, str(fit)[:200])
     fifty = {k: v for k, v in many.items() if int(k) < 50}
     try:
         compile_data(_art_fixture(fifty, fx))
@@ -12427,6 +12432,181 @@ def test_s168(with_rom=False):
         test_s168_rom(tmp, rid)
 
 
+def _s170_mirror_fixture():
+    """S170: the example + EVERY original monster re-arted the way the S170 demo does it
+    (examples/s170_mirror_demo: own pose mirrored, own walking colours 1/2 swapped, own walk
+    style) -> (project data, {sid: (battle picture, walking picture)})."""
+    import importlib.util as _iu
+    spec = _iu.spec_from_file_location('s170demo', os.path.join(REPO, 'examples', 's170_mirror_demo',
+                                                                 'build_demo.py'))
+    demo = _iu.module_from_spec(spec)
+    spec.loader.exec_module(demo)
+    from editor2.core.sheet_import import literal_stream
+    from editor2.core.sprite_render import species_layout_id
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    ents, fx, pics = {}, {}, {}
+    for sid in range(215):
+        b = demo.mirrored_pose(bytes.fromhex(ms[str(sid)]['battle']['tile_bytes_hex']))
+        f = demo.swapped_walk(bytes.fromhex(ms[str(sid)]['follower']['tile_bytes_hex']))
+        fx[f'assets/art/m{sid}_b.bin'] = literal_stream(b)
+        fx[f'assets/art/m{sid}_f.bin'] = literal_stream(f)
+        ents[str(sid)] = {'battle': {'art': f'assets/art/m{sid}_b.bin'},
+                          'follower': {'art': f'assets/art/m{sid}_f.bin',
+                                       'layout': species_layout_id(sid)[0]}}
+        pics[sid] = (b, f)
+    return _art_fixture(ents, fx), pics
+
+
+def _asm_streams(text):
+    """{label: bytes} of an art bank's streams from its generated text."""
+    out, cur = {}, None
+    for ln in text.splitlines():
+        m = re.match(r'^(Art(?:Battle|Walk)_\d+):', ln)
+        if m:
+            cur = m.group(1)
+            out[cur] = bytearray()
+        elif cur and ln.startswith('    db '):
+            out[cur] += bytes(int(x.strip()[1:], 16) for x in ln[7:].split(';')[0].split(','))
+        elif cur and ln.strip() and not ln.startswith('    db '):
+            cur = None
+    return {k: bytes(v) for k, v in out.items()}
+
+
+def test_s170(with_rom=False):
+    """S170 (the user: "expand the monster graphics" — more than ≈58 re-arted originals):
+    gamedata.art spills past $7F / $7C / $7A into banks $80+ (taken LAST), every stream
+    stored as the smaller of its literal copy and a compressed re-encode (art.pack); the
+    encoder's match search indexed (same output, ≈ 11× faster)."""
+    from dwm import sprite_codec as SC
+    from editor2.core import art as A
+    from editor2.core.project import Project
+    import random as _rnd
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    # -- the encoder: indexed search == the full scan, byte for byte
+    pays = []
+    for base_, skip in ((0x2B9F, 0), (0x49DF, 0x10)):
+        for i in range(215):
+            e = base_ + 2 * (i + skip)
+            g = rom[e] | rom[e + 1] << 8
+            pays.append(SC.decode(SC.read_stream(rom, SC.gfxid_stream_offset(rom, g)[3])))
+    r = _rnd.Random(170)
+    pays += [bytes(r.randrange(r.choice([2, 4, 16, 200])) for _ in range(r.choice([40, 576, 2048])))
+             for _ in range(30)] + [bytes(2048), bytes([7]) * 576]
+
+    def scan_encode(pl, mk):
+        keep = SC._find_match
+        SC._find_match = lambda d_, p_, _i=None: SC._find_match_scan(d_, p_)
+        try:
+            return SC.encode(pl, marker=mk)
+        finally:
+            SC._find_match = keep
+    diff = 0
+    for pl in pays:
+        mk = next((b for b in range(256) if b not in set(pl)), SC.choose_marker(pl))
+        try:
+            fast = SC.encode(pl, marker=mk)
+        except SC._MarkerCollision:
+            fast = 'collision'
+        try:
+            slow = scan_encode(pl, mk)
+        except SC._MarkerCollision:
+            slow = 'collision'
+        diff += fast != slow
+    ok(f"S170: the indexed encoder == the full scan on {len(pays)} payloads (430 original "
+       "monster pictures + random)", diff == 0, f'{diff} differ')
+    # -- pack: the same picture, never larger
+    lits = [SC.encode_safe(pl, literal_only=True) for pl in pays[:430]]
+    packed = [A.pack(x) for x in lits]
+    ok("S170: pack(literal) decodes to the same picture and is never larger",
+       all(SC.decode(p_) == pl for p_, pl in zip(packed, pays)) and
+       all(len(p_) <= len(x) for p_, x in zip(packed, lits)), '')
+    saved = 1 - sum(map(len, packed)) / sum(map(len, lits))
+    ok(f"S170: compression saves ≈ 31 % on the 430 original pictures (measured {saved:.1%})",
+       0.25 < saved < 0.40, f'{saved:.3f}')
+    # -- the example: no art -> no art bank $80+, no owner
+    prj0 = Project(base(), os.path.dirname(EXAMPLE))
+    prj0.repo_root = REPO
+    ok("S170: the example has no art -> no art bank $80+",
+       'monster art' not in prj0.ext_bank_owners().values(), prj0.ext_bank_owners())
+    # -- all 215 re-arted
+    d, pics = _s170_mirror_fixture()
+    out, prj, _w = compile_data(d)
+    owners = prj.ext_bank_owners()
+    art_b = sorted(b for b, w_ in owners.items() if w_ == 'monster art')
+    ok("S170: 215 re-arted -> the art spills into banks $80+, taken LAST (after every other kind)",
+       bool(art_b) and all(b > o for b in art_b for o, w_ in owners.items() if w_ != 'monster art'),
+       owners)
+    ok("S170: 215 fully re-arted monsters need ≈ 8 banks in all (3 art banks + ≈ 5 banks $80+)",
+       len(art_b) <= 6, art_b)
+    for b in art_b:
+        ok(f"S170: art bank ${b:02X} = a whole file (self-ID, ArtPtrs, streams; no ds)",
+           f'patches/bank_{b:03x}.asm' in out and f'db ${b:02X}' in out[f'patches/bank_{b:03x}.asm']
+           and 'ds $8000' not in out[f'patches/bank_{b:03x}.asm'], '')
+    ok("S170: bank_ext.asm INCLUDEs the art banks",
+       all(f'INCLUDE "bank_{b:03x}.asm"' in out['patches/bank_ext.asm'] for b in art_b), '')
+    streams = {}
+    for b in list(A.ART_BANKS) + art_b:
+        streams.update(_asm_streams(out[f'patches/bank_0{b:02x}.asm' if b < 0x80
+                                        else f'patches/bank_{b:03x}.asm']))
+    bad = [k for k, v in streams.items()
+           if SC.decode(v) != pics[int(k.split('_')[1])][0 if 'Battle' in k else 1]]
+    ok("S170: all 430 emitted streams decode to their monster's picture", len(streams) == 430
+       and not bad, f'{len(streams)} streams; wrong {bad[:4]}')
+    bg = region_bytes(out, 'patches/bank_000.asm', 'art_battle_gfx')
+    gids = [bg[2 * i] | bg[2 * i + 1] << 8 for i in range(215)]
+    ok("S170: the battle table names the art banks (home banks first, in species order)",
+       {g >> 8 for g in gids} == set(A.ART_BANKS) | set(art_b) and
+       [g >> 8 for g in gids] == sorted((g >> 8 for g in gids),
+                                        key=lambda b: (list(A.ART_BANKS) + art_b).index(b)), '')
+    used, cap = A.usage(prj)
+    ok("S170: usage counts the packed bytes (+2 a pointer) past the three banks' capacity",
+       used == sum(len(v) + 2 for v in streams.values()) and used > cap, (used, cap))
+    # -- the ROM is full: the art cannot take another bank -> an error in words
+    from editor2.core import project as PJ
+    keep = PJ.EXT_BANK_LAST
+    try:
+        PJ.EXT_BANK_LAST = 0x82
+        prj2 = Project(d, '/tmp/_t_proj')
+        prj2.repo_root = REPO
+        try:
+            A.place(prj2)
+            err = ''
+        except A.ArtError as e:
+            err = str(e)
+    finally:
+        PJ.EXT_BANK_LAST = keep
+    ok("S170: no bank left -> an art error naming the full ROM", 'the ROM is full' in err, err[:160])
+    if with_rom:
+        from editor2.core import builder as B
+        outdir = '/tmp/_t_s170'
+        C.write_outputs(out, outdir)
+        romp, sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        rb = open(romp, 'rb').read()
+        S = B.parse_sym(sym)
+
+        def wd(o):
+            return rb[o] | rb[o + 1] << 8
+
+        def off_(lab):
+            b_, a_ = S[lab]
+            return b_ * 0x4000 + (a_ - 0x4000 if a_ >= 0x4000 else a_)
+        badb = [i for i in range(215) if SC.decode(SC.read_stream(rb, SC.gfxid_stream_offset(
+            rb, wd(off_('MonsterBattleGfxTable') + 2 * i))[3])) != pics[i][0]]
+        badw = []
+        for lab, skip in (('ScreenTransDataTable', 16), ('FollowerGfxTable06', 16),
+                          ('FollowerGfxTable07', 16), ('FollowerGfxTable09', 16),
+                          ('FollowerGfxTable0B', 16), ('FollowerGfxTable12', 16),
+                          ('FollowerGfxTable18', 0), ('FollowerGfxTable59', 0)):
+            badw += [(lab, i) for i in range(215) if SC.decode(SC.read_stream(
+                rb, SC.gfxid_stream_offset(rb, wd(off_(lab) + 2 * (i + skip)))[3])) != pics[i][1]]
+        ok("S170 ROM: every battle-table row -> the BUILT ROM's stream == the picture",
+           not badb, badb[:6])
+        ok("S170 ROM: every row of all eight walking copies -> the ROM's stream == the picture",
+           not badw, badw[:6])
+        ok("S170 ROM: every art bank $80+ starts with its own number",
+           all(rb[b * 0x4000] == b for b in art_b), '')
+
+
 def test_s169():
     """S169 (ROADMAP P3.12 residual (a)): the baby of a cross (editor2/core/cross.py, the
     Breeding tab's "Try a cross" page) — the S130 raising model asked and explained; the
@@ -13557,6 +13737,7 @@ def main():
     test_s168('--rom' in sys.argv)
     test_s168r2()
     test_s169()
+    test_s170('--rom' in sys.argv)
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

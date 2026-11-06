@@ -7851,3 +7851,33 @@ pedigree names read from save records, `tools/walk_cross.py`), not reverse engin
 residual's "not decoded" is a claim like any other — grep the subsystem's reference doc and
 TOOLS_AND_DATA for its routine names before scoping RE; and a session that decodes a residual's
 subject closes the residual line in the ROADMAP too.
+
+## S170 — monster art in banks $80+, compressed
+
+### A stub's scratch bytes inside the stub's own code
+**Symptom:** the speed stub (`tools/walk_art.py` step `stub`) never reached its marker: every
+unpack "took" 120 frames and every picture was wrong. **Root cause:** the stub (26 bytes from
+`$DEC0`) stored LY to `$DED0` / `$DED1` — inside itself; the first store rewrote its own
+`ld de, gfx-ID` operand. **Fix:** the samples at `$DEDA` / `$DEDB` (after the code, before the marker
+`$DEDC`). **Rule:** lay a stub out on paper — code, then scratch, then the marker — and assert the code
+length against the scratch address before running it.
+
+### A negative control that crashes the game tests nothing
+**Symptom:** the first `--negative` (bit 7 of every bank $80+ gfx-ID cleared) failed everything, the
+$7C monster too, and CONTINUE landed in map $2F. **Root cause:** a gfx-ID into banks $02-$06 makes
+the decoder read code bytes as a header (any length) — it overwrote WRAM; the run said only "a
+broken ROM breaks". **Fix:** rotate each art bank $80+'s pointer table by one within its kind:
+every gfx-ID there names another VALID picture of the same size — the game runs, exactly the
+monsters stored in banks $80+ fail (19), the home-bank ones pass. **Rule:** a negative control must
+keep the game running and break exactly the claim under test; and the expectations come from the
+BUILT ROM, never from the copy the control mutated (the first static check read the mutated copy's
+tables and "passed").
+
+### An optimisation with a proof: same output, not "equivalent output"
+`sprite_codec._find_match` scanned every earlier offset (12 s for 430 pictures). The encoder only
+uses a match of 4+ bytes, so only offsets sharing the next 4 bytes can matter: an index of 4-byte
+keys gives the SAME (offset, length) — the lowest offset among the longest — whenever the answer is
+used. Every user of the encoder (battle animation sheets, the title, the sheet import) gets the same
+bytes, which the unchanged pin and test_s170's 462-payload equality prove. **Rule:** when speeding up
+an encoder other builds depend on, keep its tie-breaking exactly and prove byte equality against
+the old path kept beside it (`_find_match_scan`).

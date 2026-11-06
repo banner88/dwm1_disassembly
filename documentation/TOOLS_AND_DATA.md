@@ -2327,3 +2327,16 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/app/cross_page.py` | `MonPic` (a battle pose via `sprite_qt.species_art` + role + caption) × 3 under the parents; `battle_rows` (cached per document revision); the baby's line under the egg's, Resistances under the AI table (six + tooltip); line-based minimum heights | test_app `s169_window_and_cross` (pictures == `species_art`; a palette edit redraws) |
 | `editor2/app/breeding_tab.py` | the small Try a cross box: the three field icons (`species_icon`) with the baby button on their row | the same |
 | `editor2/help/58_breeding.md` ("The pictures"), `img/sub_breeding_cross.png` / `tab_breeding.png` (regenerated); `_revision.md` / `editor2/__init__.py` `S169 r2` | | test_app help checks |
+
+## S170 rows (monster art past the three art banks: banks $80+, compressed; built S170, NOT yet user-tested)
+
+| File | What | Verified |
+|---|---|---|
+| `editor2/core/art.py` | `pack` (the smallest of the file / its literal / a compressed re-encode, cached by content), `place` (first fit $7F / $7C / $7A, then banks $80+ taken LAST via `_number_earlier_kinds` + `Project._take_ext_bank('monster art')`; cached `_art_plan`), `ext_banks` / `ext_bank_files` / `emit_ext_banks`, `bank_text` (ext banks: `ROM Bank $0xx`, no `ds`), `usage` counts packed bytes | test_compiler `test_s170` (+ `--rom`), S107 budget case (60 build) |
+| `editor2/core/project.py` (`stream_plan` drops `_art_plan`; `ext_bank_owners` + art), `emitters.py` (`ext_bank_files` + art; registry `art_ext`) | the art banks as the last ext kind | the same |
+| `dwm/sprite_codec.py` | `_find_match` with a 4-byte-key index (built by `encode`) — the same output, ≈ 11× faster; `_find_match_scan` = the old full scan, kept as the proof | test_s170: 462 payloads byte-equal; the example pin unchanged |
+| `editor2/core/capacity.py` (`art` row: no own limit, shown with the ROM-space part), `monsters.py` (`art_capacity` doc), `app/monsters_tab.py` (meter + Name & art note) | the editor half | test_app `s170_art_space` |
+| `editor2/help/52_monsters.md`, `90_limits.md`; `_revision.md` / `editor2/__init__.py` `S170` | help | test_app help checks |
+| `tools/walk_art.py` (NEW) | PyBoy on the user's save: static (tables → ROM streams → pictures), the decode log (every `WaitDMATransfer` / `WaitLCDTransfer` unpack of a monster's art == its picture; no original stream), followers after CONTINUE and after a party swap to banks $80+, the field menu's pages, three forced battles, the farm (its plain monster NPCs $3A-$4C unpack the ORIGINAL streams ROM0 `$2ADF` names — by design), the 430-stream stub + speed (LY-sampled; a literal reference staged in banks $F0+ of the ROM copy); `--negative` rotates each art bank $80+'s pointer table within its kind | 47 / 47 on the S170 demo; `--negative` 25 FAIL |
+| `examples/s170_mirror_demo/build_demo.py` (NEW) | the user's project + all 215 originals re-arted: pose mirrored, walking colours 1 / 2 swapped, own walk style | test ROM `DWM-S170-mirror-test.gbc` |
+| `disassembly/bank_000.asm`, `patches/bank_000.asm` (`MonsterBattleGfxTable` header), `disassembly/bank_007.asm`, `patches/bank_007.asm` (the two dead INFO-page reads); ROM0 `$2ADF` (the NPC sheet table, both trees) | comments only | clean build `1ca6579…` |

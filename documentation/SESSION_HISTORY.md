@@ -1,5 +1,64 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-05 (Session 168 — **ROADMAP P3.3g BUILT: PAGE 2 — A TILESET HOLDS 256 TILES, THE SECOND 128 IN
+> VRAM BANK 1 (ATTRIBUTE BIT 3, GBC ONLY); THE WHOLE-GAME CENSUS (THE ORIGINAL NEVER TOUCHES BANK 1'S TILES), THE ENGINE
+> (PAGE-2 BANKS, A GDMA COPY AT EVERY ROOM-SHEET LOAD, BOXES / WINDOWS CLEAN OVER PAGE 2, ANIMATIONS ON PAGE 2), THE
+> COMPILER AND THE EDITOR (EVERY SLOT SEARCH SPILLS ONTO PAGE 2)** (the user: "This session I want: more tiles per room
+> item"; the audit conferred → "Different rooms will have mostly different tilesets … having access to diverse tiles in a
+> given room is the most important thing"; "Walkability per room is completely fine"; "GBC only yes absolutely";
+> "Include animation"; "I just want it to work"; "Do it all this session"). **Built S168, NOT yet user-tested.**
+> Test ROM **`DWM-S168-page2-test.gbc`** (`020d8dd2…`, patched) = the user's project + THE NUMBERED GALLERY
+> (`examples/s168_page2_demo/build_demo.py`; way in: the GALLERY CURATOR, Cities_FOUNT (3, 4)): two screens of 256 numbered
+> tiles (page 1 plain, page 2 striped; 208 different on screen 0), the curator's YES / NO, a SHOPKEEPER, GRANDPA, a VAULT
+> KEEPER, a LIBRARIAN, the SPARRING SLIME, a blinking page-2 strip. Example pin `7aae0e95…` (patched; was `26a4faf1…`,
+> patched, historical) — the example has no page 2; the pin moves with the engine (bank $73 / $77 / the animation player).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler
+> `--rom` ALL 2025 PASSED at start (in a worktree of HEAD).
+> **Census (`tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json`):** VRAM bank 1 `$8000-$97FF` seeded at
+> power-on — the title, 8 gates' battles (25 played out) + the field menu, the 519-scene cutscene census (68 runs): no
+> write, no BG cell with attribute bit 3; positive control reported.
+> **Engine:** page-2 banks (ext banks, the LAST kind; `templates/page2_copy.asm` / `page2_home.asm`): bank $0B's
+> room-sheet regions → `Page2Room` (`wPage2On` $D5BC; directory by region + map id) → the RAW sheet by GDMA (64 × 32 B
+> at HBlank) + tiles `$E0-$FF` mirrored; bank $73 `BoxAttrActive` / bank $77 `PushAttrActive` answer in a page-2 room,
+> ScreenPush writes attribute + tile per cell there (`PushRowBoth` — tiles-then-attributes showed 2-6 frames of bank-1
+> letters at the shop / the Vault, KEY_LESSONS S168); the own-animation player copies to the bank in bit 0 of its
+> destination word (`wTileAnimDstVBK` $D5BD). `TEMPLATE_SIZE[$77]` 2889, `[$6C]` 378, `ANIM_TEMPLATE_SIZE` 290.
+> **Compiler / editor:** tile value `$100-$17F` = page-2 tile n; a 4096-byte raw2bpp = page 1 + page 2; the compiler
+> derives bit 3 per (attr grid, tile grid) (`page2.derived_attr_items`, appended last — a project without page 2 compiles
+> as before); every free-slot search covers 256 slots, page 1 first; walkability = the map byte (page-2 n walks like
+> page-1 n); statues keep page 1 (`Document.page1_room`); the Tileset tab / metatile editor show both pages.
+> PROJECT_COMPILER §2.76, ROOM_DATA_FORMAT "Page 2: the second 128 tiles (S168)". `EDITOR_REVISION` S168.
+> **Measured:** `tools/walk_page2.py` on the user's save 55 / 55 (every cell's byte + bank, bank 1 == page 2, the blink,
+> 7 overlays sampled every 2 frames, the room whole after each, leaving clears `wPage2On`); `--negative` (`wPage2On`
+> forced 0) 6 FAIL. **A / B:** the user's project WITHOUT page 2, built with HEAD vs the S168 engine, on the user's save:
+> all 35 screens of its 12 rooms identical (both tile maps + attributes, VRAM banks 0 / 1, palettes). **Annotation:** comments in both trees (bank $00 WaitDMATransfer's VRAM-bank rule, bank $0B's hook /
+> census, bank $07's `$E0` fill); clean build `1ca6579…`.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2049 PASSED (+ `test_s168` / `--rom`); test_app `--rom` PASS
+> (+ `s168_page2`; S122's borrow into a full theme now lands on page 2 without the "release vocabulary" question; the GUI
+> build == the pin `7aae0e95…`, patched).
+> **S168 r2 — the user tested and reported "Breed/hatch/exit menu (talk with breeding NPC) creates visual glitches of
+> words on the screen"** (Grandpa in the gallery: "EXIT INFO" over the floor). Not a page-2 fault: the breeding / farm /
+> egg screens draw into the ROOM's page-1 slots while the room shows (ROOM_DATA_FORMAT "The game's menus draw into the
+> room's tile slots" — S126 / S127 knew the slots; the gallery placed tiles in all 256). Measured (PyBoy, a new room-art
+> check: a visible room cell whose slot no longer holds its graphic): Grandpa writes `$40-$48` / `$61-$7A`, a master
+> `$38-$3F` / `$78-$7C` while the room shows; code-read sets (`services.BORROWED_SLOTS`): breeding `$38-$7F`, farm
+> `$60-$6F`, eggs `$70-$78`. **Editor fix (no engine change, the pin stays `7aae0e95…`):** a project sheet whose rooms
+> have such a screen (a service NPC's kind, or a raw `op $04 3/5/6/7/11`) keeps those slots free — status `service`
+> (brown on the Tileset tab), out of every slot search / twin / reuse; `make_service_npc` and the project open
+> (`_migrate_service_slots`) move tiles placed there to a free slot on their side (page 2 first, lowest numbers), every
+> layout following; the validator warns (`services.borrowed_problems`, project tilesets only). The user's project: 26
+> tiles of "Boss: Temptation (Servant)" (2 breeders) move to page 2 on open. The gallery keeps page-1 `$38-$7F` empty
+> (168 tiles on screen 0). Test ROM **`DWM-S168r2-page2-test.gbc`** (`7a4edcf9…`, patched). `walk_page2.py` 62 / 62
+> (+ the room-art check per overlay; the S168 build FAILS it at Grandpa = the negative; `--negative` 6 FAIL);
+> test_compiler `test_s168r2`; checks: verify_integrity PASS, test_compiler `--rom` ALL 2061 PASSED (REGRESSION == the
+> pin), test_app `--rom` PASS. Known, unchanged (help 68): while a breeding menu is open, sprites over tiles numbered
+> `$40`+ (Grandpa) hide — on page 2 too (the gallery's Grandpa stands on `p2 $40`). `EDITOR_REVISION` S168 r2.
+> **Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it")** — the editor half (import / borrow / draw into a full tileset, the brown slots,
+> the open-time move in the user's project) NOT yet user-tested.
+> **Next:** the user's test (`DWM-S168r2-page2-test.gbc`: Grandpa's menu over the gallery; the gallery's windows over the
+> striped tiles; the editor: import / borrow / draw into a full tileset, the Tileset tab's page 2 and its brown slots);
+> P3.17 packaging; the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 167 — **THE OUTSTANDING FIXES F2 + F3 + P3.H: A STALE PYSIDE WRAPPER (THE S166
 > "QStandardItem.triggered" NOTE), THE PATCH-SPACE AUDIT (EVERY BYTE A PATCHED BUILD WRITES INTO A BANK THE GAME USES —
 > ONE LIVE OVERLAP FOUND AND FIXED: ROM0's GROOVE ROW TABLE), THE HELP TAB'S GLOSSARY, "?" BUTTONS AND SCREENSHOTS**

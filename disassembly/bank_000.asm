@@ -9175,6 +9175,16 @@ Data_2AD5:
     ld [bc], a
     jr nc, Data_2ADD
 
+; S170: ROM0 $2ADF (2 bytes into Data_2ADD; disassembled as code — the bytes are
+; data) = the NPC SHEET gfx-ID table: one word per plain NPC sprite id (96 words up
+; to MonsterBattleGfxTable), read by bank $0B Call_00b_4839 (the room load) and bank
+; $06 ReloadNPCSheets. Ids $3A-$4C name the ORIGINAL walking streams of 19 monsters
+; (one stream shared by two tables): $3A Slime, $3B DragonKid, $3C MadCat, $3D Wyvern,
+; $3E Toadstool, $3F ArmyAnt, $40 Demonite, $41 Hork, $42 BombCrag, $43 Hargon,
+; $44 Dracky, $45 Trumpeter, $46 FloraMan, $47 Florajay, $48 BoneSlave, $49 SpikyBoy,
+; $4A CactiBall, $4B HammerMan, $4C Metaly — the game's own decorative monster NPCs
+; (the farm's). gamedata.art repoints only the species tables, so these keep the
+; original art (measured on the farm, tools/walk_art.py step `farm`).
 Data_2ADD:
     nop
     nop
@@ -9308,6 +9318,10 @@ Data_2B91:
 ; Read by SetFld_466d ($07): A=species; word = [$2B9F + species*2].
 ; gfx-ID = (bank<<8)|index -> per-bank pointer table $<bank>:$4001+index*2
 ; -> LZ stream -> DMA to VRAM $8B00. 221 entries; banks $2F,$32-$36.
+; S170 (measured, tools/walk_art.py): every reader (13 sites; bank $07 has two
+; more reads whose DE is overwritten unused) hands the word straight to
+; WaitDMATransfer / WaitLCDTransfer -> DecompressTileLayout, which maps ANY bank
+; $01-$FF — a gfx-ID may name a bank $80+ of the patched 4 MB ROM.
 MonsterBattleGfxTable:
     dw $2f11, $2f12, $2f13, $2f14, $2f15, $2f16, $2f17, $2f18
     dw $2f19, $2f1a, $2f1b, $2f1c, $2f1d, $2f1e

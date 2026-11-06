@@ -136,9 +136,16 @@ Select an original monster (0-214) and open **Name & art**:
 
 New walking art walks in the walk style chosen in the sheet window (the
 best fit to the sheet's six frames unless you pick another). The list and the
-canvas show the new art at once. Space: the art of re-drawn original monsters shares
-three banks (about 49 KB, shown under the list) — about 58 monsters with new
-battle AND walking art. Only the changes are saved (`gamedata.art`).
+canvas show the new art at once. Space: every one of the 215 original monsters
+can have new art. The build stores each picture compressed (the game's own
+format — the same picture, about a third smaller; it loads as fast as the
+game's own art). The first ≈ 84 re-drawn monsters fill three banks of their
+own (about 49 KB, shown under the list); the rest go into the ROM space your
+rooms and texts share (all 215 take about 125 KB in all — the 4 MB ROM has
+about 2 MB of it). Only the changes are saved (`gamedata.art`). The game's
+own monster NPCs in its rooms (the farm's Slime, Dracky, …) have separate
+drawings and keep their original look; a monster NPC you place in your own
+room shows the monster's new art.
 TERRY? and the four summons have no art page: they are special battle
 entries, not monsters — only their moves and stats change.
 
@@ -183,7 +190,8 @@ parents' names follow your renames.
 
 The meters under the list: new species used of 19, the bytes their names
 take of the ≈ 290 the game has free, the art bytes of the 16 KB new-species
-art bank, and the bytes used by new art for original monsters (three banks).
+art bank, and the bytes used by new art for original monsters (as stored —
+compressed; past the three banks' ≈ 49 KB it goes on in the ROM space).
 
 ## Putting a monster in a gate
 

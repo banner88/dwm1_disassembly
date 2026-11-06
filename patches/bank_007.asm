@@ -1487,9 +1487,9 @@ jr_007_49c6:
     ld a, h
     adc $2b
     ld h, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    ld e, [hl]                      ; S170: a DEAD read — the battle gfx-ID of the
+    inc hl                          ;   second parent loaded into DE and overwritten
+    ld d, [hl]                      ;   unused (no unpack here; the pose is not drawn)
     ld de, WinLayout_07_724F
     call LoadFld_68dc
     ld de, WinLayout_07_765B
@@ -1506,9 +1506,9 @@ jr_007_49c6:
     ld a, h
     adc $2b
     ld h, a
-    ld e, [hl]
-    inc hl
-    ld d, [hl]
+    ld e, [hl]                      ; S170: a DEAD read too — DE (this parent's battle
+    inc hl                          ;   gfx-ID) is not used: the two small parent
+    ld d, [hl]                      ;   pictures below come from SaveFld_66b1
     ld hl, $cad6
     call LoadFld_6dba
     ld hl, $8600

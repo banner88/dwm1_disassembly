@@ -832,7 +832,8 @@ class MonstersMixin:
         self._put_art(sid, {})
 
     def art_capacity(self):
-        """(bytes used, capacity) of the art banks $7F/$7C/$7A."""
+        """(bytes used as stored — compressed, S170 —, capacity of the art banks
+        $7F/$7C/$7A; past it the art goes on in banks $80+)."""
         from editor2.core import art as A
         return A.usage(self._project())
 

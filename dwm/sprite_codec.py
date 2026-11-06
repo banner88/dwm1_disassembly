@@ -99,7 +99,43 @@ def decode(stream: bytes) -> bytes:
     return bytes(out[:declen])
 
 
-def _find_match(data: bytes, pos: int):
+def _find_match(data: bytes, pos: int, _index=None):
+    """Greedy longest match earlier in the output buffer (absolute window):
+    the LOWEST offset among the longest matches. The encoder only uses a match
+    of 4+ bytes, so (S170) when `_index` (4-byte key -> ascending offsets, built
+    by encode) is given only the offsets that share the next 4 bytes are tried —
+    the same (off, len) whenever len >= 4, ≈ 50× faster (`_find_match_scan` is
+    the original full scan; test_compiler S170 proves equal output on every
+    vanilla monster picture and the fixture payloads)."""
+    if _index is None:
+        return _find_match_scan(data, pos)
+    if pos + 4 > len(data):
+        return 0, 0
+    cands = _index.get(data[pos:pos + 4])
+    if not cands:
+        return 0, 0
+    start = max(0, pos - MAX_BACK_OFFSET)
+    cap = min(MAX_COPY, len(data) - pos)
+    best_off = best_len = 0
+    import bisect
+    for i in range(bisect.bisect_left(cands, start), len(cands)):
+        off = cands[i]
+        if off + 4 > pos:                 # pos - off < 4: a copy shorter than 4
+            break
+        maxln = min(cap, pos - off)
+        if maxln <= best_len:
+            continue
+        ln = 4
+        while ln < maxln and data[off + ln] == data[pos + ln]:
+            ln += 1
+        if ln > best_len:
+            best_len, best_off = ln, off
+            if best_len >= cap:
+                break
+    return best_off, best_len
+
+
+def _find_match_scan(data: bytes, pos: int):
     """Greedy longest match earlier in the output buffer (absolute window)."""
     best_off = best_len = 0
     start = max(0, pos - MAX_BACK_OFFSET)
@@ -142,8 +178,11 @@ def encode(payload: bytes, marker: int | None = None, literal_only: bool = False
 
     pos = 0
     n = len(payload)
+    index = {}                            # S170: 4-byte key -> ascending offsets
+    for o in range(n - 3):
+        index.setdefault(payload[o:o + 4], []).append(o)
     while pos < n:
-        off, ln = _find_match(payload, pos)
+        off, ln = _find_match(payload, pos, index)
         # encoding a back-ref costs 3 bytes; only worth it for len>=4 and never
         # when the literal byte equals the marker (which would be misread)
         if ln >= 4:

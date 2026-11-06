@@ -1444,6 +1444,12 @@ Per species — every knob is a decoded, proven surface:
   original game; each action one undo step (the asset files are snapshotted).
   Walking art always uses layout 0 here (2a USER-CONFIRMED 2026-10-01, except
   the still library icon → 2b); the family-icon editor (G-P) is 2c.
+- **As built S170 (the user: "expand the monster graphics"; PROJECT_COMPILER §2.77).** All 215
+  original monsters can be re-arted: past the three art banks the art goes on in the ROM space
+  (banks $80+, the last kind), stored compressed. The Monsters tab's meter: "New art for original
+  monsters: N / 49,149 bytes (+ M in the ROM space)"; the Name & art note says all 215 can have new
+  art and where the bytes went; the Capacity tab's row has no limit of its own ("the ROM space row:
+  the ROM is full"). Built S170, NOT yet user-tested.
 - **As built S107 2b (ROADMAP P3.10 part 2b — walk styles; core
   `editor2/core/walk_layouts.py`, PROJECT_COMPILER §2.23 "Walking layouts";
   USER-CONFIRMED 2026-10-01).** The sheet dialog (all three modes) packs the walking

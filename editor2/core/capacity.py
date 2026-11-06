@@ -483,10 +483,21 @@ def _project_rows(prj, data, rows):
 
     def art():
         return AR.usage(prj)[0]
-    add('art', 'Gates, battles and monsters', 'New art for the game\'s monsters (≈58 '
-        'monsters with battle and walking art)', art, AR.capacity(), 'the build stops',
-        'Monsters', shown=lambda u: f'{kb(u)} of {kb(AR.capacity())}',
-        tech='art banks $7F / $7C / $7A')
+    # S170: past the three art banks the art spills into the ROM space (banks $80+, taken
+    # last) — the three banks are no longer where the build stops
+    def art_shown(u):
+        cap = AR.capacity()
+        if u <= cap:
+            return f'{kb(u)} of {kb(cap)} (then the ROM space)'
+        return f'{kb(u)} — {kb(cap)} in its own banks, {kb(u - cap)} in the ROM space'
+    rows_before = len(rows)
+    add('art', 'Gates, battles and monsters', 'New art for the game\'s monsters (all 215 can '
+        'be re-drawn; stored compressed — ≈ 84 fit their own three banks, the rest go into '
+        'the ROM space)', art, None, 'the ROM space row: "the ROM is full"', 'Monsters',
+        shown=art_shown,
+        tech='art banks $7F / $7C / $7A, then banks $80+ (taken last; S170)')
+    if len(rows) > rows_before and rows[-1]['used'] is not None:
+        rows[-1]['level'] = 'ok'
     from . import music as M
 
     # S147 (ROADMAP ARC CAP5): one id per song (S116: one per channel — 95 ids were
