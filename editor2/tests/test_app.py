@@ -3978,6 +3978,109 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s171_app_window(app, w):
+    """S171 (the user: "when I change tabs a random empty window pops up that never loads"
+    + a screenshot over the Arena tab; "when I open editor its a bit slow at first"):
+    (1) a widget a page drops never becomes a window — the Arena class page shown twice in
+    one event-loop turn left its first "opens when" table as a top-level window (Qt's
+    queued show after setParent(None)); the same pattern in the Encounters room battle
+    and the Skills tab's parameters; qt_safe.discard + the app's StrayWindowGuard;
+    (2) tabs are made on first need: opening a project makes the Rooms tab only;
+    (3) no `setParent(None)` in the editor without a hide() first (static)."""
+    import re
+    import glob
+    from PySide6.QtWidgets import QApplication, QWidget
+
+    w.show()
+    app.processEvents()
+    # windows earlier tests made on purpose (s130 shows a BalanceTab of its own) are not strays
+    before = {id(x) for x in QApplication.topLevelWidgets() if x.isVisible()}
+
+    def strays():
+        return [type(x).__name__ for x in QApplication.topLevelWidgets()
+                if x.isVisible() and x.parent() is None and x is not w
+                and id(x) not in before and type(x).__name__ not in ('QMenu',)]
+    # (1) the Arena race, measured S171: two show_class in one turn
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    doc = w.session.doc
+    had_arena = doc.your_arena() is not None
+    if not had_arena:
+        doc.data.setdefault('custom', {})['arena'] = {}
+    try:
+        at.refresh()
+        at.list.setCurrentRow(1)
+        app.processEvents()
+        if at.class_box.isVisibleTo(at):
+            at.class_box.show_class('G')
+            at.class_box.show_class('G')
+            app.processEvents()
+        for r in (2, 3, 4, 1):
+            at.list.setCurrentRow(r)
+        app.processEvents()
+    finally:
+        if not had_arena:
+            doc.data['custom'].pop('arena', None)
+            at.refresh()
+    assert not strays(), f'Arena: a dropped widget became a window: {strays()}'
+    # the Skills tab's parameter rows, twice in one turn
+    sk = w.skills_tab
+    w.tabs.setCurrentWidget(sk)
+    app.processEvents()
+    if sk.list.count() > 2:
+        sk.list.setCurrentRow(1)
+        sk.list.setCurrentRow(2)
+        sk.list.setCurrentRow(1)
+    app.processEvents()
+    assert not strays(), f'Skills: a dropped widget became a window: {strays()}'
+    # the guard (the app installs it in main()): a stray is never shown, and is named
+    from editor2.app.qt_safe import StrayWindowGuard
+    said = []
+    g = StrayWindowGuard(app, said.append)
+    try:
+        lost = QWidget()
+        lost.show()
+        app.processEvents()
+        assert not lost.isVisible() and g.stopped == ['QWidget'] and said, (g.stopped, said)
+    finally:
+        app.removeEventFilter(g._filter)
+    # (3) static: every setParent(None) in the editor's pages is preceded by hide()
+    bad = []
+    for f in glob.glob(os.path.join(REPO, 'editor2', 'app', '**', '*.py'), recursive=True):
+        lines = open(f, encoding='utf-8').read().splitlines()
+        for i, ln in enumerate(lines):
+            if '.setParent(None)' in ln and not ln.lstrip().startswith('#') \
+                    and not any('.hide()' in x for x in lines[max(0, i - 3):i]) \
+                    and not f.endswith('qt_safe.py'):
+                bad.append(f'{os.path.relpath(f, REPO)}:{i + 1}')
+    assert not bad, f'setParent(None) without a hide() first (use qt_safe.discard): {bad}'
+    # (2) lazy tabs: a fresh open makes the Rooms tab only; naming a tab makes it
+    path = w.session.project_dir
+    w.open_project(path)
+    made = [n for n in w.LAZY_TABS if w.built_tab(n) is not None]
+    assert made == [], f'tabs made at open: {made}'
+    i = w.tabs.indexOf(w.tabs.widget(0))
+    assert i == 0 and w.tabs.built(0) is w.rooms_tab
+    mt = w.monsters_tab                       # named -> made
+    assert w.built_tab('monsters_tab') is mt and w.tabs.indexOf(mt) >= 0
+    k = next(j for j in range(w.tabs.count()) if w.tabs.tabText(j) == 'Breeding')
+    assert w.tabs.built(k) is None
+    w.tabs.setCurrentIndex(k)                 # shown -> made, with its "?" corner buttons
+    app.processEvents()
+    bt = w.built_tab('breeding_tab')
+    assert bt is not None and w.tabs.currentWidget() is bt
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QTabWidget
+    tws = [t for t in bt.findChildren(QTabWidget)]
+    assert all(t.cornerWidget(Qt.TopRightCorner) is not None for t in tws), 'no "?" on a late tab'
+    w.tabs.setCurrentIndex(0)
+    app.processEvents()
+    print(f'OK: S171 no stray window (Arena double show, Skills rows, the guard stops and names '
+          f'one, no bare setParent(None)); tabs made on first need ({len(w.LAZY_TABS)} lazy, '
+          f'Rooms at open, Monsters when named, Breeding when shown with its "?")')
+
+
 def s170_art_space(app, w):
     """S170 (the user: "expand the monster graphics"): new battle poses for all 215 originals —
     more than the three art banks hold — is no error any more: the Monsters tab's meter and
@@ -5988,6 +6091,7 @@ def main():
     s167_context_help(app, w)
     s169_window_and_cross(app, w)
     s170_art_space(app, w)
+    s171_app_window(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

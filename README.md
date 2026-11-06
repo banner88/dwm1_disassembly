@@ -94,6 +94,8 @@ dwm/             Python support package (ROM access, text codec)
 editor2/         THE editor: core/ (headless compiler + live renderer + document model),
                  app/ (PySide6 shell + Rooms tab), example-project/, tests/
                  Run:  pip install PySide6 Pillow numpy   then   python3 -m editor2.app
+                 The Mac app (S171): Releases → "DWM1 Editor (latest)" (built by
+                 .github/workflows/editor-app.yml), or  python3 tools/package_app.py
 editor/          Legacy Streamlit editor — frozen, superseded by editor2/
 data/            DWM-original.gbc (user-provided, gitignored)
 ```

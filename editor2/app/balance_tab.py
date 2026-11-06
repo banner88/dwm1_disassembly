@@ -945,7 +945,10 @@ class StoryPage(QWidget):
         self.banner.setText(' '.join(msgs))
         self.banner.setVisible(bool(msgs))
         if self.proc is None:
-            self.b_anchor.setVisible(bool(prob))
+            # S171: the packaged app's files are read-only — the anchor it carries is the
+            # one built for its simulator; the build button is a checkout's tool
+            from editor2.app import appmode
+            self.b_anchor.setVisible(bool(prob) and not appmode.APP)
             done = self.anchor_parts_done()
             self.anchor_status.setText(f'{done} parts already saved — the build continues from '
                                        'there.' if (prob and done) else '')

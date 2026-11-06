@@ -13,6 +13,9 @@ game room, or your own frames drawn in the editor. [Animated tiles](15_animated_
 **Animation (battle)** — what a skill shows in battle; new ones are made from the
 frames of the game's 45. [Animations](57_animations.md)
 
+**App (DWM1 Editor.app)** — the editor as one Mac app with its own Python, RGBDS and
+SameBoy inside; it keeps the original ROM's copy in its own folder. [Getting started](00_start.md)
+
 **Arena** — the game's class matches, Starry Night and Monster Grandpa's match;
 **Your arena** = your own copies of the arena rooms. [Arena](53_arena.md),
 [Your arena](69_your_arena.md)

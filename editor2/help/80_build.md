@@ -3,7 +3,13 @@
 ![The Build & Play tab](img/tab_build_play.png)
 
 **Build & Play** → *Build ROM* (Ctrl+B; saves first) or *Validate project*
-(checks without building). *Play in emulator* (Ctrl+R) runs the last build.
+(checks without building). *Play in emulator* (Ctrl+R) runs the last build — in the
+app, its own SameBoy (File → *Set emulator command…* still picks another one).
+
+**What a build runs (S171):** the editor's compiler, then RGBDS v0.6.1 (rgbasm, rgblink,
+rgbfix) in a temporary folder of its own — nothing is written into the editor's files and
+no `make` is needed. The app carries RGBDS; a checkout uses the one on your PATH or the
+folder set with File → *Set RGBDS folder…*.
 
 The ROM you get is **4 MB** (S134) — twice the original game, so there is room
 for a large romhack. Every modern Game Boy Color emulator plays it; on a real

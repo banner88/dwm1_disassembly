@@ -1211,3 +1211,11 @@ mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this sessio
 |---|---|
 | ROOM_DATA_FORMAT S126 table "Grandpa (6) / a master (5) / Take… (11) — `$40-$7F`" | ✓ + MORE: the master's party list starts at `$38` (bank $09 `SetFld9_5f4d`, `$9380` + 8 × `$90`); PyBoy while the room shows: Grandpa `$40-$48` / `$61-$7A`, a master `$38-$3F` / `$78-$7C` — the S168 r2 note under the table |
 | PROJECT_STATE S168 "every window of the game opens over page-2 cells … letters and art must stay clean" (walk 55 / 55) | ❌ INCOMPLETE — the walk checked bank-1 letters only; Grandpa drew into page-1 slots the gallery used. r2: the room-art check, 62 / 62 |
+
+**S171 (the packaged app; the stray window):**
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| EDITOR_DESIGN §4 (S72) "PyInstaller `--windowed` (`.app` codesigned/notarized on macOS)" | ❌ SUPERSEDED S171 | the editor starts its own scripts with `sys.executable` (Playback server, ROM checker, Balance anchor) — a frozen app would start a second editor; a standalone CPython inside the app instead, ad hoc signed (no Developer ID, user decision) — EDITOR_DESIGN §4.1 |
+| PROJECT_COMPILER §3 pipeline "stage patches/ over disassembly/, `make`, … ALWAYS restore the tree" | ❌ SUPERSEDED S171 | the build assembles in a private temporary folder (disassembly/ = rgbasm's include path), no `make`; byte-identical (the pin, the user's project, game.sym) — test_compiler `test_s171` |
+| EDITOR_DESIGN §5.0 S169 "23 tab switches … leave the window unchanged" (offscreen) read as "no tab click opens a window" | ✓ for the size, ❌ for windows — the S169 run switched tabs only; two refreshes in one turn on the Arena class page left a top-level `FlagTerms` (KEY_LESSONS S171) | test_app `s171_app_window` |

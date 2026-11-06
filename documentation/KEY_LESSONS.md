@@ -7881,3 +7881,54 @@ used. Every user of the encoder (battle animation sheets, the title, the sheet i
 bytes, which the unchanged pin and test_s170's 462-payload equality prove. **Rule:** when speeding up
 an encoder other builds depend on, keep its tie-breaking exactly and prove byte equality against
 the old path kept beside it (`_find_match_scan`).
+
+## S171 — the packaged app; the stray window; tabs made on first need
+
+### setParent(None) without hide() can turn a dropped widget into a window
+- **Symptom:** (user, screenshot) "when I change tabs a random empty window pops up that never
+  loads, and I have to close it" — over the Arena tab, sometimes after a minute of use.
+- **Root cause:** measured offscreen on the user's project. `ClassArenaBox.show_class` ran twice
+  in one event-loop turn (a quick change of class; the refresh after an edit). The first call
+  put a new `FlagTerms` into a SHOWN page — `QLayout.addWidget` then queues
+  `_q_showIfNotHidden` on it; the second call took it out with `setParent(None)`, which hides
+  the widget but CLEARS its "explicitly hidden" mark. The queued call then ran on a parentless
+  widget: `setVisible(True)` = a top-level window. Same pattern in the Encounters room-battle
+  list and the Skills tab's parameter rows. The S166-S170 offscreen checks never saw it: they
+  looked for windows after single refreshes.
+- **Fix:** `qt_safe.discard(w)` — `hide()` FIRST (the mark stays: Qt skips the queued show), then
+  unparent, then `deleteLater()`; the app's `StrayWindowGuard` keeps any parentless plain widget
+  off screen and names it in the Build log; test_app `s171_app_window` (negative: the old
+  unparenting gives 5 FlagTerms windows) + a static check of every `setParent(None)`.
+- **Rule:** never `setParent(None)` a widget that was ever in a shown layout without `hide()` on
+  the line before (use `qt_safe.discard`). To find an "empty window" report, watch
+  `QApplication.topLevelWidgets()` for parentless visible widgets after TWO refreshes in one turn.
+
+### A lazy tab must not be made while the tabs are being removed
+- **Symptom:** (S171, measured) after a re-open, seven tabs of the PREVIOUS project were built.
+- **Root cause:** `QTabWidget.clear()` removes tabs one by one; the current index walks across
+  the remaining ones and `currentChanged` fires for each — the "make the page shown" slot made
+  them.
+- **Fix:** `PageTabs.clear()` sets a flag the slot honours; unmade wrappers are deleted.
+- **Rule:** a slot on `currentChanged` that does work must ignore the changes a `clear()` /
+  `removeTab` makes.
+
+### The packaged app: a real interpreter, a read-only tree, a writable workspace
+- **Lesson (design, S171):** this editor runs its own scripts as separate processes with
+  `sys.executable` and loads tools/*.py by path. A freezer (PyInstaller) makes `sys.executable`
+  the app — every helper process would start a second editor. Bundling a standalone CPython
+  keeps the code unchanged; the app's files stay read-only and a workspace of symbolic links
+  (+ a real `data/`) gives every `__file__`-derived REPO a writable data folder.
+- **Rule:** in the app, never `Path(__file__).resolve()` to find the repository (it leaves the
+  workspace); use `os.path.abspath`. Never write into the repository at run time (the builder
+  assembles in a temporary folder since S171).
+
+### Test a read-only app as a user that is not root
+- **Symptom:** (S171) the app's self-check passed as root with the app `chmod -R a-w`, and failed
+  as an ordinary user: `PermissionError … /tmp/dwm-build-…/bank_000.asm`.
+- **Root cause:** root ignores file modes. `shutil.copy` copies the MODE too: the app's read-only
+  patch files arrived read-only in the build's temporary folder, and the compiler's file of the
+  same name could not replace them.
+- **Fix:** `shutil.copyfile` for every copy out of the app (the builder's stage, the new
+  project's template, Playback's ROM copy); the check runs as `su tester` on a read-only copy.
+- **Rule:** a "read-only" test run as root proves nothing; copy files out of a read-only tree with
+  `copyfile` (content only).

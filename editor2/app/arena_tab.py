@@ -512,8 +512,11 @@ class ClassArenaBox(QGroupBox):
                                 f'<b>{name} class opens when</b> (every condition; none = always '
                                 'open — a closed class shows "-" in the class menu):')
         if self.terms is not None:
+            # S171: hide BEFORE unparenting — else Qt's queued show (from the last
+            # addWidget) turns the old table into an empty window (qt_safe.discard)
+            from editor2.app.qt_safe import discard
             self.terms_holder.removeWidget(self.terms)
-            self.terms.setParent(None)
+            discard(self.terms)
         self.terms = self.FlagTerms(doc, sp.get('opens_when') or [])
         self.terms.setMinimumHeight(100)
         self.terms_holder.addWidget(self.terms)

@@ -101,8 +101,9 @@ class BuildPlayTab(QWidget):
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, defer_open=False):
         super().__init__()
+        self._lazy_wrappers = {}
         self.settings = QSettings('dwm1_disassembly', 'DWM1Editor')
         PN.SHOW_IDS = self.settings.value('view/show_ids', False) in (True, 'true', '1', 1)
         self.session = None
@@ -115,7 +116,34 @@ class MainWindow(QMainWindow):
         self._restore_rom_status()
         last = self.settings.value('recent/project')
         if last and os.path.exists(last):
-            self.open_project(last)
+            if defer_open:
+                # S171: the window shows first, the project opens a moment later
+                from PySide6.QtCore import QTimer
+                self.statusBar().showMessage(f'Opening {os.path.basename(os.path.normpath(last))}…')
+                QTimer.singleShot(50, lambda: self._open_deferred(last))
+            else:
+                self.open_project(last)
+
+    def ask_for_rom_if_missing(self):
+        """S171: the packaged app's first start — the original ROM is never in the app;
+        ask for it once (it is copied to the app's data folder)."""
+        from editor2.app import appmode
+        if not appmode.APP or os.path.exists(os.path.join(REPO, 'data', 'DWM-original.gbc')):
+            return
+        QMessageBox.information(
+            self, 'The original game',
+            'The editor needs the original Dragon Warrior Monsters ROM (Game Boy Color, '
+            f'MD5 {ORIGINAL_MD5}).\n\nIt is not part of the app. Choose your copy of the '
+            'ROM next — the app keeps a copy of it in its own folder.')
+        self._locate_rom()
+
+    def _open_deferred(self, path):
+        from PySide6.QtGui import QGuiApplication
+        QGuiApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            self.open_project(path)
+        finally:
+            QGuiApplication.restoreOverrideCursor()
 
     # ---------------- UI scaffolding ----------------
     def _build_ui(self):
@@ -162,165 +190,222 @@ class MainWindow(QMainWindow):
         self.rom_status = QLabel()
         self.statusBar().addPermanentWidget(self.rom_status)
 
+    # S171 (user: "when I open editor its a bit slow at first"): every tab but Rooms is
+    # made the first time it is shown or named (`self.monsters_tab` …) — opening a
+    # project built all 23 pages before (6-8 s measured on the user's project).
+    LAZY_TABS = ('import_tab', 'cutscenes_tab', 'gates_tab', 'families_tab', 'monsters_tab',
+                 'resistances_tab', 'dialogue_tab', 'arena_tab', 'skills_tab', 'anims_tab',
+                 'breeding_tab', 'encounters_tab', 'music_tab', 'items_tab', 'shops_tab',
+                 'services_tab', 'progression_tab', 'world_tab', 'balance_tab', 'capacity_tab')
+
+    def __getattr__(self, name):
+        """A tab not made yet is made when it is named (S171)."""
+        lazy = self.__dict__.get('_lazy_wrappers')
+        if lazy is not None and name in lazy:
+            lazy[name].ensure()
+            if name in self.__dict__:
+                return self.__dict__[name]
+        raise AttributeError(name)
+
+    def built_tab(self, name):
+        """The tab `name` if it has been made — never makes it (shutdown / flush paths)."""
+        return self.__dict__.get(name)
+
+    def _lazy(self, attr, title, make):
+        """Add a tab whose page `make()` builds on first need; the page is kept as
+        self.<attr> (S171)."""
+        def factory():
+            page = make()
+            self.__dict__[attr] = page
+            return page
+        i = self.tabs.addLazyTab(factory, title)
+        self._lazy_wrappers[attr] = self.tabs.wrapper(i)
+
     def _fill_tabs(self):
-        old = getattr(self, 'cutscenes_tab', None)
+        old = self.built_tab('cutscenes_tab')
         if old is not None:                      # S118: stop its recorder / playback
             try:
                 old.shutdown()
             except RuntimeError:
                 pass
-            self.cutscenes_tab = None
-        old = getattr(self, 'balance_tab', None)
+        old = self.built_tab('balance_tab')
         if old is not None:                      # S130: stop its background computations
             try:
                 old.shutdown()
             except RuntimeError:
                 pass
-            self.balance_tab = None
+        for name in self.LAZY_TABS:              # the next project's tabs are made anew
+            self.__dict__.pop(name, None)
+        self._lazy_wrappers = {}
         self.tabs.clear()
-        if self.session:
-            self.rooms_tab = RoomsTab(self.session)
+        s = self.session
+        if s:
+            self.rooms_tab = RoomsTab(s)
             self.rooms_tab.status.connect(self.statusBar().showMessage)
             self.rooms_tab.gatesRequested.connect(self._open_gates_for)
             self.rooms_tab.hintsRequested.connect(self._open_hints)       # S158
             self.tabs.addTab(self.rooms_tab, 'Rooms')
-            from editor2.app.import_tab import ImportTab
-            self.import_tab = ImportTab(self.session)
-            self.tabs.addTab(self.import_tab, 'Import art')
-            # S118 (P3.8 part A): every scene of the game and the project —
-            # storyboard, recorded frames, Playback in the real game
-            from editor2.app.cutscenes_tab import CutscenesTab
-            self.cutscenes_tab = CutscenesTab(self.session)
-            self.tabs.addTab(self.cutscenes_tab, 'Cutscenes')
+
+            def import_tab():
+                from editor2.app.import_tab import ImportTab
+                return ImportTab(s)
+
+            def cutscenes():
+                # S118 (P3.8 part A): every scene of the game and the project —
+                # storyboard, recorded frames, Playback in the real game
+                from editor2.app.cutscenes_tab import CutscenesTab
+                return CutscenesTab(s)
+
+            def gates():
+                # S100 (P3.7b part 1): custom rooms served on gate floors
+                from editor2.app.gates_tab import GatesTab
+                t = GatesTab(s)
+                t.openRoomRequested.connect(self._open_gate_room)
+                return t
+
+            def families():
+                # S104 (P3.10a): families — members, dialogue voice, Spirit names
+                from editor2.app.families_tab import FamiliesTab
+                return FamiliesTab(s)
+
+            def monsters():
+                # S106 (P3.10 part 1): species data, enemy rows, new species;
+                # "Texts that name it…" opens the Text tab filtered (S108)
+                from editor2.app.monsters_tab import MonstersTab
+                t = MonstersTab(s)
+                t.showDialogue.connect(self._show_dialogue_for)
+                return t
+
+            def resistances():
+                # S159 (ROADMAP E16): every monster's 27 resistances in groups
+                from editor2.app.resistances_tab import ResistancesTab
+                t = ResistancesTab(s)
+                t.openSkill.connect(self._open_skill)
+                return t
+
+            def text():
+                # S150 (P3.6): the Text tab — the game's own texts EDITABLE
+                from editor2.app.text_tab import TextTab
+                return TextTab(s)
+
+            def arena():
+                # S109 (P3.10b): fees, masters, 1-3 monster teams, the teams' rows
+                from editor2.app.arena_tab import ArenaTab
+                return ArenaTab(s)
+
+            def skills():
+                # S110 (P3.11): the original skills
+                from editor2.app.skills_tab import SkillsTab
+                return SkillsTab(s)
+
+            def anims():
+                # S112 (P3.11e): new battle animations from the stock frames
+                from editor2.app.anims_tab import AnimationsTab
+                return AnimationsTab(s)
+
+            def breeding():
+                # S113 (P3.12): recipes, depth, try a cross, generate a tree
+                from editor2.app.breeding_tab import BreedingTab
+                return BreedingTab(s)
+
+            def encounters():
+                # S114 (P3.13a): wild-monster lists, gate floor plans, room battles
+                from editor2.app.encounters_tab import EncountersTab
+                return EncountersTab(s)
+
+            def music():
+                # S116 (P3.13b): the song library, preview on the game's own engine
+                from editor2.app.music_tab import MusicTab
+                return MusicTab(s)
+
+            def items():
+                # S151 (ROADMAP E9): every item's record + the project's new items
+                from editor2.app.items_tab import ItemsTab
+                return ItemsTab(s)
+
+            def shops():
+                # S117 (P3.13c): the vanilla lists, the project's own shops, prices
+                from editor2.app.shops_tab import ShopsTab
+                return ShopsTab(s)
+
+            def services():
+                # S126 (P3.14e1): service NPCs, their menu lines, medal rewards
+                from editor2.app.services_tab import ServicesTab
+                t = ServicesTab(s)
+                t.navigate.connect(self.navigate_to)
+                return t
+
+            def progression():
+                # S124 (P3.14a): every flag — what turns it ON / OFF, what checks it
+                from editor2.app.flags_tab import ProgressionTab
+                t = ProgressionTab(s)
+                t.navigate.connect(self.navigate_to)
+                return t
+
+            def world():
+                # S98 (P3.7): the World graph sits before Balance, as in §5.0
+                from editor2.app.world_tab import WorldTab
+                t = WorldTab(s)
+                t.openRequested.connect(self._open_world_node)
+                return t
+
+            def capacity():
+                # S145 (ROADMAP ARC CAP4d): every ceiling in words — the status bar's
+                # meter measures, this tab shows its report
+                from editor2.app.capacity_tab import CapacityTab
+                t = CapacityTab(s)
+                t.navigate.connect(self.navigate_to)
+                t.openTab.connect(self.open_tab_titled)
+                m = getattr(self, 'space_meter', None)
+                if m is not None:
+                    m.reported.connect(t.show_report)
+                    t.measureRequested.connect(m.measure_async)
+                    if m.report is not None:
+                        t.show_report(m.report)
+                return t
+
+            self._lazy('import_tab', 'Import art', import_tab)
+            self._lazy('cutscenes_tab', 'Cutscenes', cutscenes)
+            self._lazy('gates_tab', 'Gates', gates)
+            self._lazy('families_tab', 'Families', families)
+            self._lazy('monsters_tab', 'Monsters', monsters)
+            self._lazy('resistances_tab', 'Resistances', resistances)
+            self._lazy('dialogue_tab', 'Text', text)
+            self._lazy('arena_tab', 'Arena', arena)
+            self._lazy('skills_tab', 'Skills', skills)
+            self._lazy('anims_tab', 'Animations', anims)
+            self._lazy('breeding_tab', 'Breeding', breeding)
+            self._lazy('encounters_tab', 'Encounters', encounters)
+            self._lazy('music_tab', 'Music', music)
+            self._lazy('items_tab', 'Items', items)
+            self._lazy('shops_tab', 'Shops', shops)
+            self._lazy('services_tab', 'Services', services)
+            self._lazy('progression_tab', 'Progression && Flags', progression)
+            self._lazy('world_tab', 'World', world)
         else:
             self.rooms_tab = None
             self.tabs.addTab(_stub('Rooms', 'P3.3', 'Open a project (File → Open) to edit rooms.'),
                              'Rooms')
-        for title, box, blurb in STUB_TABS:
-            if title == 'Gates' and self.session:
-                # S100 (P3.7b part 1): custom rooms served on gate floors
-                from editor2.app.gates_tab import GatesTab
-                self.gates_tab = GatesTab(self.session)
-                self.gates_tab.openRoomRequested.connect(self._open_gate_room)
-                self.tabs.addTab(self.gates_tab, 'Gates')
-                continue
-            if title == 'Monsters':
-                # S104 (P3.10a): families — members, dialogue voice, Spirit names
-                if self.session:
-                    from editor2.app.families_tab import FamiliesTab
-                    self.families_tab = FamiliesTab(self.session)
-                    self.tabs.addTab(self.families_tab, 'Families')
-                else:
+            for title, box, blurb in STUB_TABS:
+                if title == 'Monsters':
                     self.tabs.addTab(_stub('Families', 'P3.10a', 'Family members, dialogue, Spirit names (open a project).'),
                                      'Families')
-                if self.session:
-                    # S106 (P3.10 part 1): species data, enemy rows, new species
-                    from editor2.app.monsters_tab import MonstersTab
-                    self.monsters_tab = MonstersTab(self.session)
-                    self.tabs.addTab(self.monsters_tab, 'Monsters')
-                    # S159 (ROADMAP E16): every monster's 27 resistances in groups,
-                    # what each blocks and which skills test it (Earth included)
-                    from editor2.app.resistances_tab import ResistancesTab
-                    self.resistances_tab = ResistancesTab(self.session)
-                    self.tabs.addTab(self.resistances_tab, 'Resistances')
-                    self.resistances_tab.openSkill.connect(self._open_skill)
-                    # S108 (P3.10 part 3): every text in the game, searchable;
-                    # "Texts that name it…" on the Monsters tab opens it filtered.
-                    # S150 (P3.6): the Text tab — the game's own texts EDITABLE,
-                    # one sub-tab per kind (replaces the read-only Dialogue tab)
-                    from editor2.app.text_tab import TextTab
-                    self.dialogue_tab = TextTab(self.session)
-                    self.tabs.addTab(self.dialogue_tab, 'Text')
-                    self.monsters_tab.showDialogue.connect(self._show_dialogue_for)
-                    # S109 (P3.10b): the arena — fees, masters, 1-3 monster teams,
-                    # the teams' enemy rows
-                    from editor2.app.arena_tab import ArenaTab
-                    self.arena_tab = ArenaTab(self.session)
-                    self.tabs.addTab(self.arena_tab, 'Arena')
-                    continue
-            if title == 'Skills' and self.session:
-                # S110 (P3.11): the original skills — names, SKIL text, MP,
-                # learning, power, targets, AI, behaviour flags, looks
-                from editor2.app.skills_tab import SkillsTab
-                self.skills_tab = SkillsTab(self.session)
-                self.tabs.addTab(self.skills_tab, 'Skills')
-                # S112 (P3.11e): new battle animations from the stock frames
-                from editor2.app.anims_tab import AnimationsTab
-                self.anims_tab = AnimationsTab(self.session)
-                self.tabs.addTab(self.anims_tab, 'Animations')
-                continue
-            if title == 'Encounters' and self.session:
-                # S114 (P3.13a): every wild-monster list, gate floor plans,
-                # room battles, flag variants
-                from editor2.app.encounters_tab import EncountersTab
-                self.encounters_tab = EncountersTab(self.session)
-                self.tabs.addTab(self.encounters_tab, 'Encounters')
-                continue
-            if title == 'Music' and self.session:
-                # S116 (P3.13b): the song library (the game's songs, DWM2, MIDI)
-                # with preview on the game's own sound engine, MIDI import,
-                # room / gate / battle music
-                from editor2.app.music_tab import MusicTab
-                self.music_tab = MusicTab(self.session)
-                self.tabs.addTab(self.music_tab, 'Music')
-                # S117 (P3.13c): shops — the five vanilla lists, the project's
-                # own shops (sold by NPCs made shopkeepers), item prices
-                # S151 (ROADMAP E9): every item's record, words, battle half;
-                # the project's NEW items (ids 44-127) working like a game item
-                from editor2.app.items_tab import ItemsTab
-                self.items_tab = ItemsTab(self.session)
-                self.tabs.addTab(self.items_tab, 'Items')
-                from editor2.app.shops_tab import ShopsTab
-                self.shops_tab = ShopsTab(self.session)
-                self.tabs.addTab(self.shops_tab, 'Shops')
-                # S126 (P3.14e1): service NPCs (Vault, farm, library, namer,
-                # Medal Man, eggs, gate guide), their menu lines, medal rewards
-                from editor2.app.services_tab import ServicesTab
-                self.services_tab = ServicesTab(self.session)
-                self.services_tab.navigate.connect(self.navigate_to)
-                self.tabs.addTab(self.services_tab, 'Services')
-                continue
-            if title == 'Breeding' and self.session:
-                # S113 (P3.12): recipes, depth, try a cross, generate a tree
-                from editor2.app.breeding_tab import BreedingTab
-                self.breeding_tab = BreedingTab(self.session)
-                self.tabs.addTab(self.breeding_tab, 'Breeding')
-                continue
-            if title.startswith('Progression') and self.session:
-                # S124 (P3.14a): every flag — what turns it ON / OFF, what checks
-                # it, in words with a link to the place; every trigger; problems
-                from editor2.app.flags_tab import ProgressionTab
-                self.progression_tab = ProgressionTab(self.session)
-                self.progression_tab.navigate.connect(self.navigate_to)
-                self.tabs.addTab(self.progression_tab, 'Progression && Flags')
-                continue
-            if title == 'Balance':
-                # S98 (P3.7): the World graph sits before Balance, as in §5.0
-                if self.session:
-                    from editor2.app.world_tab import WorldTab
-                    self.world_tab = WorldTab(self.session)
-                    self.world_tab.openRequested.connect(self._open_world_node)
-                    self.tabs.addTab(self.world_tab, 'World')
-                else:
+                if title == 'Balance':
                     self.tabs.addTab(_stub('World', 'P3.7', 'Room / warp graph (open a project).'),
                                      'World')
-                # S130 (P3.15a): the difficulty curve — the original game's
-                # (read-only, precomputed) against the project's; teams; what-if
-                from editor2.app.balance_tab import BalanceTab
-                self.balance_tab = BalanceTab(self.session)
-                self.tabs.addTab(self.balance_tab, 'Balance')
-                continue
-            self.tabs.addTab(_stub(title, box, blurb), title)
-        if self.session:
-            # S145 (ROADMAP ARC CAP4d): every ceiling in words — the status bar's
-            # meter measures, this tab shows its report (open_project wires them)
-            from editor2.app.capacity_tab import CapacityTab
-            self.capacity_tab = CapacityTab(self.session)
-            self.capacity_tab.navigate.connect(self.navigate_to)
-            self.capacity_tab.openTab.connect(self.open_tab_titled)
-            self.tabs.addTab(self.capacity_tab, 'Capacity')
+                    break
+                self.tabs.addTab(_stub(title, box, blurb), title)
+
+        def balance():
+            # S130 (P3.15a): the difficulty curve — the original game's (read-only,
+            # precomputed) against the project's; teams; what-if
+            from editor2.app.balance_tab import BalanceTab
+            return BalanceTab(s)
+        self._lazy('balance_tab', 'Balance', balance)
+        if s:
+            self._lazy('capacity_tab', 'Capacity', capacity)
         else:
-            self.capacity_tab = None
+            self.__dict__['capacity_tab'] = None
         self.build_tab = BuildPlayTab(self)
         self.tabs.addTab(self.build_tab, 'Build && Play')
         from editor2.app.help_tab import HelpTab      # S101 r2
@@ -337,16 +422,12 @@ class MainWindow(QMainWindow):
             context_help.install(self)
 
     def _wire_capacity(self):
-        """S145: the status bar's meter feeds the Capacity tab; a click on the meter
-        opens it; the tab's Measure now asks the meter."""
-        m, t = getattr(self, 'space_meter', None), getattr(self, 'capacity_tab', None)
-        if m is None or t is None:
+        """S145: a click on the status bar's meter opens the Capacity tab (S171: the tab
+        is made then; its own factory connects the meter's reports)."""
+        m = getattr(self, 'space_meter', None)
+        if m is None or self.session is None:
             return
-        m.reported.connect(t.show_report)
-        m.openRequested.connect(lambda: self.tabs.setCurrentWidget(t))
-        t.measureRequested.connect(m.measure_async)
-        if m.report is not None:
-            t.show_report(m.report)
+        m.openRequested.connect(lambda: self.tabs.setCurrentWidget(self.capacity_tab))
 
     def open_tab_titled(self, title):
         """S145: show the tab whose title is `title` (the Capacity tab's rows)."""
@@ -591,6 +672,17 @@ class MainWindow(QMainWindow):
 
     # ---------------- ROM + emulator preferences ----------------
     def _restore_rom_status(self):
+        from editor2.app import appmode
+        if appmode.APP:
+            # S171: the app keeps its own copy (data/ in its workspace) — taken from the
+            # ROM a checkout of the editor was shown, when there is one
+            appmode.ensure_rom(REPO, self.settings)
+            own = os.path.join(REPO, 'data', 'DWM-original.gbc')
+            if os.path.exists(own):
+                self.rom_status.setText('ROM: verified')
+            else:
+                self.rom_status.setText('ROM: not set (File → Locate…)')
+            return
         rom = self.settings.value('rom/path')
         if not rom:
             default = os.path.join(REPO, 'data', 'DWM-original.gbc')
@@ -614,6 +706,12 @@ class MainWindow(QMainWindow):
                                 'Select the unmodified original ROM.')
             return
         self.settings.setValue('rom/path', path)
+        from editor2.app import appmode
+        if appmode.APP:                  # S171: the app's own copy, in its data folder
+            try:
+                appmode.adopt_rom(REPO, path)
+            except OSError as e:
+                QMessageBox.warning(self, 'Locate ROM', f'Could not copy the ROM: {e}')
         self._restore_rom_status()
         if self.session:
             self.session.rebind_build()
@@ -664,7 +762,8 @@ class MainWindow(QMainWindow):
         if os.path.exists(os.path.join(path, 'project.json')):
             raise RuntimeError(f'{path} already contains a project.json')
         os.makedirs(path, exist_ok=True)
-        shutil.copy(os.path.join(tpl, 'project.json'), os.path.join(path, 'project.json'))
+        # copyfile: the packaged app's template is read-only (S171) — the project's copy is not
+        shutil.copyfile(os.path.join(tpl, 'project.json'), os.path.join(path, 'project.json'))
         os.makedirs(os.path.join(path, 'assets'), exist_ok=True)
         import json
         pj = os.path.join(path, 'project.json')
@@ -789,7 +888,7 @@ class MainWindow(QMainWindow):
     def save(self):
         if not self.session:
             return False
-        ct = getattr(self, 'cutscenes_tab', None)        # S119b: a text still being typed
+        ct = self.built_tab('cutscenes_tab')             # S119b: a text still being typed
         if ct is not None and getattr(ct, 'editor', None) is not None:
             try:
                 ct.editor.form.flush()
@@ -824,7 +923,7 @@ class MainWindow(QMainWindow):
     def _mute_toggled(self, on):
         self.settings.setValue('playback/mute', bool(on))
         self.settings.sync()
-        ct = getattr(self, 'cutscenes_tab', None)
+        ct = self.built_tab('cutscenes_tab')
         if ct is not None:
             ct.apply_mute()
         self.statusBar().showMessage('Game playback muted' if on else 'Game playback sound on',
@@ -832,13 +931,13 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, ev):
         if self._confirm_discard():
-            ct = getattr(self, 'cutscenes_tab', None)
+            ct = self.built_tab('cutscenes_tab')
             if ct is not None:
                 try:
                     ct.shutdown()
                 except RuntimeError:
                     pass
-            bt = getattr(self, 'balance_tab', None)
+            bt = self.built_tab('balance_tab')
             if bt is not None:                   # S130
                 try:
                     bt.shutdown()
@@ -949,8 +1048,20 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName('DWM1 Editor')
-    w = MainWindow()
+    # S171: a widget the editor drops can never pop up as an empty window
+    # (editor2/app/qt_safe.py); a stopped one is named in the Build log
+    from editor2.app.qt_safe import StrayWindowGuard
+    holder = {}
+    guard = StrayWindowGuard(app, lambda msg: holder['w'].log.appendPlainText(msg)
+                             if 'w' in holder else print(msg))
+    from editor2.app import appmode
+    appmode.icon_for(app)
+    w = MainWindow(defer_open=True)
+    holder['w'] = w
+    app._stray_guard = guard
     w.show()
+    from PySide6.QtCore import QTimer
+    QTimer.singleShot(400, w.ask_for_rom_if_missing)
     sys.exit(app.exec())
 
 

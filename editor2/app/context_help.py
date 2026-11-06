@@ -291,9 +291,10 @@ def install(mw):
         b.show()
         mw._help_corner = b
     for i in range(tabs.count()):
-        page = tabs.widget(i)
+        # S171: a tab not made yet (page_tabs.addLazyTab) gets its "?" when it is shown
+        page = tabs.built(i) if hasattr(tabs, 'built') else tabs.widget(i)
         title = tab_title(tabs, i)
-        if page is mw.help_tab:
+        if page is None or page is mw.help_tab:
             continue
         for tw in page.findChildren(QTabWidget):
             if tw.cornerWidget(Qt.TopRightCorner) is not None:

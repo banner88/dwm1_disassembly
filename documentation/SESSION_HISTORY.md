@@ -1,5 +1,49 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-05 (Session 169 — **THE WINDOW (NO TAB RESIZES IT ANY MORE; IT REOPENS AS IT WAS CLOSED) + ROADMAP
+> P3.12 RESIDUAL (a): THE BREEDING TAB'S "TRY A CROSS" PAGE — THE BABY ITSELF (MAX LEVEL, STATS, AI, RESISTANCES, GENDER,
+> ITS LEARN QUEUE WITH WHERE EACH SKILL CAME FROM AND THE LEVEL IT LEARNS IT), PARENTS TYPICAL OR FROM A .SAV; THE HELP'S
+> "RAISING MONSTERS"** (the user: "On the editor side, clicking on a different tab resizes the window and I have to make
+> it fullscreen again every time - please fix. But FIRST lets also discuss what is left to implement"; the audit conferred
+> → "Explain the raising stuff?" → "1) Fix window resizing and do the cross stuff, also populate the help tab with
+> relevant info about this. Next session is more than 58 original art."). **Built S169, NOT yet user-tested; byte-neutral
+> (no ROM change: the example pin stays `7aae0e95…`, patched; clean build `1ca6579…`) — no test ROM.**
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (for the user, in chat):** open ROADMAP boxes = P3.17 packaging, P3.11b (optional), CAP5 (as it binds),
+> Phase D annotation; editor residuals (event jingles, the battle's join / party-full window words, master id 239);
+> against the GreatLog outline: varying gate length, the outline's new skill ideas (Echo, Sense, Pedigree, Haunt, Lure,
+> Share, Provoke, Forage), player-set skill priorities, the ≈ 58 re-art budget (banks $7F / $7C / $7A) — **the user
+> chose the re-art budget for S170** ("Next session is more than 58 original art").
+> **The window (measured offscreen on the user's project):** the window's minimum was 1,530 × 911 — the largest page
+> minimum + the tab row (1,669 px of tabs with the macOS style's no-arrows tab bar → 1,696); World 1,526 → 1,666 after its
+> first show, Music 1,477, Cutscenes 1,435; five pages grow on first show, so a tab click re-applied a minimum wider than a
+> laptop screen. NEW `editor2/app/page_tabs.py` (`PageTabs` + `PageScroll`: scrolling tab row, each page in a scroll area
+> sized from its MINIMUM — a `widgetResizable` area scrolled fitting pages: it asks for the height-for-width = the
+> preferred height); `main.py` saves / restores the window geometry + docks; World legend row, three labels wrap. Minimum
+> now 412 × 273; 23 tab switches at 1,440 × 800 leave the window unchanged. EDITOR_DESIGN §5.0 "The window", KEY_LESSONS S169.
+> **Try a cross:** the ROADMAP residual said "not decoded" — stale: S130 decoded and measured breeding / birth / learning
+> (KEY_LESSONS S169). NEW `editor2/core/cross.py` (asks `simulator/raising.py`; `raising.learn_scan(max_known=…)`, default
+> the game's 8) + `editor2/app/cross_page.py` (the Breeding tab's fifth page; the By monster box's **The baby in detail →**).
+> EID 0 (the all-zero row) is skipped as a typical parent's row — `balance.species_rows` too (a picked DrakSlime was made
+> from it). EDITOR_DESIGN §5.4 "As built S169", MONSTER_DATA "Measured on real save records — the Try a cross page (S169)".
+> **Measured:** NEW `tools/walk_cross.py` on the user's save + the user's build: 11 monsters, every ordered pair × 3 (as
+> saved / the pedigree from another master / the mate with a pedigree of strangers), bank $16 entries 0 + 4 stub-called on
+> the staged records == the panel; the first 12 newborns levelled in the game on the panel's RNG trace == its timeline:
+> 330 breeds, 384 level-ups, 2,694 OK / 0 FAIL; `--negative` (k forced 0) 166 FAIL.
+> **Help:** NEW `58_raising.md` "Raising monsters" (joining, level-up order, learning, the egg, the hatch); `58_breeding.md`
+> "Try a cross: the baby" (+ NEW picture `sub_breeding_cross.png`, `tools/help_screenshots.py` SUBTABS); `00_start.md`
+> "The window"; the glossary (Learn queue, Max level, Pedigree names, Raising). `EDITOR_REVISION` S169.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2071 PASSED (+ `test_s169`; REGRESSION == the pin); test_app `--rom`
+> PASS (+ `s169_window_and_cross`; the GUI build == the pin `7aae0e95…`, patched).
+> **S169 r2 — the user: "For try a cross, can you have a picture of the resulting monster (egg) displayed? … Also show
+> the two parents please. … if I modified monster graphics it should reflect that":** pedigree × mate → the egg as battle
+> poses drawn from the project's art (`sprite_qt.species_art`: re-arted / re-coloured originals, new species), the small
+> box's field icons; test_app: pictures == `species_art`, a palette edit redraws (EDITOR_DESIGN §5.4 "S169 r2").
+> `EDITOR_REVISION` S169 r2. Built S169 r2, NOT yet user-tested.
+> **Next:** the user's test (the window in full screen on the Mac across every tab and a restart; Breeding → Try a cross
+> with typical parents and the user's .sav, the pictures); S170 = more than 58 re-arted original monsters (the art banks); P3.17
+> packaging; the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 168 — **ROADMAP P3.3g BUILT: PAGE 2 — A TILESET HOLDS 256 TILES, THE SECOND 128 IN
 > VRAM BANK 1 (ATTRIBUTE BIT 3, GBC ONLY); THE WHOLE-GAME CENSUS (THE ORIGINAL NEVER TOUCHES BANK 1'S TILES), THE ENGINE
 > (PAGE-2 BANKS, A GDMA COPY AT EVERY ROOM-SHEET LOAD, BOXES / WINDOWS CLEAN OVER PAGE 2, ANIMATIONS ON PAGE 2), THE

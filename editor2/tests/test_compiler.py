@@ -12472,6 +12472,45 @@ def _asm_streams(text):
     return {k: bytes(v) for k, v in out.items()}
 
 
+def test_s171(with_rom=False):
+    """S171 (ROADMAP P3.17 — the packaged app): builder.build_rom runs rgbasm / rgblink /
+    rgbfix itself in a private temporary folder (disassembly/ = the include path) — no
+    `make` (a fresh Mac has none) and nothing written into the repository (the app's files
+    are read-only; two builds at once cannot meet in disassembly/)."""
+    import tempfile
+    from editor2.core import builder as B
+    src = open(os.path.join(REPO, 'editor2', 'core', 'builder.py')).read()
+    ok("S171: the builder never runs make", "['make']" not in src and '"make"' not in src)
+    if not with_rom:
+        return
+    dis = os.path.join(REPO, 'disassembly')
+
+    def snap():
+        return {f: os.stat(os.path.join(dis, f)).st_mtime_ns for f in os.listdir(dis)
+                if os.path.isfile(os.path.join(dis, f))}
+    before = snap()
+    fake = tempfile.mkdtemp(prefix='s171-fake-make-')
+    with open(os.path.join(fake, 'make'), 'w') as f:
+        f.write('#!/bin/sh\necho MAKE >> "%s/called"\nexit 99\n' % fake)
+    os.chmod(os.path.join(fake, 'make'), 0o755)
+    keep = os.environ['PATH']
+    os.environ['PATH'] = fake + os.pathsep + keep
+    tmp_before = set(os.listdir(tempfile.gettempdir()))
+    try:
+        out, _prj, _w = C.compile_project(os.path.join(REPO, 'editor2', 'example-project'), REPO)
+        outdir = '/tmp/_t_s171'
+        C.write_outputs(out, outdir)
+        _rom, _sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    finally:
+        os.environ['PATH'] = keep
+    ok("S171: the example builds to the pin without make", md5 == REFERENCE_MD5, md5)
+    ok("S171: make was never called", not os.path.exists(os.path.join(fake, 'called')))
+    ok("S171: disassembly/ untouched (no file added, none rewritten)", snap() == before)
+    left = [d for d in set(os.listdir(tempfile.gettempdir())) - tmp_before
+            if d.startswith('dwm-build-')]
+    ok("S171: the build's temporary folder is removed", not left, str(left))
+
+
 def test_s170(with_rom=False):
     """S170 (the user: "expand the monster graphics" — more than ≈58 re-arted originals):
     gamedata.art spills past $7F / $7C / $7A into banks $80+ (taken LAST), every stream
@@ -13738,6 +13777,7 @@ def main():
     test_s168r2()
     test_s169()
     test_s170('--rom' in sys.argv)
+    test_s171('--rom' in sys.argv)
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

@@ -1049,9 +1049,9 @@ class SkillsTab(QWidget):
             self.announce.setText(_readable(d['announce_text'], d['name']))
 
     def _show_params(self, d):
+        from editor2.app.qt_safe import discard
         for wdg in self.params_widgets:
-            wdg.setParent(None)
-            wdg.deleteLater()
+            discard(wdg)                        # S171: hidden first (no stray window)
         self.params_widgets = []
         P = d['params']
         sid = d['id']

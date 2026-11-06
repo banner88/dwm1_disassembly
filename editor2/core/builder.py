@@ -1,9 +1,11 @@
 """builder.py — stage → rgbasm → ROM + manifest, always restoring the tree.
 
-Uses the SAME staging mechanism as tools/verify_integrity.py check 2 (the
-PATCH_FILES / PATCH_NEW_FILES lists are parsed from that script so there is
-one source of truth): copy patches/ over disassembly/, overlay the
-compiler's generated files, `make`, capture game.gbc + game.sym, restore.
+Uses the SAME overlay as tools/verify_integrity.py check 2 (the PATCH_FILES /
+PATCH_NEW_FILES lists are parsed from that script so there is one source of
+truth): patches/ + the compiler's generated files over disassembly/, assembled,
+game.gbc + game.sym captured. S171: assembled in a private temporary folder
+with disassembly/ as rgbasm's include path — no `make`, the tree is never
+written (build_rom).
 
 The manifest (EDITOR_DESIGN §6) is the debugging bridge: it maps generated
 content back to addresses so a SameBoy break can be traced to the
@@ -25,10 +27,12 @@ def check_toolchain(rgbds_dir=None):
     """Verify rgbasm exists and is exactly v0.6.1 (newer rgbasm changed
     macro/conditional syntax and fails on this project's source with
     'Cannot output data outside of a SECTION' / 'unexpected ENDM').
-    Returns the env dict for `make` (PATH-prefixed if rgbds_dir given)."""
+    Returns the env dict for the RGBDS commands (PATH-prefixed if rgbds_dir
+    given; S171: the packaged app's own RGBDS folder comes next — appmode)."""
     env = os.environ.copy()
-    if rgbds_dir:
-        env['PATH'] = rgbds_dir + os.pathsep + env.get('PATH', '')
+    dirs = [d for d in (rgbds_dir, os.environ.get('DWM_RGBDS_DIR')) if d and os.path.isdir(d)]
+    if dirs:
+        env['PATH'] = os.pathsep.join(dirs + [env.get('PATH', '')])
     try:
         r = subprocess.run(['rgbasm', '--version'], capture_output=True,
                            text=True, env=env)
@@ -73,45 +77,63 @@ def md5(path_or_bytes):
     return hashlib.md5(data).hexdigest()
 
 
+def _run_rgbds(args, cwd, env):
+    r = subprocess.run(args, cwd=cwd, capture_output=True, text=True, env=env)
+    return r.returncode, r.stdout + r.stderr
+
+
 def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
-    """Stage patches + generated over disassembly/, build, capture, restore.
-    rgbds_dir: optional folder holding the v0.6.1 binaries (prepended to
-    PATH for `make`); either way the version is verified first.
-    Returns (rom_path, sym_path, rom_md5)."""
+    """Patches + generated files over disassembly/, assembled, ROM + symbols kept.
+    rgbds_dir: optional folder holding the v0.6.1 binaries (searched before PATH);
+    either way the version is verified first.
+    Returns (rom_path, sym_path, rom_md5).
+
+    S171 (ROADMAP P3.17 — the packaged app): no `make` and nothing written into the
+    repository. A fresh Mac has no `make` (/usr/bin/make only offers to install the
+    developer tools) and the app's own files are read-only. The overlay (patches/ +
+    the compiler's files) is copied into a private temporary folder, which is the
+    working directory of rgbasm; disassembly/ is rgbasm's include path, so a file
+    present in the overlay wins (rgbasm tries the working directory first) and every
+    other INCLUDE / INCBIN is read from the clean tree. The commands are the
+    Makefile's (rgbasm -o game.o game.asm; rgblink -n game.sym -m game.map; rgbfix
+    -v -p 255) — the ROM is byte-identical (the regression pins). Two builds at once
+    can no longer meet in disassembly/ (KEY_LESSONS S163)."""
+    import tempfile
     env = check_toolchain(rgbds_dir)
     dis = os.path.join(repo, 'disassembly')
     patches = os.path.join(repo, 'patches')
     patch_files, patch_new = _patch_lists(repo)
-
-    backups = {}
-    for f in patch_files:
-        p = os.path.join(dis, f)
-        backups[f] = open(p, 'rb').read() if os.path.exists(p) else None
-    created = set()
+    stage = tempfile.mkdtemp(prefix='dwm-build-')
     try:
         # 1. the proven hand-authored overlay
         for f in patch_files + patch_new:
             p = os.path.join(patches, f)
             if os.path.exists(p):
-                shutil.copy(p, os.path.join(dis, f))
+                # copyfile, not copy: the app's files are read-only and copy() would
+                # carry that mode into the stage (the overlay below then fails; S171)
+                shutil.copyfile(p, os.path.join(stage, f))
         # 2. the compiler's generated files layered on top
         gen_patches = os.path.join(generated_dir, 'patches')
         if os.path.isdir(gen_patches):
             for f in sorted(os.listdir(gen_patches)):
-                dst = os.path.join(dis, f)
-                if f not in backups and not os.path.exists(dst):
-                    created.add(f)       # S134: removed again below (bank_08x …)
-                shutil.copy(os.path.join(gen_patches, f), dst)
-        r = subprocess.run(['make'], cwd=dis, capture_output=True,
-                           text=True, env=env)
-        if r.returncode != 0:
-            tail = "\n".join((r.stdout + r.stderr).splitlines()[-25:])
-            raise RuntimeError(f"build failed:\n{tail}")
+                shutil.copyfile(os.path.join(gen_patches, f), os.path.join(stage, f))
+        main = 'game.asm' if os.path.exists(os.path.join(stage, 'game.asm')) \
+            else os.path.join(dis, 'game.asm')
+        inc = dis.rstrip(os.sep) + os.sep
+        log = []
+        for args in (['rgbasm', '-i', inc, '-o', 'game.o', main],
+                     ['rgblink', '-n', 'game.sym', '-m', 'game.map', '-o', 'game.gbc', 'game.o'],
+                     ['rgbfix', '-v', '-p', '255', 'game.gbc']):
+            code, out = _run_rgbds(args, stage, env)
+            log.append(out)
+            if code != 0:
+                tail = "\n".join(out.splitlines()[-25:])
+                raise RuntimeError(f"build failed ({args[0]}):\n{tail}")
         # S140 (ROADMAP ARC CAP3a — regions): a value cut to fit a byte / word
         # is always a compiler mistake — e.g. a region's mapID ($176) emitted
         # where the engine wants its real map id ($76). rgbasm only WARNS
         # (-Wtruncation); refuse the ROM instead.
-        lines = (r.stdout + r.stderr).splitlines()
+        lines = "".join(log).splitlines()
         trunc = [f"{lines[i - 1].strip()} {ln.strip()}" for i, ln in enumerate(lines)
                  if 'truncat' in ln.lower() or '-Wtruncation' in ln]
         if trunc:
@@ -120,8 +142,8 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
         os.makedirs(out_dir, exist_ok=True)
         rom_path = os.path.join(out_dir, 'rom.gbc')
         sym_path = os.path.join(out_dir, 'game.sym')
-        shutil.copy(os.path.join(dis, 'game.gbc'), rom_path)
-        shutil.copy(os.path.join(dis, 'game.sym'), sym_path)
+        shutil.copy(os.path.join(stage, 'game.gbc'), rom_path)
+        shutil.copy(os.path.join(stage, 'game.sym'), sym_path)
         # [S75] crash-config validation: refuse to hand back a ROM whose
         # custom data forms a known crash-capable configuration (universal
         # learn qualifiers without the code-2 fence, missing slot-index
@@ -140,17 +162,7 @@ def build_rom(repo, generated_dir, out_dir, rgbds_dir=None):
                                + (v.stdout.strip() + '\n' + v.stderr.strip()).strip())
         return rom_path, sym_path, md5(rom_path)
     finally:
-        for f, data in backups.items():
-            if data is not None:
-                open(os.path.join(dis, f), 'wb').write(data)
-        for f in set(patch_new) | created:
-            p = os.path.join(dis, f)
-            if os.path.exists(p):
-                os.remove(p)
-        for a in BUILD_ARTIFACTS:
-            p = os.path.join(dis, a)
-            if os.path.exists(p):
-                os.remove(p)
+        shutil.rmtree(stage, ignore_errors=True)
 
 
 def parse_sym(sym_path):

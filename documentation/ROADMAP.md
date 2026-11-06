@@ -2550,9 +2550,22 @@ recipes are pure authoring.
       the window's minimum 1,530 × 911 → 412 × 273 on the user's project (EDITOR_DESIGN §5.0 "The
       window", KEY_LESSONS S169). *Accept (machine):* test_app `s169_window_and_cross` — every tab
       shown, the window's size unchanged; *user:* full screen on the Mac survives every tab.
-- [ ] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
+- [x] **P3.17 — Packaging**: per-OS bundles with RGBDS v0.6.1 bundled,
       signed macOS `.app`. *Accept:* a fresh Mac with no dev tools opens
-      the example project, builds, plays.
+      the example project, builds, plays. — **Built S171, NOT yet user-tested** (user: "I want to
+      have the editor be a proper app I can run with everything included inside"; M3 Max, macOS
+      15.7; download from GitHub; no Apple Developer ID → ad hoc signature; SameBoy inside; an
+      icon): `tools/package_app.py` → `DWM1 Editor.app` (its own CPython 3.12, PySide6 cut to
+      what the editor loads, PyBoy, RGBDS v0.6.1, SameBoy v1.0.5, the editor's files read-only;
+      the original ROM never inside — asked for once, kept in Application Support);
+      `editor2/packaging/launch.py` (a workspace of links + a real data/), `selftest.py`;
+      `.github/workflows/editor-app.yml` (macos-14 → pre-release `editor-latest`); the builder
+      without `make`, out of tree (PROJECT_COMPILER §3 S171). EDITOR_DESIGN §4.1. Machine accept:
+      the Linux build of the same layout, no system Python / RGBDS, a failing `make` on PATH —
+      self-check ALL PASSED. *User accept:* download from Releases, `xattr -cr`, open, locate the
+      ROM, open the project, Build, Play (SameBoy from the app). Same session (user-reported):
+      the stray empty window over the Arena tab fixed (EDITOR_DESIGN §5.0, KEY_LESSONS S171) and
+      tabs made on first need (open 6.6 s → 0.3 s).
 
 ### ARC CAP — campaign-scale capacity (S133; user: "Actual romhack will have HUNDREDS OF CUSTOM ROOMS")
 User direction (S133): distinct places, each its own tileset ("Reusing tileset is NOT ideal

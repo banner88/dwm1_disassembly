@@ -77,7 +77,7 @@ class Engine:
         # a private copy: PyBoy reads/writes <rom>.ram next to the ROM
         self.rom_copy = os.path.join(self.cache_dir, f'rom_{tag}.gbc')
         if not os.path.exists(self.rom_copy):
-            shutil.copy(rom_path, self.rom_copy)
+            shutil.copyfile(rom_path, self.rom_copy)     # S171: never a read-only mode
         ram = self.rom_copy + '.ram'
         if sav_path:
             data = open(sav_path, 'rb').read()

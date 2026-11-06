@@ -1,0 +1,83 @@
+# The DWM1 Editor as a Mac app (S171, ROADMAP P3.17) — tools/package_app.py on a GitHub
+# macOS machine (Apple Silicon), checked with the app's own self-check, uploaded as a zip.
+#
+# Download: the repository's Releases → "DWM1 Editor (latest)" (tag editor-latest, remade
+# by every push to master) → DWM1-Editor-macOS.zip. Also: the Actions tab → "editor-app" →
+# a run → Artifacts (a zip around the zip). A tag named app-… makes a Release of its own.
+# First start of a downloaded app (ad hoc signed, no Apple Developer ID): unzip, move
+# "DWM1 Editor.app" to Applications, then once in Terminal:
+#     xattr -cr "/Applications/DWM1 Editor.app"
+# (editor help: Getting started → "The app").
+name: editor-app
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['app-*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache RGBDS 0.6.1 (macOS arm64)
+        id: cache-rgbds
+        uses: actions/cache@v4
+        with:
+          path: ~/rgbds-mac
+          key: rgbds-0.6.1-macos-arm64-v1
+
+      - name: Build RGBDS 0.6.1 (rgbasm, rgblink, rgbfix — system libraries only)
+        if: steps.cache-rgbds.outputs.cache-hit != 'true'
+        env:
+          MACOSX_DEPLOYMENT_TARGET: '12.0'
+        run: |
+          brew install bison libpng pkg-config || true
+          export PATH="$(brew --prefix bison)/bin:$PATH"
+          git clone --branch v0.6.1 --depth 1 https://github.com/gbdev/rgbds.git /tmp/rgbds
+          make -C /tmp/rgbds -j"$(sysctl -n hw.ncpu)" rgbasm rgblink rgbfix Q=
+          mkdir -p ~/rgbds-mac
+          cp /tmp/rgbds/rgbasm ~/rgbds-mac/
+          cp /tmp/rgbds/rgblink ~/rgbds-mac/
+          cp /tmp/rgbds/rgbfix ~/rgbds-mac/
+          otool -L ~/rgbds-mac/rgbasm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Make the app and run its self-check
+        run: |
+          python3 tools/package_app.py --rgbds ~/rgbds-mac --selftest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DWM1-Editor-macOS
+          path: dist/DWM1-Editor-macOS.zip
+          compression-level: 0
+
+      - name: Release "editor-latest" (every push to master)
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete editor-latest --yes --cleanup-tag || true
+          gh release create editor-latest dist/DWM1-Editor-macOS.zip \
+            --prerelease --target "${GITHUB_SHA}" \
+            --title "DWM1 Editor (latest)" \
+            --notes "Built from ${GITHUB_SHA}. Unzip, move DWM1 Editor.app to Applications, then once in Terminal: xattr -cr \"/Applications/DWM1 Editor.app\""
+
+      - name: Release (tags app-…)
+        if: startsWith(github.ref, 'refs/tags/app-')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/DWM1-Editor-macOS.zip \
+            --title "DWM1 Editor ${GITHUB_REF_NAME}" \
+            --notes "Unzip, move DWM1 Editor.app to Applications, then once in Terminal: xattr -cr \"/Applications/DWM1 Editor.app\""

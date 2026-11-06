@@ -123,6 +123,47 @@ window's size, so a full-screen or zoomed window stays that way. The editor reop
 the size, place and full-screen state it was closed in, with the Build log and History
 where you left them.
 
+**Opening is quick (S171).** The window appears at once and the last project opens a
+moment later. Each tab is made the first time you click it (the Rooms tab at once), so the
+first click on a big tab (Breeding, Text, Monsters, Balance) can take a second; after that it
+is instant.
+
+**A window that pops up on its own (S171).** It was an editor bug (the Arena tab's "opens
+when" list and two other pages could leave a copy of themselves as an empty window when a
+page was redrawn twice quickly) — fixed. If the editor ever stops such a window again, the
+Build log says *Stopped a stray window (…)* — mention that line when you report it.
+
+## The app
+
+Since S171 the editor is also one Mac app — **DWM1 Editor.app** — with everything inside:
+its own Python, Qt, PyBoy, RGBDS v0.6.1 (the assembler) and SameBoy (Build → *Play in
+emulator* opens your ROM in it). Nothing else needs to be installed — no Python, Homebrew,
+Xcode or `make`.
+
+**Getting it.** GitHub: the repository's **Releases** → *DWM1 Editor (latest)* (it is made
+again after every push) → **DWM1-Editor-macOS.zip**. Or make it on your own Mac from a
+checkout: `python3 tools/package_app.py` → `dist/DWM1 Editor.app` (it uses the RGBDS
+v0.6.1 you already have).
+
+**First start of a downloaded app.** Unzip, move **DWM1 Editor.app** to Applications, then
+once in Terminal:
+
+    xattr -cr "/Applications/DWM1 Editor.app"
+
+(The app is signed only by itself — no Apple developer account — so macOS refuses a
+downloaded copy until this is done. Or: open it once, then System Settings → Privacy &
+Security → *Open Anyway*. An app you made yourself opens straight away.)
+
+**The original ROM.** The app never contains the game. The first time it asks for your
+`DWM-original.gbc` (it checks the MD5 `1ca6579…`) and keeps a copy in
+`~/Library/Application Support/DWM1 Editor/data`. If you used the editor from a checkout
+before, it takes that ROM by itself. Your projects stay wherever they are; settings
+(recent project, window size, emulator command) are shared with a checkout's editor.
+
+**If something goes wrong.** What the app prints goes to
+`~/Library/Application Support/DWM1 Editor/logs/editor.log` (the run before in
+`editor.log.1`) — send that file along.
+
 **Every edit can be undone** (Edit → Undo / Redo; View → History shows
 the list). File → Save saves the project.
 

@@ -525,11 +525,29 @@ Project.load ──► content validate ──► emit ×2 (determinism) ──�
                 write <out>/patches/… ────────────┘
                      │ --build
                      ▼
-   stage patches/ over disassembly/ (same PATCH_FILES/PATCH_NEW_FILES lists
-   as verify_integrity.py check 2 — parsed from that script, one source of
-   truth), overlay <out>/patches/, `make`, capture rom.gbc + game.sym into
-   <out>/build/, ALWAYS restore the tree, write manifest.json
+   copy patches/ (same PATCH_FILES/PATCH_NEW_FILES lists as verify_integrity.py
+   check 2 — parsed from that script, one source of truth) + <out>/patches/ into
+   a PRIVATE TEMPORARY FOLDER; rgbasm there with disassembly/ as its include
+   path, rgblink, rgbfix (S171: no `make`, nothing written into the tree);
+   capture rom.gbc + game.sym into <out>/build/, remove the folder, write
+   manifest.json
 ```
+
+**S171 (ROADMAP P3.17 — the packaged app): the build runs out of tree.** `builder.build_rom`
+copies the overlay into `tempfile.mkdtemp(prefix='dwm-build-')` and runs the Makefile's three
+commands itself: `rgbasm -i <repo>/disassembly/ -o game.o <game.asm>` (the stage's own
+`game.asm` when the overlay has one), `rgblink -n game.sym -m game.map -o game.gbc game.o`,
+`rgbfix -v -p 255 game.gbc`. rgbasm 0.6.1 resolves an INCLUDE / INCBIN against its WORKING
+DIRECTORY first, then the include paths — so a file of the overlay wins and every other file
+is read from the clean tree (measured S171: the clean disassembly assembled from an empty
+folder = `1ca6579…`; the example = the pin `7aae0e95…` (patched) and the user's project =
+`e0acf026…` (patched) with the old and the new builder, game.sym identical). Why: a fresh Mac
+has no `make` (`/usr/bin/make` only offers the developer tools), the app's files are read-only
+(EDITOR_DESIGN §4 "Packaging"), and two builds at once can no longer meet in `disassembly/`
+(KEY_LESSONS S163). `check_toolchain` searches, in order: the folder of File → Set RGBDS
+folder, `DWM_RGBDS_DIR` (the app's own RGBDS), the PATH. `test_compiler` `test_s171`: no `make`
+in the builder; `--rom`: a failing `make` first on PATH, the example builds to the pin, make
+never called, `disassembly/` unchanged (names + mtimes), the temporary folder removed.
 
 Content validation runs **before** emit so schema errors surface as
 validator messages, not emitter crashes; bank accounting runs **after**
@@ -951,7 +969,7 @@ editor2/
         arena.py arena_doc.py  # S109 gamedata.arena: regions + validator (§2.25); the Arena tab's model (ArenaMixin)
         capacity.py          # S145 every ceiling in words: the report the Capacity tab + the meters show (§2.53)
         skill_scripts.json   # S105 the custom skills' built-in dialog scripts + texts (§2.22)
-        emulator.py
+        emulator.py          # S171: the app's own SameBoy first (DWM_SAMEBOY)
         templates/{bank_060_head.asm, bank_071_head.asm, PINNED_SHA256}
   app/  main.py session.py build_worker.py     # shell (S93), one Session per project
         rooms/ tab.py canvas.py tile_picker.py palette_panel.py minimap.py
@@ -968,6 +986,10 @@ editor2/
         gates_tab.py                                   # S100 Gates tab (custom rooms on gate floors)
         arena_tab.py                                   # S109 Arena tab (fees, masters, team sizes, team rows)
         rooms/gate_panel.py                            # S100 inspector "Inside gates" group
+  app/  page_tabs.py                  # S169 scrolling tabs; S171 tabs made on first need
+        qt_safe.py                    # S167 wrappers; S171 discard() + StrayWindowGuard
+        appmode.py                    # S171 the editor inside the packaged app
+  packaging/ launch.py selftest.py make_icon.py AppIcon.icns   # S171 the app (tools/package_app.py)
   templates/blank-project/project.json   # File > New project (S94)
   example-project/project.json      # regression baseline (build/ is regenerable output;
                                     #   untracked + .gitignore'd since S108)

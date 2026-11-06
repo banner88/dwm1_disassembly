@@ -790,8 +790,10 @@ class RoomEditor(QWidget):
         i = self.gate.findData(int(b.get('gate_id') or 0))
         self.gate.setCurrentIndex(max(i, 0))
         self.floor.setValue(int(b.get('floor') or 0) + 1)
-        if self.list_combo is not None:
-            self.list_combo.setParent(None)
+        if self.list_combo is not None:            # S171: qt_safe.discard (no stray window)
+            from editor2.app.qt_safe import discard
+            self.list_holder.removeWidget(self.list_combo)
+            discard(self.list_combo)
         cur = M.ref(b['list'], 'list') if b['list'] is not None else None
         self.list_combo = ListCombo(lists, cur)
         self.list_combo.currentIndexChanged.connect(lambda _i: self._list_changed())

@@ -48,10 +48,14 @@ Exit code 0 = PASS, 1 = FAIL (build systems must treat FAIL as fatal).
 """
 import argparse
 import re
+import os
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+# S171: absolute, NOT resolve(): in the packaged app the tools/ folder is a symbolic link
+# from the app's workspace (editor2/app/appmode.py) — resolving it would leave the
+# workspace, whose data/ holds the original ROM
+REPO = Path(os.path.abspath(__file__)).parent.parent
 sys.path.insert(0, str(REPO))
 
 RECORD_LEN = 18

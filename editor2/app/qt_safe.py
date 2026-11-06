@@ -47,3 +47,75 @@ def menu_action(menu, text, slot=None, tip=None):
         a.triggered.connect(slot)
     menu.addAction(a)
     return a
+
+
+# ---------------------------------------------------------------------------
+# S171 — a widget taken out of a page never becomes a window of its own
+# ---------------------------------------------------------------------------
+# User (S171, with a screenshot): "when I change tabs a random empty window pops up that
+# never loads, and I have to close it" — over the Arena tab. Measured S171 (offscreen,
+# the user's project): ClassArenaBox.show_class twice in one event-loop turn (a quick
+# change of class, or the refresh after an edit) left the first "opens when" FlagTerms
+# as a TOP-LEVEL WINDOW. Why: QLayout.addWidget into a shown page queues a
+# `_q_showIfNotHidden` call on the new child; `setParent(None)` hides the widget but
+# CLEARS its "explicitly hidden" mark, so when the queued call runs, the now
+# parentless widget is shown — as a window. `hide()` FIRST keeps the mark (Qt then
+# skips the show), and deleteLater removes the widget for good.
+
+def discard(w):
+    """Take widget `w` out of its page for good: hidden first (so a show Qt has
+    already queued can never turn it into a window), unparented, deleted later."""
+    if w is None:
+        return
+    try:
+        w.hide()
+        w.setParent(None)
+        w.deleteLater()
+    except RuntimeError:                 # already gone
+        pass
+
+
+def _hide_quietly(w):
+    try:
+        w.hide()
+        w.setAttribute(Qt.WA_DontShowOnScreen, False)
+    except RuntimeError:
+        pass
+
+
+class StrayWindowGuard:
+    """The app's safety net (installed by main(), not by the tests): a parentless
+    plain widget that is about to be shown as a window is hidden at once and
+    reported in the Build log — so a missed `discard` can never again leave an empty
+    window on the screen, and the log names the widget's class for the next fix."""
+
+    def __init__(self, app, report=None):
+        from PySide6.QtCore import QEvent, QObject
+        from PySide6.QtWidgets import QDialog, QMainWindow, QMenu, QWidget
+        guard = self
+        self.report = report
+        self.stopped = []
+
+        class _F(QObject):
+            def eventFilter(self, obj, ev):              # noqa: N802 (Qt API)
+                if ev.type() == QEvent.Show and isinstance(obj, QWidget) \
+                        and obj.parent() is None and obj.windowType() == Qt.Window \
+                        and not isinstance(obj, (QMainWindow, QDialog, QMenu)) \
+                        and not obj.property('dwm_window'):
+                    name = type(obj).__name__
+                    guard.stopped.append(name)
+                    # Qt maps the native window right AFTER this event: never on screen,
+                    # then hidden (not deleted — Python code may still hold it)
+                    obj.setAttribute(Qt.WA_DontShowOnScreen, True)
+                    from PySide6.QtCore import QTimer
+                    QTimer.singleShot(0, lambda o=obj: _hide_quietly(o))
+                    if guard.report is not None:
+                        try:
+                            guard.report(f'Stopped a stray window ({name}) — an editor bug; '
+                                         'please mention it to Claude.')
+                        except RuntimeError:
+                            pass
+                    return True
+                return False
+        self._filter = _F(app)
+        app.installEventFilter(self._filter)

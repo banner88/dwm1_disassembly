@@ -129,14 +129,80 @@ Hard rules (unchanged): project.json is truth · `core/` never imports Qt
 (same project → byte-identical ROM) · validators cite their KEY_LESSONS/
 PROJECT_COMPILER rule.
 
-Platform/packaging — **carried from S72, still binding**: RGBDS
-**v0.6.1 pinned permanently** (user decision S72), bundled per-OS;
-`builder.check_toolchain()` preflight + File → "Set RGBDS folder…";
-emulator launch via `core/emulator.py` (SameBoy on macOS, OS default
-fallback, user command with `{rom}` override); PyInstaller `--windowed`
-(`.app` codesigned/notarized on macOS); app never bundles the ROM (File →
-Locate original ROM, MD5-gated `1ca6579…`); QUndoStack ⌘Z, ⌘B build,
-⌘R run, autosave, recent projects.
+Platform/packaging — carried from S72: RGBDS **v0.6.1 pinned permanently** (user decision
+S72), bundled per-OS; `builder.check_toolchain()` preflight + File → "Set RGBDS folder…";
+emulator launch via `core/emulator.py` (SameBoy on macOS, OS default fallback, user command
+with `{rom}` override); app never bundles the ROM (File → Locate original ROM, MD5-gated
+`1ca6579…`); QUndoStack ⌘Z, ⌘B build, ⌘R run, autosave, recent projects. The S72 plan's
+"PyInstaller `--windowed`, codesigned / notarized" is SUPERSEDED by S171 below.
+
+### 4.1 Packaging, as built S171 (ROADMAP P3.17)
+
+User (S171): "I want to have the editor be a proper app I can run with everything included
+inside" — M3 Max, macOS 15.7; "as long as I can download app from github"; no Apple Developer
+ID ("No I dont have it nor want it"); SameBoy inside ("Sounds good"); no example project in
+the menu; an icon drawn.
+
+- **What the app is** (`tools/package_app.py`): `DWM1 Editor.app/Contents/` = `MacOS/DWM1 Editor`
+  (sh: `PYTHONHOME=Resources/python`, exec the next) + `MacOS/dwm1-python` (python-build-standalone
+  CPython 3.12.16 — statically linked, system libraries only; in MacOS/ so the Dock / menu bar
+  show the app) + `Resources/python` (stdlib + site-packages: PySide6 6.9.1, PyBoy 2.9.0, numpy,
+  Pillow) + `Resources/rgbds` (rgbasm / rgblink / rgbfix v0.6.1, version- and library-checked) +
+  `Resources/SameBoy.app` (v1.0.5, its own signature kept) + `Resources/repo` (editor2, dwm, tools,
+  simulator, randomizer, extracted, disassembly, patches, dwm.tbl — compiled to .pyc) +
+  `launch.py` / `build_id.txt` / `AppIcon.icns`. PySide6 is cut to the bindings the editor imports
+  (QtCore / QtGui / QtWidgets / QtMultimedia / QtTest), the plugin folders it needs, and every Qt
+  library those load (a closure read from the binaries — otool / readelf; the bindings of every kept
+  library too — QtMultimedia's Python module imports QtNetwork's): 654 → 184 MB on Linux.
+  PyBoy's 64 MB of generated C sources go. No ROM, no documentation/, no examples/.
+- **Why not PyInstaller:** the editor starts its own scripts as separate Python processes with
+  `sys.executable` (the Playback / storyboard game `core/playback_server.py`, the ROM checker
+  `tools/validate_custom_data.py`, the Balance anchor) and loads tools/*.py by path; in a
+  PyInstaller app `sys.executable` is the app — each would open a second editor. A real Python
+  inside keeps all of them unchanged.
+- **Read-only app, writable workspace** (`editor2/packaging/launch.py`,
+  `editor2/app/appmode.py`): the app's files never change (a signed bundle; macOS may run a
+  downloaded app from a read-only translocated path). `launch.py` makes
+  `~/Library/Application Support/DWM1 Editor/runtime/<build id>/` — a symbolic link for each
+  entry of Resources/repo (re-pointed when the app moved) + `data` → `<data>/data`, a real folder
+  — and runs `editor2.app` from there, so every `REPO` / `repo_root` computed from `__file__`
+  is the workspace and `data/DWM-original.gbc` works as in a checkout (tools that `resolve()`
+  `__file__` would leave it: `validate_custom_data.py` now uses `abspath`). Older builds'
+  workspaces are removed (links only). The build writes nothing into the tree (PROJECT_COMPILER
+  §3 S171). The Balance tab's anchor-build button is a checkout's tool (hidden in the app).
+- **The ROM:** never in the app. First start: a message, then File → Locate original ROM (MD5
+  `1ca6579…`); `appmode.adopt_rom` copies it to `<data>/data/`. A ROM a checkout was shown
+  (QSettings `rom/path`, shared with the app) is taken by itself (`appmode.ensure_rom`).
+- **Environment** (set by launch.py; absent in a checkout): `DWM_APP=1`, `DWM_APP_RESOURCES`,
+  `DWM_APP_DATA`, `DWM_RGBDS_DIR` (searched after the "Set RGBDS folder" one), `DWM_SAMEBOY`
+  (`emulator.default_command` starts it first: `open -a <SameBoy.app> <rom>`), `PYTHONPATH` = the
+  workspace (the helper processes). Opened from the Finder, the app's output goes to
+  `<data>/logs/editor.log` (the run before: `editor.log.1`).
+- **Self-check** (`launch.py --selftest`, `editor2/packaging/selftest.py`): the app's RGBDS is the
+  one found and is v0.6.1; the original ROM assembled from the app's own clean disassembly by
+  that RGBDS = `1ca6579…`; the example project builds to `test_compiler`'s `REFERENCE_MD5`; nothing
+  written into the app; QtMultimedia loads; MainWindow opens the example, every tab shown, no
+  stray window; a playback-server process opens the ROM in PyBoy; Play = the app's SameBoy (macOS).
+  Run in a temporary data folder. Measured S171 on the Linux build of the same layout, with no
+  system Python / RGBDS on PATH and a failing `make` first on PATH: ALL PASSED in 12 s, make never
+  called; then as a NON-ROOT user with the app read-only (root ignores file modes — the first
+  such run FAILED: `shutil.copy` carried the app's read-only mode into the build's temporary
+  folder and the overlay could not replace a file; now `copyfile` there, for File → New
+  project's template and for Playback's ROM copy): ALL PASSED, no file of the app changed; the
+  app started on the user's project and their ROM (taken from the shared settings) ran 25 s
+  without an error in its log; the user's project built with the app's Python and RGBDS =
+  `e0acf026…` (patched) — the checkout's build of it.
+- **Getting it:** `.github/workflows/editor-app.yml` (macos-14, Apple Silicon): RGBDS 0.6.1 built
+  from source (brew bison; rgbasm / rgblink / rgbfix only, cached), `package_app.py --selftest`,
+  the zip as an artifact and as the pre-release **editor-latest** (remade by every push to master;
+  a tag `app-…` makes its own release). Or on the Mac: `python3 tools/package_app.py`.
+- **Signing:** ad hoc (`codesign --sign -` on the interpreter and the bundle, not `--deep`). An app
+  built on the Mac that runs it opens directly; a downloaded one needs, once,
+  `xattr -cr "/Applications/DWM1 Editor.app"` (or Privacy & Security → Open Anyway) — help
+  00_start "The app".
+- **Not verified on a Mac by Claude** (no macOS in the session): the workflow's self-check is the
+  first run on macOS; the Dock name / icon, the first-start ROM prompt and SameBoy from the app
+  are the user's test.
 
 ---
 
@@ -186,6 +252,35 @@ project: Document + live renderer + QUndoStack + change signals.)*
   (QSettings `window/geometry` / `window/state`; the docks / tool bar have object names). Three long
   one-line labels (Music ×2, Services) wrap, the World tab's legend + count moved to their own row
   (World 1,666 → 991 px). KEY_LESSONS "S169 — a tab widget is as big as its biggest page".
+- **Start-up and tabs made on first need (S171; user: "when I open editor its a bit slow at
+  first"):** measured on the user's project, the window appeared only after all 23 tabs were
+  built — `open_project` 6.6 s (Breeding 3.3 s: its analysis of 224 species; Skills 0.8, Text
+  0.7, Arena 0.6, Monsters 0.6, Rooms 0.5 …). Now `main()` shows the window first and opens the
+  last project 50 ms later (`MainWindow(defer_open=True)`, a wait cursor + "Opening …" in the
+  status bar); every tab but Rooms / Build & Play / Help is added with `PageTabs.addLazyTab(factory)`
+  and made the first time it is shown (`currentChanged`, connected before MainWindow's own slots)
+  or named — `MainWindow.__getattr__` makes `self.monsters_tab` … on first access, so every
+  caller (navigate_to, the tests) works unchanged; `built_tab(name)` answers without making it
+  (shutdown / flush / mute paths); the factories carry the tabs' signal wiring (the Capacity tab
+  connects the status-bar meter when it is made). `PageTabs.clear()` (a re-open) never makes a
+  page while the tabs go (it did: the current index walked across them). `open_project` 6.6 s →
+  0.28 s; a tab's first show costs what its construction cost before. Known, NOT changed: the
+  Balance tab's first show still holds the window ≈ 2-4 s (its `story.populate` fingerprints
+  every fight in the GUI thread after the background read; the same on S170).
+- **No stray windows (S171; user: "when I change tabs a random empty window pops up that never
+  loads, and I have to close it", screenshot over the Arena tab):** measured offscreen on the
+  user's project — `ClassArenaBox.show_class` twice in one event-loop turn (a quick change of
+  class, the refresh after an edit) left the first "opens when" `FlagTerms` as a TOP-LEVEL
+  window. `QLayout.addWidget` into a shown page queues `_q_showIfNotHidden` on the child;
+  `setParent(None)` hides it but clears its "explicitly hidden" mark, so the queued call shows
+  the now parentless widget — as a window. The Encounters room-battle list and the Skills tab's
+  parameter rows did the same. Fix: `qt_safe.discard(w)` (hide FIRST, unparent, deleteLater) at
+  the three sites; the app's `main()` installs `qt_safe.StrayWindowGuard` (a parentless plain
+  widget about to be shown as a window is kept off screen — `WA_DontShowOnScreen` during its Show
+  event, hidden next turn — and named in the Build log); test_app `s171_app_window` (the Arena
+  race, negative: the old unparenting → 5 FlagTerms windows; a static check that every
+  `setParent(None)` in editor2/app follows a `hide()`). KEY_LESSONS "S171 — setParent(None)
+  without hide()".
 
 **Game text (S127 r3, user: "Use game text box previews. … make that default for all text
 entries in editor this is like the fifth time this comes up").** Every field whose words end up

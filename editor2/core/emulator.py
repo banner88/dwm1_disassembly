@@ -23,6 +23,13 @@ import sys
 
 def default_command(rom_path):
     """Return (argv_list_or_None, description). None argv => os.startfile."""
+    # S171 (ROADMAP P3.17): the packaged app carries SameBoy (DWM_SAMEBOY = its
+    # SameBoy.app on macOS, an executable elsewhere) — used before anything installed
+    own = os.environ.get('DWM_SAMEBOY')
+    if own and os.path.exists(own):
+        if sys.platform == 'darwin' and own.endswith('.app'):
+            return ['open', '-a', own, rom_path], 'SameBoy (inside the editor app)'
+        return [own, rom_path], 'SameBoy (inside the editor app)'
     if sys.platform == 'darwin':
         # `open -a` fails cleanly if the app is missing; probe first so the
         # fallback is silent.

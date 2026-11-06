@@ -19,3 +19,6 @@ editor2/example-project/build/
 
 # S131: the Balance anchor build log (tools/build_balance_anchor.py; send it when a build stops)
 extracted/balance_vanilla.build.log
+
+# S171: tools/package_app.py output (the app, its zip)
+dist/
