@@ -7960,3 +7960,17 @@ the old path kept beside it (`_find_match_scan`).
   graphic. Only parking made free slots with distinct stale pictures common enough to hit it.
 - **Rule:** a slot allocator must treat its own pending claims as taken in every search
   (reuse AND free), not only the free-list.
+
+### Recolouring must be one-to-one (S171 r6)
+- **Symptom:** "why does it just make a whole quarter a blank colour instead of filling in or
+  doing pixel by pixel?" — painting one pixel with another row's colour flattened the quarter.
+- **Root cause:** moving a quarter to another row renumbered every pixel to the CLOSEST colour
+  of the new row; three browns are all closest to one green. `quantize` merged the same way
+  (two near shades → one colour number) for every import.
+- **Fix:** a row change keeps the colour numbers; `quantize` assigns the distinct colours
+  one-to-one (best of ≤ 24 assignments); merging only when a piece has more than 4 colours.
+- **Rule (the user's):** "only RECOLOR ALL PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only me
+  clicking individual pixels should change STRUCTURE" — any automatic colour mapping in the
+  editor is a bijection on the colours a piece uses.
+- **Also:** an editor tab with its own history must take ⌘Z while it is the thing being edited
+  (`MainWindow._undo` → `DrawTab.owns_undo`), or the shortcut silently undoes the project.

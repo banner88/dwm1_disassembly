@@ -45,6 +45,8 @@ class MetatilePicker(QWidget):
     foreignSelection = Signal(int)         # S171 r4: how many foreign metatiles are ticked
     parkedPicked = Signal(int)             # S171 r5: index in the parked list -> unpark + brush
     parkedRemove = Signal(int)             # S171 r5: delete a parked metatile
+    copyInRow = Signal(object, int)        # S171 r6: metatile, row -> a twin in that row
+    parkedCopyInRow = Signal(int, int)     # S171 r6: parked index, row
 
     SECTIONS = ('found', 'foreign', 'custom')
 
@@ -58,6 +60,7 @@ class MetatilePicker(QWidget):
         self.found = []           # [metatile]
         self.custom = []          # [metatile] (with 'name')
         self.parked = []          # S171 r5: parking entries (no slots; own graphics)
+        self.preview_fn = None    # S171 r6: foreign mt -> PIL picture as it would import
         self.foreign = []         # [metatile] from another room
         self.foreign_sheet = None
         self.foreign_threshold = 0
@@ -117,6 +120,14 @@ class MetatilePicker(QWidget):
         self.parked = entries
         self._pix = {k: v for k, v in self._pix.items() if k[0] != 'parked'}
         self._relayout()
+
+    def set_preview(self, fn, key=None):
+        """S171 r6: draw the foreign tiles as they would look imported (None = as they are)."""
+        if fn is None and self.preview_fn is None:
+            return
+        self.preview_fn = fn
+        self._pix = {k: v for k, v in self._pix.items() if k[0] != 'foreign'}
+        self.update()
 
     def _shown(self):
         out = []
@@ -191,6 +202,14 @@ class MetatilePicker(QWidget):
     def _render(self, sec, mt):
         sheet = self.foreign_sheet if sec == 'foreign' else self.sheet
         key = (sec if sec == 'foreign' else 'own',) + metatile_key(mt)
+        if key not in self._pix and sec == 'foreign' and self.preview_fn is not None:
+            try:
+                img = self.preview_fn(mt)
+            except Exception:                                    # noqa: BLE001
+                img = None
+            if img is not None:
+                img = img.resize((MT, MT), Image.NEAREST)
+                self._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(img))
         if key not in self._pix:
             if self.renderer is None or sheet is None:
                 return None
@@ -319,6 +338,24 @@ class MetatilePicker(QWidget):
             p.drawRect(r.adjusted(1, 1, -2, -2))
 
     # -------------------------------------------------------------- events
+    def _row_menu(self, m):
+        """S171 r6: 'Copy in row ▸ 0-3' — the same tiles in another row of colours (the
+        shapes and colour numbers kept; no new tileset slot)."""
+        from PySide6.QtGui import QIcon
+        sub = m.addMenu('Copy in row')
+        out = {}
+        for r in range(4):
+            icon = QIcon()
+            if self.pals is not None and r < len(self.pals):
+                pm = QPixmap(32, 8)
+                pnt = QPainter(pm)
+                for k in range(4):
+                    pnt.fillRect(k * 8, 0, 8, 8, QColor(*self.pals[r][k][:3]))
+                pnt.end()
+                icon = QIcon(pm)
+            out[sub.addAction(icon, f'row {r} — same tiles, these colours')] = r
+        return out
+
     def mouseMoveEvent(self, ev):
         h = self._hit(ev.position().toPoint())
         if h != self._hover:
@@ -370,9 +407,13 @@ class MetatilePicker(QWidget):
         if sec == 'parked':
             if ev.button() == Qt.RightButton:
                 m = QMenu(self)
+                rows = self._row_menu(m)
                 a_del = m.addAction('Delete this parked metatile')
-                if m.exec(ev.globalPosition().toPoint()) == a_del:
+                chosen = m.exec(ev.globalPosition().toPoint())
+                if chosen == a_del:
                     self.parkedRemove.emit(i)
+                elif chosen in rows:
+                    self.parkedCopyInRow.emit(i, rows[chosen])
             elif ev.button() == Qt.LeftButton:
                 self.parkedPicked.emit(i)
             return
@@ -383,7 +424,11 @@ class MetatilePicker(QWidget):
             a_del = m.addAction('Delete') if sec == 'custom' else None
             a_imp = (m.addAction('Import into this tileset')
                      if sec == 'foreign' and not self.foreign_same else None)
+            rows = self._row_menu(m) if sec in ('found', 'custom') else {}
             chosen = m.exec(ev.globalPosition().toPoint())
+            if chosen in rows:
+                self.copyInRow.emit(mt, rows[chosen])
+                return
             if a_edit is not None and chosen == a_edit:
                 self.editRequested.emit(mt)
             elif a_del is not None and chosen == a_del:

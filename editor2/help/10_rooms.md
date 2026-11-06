@@ -97,10 +97,15 @@ One undo step. The palette combos name the rooms that use each palette.
 **Draw** (Tiles page → Draw tab): paint a metatile pixel by pixel. Load the
 selected cell, the brush, or a blank tile (left = paint, Shift = fill, right = pick a
 colour; Ctrl+click picks a quarter for the tools: flip, shift, copy / paste, clear, undo,
-revert). The colours are **every row of the room** (S171 r4): an 8×8 quarter is drawn in
-one row, so painting a quarter with a colour of another row moves that quarter there —
-its other pixels take that row's closest colours (Undo puts it back). To change a colour
-itself, edit it on the Palettes page. Then
+redo, revert). **⌘Z / ⌘⇧Z** undo and redo your strokes while a drawing is loaded and the
+Draw tab is shown (one drag = one step); otherwise they undo the project as usual. The
+colours are **every row of the room**: an 8×8 quarter is drawn in one row, so painting a
+quarter with a colour of another row moves that quarter there — its other pixels keep
+their colour numbers (the same shapes in that row's colours; S171 r6), then the pixel you
+clicked is painted. Shapes change only where you paint. **Recolour the part** (the quarter
+picked with the tool buttons, or the whole tile): **row 0-3** puts it in that row (colour
+numbers kept), **swap a⇄b** turns every pixel of colour a into b and every b into a. To
+change a colour itself, edit it on the Palettes page. Then
 **Redraw it everywhere it is drawn** (the tiles themselves change — the line says
 how many cells in which rooms; nothing is spent) or **Save as a new metatile**
 (free tileset slots, the walkable / wall side you tick; put it on the selected

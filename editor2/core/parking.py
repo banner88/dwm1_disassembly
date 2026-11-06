@@ -174,6 +174,22 @@ def delete_parked(doc, tid, indices=None):
     return n
 
 
+def copy_in_row(doc, tid, index, row):
+    """S171 r6: a twin of parked entry `index` drawn in `row` (colour numbers kept — the same
+    shapes in that row's colours). Returns the new entry's index."""
+    pk = _parked_mut(doc, tid)
+    e = {k: (list(v) if isinstance(v, list) else v) for k, v in pk[index].items() if k != 'q'}
+    e['q'] = [{'g': q['g'], 'row': int(row), 'true': None} for q in pk[index]['q']]
+    e['name'] = f"{pk[index].get('name', 'metatile')} (row {row})"
+    e['pal'] = int(row)
+    for i, x in enumerate(pk):
+        if _sig(x) == _sig(e):
+            return i
+    pk.append(e)
+    doc.touch()
+    return len(pk) - 1
+
+
 def park_new(doc, tid, name, px, pals, walk, truths=None, src='borrowed'):
     """An import with no room even after parking: it goes straight to the parked list
     (4 x 64 colour numbers, the row of each quarter, its walkable side). Returns the
@@ -208,9 +224,9 @@ def entry_rows(e):
 
 def _fit(e, rows):
     """(4 x 64 colour numbers, 4 rows, 4 truths) for bringing `e` back with `rows` (this
-    screen's 4 rows of RGB): a quarter whose real colours are known takes the row that
-    draws them best when that beats its stored colours (the palette changed since it was
-    parked); otherwise it comes back exactly as it was."""
+    screen's 4 rows of RGB): each quarter stays in its row; one whose real colours are
+    known is matched to that row again when that beats its stored colour numbers (the
+    row's colours changed since it was parked); otherwise it comes back exactly as it was."""
     from . import recolour as RC
     px, prow, truths = entry_pixels(e), entry_rows(e), []
     for q, d in enumerate(e['q']):
@@ -223,8 +239,13 @@ def _fit(e, rows):
         truths.append(tr)
         if tr is None or rows is None or len(rows) < 4:
             continue
-        keep = RC.fixed_error(tr, px[q], rows[prow[q]]) if prow[q] < len(rows) else 1e18
-        r, idx, err = RC.best_row(tr, rows, allowed=(0, 1, 2, 3))
+        if prow[q] >= len(rows):
+            continue
+        # S171 r6: the row stays (it may have been chosen on purpose — "into row N", a copy
+        # in another row); only the colour numbers are matched again when the row's colours
+        # changed since (one-to-one: shapes kept)
+        keep = RC.fixed_error(tr, px[q], rows[prow[q]])
+        r, idx, err = RC.best_row(tr, rows, allowed=(prow[q],))
         if err < keep - 1e-6:
             px[q], prow[q] = idx, r
     return px, prow, truths
@@ -306,4 +327,4 @@ def unpark(doc, room_id, index, rows, threshold, own_sheet=None):
 
 
 __all__ = ['parked', 'parkable', 'preview', 'as_if_parked', 'park', 'park_unplaced', 'delete_parked',
-           'park_new', 'entry_pixels', 'entry_rows', 'evicting', 'unpark', 'full_message']
+           'park_new', 'copy_in_row', 'entry_pixels', 'entry_rows', 'evicting', 'unpark', 'full_message']

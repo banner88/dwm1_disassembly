@@ -242,6 +242,7 @@ class MainWindow(QMainWindow):
         if s:
             self.rooms_tab = RoomsTab(s)
             self.rooms_tab.status.connect(self.statusBar().showMessage)
+            self.rooms_tab.draw_tab.historyChanged.connect(self._sync_undo)   # S171 r6
             self.rooms_tab.gatesRequested.connect(self._open_gates_for)
             self.rooms_tab.hintsRequested.connect(self._open_hints)       # S158
             self.tabs.addTab(self.rooms_tab, 'Rooms')
@@ -792,12 +793,13 @@ class MainWindow(QMainWindow):
                 a.triggered.disconnect()
             except (RuntimeError, TypeError):
                 pass
-        self.a_undo.triggered.connect(session.undo.undo)
-        self.a_redo.triggered.connect(session.undo.redo)
-        session.undo.canUndoChanged.connect(self.a_undo.setEnabled)
-        session.undo.canRedoChanged.connect(self.a_redo.setEnabled)
-        session.undo.undoTextChanged.connect(self._undo_text)
-        session.undo.redoTextChanged.connect(self._redo_text)
+        # S171 r6: ⌘Z / ⌘⇧Z undo the Draw tab's strokes while it shows a drawing
+        self.a_undo.triggered.connect(self._undo)
+        self.a_redo.triggered.connect(self._redo)
+        session.undo.canUndoChanged.connect(lambda _on: self._sync_undo())
+        session.undo.canRedoChanged.connect(lambda _on: self._sync_undo())
+        session.undo.undoTextChanged.connect(lambda _t: self._sync_undo())
+        session.undo.redoTextChanged.connect(lambda _t: self._sync_undo())
         session.dirtyChanged.connect(self._dirty_changed)
         self.undo_view.setStack(session.undo)
         # S96 space meters in the status bar (S145: ROM space + rooms, the Capacity tab's report)
@@ -862,6 +864,49 @@ class MainWindow(QMainWindow):
         for n in cmd.result or []:
             self.log.appendPlainText('FIXED: ' + n + ' — Save to keep it')
         session.structureChanged.emit()
+
+    def _draw_tab(self):
+        """The Rooms tab's Draw tab when it owns ⌘Z (a drawing loaded, the tab shown)."""
+        dt = getattr(self.rooms_tab, 'draw_tab', None) if self.rooms_tab is not None else None
+        try:
+            return dt if dt is not None and dt.owns_undo() else None
+        except RuntimeError:            # the tab already torn down (exit, another project)
+            return None
+
+    def _undo(self):
+        dt = self._draw_tab()
+        if dt is not None and dt.can_undo():
+            dt.undo()
+        elif self.session is not None:
+            self.session.undo.undo()
+
+    def _redo(self):
+        dt = self._draw_tab()
+        if dt is not None and dt.can_redo():
+            dt.redo()
+        elif self.session is not None:
+            self.session.undo.redo()
+
+    def _sync_undo(self):
+        s = self.session
+        if s is None:
+            return
+        dt = self._draw_tab()
+        try:
+            if dt is not None and dt.can_undo():
+                self.a_undo.setEnabled(True)
+                self.a_undo.setText('Undo stroke (Draw)')
+            else:
+                self.a_undo.setEnabled(s.undo.canUndo())
+                self._undo_text(s.undo.undoText())
+            if dt is not None and dt.can_redo():
+                self.a_redo.setEnabled(True)
+                self.a_redo.setText('Redo stroke (Draw)')
+            else:
+                self.a_redo.setEnabled(s.undo.canRedo())
+                self._redo_text(s.undo.redoText())
+        except RuntimeError:            # actions torn down at exit
+            pass
 
     def _undo_text(self, t):
         try:

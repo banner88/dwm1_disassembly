@@ -20,7 +20,8 @@ Before S171 r4 a tile borrowed from another room kept its colour numbers and its
     (`'true'`: per quarter a colour list + 64 indices) so the planner can always start
     from the real art, not from a mangled copy;
   * MATCH — `best_row` / `quantize` put a quarter into the row whose colours look closest
-    (OKLab, the perceptual colour space) and renumber its pixels to those colours;
+    (OKLab, the perceptual colour space) and renumber its pixels to those colours — one
+    colour of the art to one colour number (S171 r6: shapes are never merged);
   * PLAN — `plan_rows` finds the 4 rows (3 free colours each, or 2 with the game's cream)
     that draw a whole set of quarters best: weighted k-medoids over the quarters' real
     colours, seeded — `propose` returns several different good answers ("re-roll") with
@@ -157,15 +158,33 @@ def quarter_from_indices(px64, row_rgb):
 
 
 def quantize(q, row):
-    """(64 colour numbers, error) — every pixel of `q` to its closest colour of `row`."""
+    """(64 colour numbers, error) — `q` in the colours of `row`.
+
+    S171 r6 (user: "I will never want to change the actual structure, only RECOLOR ALL
+    PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only me clicking individual pixels should
+    change STRUCTURE"): the quarter's distinct colours go ONE-TO-ONE onto the row's 4
+    colour numbers (the assignment with the least total error) — two colours never become
+    one, so the picture keeps its shapes. Only a quarter with more than 4 colours (a PNG
+    that is not Game Boy art) must merge: each pixel to its closest colour then."""
+    import itertools
     row = [snap(c) for c in row]
-    best = {}
-    err = 0.0
-    for c, n in q.hist().items():
-        d, k = min((dist(c, row[i]), i) for i in range(4))
-        best[c] = k
-        err += d * n
-    return [best[q.cols[i]] for i in q.idx], err
+    hist = q.hist()
+    cols = sorted(hist, key=lambda c: (-hist[c], c))
+    if len(cols) > 4:
+        best, err = {}, 0.0
+        for c, n in hist.items():
+            d, k = min((dist(c, row[i]), i) for i in range(4))
+            best[c] = k
+            err += d * n
+        return [best[q.cols[i]] for i in q.idx], err
+    cost = [[dist(c, row[i]) * hist[c] for i in range(4)] for c in cols]
+    pick, err = None, None
+    for perm in itertools.permutations(range(4), len(cols)):
+        e = sum(cost[j][perm[j]] for j in range(len(cols)))
+        if err is None or e < err - 1e-9:
+            pick, err = perm, e
+    best = {c: pick[j] for j, c in enumerate(cols)}
+    return [best[q.cols[i]] for i in q.idx], err or 0.0
 
 
 def fixed_error(q, idx64, row):

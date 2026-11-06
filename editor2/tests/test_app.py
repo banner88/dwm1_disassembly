@@ -4280,6 +4280,122 @@ def s171_parking(app, w):
           f'explains; all undone exactly')
 
 
+def s171_recolour(app, w):
+    """S171 r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole
+    quarter a blank colour"; "I may want some tiles to be 1 colour and some other tiles to be
+    a different (palette-compatible) colour"; "I will never want to change the actual
+    structure, only RECOLOR ALL PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only me clicking
+    individual pixels should change STRUCTURE"): matching is one-to-one (two colours never
+    become one); Draw keeps colour numbers when a quarter changes row, ⌘Z / ⌘⇧Z undo / redo
+    strokes, row / swap tools keep shapes; Borrow → into row N + the preview; right-click →
+    Copy in row N (no slot); all undone exactly."""
+    import json
+    from editor2.core import recolour as RC
+    from editor2.core import parking as PK
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    # core: two near reds stay two colour numbers
+    q = RC.Quarter.from_rgb([(200, 40, 40)] * 32 + [(190, 50, 50)] * 16 + [(10, 10, 10)] * 16)
+    rows = [[(255, 255, 255), (248, 248, 208), (120, 120, 120), (0, 0, 0)],
+            [(208, 48, 48), (248, 248, 208), (40, 40, 200), (0, 0, 0)]]
+    _r, idx, _e = RC.best_row(q, rows)
+    assert len(set(idx)) == 3 and idx[0] != idx[40] and idx[0] == idx[31], idx[:2]
+    rid = None
+    for room in doc.rooms:
+        if room.get('screens') and room.get('record') and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    # Draw: another row's colour keeps the quarter's colour numbers; ⌘Z undoes the stroke
+    rt.picker_tabs.setCurrentIndex([rt.picker_tabs.tabText(i) for i in
+                                    range(rt.picker_tabs.count())].index('Draw'))
+    app.processEvents()
+    rt.canvas.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert dt.owns_undo()
+    before = dt.current()
+    tgt = (dt.qrow[0] + 1) % 4
+    dt._pick_swatch(tgt, 2)
+    dt._snap()
+    dt._pre_put(0)
+    dt.pad.put(0, 0, dt.pad.colour)
+    dt._changed()
+    after = dt.current()
+    assert dt.qrow[0] == tgt
+    assert all(after[0][i] == before[0][i] for i in range(1, 64)), 'other pixels keep numbers'
+    assert after[0][0] == 2 and after[1:] == before[1:]
+    assert w.a_undo.isEnabled() and 'stroke' in w.a_undo.text(), w.a_undo.text()
+    w.a_undo.trigger()
+    assert dt.current() == before and dt.qrow == dt.old_qrow, 'Cmd+Z undid the stroke'
+    assert s.undo.index() == n0, 'the project was not undone'
+    w.a_redo.trigger()
+    assert dt.current() == after and dt.qrow[0] == tgt, 'Cmd+Shift+Z redid it'
+    # tools: row (numbers kept) and swap (a <-> b, shapes kept)
+    dt._set_part(1)
+    p1 = list(dt.current()[1])
+    dt._tool(('row', 3))
+    assert dt.qrow[1] == 3 and dt.current()[1] == p1
+    dt._tool(('swap', 0, 3))
+    sw = {0: 3, 3: 0}
+    assert dt.current()[1] == [sw.get(v, v) for v in p1]
+    dt._tool('revert')
+    dt._set_part('whole')
+    # Borrow: into row 2 + the preview
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    rt.borrow_rows.setCurrentIndex(rt.borrow_rows.findData(2))
+    rt.borrow_preview.setChecked(True)
+    app.processEvents()
+    assert rt.picker_foreign.preview_fn is not None
+    pm = rt.picker_foreign._render('foreign', rt.picker_foreign.foreign[5])
+    assert pm is not None
+    rt._import_metatile(rt.picker_foreign.foreign[5])
+    app.processEvents()
+    tid = doc.tileset_key(doc.room(rid))
+    got = doc.metatiles(tid)[-1]
+    from editor2.core import tile_draw as TD
+    assert TD.quarter_pals(got) == [2, 2, 2, 2], got
+    rt.borrow_preview.setChecked(False)
+    rt.borrow_rows.setCurrentIndex(0)
+    # right-click -> Copy in row 1: the same tiles, no new slot, the brush
+    free0 = doc.free_counts(tid, rt.canvas.gfx.threshold)['total']
+    rt._copy_in_row(got, 1)
+    app.processEvents()
+    tw = doc.metatiles(tid)[-1]
+    assert tw['tiles'] == got['tiles'] and tw['pal'] == 1 and rt.canvas.brush['pal'] == 1
+    assert doc.free_counts(tid, rt.canvas.gfx.threshold)['total'] == free0, 'no slot spent'
+    # a parked one too
+    rt._purge_metatiles('park')
+    pk = PK.parked(doc, tid)
+    assert pk
+    rt._parked_copy_in_row(0, 3)
+    pk = PK.parked(doc, tid)
+    assert [q['row'] for q in pk[-1]['q']] == [3] * 4 and \
+        [q['g'] for q in pk[-1]['q']] == [q['g'] for q in pk[0]['q']]
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print('OK: S171 r6 recolour — matching one-to-one (2 near reds stay 2 colours); Draw: a row '
+          'change keeps colour numbers, Cmd+Z / Cmd+Shift+Z undo / redo the stroke (not the '
+          'project), row / swap tools keep shapes; Borrow into row 2 + preview; Copy in row 1 '
+          '(no slot) and a parked copy in row 3; all undone exactly')
+
+
 def s171_borrow_custom(app, w):
     """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
     its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
@@ -6478,6 +6594,7 @@ def main():
     s171_borrow_custom(app, w)
     s171_colour_true(app, w)
     s171_parking(app, w)
+    s171_recolour(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

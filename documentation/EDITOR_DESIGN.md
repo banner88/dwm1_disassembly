@@ -806,7 +806,29 @@ happening"; built S99, NOT yet user-tested):**
   carry the parked list. Found on the way: `tile_draw.plan_new` could REUSE a free slot an
   earlier quarter of the same metatile had just taken (it still showed a stale picture) —
   that quarter then got the other's graphic; a slot taken in the plan is never reused now.
-- **S99 r3 — "Make animated" tab** (user: "please make the 'make
+- **S171 r6 — recolour without changing shapes (ROADMAP P3.3k)** (user: "Why cant I undo
+  'draw' on cell? Also why does it just make a whole quarter a blank colour …"; "I may want
+  some tiles to be 1 colour and some other tiles to be a different (palette-compatible)
+  colour"; "I will never want to change the actual structure, only RECOLOR ALL PIXELS THAT ARE
+  EXACTLY THE SAME COLOUR. Only me clicking individual pixels should change STRUCTURE").
+  Found: ⌘Z was the project's undo only (the Draw tab had a button); the r4 row move
+  renumbered a quarter's pixels to the closest colours of the new row, so 3 browns could all
+  become one green — a flat quarter; `quantize` did the same per colour (two shades → one).
+  Now: `recolour.quantize` assigns a quarter's distinct colours one-to-one to the row's 4
+  colour numbers (all ≤ 24 assignments tried, least weighted OKLab error; > 4 colours = the
+  old nearest-colour merge) — every caller (Borrow with *Match colours*, a picture,
+  `apply_plan`, `parking.unpark`) keeps shapes. Draw: `_pre_put` moves the quarter's row only
+  (numbers kept), then the pixel is painted; tools *row 0-3* and *swap a⇄b* act on the part;
+  `_redo` stack + Redo; `historyChanged` → `MainWindow._sync_undo` ("Undo stroke (Draw)")
+  and `_undo` / `_redo` route ⌘Z / ⌘⇧Z to the tab while `owns_undo()` (a drawing loaded,
+  `isVisibleTo(window)`), else the project stack. Borrow: *colours* = into the closest row /
+  into row N (`allowed_rows` of `import_true_metatile`); *show as they will look here* =
+  `MetatilePicker.set_preview` / `PngCells.set_preview` (the quarters through `best_row`
+  with the chosen rows). Right-click *Copy in row ▸ N* (`copyInRow` / `parkedCopyInRow`): a
+  My metatile with the same tiles and `pal` N (0 slots), or a parked twin (`parking.
+  copy_in_row`, truth dropped — a pure palette swap). `parking._fit` no longer moves a
+  quarter to another row (a row may be chosen on purpose); it only re-matches within it.
+ (user: "please make the 'make
   animatable' tab. Bonus points if you can make a little tab/edit doodad
   that lets me re-paint a second tile in a paint-like manner"; and "how do I
   change animation of e.g. the water? Double clicking on the tile doesnt

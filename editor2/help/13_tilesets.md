@@ -44,6 +44,10 @@ switches to Paint):
   and becomes the brush — parking other unplaced ones first if the sheet is full.
   Right-click → **Delete this parked metatile**.
 
+**Copy in row ▸ 0-3** (right-click a tile of *This room's tiles*, *My metatiles* or
+*Parked*, S171 r6): the same tiles in another row's colours — a new *My metatile* (a parked
+copy for a parked one) and the brush. The tiles are the same, so it uses **no** tileset slot.
+
 Corner marks: bottom-right red = wall, green = walkable; top-left orange =
 its slot was released (the picture may change on the next import), red = the
 picture already changed; top-right teal = it moves in the game. Hover for
@@ -66,6 +70,13 @@ the editor remembers the real colours, so **Re-plan colours** (below) can fit th
 them later. Unticked: the old way — the tiles drawn in this room's colours, colour numbers
 and rows copied as they are. A tile that moves in its own room keeps the old way: take
 over that room's animation, or **Import it still (it will not move)**.
+
+**colours** (S171 r6): *into the closest row* (each 8×8 piece where it looks closest) or
+*into row N* (every piece in the row you pick — some tiles in one colour set, others in
+another). Either way each colour of the art gets its own colour number: two colours are
+never merged into one, so the shapes stay (only a picture with more than 4 colours in one
+8×8 piece must merge). **show as they will look here** draws the tiles and picture cells
+as the import would put them in this room.
 
 **Several at once:** Ctrl / Shift + click tiles (yellow frame), then **Import the
 selected (N)** — one undo step.

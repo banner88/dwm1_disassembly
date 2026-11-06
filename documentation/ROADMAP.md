@@ -1035,6 +1035,21 @@ recipes are pure authoring.
       and the brush; right-click = delete); Tileset tab *Park unplaced (N)* / *Delete parked
       (N)* (were the two Purge buttons). Fixed on the way: `tile_draw.plan_new` reused a slot
       an earlier quarter had just taken. EDITOR_DESIGN §5.1 "S171 r5"; test_app `s171_parking`.
+- [x] **P3.3k — Recolour without changing shapes; Draw undo; tiles in a row of your choice**
+      — **built S171 r6, NOT yet user-tested** (user: "Why cant I undo 'draw' on cell? Also why
+      does it just make a whole quarter a blank colour instead of filling in or doing pixel by
+      pixel?"; "Where can I import a png into current tileset and fiddle with colours? I may
+      want some tiles to be 1 colour and some other tiles to be a different (palette-compatible)
+      colour"; "Yes I want everything … I will never want to change the actual structure, only
+      RECOLOR ALL PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only me clicking individual pixels
+      should change STRUCTURE"). `recolour.quantize` one-to-one (a quarter's distinct colours
+      onto distinct colour numbers, least error; merges only past 4 colours) — Borrow,
+      pictures, Re-plan, unpark; Draw: a row change keeps colour numbers (r4 renumbered to the
+      closest colours and could flatten a quarter), *row 0-3* / *swap a⇄b* tools, Redo, ⌘Z / ⌘⇧Z
+      = strokes while a drawing is shown (`MainWindow._undo` asks `DrawTab.owns_undo`); Borrow
+      → *colours: into the closest row / into row N* + *show as they will look here* (picker +
+      picture cells); right-click → *Copy in row ▸ N* (same tiles, no slot; parked too); unpark
+      keeps a quarter's row. EDITOR_DESIGN §5.1 "S171 r6"; test_app `s171_recolour`.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

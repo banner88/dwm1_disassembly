@@ -91,6 +91,18 @@
 > test_app `s171_parking`; test_canvas's tileset block updated (that file still stops earlier,
 > see above). EDITOR_DESIGN §5.1 "S171 r5", PROJECT_COMPILER `_editor.parked`, KEY_LESSONS S171
 > r5, help 13_tilesets / glossary.
+> **r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole quarter a blank
+> colour …"; "I may want some tiles to be 1 colour and some other tiles to be a different
+> (palette-compatible) colour"; "Yes I want everything … only RECOLOR ALL PIXELS THAT ARE EXACTLY
+> THE SAME COLOUR. Only me clicking individual pixels should change STRUCTURE"):** ROADMAP P3.3k —
+> matching is one-to-one (`recolour.quantize`: shapes never merged); Draw keeps colour numbers on
+> a row change (the r4 flat-quarter bug), *row 0-3* / *swap a⇄b*, Redo, ⌘Z / ⌘⇧Z = strokes;
+> Borrow → *colours: into row N* + *show as they will look here*; right-click → *Copy in row ▸ N*
+> (no slot). Measured on the user's project: Mermaids Cave cells shown in their own colours /
+> the closest rows / row 1, 12 imported into row 1, two twins in rows 2 and 0 (no slot), placed,
+> built (`3b962c03…`, patched test build), the room in PyBoy = the editor; a Draw stroke undone
+> by ⌘Z, the project untouched. test_app `s171_recolour`. EDITOR_DESIGN §5.1 "S171 r6", help
+> 10_rooms / 13_tilesets.
 > **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
 > `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
 > Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
@@ -137,7 +149,7 @@
 > "Awaiting a user test" list.
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
-- **S171** (2026-11-06): ROADMAP P3.17 packaging — `DWM1 Editor.app` with its own Python / Qt / PyBoy / RGBDS v0.6.1 / SameBoy (`tools/package_app.py`, `editor2/packaging/launch.py` + `selftest.py`, `editor2/app/appmode.py`, `.github/workflows/editor-app.yml` → pre-release `editor-latest`; ad hoc signed; the ROM never inside); the builder without `make`, out of tree (byte-identical); the stray empty window (Arena "opens when" list: `setParent(None)` without `hide()` + Qt's queued show — `qt_safe.discard`, `StrayWindowGuard`); tabs made on first need (open 6.6 s → 0.3 s). EDITOR_DESIGN §4.1 / §5.0, PROJECT_COMPILER §3, KEY_LESSONS S171. r3 Borrow from your rooms (P3.3h), r4 colour-true tiles (P3.3i), r5 parked metatiles (P3.3j, `editor2/core/parking.py`). Byte-neutral for the ROM (pin `7aae0e95…`, patched). Built S171, NOT yet user-tested.
+- **S171** (2026-11-06): ROADMAP P3.17 packaging — `DWM1 Editor.app` with its own Python / Qt / PyBoy / RGBDS v0.6.1 / SameBoy (`tools/package_app.py`, `editor2/packaging/launch.py` + `selftest.py`, `editor2/app/appmode.py`, `.github/workflows/editor-app.yml` → pre-release `editor-latest`; ad hoc signed; the ROM never inside); the builder without `make`, out of tree (byte-identical); the stray empty window (Arena "opens when" list: `setParent(None)` without `hide()` + Qt's queued show — `qt_safe.discard`, `StrayWindowGuard`); tabs made on first need (open 6.6 s → 0.3 s). EDITOR_DESIGN §4.1 / §5.0, PROJECT_COMPILER §3, KEY_LESSONS S171. r3 Borrow from your rooms (P3.3h), r4 colour-true tiles (P3.3i), r5 parked metatiles (P3.3j, `editor2/core/parking.py`), r6 recolour without changing shapes + Draw undo (P3.3k). Byte-neutral for the ROM (pin `7aae0e95…`, patched). Built S171, NOT yet user-tested.
 - **S170** (2026-11-05): monster art past the three art banks — all 215 originals re-artable: the art spills into banks $80+ (the LAST kind, after page 2), every stream stored compressed (`art.pack`, ≈ 31 % smaller, the game's own unpack speed); no engine change (every reader maps any bank — `tools/walk_art.py` 47 / 47, negative 25 FAIL); `sprite_codec` encoder indexed (same bytes, ≈ 11× faster); the meters / Capacity row; bank $07's two dead parent reads annotated. PROJECT_COMPILER §2.77. Test ROM `DWM-S170-mirror-test.gbc` (patched); pin `7aae0e95…` (patched) unchanged. Built S170, NOT yet user-tested.
 - **S169** (2026-11-05): the window + ROADMAP P3.12 residual (a) — no tab resizes the window any more (`editor2/app/page_tabs.py`: a scrolling tab row, every page in a scroll area sized from its minimum; the window minimum 1,530 × 911 → 412 × 273; geometry + docks kept between runs); the Breeding tab's Try a cross page shows the BABY (`editor2/core/cross.py` over the S130 raising model: max level, stats, AI with the dropped carry, resistances, gender, the learn queue with sources + the level each skill is learned; parents typical or from a .sav; `tools/walk_cross.py` 2,694 / 2,694 on the user's save, negative 166 FAIL); help `58_raising.md`; EID 0 skipped as a typical row. Byte-neutral (pin `7aae0e95…`, patched, unchanged). Built S169, NOT yet user-tested. Next: S170 more than 58 re-arted monsters.
 - **S168** (2026-11-05): ROADMAP P3.3g built — PAGE 2: a tileset holds 256 tiles, the second 128 in VRAM bank 1 (attribute bit 3, GBC only). Census `tools/census_vram_bank1.py` (the original never touches bank 1's tiles: title, battles, 519 cutscenes); engine: page-2 banks (the last ext kind; GDMA copy at every room-sheet load via bank $0B's regions → `Page2Room`, tiles $E0-$FF mirrored), boxes / windows clean over page 2 (`wPage2On` → bank $73 / $77; ScreenPush attribute + tile per cell), own animations on page 2; compiler: tile values $100-$17F, derived attr streams; editor: every slot search spills onto page 2, statues keep page 1, Tileset tab / metatile editor show both pages. `tools/walk_page2.py` 55 / 55 on the user's save (negative 6 FAIL). PROJECT_COMPILER §2.76. Test ROM `DWM-S168-page2-test.gbc` (patched); pin `7aae0e95…` (patched). **S168 r2** (user report: Grandpa's BREED / HATCH / EXIT words over the floor): rooms with a breeding / farm / egg screen keep the page-1 slots it draws into free (`services.BORROWED_SLOTS`; moved on NPC creation and on open, page 2 first; validator warning); walk 62 / 62; test ROM `DWM-S168r2-page2-test.gbc` (patched). Built S168 r2; the r2 ROM USER-CONFIRMED 2026-11-05 18:10 ("Great that fixed it"); the editor half NOT yet user-tested.
@@ -538,6 +550,8 @@ real project starts, so these are best confirmed on the way into it:
   Palettes → *Re-plan colours…* (re-roll, keep rows); Draw with every row.
 - S171 r5: parked metatiles — a big Borrow / picture import into a full room (nothing refused;
   the *Parked* section), painting with a parked one, Tileset tab *Park unplaced* / *Delete parked*.
+- S171 r6: Draw (⌘Z / ⌘⇧Z, a row change keeps the shapes, row / swap tools); Borrow *colours: into
+  row N* + the preview; right-click → *Copy in row*.
 
 ### Not yet implemented
 

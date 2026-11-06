@@ -491,6 +491,8 @@ class RoomsTab(QWidget):
         self.picker.removeRequested.connect(self._remove_metatile)
         self.picker.parkedPicked.connect(self._unpark)              # S171 r5
         self.picker.parkedRemove.connect(self._delete_parked)
+        self.picker.copyInRow.connect(self._copy_in_row)            # S171 r6
+        self.picker.parkedCopyInRow.connect(self._parked_copy_in_row)
         pscroll = QScrollArea()
         pscroll.setWidgetResizable(True)
         pscroll.setWidget(self.picker)
@@ -538,6 +540,26 @@ class RoomsTab(QWidget):
             'animates keeps moving).')
         self.borrow_match.toggled.connect(lambda _on: self._refresh_foreign())
         mrow.addWidget(self.borrow_match)
+        # S171 r6 (user: "I may want some tiles to be 1 colour and some other tiles to be a
+        # different (palette-compatible) colour"): which row(s) an import may take
+        self.borrow_rows = QComboBox()
+        self.borrow_rows.addItem('into the closest row', None)
+        for r in range(4):
+            self.borrow_rows.addItem(f'into row {r}', r)
+        self.borrow_rows.setToolTip(
+            'Where matched tiles go: each 8x8 piece into the row of this room that looks '
+            'closest, or every piece into the row you pick. Either way each colour of the art '
+            'takes its own colour number — shapes are never merged.')
+        self.borrow_rows.currentIndexChanged.connect(lambda _i: self._borrow_preview_changed())
+        crow = QHBoxLayout()
+        crow.addWidget(QLabel('colours'))
+        crow.addWidget(self.borrow_rows)
+        self.borrow_preview = QCheckBox('show as they will look here')
+        self.borrow_preview.setToolTip('Draw the tiles (and picture cells) as they will look in '
+                                       'this room after the import — the rows chosen on the left.')
+        self.borrow_preview.toggled.connect(lambda _on: self._borrow_preview_changed())
+        crow.addWidget(self.borrow_preview)
+        crow.addStretch(1)
         self.borrow_png_btn = QPushButton('A picture (PNG)…')
         self.borrow_png_btn.setToolTip('Borrow cells of a PNG straight into this room — no '
                                        'helper room needed (colours matched).')
@@ -545,6 +567,7 @@ class RoomsTab(QWidget):
         mrow.addWidget(self.borrow_png_btn)
         mrow.addStretch(1)
         bl.addLayout(mrow)
+        bl.addLayout(crow)
         self.picker_foreign = MetatilePicker(sections=('foreign',))
         self.picker_foreign.brushSelected.connect(self._foreign_brush)
         self.picker_foreign.hoverInfo.connect(self._hover)
@@ -1300,6 +1323,7 @@ class RoomsTab(QWidget):
                                             gfx.threshold, same,
                                             pals=self._source_rows() if not same and
                                             self.borrow_match.isChecked() else None)
+            self._borrow_preview_changed()
             return
         sel = self.foreign_box.currentData()
         if sel is None or self.canvas.gfx is None:
@@ -1320,6 +1344,47 @@ class RoomsTab(QWidget):
         self.picker_foreign.set_foreign(title, vocab, gfx.sheet, gfx.threshold, same,
                                         pals=self._source_rows() if not same and
                                         self.borrow_match.isChecked() else None)
+        self._borrow_preview_changed()
+
+    # ------------------------------------------- S171 r6: rows chosen + preview
+    def _allowed_rows(self):
+        r = self.borrow_rows.currentData()
+        return (0, 1, 2, 3) if r is None else (int(r),)
+
+    def _preview_image(self, qs):
+        """4 Quarters -> a 16x16 PIL picture as the import would draw them here."""
+        from PIL import Image
+        from editor2.core import recolour as RC
+        cv = self.canvas
+        if qs is None or cv.pals is None:
+            return None
+        rows = [list(cv.pals[i]) for i in range(4)]
+        img = Image.new('RGB', (16, 16))
+        for k, q in enumerate(qs):
+            r, idx, _e = RC.best_row(q, rows, allowed=self._allowed_rows())
+            t = Image.new('RGB', (8, 8))
+            t.putdata([tuple(rows[r][v][:3]) for v in idx])
+            img.paste(t, ((k % 2) * 8, (k // 2) * 8))
+        return img
+
+    def _borrow_preview_changed(self):
+        on = self.borrow_preview.isChecked()
+        if on and self.borrow_match.isChecked():
+            def fmt(mt):
+                got = self._source_quarters(mt)
+                return self._preview_image(got[0]) if got is not None else None
+            self.picker_foreign.set_preview(fmt, (self._allowed_rows(), id(self.canvas.pals)))
+        else:
+            self.picker_foreign.set_preview(None)
+        if getattr(self, '_png', None) is None:
+            return
+        if on:
+            from editor2.app.rooms.png_source import cell_quarters
+            from editor2.core import recolour as RC
+            self.png_cells.set_preview(lambda cell: self._preview_image(
+                [RC.Quarter.from_rgb(q) for q in cell_quarters(cell)]))
+        else:
+            self.png_cells.set_preview(None)
 
     # ------------------------------------------- S171 r4: colour-true borrowing
     def _source_rows(self):
@@ -1382,11 +1447,13 @@ class RoomsTab(QWidget):
         rows = [list(cv.pals[i]) for i in range(4)]
         own = bytes(cv.gfx.sheet[:2048])
 
+        allowed = self._allowed_rows()
+
         def op(doc):
             out = []
             for qs, walk, name in items:
                 new, _msg, errs = RC.import_true_metatile(doc, rid, qs, rows, thr, walk, name,
-                                                          own_sheet=own)
+                                                          own_sheet=own, allowed_rows=allowed)
                 out.append((new, errs))
             return out
         cmd = C.SnapshotCommand(self.s, label, op)
@@ -1476,6 +1543,7 @@ class RoomsTab(QWidget):
         cells, what = cut_cells(self._png[1], None if auto else self.png_ox.value(),
                                 None if auto else self.png_oy.value())
         self.png_cells.set_cells(cells)
+        self._borrow_preview_changed()
         self.png_head.setText(f'<b>{os.path.basename(self._png[0])}</b> — {len(cells)} different '
                               f'cells ({what}). Click = import one; Ctrl / Shift + click = '
                               'select several.')
@@ -1924,6 +1992,40 @@ class RoomsTab(QWidget):
         self.status_line.setText(msg)
         self._brush_selected(new)
         self.picker.select_metatile(new)
+
+    def _copy_in_row(self, mt, row):
+        """S171 r6 (user: "I may want some tiles to be 1 colour and some other tiles to be a
+        different (palette-compatible) colour"): a My metatile with the same tiles drawn in
+        `row` — the shapes and colour numbers kept, no tileset slot spent; it is the brush."""
+        from editor2.core.document import metatile_key
+        room = self.current_room()
+        if room is None:
+            QMessageBox.information(self, 'Copy in row', 'This is a game room (read-only) — '
+                                    'Make editable first.')
+            return
+        tid = self.s.doc.tileset_key(room)
+        new = {'name': f"{mt.get('name') or 'metatile'} (row {row})",
+               'tiles': [int(t) for t in mt['tiles']], 'pal': int(row)}
+        have = [m for m in self.s.doc.metatiles(tid) if metatile_key(m) == metatile_key(new)]
+        if not have:
+            self.s.undo.push(C.SnapshotCommand(
+                self.s, f'Copy in row {row}',
+                lambda doc: doc.add_metatile(tid, new['name'], new['tiles'], row)))
+            self._show()
+        self._brush_selected(have[0] if have else new)
+        self.picker.select_metatile(have[0] if have else new)
+        self.status_line.setText(f"'{new['name']}' — the same tiles in row {row}'s colours "
+                                 '(no new slot); it is the brush')
+
+    def _parked_copy_in_row(self, index, row):
+        room = self.current_room()
+        if room is None:
+            return
+        tid = self.s.doc.tileset_key(room)
+        self.s.undo.push(C.SnapshotCommand(self.s, f'Copy parked metatile in row {row}',
+                                           lambda doc: PK.copy_in_row(doc, tid, index, row)))
+        self._show()
+        self.status_line.setText(f'A parked copy in row {row} — under Parked; click it to paint')
 
     def _delete_parked(self, index):
         room = self.current_room()

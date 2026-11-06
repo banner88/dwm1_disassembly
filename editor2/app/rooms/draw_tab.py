@@ -17,6 +17,17 @@ another row MOVES that quarter to that row — its other pixels take the closest
 there (recolour.dist). The quarters' rows travel with the drawing: "as a new metatile"
 saves them; "everywhere" is refused once a row changed (other cells drawing those tiles
 keep their rows) — save it as a new metatile on every cell drawing the original instead.
+
+S171 r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole quarter
+a blank colour instead of filling in or doing pixel by pixel?"; "I will never want to
+change the actual structure, only RECOLOR ALL PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only
+me clicking individual pixels should change STRUCTURE"): a quarter moved to another row
+KEEPS every pixel's colour number (r4 renumbered them to the closest colours — two colours
+could become one, a whole quarter one flat colour); then the clicked pixel is painted.
+Tools: "row ▸ 0-3" moves the part to a row (numbers kept), "swap a ⇄ b" exchanges two colour
+numbers in the part (all pixels of one colour become the other and back) — neither changes
+a shape. Cmd+Z / Cmd+Shift+Z undo / redo strokes while a drawing is loaded and the tab is
+shown (the main window asks `owns_undo()`), the Redo button too.
 """
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -47,6 +58,7 @@ class DrawTab(QWidget):
     everywhereRequested = Signal(object)         # {'mt', 'old', 'new'}
     newRequested = Signal(object)                # {'mt', 'new', 'walkable', 'name', 'place', 'pal'}
     status = Signal(str)
+    historyChanged = Signal()                    # S171 r6: the stroke history changed
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -61,6 +73,7 @@ class DrawTab(QWidget):
         self.can_place_sel = False
         self.part = 'whole'
         self._undo = []
+        self._redo = []                  # S171 r6
         self._clip = None
         v = QVBoxLayout(self)
         v.setContentsMargins(6, 6, 6, 6)
@@ -154,12 +167,44 @@ class DrawTab(QWidget):
         tools = (('Flip ↔', 'flip_h'), ('Flip ↕', 'flip_v'), ('Shift ◀', 'left'),
                  ('Shift ▶', 'right'), ('Shift ▲', 'up'), ('Shift ▼', 'down'),
                  ('Copy', 'copy'), ('Paste', 'paste'), ('Clear', 'clear'),
-                 ('Undo', 'undo'), ('Revert', 'revert'))
+                 ('Undo', 'undo'), ('Redo', 'redo'), ('Revert', 'revert'))
         for i, (text, key) in enumerate(tools):
             b = QPushButton(text)
+            if key in ('undo', 'redo'):
+                b.setToolTip(f'{text} the last stroke or tool (also ⌘{"Z" if key == "undo" else "⇧Z"} '
+                             'while a drawing is loaded)')
             b.clicked.connect(lambda _c=False, k=key: self._tool(k))
             grid.addWidget(b, i // 4, i % 4)
         side.addLayout(grid)
+        # S171 r6: recolour without touching a shape
+        side.addWidget(_wrap('recolour the part — shapes stay as they are:', 'color: #888;'))
+        rr = QHBoxLayout()
+        rr.addWidget(QLabel('row'))
+        self.row_btns = []
+        for r in range(4):
+            b = QPushButton(str(r))
+            b.setFixedWidth(34)
+            b.setToolTip(f'put the part in row {r} — every pixel keeps its colour number, so '
+                         'it shows the same picture in that row\'s colours (no new slot)')
+            b.clicked.connect(lambda _c=False, rr_=r: self._tool(('row', rr_)))
+            rr.addWidget(b)
+            self.row_btns.append(b)
+        rr.addStretch(1)
+        side.addLayout(rr)
+        sr = QGridLayout()
+        sr.setHorizontalSpacing(3)
+        sr.addWidget(QLabel('swap'), 0, 0)
+        self.swap_btns = {}
+        for n, (a, b_) in enumerate(((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))):
+            b = QToolButton()
+            b.setText(f'{a}⇄{b_}')
+            b.setToolTip(f'every pixel of colour {a} becomes colour {b_} and every pixel of '
+                         f'colour {b_} becomes colour {a} (in the part)')
+            b.clicked.connect(lambda _c=False, pr_=(a, b_): self._tool(('swap',) + pr_))
+            sr.addWidget(b, n // 3, 1 + n % 3)
+            self.swap_btns[(a, b_)] = b
+        sr.setColumnStretch(4, 1)
+        side.addLayout(sr)
         v.addLayout(side)
         # ③ apply
         ga = QGroupBox('③ Apply')
@@ -224,6 +269,8 @@ class DrawTab(QWidget):
         self.old_qrow = list(self.qrow)
         self.pals = [list(self.rows[r]) for r in self.qrow]
         self._undo = []
+        self._redo = []
+        self.historyChanged.emit()
         self.pad.set_frame(2, 2, self.old, self.pals, editable=True)
         self.walkable.blockSignals(True)
         self.walkable.setChecked(bool(walkable))
@@ -287,22 +334,25 @@ class DrawTab(QWidget):
             lab.setStyleSheet('font-weight: bold; color: #ffe000;' if rr == r else '')
         self.sw_note.setText(f'the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
                              f'quarter is in row {r}. Paint it with a colour of another row and '
-                             'it moves there (its other pixels take that row\'s closest colours).')
+                             'it moves there — its other pixels keep their colour numbers (the '
+                             'same shapes in that row\'s colours).')
 
     def _pre_put(self, k):
-        """S171 r4: painting quarter `k` with a colour of another row moves it there."""
+        """S171 r4: painting quarter `k` with a colour of another row moves it there.
+        S171 r6: every pixel KEEPS its colour number (the same picture in that row's
+        colours) — r4 renumbered to the closest colours, which could merge colours."""
         if not self.qrow or self.qrow[k] == self.cur_row or self.cur_row >= len(self.rows):
             return
-        from editor2.core.recolour import dist
-        old, new = self.rows[self.qrow[k]], self.rows[self.cur_row]
-        remap = [min(range(4), key=lambda j: (dist(old[i], new[j]), j != i)) for i in range(4)]
-        self.pad.px[k] = [remap[v & 3] for v in self.pad.px[k]]
-        self.qrow[k] = self.cur_row
-        self.pals[k] = list(new)
-        self.pad.pals = self.pals
+        self._move_row(k, self.cur_row)
         self.status.emit(f'Draw: the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
-                         f'quarter moved to row {self.cur_row}')
+                         f'quarter moved to row {self.cur_row} (an 8×8 quarter shows one row; '
+                         'its pixels kept their colour numbers) — Undo / ⌘Z puts it back')
         self._quarter_clicked(k)
+
+    def _move_row(self, k, row):
+        self.qrow[k] = row
+        self.pals[k] = list(self.rows[row])
+        self.pad.pals = self.pals
 
     def _set_part(self, part):
         self.part = part
@@ -317,6 +367,32 @@ class DrawTab(QWidget):
     def _snap(self):
         self._undo.append((self.current(), list(self.qrow or [])))
         del self._undo[:-100]
+        self._redo = []
+        self.historyChanged.emit()
+
+    # S171 r6: the main window's ⌘Z / ⌘⇧Z come here while this tab owns them
+    def owns_undo(self):
+        return self.mt is not None and self.isVisibleTo(self.window())
+
+    def can_undo(self):
+        return bool(self._undo)
+
+    def can_redo(self):
+        return bool(self._redo)
+
+    def undo(self):
+        self._tool('undo')
+
+    def redo(self):
+        self._tool('redo')
+
+    def showEvent(self, ev):
+        super().showEvent(ev)
+        self.historyChanged.emit()
+
+    def hideEvent(self, ev):
+        super().hideEvent(ev)
+        self.historyChanged.emit()
 
     def _restore(self, snap):
         px, qrow = snap
@@ -333,11 +409,33 @@ class DrawTab(QWidget):
     def _tool(self, key):
         if self.mt is None:
             return
-        if key == 'undo':
-            if self._undo:
-                self._restore(self._undo.pop())
+        if key in ('undo', 'redo'):
+            src, dst = (self._undo, self._redo) if key == 'undo' else (self._redo, self._undo)
+            if src:
+                dst.append((self.current(), list(self.qrow or [])))
+                self._restore(src.pop())
                 self.pad.update()
                 self._changed()
+                self.historyChanged.emit()
+            return
+        if isinstance(key, tuple):                 # S171 r6: row / swap — shapes kept
+            self._snap()
+            px = self.current()
+            if key[0] == 'row':
+                for q in self._parts():
+                    self._move_row(q, key[1])
+                self._quarter_clicked(self._parts()[0])
+                self.status.emit(f'Draw: row {key[1]} for '
+                                 + ('the whole tile' if self.part == 'whole' else 'the quarter')
+                                 + ' — colour numbers kept')
+            else:
+                a, b = key[1], key[2]
+                sw = {a: b, b: a}
+                for q in self._parts():
+                    px[q] = [sw.get(v, v) for v in px[q]]
+                self.pad.px = px
+            self.pad.update()
+            self._changed()
             return
         if key == 'revert':
             self._snap()

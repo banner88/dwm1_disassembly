@@ -77,18 +77,37 @@ class PngCells(QWidget):
         self.selected = set()
         self._pix = []
         self._drag = None
+        self.preview_fn = None           # S171 r6: cell -> PIL picture as it would import
         self.setMouseTracking(True)
         self.setMinimumWidth(PER_ROW * (THUMB + GAP) + GAP)
+
+    def set_preview(self, fn):
+        """S171 r6: show the cells as they would look imported (None = their own colours)."""
+        if fn is None and self.preview_fn is None:
+            return
+        self.preview_fn = fn
+        self._render_all()
+        self.update()
+
+    def _render_all(self):
+        self._pix = []
+        for _x, _y, c in self.cells:
+            im = None
+            if self.preview_fn is not None:
+                try:
+                    im = self.preview_fn(c)
+                except Exception:                                # noqa: BLE001
+                    im = None
+            if im is None:
+                im = Image.new('RGB', (CELL, CELL))
+                im.putdata([tuple(p) for p in c])
+            im = im.resize((THUMB, THUMB), Image.NEAREST)
+            self._pix.append(QPixmap.fromImage(ImageQt.ImageQt(im)))
 
     def set_cells(self, cells):
         self.cells = list(cells)
         self.selected = set()
-        self._pix = []
-        for _x, _y, c in self.cells:
-            im = Image.new('RGB', (CELL, CELL))
-            im.putdata([tuple(p) for p in c])
-            im = im.resize((THUMB, THUMB), Image.NEAREST)
-            self._pix.append(QPixmap.fromImage(ImageQt.ImageQt(im)))
+        self._render_all()
         rows = (len(self.cells) + PER_ROW - 1) // PER_ROW
         self.setFixedHeight(max(60, rows * (THUMB + GAP) + GAP))
         self.selectionChanged.emit(0)
