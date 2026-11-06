@@ -76,6 +76,9 @@ class FramePad(QWidget):
         self.active = False
         self.part_rect = None            # (x, y, w, h) in pixels: the selected part
         self.pre_put = None              # S171 r4 (Draw): called with the tile index before a paint
+        # S171 r7 (Draw): pre_put(k, colour) -> the colour number to paint, or None = do not
+        # paint there; click_hook((x, y)) -> True = the click was used (Recolour mode)
+        self.click_hook = None
         self._last = None
         self._resize()
 
@@ -185,13 +188,18 @@ class FramePad(QWidget):
             return
         if not self.editable:
             return
-        self.aboutToChange.emit()
+        if self.click_hook is not None and self.click_hook(xy):
+            return
+        colour = self.colour
         if self.pre_put is not None:
-            self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8)
+            colour = self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8, colour)
+            if colour is None:
+                return
+        self.aboutToChange.emit()
         if ev.modifiers() & Qt.ShiftModifier:
-            self._fill(*xy, self.colour)
+            self._fill(*xy, colour)
         else:
-            self.put(*xy, self.colour)
+            self.put(*xy, colour)
             self._last = xy
         self.update()
         self.changed.emit()
@@ -201,9 +209,11 @@ class FramePad(QWidget):
             return
         xy = self._xy(ev)
         if xy and xy != self._last:
+            colour = self.colour
             if self.pre_put is not None:
-                self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8)
-            self.put(*xy, self.colour)
+                colour = self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8, colour)
+            if colour is not None:
+                self.put(*xy, colour)
             self._last = xy
             self.update()
             self.changed.emit()

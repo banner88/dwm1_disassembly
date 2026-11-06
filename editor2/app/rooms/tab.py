@@ -1761,6 +1761,15 @@ class RoomsTab(QWidget):
         room = self.current_room()
         if room is None or self.canvas.tiles is None:
             return
+        # S171 r7 (user: "Does it get identity from the original tile and not from current
+        # drawing window"): the drawing follows the palette of the screen it came from
+        dk = getattr(self, '_draw_from', None)
+        if dk == (self.room_id, self.key, self.state_idx) and self.draw_tab.loaded():
+            try:        # from the document (the canvas may reload after this slot)
+                pals = self.s.renderer.room_palettes(room, self.key, self.state_idx)
+                self.draw_tab.set_rows([list(pals[r]) for r in range(4)])
+            except Exception:                                    # noqa: BLE001
+                pass
         sts = self.s.doc.states(room, self.key)
         self.state_box.blockSignals(True)
         self.state_box.clear()
@@ -4889,6 +4898,7 @@ class RoomsTab(QWidget):
         if sel is not None and cv.lid is not None:
             self._draw_cells = (self.room_id, self.key, self.state_idx, cv.lid, sel)
         # S171 r4: every row of the room is offered; each quarter starts in its own row
+        self._draw_from = (self.room_id, self.key, self.state_idx)       # S171 r7
         self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok,
                            rows=[list(cv.pals[r]) for r in range(len(cv.pals))],
                            qrow=list(TD.quarter_pals(mt)))

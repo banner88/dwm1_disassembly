@@ -103,6 +103,14 @@
 > built (`3b962c03…`, patched test build), the room in PyBoy = the editor; a Draw stroke undone
 > by ⌘Z, the project untouched. test_app `s171_recolour`. EDITOR_DESIGN §5.1 "S171 r6", help
 > 10_rooms / 13_tilesets.
+> **r7 (user: "why does clicking on some pixels change that pixel and clicking on other pixels
+> change the entire regions? … I click on black and it recolours other colours? Does it get
+> identity from the original tile and not from current drawing window"; "Yes I want that"):**
+> Draw — painting never moves a quarter (own row; shared colours like black paint as its own;
+> others refused and dimmed), right-click picks the pixel's own row, palette edits reach the
+> drawing at once, *Recolour…* (a colour in the drawing → a swatch) replaces the swap buttons.
+> (The user's "play does nothing" was the ▶ Play animation preview in a room without animated
+> tiles — normal.) test_app `s171_recolour` extended; EDITOR_DESIGN §5.1 "S171 r7".
 > **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
 > `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
 > Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
@@ -550,8 +558,9 @@ real project starts, so these are best confirmed on the way into it:
   Palettes → *Re-plan colours…* (re-roll, keep rows); Draw with every row.
 - S171 r5: parked metatiles — a big Borrow / picture import into a full room (nothing refused;
   the *Parked* section), painting with a parked one, Tileset tab *Park unplaced* / *Delete parked*.
-- S171 r6: Draw (⌘Z / ⌘⇧Z, a row change keeps the shapes, row / swap tools); Borrow *colours: into
-  row N* + the preview; right-click → *Copy in row*.
+- S171 r6/r7: Draw (⌘Z / ⌘⇧Z; a quarter keeps its row — black paints one pixel; row buttons,
+  *Recolour…*; palette edits show at once); Borrow *colours: into row N* + the preview;
+  right-click → *Copy in row*.
 
 ### Not yet implemented
 

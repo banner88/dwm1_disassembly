@@ -828,7 +828,25 @@ happening"; built S99, NOT yet user-tested):**
   My metatile with the same tiles and `pal` N (0 slots), or a parked twin (`parking.
   copy_in_row`, truth dropped — a pure palette swap). `parking._fit` no longer moves a
   quarter to another row (a row may be chosen on purpose); it only re-matches within it.
- (user: "please make the 'make
+- **S171 r7 — Draw: a quarter keeps its row unless you move it** (user: "why does clicking on
+  some pixels change that pixel and clicking on other pixels change the entire regions? …
+  some of the 1-3 and 2-3 and 1-2 etc buttons do NOT give all possible swaps … I click on
+  black and it recolours other colours? Does it get identity from the original tile and not
+  from current drawing window"; "Yes I want that"). Found: (1) painting with another row's
+  colour moved the whole quarter (r4 / r6) — black and cream are in every row but counted
+  as "another row"; (2) right-click picked colour number i of the LAST row used, not the
+  clicked quarter's; (3) the drawing kept the rows of load time — palette edits never
+  reached it; (4) the swaps worked on numbers of one row only. Now: `FramePad.pre_put(k,
+  colour)` returns the colour number to paint (None = refused): `DrawTab._own_colour` maps a
+  colour of another row onto the quarter's own row by RGB (black → its black) or refuses
+  with a hint; `_paint_swatches` dims the colours the clicked quarter's row lacks;
+  `_set_colour` (right-click) takes the row of the clicked quarter (`tileClicked` comes
+  first); a row changes only by the *row 0-3* buttons; `RoomsTab._refresh_side` (palette
+  edits, undo) calls `DrawTab.set_rows` with the drawn screen's rows from the renderer (the
+  canvas reloads after that slot); `FramePad.click_hook` + *Recolour…* (click a colour in
+  the drawing, then a swatch: every pixel of that RGB in the part → the swatch's colour,
+  per quarter in its own row; quarters whose row lacks it are reported).
+- **S99 r3 — "Make animated" tab** (user: "please make the 'make
   animatable' tab. Bonus points if you can make a little tab/edit doodad
   that lets me re-paint a second tile in a paint-like manner"; and "how do I
   change animation of e.g. the water? Double clicking on the tile doesnt

@@ -28,6 +28,18 @@ Tools: "row ▸ 0-3" moves the part to a row (numbers kept), "swap a ⇄ b" exch
 numbers in the part (all pixels of one colour become the other and back) — neither changes
 a shape. Cmd+Z / Cmd+Shift+Z undo / redo strokes while a drawing is loaded and the tab is
 shown (the main window asks `owns_undo()`), the Redo button too.
+
+S171 r7 (user: "why does clicking on some pixels change that pixel and clicking on other
+pixels change the entire regions? … I click on black and it recolours other colours? Does
+it get identity from the original tile and not from current drawing window …"; then "Yes I
+want that"): painting NEVER moves a quarter to another row any more — a quarter is painted
+with the colours of its own row (another row's colour that the quarter's row also has, like
+black or cream, paints as that one; any other is refused with a hint); the other rows'
+swatches are dimmed for the quarter last clicked; right-click picks the clicked pixel's own
+row; a quarter changes row only with the *row 0-3* buttons; the room's palette edits reach
+the drawing at once (`set_rows`); *Recolour* (click a colour in the drawing, then a swatch)
+turns every pixel of that colour in the part into the colour picked — it replaces the six
+numbered swap buttons.
 """
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -111,7 +123,8 @@ class DrawTab(QWidget):
         mid = QHBoxLayout()
         self.pad = FramePad()
         self.pad.set_zoom(13)
-        self.pad.pre_put = self._pre_put           # S171 r4
+        self.pad.pre_put = self._pre_put           # S171 r4 / r7
+        self.pad.click_hook = self._recolour_click  # S171 r7
         self.pad.aboutToChange.connect(self._snap)
         self.pad.changed.connect(self._changed)
         self.pad.picked.connect(self._set_colour)
@@ -129,8 +142,9 @@ class DrawTab(QWidget):
         mid.addStretch(1)
         v.addLayout(mid)
         side = QVBoxLayout()
-        side.addWidget(_wrap('colour — every row of the room. A quarter takes the row of '
-                             'the colour you paint it with.'))
+        side.addWidget(_wrap('colour — every row of the room. A quarter is painted with its '
+                             'own row\'s colours (the others are dimmed); the row buttons below '
+                             'move it to another row.'))
         self.swatches = {}                 # (row, index) -> button
         self.row_labels = []
         sw = QGridLayout()
@@ -178,6 +192,17 @@ class DrawTab(QWidget):
         side.addLayout(grid)
         # S171 r6: recolour without touching a shape
         side.addWidget(_wrap('recolour the part — shapes stay as they are:', 'color: #888;'))
+        rc = QHBoxLayout()
+        self.recolour_btn = QPushButton('Recolour…')
+        self.recolour_btn.setCheckable(True)
+        self.recolour_btn.setToolTip(
+            'Click a colour in the drawing, then a colour swatch: every pixel of that colour in '
+            'the part (the whole tile or the quarter picked above) becomes the colour you picked.')
+        self.recolour_btn.toggled.connect(self._recolour_toggled)
+        rc.addWidget(self.recolour_btn)
+        rc.addStretch(1)
+        side.addLayout(rc)
+        self._recolour_src = None          # S171 r7: (quarter, colour number) clicked
         rr = QHBoxLayout()
         rr.addWidget(QLabel('row'))
         self.row_btns = []
@@ -191,20 +216,6 @@ class DrawTab(QWidget):
             self.row_btns.append(b)
         rr.addStretch(1)
         side.addLayout(rr)
-        sr = QGridLayout()
-        sr.setHorizontalSpacing(3)
-        sr.addWidget(QLabel('swap'), 0, 0)
-        self.swap_btns = {}
-        for n, (a, b_) in enumerate(((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))):
-            b = QToolButton()
-            b.setText(f'{a}⇄{b_}')
-            b.setToolTip(f'every pixel of colour {a} becomes colour {b_} and every pixel of '
-                         f'colour {b_} becomes colour {a} (in the part)')
-            b.clicked.connect(lambda _c=False, pr_=(a, b_): self._tool(('swap',) + pr_))
-            sr.addWidget(b, n // 3, 1 + n % 3)
-            self.swap_btns[(a, b_)] = b
-        sr.setColumnStretch(4, 1)
-        side.addLayout(sr)
         v.addLayout(side)
         # ③ apply
         ga = QGroupBox('③ Apply')
@@ -307,21 +318,118 @@ class DrawTab(QWidget):
 
     # ------------------------------------------------------------ paint
     def _set_colour(self, i):
-        """Colour number `i` of the current row (the right-click pick, the start)."""
-        self._pick_swatch(self.cur_row, i)
+        """Colour number `i` of the clicked quarter's row (the right-click pick; S171 r7:
+        the pad's tileClicked came first, so _sw_quarter is the quarter clicked)."""
+        k = getattr(self, '_sw_quarter', 0)
+        row = self.qrow[k] if self.qrow else self.cur_row
+        self._pick_swatch(row, i)
 
     def _pick_swatch(self, row, i):
+        if self._recolour_src is not None:          # S171 r7: Recolour's second click
+            self._recolour_to(row, i)
+            return
         self.cur_row, self.pad.colour = row, i
         for (r, k), b in self.swatches.items():
             b.setChecked(r == row and k == i)
 
+    # ---- S171 r7: rows follow the palette; Recolour
+    def set_rows(self, rows):
+        """The room's 4 rows changed (the Palettes page): the drawing shows them at once."""
+        if self.mt is None or not rows:
+            return
+        rows = [list(r) for r in rows[:4]]
+        if rows == self.rows[:4]:
+            return
+        self.rows = rows + self.rows[4:]
+        self.pals = [list(self.rows[r]) for r in self.qrow]
+        self.pad.pals = self.pals
+        self._paint_swatches()
+        self.pad.update()
+        self._changed()
+
+    def _own_colour(self, k, row, i):
+        """The colour number in quarter k's row that IS colour i of `row` (same RGB), or
+        None."""
+        if not self.qrow or not self.rows:
+            return i
+        mine = self.qrow[k]
+        if row == mine:
+            return i
+        want = tuple(self.rows[row][i][:3])
+        own = [tuple(c[:3]) for c in self.rows[mine]]
+        if want not in own:
+            return None
+        return i if own[i] == want else own.index(want)
+
+    def _recolour_toggled(self, on):
+        self._recolour_src = None
+        if on:
+            self.status.emit('Recolour: click a colour in the drawing (inside the part: '
+                             + ('the whole tile' if self.part == 'whole' else 'the quarter')
+                             + ')')
+
+    def _recolour_click(self, xy):
+        if not self.recolour_btn.isChecked() or self.mt is None:
+            return False
+        k = (xy[1] // 8) * 2 + xy[0] // 8
+        if k not in self._parts():
+            self.status.emit('Recolour: that pixel is outside the part — pick the whole tile or '
+                             'that quarter under "tools act on"')
+            return True
+        self._recolour_src = (k, self.pad.get(*xy))
+        r = self.qrow[k]
+        self.status.emit(f'Recolour: colour {self._recolour_src[1]} of row {r} — now click the '
+                         'swatch it should become')
+        return True
+
+    def _recolour_to(self, row, i):
+        k, a = self._recolour_src
+        self._recolour_src = None
+        self.recolour_btn.setChecked(False)
+        src_rgb = tuple(self.rows[self.qrow[k]][a][:3])
+        self._snap()
+        px = self.current()
+        done, skipped = 0, []
+        for q in self._parts():
+            own = [tuple(c[:3]) for c in self.rows[self.qrow[q]]]
+            if src_rgb not in own:
+                continue
+            b = self._own_colour(q, row, i)
+            if b is None:
+                skipped.append(q)
+                continue
+            hits = {n for n, c in enumerate(own) if c == src_rgb}
+            new = [b if v in hits else v for v in px[q]]
+            done += sum(1 for x, y in zip(px[q], new) if x != y)
+            px[q] = new
+        self.pad.px = px
+        self.pad.update()
+        self._changed()
+        names = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
+        msg = f'Recolour: {done} pixel(s) changed'
+        if skipped:
+            msg += (' — not in the ' + ', '.join(names[q] for q in skipped)
+                    + f' quarter: row {row}\'s colour is not in its row (move it with the row '
+                    'buttons first)')
+        self.status.emit(msg)
+
     def _paint_swatches(self):
+        k = getattr(self, '_sw_quarter', None)
+        mine = self.qrow[k] if (k is not None and self.qrow) else None
+        own = {tuple(c[:3]) for c in self.rows[mine]} if mine is not None and self.rows else set()
         for (r, i), b in self.swatches.items():
             if not self.rows or r >= len(self.rows):
                 b.setStyleSheet('')
                 continue
             c = QColor(*self.rows[r][i])
-            b.setStyleSheet(f'QToolButton {{ background: {c.name()}; border: 1px solid #555; }}'
+            # S171 r7: a colour the clicked quarter cannot use is dimmed
+            usable = mine is None or r == mine or tuple(self.rows[r][i][:3]) in own
+            if not usable:
+                g = QColor(70, 70, 76)
+                c = QColor((c.red() + 2 * g.red()) // 3, (c.green() + 2 * g.green()) // 3,
+                           (c.blue() + 2 * g.blue()) // 3)
+            border = '1px solid #555' if usable else '1px dashed #333'
+            b.setStyleSheet(f'QToolButton {{ background: {c.name()}; border: {border}; }}'
                             f'QToolButton:checked {{ border: 3px solid #ffe000; }}')
 
     def _quarter_clicked(self, k):
@@ -333,21 +441,25 @@ class DrawTab(QWidget):
         for rr, lab in enumerate(self.row_labels):
             lab.setStyleSheet('font-weight: bold; color: #ffe000;' if rr == r else '')
         self.sw_note.setText(f'the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
-                             f'quarter is in row {r}. Paint it with a colour of another row and '
-                             'it moves there — its other pixels keep their colour numbers (the '
-                             'same shapes in that row\'s colours).')
+                             f'quarter is in row {r} — it is painted with row {r}\'s colours '
+                             '(the dimmed ones are not in its row). Another row: "tools act on" '
+                             'that quarter, then a row button.')
 
-    def _pre_put(self, k):
-        """S171 r4: painting quarter `k` with a colour of another row moves it there.
-        S171 r6: every pixel KEEPS its colour number (the same picture in that row's
-        colours) — r4 renumbered to the closest colours, which could merge colours."""
-        if not self.qrow or self.qrow[k] == self.cur_row or self.cur_row >= len(self.rows):
-            return
-        self._move_row(k, self.cur_row)
-        self.status.emit(f'Draw: the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
-                         f'quarter moved to row {self.cur_row} (an 8×8 quarter shows one row; '
-                         'its pixels kept their colour numbers) — Undo / ⌘Z puts it back')
-        self._quarter_clicked(k)
+    def _pre_put(self, k, colour):
+        """The colour number to paint into quarter `k` (S171 r7): a quarter is painted
+        with its OWN row — another row's colour that its row also has (black, cream…) paints
+        as that one; any other is refused (None) with a hint. (r4 / r6 moved the whole
+        quarter to the colour's row: "clicking on other pixels change the entire regions".)"""
+        if not self.qrow or self.cur_row >= len(self.rows or []):
+            return colour
+        got = self._own_colour(k, self.cur_row, colour)
+        if got is None:
+            names = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
+            self.status.emit(f'Draw: the {names[k]} quarter is in row {self.qrow[k]} and that '
+                             f'colour is only in row {self.cur_row} — pick a colour of row '
+                             f'{self.qrow[k]}, or move the quarter with the row buttons '
+                             '(tools act on that quarter, then "row ' + str(self.cur_row) + '")')
+        return got
 
     def _move_row(self, k, row):
         self.qrow[k] = row
@@ -428,12 +540,6 @@ class DrawTab(QWidget):
                 self.status.emit(f'Draw: row {key[1]} for '
                                  + ('the whole tile' if self.part == 'whole' else 'the quarter')
                                  + ' — colour numbers kept')
-            else:
-                a, b = key[1], key[2]
-                sw = {a: b, b: a}
-                for q in self._parts():
-                    px[q] = [sw.get(v, v) for v in px[q]]
-                self.pad.px = px
             self.pad.update()
             self._changed()
             return

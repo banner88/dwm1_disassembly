@@ -4104,16 +4104,16 @@ def s171_colour_true(app, w):
                   s.renderer.common_blocks(), doc.animated_slots(doc.tileset_key(room)))
     now = RC.plan_rows(sc.quarters(), 3, locked={r: cv.pals[r] for r in range(4)})
     assert now.error <= seen['first'] + 0.05, (now.error, seen['first'])
-    # Draw: every row; a quarter moves to the row of its colour
+    # Draw: every row; a quarter moves to another row (S171 r7: by the row buttons only)
     cv.selected_cell = (0, 1)
     rt._draw_load_cell()
     app.processEvents()
     dt = rt.draw_tab
     assert len(dt.swatches) == 16
     tgt = (dt.qrow[0] + 1) % 4
-    dt._pick_swatch(tgt, 2)
-    dt._snap()
-    dt._pre_put(0)
+    dt._set_part(0)
+    dt._tool(('row', tgt))
+    dt._set_part('whole')
     assert dt.qrow[0] == tgt and dt.rows_changed() and dt.pal_value() != dt.old_qrow[0]
     dt._update_report()
     assert not dt.ev_btn.isEnabled(), 'everywhere refused once a row changed'
@@ -4129,7 +4129,7 @@ def s171_colour_true(app, w):
     print(f"OK: S171 r4 colour-true tiles — Borrow matches colours (source colours shown, truth "
           f"recorded), 3 at once = 1 undo step, a PNG straight in (2 cells); Re-plan colours "
           f"({seen['n']} plans, re-roll, applied, error {now.error:.2f}); Draw offers 16 colours "
-          f"and moves a quarter's row; all undone exactly")
+          f"and moves a quarter's row (row button); all undone exactly")
 
 
 def s171_parking(app, w):
@@ -4314,7 +4314,10 @@ def s171_recolour(app, w):
     app.processEvents()
     n0 = s.undo.index()
     snap0 = json.dumps(doc.data, sort_keys=True)
-    # Draw: another row's colour keeps the quarter's colour numbers; ⌘Z undoes the stroke
+    # Draw (S171 r7): a quarter is painted with its own row; ⌘Z undoes the stroke
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    from editor2.app.rooms import commands as RCMD
     rt.picker_tabs.setCurrentIndex([rt.picker_tabs.tabText(i) for i in
                                     range(rt.picker_tabs.count())].index('Draw'))
     app.processEvents()
@@ -4323,33 +4326,71 @@ def s171_recolour(app, w):
     app.processEvents()
     dt = rt.draw_tab
     assert dt.owns_undo()
+    pad = dt.pad
+
+    def click(x, y, button=_Qt.LeftButton):
+        QTest.mouseClick(pad, button, _Qt.NoModifier,
+                         QPoint(3 + x * pad.zoom + pad.zoom // 2, 3 + y * pad.zoom + pad.zoom // 2))
+        app.processEvents()
     before = dt.current()
-    tgt = (dt.qrow[0] + 1) % 4
-    dt._pick_swatch(tgt, 2)
-    dt._snap()
-    dt._pre_put(0)
-    dt.pad.put(0, 0, dt.pad.colour)
-    dt._changed()
+    r0 = dt.qrow[0]
+    # a colour only another row has: refused, nothing changes, no undo step
+    other = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                  tuple(dt.rows[r][i][:3]) not in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    if other is not None:
+        n_u = len(dt._undo)
+        dt._pick_swatch(*other)
+        click(0, 0)
+        assert dt.current() == before and dt.qrow[0] == r0 and len(dt._undo) == n_u, \
+            'another row\'s colour does not repaint the quarter'
+    # black of another row = this row's black: one pixel, the row stays
+    blk = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                tuple(dt.rows[r][i][:3]) in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    assert blk is not None
+    want = [tuple(c[:3]) for c in dt.rows[r0]].index(tuple(dt.rows[blk[0]][blk[1]][:3]))
+    i0 = next(i for i in range(64) if before[0][i] != want)
+    dt._pick_swatch(*blk)
+    click(i0 % 8, i0 // 8)
     after = dt.current()
-    assert dt.qrow[0] == tgt
-    assert all(after[0][i] == before[0][i] for i in range(1, 64)), 'other pixels keep numbers'
-    assert after[0][0] == 2 and after[1:] == before[1:]
+    assert dt.qrow[0] == r0 and after[0][i0] == want, (after[0][i0], want)
+    assert sum(1 for i in range(64) if after[0][i] != before[0][i]) == 1 and after[1:] == before[1:]
+    # right-click picks the clicked quarter's own row
+    dt._pick_swatch((r0 + 1) % 4, 0)
+    click(1, 1, _Qt.RightButton)
+    assert dt.cur_row == r0 and dt.pad.colour == after[0][9]
     assert w.a_undo.isEnabled() and 'stroke' in w.a_undo.text(), w.a_undo.text()
     w.a_undo.trigger()
-    assert dt.current() == before and dt.qrow == dt.old_qrow, 'Cmd+Z undid the stroke'
+    assert dt.current() == before, 'Cmd+Z undid the stroke'
     assert s.undo.index() == n0, 'the project was not undone'
     w.a_redo.trigger()
-    assert dt.current() == after and dt.qrow[0] == tgt, 'Cmd+Shift+Z redid it'
-    # tools: row (numbers kept) and swap (a <-> b, shapes kept)
+    assert dt.current() == after, 'Cmd+Shift+Z redid it'
+    # row tool (numbers kept); Recolour = click a colour, then a swatch
     dt._set_part(1)
     p1 = list(dt.current()[1])
     dt._tool(('row', 3))
     assert dt.qrow[1] == 3 and dt.current()[1] == p1
-    dt._tool(('swap', 0, 3))
-    sw = {0: 3, 3: 0}
-    assert dt.current()[1] == [sw.get(v, v) for v in p1]
+    src_v = p1[0]
+    tgt_v = (src_v + 1) % 4
+    dt.recolour_btn.setChecked(True)
+    click(8, 0)
+    dt._pick_swatch(3, tgt_v)
+    own3 = [tuple(c[:3]) for c in dt.rows[3]]
+    hits = {n for n, c in enumerate(own3) if c == own3[src_v]}
+    tv = own3.index(own3[tgt_v])
+    assert dt.current()[1] == [tv if v in hits else v for v in p1], 'Recolour'
+    assert not dt.recolour_btn.isChecked()
     dt._tool('revert')
     dt._set_part('whole')
+    # the palette changes: the drawing shows it at once
+    pid = s.renderer.state_palette_id(doc.room(rid), rt.key, rt.state_idx)
+    if pid:
+        old_rows = [list(r) for r in dt.rows]
+        s.undo.push(RCMD.SetPaletteColor(s, pid, dt.qrow[0], 2, 0x001F))
+        app.processEvents()
+        assert dt.rows != old_rows and dt.pals[0] == dt.rows[dt.qrow[0]], 'set_rows'
+        s.undo.undo()
+        app.processEvents()
+        assert dt.rows[:4] == old_rows[:4]
     # Borrow: into row 2 + the preview
     rt.picker_tabs.setCurrentIndex(1)
     rt.borrow_match.setChecked(True)
@@ -4390,10 +4431,12 @@ def s171_recolour(app, w):
     assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
     rt.foreign_box.setCurrentIndex(0)
     rt.picker_tabs.setCurrentIndex(0)
-    print('OK: S171 r6 recolour — matching one-to-one (2 near reds stay 2 colours); Draw: a row '
-          'change keeps colour numbers, Cmd+Z / Cmd+Shift+Z undo / redo the stroke (not the '
-          'project), row / swap tools keep shapes; Borrow into row 2 + preview; Copy in row 1 '
-          '(no slot) and a parked copy in row 3; all undone exactly')
+    print('OK: S171 r6/r7 recolour — matching one-to-one (2 near reds stay 2 colours); Draw: a '
+          'quarter keeps its row (another row\'s colour refused, a shared black paints one '
+          'pixel), right-click picks its own row, Cmd+Z / Cmd+Shift+Z undo / redo the stroke '
+          '(not the project), row tool + Recolour keep shapes, palette edits reach the drawing; '
+          'Borrow into row 2 + preview; Copy in row 1 (no slot) and a parked copy in row 3; all '
+          'undone exactly')
 
 
 def s171_borrow_custom(app, w):

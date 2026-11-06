@@ -7974,3 +7974,11 @@ the old path kept beside it (`_find_match_scan`).
   editor is a bijection on the colours a piece uses.
 - **Also:** an editor tab with its own history must take ⌘Z while it is the thing being edited
   (`MainWindow._undo` → `DrawTab.owns_undo`), or the shortcut silently undoes the project.
+
+### A colour is an RGB to the user, a (row, number) to the hardware (S171 r7)
+- **Symptom:** "I click on black and it recolours other colours?"
+- **Root cause:** the Draw tab treated the swatch picked as (row, number): black of row 2 in
+  a row-0 quarter "needed" row 2, so the quarter moved; the right-click pick and the
+  palette at load time were (row, number) leftovers too.
+- **Rule:** map what the user picked by its RGB onto what the target can show (the quarter's
+  own row); change the hidden structure (a quarter's row) only by an explicit action.

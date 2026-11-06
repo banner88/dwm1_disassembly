@@ -1050,6 +1050,14 @@ recipes are pure authoring.
       → *colours: into the closest row / into row N* + *show as they will look here* (picker +
       picture cells); right-click → *Copy in row ▸ N* (same tiles, no slot; parked too); unpark
       keeps a quarter's row. EDITOR_DESIGN §5.1 "S171 r6"; test_app `s171_recolour`.
+      **S171 r7** (user: "why does clicking on some pixels change that pixel and clicking on
+      other pixels change the entire regions? … I click on black and it recolours other
+      colours? Does it get identity from the original tile and not from current drawing
+      window"; "Yes I want that"): painting never moves a quarter (own row only; a shared
+      colour like black paints as its own; others refused + dimmed), right-click picks the
+      pixel's own row, row changes only by the row buttons, palette edits reach the drawing
+      (`DrawTab.set_rows`), *Recolour…* (a colour in the drawing → a swatch) replaces the six
+      swap buttons. EDITOR_DESIGN §5.1 "S171 r7".
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

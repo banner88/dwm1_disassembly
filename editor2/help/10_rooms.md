@@ -99,13 +99,17 @@ selected cell, the brush, or a blank tile (left = paint, Shift = fill, right = p
 colour; Ctrl+click picks a quarter for the tools: flip, shift, copy / paste, clear, undo,
 redo, revert). **⌘Z / ⌘⇧Z** undo and redo your strokes while a drawing is loaded and the
 Draw tab is shown (one drag = one step); otherwise they undo the project as usual. The
-colours are **every row of the room**: an 8×8 quarter is drawn in one row, so painting a
-quarter with a colour of another row moves that quarter there — its other pixels keep
-their colour numbers (the same shapes in that row's colours; S171 r6), then the pixel you
-clicked is painted. Shapes change only where you paint. **Recolour the part** (the quarter
-picked with the tool buttons, or the whole tile): **row 0-3** puts it in that row (colour
-numbers kept), **swap a⇄b** turns every pixel of colour a into b and every b into a. To
-change a colour itself, edit it on the Palettes page. Then
+colours are **every row of the room**, but an 8×8 quarter is drawn in ONE row, so a
+quarter is painted with its own row's colours: when you click in a quarter, the colours its
+row does not have are dimmed (S171 r7). A colour another row shares with it (black, cream)
+paints as its own; any other is refused with a hint — painting never moves a quarter.
+Right-click picks the clicked pixel's colour in its own row. Shapes change only where you
+paint. **Recolour the part** (the quarter picked under *tools act on*, or the whole tile):
+**row 0-3** puts it in that row (every pixel keeps its colour number — the same shapes in
+that row's colours); **Recolour…** = click a colour in the drawing, then a swatch: every
+pixel of that colour in the part becomes the colour you picked. Palette edits (Palettes
+page) show in the drawing at once. To change a colour itself, edit it on the Palettes page.
+Then
 **Redraw it everywhere it is drawn** (the tiles themselves change — the line says
 how many cells in which rooms; nothing is spent) or **Save as a new metatile**
 (free tileset slots, the walkable / wall side you tick; put it on the selected
