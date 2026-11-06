@@ -95,14 +95,18 @@ places use your palette, *Only here* copies it first so they keep their colours.
 One undo step. The palette combos name the rooms that use each palette.
 
 **Draw** (Tiles page → Draw tab): paint a metatile pixel by pixel. Load the
-selected cell, the brush, or a blank tile; each 8×8 quarter paints in its own
-palette (left = paint, Shift = fill, right = pick a colour; Ctrl+click picks a
-quarter for the tools: flip, shift, copy / paste, clear, undo, revert). Then
+selected cell, the brush, or a blank tile (left = paint, Shift = fill, right = pick a
+colour; Ctrl+click picks a quarter for the tools: flip, shift, copy / paste, clear, undo,
+revert). The colours are **every row of the room** (S171 r4): an 8×8 quarter is drawn in
+one row, so painting a quarter with a colour of another row moves that quarter there —
+its other pixels take that row's closest colours (Undo puts it back). To change a colour
+itself, edit it on the Palettes page. Then
 **Redraw it everywhere it is drawn** (the tiles themselves change — the line says
 how many cells in which rooms; nothing is spent) or **Save as a new metatile**
 (free tileset slots, the walkable / wall side you tick; put it on the selected
 cells, on every cell of the room drawing the original, or only into My
-metatiles). Tiles the room animates are changed in the Animate tab; the common
+metatiles). Once a quarter moved to another row, use *Save as a new metatile* (on every
+cell drawing the original): *everywhere* would leave other cells in their old row. Tiles the room animates are changed in the Animate tab; the common
 font / frame tiles ($80-$AF) only as a new metatile.
 
 **States:** a screen can have several **states** (versions) — e.g. "boss

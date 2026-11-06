@@ -45,13 +45,28 @@ from this one) or **Delete** (My metatiles only).
 **Borrow** tab — two lists, each A-Z; picking in one clears the other.
 **Your room:** any room of your project (S171 r3) — its metatiles on every screen
 and its *My metatiles*, including tiles you imported from a PNG and page-2 tiles.
-**Game room:** any game room or *Gate theme N*. The metatiles are drawn in THIS
-room's colours. Same tileset: click = brush. Other tileset:
-click (or right-click → **Import into this tileset**) copies the four tiles
-into free slots of your tileset (a tile already there is reused; the
-bottom-right one stays on its wall / walkable side). The new metatile lands
-in *My metatiles* and becomes the brush. A tile that moves in its own room:
-take over that room's animation, or **Import it still (it will not move)**.
+**Game room:** any game room or *Gate theme N*. Same tileset: click = brush. Other
+tileset: click (or right-click → **Import into this tileset**) copies the four tiles
+into free slots of your tileset (a tile already there is reused; the bottom-right one
+stays on its wall / walkable side). The new metatile lands in *My metatiles* and becomes
+the brush.
+
+**Match colours** (ticked, S171 r4): the tiles show in their OWN colours, and each 8×8
+piece of an import goes to the row of THIS room whose colours look closest — its pixels
+renumbered to them. The status line says how close they came (*exact / close / rough*);
+the editor remembers the real colours, so **Re-plan colours** (below) can fit the rows to
+them later. Unticked: the old way — the tiles drawn in this room's colours, colour numbers
+and rows copied as they are. A tile that moves in its own room keeps the old way: take
+over that room's animation, or **Import it still (it will not move)**.
+
+**Several at once:** Ctrl / Shift + click tiles (yellow frame), then **Import the
+selected (N)** — one undo step.
+
+**A picture (PNG)…** — borrow straight from a PNG, no helper room: its 16×16 cells show
+in their own colours (each panel on its own grid, as the Import art tab would guess;
+untick *grid found by itself* to set x / y yourself; identical cells once). Click = import
+one; Ctrl / Shift + click = several. **walkable / wall** = the side they go to. Picking a
+room in a list closes the picture.
 If a side is full on both pages and unused vocabulary would free it, the editor offers
 to release that vocabulary (page 2 is used first — see *Page 2* below).
 
@@ -130,6 +145,29 @@ palette slot of its metatile; **Palettes** on the canvas toolbar shows them.
   the room's palette* and which screens kept their own (see *Gate themes*).
 - **attr grid** (*Screen & state*) says where the screen's palette slots come
   from; in a game room it reads *vanilla attr*.
+
+## Re-plan colours (re-roll)
+
+A room's screen has **4 colour rows** (black + three colours of your own each, or two +
+the game's cream); every 8×8 piece is drawn in one row. Tiles gathered from different
+places rarely share rows. **Palettes → Re-plan colours… (re-roll)** works out the 4 rows
+that draw ALL the room's tiles best — from their real colours where the editor knows them
+(anything brought in with *Match colours* or a picture since S171 r4), else from how they
+look now:
+
+- the first picture is *the rows as they are* (with its score), then four **plans** — the
+  first starts from the rows as they are, the others try other rows; each shows the screen,
+  its rows and a score (*% of tiles exact · error*, lower error = closer);
+- **Re-roll** — four other plans; **Keep a row as it is** — tick it and the plans fit the
+  others around it; **Own colour 1** — three colours of your own per row (recommended);
+- **Apply** — the palette rows, every piece's row and its renumbered tile, the cells and
+  *My metatiles*: one undo step. A tile wanted in two colourings (or also drawn in another
+  room) gets a second slot on the same wall / walkable side — the message says how many.
+
+It covers the screens of this room drawing with the palette of the screen shown (a screen
+with its own palette is planned on its own). A room that still draws with the game's
+tileset or palette gets its own copy first. It refuses while a screen shares its drawing
+with a room of other colours (the message names it).
 
 ## Page 2 — the second 128 tiles
 

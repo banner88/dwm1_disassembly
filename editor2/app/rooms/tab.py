@@ -11,13 +11,15 @@ Room model (user decision S94 — fork, don't fiddle):
 Every edit goes through rooms/commands.py so ⌘Z always works.
 """
 
+import os
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QGroupBox, QLineEdit,
                                QGridLayout, QHBoxLayout, QInputDialog, QLabel, QListWidget,
                                QListWidgetItem, QMenu, QMessageBox, QPushButton,
-                               QScrollArea, QSizePolicy, QSplitter, QTabWidget,
+                               QScrollArea, QSizePolicy, QSpinBox, QSplitter, QTabWidget,
                                QToolBar, QToolButton, QVBoxLayout, QWidget)
 
 from editor2.core.animation import rng as ANIMR
@@ -518,14 +520,85 @@ class RoomsTab(QWidget):
             b.setMaxVisibleItems(30)
         frow.setColumnStretch(1, 1)
         bl.addLayout(frow)
+        # S171 r4 (ROADMAP P3.3i — user: "if you import a sort of similar looking tileset the
+        # colours are fairly random … It does NOT work well if you are ADDING it to an
+        # existing room"): tiles come in with their REAL colours matched to this room's rows;
+        # a picture (PNG) is a source too; several at once
+        mrow = QHBoxLayout()
+        self.borrow_match = QCheckBox('Match colours')
+        self.borrow_match.setChecked(True)
+        self.borrow_match.setToolTip(
+            'Ticked: the tiles show in their OWN colours, and an import puts each 8x8 piece in '
+            'the row of this room whose colours look closest (its pixels renumbered to them); '
+            'the editor remembers the real colours for Palettes → Re-plan colours. Unticked: the '
+            'old way — colour numbers and rows copied as they are (and a tile the source room '
+            'animates keeps moving).')
+        self.borrow_match.toggled.connect(lambda _on: self._refresh_foreign())
+        mrow.addWidget(self.borrow_match)
+        self.borrow_png_btn = QPushButton('A picture (PNG)…')
+        self.borrow_png_btn.setToolTip('Borrow cells of a PNG straight into this room — no '
+                                       'helper room needed (colours matched).')
+        self.borrow_png_btn.clicked.connect(lambda: self._borrow_png())
+        mrow.addWidget(self.borrow_png_btn)
+        mrow.addStretch(1)
+        bl.addLayout(mrow)
         self.picker_foreign = MetatilePicker(sections=('foreign',))
         self.picker_foreign.brushSelected.connect(self._foreign_brush)
         self.picker_foreign.hoverInfo.connect(self._hover)
         self.picker_foreign.importRequested.connect(self._import_metatile)
-        fscroll = QScrollArea()
+        self.picker_foreign.foreignSelection.connect(self._borrow_selection)
+        self._fscroll = fscroll = QScrollArea()
         fscroll.setWidgetResizable(True)
         fscroll.setWidget(self.picker_foreign)
         bl.addWidget(fscroll, 1)
+        from editor2.app.rooms.png_source import PngCells
+        self.png_box = QWidget()
+        pv = QVBoxLayout(self.png_box)
+        pv.setContentsMargins(0, 0, 0, 0)
+        self.png_head = QLabel('')
+        self.png_head.setWordWrap(True)
+        pv.addWidget(self.png_head)
+        pr = QHBoxLayout()
+        self.png_auto = QCheckBox('grid found by itself')
+        self.png_auto.setChecked(True)
+        self.png_auto.setToolTip('Each panel of the picture on its own best 16-px grid (as the '
+                                 'Import art tab proposes). Untick to set the offset yourself.')
+        self.png_auto.toggled.connect(lambda _on: self._png_recut())
+        pr.addWidget(self.png_auto)
+        self.png_ox, self.png_oy = QSpinBox(), QSpinBox()
+        for sp, lab in ((self.png_ox, 'x'), (self.png_oy, 'y')):
+            sp.setRange(0, 15)
+            sp.valueChanged.connect(lambda _v: self._png_recut())
+            pr.addWidget(QLabel(lab))
+            pr.addWidget(sp)
+        self.png_walk = QComboBox()
+        self.png_walk.addItem('walkable', True)
+        self.png_walk.addItem('wall', False)
+        self.png_walk.setToolTip('the side the imported cells go to (the bottom-right piece '
+                                 'decides walkability)')
+        pr.addWidget(self.png_walk)
+        pr.addStretch(1)
+        pv.addLayout(pr)
+        self.png_cells = PngCells()
+        self.png_cells.importRequested.connect(self._png_import)
+        self.png_cells.selectionChanged.connect(self._borrow_selection)
+        self.png_cells.hoverInfo.connect(self._hover)
+        pscroll2 = QScrollArea()
+        pscroll2.setWidgetResizable(True)
+        pscroll2.setWidget(self.png_cells)
+        pv.addWidget(pscroll2, 1)
+        self.png_box.hide()
+        bl.addWidget(self.png_box, 1)
+        srow = QHBoxLayout()
+        self.borrow_sel_btn = QPushButton('Import the selected (0)')
+        self.borrow_sel_btn.setToolTip('Ctrl / Shift + click tiles above to select several; '
+                                       'they come in as one undo step')
+        self.borrow_sel_btn.setEnabled(False)
+        self.borrow_sel_btn.clicked.connect(self._import_selected)
+        srow.addWidget(self.borrow_sel_btn)
+        srow.addStretch(1)
+        bl.addLayout(srow)
+        self._png = None                 # (path, PIL image) of the picture shown
         self.picker_tabs.addTab(btab, 'Borrow')
         # tab 3 — the tileset's 256 slots (P3.3c, S96; S168: page 1 + page 2)
         self.tileset_map = TilesetMap()
@@ -611,6 +684,14 @@ class RoomsTab(QWidget):
                                        'screen only, or just some rows. Preview first.')
         self.btn_borrow_pal.clicked.connect(self._borrow_palette)
         pl.addWidget(self.btn_borrow_pal)
+        # S171 r4 (ROADMAP P3.3i — user: "there is no way to re-roll the colour allocation
+        # or change it"): plan the room's 4 rows again from the tiles' real colours
+        self.btn_replan = QPushButton('Re-plan colours… (re-roll)')
+        self.btn_replan.setToolTip('Work out the 4 rows that draw this room\'s tiles best (their '
+                                   'real colours, when the editor knows them), see several '
+                                   'plans side by side, keep rows you like, re-roll the rest.')
+        self.btn_replan.clicked.connect(self._replan_colours)
+        pl.addWidget(self.btn_replan)
         self._palbox_layout = pl              # the inspector's palette combos go here
         self.sec_pal = self.rail.add_page(
             'palettes', 'Palettes', palbox,
@@ -1171,7 +1252,8 @@ class RoomsTab(QWidget):
         b.blockSignals(False)
 
     def _foreign_picked(self, which):
-        """One source at a time: a choice in one list clears the other."""
+        """One source at a time: a choice in one list clears the other (and the picture)."""
+        self._png_close()
         other = self.foreign_box if which == 'custom' else self.foreign_custom
         mine = self.foreign_custom if which == 'custom' else self.foreign_box
         if mine.currentData() is not None and other.currentIndex() != 0:
@@ -1211,7 +1293,9 @@ class RoomsTab(QWidget):
                     self.s.doc.tileset_key(src_room) == self.s.doc.tileset_key(room))
             self.picker_foreign.set_foreign(PN.Places.of(self.s.doc).room_label(src_room),
                                             self._custom_vocab(src_room), gfx.sheet,
-                                            gfx.threshold, same)
+                                            gfx.threshold, same,
+                                            pals=self._source_rows() if not same and
+                                            self.borrow_match.isChecked() else None)
             return
         sel = self.foreign_box.currentData()
         if sel is None or self.canvas.gfx is None:
@@ -1229,9 +1313,259 @@ class RoomsTab(QWidget):
         same = (bytes(gfx.sheet[:2048]) == bytes(self.canvas.gfx.sheet[:2048]))
         if room is None:
             same = same  # vanilla view: brush only when the sheets match
-        self.picker_foreign.set_foreign(title, vocab, gfx.sheet, gfx.threshold, same)
+        self.picker_foreign.set_foreign(title, vocab, gfx.sheet, gfx.threshold, same,
+                                        pals=self._source_rows() if not same and
+                                        self.borrow_match.isChecked() else None)
+
+    # ------------------------------------------- S171 r4: colour-true borrowing
+    def _source_rows(self):
+        """The 8 rows of RGB the Borrow source is drawn with in its own place."""
+        from editor2.core import recolour as RC
+        r = self.s.renderer
+        src_room = self._foreign_room()
+        if src_room is not None:
+            keys = self.s.doc.screen_keys(src_room)
+            return r.room_palettes(src_room, keys[0] if keys else 0, 0)
+        sel = self.foreign_box.currentData()
+        if sel is None:
+            return None
+        mid = int(sel)
+        if mid >= THEME_KEY:
+            rows = [list(row) for row in r.theme_palettes(mid - THEME_KEY)]
+            for row in rows[:4]:
+                row[1], row[3] = RC.CREAM, RC.BLACK
+            return rows
+        return r.vanilla_palettes(mid)
+
+    def _source_quarters(self, mt):
+        """The metatile's 4 quarters in their REAL colours (recolour.Quarter), or None for
+        a tile the source animates (that one keeps the old import, so it keeps moving)."""
+        from editor2.core import recolour as RC
+        from editor2.core import tile_draw as TD
+        from editor2.core import animation as ANIM
+        rows = self._source_rows()
+        if rows is None:
+            return None
+        r = self.s.renderer
+        src_room = self._foreign_room()
+        if src_room is not None:
+            gfx = r.room_gfx(src_room)
+            m = self.s.doc.room_animation(src_room)['map']
+            anim = set(ANIM.slots(m)) if m is not None else set()
+            anim |= set(self.s.doc.own_anim_slots(src_room))
+        else:
+            mid = int(self.foreign_box.currentData())
+            gfx = r.theme_gfx(mid - THEME_KEY) if mid >= THEME_KEY else r.vanilla_gfx(mid)
+            anim = set() if mid >= THEME_KEY else set(ANIM.slots(mid) or ())
+        if any(P2.slot_key(t) in anim for t in mt['tiles'] if not P2.is_common(t)):
+            return None
+        px = TD.metatile_pixels(gfx.sheet, mt, r.common_blocks())
+        pals = TD.quarter_pals(mt)
+        return [RC.quarter_from_indices(px[q], rows[pals[q]]) for q in range(4)], \
+            P2.walkable(mt['tiles'][3], gfx.threshold)
+
+    def _import_true(self, items, label):
+        """items = [(4 Quarters, walkable, name)] -> one undo step; the status line says
+        how close the colours came."""
+        from editor2.core import recolour as RC
+        room = self.current_room()
+        if room is None:
+            QMessageBox.information(self, 'Import', 'Select a custom room first — a vanilla '
+                                    'room is read-only (clone it to import tiles).')
+            return None
+        cv = self.canvas
+        rid, thr = room['id'], cv.gfx.threshold
+        rows = [list(cv.pals[i]) for i in range(4)]
+        own = bytes(cv.gfx.sheet[:2048])
+
+        def op(doc):
+            out = []
+            for qs, walk, name in items:
+                new, _msg, errs = RC.import_true_metatile(doc, rid, qs, rows, thr, walk, name,
+                                                          own_sheet=own)
+                out.append((new, errs))
+            return out
+        cmd = C.SnapshotCommand(self.s, label, op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Import', str(cmd.error))
+            return None
+        words = [RC.match_words(errs) for _new, errs in cmd.result]
+        n = {w: words.count(w) for w in ('exact', 'close', 'rough')}
+        txt = (f"Imported {len(words)} — colours: {n['exact']} exact, {n['close']} close, "
+               f"{n['rough']} rough")
+        if n['rough'] or n['close']:
+            txt += ' — Palettes → Re-plan colours… fits the rows to all your tiles'
+        self.status_line.setText(txt)
+        self._show()
+        if cmd.result:
+            self._brush_selected(cmd.result[-1][0])
+        return cmd.result
+
+    def _borrow_selection(self, n):
+        self.borrow_sel_btn.setText(f'Import the selected ({n})')
+        self.borrow_sel_btn.setEnabled(n > 0)
+
+    def _import_selected(self):
+        if self._png is not None and not self.png_box.isHidden():
+            idx = sorted(self.png_cells.selected)
+            self._png_import(idx)
+            return
+        ticked = sorted(getattr(self.picker_foreign, 'foreign_ticked', ()))
+        mts = [self.picker_foreign.foreign[i] for i in ticked
+               if i < len(self.picker_foreign.foreign)]
+        items, still = [], 0
+        for mt in mts:
+            got = self._source_quarters(mt) if self.borrow_match.isChecked() else None
+            if got is None:
+                still += 1
+                continue
+            qs, walk = got
+            items.append((qs, walk, f"{self.picker_foreign.foreign_title} {list(mt['tiles'])}"))
+        if items:
+            self._import_true(items, f'Borrow {len(items)} tiles (colours matched)')
+        if still:               # an animated tile (or matching off): the old way, one by one
+            for mt in mts:
+                if (self._source_quarters(mt) if self.borrow_match.isChecked() else None) is None:
+                    self._import_metatile_raw(mt)
+        self.picker_foreign.foreign_ticked = set()
+        self.picker_foreign.update()
+        self._borrow_selection(0)
+
+    # PNG source
+    def _borrow_png(self, path=None):
+        from PySide6.QtWidgets import QFileDialog
+        if path is None:
+            path, _f = QFileDialog.getOpenFileName(self, 'A picture to borrow from',
+                                                   self.s.doc.project_dir or '',
+                                                   'Pictures (*.png *.gif *.bmp)')
+            if not path:
+                return
+        from PIL import Image
+        try:
+            img = Image.open(path).convert('RGB')
+        except OSError as e:
+            QMessageBox.warning(self, 'Picture', f'Cannot open the picture: {e}')
+            return
+        self._png = (path, img)
+        for b in (self.foreign_box, self.foreign_custom):
+            b.blockSignals(True)
+            b.setCurrentIndex(0)
+            b.blockSignals(False)
+        self.picker_foreign.set_foreign('', [], None, 0, True)
+        self._fscroll.hide()
+        self.png_box.show()
+        self._png_recut()
+
+    def _png_recut(self):
+        if self._png is None:
+            return
+        from editor2.app.rooms.png_source import cut_cells
+        auto = self.png_auto.isChecked()
+        self.png_ox.setEnabled(not auto)
+        self.png_oy.setEnabled(not auto)
+        cells, what = cut_cells(self._png[1], None if auto else self.png_ox.value(),
+                                None if auto else self.png_oy.value())
+        self.png_cells.set_cells(cells)
+        self.png_head.setText(f'<b>{os.path.basename(self._png[0])}</b> — {len(cells)} different '
+                              f'cells ({what}). Click = import one; Ctrl / Shift + click = '
+                              'select several.')
+
+    def _png_close(self):
+        if self._png is not None:
+            self._png = None
+            self.png_box.hide()
+            self._fscroll.show()
+
+    def _png_import(self, idx):
+        from editor2.app.rooms.png_source import cell_quarters
+        from editor2.core import recolour as RC
+        if self._png is None or not idx:
+            return
+        walk = bool(self.png_walk.currentData())
+        name = os.path.splitext(os.path.basename(self._png[0]))[0]
+        items = []
+        for i in idx:
+            x, y, cell = self.png_cells.cells[i]
+            items.append(([RC.Quarter.from_rgb(q) for q in cell_quarters(cell)], walk,
+                          f'{name} ({x},{y})'))
+        self._import_true(items, f'Import {len(items)} picture cell(s) (colours matched)')
+        self.png_cells.selected = set()
+        self.png_cells.update()
+        self._borrow_selection(0)
+
+    def _replan_colours(self):
+        """S171 r4: Palettes → Re-plan colours… (replan_dialog + recolour.apply_plan)."""
+        from editor2.app.rooms.replan_dialog import ReplanDialog
+        from editor2.core import recolour as RC
+        from editor2.core import tile_draw as TD
+        room = self.current_room()
+        if room is None:
+            QMessageBox.information(self, 'Re-plan colours', 'This is a game room (read-only) — '
+                                    'Make editable first.')
+            return
+        cv = self.canvas
+        if cv.gfx is None or cv.tiles is None:
+            return
+        doc, r = self.s.doc, self.s.renderer
+        anim = (doc.animated_slots(doc.tileset_key(room)) if 'tileset' in room['record']
+                else TD._room_anim_slots(doc, room))
+        scope = RC.Scope(doc, room, self.key, self.state_idx, cv.pals, cv.gfx.sheet,
+                         r.common_blocks(), anim)
+        pid = scope.pid
+        free1 = bool(pid and doc.palette(pid).get('free_color1'))
+        dlg = ReplanDialog(doc, scope, self.key, self.state_idx, free1, self)
+        self._replan_dlg = dlg                      # tests drive it
+        if scope.problems:
+            dlg.box.button(QDialogButtonBox.Apply).setEnabled(False)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        rows, nfree = dlg.chosen()
+        self._replan_apply(rows, nfree)
+
+    def _replan_apply(self, rows, nfree):
+        from editor2.core import recolour as RC
+        from editor2.core import tile_draw as TD
+        room = self.current_room()
+        cv = self.canvas
+        doc, r = self.s.doc, self.s.renderer
+        rid, key, st = room['id'], self.key, self.state_idx
+        anim = (doc.animated_slots(doc.tileset_key(room)) if 'tileset' in room['record']
+                else TD._room_anim_slots(doc, room))
+        words = None
+        if doc.effective_palette(room, key, st) is None:
+            words = [[RC.to555(c) for c in row] for row in r.room_palettes(room, key, st)]
+        rows_old = [list(x) for x in cv.pals]
+        own = bytes(cv.gfx.sheet[:2048])
+        thr = cv.gfx.threshold
+        common = r.common_blocks()
+        cmd = C.SnapshotCommand(
+            self.s, 'Re-plan colours',
+            lambda d: RC.apply_plan(d, rid, key, st, rows, nfree, rows_old, d.read_sheet(
+                d.tileset_key(d.room(rid))) if 'tileset' in d.room(rid)['record'] else own,
+                common, anim, thr, own_sheet=own, vanilla_words=words))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Re-plan colours', str(cmd.error))
+            return False
+        self.status_line.setText('Re-plan colours: ' + str(cmd.result))
+        self._show()
+        return True
 
     def _import_metatile(self, mt):
+        # S171 r4: colours matched (the default) unless the source animates the tile
+        if self.borrow_match.isChecked() and not self.picker_foreign.foreign_same \
+                and self.current_room() is not None:
+            got = self._source_quarters(mt)
+            if got is not None:
+                qs, walk = got
+                self._import_true([(qs, walk, f"{self.picker_foreign.foreign_title} "
+                                              f"{list(mt['tiles'])}")],
+                                  f'Borrow a tile (colours matched)')
+                return
+        self._import_metatile_raw(mt)
+
+    def _import_metatile_raw(self, mt):
         room = self.current_room()
         sel = self.foreign_box.currentData()
         src_room = self._foreign_room()
@@ -4332,7 +4666,10 @@ class RoomsTab(QWidget):
         sel = cv.selection()
         if sel is not None and cv.lid is not None:
             self._draw_cells = (self.room_id, self.key, self.state_idx, cv.lid, sel)
-        self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok)
+        # S171 r4: every row of the room is offered; each quarter starts in its own row
+        self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok,
+                           rows=[list(cv.pals[r]) for r in range(len(cv.pals))],
+                           qrow=list(TD.quarter_pals(mt)))
         combo_row_enabled(self.draw_tab.place, 2, not mt.get('blank'))   # S167
 
     def _draw_load_cell(self):

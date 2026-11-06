@@ -5,6 +5,12 @@
 Turn a PNG — a map rip, a mock-up — into tiles, metatiles and screens of a
 room of your own. The editor proposes a grid and colours; your eye decides.
 
+**Adding tiles of a picture to a room that already has its art** (a master room made of
+several tilesets): use the Rooms tab's **Tiles → Borrow → A picture (PNG)…** instead —
+each cell comes in with its colours matched to the room's rows, then **Palettes →
+Re-plan colours…** fits the rows to everything (see *Tilesets, metatiles and palettes*).
+This tab is best for a NEW room built from one picture.
+
 **Before you start:** art needs free tileset slots. Rooms tab → **New** →
 tick *start with a BLANK tileset (for imported PNG art)* (the palette still
 comes from the room you pick above it), or **New room…** on this tab. A room

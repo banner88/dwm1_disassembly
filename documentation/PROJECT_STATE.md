@@ -65,6 +65,15 @@
 > both pages; further asserts expect "not enough free tileset slots" where page 2 now has room).
 > Not one of the mandated suites; the S168+ sessions did not run it. Needs its own pass (rewrite
 > the slot-budget asserts for 256 slots).
+> **r4 (user-directed: "Now please … Do the whole thing"):** ROADMAP P3.3i — colour-true tiles:
+> Borrow *Match colours* (each piece in the closest row of this room, the real colours
+> remembered), several at once, *A picture (PNG)…* straight in; Palettes → *Re-plan colours…
+> (re-roll)* (plans with pictures, keep rows, one undo step); Draw offers every row (a
+> quarter moves to the row of its colour). NEW `editor2/core/recolour.py`,
+> `rooms/replan_dialog.py`, `rooms/png_source.py`. Measured on the user's project: GreatTree +
+> 8 Cities_FOUNT + 8 Mermaids Cave cells → plan 1 92 % exact (error 0.36), applied, built,
+> and the room in PyBoy matches the editor. test_app `s171_colour_true`. EDITOR_DESIGN §5.1
+> "S171 r4", help 13_tilesets / 10_rooms / 14_import_art.
 > **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
 > `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
 > Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
@@ -508,6 +517,8 @@ real project starts, so these are best confirmed on the way into it:
 - S171: the Mac app (download, `xattr -cr`, the ROM prompt, Build, Play with the app's SameBoy, Playback, Dock name / icon);
   no empty window on the Arena tab (or anywhere); the quick open.
 - S171 r3: Borrow → "Your room" (import from your own rooms) and the two A-Z lists.
+- S171 r4: colour-true tiles — Borrow *Match colours*, several at once, *A picture (PNG)…*;
+  Palettes → *Re-plan colours…* (re-roll, keep rows); Draw with every row.
 
 ### Not yet implemented
 

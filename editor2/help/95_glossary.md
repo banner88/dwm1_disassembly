@@ -209,6 +209,9 @@ in it. [Getting started](00_start.md)
 **Raising** — how the game grows a monster: stat gains per level, the learn check,
 upgrades and combinations, max level. [Raising monsters](58_raising.md)
 
+**Re-plan colours** — Palettes page: work out the room's 4 colour rows again from its
+tiles' real colours; plans side by side, re-roll, keep rows. [Tilesets, metatiles and palettes](13_tilesets.md)
+
 **Region** — the editor's own group of 128 rooms; it hands them out by itself and
 never shows them. [Limits](90_limits.md)
 

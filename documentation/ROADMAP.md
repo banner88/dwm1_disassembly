@@ -1005,6 +1005,24 @@ recipes are pure authoring.
       own animated tiles comes in still (the status line says so). EDITOR_DESIGN §5.1 "S171 r3".
       Measured on the user's project: GreatTree ← Cities_FOUNT, 4 imports, graphics identical,
       the last ones spilled onto page 2. test_app `s171_borrow_custom`.
+- [x] **P3.3i — Colour-true tiles: matched borrowing, PNG straight in, re-plan colours
+      (re-roll), Draw with every row** — **built S171 r4, NOT yet user-tested** (user: "the
+      palette for a room is fixed and if you import a sort of similar looking tileset the
+      colours are fairly random and there is no way to re-roll the colour allocation or
+      change it. Nor can you edit an individual tile … It's when I started pulling together
+      diverse tilesets for the master room"; "Draw … doesnt allow all colours … just give me
+      the current valid colours and I can work within that universe"; "It does NOT work well
+      if you are ADDING it to an existing room … first make a new custom room, add a new
+      tileset png, then import tiles from the secondary room"; "Now please … Do the whole
+      thing"). NEW `editor2/core/recolour.py` (OKLab matching, the k-medoids row planner with
+      locked rows and seeded re-rolls, the truth store `custom._editor.truth`, `Scope` +
+      `apply_plan`, `import_true_metatile`), `editor2/app/rooms/replan_dialog.py`,
+      `editor2/app/rooms/png_source.py`; Borrow → *Match colours* (default) / several at once /
+      *A picture (PNG)…*; Palettes → *Re-plan colours… (re-roll)*; Draw → 16 colours, a
+      quarter moves to the row of its colour. Measured on the user's project: GreatTree +
+      8 Cities_FOUNT + 8 Mermaids Cave cells (all "rough" against GreatTree's rows) → plan 1
+      92 % exact, error 0.36, applied, built (`047962c6…`, patched test build), the room in
+      PyBoy = the editor's picture. EDITOR_DESIGN §5.1 "S171 r4"; test_app `s171_colour_true`.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

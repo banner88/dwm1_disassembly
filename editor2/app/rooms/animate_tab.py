@@ -75,6 +75,7 @@ class FramePad(QWidget):
         self.editable = True
         self.active = False
         self.part_rect = None            # (x, y, w, h) in pixels: the selected part
+        self.pre_put = None              # S171 r4 (Draw): called with the tile index before a paint
         self._last = None
         self._resize()
 
@@ -185,6 +186,8 @@ class FramePad(QWidget):
         if not self.editable:
             return
         self.aboutToChange.emit()
+        if self.pre_put is not None:
+            self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8)
         if ev.modifiers() & Qt.ShiftModifier:
             self._fill(*xy, self.colour)
         else:
@@ -198,6 +201,8 @@ class FramePad(QWidget):
             return
         xy = self._xy(ev)
         if xy and xy != self._last:
+            if self.pre_put is not None:
+                self.pre_put((xy[1] // 8) * self.cols + xy[0] // 8)
             self.put(*xy, self.colour)
             self._last = xy
             self.update()

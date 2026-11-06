@@ -8,6 +8,15 @@ as a NEW metatile (free slots; placed on the selected cells / every cell of
 the room drawing the original / nowhere). The tab only shows facts and emits
 requests; editor2/core/tile_draw.py does the work (one undo step each, pushed
 by the Rooms tab).
+
+S171 r4 (user: "Draw … doesnt allow all colours of the tileset? E.g. greattree tileset
+includes blue but I don't see it … just give me the current valid colours and I can work
+within that universe"): the colour grid shows ALL FOUR ROWS of the room's colours. An 8x8
+quarter is drawn in one row (the hardware), so painting a quarter with a colour of
+another row MOVES that quarter to that row — its other pixels take the closest colours
+there (recolour.dist). The quarters' rows travel with the drawing: "as a new metatile"
+saves them; "everywhere" is refused once a row changed (other cells drawing those tiles
+keep their rows) — save it as a new metatile on every cell drawing the original instead.
 """
 
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -44,6 +53,10 @@ class DrawTab(QWidget):
         self.mt = None                 # the metatile being drawn (dict)
         self.old = None                # its 4 quarters as loaded
         self.pals = None               # 4 rows of RGB (per quarter)
+        self.rows = None               # S171 r4: the room's 4 rows of RGB
+        self.qrow = None               # S171 r4: the row of each quarter
+        self.old_qrow = None
+        self.cur_row = 0               # the row of the colour picked
         self.reporter = None           # set by the tab: (new px, walkable) -> report
         self.can_place_sel = False
         self.part = 'whole'
@@ -85,6 +98,7 @@ class DrawTab(QWidget):
         mid = QHBoxLayout()
         self.pad = FramePad()
         self.pad.set_zoom(13)
+        self.pad.pre_put = self._pre_put           # S171 r4
         self.pad.aboutToChange.connect(self._snap)
         self.pad.changed.connect(self._changed)
         self.pad.picked.connect(self._set_colour)
@@ -102,17 +116,25 @@ class DrawTab(QWidget):
         mid.addStretch(1)
         v.addLayout(mid)
         side = QVBoxLayout()
-        side.addWidget(QLabel('colour'))
-        self.swatches = []
-        sw = QHBoxLayout()
-        for i in range(4):
-            b = QToolButton()
-            b.setFixedSize(30, 30)
-            b.setCheckable(True)
-            b.clicked.connect(lambda _c=False, k=i: self._set_colour(k))
-            sw.addWidget(b)
-            self.swatches.append(b)
-        sw.addStretch(1)
+        side.addWidget(_wrap('colour — every row of the room. A quarter takes the row of '
+                             'the colour you paint it with.'))
+        self.swatches = {}                 # (row, index) -> button
+        self.row_labels = []
+        sw = QGridLayout()
+        sw.setHorizontalSpacing(3)
+        sw.setVerticalSpacing(3)
+        for r in range(4):
+            lab = QLabel(f'row {r}')
+            self.row_labels.append(lab)
+            sw.addWidget(lab, r, 0)
+            for i in range(4):
+                b = QToolButton()
+                b.setFixedSize(26, 26)
+                b.setCheckable(True)
+                b.clicked.connect(lambda _c=False, rr=r, k=i: self._pick_swatch(rr, k))
+                sw.addWidget(b, r, 1 + i)
+                self.swatches[(r, i)] = b
+        sw.setColumnStretch(5, 1)
         side.addLayout(sw)
         self.sw_note = _wrap('', 'color: #888;')
         side.addWidget(self.sw_note)
@@ -186,13 +208,21 @@ class DrawTab(QWidget):
         self._set_enabled(False)
 
     # ------------------------------------------------------------ load
-    def load(self, mt, px, pals, desc, walkable=True, selection_ok=False):
+    def load(self, mt, px, pals, desc, walkable=True, selection_ok=False, rows=None,
+             qrow=None):
         """mt = metatile dict, px = 4 quarters of 64 colour numbers, pals =
-        4 palette rows of RGB (the quarters' palettes), desc = where from."""
+        4 palette rows of RGB (the quarters' palettes), desc = where from.
+        S171 r4: rows = the room's 4 rows, qrow = each quarter's row."""
         self.mt = {'tiles': list(mt['tiles']), 'pal': mt.get('pal', 0),
                    'name': mt.get('name')}
         self.old = [list(q) for q in px]
-        self.pals = [list(p) for p in pals]
+        self.rows = [list(r) for r in (rows or pals)]
+        if qrow is None:                 # the row whose colours each quarter shows
+            qrow = [next((r for r in range(len(self.rows)) if self.rows[r] == list(p)), 0)
+                    for p in pals]
+        self.qrow = list(qrow)
+        self.old_qrow = list(self.qrow)
+        self.pals = [list(self.rows[r]) for r in self.qrow]
         self._undo = []
         self.pad.set_frame(2, 2, self.old, self.pals, editable=True)
         self.walkable.blockSignals(True)
@@ -216,26 +246,63 @@ class DrawTab(QWidget):
     def current(self):
         return [list(q) for q in self.pad.px]
 
+    def rows_changed(self):
+        return self.qrow is not None and self.qrow != self.old_qrow
+
+    def pal_value(self):
+        """The quarters' rows as a metatile 'pal' (int when all four are equal)."""
+        q = list(self.qrow or [0, 0, 0, 0])
+        return q[0] if len(set(q)) == 1 else q
+
     def _set_enabled(self, on):
         for w in (self.pad, self.ev_btn, self.new_btn, self.name, self.walkable, self.place):
             w.setEnabled(on)
 
     # ------------------------------------------------------------ paint
     def _set_colour(self, i):
-        self.pad.colour = i
-        for k, b in enumerate(self.swatches):
-            b.setChecked(k == i)
+        """Colour number `i` of the current row (the right-click pick, the start)."""
+        self._pick_swatch(self.cur_row, i)
+
+    def _pick_swatch(self, row, i):
+        self.cur_row, self.pad.colour = row, i
+        for (r, k), b in self.swatches.items():
+            b.setChecked(r == row and k == i)
+
+    def _paint_swatches(self):
+        for (r, i), b in self.swatches.items():
+            if not self.rows or r >= len(self.rows):
+                b.setStyleSheet('')
+                continue
+            c = QColor(*self.rows[r][i])
+            b.setStyleSheet(f'QToolButton {{ background: {c.name()}; border: 1px solid #555; }}'
+                            f'QToolButton:checked {{ border: 3px solid #ffe000; }}')
 
     def _quarter_clicked(self, k):
         if not self.pals:
             return
         self._sw_quarter = k
-        for i, b in enumerate(self.swatches):
-            c = QColor(*self.pals[k][i])
-            b.setStyleSheet(f'QToolButton {{ background: {c.name()}; border: 1px solid #555; }}'
-                            f'QToolButton:checked {{ border: 3px solid #ffe000; }}')
+        self._paint_swatches()
+        r = self.qrow[k] if self.qrow else 0
+        for rr, lab in enumerate(self.row_labels):
+            lab.setStyleSheet('font-weight: bold; color: #ffe000;' if rr == r else '')
         self.sw_note.setText(f'the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
-                             'quarter\'s colours (each quarter has its own palette)')
+                             f'quarter is in row {r}. Paint it with a colour of another row and '
+                             'it moves there (its other pixels take that row\'s closest colours).')
+
+    def _pre_put(self, k):
+        """S171 r4: painting quarter `k` with a colour of another row moves it there."""
+        if not self.qrow or self.qrow[k] == self.cur_row or self.cur_row >= len(self.rows):
+            return
+        from editor2.core.recolour import dist
+        old, new = self.rows[self.qrow[k]], self.rows[self.cur_row]
+        remap = [min(range(4), key=lambda j: (dist(old[i], new[j]), j != i)) for i in range(4)]
+        self.pad.px[k] = [remap[v & 3] for v in self.pad.px[k]]
+        self.qrow[k] = self.cur_row
+        self.pals[k] = list(new)
+        self.pad.pals = self.pals
+        self.status.emit(f'Draw: the {("top-left", "top-right", "bottom-left", "bottom-right")[k]} '
+                         f'quarter moved to row {self.cur_row}')
+        self._quarter_clicked(k)
 
     def _set_part(self, part):
         self.part = part
@@ -248,8 +315,17 @@ class DrawTab(QWidget):
         self.pad.update()
 
     def _snap(self):
-        self._undo.append(self.current())
+        self._undo.append((self.current(), list(self.qrow or [])))
         del self._undo[:-100]
+
+    def _restore(self, snap):
+        px, qrow = snap
+        self.pad.px = px
+        if qrow:
+            self.qrow = list(qrow)
+            self.pals = [list(self.rows[r]) for r in self.qrow]
+            self.pad.pals = self.pals
+        self._quarter_clicked(getattr(self, '_sw_quarter', 0))
 
     def _parts(self):
         return [0, 1, 2, 3] if self.part == 'whole' else [self.part]
@@ -259,13 +335,13 @@ class DrawTab(QWidget):
             return
         if key == 'undo':
             if self._undo:
-                self.pad.px = self._undo.pop()
+                self._restore(self._undo.pop())
                 self.pad.update()
                 self._changed()
             return
         if key == 'revert':
             self._snap()
-            self.pad.px = [list(q) for q in self.old]
+            self._restore(([list(q) for q in self.old], list(self.old_qrow or [])))
             self.pad.update()
             self._changed()
             return
@@ -360,6 +436,11 @@ class DrawTab(QWidget):
             return
         self.last_report = rep
         ev = rep['everywhere']
+        if self.rows_changed():                    # S171 r4
+            ev = dict(ev, ok=False,
+                      why='A quarter moved to another colour row — other cells drawing these '
+                          'tiles keep their rows. Save it as a new metatile (put it on every '
+                          'cell of this room drawing the original).')
         if ev['ok']:
             rooms = ', '.join(f'{n} in {r}' for r, n in ev['rooms'].items())
             self.ev_note.setText(f"Changes {ev['cells']} cell(s) — {rooms or 'none placed yet'}"
@@ -385,6 +466,8 @@ class DrawTab(QWidget):
     # ------------------------------------------------------------ apply
     def _everywhere(self):
         if self.mt is not None:
+            if self.rows_changed():
+                return
             self.everywhereRequested.emit({'mt': dict(self.mt), 'old': self.old,
                                            'new': self.current()})
 
@@ -394,4 +477,4 @@ class DrawTab(QWidget):
                                     'walkable': self.walkable.isChecked(),
                                     'name': self.name.text().strip() or 'drawn',
                                     'place': self.place.currentData(),
-                                    'pal': self.mt.get('pal', 0)})
+                                    'pal': self.pal_value()})

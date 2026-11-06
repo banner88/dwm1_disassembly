@@ -1065,7 +1065,12 @@ template `editor2/templates/blank-project/project.json` builds as-is.
 `metatiles: {<tileset key>: [{name, tiles:[tl,tr,bl,br], pal}]}` where the key
 is the custom tileset id or `"<bank>:<id>"` for a vanilla tileset. S124 r3:
 `npc_names: {"MM:screen:state:n": name}` — your names for the original game's NPCs
-(§2.37).
+(§2.37). S171 r4 (ROADMAP P3.3i): `truth: {<tileset key>: {"<slot>:<row>": {cols:
+["0xRRRR"…], idx: "<64 base-36 digits>", g: "<the slot's 16 bytes, hex>"}}}` — the REAL
+colours of the art a tile slot draws in palette row `row` (editor2/core/recolour.py: Borrow
+with *Match colours*, a picture, a re-plan record it; an entry whose slot no longer holds
+graphic `g` is ignored). Nothing of it reaches the ROM; a re-plan writes ordinary palette
+rows, tiles, tile grids and attr grids.
 
 **`custom.rooms[].name`**: display name (free text); `id` stays the stable
 reference. **`custom.tilesets[]` `raw2bpp` sheets may be created by the

@@ -7932,3 +7932,16 @@ the old path kept beside it (`_find_match_scan`).
   project's template, Playback's ROM copy); the check runs as `su tester` on a read-only copy.
 - **Rule:** a "read-only" test run as root proves nothing; copy files out of a read-only tree with
   `copyfile` (content only).
+
+### Colours: one RGB convention, and a planner that never steps back (S171 r4)
+- **Symptom:** the planner scored the room's OWN palette "0 % exact" against its own tiles;
+  later, plans started from that palette came out worse than it.
+- **Root cause:** (1) two RGB555→RGB conventions — `(c << 3) | (c >> 2)` in the new module,
+  `c * 8` in render_project / png_import — so a colour read from the renderer never equalled
+  the same word expanded again; (2) the k-medoids refit of a row could replace it by a worse
+  row (a local optimum from a farthest-first start).
+- **Fix:** recolour.py uses the editor's `c * 8` everywhere (snap = round to 5 bits); a refit
+  keeps the old row unless the new one draws its pieces better (`_fit_row_keep`); seed 0 starts
+  from the rows as they are; empty / black-only rows are reseeded from the worst-drawn pieces.
+- **Rule:** compare colours only after snapping both sides to the GBC's 5 bits with the
+  editor's convention; an optimiser offered to the user must never return worse than "as it is".

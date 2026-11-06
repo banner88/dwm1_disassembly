@@ -3978,6 +3978,160 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s171_colour_true(app, w):
+    """S171 r4 (ROADMAP P3.3i — user: "the palette for a room is fixed and if you import a
+    sort of similar looking tileset the colours are fairly random and there is no way to
+    re-roll the colour allocation or change it. Nor can you edit an individual tile";
+    "Draw … doesnt allow all colours"; "It does NOT work well if you are ADDING it to an
+    existing room"): Borrow matches colours (the source's own colours shown; each piece in
+    the closest row, renumbered; the truth recorded), several at once, a PNG straight in;
+    Palettes → Re-plan colours (plans, re-roll, apply = one undo step, exact undo); Draw
+    offers every row and moves a quarter to the row of its colour."""
+    import json
+    import tempfile
+    from PIL import Image
+    from editor2.core import recolour as RC
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core import tile_draw as TD
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    # core: the closest row, renumbered
+    q = RC.Quarter.from_rgb([(200, 40, 40)] * 32 + [(10, 10, 10)] * 32)
+    rows = [[(255, 255, 255), (248, 248, 208), (120, 120, 120), (0, 0, 0)],
+            [(208, 48, 48), (248, 248, 208), (40, 40, 200), (0, 0, 0)],
+            [(0, 200, 0)] * 3 + [(0, 0, 0)], [(255, 255, 0)] * 3 + [(0, 0, 0)]]
+    r_, idx, _e = RC.best_row(q, rows)
+    assert r_ == 1 and idx[0] == 0 and idx[40] == 3, (r_, idx[:2])
+    # a room whose screens are its own (the example shares island_s0 between rooms of
+    # different colours — the re-plan refuses those, rightly)
+    rid = None
+    for room in doc.rooms:
+        if not room.get('screens') or not room.get('record'):
+            continue
+        k0 = doc.screen_keys(room)[0]
+        sc = RC.Scope(doc, room, k0, 0, s.renderer.room_palettes(room, k0, 0),
+                      s.renderer.room_gfx(room).sheet)
+        if not sc.problems and sc.lids:
+            rid = room['id']
+            break
+    assert rid is not None, 'the example has a room of its own'
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    assert rt.picker_foreign.foreign_pals is not None, 'match colours shows the source colours'
+    nmt = len(doc.metatiles(doc.tileset_key(doc.room(rid))))
+    rt._import_metatile(rt.picker_foreign.foreign[5])
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 1 — colours:'), rt.status_line.text()
+    tid = doc.tileset_key(doc.room(rid))
+    assert len(doc.metatiles(tid)) >= nmt + 1
+    assert doc.custom['_editor']['truth'][tid], 'the real colours are recorded'
+    # several at once: one undo step
+    i1 = s.undo.index()
+    rt.picker_foreign.foreign_ticked = {6, 7, 8}
+    rt._import_selected()
+    app.processEvents()
+    assert s.undo.index() == i1 + 1 and rt.status_line.text().startswith('Imported 3'), \
+        rt.status_line.text()
+    # a picture straight in (no helper room)
+    tmp = tempfile.mkdtemp(prefix='s171r4-')
+    png = os.path.join(tmp, 'two.png')
+    im = Image.new('RGB', (48, 32), (248, 0, 248))          # a key colour round the art
+    for x in range(16):
+        for y in range(16):
+            im.putpixel((8 + x, 8 + y), (0, 128, 248) if (x + y) % 3 else (24, 24, 120))
+            im.putpixel((24 + x, 8 + y), (240, 200, 64) if x % 4 else (120, 64, 0))
+    im.save(png)
+    rt._borrow_png(png)
+    app.processEvents()
+    assert not rt.png_box.isHidden() and len(rt.png_cells.cells) == 2, len(rt.png_cells.cells)
+    rt.png_cells.selected = {0, 1}
+    rt._import_selected()
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 2'), rt.status_line.text()
+    tid = doc.tileset_key(doc.room(rid))
+    new = doc.metatiles(tid)[-6:]
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x01))      # closes the picture
+    app.processEvents()
+    assert rt.png_box.isHidden()
+    # put them on the screen, then re-plan
+    room = doc.room(rid)
+    lid = doc.state_layout_ref(room, rt.key, rt.state_idx)['id']
+
+    def place(d):
+        alid = d.writable_attr_id(d.room(rid), rt.key, rt.state_idx)
+        ch, ach = [], []
+        for n, mt in enumerate(new):
+            pals = TD.quarter_pals(mt)
+            for qq, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+                ch.append((2 + dr, n * 2 + dc, mt['tiles'][qq]))
+                ach.append((2 + dr, n * 2 + dc, pals[qq]))
+        d.set_cells(lid, 'tiles', ch)
+        d.set_cells(alid, 'attr', ach)
+    s.undo.push(RCMD.SnapshotCommand(s, 'place', place))
+    rt._show()
+    app.processEvents()
+    from PySide6.QtCore import QTimer
+    seen = {}
+
+    def drive():
+        dlg = rt._replan_dlg
+        seen['n'] = len(dlg.plans)
+        seen['first'] = dlg.plans[0].error
+        dlg._reroll()
+        seen['reroll'] = len(dlg.plans)
+        dlg._compute(reset=True)
+        dlg.accept()
+    QTimer.singleShot(200, drive)
+    rt._replan_colours()
+    app.processEvents()
+    assert seen.get('n', 0) >= 2 and seen.get('reroll', 0) >= 1, seen
+    assert rt.status_line.text().startswith('Re-plan colours: re-planned'), rt.status_line.text()
+    # the plan applied fits: planning again from it changes nothing much
+    cv = rt.canvas
+    room = doc.room(rid)
+    sc = RC.Scope(doc, room, rt.key, rt.state_idx, cv.pals, cv.gfx.sheet,
+                  s.renderer.common_blocks(), doc.animated_slots(doc.tileset_key(room)))
+    now = RC.plan_rows(sc.quarters(), 3, locked={r: cv.pals[r] for r in range(4)})
+    assert now.error <= seen['first'] + 0.05, (now.error, seen['first'])
+    # Draw: every row; a quarter moves to the row of its colour
+    cv.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert len(dt.swatches) == 16
+    tgt = (dt.qrow[0] + 1) % 4
+    dt._pick_swatch(tgt, 2)
+    dt._snap()
+    dt._pre_put(0)
+    assert dt.qrow[0] == tgt and dt.rows_changed() and dt.pal_value() != dt.old_qrow[0]
+    dt._update_report()
+    assert not dt.ev_btn.isEnabled(), 'everywhere refused once a row changed'
+    dt._tool('undo')
+    assert dt.qrow == dt.old_qrow
+    # all of it undone exactly
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print(f"OK: S171 r4 colour-true tiles — Borrow matches colours (source colours shown, truth "
+          f"recorded), 3 at once = 1 undo step, a PNG straight in (2 cells); Re-plan colours "
+          f"({seen['n']} plans, re-roll, applied, error {now.error:.2f}); Draw offers 16 colours "
+          f"and moves a quarter's row; all undone exactly")
+
+
 def s171_borrow_custom(app, w):
     """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
     its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
@@ -4002,6 +4156,7 @@ def s171_borrow_custom(app, w):
         assert rt.current_room()['id'] == rid
     rooms = [r["id"] for r in doc.rooms]
     a, b = rooms[0], rooms[1]
+    rt.borrow_match.setChecked(False)          # S171 r4: the graphics copied as they are
     pick(a)
     # room A gets a Castle metatile (its tileset becomes the project's own)
     rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
@@ -4052,6 +4207,7 @@ def s171_borrow_custom(app, w):
         s.undo.undo()
     app.processEvents()
     rt.foreign_box.setCurrentIndex(0)
+    rt.borrow_match.setChecked(True)
     print(f'OK: S171 r3 Borrow — "Your room" ({len(cust)} rooms, A-Z, this room left out) and '
           f'"Game room" (A-Z, 16 gate themes); one list clears the other; a metatile of your '
           f'room imported into another tileset (graphics + wall side), undone')
@@ -6172,6 +6328,7 @@ def main():
     s170_art_space(app, w)
     s171_app_window(app, w)
     s171_borrow_custom(app, w)
+    s171_colour_true(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

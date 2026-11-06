@@ -739,6 +739,42 @@ happening"; built S99, NOT yet user-tested):**
   `import_metatile`. Animation: when the source room plays a game room's animation and the
   metatile uses its slots, that map is `anim_src` (the S99 r2 path); a tile of its own
   `tile_anims` is imported still, said in the status line.
+- **S171 r4 — colour-true tiles (ROADMAP P3.3i)** (user: "the palette for a room is fixed …
+  the colours are fairly random and there is no way to re-roll the colour allocation";
+  "Draw … just give me the current valid colours"; "It does NOT work well if you are
+  ADDING it to an existing room"). Found first: Borrow copied colour NUMBERS and the row
+  number (`import_metatile` keeps `'pal'`), so a borrowed tile showed whatever this room has
+  in that row; the PNG fit (`png_import.fit_palettes`) is a deterministic greedy pick in RGB
+  distance; Draw offered the 4 colours of the quarter's row only.
+  `editor2/core/recolour.py` (no Qt): colours compared in OKLab (×100); a `Quarter` = a
+  piece's real colours + 64 indices; `best_row` / `quantize` = the closest row, pixels
+  renumbered; `plan_rows` = weighted k-medoids per row over the pieces' real colours (black
+  fixed, cream too when the palette is not `free_color1`; a fit never replaces a row by a
+  worse one; an unused row is reseeded from the worst-drawn pieces); `propose` = seed 0 from
+  the rows as they are, seeds ≡1/2 (mod 3) restart 1/2 rows from random pieces, ≡0 a fresh
+  start; plans aligned to the old row order (fewer changes) and de-duplicated, earlier ones
+  excluded on a re-roll. The TRUTH store `custom._editor.truth[tileset]["slot:row"]` (the
+  real colours + the slot's graphic when recorded — stale entries ignored) is written by
+  `import_true_metatile` (Borrow with *Match colours*, a picture) and by `apply_plan`; a
+  piece without truth is planned from how it looks. `Scope` = the screens / states of ONE
+  room whose effective palette is the shown one (+ the tileset's My metatiles, weight 0); it
+  refuses when a layout / colour grid is shared with a screen outside it (the example's rooms
+  share `island_s0`). `apply_plan` (one SnapshotCommand): own tileset / palette first
+  (localize; a palette used elsewhere is copied for the scope), new rows (and `free_color1`),
+  every unit (tile value, row) → its best row + renumbered graphic; per slot: one graphic in
+  place when nothing outside draws it, every other colouring → a slot with the same graphic
+  or a free slot on the same wall / walkable side (refused with the count when there are
+  none); the font tiles and animated slots keep their numbers (only their row is chosen);
+  cells, colour grids (`writable_attr_id`) and My metatiles repointed; truth re-recorded.
+  UI: Borrow → *Match colours* (picker in the source's own colours via
+  `MetatilePicker.set_foreign(pals=)`), Ctrl/Shift-click + *Import the selected (N)*,
+  *A picture (PNG)…* (`png_source.cut_cells`: each panel on its own `best_offset` grid or a
+  manual offset; identical cells once); Palettes → *Re-plan colours… (re-roll)*
+  (`replan_dialog`: the rows as they are + 4 plans with pictures (`Scope.preview`), score,
+  re-roll, keep a row, own colour 1); Draw → a 4×4 colour grid, `FramePad.pre_put` moves a
+  quarter to the row of the colour painted (pixels → closest colours; *everywhere* refused
+  once a row moved; the new metatile keeps the per-quarter rows). Colour convention: 5 bits
+  × 8 (render_project / png_import), so a colour read back from the renderer is exact.
 - **S99 r3 — "Make animated" tab** (user: "please make the 'make
   animatable' tab. Bonus points if you can make a little tab/edit doodad
   that lets me re-paint a second tile in a paint-like manner"; and "how do I

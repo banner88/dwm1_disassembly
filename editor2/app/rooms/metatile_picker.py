@@ -39,6 +39,7 @@ class MetatilePicker(QWidget):
     removeRequested = Signal(int)          # index in the custom list
     editRequested = Signal(object)         # metatile dict (to seed the editor)
     importRequested = Signal(object)       # foreign metatile dict (other tileset)
+    foreignSelection = Signal(int)         # S171 r4: how many foreign metatiles are ticked
 
     SECTIONS = ('found', 'foreign', 'custom')
 
@@ -55,6 +56,8 @@ class MetatilePicker(QWidget):
         self.foreign_sheet = None
         self.foreign_threshold = 0
         self.foreign_same = True  # foreign room shares this tileset?
+        self.foreign_pals = None  # S171 r4: the source's own colours (None = this room's)
+        self.foreign_ticked = set()
         self.foreign_title = ''
         self.flags = {}           # tile index -> 'released' | 'changed' (S96)
         self.anim = set()         # S99: slots the room's animation changes
@@ -99,12 +102,17 @@ class MetatilePicker(QWidget):
         self.found, self.custom = found, custom
         self._relayout()
 
-    def set_foreign(self, title, mts, sheet, threshold, same_tileset):
+    def set_foreign(self, title, mts, sheet, threshold, same_tileset, pals=None):
+        """S171 r4: `pals` = the SOURCE's own colours (Borrow → match colours shows the
+        tiles as they really look); None = drawn in this room's colours."""
         self.foreign_title = title
         self.foreign = list(mts)
         self.foreign_sheet = sheet
         self.foreign_threshold = threshold
         self.foreign_same = same_tileset
+        self.foreign_pals = pals
+        self.foreign_ticked = set()
+        self.foreignSelection.emit(0)
         self._pix = {k: v for k, v in self._pix.items() if k[0] != 'foreign'}
         self._relayout()
 
@@ -146,8 +154,11 @@ class MetatilePicker(QWidget):
                 return None
             img = Image.new('RGB', (16, 16))
             pals = metatile_pals(mt) or [0] * 4
+            rows = self.pals
+            if sec == 'foreign' and getattr(self, 'foreign_pals', None) is not None:
+                rows = self.foreign_pals
             for i, t in enumerate(mt['tiles']):
-                img.paste(self.renderer.render_tile(sheet, t, self.pals, pals[i]),
+                img.paste(self.renderer.render_tile(sheet, t, rows, pals[i]),
                           ((i % 2) * 8, (i // 2) * 8))
             img = img.resize((MT, MT), Image.NEAREST)
             self._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(img))
@@ -221,6 +232,12 @@ class MetatilePicker(QWidget):
         pm = self._render(sec, mt)
         if pm is not None:
             p.drawPixmap(r, pm)
+        if sec == 'foreign' and key[1] in getattr(self, 'foreign_ticked', ()):
+            pen = QPen(QColor('#ffe000'))
+            pen.setWidth(3)
+            p.setPen(pen)
+            p.setBrush(Qt.NoBrush)
+            p.drawRect(r.adjusted(1, 1, -2, -2))
         # walkability corner (bottom-right subtile decides — S94 measurement)
         wall = (mt['tiles'][3] & 0xFF) < thr
         p.fillRect(QRect(r.right() - 5, r.bottom() - 5, 5, 5),
@@ -301,6 +318,14 @@ class MetatilePicker(QWidget):
                 self.importRequested.emit(mt)
             return
         if sec == 'foreign' and not self.foreign_same:
+            # S171 r4: Ctrl / Shift + click ticks several for "Import the selected"
+            if ev.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier):
+                t = getattr(self, 'foreign_ticked', set())
+                t ^= {i}
+                self.foreign_ticked = t
+                self.foreignSelection.emit(len(t))
+                self.update()
+                return
             self.importRequested.emit(mt)
             return
         self.selected = h
