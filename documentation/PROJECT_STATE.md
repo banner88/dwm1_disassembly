@@ -53,6 +53,18 @@
 > the glossary (App). `EDITOR_REVISION` S171.
 > **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2095 PASSED (+ `test_s171`; REGRESSION == the pin);
 > test_app `--rom` PASS (+ `s171_app_window`; the GUI build == the pin `7aae0e95…`, patched).
+> **r2:** the GitHub build hit "The configuration 'macos-14-arm64-us-default' is not supported" —
+> GitHub retired the macos-14 image 2026-11-02; the workflow runs on `macos-15`.
+> **r3 (user-directed, the user starting a project):** ROADMAP P3.3h — the Rooms tab's Borrow tab
+> lists YOUR rooms ("Your room") and the game's ("Game room" + gate themes), each A-Z, one clears
+> the other; a metatile of your room imported into another tileset (both pages). Measured on the
+> user's project: GreatTree ← Cities_FOUNT ×4, graphics identical, page 2 used. test_app
+> `s171_borrow_custom`. EDITOR_DESIGN §5.1 "S171 r3", help 13_tilesets.
+> **Found, NOT fixed (pre-existing, HEAD 7cb910a too):** `editor2/tests/test_canvas.py` stops at
+> `v3_round_trip` line 627 — its slot counts assume one 128-slot page (S168 made free_counts count
+> both pages; further asserts expect "not enough free tileset slots" where page 2 now has room).
+> Not one of the mandated suites; the S168+ sessions did not run it. Needs its own pass (rewrite
+> the slot-budget asserts for 256 slots).
 > **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
 > `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
 > Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
@@ -495,6 +507,7 @@ real project starts, so these are best confirmed on the way into it:
 - S170: the Monsters tab's art meter and the Capacity row past the three banks (the ROM half: user-tested S170 r2).
 - S171: the Mac app (download, `xattr -cr`, the ROM prompt, Build, Play with the app's SameBoy, Playback, Dock name / icon);
   no empty window on the Arena tab (or anywhere); the quick open.
+- S171 r3: Borrow → "Your room" (import from your own rooms) and the two A-Z lists.
 
 ### Not yet implemented
 

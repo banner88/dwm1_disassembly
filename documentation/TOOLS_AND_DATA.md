@@ -2354,3 +2354,4 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `tools/validate_custom_data.py` | `REPO` from `abspath(__file__)` (not `resolve()`: the app's workspace links) | verify_integrity check 6 |
 | `editor2/app/appmode.py` (NEW), `qt_safe.py` (`discard`, `StrayWindowGuard`), `page_tabs.py` (`addLazyTab`, `built`, `clear`), `main.py` (lazy tabs, deferred open, the guard, the ROM in the app), `arena_tab.py` / `encounters_tab.py` / `skills_tab.py` (discard), `balance_tab.py` (no anchor build in the app), `core/emulator.py` (the app's SameBoy) | the editor side | test_app `s171_app_window` |
 | `editor2/help/00_start.md` ("The app", start-up, stray windows), `80_build.md`, `95_glossary.md`; `_revision.md` / `editor2/__init__.py` `S171` | help | test_app help checks |
+| `editor2/app/rooms/tab.py` (S171 r3) | Borrow tab: "Your room" + "Game room" lists (A-Z), import from a project room (both pages) | test_app `s171_borrow_custom` |

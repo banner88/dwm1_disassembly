@@ -15,7 +15,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QGroupBox, QLineEdit,
-                               QHBoxLayout, QInputDialog, QLabel, QListWidget,
+                               QGridLayout, QHBoxLayout, QInputDialog, QLabel, QListWidget,
                                QListWidgetItem, QMenu, QMessageBox, QPushButton,
                                QScrollArea, QSizePolicy, QSplitter, QTabWidget,
                                QToolBar, QToolButton, QVBoxLayout, QWidget)
@@ -494,15 +494,29 @@ class RoomsTab(QWidget):
         btab = QWidget()
         bl = QVBoxLayout(btab)
         bl.setContentsMargins(0, 0, 0, 0)
-        frow = QHBoxLayout()
-        frow.addWidget(QLabel('Room:'))
+        # S171 r3 (user: "Borrow should show my custom rooms … its an enormous giant
+        # unalphabetized list at least have 2 drop downs, 1 for custom 1 for vanilla"):
+        # YOUR rooms and the GAME's rooms (+ the gate themes), each A-Z; picking in one
+        # list clears the other
+        tip = ('Show another room\'s tiles, drawn with THIS room\'s palettes. Same tileset: '
+               'click = brush. Other tileset: click imports the 4 subtiles into this room\'s '
+               'tileset.')
+        frow = QGridLayout()
+        frow.addWidget(QLabel('Your room:'), 0, 0)
+        self.foreign_custom = QComboBox()
+        self.foreign_custom.setToolTip(tip + ' Your own rooms, A-Z.')
+        self.foreign_custom.currentIndexChanged.connect(lambda _i: self._foreign_picked('custom'))
+        frow.addWidget(self.foreign_custom, 0, 1)
+        frow.addWidget(QLabel('Game room:'), 1, 0)
         self.foreign_box = QComboBox()
-        self.foreign_box.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.foreign_box.setToolTip('Show another room\'s tiles, drawn with THIS room\'s '
-                                    'palettes. Same tileset: click = brush. Other tileset: '
-                                    'click imports the 4 subtiles into this room\'s tileset.')
-        self.foreign_box.currentIndexChanged.connect(lambda _i: self._refresh_foreign())
-        frow.addWidget(self.foreign_box, 1)
+        self.foreign_box.setToolTip(tip + ' The game\'s rooms and the 16 gate themes, A-Z.')
+        self.foreign_box.currentIndexChanged.connect(lambda _i: self._foreign_picked('vanilla'))
+        frow.addWidget(self.foreign_box, 1, 1)
+        for b in (self.foreign_custom, self.foreign_box):
+            b.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+            b.setMinimumContentsLength(18)
+            b.setMaxVisibleItems(30)
+        frow.setColumnStretch(1, 1)
         bl.addLayout(frow)
         self.picker_foreign = MetatilePicker(sections=('foreign',))
         self.picker_foreign.brushSelected.connect(self._foreign_brush)
@@ -1123,21 +1137,83 @@ class RoomsTab(QWidget):
         return []
 
     def _fill_foreign_box(self):
+        self._fill_custom_box()
         if self.foreign_box.count():
             return
         self.foreign_box.blockSignals(True)
         self.foreign_box.addItem('(none)', None)
-        for e in PN.Places.of(self.s.doc).vanilla_entries(self.s.renderer.vanilla_rooms()):
-            self.foreign_box.addItem(e.label, int(e.value))
+        items = [(e.label, int(e.value))
+                 for e in PN.Places.of(self.s.doc).vanilla_entries(self.s.renderer.vanilla_rooms())]
         # S122: the 16 maze floor types (gate themes) — data THEME_KEY + type
         from editor2.core.maze import THEME_NAMES
-        for t, nm in enumerate(THEME_NAMES):
-            self.foreign_box.addItem(f'Gate theme {t}: {nm}', THEME_KEY + t)
+        items += [(f'Gate theme {t}: {nm}', THEME_KEY + t) for t, nm in enumerate(THEME_NAMES)]
+        for lab, v in sorted(items, key=lambda it: (it[0].casefold(), it[1])):   # S171 r3: A-Z
+            self.foreign_box.addItem(lab, v)
         self.foreign_box.blockSignals(False)
 
+    def _fill_custom_box(self):
+        """S171 r3: the project's rooms, A-Z (the room shown is left out), refilled each
+        time (rooms come, go and get renamed); the choice is kept when it still exists."""
+        b = self.foreign_custom
+        keep = b.currentData()
+        cur = self.current_room()
+        places = PN.Places.of(self.s.doc)
+        items = sorted(((places.room_label(r), str(r['id'])) for r in self.s.doc.rooms
+                        if cur is None or r['id'] != cur['id']),
+                       key=lambda it: it[0].casefold())
+        b.blockSignals(True)
+        b.clear()
+        b.addItem('(none)', None)
+        for lab, rid in items:
+            b.addItem(lab, rid)
+        i = b.findData(keep) if keep is not None else 0
+        b.setCurrentIndex(max(i, 0))
+        b.blockSignals(False)
+
+    def _foreign_picked(self, which):
+        """One source at a time: a choice in one list clears the other."""
+        other = self.foreign_box if which == 'custom' else self.foreign_custom
+        mine = self.foreign_custom if which == 'custom' else self.foreign_box
+        if mine.currentData() is not None and other.currentIndex() != 0:
+            other.blockSignals(True)
+            other.setCurrentIndex(0)
+            other.blockSignals(False)
+        self._refresh_foreign()
+
+    def _foreign_room(self):
+        """The project room picked in 'Your room', or None."""
+        rid = self.foreign_custom.currentData()
+        if rid is None:
+            return None
+        for r in self.s.doc.rooms:
+            if str(r['id']) == rid:
+                return r
+        return None
+
+    def _custom_vocab(self, src):
+        """A project room's tiles for the Borrow tab: every metatile on its screens
+        (+ its source room's) and the 'My metatiles' of its tileset."""
+        out = list(self._room_vocab(src))
+        seen = {metatile_key(mt) for mt in out}
+        for mt in self.s.doc.metatiles(self.s.doc.tileset_key(src)):
+            if metatile_key(mt) not in seen:
+                seen.add(metatile_key(mt))
+                out.append(mt)
+        return out
+
     def _refresh_foreign(self):
-        sel = self.foreign_box.currentData()
         room = self.current_room()
+        src_room = self._foreign_room()
+        if src_room is not None and self.canvas.gfx is not None:     # S171 r3: your room
+            r = self.s.renderer
+            gfx = r.room_gfx(src_room)
+            same = (room is not None and
+                    self.s.doc.tileset_key(src_room) == self.s.doc.tileset_key(room))
+            self.picker_foreign.set_foreign(PN.Places.of(self.s.doc).room_label(src_room),
+                                            self._custom_vocab(src_room), gfx.sheet,
+                                            gfx.threshold, same)
+            return
+        sel = self.foreign_box.currentData()
         if sel is None or self.canvas.gfx is None:
             self.picker_foreign.set_foreign('', [], None, 0, True)
             return
@@ -1158,15 +1234,29 @@ class RoomsTab(QWidget):
     def _import_metatile(self, mt):
         room = self.current_room()
         sel = self.foreign_box.currentData()
-        if room is None or sel is None:
+        src_room = self._foreign_room()
+        if room is None or (sel is None and src_room is None):
             QMessageBox.information(self, 'Import', 'Select a custom room first — a vanilla '
                                     'room is read-only (clone it to import tiles).')
             return
         r = self.s.renderer
-        mid = int(sel)
+        mid = int(sel) if sel is not None else None
         from editor2.core import animation as ANIM
         from editor2.core.document import AnimationSwitchNeeded, VocabReleaseWouldHelp
-        if mid >= THEME_KEY:                     # S122: a gate theme (never animated)
+        still_note = ''
+        if src_room is not None:                 # S171 r3: one of your rooms
+            gfx = r.room_gfx(src_room)
+            src_name = PN.Places.of(self.s.doc).room_label(src_room)
+            # a tile it animates with a game room's animation keeps moving (that game
+            # room's slots); one of its own animated tiles comes in still
+            mid = self.s.doc.room_animation(src_room)['map']
+            keys = {P2.slot_key(t) for t in mt['tiles']}
+            anim = mid if (mid is not None and keys & set(ANIM.slots(mid))) else None
+            if anim is None and keys & set(self.s.doc.own_anim_slots(src_room)):
+                still_note = ' (its animation stays in ' + src_name + ': imported still)'
+            if anim is None:
+                mid = None
+        elif mid >= THEME_KEY:                   # S122: a gate theme (never animated)
             from editor2.core.maze import THEME_NAMES
             gfx = r.theme_gfx(mid - THEME_KEY)
             src_name = f'gate theme {THEME_NAMES[mid - THEME_KEY]}'
@@ -1179,7 +1269,10 @@ class RoomsTab(QWidget):
             e = ANIM.map_entry(mid)
             anim = mid if (e.get('slots') and not e.get('inert_in_vanilla')
                            and any(P2.slot_key(t) in ANIM.slots(mid) for t in mt['tiles'])) else None
-        src_sheet, src_thr = bytes(gfx.sheet[:2048]), gfx.threshold
+        # S171 r3: one of your rooms may have a page 2 — its whole sheet (import_metatile
+        # reads page-2 tiles by their slot key)
+        src_sheet = bytes(gfx.sheet) if src_room is not None else bytes(gfx.sheet[:2048])
+        src_thr = gfx.threshold
         own = bytes(self.canvas.gfx.sheet[:2048])
         name = f"{src_name} {mt['tiles']}"
         rid = room['id']
@@ -1223,7 +1316,7 @@ class RoomsTab(QWidget):
         if cmd.error is not None:
             QMessageBox.warning(self, 'Import failed', str(cmd.error))
             return
-        note = getattr(self.s.doc, 'last_import_note', '')
+        note = getattr(self.s.doc, 'last_import_note', '') + still_note
         if note:
             self.status_line.setText('Imported — ' + note + '. ▶ Play to see it.')
         self._show()
@@ -1577,6 +1670,8 @@ class RoomsTab(QWidget):
         the metatile's slots but this room does not, offer its animation."""
         room = self.current_room()
         sel = self.foreign_box.currentData()
+        if self._foreign_room() is not None:     # S171 r3: your room on the same tileset
+            sel = None
         if room is not None and sel is not None and int(sel) < THEME_KEY:
             from editor2.core import animation as ANIM
             mid = int(sel)

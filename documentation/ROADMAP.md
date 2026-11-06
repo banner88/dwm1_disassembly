@@ -992,6 +992,19 @@ recipes are pure authoring.
       loader for bank 1, attr bit 3 through the attr emitters and the editor
       (renderer, slot map, import). *Accept:* a custom room drawing 200+
       distinct tiles, PyBoy + SameBoy, battles and menus from it intact.
+- [x] **P3.3h — Borrow from your own rooms; two A-Z lists** — **built S171 r3, NOT yet
+      user-tested** (user, starting a project — GreatLog = GreatTree + tiles of 3 imported
+      tilesets: "Can I not borrow a custom room's tileset? … finding the whole process really
+      cumbersome"; then "Borrow should show my custom rooms. Currently I dont see it. Also its an
+      enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1 for
+      vanilla"). Rooms tab → Tiles → Borrow: **Your room** (the project's rooms, A-Z, the room
+      shown left out; a room's vocabulary + its tileset's My metatiles, page 2 included) and
+      **Game room** (the game's rooms + the 16 gate themes, A-Z); one clears the other. Other
+      tileset: click imports through `Document.import_metatile` (the whole source sheet, both
+      pages); a tile your room animates with a game room's animation keeps moving; one of its
+      own animated tiles comes in still (the status line says so). EDITOR_DESIGN §5.1 "S171 r3".
+      Measured on the user's project: GreatTree ← Cities_FOUNT, 4 imports, graphics identical,
+      the last ones spilled onto page 2. test_app `s171_borrow_custom`.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

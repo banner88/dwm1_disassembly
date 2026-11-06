@@ -3978,6 +3978,85 @@ def s165_window_words(app, w):
           'undo restores project.json')
 
 
+def s171_borrow_custom(app, w):
+    """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
+    its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
+    for vanilla"): the Borrow tab has 'Your room' (the project's rooms, A-Z, the room shown
+    left out) and 'Game room' (the game's rooms + the 16 gate themes, A-Z); a choice in one
+    clears the other; a metatile of YOUR room on another tileset is imported into this
+    room's tileset (the graphics copied, the bottom-right on its side), undo removes it."""
+    from editor2.app.rooms import tab as RT
+    from editor2.core import page2 as P2
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+
+    def pick(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+    rooms = [r["id"] for r in doc.rooms]
+    a, b = rooms[0], rooms[1]
+    pick(a)
+    # room A gets a Castle metatile (its tileset becomes the project's own)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
+    app.processEvents()
+    assert rt.foreign_custom.currentIndex() == 0
+    castle = rt.picker_foreign.foreign[5]
+    n0 = s.undo.count()
+    rt._import_metatile(castle)
+    app.processEvents()
+    ta = doc.tileset_key(doc.room(a))
+    mine = doc.metatiles(ta)[-1]
+    # the two lists
+    labs = [rt.foreign_box.itemText(i) for i in range(1, rt.foreign_box.count())]
+    assert labs == sorted(labs, key=lambda t: (t.casefold())) or \
+        [t.casefold() for t in labs] == sorted(t.casefold() for t in labs), 'Game room list A-Z'
+    assert sum(1 for i in range(rt.foreign_box.count())
+               if (rt.foreign_box.itemData(i) or 0) >= RT.THEME_KEY) == 16
+    pick(b)
+    cust = [rt.foreign_custom.itemData(i) for i in range(1, rt.foreign_custom.count())]
+    clabs = [rt.foreign_custom.itemText(i).casefold() for i in range(1, rt.foreign_custom.count())]
+    assert str(b) not in cust and str(a) in cust and len(cust) == len(rooms) - 1, cust
+    assert clabs == sorted(clabs), 'Your room list A-Z'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
+    rt.foreign_custom.setCurrentIndex(rt.foreign_custom.findData(str(a)))
+    app.processEvents()
+    assert rt.foreign_box.currentIndex() == 0, 'picking your room clears the game room'
+    voc = rt.picker_foreign.foreign
+    assert any(m['tiles'] == mine['tiles'] for m in voc), "your room's own metatile is listed"
+    assert not rt.picker_foreign.foreign_same
+    src = [m for m in voc if m['tiles'] == mine['tiles']][0]
+    rt._import_metatile(src)
+    app.processEvents()
+    rec = doc.room(b)['record']
+    tb = doc.tileset_key(doc.room(b))
+    got = doc.metatiles(tb)[-1]
+    sa, sb = doc.read_sheet(ta), doc.read_sheet(tb)
+    for t_src, t_dst in zip(src['tiles'], got['tiles']):
+        ks, kd = P2.slot_key(t_src), P2.slot_key(t_dst)
+        assert bytes(sb[kd * 16:kd * 16 + 16]) == bytes(sa[ks * 16:ks * 16 + 16]), 'graphic copied'
+    thr_a = val(doc.room(a)['record']['collision_threshold'])
+    thr_b = val(rec['collision_threshold'])
+    assert P2.is_wall(P2.slot_key(got['tiles'][3]), thr_b) == \
+        P2.is_wall(P2.slot_key(src['tiles'][3]), thr_a), 'bottom-right keeps its side'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x01))
+    app.processEvents()
+    assert rt.foreign_custom.currentIndex() == 0, 'picking a game room clears your room'
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    rt.foreign_box.setCurrentIndex(0)
+    print(f'OK: S171 r3 Borrow — "Your room" ({len(cust)} rooms, A-Z, this room left out) and '
+          f'"Game room" (A-Z, 16 gate themes); one list clears the other; a metatile of your '
+          f'room imported into another tileset (graphics + wall side), undone')
+
+
 def s171_app_window(app, w):
     """S171 (the user: "when I change tabs a random empty window pops up that never loads"
     + a screenshot over the Arena tab; "when I open editor its a bit slow at first"):
@@ -6092,6 +6171,7 @@ def main():
     s169_window_and_cross(app, w)
     s170_art_space(app, w)
     s171_app_window(app, w)
+    s171_borrow_custom(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

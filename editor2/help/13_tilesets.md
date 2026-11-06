@@ -42,8 +42,11 @@ picture already changed; top-right teal = it moves in the game. Hover for
 details. Right-click → **Open in metatile editor…** (a new metatile starting
 from this one) or **Delete** (My metatiles only).
 
-**Borrow** tab — **Room:** any game room or *Gate theme N*. Its metatiles are
-drawn in THIS room's colours. Same tileset: click = brush. Other tileset:
+**Borrow** tab — two lists, each A-Z; picking in one clears the other.
+**Your room:** any room of your project (S171 r3) — its metatiles on every screen
+and its *My metatiles*, including tiles you imported from a PNG and page-2 tiles.
+**Game room:** any game room or *Gate theme N*. The metatiles are drawn in THIS
+room's colours. Same tileset: click = brush. Other tileset:
 click (or right-click → **Import into this tileset**) copies the four tiles
 into free slots of your tileset (a tile already there is reused; the
 bottom-right one stays on its wall / walkable side). The new metatile lands

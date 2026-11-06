@@ -729,6 +729,16 @@ happening"; built S99, NOT yet user-tested):**
   says what happened, incl. the walkability of the fixed slot in THIS sheet
   (an animated slot cannot move to the other side of the threshold). The
   same-sheet brush from the Borrow tab offers the animation switch too.
+- **S171 r3 — Borrow from your own rooms** (user: "Borrow should show my custom rooms …
+  at least have 2 drop downs, 1 for custom 1 for vanilla"): the Borrow tab has **Your room**
+  (`foreign_custom`: the project's rooms by `Places.room_label`, A-Z, the room shown left out,
+  refilled on every show, data = the room id) and **Game room** (`foreign_box`: the game's
+  rooms + the 16 gate themes, A-Z; it was grouped by area, then map id); a choice in one sets
+  the other to (none). A project room's list = `_room_vocab` + `metatiles(its tileset)`; same
+  tileset key = brush, else `_import_metatile` passes the WHOLE source sheet (page 2 too) to
+  `import_metatile`. Animation: when the source room plays a game room's animation and the
+  metatile uses its slots, that map is `anim_src` (the S99 r2 path); a tile of its own
+  `tile_anims` is imported still, said in the status line.
 - **S99 r3 — "Make animated" tab** (user: "please make the 'make
   animatable' tab. Bonus points if you can make a little tab/edit doodad
   that lets me re-paint a second tile in a paint-like manner"; and "how do I
