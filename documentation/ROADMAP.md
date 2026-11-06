@@ -1023,6 +1023,18 @@ recipes are pure authoring.
       8 Cities_FOUNT + 8 Mermaids Cave cells (all "rough" against GreatTree's rows) → plan 1
       92 % exact, error 0.36, applied, built (`047962c6…`, patched test build), the room in
       PyBoy = the editor's picture. EDITOR_DESIGN §5.1 "S171 r4"; test_app `s171_colour_true`.
+- [x] **P3.3j — Parked metatiles: only tiles placed on screens hold slots** — **built S171
+      r5, NOT yet user-tested** (user: "I added 38 metatiles and immediately get 'The tileset
+      has no free walkable slot …' Does purging remove the tiles from a selection? Like there
+      is a difference between having more than possible tiles AVAILABLE versus ACTUALLY HAVING
+      THEM DOWN ON THE SCREEN"; "Yes please implement it"). NEW `editor2/core/parking.py`
+      (`custom._editor.parked`): a parked metatile keeps its pictures, rows, walkable side and
+      real colours but no slot; imports / Draw → new / Re-plan park the unplaced My metatiles
+      when the sheet is full (`Document.NoFreeSlot` + `parking.evicting`); still full = the
+      import itself is parked; the picker's *Parked* section (click = back into the tileset
+      and the brush; right-click = delete); Tileset tab *Park unplaced (N)* / *Delete parked
+      (N)* (were the two Purge buttons). Fixed on the way: `tile_draw.plan_new` reused a slot
+      an earlier quarter had just taken. EDITOR_DESIGN §5.1 "S171 r5"; test_app `s171_parking`.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

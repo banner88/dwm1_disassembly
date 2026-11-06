@@ -21,7 +21,7 @@ there can only be drawn as part of a new metatile. Slots a room animates are
 rewritten by the game every few frames — edit those in the Animate tab.
 """
 
-from .document import metatile_key, metatile_pals, val
+from .document import NoFreeSlot, metatile_key, metatile_pals, val
 from . import page2 as P2
 
 QUARTERS = ('top-left', 'top-right', 'bottom-left', 'bottom-right')
@@ -226,7 +226,9 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
             cand = taken[g]
         if cand is None and sheet is not None:
             for i in sorted(range(P2.SLOTS), key=lambda i: (i >= 0x80, i)):
-                if i in anim or bytes(sheet[i * 16:i * 16 + 16]) != g:
+                # S171 r5: never a slot an earlier quarter of THIS metatile took (a free
+                # slot still showing a stale picture was 'reused' and then overwritten)
+                if i in anim or i in tiles[:q] or bytes(sheet[i * 16:i * 16 + 16]) != g:
                     continue
                 if q == 3 and (P2.is_wall(i, threshold) != need_wall):
                     continue
@@ -239,8 +241,9 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
             if not pool:
                 side = 'wall' if need_wall else 'walkable'
                 why = (f'The tileset has no free {side if q == 3 else ""} slot for the '
-                       f'{QUARTERS[q]} quarter — free some on the Tileset tab (Purge unused), '
-                       'or draw over an existing tile with "everywhere".').replace('  ', ' ')
+                       f'{QUARTERS[q]} quarter — the tiles placed on screens fill it (unplaced My metatiles are parked '
+                       'to make room) — remove some from the screens, or draw over an existing '
+                       'tile with "everywhere".').replace('  ', ' ')
                 break
             cand = pool[0]
             free.remove(cand)
@@ -301,14 +304,14 @@ def apply_new(doc, room_id, mt, new_px, threshold, walkable=None, own_sheet=None
     tid = rec.get('tileset')
     plan = plan_new(doc, room, mt, new_px, threshold, walkable, own_sheet=own_sheet)
     if not plan['ok']:
-        raise RuntimeError(plan['why'])
+        raise NoFreeSlot(plan['why'])
     if tid is None:
         if own_sheet is None:
             raise RuntimeError('room borrows a game tileset — pass own_sheet')
         tid = doc.localize_tileset(room, own_sheet)
         plan = plan_new(doc, room, mt, new_px, threshold, walkable)
         if not plan['ok']:
-            raise RuntimeError(plan['why'])
+            raise NoFreeSlot(plan['why'])
     sheet = doc.read_sheet(tid)
     for q, t in enumerate(plan['tiles']):
         t = P2.slot_key(t)

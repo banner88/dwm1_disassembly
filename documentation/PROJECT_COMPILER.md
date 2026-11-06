@@ -1069,7 +1069,10 @@ is the custom tileset id or `"<bank>:<id>"` for a vanilla tileset. S124 r3:
 ["0xRRRR"…], idx: "<64 base-36 digits>", g: "<the slot's 16 bytes, hex>"}}}` — the REAL
 colours of the art a tile slot draws in palette row `row` (editor2/core/recolour.py: Borrow
 with *Match colours*, a picture, a re-plan record it; an entry whose slot no longer holds
-graphic `g` is ignored). Nothing of it reaches the ROM; a re-plan writes ordinary palette
+graphic `g` is ignored). S171 r5 (ROADMAP P3.3j): `parked: {<tileset key>: [{name, src,
+pal, tiles, walk, q: [{g: "<16 bytes hex>", row, true: {cols, idx} | null} ×4]}]}` — PARKED
+metatiles (editor2/core/parking.py): kept with their own pictures, holding no tile slot until
+painted. Nothing of it reaches the ROM; a re-plan writes ordinary palette
 rows, tiles, tile grids and attr grids.
 
 **`custom.rooms[].name`**: display name (free text); `id` stays the stable

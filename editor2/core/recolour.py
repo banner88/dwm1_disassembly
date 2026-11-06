@@ -492,13 +492,32 @@ def import_true_metatile(doc, room_id, quarters, rows, threshold, walkable=True,
     the bottom-right on the walkable / wall side asked for); the truth is recorded. Returns
     (new metatile, sentence, [error per quarter])."""
     from . import tile_draw as TD
+    from . import parking as PK
+    from .document import NoFreeSlot
     room = doc.room(room_id)
     picks = [best_row(q, rows, allowed=allowed_rows) for q in quarters]
     px = [p[1] for p in picks]
     pals = [p[0] for p in picks]
+    errs = [p[2] / 64.0 for p in picks]
     mt = {'tiles': [0, 0, 0, 0], 'pal': pals, 'name': name}
-    new, msg = TD.apply_new(doc, room_id, mt, px, threshold, walkable, own_sheet=own_sheet,
-                            pal=pals if len(set(pals)) > 1 else pals[0], name=name)
+    # S171 r5: the room's own tileset first (parked metatiles live with it), then — when
+    # the sheet is full — the unplaced My metatiles are parked; when the PLACED tiles fill
+    # it, the import itself is parked (it takes slots when painted)
+    if 'tileset' not in room['record'] and own_sheet is not None:
+        old_key = doc.tileset_key(room)
+        rename_truth(doc, old_key, doc.localize_tileset(room, own_sheet))
+    try:
+        new, msg = PK.evicting(
+            doc, room_id, rows,
+            lambda: TD.apply_new(doc, room_id, mt, px, threshold, walkable, own_sheet=own_sheet,
+                                 pal=pals if len(set(pals)) > 1 else pals[0], name=name),
+            threshold)
+    except NoFreeSlot:
+        tid = doc.tileset_key(doc.room(room_id))
+        if ':' in str(tid):
+            raise
+        new = PK.park_new(doc, tid, name, px, pals, walkable, list(quarters), src=src)
+        return new, f"'{name}' parked — the tiles on the screens fill the tileset", errs
     tid = doc.tileset_key(doc.room(room_id))
     lst = doc._metatiles_mut(tid)
     if lst and lst[-1].get('tiles') == list(new['tiles']):
@@ -506,7 +525,6 @@ def import_true_metatile(doc, room_id, quarters, rows, threshold, walkable=True,
     sheet = doc.read_sheet(tid)
     for q, t, r in zip(quarters, new['tiles'], pals):
         record_truth(doc, tid, t, r, q, sheet)
-    errs = [p[2] / 64.0 for p in picks]
     return new, msg, errs
 
 
@@ -782,10 +800,11 @@ def apply_plan(doc, room_id, key, state, rows_new, nfree, rows_old, sheet,
             for u in us:
                 newval[u] = P2.value_of(target)
     if need_more['wall'] or need_more['walkable']:
-        raise RuntimeError('Re-plan needs more free tile slots: '
-                           f"{need_more['wall']} wall, {need_more['walkable']} walkable "
-                           '(the same tile drawn in two colourings needs two slots). Free some '
-                           'on the Tileset tab (Purge unused), or lock a row.')
+        from .document import NoFreeSlot
+        raise NoFreeSlot('Re-plan needs more free tile slots: '
+                         f"{need_more['wall']} wall, {need_more['walkable']} walkable "
+                         '(the same tile drawn in two colourings needs two slots). Remove '
+                         'some tiles from the screens, or lock a row.')
     for i, g in claimed.items():
         sh[i * 16:i * 16 + 16] = g
     doc.write_sheet(tid, sh)

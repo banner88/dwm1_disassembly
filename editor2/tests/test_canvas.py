@@ -1503,7 +1503,11 @@ def tileset_sharing_check(new_dir):
     app.processEvents()
     left = [m for m in doc.metatiles(tid_now) if doc.metatile_kind(m) == 'borrowed']
     assert left == [keep], f'only the placed borrowed metatile stays: {left}'
-    assert len(doc.unused_metatiles(tid_now, 'own')) == n_own, 'own ones untouched'
+    # S171 r5: the button PARKS the unplaced ones (own ones too) — kept, no slots
+    from editor2.core import parking as PK
+    assert not doc.unused_metatiles(tid_now, 'own') or n_own == 0 or \
+        len(PK.parked(doc, tid_now)) >= 3, 'unplaced ones parked'
+    assert len([e for e in PK.parked(doc, tid_now) if e.get('src') == 'borrowed']) == 3
     assert doc.free_counts(tid_now, thr_s)['total'] > free0
     # 6. S98 r2 (user: "I walk onto door but nothing happens"): a door on an
     # edge that scrolls into another screen can never fire — refused, and an
@@ -1537,7 +1541,7 @@ def tileset_sharing_check(new_dir):
     print(f'OK: tilesets — Copy room gets its own sheet ({ctid}); a shared sheet is flagged; '
           f'walkable side full -> "move the split down" asked (No = no change; Yes = cell '
           f'{cell} walkable, split ${thr:02X}->${thr - 1:02X}, screen pixel-identical); '
-          f'"own copy" stops sharing; "Purge unused borrowed" drops the 3 unplaced '
+          f'"own copy" stops sharing; "Park unplaced" parks the 3 unplaced '
           f'borrowed metatiles and keeps the placed one')
     return w
 

@@ -183,6 +183,10 @@ is full. [Tilesets, metatiles and palettes](13_tilesets.md#Page%202%20%E2%80%94%
 **Play here** — build and start the game in the room shown, with a game state you
 pick. [Play here](16_play_here.md)
 
+**Parked metatile** — a metatile kept with its own picture that uses no tileset slot;
+only tiles placed on a screen hold slots. Click it in the picker to paint with it.
+[Tilesets, metatiles and palettes](13_tilesets.md#The%20Tiles%20page)
+
 **Pedigree names** — the six names the game keeps of a baby's ancestors (each parent's
 master, and a bred parent's own parents); each one that is not the player's makes the baby
 2 % stronger. [Raising monsters](58_raising.md#Breeding:%20the%20egg)

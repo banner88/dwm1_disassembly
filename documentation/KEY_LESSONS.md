@@ -7945,3 +7945,18 @@ the old path kept beside it (`_find_match_scan`).
   from the rows as they are; empty / black-only rows are reseeded from the worst-drawn pieces.
 - **Rule:** compare colours only after snapping both sides to the GBC's 5 bits with the
   editor's convention; an optimiser offered to the user must never return worse than "as it is".
+
+### A slot is spent by what the screens show, not by what the picker offers (S171 r5)
+- **Symptom:** "I added 38 metatiles and immediately get 'The tileset has no free walkable
+  slot'" — with most of them on no screen.
+- **Root cause:** a My metatiles entry kept its four slots whether or not a screen drew it
+  (`tile_usage` 'mine'); the only way out (Purge) threw the tiles away.
+- **Fix:** parked metatiles (editor2/core/parking.py) — the picture lives in the entry, the
+  slot is taken when a screen needs it; everything that brings tiles in parks the unplaced
+  ones on `NoFreeSlot` and tries again.
+- **Also found:** `tile_draw.plan_new` searched the WHOLE sheet for a reusable picture, so a
+  free slot an earlier quarter of the same metatile had just claimed (still showing its stale
+  picture) could be "reused" by a later quarter — both quarters ended up with the later one's
+  graphic. Only parking made free slots with distinct stale pictures common enough to hit it.
+- **Rule:** a slot allocator must treat its own pending claims as taken in every search
+  (reuse AND free), not only the free-list.

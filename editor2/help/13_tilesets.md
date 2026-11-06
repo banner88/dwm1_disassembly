@@ -35,6 +35,14 @@ switches to Paint):
   tile you painted over is still here. The header says how many wall and
   walkable slots are free.
 - *My metatiles* — your own. Click **+** to build one.
+- *Parked* (S171 r5) — metatiles kept with their own pictures that use **no** tileset
+  slot (dashed grey frame, grey corner mark). Only tiles placed on a screen hold slots:
+  when an import, a drawing or a re-plan needs room and the tileset is full, the editor
+  parks every *My metatile* that no screen shows (animated ones and statue / service
+  tiles stay). Click a parked one = it comes back into the tileset (the same picture;
+  if the palette changed since, each piece takes the row closest to its real colours)
+  and becomes the brush — parking other unplaced ones first if the sheet is full.
+  Right-click → **Delete this parked metatile**.
 
 Corner marks: bottom-right red = wall, green = walkable; top-left orange =
 its slot was released (the picture may change on the next import), red = the
@@ -67,8 +75,11 @@ in their own colours (each panel on its own grid, as the Import art tab would gu
 untick *grid found by itself* to set x / y yourself; identical cells once). Click = import
 one; Ctrl / Shift + click = several. **walkable / wall** = the side they go to. Picking a
 room in a list closes the picture.
-If a side is full on both pages and unused vocabulary would free it, the editor offers
-to release that vocabulary (page 2 is used first — see *Page 2* below).
+If a side is full on both pages, the editor first parks the unplaced *My metatiles* (see
+*Parked* above); if the tiles **placed on screens** fill it, the import is parked instead
+(the status line says so) — it takes slots when you paint with it, which then says what
+fills the tileset. If unused vocabulary would free a side, the editor offers to release
+it (page 2 is used first — see *Page 2* below).
 
 **Animate** tab — see *Animated tiles*.
 
@@ -99,10 +110,12 @@ are on each page.
 - **Release unused vocabulary** — the original room's tiles are kept so
   *This room's tiles* still offers them. Ticked, imports and walkability
   flips may use the ones placed nowhere. Untick to protect them again.
-- **Purge unused borrowed** / **Purge unused own** — remove every borrowed
-  metatile / every one of your own (made here or imported from a PNG) that
-  is placed nowhere; the button says how many and what slots that frees.
-  Undo brings them back.
+- **Park unplaced (N)** — park every *My metatile* placed nowhere (S171 r5, was *Purge
+  unused*): it stays in the picker under *Parked* with its picture, but frees its slots;
+  the button says how many and what slots that frees. Imports do this on their own when
+  the tileset is full. The summary counts the parked ones (0 slots).
+- **Delete parked (N)** — forget the parked metatiles (they use no slot; this only tidies
+  the picker). Undo brings them back.
 - **Give this room its own copy** — shown when other rooms draw with the
   same tileset (*SHARED with: …*): this room gets a copy of its own.
 

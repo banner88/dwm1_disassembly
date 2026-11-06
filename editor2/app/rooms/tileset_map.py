@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushB
                                QVBoxLayout, QWidget)
 
 from editor2.core import page2 as P2
+from editor2.core import parking as PK
 
 COLS = 16
 PITCH = 22
@@ -168,7 +169,7 @@ class TilesetMap(QWidget):
     highlightTile = Signal(int)         # -1 = clear
     releaseToggled = Signal(bool)
     ownCopyRequested = Signal()          # S98 r2: stop sharing the sheet
-    purgeRequested = Signal(str)         # S98 r2: 'own' | 'borrowed'
+    purgeRequested = Signal(str)         # S98 r2 'own' | 'borrowed'; S171 r5 'park' | 'delete_parked'
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -209,18 +210,23 @@ class TilesetMap(QWidget):
         v.addLayout(row)
         # S98 r2 (user: "a good way to purge unused tiles, like a button …
         # purge unused own and purge unused borrowed"): My metatiles placed
-        # nowhere keep their slots until removed — one click each
+        # nowhere keep their slots until removed — one click each.
+        # S171 r5 (user: "there is a difference between having more than possible tiles
+        # AVAILABLE versus ACTUALLY HAVING THEM DOWN ON THE SCREEN"): PARK instead of
+        # remove — a parked metatile keeps its graphics and stays in the picker, but holds
+        # no slot; imports park the unplaced ones on their own when the sheet is full
         prow = QHBoxLayout()
-        self.purge_b = QPushButton('Purge unused borrowed')
-        self.purge_b.setToolTip('Remove every metatile borrowed from another room\'s tileset '
-                                'that is not placed on any screen/state of the rooms using '
-                                'this tileset — frees its slots. Undo brings them back.')
-        self.purge_b.clicked.connect(lambda: self.purgeRequested.emit('borrowed'))
-        self.purge_o = QPushButton('Purge unused own')
-        self.purge_o.setToolTip('Remove every metatile of your own (made here, or imported '
-                                'from a PNG) that is not placed anywhere — frees its slots. '
-                                'Undo brings them back.')
-        self.purge_o.clicked.connect(lambda: self.purgeRequested.emit('own'))
+        self.purge_b = QPushButton('Park unplaced')
+        self.purge_b.setToolTip('Park every My metatile not placed on any screen / state of the '
+                                'rooms using this tileset: it stays in the picker (Parked) with '
+                                'its own graphics but holds no slot; painting with it brings it '
+                                'back. Imports do this on their own when the sheet is full. '
+                                'Undo brings them back as they were.')
+        self.purge_b.clicked.connect(lambda: self.purgeRequested.emit('park'))
+        self.purge_o = QPushButton('Delete parked')
+        self.purge_o.setToolTip('Forget the parked metatiles of this tileset (they hold no slot '
+                                'anyway — this only tidies the picker). Undo brings them back.')
+        self.purge_o.clicked.connect(lambda: self.purgeRequested.emit('delete_parked'))
         prow.addWidget(self.purge_b)
         prow.addWidget(self.purge_o)
         prow.addStretch(1)
@@ -290,23 +296,22 @@ class TilesetMap(QWidget):
             f"(<b>{fc['total']}</b> of 256: page 1 {fc['page1']}, page 2 {fc['page2']}) · "
             f"placed {counts.get('placed', 0)} · "
             f"my metatiles {counts.get('mine', 0)} · vocabulary {counts.get('vocab', 0)}"
+            f" · parked metatiles <b>{len(PK.parked(self.doc, tid))}</b> (0 slots)"
             + anim_line
             + (f"<br>kept free for a service menu: <b>{sum(1 for u in usage if u.get('service'))}"
                '</b> slot(s) (brown) — the breeding / farm / egg screen of a room on this sheet '
                'draws its words there while the room shows'
                if any(u.get('service') for u in usage) else ''))
-        for btn, kind, label in ((self.purge_b, 'borrowed', 'borrowed'),
-                                 (self.purge_o, 'own', 'own')):
-            try:
-                n, fr = self.doc.purge_preview(tid, kind, self.threshold)
-            except Exception:
-                n, fr = 0, {'wall': 0, 'walkable': 0}
-            if n:
-                btn.setText(f"Purge unused {label} ({n}) — frees {fr['walkable']} walkable / "
-                            f"{fr['wall']} wall")
-            else:
-                btn.setText(f'Purge unused {label} (none)')
-            btn.setEnabled(bool(n) and ':' not in str(tid))
+        try:
+            n, fr = PK.preview(self.doc, tid, self.threshold)
+        except Exception:                                        # noqa: BLE001
+            n, fr = 0, {'wall': 0, 'walkable': 0}
+        self.purge_b.setText(f"Park unplaced ({n}) — frees {fr['walkable']} walkable / "
+                             f"{fr['wall']} wall" if n else 'Park unplaced (none)')
+        self.purge_b.setEnabled(bool(n) and ':' not in str(tid))
+        npk = len(PK.parked(self.doc, tid))
+        self.purge_o.setText(f'Delete parked ({npk})' if npk else 'Delete parked (none)')
+        self.purge_o.setEnabled(bool(npk))
         others = self.doc.tileset_sharers(self.room)
         self.shared.setText(('SHARED with: ' + ', '.join(self.doc.room_name(r) for r in others)
                              + ' — their placed tiles and metatiles use slots of this sheet too.')

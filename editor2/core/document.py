@@ -224,6 +224,15 @@ class VocabReleaseWouldHelp(RuntimeError):
     with the vocabulary released (one undo step)."""
 
 
+class NoFreeSlot(RuntimeError):
+    """S171 r5: a new tile needs a slot and the tileset has none free on the side asked
+    for. Callers that bring tiles in (Borrow, picture import, Draw → new metatile, a
+    parked metatile painted) PARK the unplaced My metatiles (editor2/core/parking.py) and
+    try again — only tiles placed on screens hold slots (user S171: "there is a
+    difference between having more than possible tiles AVAILABLE versus ACTUALLY HAVING
+    THEM DOWN ON THE SCREEN")."""
+
+
 class ThresholdShiftNeeded(RuntimeError):
     """S98 r2: the walkable side of the sheet is full but the wall side has
     room — moving the wall/walkable split DOWN one slot would make space.
@@ -1864,6 +1873,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         mts = self.metatiles(old_key)
         if mts:
             self._metatiles_mut(tid).extend(copy.deepcopy(mts))
+        # S171 r5: and its parked metatiles (graphics of their own — any sheet takes them)
+        pk = ((self.custom.get('_editor') or {}).get('parked') or {}).get(old_key)
+        if pk:
+            self.custom['_editor']['parked'].setdefault(tid, []).extend(copy.deepcopy(pk))
         if self.released(old_key):
             self.set_released(tid, True)
         self.touch()
@@ -1994,6 +2007,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                if metatile_filter is None or metatile_filter(m)]
         if mts:
             self._metatiles_mut(new).extend(mts)
+        pk = ((self.custom.get('_editor') or {}).get('parked') or {}).get(tid)
+        if pk:                                    # S171 r5: parked metatiles too
+            self.custom['_editor']['parked'].setdefault(new, []).extend(copy.deepcopy(pk))
         if self.released(tid):
             self.set_released(new, True)
         self.touch()
@@ -2549,12 +2565,12 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                             "the room uses (e.g. maze tiles of a gate theme). Release "
                             "the unused vocabulary and borrow? (The picker then marks "
                             "vocabulary metatiles whose tiles change.)")
-                    raise RuntimeError(
+                    raise NoFreeSlot(
                         f"tileset {tid!r} has no free "
                         f"{'wall' if want_wall else 'walkable'} slot — "
                         f"{nw} wall / {len(free) - nw} walkable free. Open the "
-                        "Tileset tab: release unused vocabulary, delete unused "
-                        "author metatiles, or pick a room with a roomier tileset")
+                        "Tileset tab: release unused vocabulary, park unplaced "
+                        "metatiles, or pick a room with a roomier tileset")
                 cand = pool[0]
                 free.remove(cand)
                 sheet[cand * 16:cand * 16 + 16] = gfx
@@ -2631,8 +2647,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             if cand is None:
                 pool = P2.pick_order(free, thr, want_wall, strict)
                 if not pool:
-                    raise RuntimeError(f"tileset {tid!r} has no free "
-                                       f"{'wall' if want_wall else 'walkable'} slot")
+                    raise NoFreeSlot(f"tileset {tid!r} has no free "
+                                     f"{'wall' if want_wall else 'walkable'} slot")
                 cand = pool[0]
                 free.remove(cand)
                 sheet[cand * 16:cand * 16 + 16] = gfx

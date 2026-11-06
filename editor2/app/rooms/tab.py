@@ -26,6 +26,7 @@ from editor2.core.animation import rng as ANIMR
 from editor2.core import page2 as P2
 from editor2.core.animation import slots as ANIM_slots
 from editor2.core import tileanim as TA
+from editor2.core import parking as PK
 from editor2.core import place_names as PN
 from editor2.app.place_picker import PlacePicker, ask_place
 from editor2.core.document import val, GRID_COLS, metatile_key
@@ -488,6 +489,8 @@ class RoomsTab(QWidget):
         self.picker.hoverInfo.connect(self._hover)
         self.picker.editRequested.connect(self._edit_metatile)
         self.picker.removeRequested.connect(self._remove_metatile)
+        self.picker.parkedPicked.connect(self._unpark)              # S171 r5
+        self.picker.parkedRemove.connect(self._delete_parked)
         pscroll = QScrollArea()
         pscroll.setWidgetResizable(True)
         pscroll.setWidget(self.picker)
@@ -1119,6 +1122,7 @@ class RoomsTab(QWidget):
         self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker.set_lists(self._harvest(), [])
+        self.picker.set_parked([])
         self.picker.set_flags({}, '')
         self.picker.set_animated(self.canvas.anim_slots)
         self.tileset_map.clear()
@@ -1394,12 +1398,17 @@ class RoomsTab(QWidget):
         n = {w: words.count(w) for w in ('exact', 'close', 'rough')}
         txt = (f"Imported {len(words)} — colours: {n['exact']} exact, {n['close']} close, "
                f"{n['rough']} rough")
+        npk = sum(1 for new, _e in cmd.result if new.get('parked'))
+        if npk:                                   # S171 r5
+            txt += (f" — {npk} parked (the tiles on the screens fill the tileset; a parked "
+                    'metatile takes slots when you paint with it)')
         if n['rough'] or n['close']:
             txt += ' — Palettes → Re-plan colours… fits the rows to all your tiles'
         self.status_line.setText(txt)
         self._show()
-        if cmd.result:
-            self._brush_selected(cmd.result[-1][0])
+        live = [new for new, _e in cmd.result if not new.get('parked')]
+        if live:
+            self._brush_selected(live[-1])
         return cmd.result
 
     def _borrow_selection(self, n):
@@ -1539,11 +1548,12 @@ class RoomsTab(QWidget):
         own = bytes(cv.gfx.sheet[:2048])
         thr = cv.gfx.threshold
         common = r.common_blocks()
-        cmd = C.SnapshotCommand(
+        cmd = C.SnapshotCommand(              # S171 r5: short of slots = park unplaced first
             self.s, 'Re-plan colours',
-            lambda d: RC.apply_plan(d, rid, key, st, rows, nfree, rows_old, d.read_sheet(
-                d.tileset_key(d.room(rid))) if 'tileset' in d.room(rid)['record'] else own,
-                common, anim, thr, own_sheet=own, vanilla_words=words))
+            lambda d: PK.evicting(d, rid, rows_old, lambda: RC.apply_plan(
+                d, rid, key, st, rows, nfree, rows_old, d.read_sheet(
+                    d.tileset_key(d.room(rid))) if 'tileset' in d.room(rid)['record'] else own,
+                common, anim, thr, own_sheet=own, vanilla_words=words), thr))
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'Re-plan colours', str(cmd.error))
@@ -1613,11 +1623,30 @@ class RoomsTab(QWidget):
         switch = False
         release = False
 
+        rows = [list(self.canvas.pals[i]) for i in range(4)]
+        thr_here = self.canvas.gfx.threshold
+
         def _imp(doc, a, sw, rel):
             if rel:                     # S122: release the unused vocabulary first
                 doc.set_released(doc.tileset_key(doc.room(rid)), True)
-            return doc.import_metatile(doc.room(rid), mt, src_sheet, src_thr, own_sheet=own,
-                                       name=name, anim_src=a, switch_ok=sw)
+            # S171 r5: a full sheet parks the unplaced My metatiles; still full = this
+            # import is parked (a still tile only — an animated one needs its slots)
+            from editor2.core.document import NoFreeSlot
+            try:
+                return PK.evicting(doc, rid, rows, lambda: doc.import_metatile(
+                    doc.room(rid), mt, src_sheet, src_thr, own_sheet=own, name=name,
+                    anim_src=a, switch_ok=sw), thr_here)
+            except NoFreeSlot:
+                tid = doc.tileset_key(doc.room(rid))
+                if a is not None or ':' in str(tid):
+                    raise
+                from editor2.core import tile_draw as TD
+                from editor2.core import recolour as RC
+                px = TD.metatile_pixels(src_sheet, mt, self.s.renderer.common_blocks())
+                pals = TD.quarter_pals(mt)
+                tr = [RC.quarter_from_indices(px[q], rows[pals[q] & 3]) for q in range(4)]
+                return PK.park_new(doc, tid, name, px, [p & 3 for p in pals],
+                                   P2.walkable(mt['tiles'][3], src_thr), tr)
         for _attempt in range(4):          # ask at most once each, then retry
             cmd = C.SnapshotCommand(
                 self.s, f'Import metatile from {src_name}',
@@ -1654,7 +1683,10 @@ class RoomsTab(QWidget):
         if note:
             self.status_line.setText('Imported — ' + note + '. ▶ Play to see it.')
         self._show()
-        if cmd.result is not None:
+        if cmd.result is not None and cmd.result.get('parked'):
+            self.status_line.setText(f"'{cmd.result['name']}' parked — the tiles on the screens "
+                                     'fill the tileset; it takes slots when you paint with it')
+        elif cmd.result is not None:
             self._brush_selected(cmd.result)
 
     def _refresh_side(self):
@@ -1707,6 +1739,7 @@ class RoomsTab(QWidget):
         self.picker.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker_foreign.set_context(self.s.renderer, gfx.sheet, pals, gfx.threshold)
         self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+        self.picker.set_parked(PK.parked(self.s.doc, self.s.doc.tileset_key(room)))
         self._refresh_slots(room)
         self._fill_foreign_box()
         self._refresh_foreign()
@@ -1746,6 +1779,15 @@ class RoomsTab(QWidget):
                 flags[i] = 'released'
         self.picker.set_flags(flags, f"{fc['wall']} wall / {fc['walkable']} walkable slots free")
         self.picker.set_animated(self.canvas.anim_slots)
+        # S171 r5: a brush whose slots nothing holds any more (it was parked — an import or
+        # another parked metatile needed the room) would paint whatever those slots get next
+        b = self.canvas.brush
+        usage = self.tileset_map.usage or []
+        if b and ':' not in str(tid) and usage and any(
+                not P2.is_common(t) and usage[P2.slot_key(t)]['status'] == 'free'
+                for t in b.get('tiles', ())):
+            self.canvas.set_brush(None)
+            self._update_brush_label()
 
     def _maze_screen(self):
         """S122: fill the current screen/state from a maze screen."""
@@ -1805,9 +1847,13 @@ class RoomsTab(QWidget):
 
     def _purge_metatiles(self, kind):
         """S98 r2: drop every unused own / borrowed metatile of this room's
-        tileset (one undo step)."""
+        tileset (one undo step). S171 r5: 'park' = park every unplaced one (kept, no
+        slots); 'delete_parked' = forget the parked ones."""
         room = self.current_room()
         if room is None:
+            return
+        if kind in ('park', 'delete_parked'):
+            self._park_action(room, kind)
             return
         tid = self.s.doc.tileset_key(room)
         thr = val(room['record']['collision_threshold'])
@@ -1823,6 +1869,70 @@ class RoomsTab(QWidget):
         self._show()
         self.status_line.setText(f"Purged {n} unused {kind} metatiles — {fr['walkable']} walkable "
                                  f"and {fr['wall']} wall slots free again (undo restores them).")
+
+    def _park_action(self, room, kind):
+        tid = self.s.doc.tileset_key(room)
+        thr = val(room['record']['collision_threshold'])
+        if kind == 'park':
+            n, fr = PK.preview(self.s.doc, tid, thr)
+            if not n:
+                return
+            rows = [list(self.canvas.pals[i]) for i in range(4)] if self.canvas.pals else None
+            cmd = C.SnapshotCommand(self.s, f'Park {n} unplaced metatiles',
+                                    lambda doc: PK.park_unplaced(doc, tid, rows, thr))
+            done = (f"Parked {n} unplaced metatiles — {fr['walkable']} walkable and {fr['wall']} "
+                    'wall slots free; they stay in the picker (Parked) and take slots again '
+                    'when you paint with them.')
+        else:
+            n = len(PK.parked(self.s.doc, tid))
+            if not n or QMessageBox.question(
+                    self, 'Delete parked metatiles',
+                    f'Forget the {n} parked metatiles of this tileset? (Undo brings them '
+                    'back.)') != QMessageBox.Yes:
+                return
+            cmd = C.SnapshotCommand(self.s, f'Delete {n} parked metatiles',
+                                    lambda doc: PK.delete_parked(doc, tid))
+            done = f'Deleted {n} parked metatiles.'
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Parked metatiles', str(cmd.error))
+            return
+        self._show()
+        self.status_line.setText(done)
+
+    def _unpark(self, index):
+        """S171 r5: a parked metatile clicked in the picker — into the tileset (parking
+        other unplaced ones when the sheet is full), then it is the brush."""
+        room = self.current_room()
+        cv = self.canvas
+        if room is None or cv.gfx is None:
+            return
+        rid, thr = room['id'], cv.gfx.threshold
+        rows = [list(cv.pals[i]) for i in range(4)]
+        own = bytes(cv.gfx.sheet[:2048])
+        pk = PK.parked(self.s.doc, self.s.doc.tileset_key(room))
+        if not 0 <= index < len(pk):
+            return
+        cmd = C.SnapshotCommand(self.s, f"Use parked metatile '{pk[index].get('name')}'",
+                                lambda doc: PK.unpark(doc, rid, index, rows, thr, own_sheet=own))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Parked metatile', str(cmd.error))
+            return
+        new, msg = cmd.result
+        self._show()
+        self.status_line.setText(msg)
+        self._brush_selected(new)
+        self.picker.select_metatile(new)
+
+    def _delete_parked(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        tid = self.s.doc.tileset_key(room)
+        self.s.undo.push(C.SnapshotCommand(self.s, 'Delete parked metatile',
+                                           lambda doc: PK.delete_parked(doc, tid, [index])))
+        self._show()
 
     def _own_tileset(self):
         """S98 r2: this room stops sharing its tileset (private copy)."""
@@ -1935,6 +2045,7 @@ class RoomsTab(QWidget):
                         keys.add(k)
             self._refresh_minimap(only=keys | {self.key})
             self.picker.set_lists(self._harvest(), self.s.doc.metatiles(self.s.doc.tileset_key(room)))
+            self.picker.set_parked(PK.parked(self.s.doc, self.s.doc.tileset_key(room)))
             self._refresh_slots(room)
             if self.canvas.brush:
                 self.picker.select_metatile(self.canvas.brush)
@@ -4658,8 +4769,17 @@ class RoomsTab(QWidget):
         old = [list(q) for q in px]
 
         def reporter(new, walk, mt=dict(mt)):
-            return TD.report(self.s.doc, self.s.doc.room(rid), mt, old, new, thr, walk,
-                             own_sheet=own)
+            doc = self.s.doc
+            rep = TD.report(doc, doc.room(rid), mt, old, new, thr, walk, own_sheet=own)
+            tid = doc.tileset_key(doc.room(rid))
+            if not rep['new']['ok'] and ':' not in str(tid):
+                # S171 r5: saving parks the unplaced My metatiles when the sheet is full
+                nw, n = PK.as_if_parked(doc, tid, lambda: TD.plan_new(
+                    doc, doc.room(rid), mt, new, thr, walk, own_sheet=own))
+                if nw['ok'] and n:
+                    nw['parks'] = n
+                    rep['new'] = nw
+            return rep
         self.draw_tab.reporter = reporter
         # the cells selected when the drawing was loaded ("put it on the selected
         # cells" still works after an apply re-drew the canvas)
@@ -4744,11 +4864,12 @@ class RoomsTab(QWidget):
         rid, thr = room['id'], self.canvas.gfx.threshold
         own = bytes(self.canvas.gfx.sheet[:2048])
         mt = {k: v for k, v in req['mt'].items() if k != 'blank'}
-        cmd = C.SnapshotCommand(
+        rows = [list(self.canvas.pals[i]) for i in range(4)]
+        cmd = C.SnapshotCommand(              # S171 r5: a full sheet parks unplaced ones
             self.s, f"Draw: new metatile '{req['name']}'",
-            lambda doc: TD.apply_new(doc, rid, mt, req['new'], thr, req['walkable'],
-                                     own_sheet=own, pal=req['pal'], name=req['name'],
-                                     place=place))
+            lambda doc: PK.evicting(doc, rid, rows, lambda: TD.apply_new(
+                doc, rid, mt, req['new'], thr, req['walkable'], own_sheet=own, pal=req['pal'],
+                name=req['name'], place=place), thr))
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'Draw', str(cmd.error))

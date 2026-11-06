@@ -456,7 +456,9 @@ class DrawTab(QWidget):
             self.new_note.setText(
                 f"Uses {nw['reuse']} tile(s) already in the tileset + {nw['take']} free slot(s) "
                 f"— free now: {nw['free']['wall']} wall / {nw['free']['walkable']} walkable "
-                '(after saving).')
+                '(after saving).'
+                + (f" Saving parks {nw['parks']} unplaced metatile(s) to make room (they stay "
+                   'in the picker under Parked).' if nw.get('parks') else ''))
             self.new_note.setStyleSheet('color: #7fe07f;')
         else:
             self.new_note.setText(nw['why'])

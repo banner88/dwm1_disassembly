@@ -775,6 +775,37 @@ happening"; built S99, NOT yet user-tested):**
   quarter to the row of the colour painted (pixels → closest colours; *everywhere* refused
   once a row moved; the new metatile keeps the per-quarter rows). Colour convention: 5 bits
   × 8 (render_project / png_import), so a colour read back from the renderer is exact.
+- **S171 r5 — parked metatiles: only placed tiles hold slots (ROADMAP P3.3j)** (user: "I
+  added 38 metatiles and immediately get 'The tileset has no free walkable slot …' Does
+  purging remove the tiles from a selection? Like there is a difference between having more
+  than possible tiles AVAILABLE versus ACTUALLY HAVING THEM DOWN ON THE SCREEN"; "Yes please
+  implement it"). Found first: every My metatiles entry kept its 4 slots (`tile_usage` status
+  'mine') placed or not, so a batch import filled the sheet with tiles no screen showed, and
+  Purge removed them for good. `editor2/core/parking.py` (no Qt): a PARKED metatile =
+  `custom._editor.parked[tileset][]` `{name, src, pal, tiles (information), walk, q: [{g:
+  the 16 bytes hex, row, true: recolour.Quarter json or None} ×4]}` — its own pictures, no
+  slot. `parkable` = My metatiles placed on no screen / state of a room on the tileset, with
+  no animated / statue / service slot and no common-sheet tile (those slots mean something by
+  NUMBER); `park` reads the pictures from the sheet and the real colours from the metatile's
+  `true`, the truth store, or how it looks in the shown rows; identical entries once.
+  `evicting(doc, room, rows, fn)` = fn(), and on `NoFreeSlot` (new, document.py — raised by
+  `import_metatile`, `_import_animated`, `tile_draw.apply_new`, `recolour.apply_plan`) park
+  the unplaced and run fn() once more. Wired: Borrow (matched: `import_true_metatile`; raw:
+  `Document.import_metatile`), the picture import, Draw → new metatile (its preview counts
+  "Saving parks N" via `as_if_parked`), Re-plan colours. Still full (the PLACED tiles fill
+  the sheet): a matched / still import is PARKED instead (`park_new`; the status line says
+  so); an animated import is refused as before. `unpark` (the picker's Parked section,
+  click): the entry leaves the list, each quarter keeps its picture and row unless its real
+  colours are drawn better by another row now (`best_row` vs `fixed_error` — the palette
+  changed since), then `apply_new` (identical pictures reused, else free slots, the
+  bottom-right on its side), parking other unplaced ones first if needed; refused with the
+  counts (`full_message`) when the placed tiles fill it. Picker: a 4th section *Parked*
+  after My metatiles (dashed grey frame, drawn from the stored pictures, right-click =
+  delete). Tileset tab: *Park unplaced (N) — frees …* and *Delete parked (N)* replace the
+  two Purge buttons; the summary counts parked (0 slots). `localize_tileset` / the own copy
+  carry the parked list. Found on the way: `tile_draw.plan_new` could REUSE a free slot an
+  earlier quarter of the same metatile had just taken (it still showed a stale picture) —
+  that quarter then got the other's graphic; a slot taken in the plan is never reused now.
 - **S99 r3 — "Make animated" tab** (user: "please make the 'make
   animatable' tab. Bonus points if you can make a little tab/edit doodad
   that lets me re-paint a second tile in a paint-like manner"; and "how do I

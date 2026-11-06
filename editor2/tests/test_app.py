@@ -4132,6 +4132,154 @@ def s171_colour_true(app, w):
           f"and moves a quarter's row; all undone exactly")
 
 
+def s171_parking(app, w):
+    """S171 r5 (ROADMAP P3.3j — user: "I added 38 metatiles and immediately get 'The tileset
+    has no free walkable slot' … there is a difference between having more than possible
+    tiles AVAILABLE versus ACTUALLY HAVING THEM DOWN ON THE SCREEN"): only placed tiles hold
+    slots. A full sheet parks the unplaced My metatiles on an import (kept with their own
+    graphics, shown under Parked, 0 slots); clicking a parked one brings it back with the
+    same graphics; the Tileset tab parks / deletes; when the PLACED tiles fill the sheet an
+    import is parked instead of refused and painting it says why; all undone exactly."""
+    import json
+    from editor2.core import parking as PK
+    from editor2.core import recolour as RC
+    from editor2.core import page2 as P2
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    rid = None
+    for room in doc.rooms:
+        if not room.get('screens') or not room.get('record'):
+            continue
+        k0 = doc.screen_keys(room)[0]
+        sc = RC.Scope(doc, room, k0, 0, s.renderer.room_palettes(room, k0, 0),
+                      s.renderer.room_gfx(room).sheet)
+        if not sc.problems and sc.lids and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    assert rid is not None
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    castle = list(rt.picker_foreign.foreign)
+    rt._import_metatile(castle[5])                 # the room's tileset is the project's now
+    app.processEvents()
+    tid = doc.tileset_key(doc.room(rid))
+    thr = val(doc.room(rid)['record']['collision_threshold'])
+    assert ':' not in tid
+
+    def fill(d, name, place_lid=None):
+        """every free slot gets a graphic of its own + an (unplaced / placed) metatile"""
+        free = [i for i, u in enumerate(d.tile_usage(tid)) if u['status'] == 'free']
+        sh = d.read_sheet(tid)
+        sh = bytearray(P2.pad_sheet(sh))
+        for i in free:
+            sh[i * 16:i * 16 + 16] = bytes([i & 0xFF, 0x5A, len(name)] + [(i * 7 + k) & 0xFF
+                                                                       for k in range(13)])
+        d.write_sheet(tid, sh)
+        n = 0
+        for g in range(0, len(free), 4):
+            grp = free[g:g + 4]
+            grp += [grp[0]] * (4 - len(grp))
+            vals = [P2.value_of(x) for x in grp]
+            d.add_metatile(tid, f'{name}{n}', vals, 0)
+            if place_lid is not None:
+                cx, cy = n % 10, n // 10
+                d.set_cells(place_lid, 'tiles', [(cy * 2 + dr, cx * 2 + dc, vals[q])
+                                                 for q, (dr, dc) in enumerate(
+                                                     ((0, 0), (0, 1), (1, 0), (1, 1)))])
+            n += 1
+        return n
+    s.undo.push(RCMD.SnapshotCommand(s, 'fill', lambda d: fill(d, 'filler')))
+    nfill = s.undo.command(s.undo.index() - 1).result
+    assert doc.free_counts(tid, thr)['total'] == 0, doc.free_counts(tid, thr)
+    # 1. an import into the full sheet parks the unplaced ones
+    rt._import_metatile(castle[6])
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 1'), rt.status_line.text()
+    pk = PK.parked(doc, tid)
+    names = {e['name'] for e in pk}
+    assert sum(1 for nm in names if nm.startswith('filler')) == nfill, (len(pk), nfill)
+    assert not any(m['name'].startswith('filler') for m in doc.metatiles(tid))
+    assert doc.free_counts(tid, thr)['total'] > 0
+    assert len(rt.picker.parked) == len(pk), 'the picker shows them under Parked'
+    rt.picker_tabs.setCurrentIndex(0)
+    app.processEvents()
+    assert 'parked metatiles <b>%d</b>' % len(pk) in rt.tileset_map.summary.text()
+    # 2. a parked one clicked = back with the same graphics, and it is the brush
+    i_f = [e['name'] for e in pk].index('filler0')
+    e = pk[i_f]
+    rt._unpark(i_f)
+    app.processEvents()
+    mt = doc.metatiles(tid)[-1]
+    assert mt['name'] == 'filler0' and rt.canvas.brush['tiles'] == mt['tiles'], mt
+    sh = P2.pad_sheet(doc.read_sheet(tid))
+    for q, t in enumerate(mt['tiles']):
+        k = P2.slot_key(t)
+        assert bytes(sh[k * 16:k * 16 + 16]).hex() == e['q'][q]['g'], \
+            ('same graphics', q, t, bytes(sh[k * 16:k * 16 + 16]).hex(), e['q'][q], mt)
+    assert 'filler0' not in {x['name'] for x in PK.parked(doc, tid)}
+    # 3. the Tileset tab parks (the unplaced) and deletes (the parked)
+    n_park, _fr = PK.preview(doc, tid, thr)
+    assert n_park >= 1
+    rt._purge_metatiles('park')
+    app.processEvents()
+    assert 'filler0' in {x['name'] for x in PK.parked(doc, tid)}
+    assert not PK.parkable(doc, tid)
+    # 4. the PLACED tiles fill the sheet: an import is parked, painting it says why
+    room = doc.room(rid)
+    rt._add_screen(max(int(k) for k in doc.screen_keys(room)) + 1)
+    app.processEvents()
+    lid_new = doc.state_layout_ref(doc.room(rid), rt.key, rt.state_idx)['id']
+    s.undo.push(RCMD.SnapshotCommand(s, 'fill placed',
+                                     lambda d: fill(d, 'placed', lid_new)))
+    assert doc.free_counts(tid, thr)['total'] == 0
+    npk = len(PK.parked(doc, tid))
+    rt.picker_tabs.setCurrentIndex(1)
+    rt._import_metatile(castle[7])
+    app.processEvents()
+    assert 'parked' in rt.status_line.text(), rt.status_line.text()
+    assert len(PK.parked(doc, tid)) == npk + 1
+    warned = []
+    from PySide6.QtWidgets import QMessageBox
+    keep_w = QMessageBox.warning
+    QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]) or QMessageBox.Ok)
+    try:
+        rt._unpark(len(PK.parked(doc, tid)) - 1)
+    finally:
+        QMessageBox.warning = keep_w
+    assert warned and 'fill this tileset' in warned[-1], warned
+    # 5. delete parked (asks first)
+    keep_q = QMessageBox.question
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        rt._purge_metatiles('delete_parked')
+    finally:
+        QMessageBox.question = keep_q
+    assert not PK.parked(doc, tid)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print(f'OK: S171 r5 parking — a full sheet ({nfill} unplaced fillers) parked on import, '
+          f'shown under Parked, one brought back with its graphics as the brush, Tileset tab '
+          f'park / delete; placed tiles filling the sheet: the import parked, painting it '
+          f'explains; all undone exactly')
+
+
 def s171_borrow_custom(app, w):
     """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
     its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
@@ -6329,6 +6477,7 @@ def main():
     s171_app_window(app, w)
     s171_borrow_custom(app, w)
     s171_colour_true(app, w)
+    s171_parking(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:
