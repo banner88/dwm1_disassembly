@@ -9239,8 +9239,8 @@ Data_2AD5:
     ld [bc], a
     jr nc, Data_2ADD
 
-; S170: ROM0 $2ADF (2 bytes into Data_2ADD; disassembled as code — the bytes are
-; data) = the NPC SHEET gfx-ID table: one word per plain NPC sprite id (96 words up
+; S170: ROM0 $2ADF (2 bytes into Data_2ADD; re-sectioned S172 as NpcSheetGfxTable
+; below) = the NPC SHEET gfx-ID table: one word per plain NPC sprite id (96 words up
 ; to MonsterBattleGfxTable), read by bank $0B Call_00b_4839 (the room load) and bank
 ; $06 ReloadNPCSheets. Ids $3A-$4C name the ORIGINAL walking streams of 19 monsters
 ; (one stream shared by two tables): $3A Slime, $3B DragonKid, $3C MadCat, $3D Wyvern,
@@ -9250,121 +9250,122 @@ Data_2AD5:
 ; (the farm's). gamedata.art repoints only the species tables, so these keep the
 ; original art (measured on the farm, tools/walk_art.py step `farm`).
 Data_2ADD:
-    nop
-    nop
-    nop
-    ld sp, $3101
-    ld [bc], a
-    ld sp, $3103
-    inc b
-    ld sp, $3105
-    ld b, $31
-    rlca
-    ld sp, $3108
-    add hl, bc
-    ld sp, $310a
-    dec bc
-    ld sp, $310c
-    dec c
-    ld sp, $310e
-    rrca
-    ld sp, $3110
-
+; ---------------------------------------------------------------------------
+; Data_2ADD: the last word of the table before (2 B), then NpcSheetGfxTable.
+; NpcSheetGfxTable (ROM0 $2ADF, S172 re-section; was mgbdis fake code — S170 note):
+; one gfx-ID per plain NPC sprite id $00-$5F (96 dw, up to MonsterBattleGfxTable):
+; the 16-tile sheet the room load (bank $0B Call_00b_4839) and bank $06
+; ReloadNPCSheets DMA to the NPC's VRAM page. gfx-ID = bank << 8 | index into that
+; bank's pointer table at $4001 (ROM0 DecompressTileLayout). Ids $3A-$4C name the
+; ORIGINAL walking streams of 19 monsters (the farm's decorative monster NPCs, kept
+; by gamedata.art — S170); $58-$5D repeat $50's sheet (unused ids). Patched builds:
+; ids $58-$5F are region npc_food_sheets (S172, gamedata.foods — the foods' own sheets).
+; ---------------------------------------------------------------------------
+    db $00, $00   ; the previous table's last word
+NpcSheetGfxTable:
+    dw $3100   ; [$00]
+    dw $3101   ; [$01]
+    dw $3102   ; [$02]
+    dw $3103   ; [$03]
+    dw $3104   ; [$04]
+    dw $3105   ; [$05]
+    dw $3106   ; [$06]
+    dw $3107   ; [$07]
+    dw $3108   ; [$08]
+    dw $3109   ; [$09]
+    dw $310A   ; [$0A]
+    dw $310B   ; [$0B]
+    dw $310C   ; [$0C]
+    dw $310D   ; [$0D]
+    dw $310E   ; [$0E]
+    dw $310F   ; [$0F]
+    dw $3110   ; [$10]
 DataLookup_2B01:
-    ld de, $1231
-    ld sp, $3113
-    inc d
-
-DataTable_2B08:
-DataLookup_2B08:
-    ld sp, $3115
-    ld d, $31
-    rla
-    ld sp, $3118
-    add hl, de
-    ld sp, $311a
-
+    dw $3111   ; [$11]
+    dw $3112   ; [$12]
+    dw $3113   ; [$13]
+    db $14   ; [$14] Milayou (lo)
+DataLookup_2B08:   ; (an anchor other bytes jump to)
+    db $31   ; [$14] Milayou (hi) = $3114
+    dw $3115   ; [$15]
+    dw $3116   ; [$16]
+    dw $3117   ; [$17]
+    dw $3118   ; [$18]
+    dw $3119   ; [$19]
+    dw $311A   ; [$1A]
 DataLookup_2B15:
-    dec de
-    ld sp, $311c
-    dec e
-    ld sp, $311e
-    rra
-    ld sp, $3120
-    ld hl, $2231
-    ld sp, $3123
-    inc h
-    ld sp, $3125
-    ld h, $31
-    daa
-    ld sp, $3128
-    add hl, hl
-    ld sp, $312a
-    dec hl
-    ld sp, $312c
-    dec l
-    ld sp, $312e
-    cpl
-    ld sp, $3130
-    ld sp, $3231
-    ld sp, $3133
-    inc [hl]
-    ld sp, $3135
-    ld [hl], $31
-    scf
-    ld sp, $3138
-    add hl, sp
-    ld sp, $2f09
-    inc b
-    jr c, @+$36
-
-    jr c, Data_2B91
-
-    jr c, @+$0a
-
-    add hl, sp
-
-DataLookup_2B5D:
-    ld e, $39
-
+    dw $311B   ; [$1B]
+    dw $311C   ; [$1C]
+    dw $311D   ; [$1D]
+    dw $311E   ; [$1E]
+    dw $311F   ; [$1F]
+    dw $3120   ; [$20]
+    dw $3121   ; [$21] Watabou
+    dw $3122   ; [$22]
+    dw $3123   ; [$23]
+    dw $3124   ; [$24]
+    dw $3125   ; [$25]
+    dw $3126   ; [$26]
+    dw $3127   ; [$27]
+    dw $3128   ; [$28]
+    dw $3129   ; [$29]
+    dw $312A   ; [$2A]
+    dw $312B   ; [$2B]
+    dw $312C   ; [$2C]
+    dw $312D   ; [$2D]
+    dw $312E   ; [$2E]
+    dw $312F   ; [$2F]
+    dw $3130   ; [$30]
+    dw $3131   ; [$31]
+    dw $3132   ; [$32]
+    dw $3133   ; [$33]
+    dw $3134   ; [$34]
+    dw $3135   ; [$35]
+    dw $3136   ; [$36]
+    dw $3137   ; [$37]
+    dw $3138   ; [$38]
+    dw $3139   ; [$39] Warubou (grey)
+    dw $2F09   ; [$3A]
+    dw $3804   ; [$3B]
+    dw $3834   ; [$3C]
+    dw $3837   ; [$3D]
+    dw $3908   ; [$3E]
+    dw $391E   ; [$3F]
 DataLookup_2B5F:
-    dec l
-    add hl, sp
-    inc bc
-    ld a, [hl-]
-    ld h, $3a
-    ld a, [hl+]
-    ld a, [hl-]
-    ld a, $38
-    ld sp, $0438
-    add hl, sp
-    add hl, sp
-    jr c, @+$0d
-
-    ld a, [hl-]
-    inc d
-    ld a, [hl-]
-    ld b, $39
-    add hl, hl
-    jr c, Data_2B78
-
-Data_2B78:
-    jr c, Data_2BBC
-
-    ld sp, $3100
-    nop
-    ld sp, $313a
-    dec sp
-    ld sp, $313c
-    dec a
-    ld sp, $313e
-    ccf
-    ld sp, $3140
-    ld b, c
-    ld sp, $313a
-
-Data_2B91:
-    db $3a, $31, $3a, $31, $3a, $31, $3a, $31, $3a, $31, $00, $2f, $19, $2e
+    dw $392D   ; [$40]
+    dw $3A03   ; [$41]
+    dw $3A26   ; [$42]
+    dw $3A2A   ; [$43]
+    dw $383E   ; [$44]
+    dw $3831   ; [$45]
+    dw $3904   ; [$46]
+    dw $3839   ; [$47]
+    dw $3A0B   ; [$48]
+    dw $3A14   ; [$49]
+    dw $3906   ; [$4A]
+    dw $3829   ; [$4B]
+    dw $3800   ; [$4C]
+    dw $3142   ; [$4D] the gate swirl
+    dw $3100   ; [$4E]
+    dw $3100   ; [$4F]
+    dw $313A   ; [$50]
+    dw $313B   ; [$51]
+    dw $313C   ; [$52]
+    dw $313D   ; [$53]
+    dw $313E   ; [$54]
+    dw $313F   ; [$55]
+    dw $3140   ; [$56]
+    dw $3141   ; [$57]
+; @BUILD_PROJECT BEGIN npc_food_sheets
+    dw $313A   ; [$58] unused: $50's sheet and frames
+    dw $313A   ; [$59] unused: $50's sheet and frames
+    dw $313A   ; [$5A] unused: $50's sheet and frames
+    dw $313A   ; [$5B] unused: $50's sheet and frames
+    dw $313A   ; [$5C] unused: $50's sheet and frames
+    dw $313A   ; [$5D] unused: $50's sheet and frames
+    dw $2F00   ; [$5E] Terry as an NPC
+    dw $2E19   ; [$5F] the meat (an object, one frame)
+; @BUILD_PROJECT END npc_food_sheets
 ; --- Monster BATTLE sprite gfx-ID table (GFX-1; ported from the clean
 ;     disassembly S107 — this patch copy was mgbdis soup). Word per species =
 ;     gfx-ID (bank<<8 | index) -> $<bank>:$4001 + index*2 -> LZ stream -> VRAM
@@ -10580,7 +10581,7 @@ RetNCFromField:   ; fake-decode label kept at its exact offset $3157 (referenced
     db $e0   ; [$29] BigBang
     db $e0   ; [$2a] MegaMagic
     db $e0   ; [$2b] DeMagic
-    db $d0   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    db $d0   ; [$2c] the NOTE (S172: a music note ♪ over the foe, not a meat) — skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 BeefJerky / 20 PorkChop / 21 Rib / 23 Sirloin
     nop
     ld bc, $3512
     adc d

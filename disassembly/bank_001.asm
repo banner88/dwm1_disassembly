@@ -5163,7 +5163,7 @@ jr_001_5fde:
     jr nc, jr_001_5ff6
 
     ld a, b
-    ld hl, $60b7
+    ld hl, PickupIconOfItem   ; $60B7
     add l
     ld l, a
     ld a, $00
@@ -5173,7 +5173,7 @@ jr_001_5fde:
 
 jr_001_5ff6:
     push af
-    ld hl, $6037
+    ld hl, PickupIconTiles   ; $6037
     add l
     ld l, a
     ld a, $00
@@ -5182,7 +5182,7 @@ jr_001_5ff6:
     ld a, [hl]
     ldh [$c9], a
     pop af
-    ld hl, $6077
+    ld hl, PickupIconAttr   ; $6077
     add l
     ld l, a
     ld a, $00
@@ -5215,197 +5215,197 @@ jr_001_5ff6:
     ld hl, $0400
     rst $10
     ret
-
-
-    ld d, b
-    ld d, h
-    ld e, b
-    ld e, h
-    ld h, b
-    ld h, h
-    ld l, b
-    ld l, h
-    jr jr_001_6059
-
-    jr jr_001_605b
-
-    jr jr_001_605d
-
-    jr jr_001_605f
-
-    jr jr_001_6061
-
-    jr jr_001_6063
-
-    jr jr_001_6065
-
-    jr jr_001_6067
-
-    jr jr_001_6069
-
-    jr jr_001_606b
-
-    jr jr_001_606d
-
-    jr jr_001_606f
-
-    inc e
-    inc e
-
-jr_001_6059:
-    inc e
-    inc e
-
-jr_001_605b:
-    inc e
-    inc e
-
-jr_001_605d:
-    inc e
-    inc e
-
-jr_001_605f:
-    inc e
-    inc e
-
-jr_001_6061:
-    inc e
-    inc e
-
-jr_001_6063:
-    inc e
-    inc e
-
-jr_001_6065:
-    inc e
-    inc e
-
-jr_001_6067:
-    inc e
-    inc e
-
-jr_001_6069:
-    inc e
-    inc e
-
-jr_001_606b:
-    inc e
-    inc e
-
-jr_001_606d:
-    inc e
-    inc e
-
-jr_001_606f:
-    inc e
-    inc e
-    inc e
-    inc e
-    inc e
-    inc e
-    inc e
-    inc e
-    ld bc, $0602
-    rlca
-    nop
-    rlca
-    inc bc
-    inc bc
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rlca
-    nop
-    ld bc, Boot
-    ld bc, $0001
-    nop
-    ld [bc], a
-    nop
-    ld bc, $0300
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc bc
-    inc b
-    inc b
-    inc b
-    inc b
-    inc b
-    dec b
-    dec b
-    dec b
-    dec b
-    dec b
-    ld b, $07
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    dec b
-    nop
-    dec b
-    ld bc, $0000
-    nop
-    nop
-    dec b
-    nop
-    dec b
+; ---------------------------------------------------------------------------
+; The gate-floor PICKUP ICONS (S172 r2 re-section; was mgbdis fake code). A floor item
+; ($D793: [kind, item, X, Y]) is drawn by CheckDirectionBit7 above with icon
+; PickupIconOfItem[item] (kind < 8) or icon = kind (8+): tile base PickupIconTiles[icon]
+; -> $FFC9, OAM attr PickupIconAttr[icon] -> $FFCA, then bank $04 entry 0 (a 2 x 2 of 8 x 8
+; pieces). The 8 icons' tiles = gfx $2E15-$2E1C at $8500-$86FF (bank $16
+; EncounterSeedOnRoomLoad, every gate room load): 0 heal $50 green, 1 cure / MP $54 light
+; blue, 2 bell $58 orange, 3 nut / seed $5C brown, 4 MEAT $60 red (all five meats), 5 staff
+; $64 brown, 6 WarpWing $68 amber, 7 TinyMedal $6C amber. Patched builds with
+; gamedata.foods: the call below the table goes to bank $77 FoodIconDraw (each food its own
+; icon from VRAM bank 1 — PROJECT_COMPILER §2.78).
+; ---------------------------------------------------------------------------
+PickupIconTiles:   ; $6037 — per icon (0-63): its first OBJ tile
+    db $50   ; [0] heal (Herb, the books)
+    db $54   ; [1] cure / MP (bottle)
+    db $58   ; [2] item 9 (bell)
+    db $5c   ; [3] nut / seed
+    db $60   ; [4] MEAT (the five meats)
+    db $64   ; [5] staff
+    db $68   ; [6] WarpWing
+    db $6c   ; [7] TinyMedal / none
+    db $18   ; [8]
+    db $18   ; [9]
+    db $18   ; [10]
+    db $18   ; [11]
+    db $18   ; [12]
+    db $18   ; [13]
+    db $18   ; [14]
+    db $18   ; [15]
+    db $18   ; [16]
+    db $18   ; [17]
+    db $18   ; [18]
+    db $18   ; [19]
+    db $18   ; [20]
+    db $18   ; [21]
+    db $18   ; [22]
+    db $18   ; [23]
+    db $18   ; [24]
+    db $18   ; [25]
+    db $18   ; [26]
+    db $18   ; [27]
+    db $18   ; [28]
+    db $18   ; [29]
+    db $18   ; [30]
+    db $18   ; [31]
+    db $1c   ; [32]
+    db $1c   ; [33]
+    db $1c   ; [34]
+    db $1c   ; [35]
+    db $1c   ; [36]
+    db $1c   ; [37]
+    db $1c   ; [38]
+    db $1c   ; [39]
+    db $1c   ; [40]
+    db $1c   ; [41]
+    db $1c   ; [42]
+    db $1c   ; [43]
+    db $1c   ; [44]
+    db $1c   ; [45]
+    db $1c   ; [46]
+    db $1c   ; [47]
+    db $1c   ; [48]
+    db $1c   ; [49]
+    db $1c   ; [50]
+    db $1c   ; [51]
+    db $1c   ; [52]
+    db $1c   ; [53]
+    db $1c   ; [54]
+    db $1c   ; [55]
+    db $1c   ; [56]
+    db $1c   ; [57]
+    db $1c   ; [58]
+    db $1c   ; [59]
+    db $1c   ; [60]
+    db $1c   ; [61]
+    db $1c   ; [62]
+    db $1c   ; [63]
+PickupIconAttr:   ; $6077 — per icon (0-63): its OBJ palette (OAM attr)
+    db $01   ; [0] heal (Herb, the books)
+    db $02   ; [1] cure / MP (bottle)
+    db $06   ; [2] item 9 (bell)
+    db $07   ; [3] nut / seed
+    db $00   ; [4] MEAT (the five meats)
+    db $07   ; [5] staff
+    db $03   ; [6] WarpWing
+    db $03   ; [7] TinyMedal / none
+    db $00   ; [8]
+    db $00   ; [9]
+    db $00   ; [10]
+    db $00   ; [11]
+    db $00   ; [12]
+    db $00   ; [13]
+    db $00   ; [14]
+    db $00   ; [15]
+    db $00   ; [16]
+    db $00   ; [17]
+    db $00   ; [18]
+    db $00   ; [19]
+    db $00   ; [20]
+    db $00   ; [21]
+    db $00   ; [22]
+    db $00   ; [23]
+    db $00   ; [24]
+    db $00   ; [25]
+    db $00   ; [26]
+    db $00   ; [27]
+    db $00   ; [28]
+    db $00   ; [29]
+    db $00   ; [30]
+    db $00   ; [31]
+    db $00   ; [32]
+    db $00   ; [33]
+    db $00   ; [34]
+    db $00   ; [35]
+    db $00   ; [36]
+    db $00   ; [37]
+    db $00   ; [38]
+    db $00   ; [39]
+    db $00   ; [40]
+    db $00   ; [41]
+    db $00   ; [42]
+    db $00   ; [43]
+    db $00   ; [44]
+    db $00   ; [45]
+    db $00   ; [46]
+    db $00   ; [47]
+    db $00   ; [48]
+    db $00   ; [49]
+    db $00   ; [50]
+    db $00   ; [51]
+    db $00   ; [52]
+    db $00   ; [53]
+    db $00   ; [54]
+    db $00   ; [55]
+    db $00   ; [56]
+    db $00   ; [57]
+    db $00   ; [58]
+    db $00   ; [59]
+    db $00   ; [60]
+    db $00   ; [61]
+    db $00   ; [62]
+    db $00   ; [63]
+PickupIconOfItem:   ; $60B7 — per item id 0-47: its icon 0-7
+    db $07   ; [0]
+    db $00   ; [1] Herb
+    db $01   ; [2] Lovewater
+    db $00   ; [3] SageStone
+    db $01   ; [4] WorldDew
+    db $01   ; [5] Potion
+    db $01   ; [6] ElfWater
+    db $00   ; [7] Antidote
+    db $00   ; [8] MoonHerb
+    db $02   ; [9] SkyBell
+    db $00   ; [10] Laurel
+    db $01   ; [11] AwakeSand
+    db $00   ; [12] WorldLeaf
+    db $03   ; [13] LifeAcorn
+    db $03   ; [14] MysticNut
+    db $03   ; [15] AtkSeed
+    db $03   ; [16] DefSeed
+    db $03   ; [17] AglSeed
+    db $03   ; [18] IntSeed
+    db $04   ; [19] BeefJerky
+    db $04   ; [20] PorkChop
+    db $04   ; [21] Rib
+    db $04   ; [22] BadMeat
+    db $04   ; [23] Sirloin
+    db $05   ; [24] BoltStaff
+    db $05   ; [25] WindStaff
+    db $05   ; [26] MistStaff
+    db $05   ; [27] LavaStaff
+    db $05   ; [28] SnowStaff
+    db $06   ; [29] WarpWing
+    db $07   ; [30] TinyMedal
+    db $00   ; [31] QuestBk
+    db $00   ; [32] HorrorBk
+    db $00   ; [33] BeniceBk
+    db $00   ; [34] CheaterBk
+    db $00   ; [35] SmartBk
+    db $00   ; [36] ComedyBk
+    db $05   ; [37] FireStaff
+    db $00   ; [38] BeastTail
+    db $05   ; [39] WarpStaff
+    db $01   ; [40] Repellant
+    db $00   ; [41] ShinyHarp
+    db $00   ; [42] MapHerb
+    db $00   ; [43] BookMark
+    db $00   ; [44]
+    db $05   ; [45]
+    db $00   ; [46]
+    db $05   ; [47]
 
 ; Per-room VRAM update = ROOM TILE ANIMATION (S99 census: ROOM_DATA_FORMAT
 ; "Animated tiles", extracted/room_animations.json). Called once per

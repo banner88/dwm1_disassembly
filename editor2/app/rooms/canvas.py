@@ -235,6 +235,25 @@ class SpriteCache:
         pm = cls.get(sprite_id)
         if palette is None or pm is None or cls._rom is None or sprite_id >= MONSTER_KEY:
             return pm
+        if cls.food(sprite_id) is not None:                    # S172: a food, recoloured
+            from editor2.core import foods as FD
+            name, pal, _n = FD.sprites(cls._doc.data)[sprite_id]
+            # S172 r2: keyed on the drawing too, so an edit (or its undo) redraws at once
+            key = ('food', sprite_id, palette, str(FD.art_rows(cls._doc.data).get(name)))
+            if key not in cls._tinted:
+                try:
+                    from PIL import Image, ImageQt
+                    cols = cls._obj_palette(int(palette))
+                    g = FD.picture(name, pal, cls._doc.data)
+                    im = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+                    for y in range(16):
+                        for x in range(16):
+                            if g[y][x]:
+                                im.putpixel((x, y), cols[g[y][x]] + (255,))
+                    cls._tinted[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+                except Exception:                              # noqa: BLE001
+                    cls._tinted[key] = pm
+            return cls._tinted[key]
         key = (sprite_id, palette)
         if key not in cls._tinted:
             try:
@@ -260,10 +279,47 @@ class SpriteCache:
                 cls._tinted[key] = pm
         return cls._tinted[key]
 
+    _doc = None
+
+    @classmethod
+    def bind_doc(cls, doc):
+        """S172: the open project — with gamedata.foods on, the food sprites ($58-$5C, the
+        meat prop $5F) are drawn from editor2/assets/foods (editor2/core/foods.py)."""
+        cls._doc = doc
+
+    @classmethod
+    def food(cls, sprite_id):
+        """S172: the food picture shown for sprite_id, or None (tick off / not a food id)."""
+        if cls._doc is None or sprite_id is None:
+            return None
+        from editor2.core import foods as FD
+        s = FD.sprites(cls._doc.data)
+        if sprite_id not in s:
+            return None
+        name, pal, _n = s[sprite_id]
+        key = ('food', sprite_id, str(FD.art_rows(cls._doc.data).get(name)))   # S172 r2
+        if key not in cls._pix:
+            try:
+                from PIL import Image, ImageQt
+                cols = FD.obj_palette(pal)
+                g = FD.picture(name, pal, cls._doc.data)
+                im = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+                for y in range(16):
+                    for x in range(16):
+                        if g[y][x]:
+                            im.putpixel((x, y), cols[g[y][x]] + (255,))
+                cls._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+            except Exception:                                  # noqa: BLE001
+                cls._pix[key] = None
+        return cls._pix[key]
+
     @classmethod
     def get(cls, sprite_id):
         if sprite_id is not None and sprite_id >= MONSTER_KEY:
             return MonsterCache.get(sprite_id - MONSTER_KEY)
+        fp = cls.food(sprite_id)
+        if fp is not None:
+            return fp
         if sprite_id not in cls._pix:
             p = os.path.join(SPRITE_DIR, f'id_{sprite_id:02X}.png')
             pm = None

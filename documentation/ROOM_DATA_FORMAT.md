@@ -719,6 +719,29 @@ editor exposes these as `behaviour` names (PROJECT_COMPILER §2.13) and
 draws the walk path of the selected NPC; the compiler warns when a path
 leaves the 10×8 screen.
 
+### NPC sprite tables (S172 — re-sectioned in both trees, PyBoy-measured)
+
+A plain NPC sprite id `$00-$5F` (room entry byte +1) names three per-id rows (labels S172,
+`tools/resection_npc_sprite_tables.py`; byte-neutral):
+
+| Table | Where | Row |
+|---|---|---|
+| `NpcSheetGfxTable` | ROM0 `$2ADF` (96 dw) | gfx-ID (bank << 8 \| index into that bank's `$4001` table) of the 16-tile sheet the room load (bank $0B `Call_00b_4839`) and bank $06 `ReloadNPCSheets` DMA to the NPC's VRAM page |
+| `NpcSpriteFrameTable` | `$05:$407F` (96 dw) | the level-1 list: 6 frame pointers (down A / B, side A / B, up A / B; the left side = the right one X-flipped), read through ROM0 `$0D91` with bank $05 mapped; a frame = 4-byte pieces (dy, dx, tile, attr), `$80` |
+| `NpcSpritePalTable` | `$05:$4152` (96 db) | the OBJ palette 0-7 ORed into the pieces' attr (`NPCSpritePaletteOr`) |
+
+The field OBJ palettes (`$17:$5615`) are colour 1 cream (`$4B7F`), 2 the accent, 3 black: 0 red,
+1 green, 2 light blue, 3 amber, 4 purple, 5 grey, 6 orange, 7 brown. **Objects have ONE frame.**
+`$50` / `$51` (the heads in bed), `$5F` (the meat on a bone: `NpcFramesMeat` $413F → `NpcFrameMeat0`
+$4141, a 2 × 2 of tiles 0-3) and `$58-$5D` (unused copies of `$50`: its sheet, its list, palette 2)
+point at a list whose SECOND word is already the frame's own bytes. A standing NPC steps between
+frames 0 and 1 (measured S172: the Bazaar's people show frames {0, 1}, Milayou walking {1, 2, 3}),
+so such an object drawn as a normal NPC shows junk pieces about half the time (PyBoy S172: 471 of
+900 frames) — the game only shows its objects from scripts. Patched builds with `gamedata.foods`
+(PROJECT_COMPILER §2.78): `$58-$5C` are the foods' own sheets (gfx-IDs `$7717-$771B`, bank $77) and
+colours, `$5F` shows the Apple, and bank $77 `NpcDrawPlain` holds the ids in `NpcStaticIds` on
+frame 0 (`NpcStaticFrame77`).
+
 ### What NPCs cost per frame (S125, PyBoy-measured)
 
 User S125: "the room you made hub was laggy". Measured on the S125 demo HUB HALL

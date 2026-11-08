@@ -27,9 +27,13 @@ class GameTextMixin:
         orig = x.markup()
         rows = self._gt_rows().get(source) or {}
         cur = rows.get(GT._norm_key(source, key))
-        out = {'entry': x, 'original': orig, 'markup': orig if cur is None else cur,
-               'edited': cur is not None, 'same': list(x.same), 'style': x.style,
-               'error': None, 'warnings': [], 'bytes': None}
+        # S172: a text the foods tick names (gamedata.foods) shows its food name
+        from . import foods as FD
+        preset = FD.text_defaults(self.data).get((source, GT._norm_key(source, key)))
+        shown = cur if cur is not None else preset
+        out = {'entry': x, 'original': orig, 'markup': orig if shown is None else shown,
+               'edited': cur is not None, 'preset': preset, 'same': list(x.same),
+               'style': x.style, 'error': None, 'warnings': [], 'bytes': None}
         try:
             raw = TM.encode(out['markup'], x.style)
             out['bytes'] = raw

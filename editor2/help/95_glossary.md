@@ -99,6 +99,12 @@ first parent's family. [Breeding](58_breeding.md#Family%20recipes)
 **Flag variant** — another encounter list used while some flags hold.
 [Encounters](59_encounters.md)
 
+**Foods instead of meats** — a tick on the Items tab: the five meats become Toast,
+Apple, Biscuit, BadApple and Honey (same effects, prices, shops), each with its own
+NPC sprite, its own pickup icon on gate floors and its own description by
+strength; click a picture to draw it.
+[Items](74_items.md)
+
 ## G
 
 **Gate** — a portal dungeon of random maze floors; yours too (a copy of a game

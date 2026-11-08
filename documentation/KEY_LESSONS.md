@@ -7982,3 +7982,49 @@ the old path kept beside it (`_find_match_scan`).
   palette at load time were (row, number) leftovers too.
 - **Rule:** map what the user picked by its RGB onto what the target can show (the quarter's
   own row); change the hidden structure (a quarter's row) only by an explicit action.
+
+### A label is not a picture: render it before describing it (S172)
+- **Symptom:** the S172 audit told the user the meats "fly in an arc" in battle as a meat icon
+  that each food should replace. The user: "THERE IS NO MEAT ANIMATION IN FLYING ARC IN GAME.
+  Only a note appears. Did you hallucinate this????"
+- **Root cause:** the animation's LABEL (`AnimTimeline_2c_FEEDMEAT`, the skill-name table's word)
+  and the table comments ("FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN") were read as what it SHOWS.
+  The 16 × 16 tiles were even rendered — a music note — and still described as meat; the
+  frames' rising path was read as "an arc". BATTLE_SKILL_SYSTEM §13.5 already called it the
+  "note command".
+- **Fix:** both trees' comments now say "the NOTE" (zero bytes); BATTLE_SKILL_SYSTEM §8 says
+  what `$C2-$C6` show and that three of their names are one off.
+- **Rule:** before telling the user what something looks like in game, look at it as the game
+  shows it (a PyBoy screenshot, or the decoded frames on a screen-sized canvas) and describe
+  the picture, not its name — and grep the docs for the word the user would use ("note").
+  When a claim about the game's look is not measured, say so and ask.
+
+### A one-frame object drawn as a standing NPC flickers junk (S172)
+- **Symptom (negative control):** the food props (plain sprite ids that reuse an object's
+  frame list) showed broken pieces on 471 of 900 frames, and 240 / 240 while talked to.
+- **Root cause:** `NpcSpriteFrameTable`'s object lists ($50 / $51 / $58-$5D / $5F) hold ONE
+  frame — the list's second word is the frame's own bytes — while a standing NPC steps between
+  frames 0 and 1 and a talked-to one turns (frames 2-5). The game shows its objects only from
+  scripts.
+- **Fix:** bank $77 `NpcDrawPlain` holds the ids in `NpcStaticIds` on frame 0.
+- **Rule:** an NPC sprite id offered to the author must have all 6 frame pointers valid, or the
+  draw must pin its frame; measure a new sprite over a few hundred frames AND through a talk.
+
+### A loader that runs before the data it would read (S172 r2)
+- **Symptom:** the first gate-pickup hook loaded only the icons of the foods it found on the
+  floor list; in PyBoy the test's forced list was gone by the time the floor showed.
+- **Root cause:** bank $16 `jr_016_6002` (the pickup-tile load) runs at the ROOM LOAD, before
+  `MazePlacements` builds the new floor's `$D793` list — the scan read the previous floor's list,
+  and the placement then overwrote what the test wrote.
+- **Fix:** load all five icons every time (64 B each, ≈ 2 frames); write test lists after the
+  floor is placed.
+- **Rule:** before a hook READS game state, measure WHEN that state is written relative to the
+  hook (a watchpoint on the data, a breakpoint on the hook — which fires first).
+
+### A register is not what the code around it suggests (S172 r2)
+- **Symptom:** `FoodIconDraw` took B as the item id (the code above the call had just used it)
+  and every floor item drew as the meat.
+- **Root cause:** at the far call B = $40 — the position code reused it; the item is at DE-2
+  (DE = the entry + 3 after the X / Y reads).
+- **Rule:** read a far-call entry's registers in PyBoy at the entry (a hook) before relying on
+  one; prefer re-reading the data through a pointer that is measured.

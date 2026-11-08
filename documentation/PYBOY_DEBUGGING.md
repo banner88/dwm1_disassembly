@@ -1453,3 +1453,26 @@ The same snapshot gives "slots written while the room showed" — how the breedi
 - **A reference in the ROM copy:** the literal form of the 430 pictures staged in empty banks
   `$F0+` of the walk's ROM copy (refused unless those banks are empty) gives literal / compressed
   / original timings of the same pictures in one run.
+
+## S172 techniques — an NPC sprite's pieces by its sheet, a GUI stall by heartbeat
+
+- **Which OAM pieces are this NPC's?** Its slot (`$D7D2 + 32i`) +$16 = the tile base of its
+  16-tile sheet; the real OAM (`$FE00`, 40 × 4) pieces with base ≤ tile < base + 16 are its.
+  A one-frame 2 × 2 object must show exactly tiles base..base+3 at two Y and two X 8 px apart
+  on EVERY frame (`tools/walk_foods.py` `drawn_ok`); the slot's +$14 is the frame the engine
+  asked for (standing NPCs: 0 / 1). The sheet in VRAM bank 0 at `$8000 + 16 × base` is
+  compared with the picture's bytes. Talk from the side (the NPC turns) and check during the
+  talk too — the negative control (the frame hold removed) failed there 240 / 240.
+- **How long does the GUI hang?** (not PyBoy — Qt offscreen) a 10 ms `QTimer` heartbeat while
+  `processEvents` runs: the gaps between beats are the stalls (the S172 Balance-tab first show:
+  3.7 s → 0.16 s). `cProfile` around the same loop names the GUI-thread callee
+  (`_peek_cache` → `fight_fingerprint`).
+- **A gate floor on demand (r2, `walk_foods.py pickups`):** enter gate 0 through the gate
+  mailbox (`$D8D7` := 0; `$C96D`, `$C96E`, `$C96C` := 0, 1, 1; `$C88F` += 1) and wait for the
+  floor; to put known items on it, write the `$D793` list `[kind, item, X, Y]` AFTER the floor
+  is placed (a list written earlier is overwritten — the placement follows the room load) on
+  free floor cells, `$FF` after the last. A floor item's OAM pieces: tiles base..base+3 with
+  the attr's bit 3 = VRAM bank; read bank 1 through `pyboy.memory[1, 0x8500:...]`. PyBoy's
+  `register_file` has no H / DE attributes — use `HL` and `(D << 8) | E`.
+- **A far-call entry's register at entry:** a hook at the entry address with a callback
+  reading `register_file` (FoodIconDraw's B was $40, not the item — KEY_LESSONS S172 r2).

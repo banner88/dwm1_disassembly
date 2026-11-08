@@ -286,7 +286,12 @@ def v2_round_trip(new_dir):
     rt.foreign_box.setCurrentIndex(i)
     app.processEvents()
     assert rt.picker_foreign.foreign and not rt.picker_foreign.foreign_same
-    n_free_before = 128 - len(s.doc.used_tiles(s.doc.tileset_key(s.doc.room(rid)))) \
+    # S172: since S171 r4 Borrow MATCHES colours by default (each quarter recoloured into
+    # this room's rows — test_app s171_colour_true); this block checks the RAW import
+    # (the S95 semantics: graphic and rows copied as they are)
+    rt.borrow_match.setChecked(False)
+    app.processEvents()
+    n_free_before = 256 - len(s.doc.used_tiles(s.doc.tileset_key(s.doc.room(rid)))) \
         if 'tileset' in s.doc.room(rid)['record'] else None
     foreign_mt = rt.picker_foreign.foreign[5]
     rt._import_metatile(foreign_mt)
@@ -624,7 +629,9 @@ def v3_round_trip(new_dir):
     # (Castle's rolling pair, animated in EVERY custom room before S99) are
     # ordinary free slots now
     assert room.get('animation') == 'none', room.get('animation')
-    assert s.doc.free_counts(tid, 0x40)['total'] == 128 - 1, \
+    from editor2.core import page2 as _P2
+    # S172: both pages count (S168: a tileset has P2.SLOTS = 256 slots)
+    assert s.doc.free_counts(tid, 0x40)['total'] == _P2.SLOTS - 1, \
         'blank tileset: every slot free but the floor tile'
     # --- PNG import through the tab's code path
     png = os.path.join(new_dir, 'synth_rip.png')
@@ -703,7 +710,7 @@ def v3_round_trip(new_dir):
     app.processEvents()
     used = s.doc.used_tiles(tid)
     fc = s.doc.free_counts(tid, 0x40)
-    assert fc['total'] == 128 - len(used)
+    assert fc['total'] == _P2.SLOTS - len(used)
     assert sum(1 for u in rt.tileset_map.usage if u['status'] == 'free') == fc['total']
     assert rt.picker_tabs.tabText(2) == f"Tileset ({fc['total']} free)"
     print(f"OK: slot map — {fc['wall']} wall / {fc['walkable']} walkable free == "
@@ -755,7 +762,13 @@ def v3_round_trip(new_dir):
     cmd = C.SnapshotCommand(s, 'Import', lambda doc: doc.import_png_cells(
         rid2, plans_, fit_.palettes, [0, 1, 2], 0, 0, own_sheet=own))
     s.undo.push(cmd)
-    assert cmd.error is not None and 'not enough free tileset slots' in str(cmd.error), cmd.error
+    # S172: since S168 a tileset has a PAGE 2 (128 more slots): the import that once failed
+    # for want of slots (page 1 had ~8) now fits — its new tiles land on page 2
+    assert cmd.error is None, cmd.error
+    used_after = s.doc.used_tiles(s.doc.tileset_key(s.doc.room(rid2)))
+    assert any(t >= 0x80 for t in used_after), 'the import used page 2'
+    s.undo.undo()
+    assert s.doc.free_counts(key2, s.renderer.vanilla_gfx(0x01).threshold)['total'] == free_before
     s.undo.push(C.SnapshotCommand(s, 'Release', lambda doc: doc.set_released(key2, True)))
     free_rel = s.doc.free_counts(key2, s.renderer.vanilla_gfx(0x01).threshold)['total']
     assert free_rel > free_before + 50, (free_before, free_rel)
@@ -771,7 +784,7 @@ def v3_round_trip(new_dir):
     app.processEvents()
     flags = rt.picker.flags
     assert any(v == 'changed' for v in flags.values()), 'overwritten vocabulary must be flagged'
-    print(f'OK: release — import failed with {free_before} free, succeeded after releasing '
+    print(f'OK: release — the import fits on page 2 with {free_before} free; after releasing '
           f'({free_rel} free); re-protect restores {free_before}; overwritten vocabulary '
           f'flagged in "This room" ({sum(1 for v in flags.values() if v == "changed")} tiles)')
     # --- space meters measured the unsaved project
@@ -1412,10 +1425,12 @@ def tileset_sharing_check(new_dir):
     # 3. fill the walkable side, then flip a wall cell walkable
     thr = val(doc.room(sid)['record']['collision_threshold'])
     used = doc.used_tiles(tid)
-    for i in range(thr, 128):
-        if i not in used and i not in (77, 78):
-            doc.add_metatile(tid, f'fill {i}', [i] * 4, 0)
-    assert doc.free_counts(tid, thr)['walkable'] == 0
+    from editor2.core import page2 as _P2
+    # S172: both pages (S168) — page-2 slot s walks like page-1 tile s - 128
+    for i in range(_P2.SLOTS):
+        if not _P2.is_wall(i, thr) and i not in used and i not in (77, 78):
+            doc.add_metatile(tid, f'fill {i}', [_P2.value_of(i)] * 4, 0)
+    assert doc.free_counts(tid, thr)['walkable'] == 0, doc.free_counts(tid, thr)
     rt._show()
     app.processEvents()
     cv = rt.canvas
@@ -2318,31 +2333,55 @@ def v6_split(new_dir):
     keep_cells = {(cx, cy) for cy in range(8) for cx in range(10)
                   if mt_at(cx, cy)['tiles'] == tmt['tiles']}
     # fill every free wall slot with a unique graphic placed in some cell
+    # S172: the wall side of BOTH pages (S168: page-2 slot s walks like page-1 tile s - 128)
+    from editor2.core import page2 as _P2
     usage = d.tile_usage(tid)
-    free_wall = [i for i in range(thr) if not usage[i]['placed'] and not usage[i]['mine']
-                 and not usage[i]['animated']]
+    free_wall = [i for i in range(_P2.SLOTS) if _P2.is_wall(i, thr) and not usage[i]['placed']
+                 and not usage[i]['mine'] and not usage[i]['animated']]
     sheet = d.read_sheet(tid)
     spots = [(cx, cy, k) for cy in range(7, -1, -1) for cx in range(10)
              if (cx, cy) not in keep_cells for k in range(4)]
     for n, i in enumerate(free_wall):
         sheet[i * 16:i * 16 + 16] = encode_2bpp([(n + x * 3 + (x // 8)) % 4 for x in range(64)])
         cx, cy, k = spots[n]
-        grid[cy * 2 + k // 2][cx * 2 + k % 2] = i
+        grid[cy * 2 + k // 2][cx * 2 + k % 2] = _P2.value_of(i)
     d.write_sheet(tid, sheet)
+    # with both pages ~100 slots are filled: a spot may cover the ONLY placement of a slot
+    # placed before — place such slots again on the next spots until none is left
+    nxt = len(free_wall)
+    for _round in range(8):
+        d.touch()
+        usage = d.tile_usage(tid)
+        lost = [i for i in range(_P2.SLOTS) if _P2.is_wall(i, thr) and not usage[i]['placed']
+                and not usage[i]['mine'] and not usage[i]['animated']]
+        if not lost:
+            break
+        for i in lost:
+            cx, cy, k = spots[nxt]
+            nxt += 1
+            grid[cy * 2 + k // 2][cx * 2 + k % 2] = _P2.value_of(i)
     r.invalidate()
     r._sheet_cache.clear()
     usage = d.tile_usage(tid)
-    assert not [i for i in range(thr) if not usage[i]['placed'] and not usage[i]['mine']], \
-        'wall side is full'
+    assert not [i for i in range(_P2.SLOTS) if _P2.is_wall(i, thr) and not usage[i]['placed']
+                and not usage[i]['mine'] and not usage[i]['animated']], \
+        ('wall side is full', len(free_wall), len(spots),
+         [(i, usage[i]) for i in range(_P2.SLOTS) if _P2.is_wall(i, thr)
+          and not usage[i]['placed'] and not usage[i]['mine']][:4])
+
+    def slot_bytes(s_, t):
+        k = _P2.slot_of(t)
+        s_ = s_ + bytes(max(0, 4096 - len(s_)))
+        return s_[k * 16:k * 16 + 16]
     sh = bytes(r.room_gfx(room).sheet)
     tmt = mt_at(*tgt)
-    fa = [sh[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in tmt['tiles']]
+    fa = [slot_bytes(sh, t) for t in tmt['tiles']]
     fb = [bytes(255 - v for v in fa[0])] + fa[1:]            # only the top-left changes
 
     def look():
         s_ = bytes(r.room_gfx(d.room(rid)).sheet)
         t_ = val(d.room(rid)['record']['collision_threshold'])
-        return {(cx, cy): ([s_[(t & 0x7F) * 16:(t & 0x7F) * 16 + 16] for t in mt_at(cx, cy)['tiles']],
+        return {(cx, cy): ([slot_bytes(s_, t) for t in mt_at(cx, cy)['tiles']],
                            (mt_at(cx, cy)['tiles'][3] & 0x7F) < t_)
                 for cy in range(8) for cx in range(10)}
     cs = d.animate_candidates(room, tmt, 'flip', fa, fb)
@@ -2361,7 +2400,7 @@ def v6_split(new_dir):
     assert (new['tiles'][0] in anim and not ({t for t in new['tiles'][1:]} & anim)), \
         ('only the changed quarter moves', new['tiles'], sorted(anim))
     moving = {(cx, cy) for cy in range(8) for cx in range(10)
-              if {t & 0x7F for t in mt_at(cx, cy)['tiles']} & anim}
+              if {_P2.slot_key(t) for t in mt_at(cx, cy)['tiles']} & anim}
     assert moving == keep_cells, (moving, keep_cells)
     print(f'OK: v6 split — wall side full (filled {len(free_wall)} slots), top-left-only flip '
           f"on ${sc['map']:02X}: split moved ${thr:02X} -> ${thr2:02X}, 1 pair used, "

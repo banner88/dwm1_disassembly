@@ -614,6 +614,7 @@ registering an emitter; nothing existing changes.
 | bank $5F regions `title_text` `title_song` `title_song_again` `credits_song` `continue_song` `credits_seconds` `credits_last_a` `credits_last_b` `credits_monster_ptr` `credits_monsters` `credits_after` (S153) + bank $79 entries 3-5 `TitleText` / `CreditsAfter` / `StoryPointApply` | `custom.title` + `custom.credits` + the ending's steps (§2.61; editor2/core/ending.py) | `region:patches/bank_05f.asm#…` (+ `hooks79`) | `$5F` `$79` |
 | `page2_ext` (S168) — the page-2 banks (ext banks $80+, the last kind) + the bank $0B regions `memorial_tiles_0` / `_1` when page 2 is on | `custom.tilesets[].raw2bpp` page 2 + page-2 tile values (§2.76; editor2/core/page2.py) | `multi:page2_banks` (+ `region:patches/bank_00b.asm#memorial_tiles_*`) | ext banks |
 | regions `memorial_battle_start` `memorial_battle_end` (bank $50) `memorial_tiles_0` `memorial_tiles_1` (bank $0B) (S154) + bank $79 entries 6-9 + `mem_pics_ext` (the picture bank, an ext bank $80+) + bank $77 `MemorialRedraw77` | `custom.memorial` + `custom.rooms[].statues` + statue entries (§2.62; editor2/core/memorial.py) | `region:patches/bank_050.asm#…` / `bank_00b.asm#…` (+ `hooks79`, `shops77`, `ext_banks`) | `$50` `$0B` `$77` `$79` + one ext bank |
+| regions `npc_food_sheets` (ROM0 `NpcSheetGfxTable` ids $58-$5F) `npc_food_pals` (bank $05 `NpcSpritePalTable` ids $58-$5F) (S172) + bank $77 `NpcStaticIds` / `FoodSheet0-4` / (r2) `FoodIconCount` / `FoodIconAttr` / `FoodIcon0-4` (in `shops77`) | `gamedata.foods`, `gamedata.food_art` (§2.78; editor2/core/foods.py) | `region:patches/bank_000.asm#npc_food_sheets`, `region:patches/bank_005.asm#npc_food_pals` | `$00` `$05` (`$77`) |
 | `text_sprites06` (S121) | `custom.rooms[].text_keeps_sprites` (§2.34) | `region:patches/bank_006.asm#text_sprite_mode` | `$06` |
 | `enc76` (S114) | `custom.encounter_lists` + `custom.rooms[].encounters` + `custom.gates[].encounters` (§2.30; editor2/core/encounters.py) | `file:patches/bank_076.asm` | `$76` |
 | `lay_copies_10` `lay_copies_11` (S107 2b) + `ns_follower_layout` (in the species list) | `gamedata.art` + `custom.species` (§2.23 "Walking layouts"; editor2/core/walk_layouts.py) | `region:` in banks $10 / $11 | those banks |
@@ -5720,6 +5721,127 @@ NPCs unpack their ORIGINAL streams — by design — while the followers show th
 speed: **47 / 47**; `--negative` (each art bank $80+'s pointer table rotated by one within its
 kind — every gfx-ID there names another monster's picture, no crash) **25 FAIL**, the $7C monster,
 the home-bank followers and the farm's NPC sheets still pass. Pin unchanged `7aae0e95…` (patched): the example has no art.
+
+## §2.78 S172 — FOODS INSTEAD OF MEATS: a tick (`gamedata.foods`)
+
+**Built S172; r2 (pictures, gate pickups, drawing) USER-CONFIRMED 2026-11-08 13:17 ("Yeah everything works … Other than that its freat"); r3 (each food its own description)
+USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please")** (user: "I want to replace the meats and meat icons in the game
+with different items … Toast, Apple, Biscuit, Honey … Make this a TICK on the editor that I can turn
+on/off. When off its vanilla behaviour"; on the audit: BadMeat → "BadApple is good"; "Dont care about
+story"; the field sprite "YES, and disambiguate so not everything is meat. Apple becomes an apple icon,
+honey becomes a honey icon"; r2 on the pictures: "Look at the nuts, meat, warpwing, herb … the
+palette, size … NOT animated", then each food its own gate pickup icon and "allow me to edit PNG
+using draw pixel tools same as tile … apply and restore default (yours)"). Module
+`editor2/core/foods.py`; the default pictures `editor2/assets/foods/*.png` (r2: redrawn in the
+game's pickup style — 1-px cream halo, thin black outline, one accent fill, a cream highlight,
+≈ 9-11 px of art, user-approved one by one).
+
+- **Schema:** `gamedata.foods: true` (absent / `false` = the game's meats; `gamedata.SECTIONS` += `foods`;
+  anything but a bool is an error). **r2:** `gamedata.food_art: {"toast" | "apple" | "biscuit" |
+  "badapple" | "honey": [16 strings of 16 digits 0-3]}` (`SECTIONS` += `food_art`) — a picture the
+  project DREW (0 see-through, 1 cream, 2 the food's colour, 3 black, in the food's OBJ palette);
+  absent = the editor's default picture. `foods.picture(name, pal, prj)` is the one reader (sheets,
+  icons, the editor's previews). Everything else is a DEFAULT under the project's own edits.
+- **What it changes (on):**
+  1. names — `gamedata.text.item_name` 19 BeefJerky → **Toast**, 20 PorkChop → **Apple**, 21 Rib →
+     **Biscuit**, 22 BadMeat → **BadApple**, 23 Sirloin → **Honey** (`foods.text_defaults`, layered by
+     `gametext.edits` with `setdefault`: a row the project typed keeps its words; `items.names` and the
+     Document's `game_text` (key `preset`, `edited` False) follow). Records, prices, shops, the battle
+     power (+10 / +30 / +100 / +400, BadApple +5 and poison) untouched. The story's words are not
+     changed (the Text tab edits them). **r3** (user: "I want description to reflect strength (Tames
+     monsters a little, tames monsters a moderate amount, tames monsters a lot, tames monsters
+     greatly)"): `gamedata.text.item_description` 19-23 too (`foods.DESCRIPTIONS`, same layering) —
+     Toast "Tames monsters / a little", Apple "… / a moderate amount", Biscuit "… / a lot", BadApple
+     "… / but poisons them", Honey "… / greatly" (two rows of ≤ 18 letters; the game's five share
+     `ItemDesc_19` "Tames monsters" — each key gets its own text-override entry, so no ROM table is
+     re-pointed; off = no defaults).
+  2. field sprites — plain NPC sprite ids **$58 Toast, $59 Apple, $5A Biscuit, $5B BadApple, $5C
+     Honey** (the game's unused copies of $50; their frame list = $50's one 2 × 2 frame) and the
+     game's meat prop **$5F** = the Apple. Region **`npc_food_sheets`** (patches/bank_000.asm,
+     ROM0 `NpcSheetGfxTable` ids $58-$5F, 8 dw): gfx-IDs **$7717-$771B** (= bank $77's `$4001`
+     rows 23-27: `FoodSheet0-4`, LZ streams of 256-byte sheets — tiles 0-3 the picture's TL / TR
+     / BL / BR, the rest empty; `foods.sheet` / `stream`); region **`npc_food_pals`**
+     (patches/bank_005.asm — NEW overlay copy of the re-sectioned bank — `NpcSpritePalTable` ids
+     $58-$5F, 8 db): Toast 6 orange, Apple 0 red, Biscuit 7 brown, BadApple 5 grey (r2; was 4
+     purple — the Apple's pixels in grey), Honey 3 amber
+     ($5F 0). Off = the ROM's bytes in both (test_compiler).
+  3. one frame — bank $77 template: `NpcDrawPlain` starts `call NpcStaticFrame77` ($FFC7 in the
+     generated `NpcStaticIds` → $FFC8 := 0; BC / DE kept). Generated (`foods.bank77_lines`,
+     appended by `shops.emit_bank_077`): `NpcStaticIds` = `$58 $59 $5A $5B $5C $5F $FF` on, `$FF`
+     off (and `FoodSheetN EQU $0000`). Why: the objects' level-1 lists hold ONE frame (the second
+     word is the frame's own bytes) and a standing NPC steps between frames 0 and 1 (PyBoy S172):
+     without the hold the props drew junk pieces on 471 of 900 frames (ROOM_DATA_FORMAT "NPC sprite
+     tables (S172)").
+  4. **gate pickup icons (r2)** — the floor items of a gate ($D793 list `[kind, item, X, Y]`, bank
+     $01 `CheckDirectionBit7`) draw icon `PickupIconOfItem[item]`; all five meats share icon 4 (the
+     red meat, tiles $60-$63). On: each food its own icon from **VRAM bank 1** (unused on gate
+     floors): bank $77 `$4001` rows **28-32** = `FoodIcon0-4` (gfx-IDs **$771C-$7720**, LZ streams of
+     the 64-byte 2 × 2, `foods.icon_bytes` / `icon_stream`). Two hooks, same size as the code they
+     replace: **bank $16 `jr_016_6002`** (`EncounterSeedOnRoomLoad` entry 6, every gate room load)
+     `ld de, $2e15 / ld hl, $8500 / call WaitDMATransfer` → `ld hl, $7721 / rst $10` + 5 nops =
+     entry **33 `FoodIconsLoad`**: on a GBC with `FoodIconCount` ≠ 0, each icon is DMA'd to $8500
+     (bank 0) and copied 64 bytes to $8500 + 64k in bank 1 (`di`, STAT-wait, `rVBK` 1 / 0 per byte),
+     then the game's own load of $2E15 to $8500 (so bank 0 is exactly the game's); ≈ 2 frames.
+     **Bank $01 `CheckDirectionBit7`** `ld hl, $0400 / rst $10` → `ld hl, $7722 / rst $10` = entry
+     **34 `FoodIconDraw`**: item = [DE-2], kind = [DE-3] (B is NOT the item — measured $40); kind &
+     $78 = 0 and item 19-23 → `$FFC9` = $50 + 4k (the tile in bank 1), `$FFCA` = `FoodIconAttr[k]` =
+     palette | $08; then bank $04 entry 0 as before. The loader runs BEFORE a new floor's items
+     are placed, so it loads all five (no scan of the list — KEY_LESSONS S172). Off / a DMG:
+     `FoodIconCount` 0 or `wIsGBC` 0 → both entries are the game's code path (the red meat). The
+     floor-item tables (`PickupIconTiles` $01:$6037, `PickupIconAttr` $6077, `PickupIconOfItem`
+     $60B7) re-sectioned byte-neutral in both trees (`tools/resection_npc_sprite_tables.py`,
+     GATE_GENERATION §5). Meat on floors: about a third of the floor items of contents rows 1-15,
+     none in row 0 (the Gate of Beginning).
+- **Validation (`foods.check`, run by `validators` after `items.check`):** the type; a project NPC
+  drawn with $58-$5C while the tick is off → a warning (it would show Terry's head in bed); r2:
+  `food_art` must be a table of the five names, each 16 rows of 16 digits 0-3 (an error).
+- **Template:** `bank_077_head.asm` re-pinned (`templates/PINNED_SHA256`); `TEMPLATE_SIZE[$77]`
+  2889 → 2922 (S172) → **3087** (r2: rows 28-32, entries 33 / 34, `FoodIconsLoad` /
+  `FoodIconDraw`; `ShopPtrTable` $4C0F in the S172 r2 example game.sym). Example pin **`18e6f102…`**
+  (patched; r2 — banks $01 / $16 / $77 differ; S172 round 1 `9ee0b97b…`, patched, historical; was
+  `7aae0e95…`, patched, historical) — the example has the tick off: bank $77 differs
+  (the call + routine + rows), the two regions are the ROM's. The user's project (tick off) vs HEAD:
+  bank $77 only (+ the header checksum).
+- **Editor:** Items tab → the **Foods instead of meats** tick at the top (the five pictures as the
+  game draws them, a line naming each food, what it was and its sprite); `Document.set_foods(on)`,
+  `foods_on()`, `foods_summary()` (one undo step each way). The NPC sprite picker lists $58-$5C (and
+  $5F) as the foods when on (`SpriteCache.bind_doc` / `food`: drawn from the pictures, recoloured
+  for an NPC colour like any sprite). **r2:** the five pictures are buttons — a click opens
+  **Draw the … picture** (`app/food_art_dialog.py`: the Draw tab's `FramePad`, 2 × 2 tiles at zoom
+  20, the food's palette with colour 0 shown as a dull floor; left = paint, Shift+left = fill inside
+  one quarter, right = pick; colour swatches 0-3; Undo stroke / Ctrl+Z; previews at ×2 and ×4;
+  **Apply** / **Restore default** / Cancel). Apply = `Document.set_food_art(name, grid)` (one undo
+  step; a grid equal to the default removes the key), Restore default = `set_food_art(name,
+  None)`; `food_art_grid` / `food_art_is_own`. `SpriteCache` keys its food pixmaps on the drawing,
+  so an edit (or its undo) redraws the rooms at once. Help 74_items (+ 20_npcs, glossary).
+  `EDITOR_REVISION` S172.
+- **Measured:** `tools/walk_foods.py` on the user's `.sav` + `examples/s172_foods_demo` (THE PANTRY /
+  THE LARDER / THE CELLAR): **32 / 32** — every prop's VRAM sheet == its picture, its four OAM pieces
+  in its palette at the 2 × 2 places, 300 frames per room with the props on their one frame (slot
+  frames 0 / 1 seen), a talk from the side (the prop turns) keeps the picture, the stall's list
+  draws Toast / Apple / Biscuit / Honey and sells a Toast for 20 G, the HUNGRY SLIME battle names
+  item 19 and its name buffer holds "Toast", the feeding line shown, the battle won. `--negative`
+  (NpcStaticIds emptied): **3 FAIL** (304 / 600, 468 / 900 and 240 / 240 frames wrong).
+  **r2 `pickups` step** (gate 0 floor 1 entered through the gate mailbox, five foods + a Herb
+  forced onto the floor list): `FoodIconsLoad` ran at the room load in ≤ 3 frames; every food's
+  four OAM pieces use tiles $50 + 4k from VRAM bank 1 in its palette, the Herb keeps the game's
+  icon (bank 0, green); VRAM bank 1 $8500-$863F == the five pictures; the same after the field menu
+  and after a wild battle (the room reload runs the loader again) — **17 / 17**; the whole walk
+  **47 / 47**, also on a demo whose Toast / Honey were DRAWN (`food_art`, flipped pictures: the
+  sheets and the icons in VRAM are the drawings). `--negative` (+ `FoodIconCount` 0): **9 FAIL**
+  (the 3 frame checks + the 6 pickup checks: the red meat icon from bank 0, bank 1 empty).
+  **r3 `descs` step** (the bag's ITEM page, the cursor on each food: the INFO box shows its own
+  description, read from the text the game drew): the whole walk **52 / 52** on the r3 ROM
+  (`ed6083c1…`, patched); `--negative` 12 FAIL (the frame and pickup checks; the descriptions are
+  texts, not touched by the negative).
+- Tests: `test_compiler.test_s172` (names / layering / regions off == ROM / on / pictures →
+  sheets → streams / icons → streams / `food_art` (the drawing reaches picture, icon and bank $77;
+  4 bad tables rejected) / `FoodIconCount` on 5 / off 0 / the two hooks / validation / Document
+  incl. `set_food_art` + restore; `--rom`: the two tables, gfx-IDs → rows → sheets, rows 28-32 →
+  icons, entries 33 / 34, `NpcStaticFrame77` run on dwm.sm83 for ids $00-$5F, `NpcDrawPlain`'s
+  call, `FoodIconDraw` run on dwm.sm83 for items 16-26 × kinds 0 / 8 × GBC / DMG) + the
+  regression block's "foods off" check; `test_app` `s172_foods` (+ r2: a food drawn through the
+  dialog — Apply / Restore default one undo step each, the NPC sprite redrawn, undo).
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

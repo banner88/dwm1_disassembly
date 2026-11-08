@@ -141,6 +141,7 @@
 ;     (NpcSheetToBank1: per byte di / read bank 0 / VBK 1 / write / VBK 0 / ei — the
 ;     VBlank handler's scroll copy sets VBK 0 behind itself, ProcessSpriteTransfer).
 ;   14 NpcDrawPlain / 15 NpcDrawMonster: bank $06 NPCDrawSlot's two builder calls (bank
+;     [S172: NpcDrawPlain first holds a one-frame object of NpcStaticIds on frame 0]
 ;     $60 entry 11 NpcColourDraw for an NPC, bank $04 entry 2 for a monster; same size):
 ;     the call as before, then — the tile base $FFC9 >= $80 in a custom room, not a gate
 ;     floor (= exactly the sheets the loaders put in bank 1) — OAM attr bit 3 (VRAM bank 1)
@@ -188,7 +189,8 @@
 ; Data (generated below): SHOP_COUNT, ShopPtrTable (dw per list),
 ;   ShopList_n (item ids, $FF), SERVICE_SET_COUNT + ServiceSetTable +
 ;   ServicePairs_n (S126); S151: ITEM_COUNT, ItemTable, ItemBaseTable; S157: OneOnlyLine,
-;   SCRIPT_OPS + ScriptArity77.
+;   SCRIPT_OPS + ScriptArity77; S172: NpcStaticIds + FoodSheet0-4 (editor2/core/foods.py);
+;   S172 r2: FoodIconCount, FoodIconAttr, FoodIcon0-4 (the gate pickup icons).
 ; =============================================================================
 
 SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
@@ -218,6 +220,23 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw BagFullCheck                     ; entry 20 (HL=$7714, S157)
     dw BuyQtyMax                        ; entry 21 (HL=$7715, S157)
     dw OneOnlySay                       ; entry 22 (HL=$7716, S157)
+    ; S172 (gamedata.foods): rows 23-27 are DATA, never called — the foods' NPC sheets
+    ; as gfx-IDs $7717-$771B (ROM0 DecompressTileLayout reads bank D's $4001 + 2E;
+    ; NpcSheetGfxTable ids $58-$5C / $5F name them). Foods off: $0000, never read.
+    dw FoodSheet0                       ; row 23: gfx-ID $7717 (Toast)
+    dw FoodSheet1                       ; row 24: gfx-ID $7718 (Apple; also the meat prop $5F)
+    dw FoodSheet2                       ; row 25: gfx-ID $7719 (Biscuit)
+    dw FoodSheet3                       ; row 26: gfx-ID $771A (BadApple)
+    dw FoodSheet4                       ; row 27: gfx-ID $771B (Honey)
+    ; S172 r2 (the gate pickups): rows 28-32 = DATA, the foods' 4-tile pickup icons as
+    ; gfx-IDs $771C-$7720 (FoodIcon0-4; 64 B each); entries 33 / 34 = code.
+    dw FoodIcon0                        ; row 28: gfx-ID $771C (Toast)
+    dw FoodIcon1                        ; row 29: gfx-ID $771D (Apple)
+    dw FoodIcon2                        ; row 30: gfx-ID $771E (Biscuit)
+    dw FoodIcon3                        ; row 31: gfx-ID $771F (BadApple)
+    dw FoodIcon4                        ; row 32: gfx-ID $7720 (Honey)
+    dw FoodIconsLoad                    ; entry 33 (HL=$7721, S172 r2)
+    dw FoodIconDraw                     ; entry 34 (HL=$7722, S172 r2)
 
 ShopFill:
     ld a, [wShopID]
@@ -1944,6 +1963,7 @@ NpcSheetToBank1:                        ; HL = the page: 256 bytes bank 0 -> ban
     ret
 
 NpcDrawPlain:
+    call NpcStaticFrame77               ; S172: a one-frame object (NpcStaticIds) -> frame 0
     ld hl, $600b                        ; bank $60 entry 11 NpcColourDraw (S123)
     jr NpcDrawBank
 NpcDrawMonster:
@@ -1984,6 +2004,155 @@ NpcDrawBank:                            ; (BC / DE pass through to the builder u
     add hl, de
     dec b
     jr nz, .piece
+    ret
+
+; NpcStaticFrame77 (S172, gamedata.foods): the plain sprite [$FFC7] listed in NpcStaticIds
+; ($FF-ended, generated) is drawn with frame 0 ([$FFC8] := 0). The objects' level-1 lists
+; (bank $05 NpcSpriteFrameTable: $50 / $51 / $58-$5D / $5F) hold ONE frame — the second word
+; is the frame's own bytes — and a standing NPC steps between frames 0 and 1 (PyBoy S172),
+; which would draw junk. Keeps BC / DE (the builder's arguments); HL is reloaded after.
+NpcStaticFrame77:
+    push bc
+    ldh a, [$c7]
+    ld b, a
+    ld hl, NpcStaticIds
+.next:
+    ld a, [hl+]
+    cp $ff
+    jr z, .done
+    cp b
+    jr nz, .next
+    xor a
+    ldh [$c8], a
+.done:
+    pop bc
+    ret
+
+; -----------------------------------------------------------------------------
+; Entries 33 / 34 (S172 r2, gamedata.foods — PROJECT_COMPILER §2.78, GATE_GENERATION §5
+; "The pickup icons"): each food its OWN gate-floor pickup icon. The game draws a floor
+; item (bank $01 CheckDirectionBit7) with one of 8 icons (`$01:$60B7[item id]`: the five
+; meats all icon 4, the meat), whose 4 tiles bank $16 EncounterSeedOnRoomLoad loads into
+; VRAM bank 0 $8500-$86FF at every gate room load; OBJ $8700+ are the floor's NPC sheets.
+; The foods' icons go to VRAM BANK 1 (never used on a gate floor) at $8500 + 64k (tiles
+; $50 + 4k), drawn with OAM attr bit 3. GBC only (wIsGBC): on a DMG the meat icon stays.
+; FoodIconCount = 0 (foods off) -> both entries do exactly the game's work.
+; -----------------------------------------------------------------------------
+FOOD_FIRST_ITEM EQU 19                  ; items 19-23 (the meats)
+FOOD_COUNT EQU 5
+
+; 33 FoodIconsLoad: bank $16's first icon load (`ld de, $2e15 / ld hl, $8500 / call
+; WaitDMATransfer`, a same-size far call). Every food k's icon (gfx $771C + k) is unpacked
+; to bank 0 $8500 and copied to bank 1 $8500 + 64k — all five: this load runs BEFORE a new
+; floor places its items (PyBoy S172 r2: $D793 still holds the last floor's list here),
+; so the floor's own foods cannot be known yet. Then the game's first load (the Herb's
+; icon over $8500) as before.
+FoodIconsLoad:
+    ld a, [FoodIconCount]
+    or a
+    jr z, .orig
+    ld a, [wIsGBC]
+    or a
+    jr z, .orig
+    ld c, 0                             ; C = k
+.load:
+    push bc
+    ld a, c
+    add $1c                             ; row 28 + k
+    ld e, a
+    ld d, $77
+    ld hl, $8500
+    call WaitDMATransfer                ; bank 0 $8500-$853F (the Herb's, reloaded below)
+    pop bc
+    push bc
+    ld hl, $8500
+    ld de, $0040
+    ld a, c
+    or a
+    jr z, .dst
+.mul:
+    add hl, de
+    dec a
+    jr nz, .mul
+.dst:
+    ld de, $8500                        ; DE = bank 0 source, HL = bank 1 destination
+    ld b, $40
+.copy:
+    di
+.w0:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w0
+    ld a, [de]
+    ld c, a
+    ld a, $01
+    ldh [rVBK], a
+.w1:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w1
+    ld [hl], c
+    xor a
+    ldh [rVBK], a
+    ei
+    inc de
+    inc hl
+    dec b
+    jr nz, .copy
+    pop bc
+    inc c
+    ld a, c
+    cp FOOD_COUNT
+    jr c, .load
+.orig:
+    ld de, $2e15
+    ld hl, $8500
+    jp WaitDMATransfer
+
+; 34 FoodIconDraw: bank $01 CheckDirectionBit7's builder call (`ld hl, $0400 / rst $10`,
+; same size). DE = the floor entry + 3 ([kind, item, X, Y]; B is NOT the item here —
+; measured $40, the position code reuses it). A food item (kind & $78 = 0, item 19-23) on
+; a GBC with the tick on: tile base $50 + 4k, OAM attr = FoodIconAttr[k] (its palette |
+; $08, VRAM bank 1). Then bank $04 entry 0 as before.
+FoodIconDraw:
+    ld a, [FoodIconCount]
+    or a
+    jr z, .draw
+    ld a, [wIsGBC]
+    or a
+    jr z, .draw
+    push de
+    dec de
+    dec de
+    ld a, [de]                          ; the item
+    dec de
+    ld b, a
+    ld a, [de]                          ; the kind
+    pop de
+    and $78
+    jr nz, .draw
+    ld a, b
+    sub FOOD_FIRST_ITEM
+    jr c, .draw
+    cp FOOD_COUNT
+    jr nc, .draw
+    ld c, a                             ; C = k
+    add a
+    add a
+    add $50
+    ldh [$c9], a                        ; tile base (bank 1)
+    ld hl, FoodIconAttr
+    ld a, c
+    add l
+    ld l, a
+    ld a, $00
+    adc h
+    ld h, a
+    ld a, [hl]
+    ldh [$ca], a                        ; palette | $08
+.draw:
+    ld hl, $0400
+    rst $10
     ret
 
 ; -----------------------------------------------------------------------------
@@ -2569,3 +2738,26 @@ ScriptArity77:   ; S157: parameter words per script op ($FF = ends the script)
 ; S154 (memorial.py): no memorial statues in this project
 MemorialRedraw77:
     ret
+
+; =============================================================================
+; FOODS (S172, generated by editor2/core/foods.py from gamedata.foods /
+; gamedata.food_art, PROJECT_COMPILER §2.78): the ids NpcDrawPlain holds on frame 0,
+; the foods' NPC sheets (gfx-IDs $7717-$771B = rows 23-27) and gate pickup icons
+; (gfx-IDs $771C-$7720 = rows 28-32; FoodIconsLoad / FoodIconDraw).
+; =============================================================================
+NpcStaticIds:   ; plain NPC sprite ids drawn with frame 0 only ($FF ends)
+    db $ff   ; gamedata.foods off: none (the game's draw)
+FoodIconCount:   ; off: the game's pickup icons
+    db 0
+FoodIconAttr:
+    db $00, $00, $00, $00, $00
+FoodSheet0 EQU $0000   ; off: never read (NpcSheetGfxTable is the game's)
+FoodIcon0 EQU $0000   ; off: never read (FoodIconCount = 0)
+FoodSheet1 EQU $0000   ; off: never read (NpcSheetGfxTable is the game's)
+FoodIcon1 EQU $0000   ; off: never read (FoodIconCount = 0)
+FoodSheet2 EQU $0000   ; off: never read (NpcSheetGfxTable is the game's)
+FoodIcon2 EQU $0000   ; off: never read (FoodIconCount = 0)
+FoodSheet3 EQU $0000   ; off: never read (NpcSheetGfxTable is the game's)
+FoodIcon3 EQU $0000   ; off: never read (FoodIconCount = 0)
+FoodSheet4 EQU $0000   ; off: never read (NpcSheetGfxTable is the game's)
+FoodIcon4 EQU $0000   ; off: never read (FoodIconCount = 0)

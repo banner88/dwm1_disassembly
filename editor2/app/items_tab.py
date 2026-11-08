@@ -16,11 +16,11 @@ Every edit is one undo step (SnapshotCommand).
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout,
                                QInputDialog, QLabel, QListWidget, QListWidgetItem,
                                QMessageBox, QPlainTextEdit, QPushButton, QScrollArea,
-                               QSpinBox, QVBoxLayout, QWidget)
+                               QSpinBox, QToolButton, QVBoxLayout, QWidget)
 
 from editor2.app.rooms import commands as C
 from editor2.core import items as IT
@@ -31,6 +31,13 @@ HELP = ('Every item of the game can be edited here, and you can add NEW items (u
         'code (a Herb heals, a seed raises a stat, a WarpWing leaves the gate) with its own '
         'name, price, power and the rest. Sell new items in a shop (Shops tab) or give them '
         '(conversations, cutscenes, quests).')
+FOODS_TIP = ('On: the five meats become foods — BeefJerky → Toast, PorkChop → Apple, Rib → '
+             'Biscuit, BadMeat → BadApple, Sirloin → Honey. What they do, cost and where '
+             'they are sold stay the same. Every food also gets its own NPC sprite '
+             '($58-$5C; the game\'s meat prop $5F shows the Apple), its own gate pickup '
+             'icon and its own description by strength ("Tames monsters / a little" … '
+             '"greatly"). A name or description you typed yourself wins. Off: the game\'s '
+             'meats exactly.')
 EDITED = QColor(255, 200, 80)
 YOURS = QColor(140, 220, 140)
 
@@ -125,6 +132,27 @@ class ItemsTab(QWidget):
         top = QLabel(HELP)
         top.setWordWrap(True)
         v.addWidget(top)
+        # S172: the foods tick (gamedata.foods, editor2/core/foods.py)
+        fr = QHBoxLayout()
+        self.foods = QCheckBox('Foods instead of meats')
+        self.foods.setToolTip(FOODS_TIP)
+        self.foods.clicked.connect(self._foods_clicked)
+        fr.addWidget(self.foods)
+        # S172 r2: one button per food picture — click to draw it (food_art_dialog.py)
+        self.food_btns = []
+        for k in range(5):
+            b = QToolButton()
+            b.setAutoRaise(True)
+            b.clicked.connect(lambda _c=False, k=k: self._food_art(k))
+            fr.addWidget(b)
+            self.food_btns.append(b)
+        self.food_pics = QLabel('')                         # error text only
+        fr.addWidget(self.food_pics)
+        self.food_note = QLabel('')
+        self.food_note.setWordWrap(True)
+        self.food_note.setStyleSheet('color: #9fd0ff;')
+        fr.addWidget(self.food_note, 1)
+        v.addLayout(fr)
         h = QHBoxLayout()
         v.addLayout(h, 1)
         # ---- the list
@@ -298,7 +326,7 @@ class ItemsTab(QWidget):
     # ------------------------------------------------------------ fill
     def _undo_changed(self, _i):
         from shiboken6 import isValid
-        if not isValid(self):
+        if not isValid(self) or not isValid(self.s.undo):     # S172: a stack torn down first
             return
         if self.isVisibleTo(self.window()):
             self.refresh()
@@ -317,6 +345,7 @@ class ItemsTab(QWidget):
 
     def refresh(self):
         keep = self.current_id()
+        self._foods_refresh()
         self._building = True
         try:
             rows = self.s.doc.item_list()
@@ -356,6 +385,71 @@ class ItemsTab(QWidget):
                   if self.list.item(r).data(Qt.UserRole) == keep), 0)
         self.list.setCurrentRow(k)
         self._show(k)
+
+    def _foods_refresh(self):
+        """S172: the tick, the five pictures (as the game draws them) and the note."""
+        on = self.s.doc.foods_on()
+        self.foods.blockSignals(True)
+        self.foods.setChecked(on)
+        self.foods.blockSignals(False)
+        try:
+            from PySide6.QtCore import QSize
+            from editor2.core import foods as FD
+            from editor2.app.food_art_dialog import food_pixmap
+            names0 = self.s.doc.item_names_all()
+            for k, f in enumerate(FD.FOODS):
+                g = FD.picture(f[5], f[4], self.s.doc.data)
+                b = self.food_btns[k]
+                b.setIcon(QIcon(food_pixmap(g, f[4], 2, dim=not on)))
+                b.setIconSize(QSize(32, 32))
+                own = self.s.doc.food_art_is_own(f[5])
+                b.setToolTip(f'{f[1]} — click to draw its picture'
+                             + (' (your drawing)' if own else ' (the editor\'s default)')
+                             + ('' if on else '. Used only when the tick is on.'))
+            self.food_pics.setText('')
+        except Exception as ex:                             # noqa: BLE001
+            self.food_pics.setText(f'⚠ {ex}')
+        names = self.s.doc.item_names_all()
+        if on:
+            self.food_note.setText('On: ' + ', '.join(
+                f"{names.get(i, n)} (was {g}, sprite ${sid:02X})"
+                for i, n, g, sid, _p, _pal in self.s.doc.foods_summary())
+                + '; the meat prop $5F shows the Apple. Click a picture to draw it.')
+        else:
+            self.food_note.setText('Off: the game\'s meats (BeefJerky, PorkChop, Rib, BadMeat, '
+                                   'Sirloin). Click a picture to draw it (used when on).')
+
+    def _foods_clicked(self, checked):
+        on = bool(checked)
+        self._push('Foods instead of meats ' + ('on' if on else 'off'),
+                   lambda doc: doc.set_foods(on))
+        self._food_caches()
+        self.refresh()
+
+    def _food_art(self, k):
+        """S172 r2: draw food k's picture; Apply / Restore default = one undo step."""
+        from editor2.core import foods as FD
+        from editor2.app.food_art_dialog import FoodArtDialog
+        f = FD.FOODS[k]
+        doc = self.s.doc
+        dlg = FoodArtDialog(self, f[1], f[5], f[4], doc.food_art_grid(f[5]),
+                            doc.food_art_is_own(f[5]))
+        if not dlg.exec():
+            return
+        grid = None if dlg.restore else dlg.result_grid
+        if grid is not None and grid == doc.food_art_grid(f[5]):
+            return
+        if grid is None and not doc.food_art_is_own(f[5]):
+            return
+        self._push(f'Food picture: {f[1]}' + (' (default)' if grid is None else ''),
+                   lambda d: d.set_food_art(f[5], grid))
+        self._food_caches()
+        self.refresh()
+
+    def _food_caches(self):
+        from editor2.app.rooms.canvas import SpriteCache
+        SpriteCache._tinted = {kk: v for kk, v in SpriteCache._tinted.items()
+                               if not (isinstance(kk, tuple) and kk[:1] == ('food',))}
 
     def _names(self):
         if getattr(self, '_names_cache_idx', None) != self.s.undo.index():

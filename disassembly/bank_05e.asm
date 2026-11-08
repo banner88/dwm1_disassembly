@@ -138,7 +138,7 @@ AnimFrameTable5E:
     dw Anim_29_BigBang       ; [$29] BigBang
     dw Anim_2a_MegaMagic     ; [$2a] MegaMagic
     dw Anim_2b_DeMagic       ; [$2b] DeMagic
-    dw Anim_2c_FEEDMEAT      ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    dw Anim_2c_FEEDMEAT      ; [$2c] the NOTE (S172: a music note ♪ over the foe, not a meat) — skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 BeefJerky / 20 PorkChop / 21 Rib / 23 Sirloin
 ; bank $5E entry 1: start an animation — X from AnimTargetXTable5E[$db54] when [$dd68] != 0 (else 0 = fly in from the left), Y $60, [$c7] = [$daa4], [$c8] = its first frame (bank $02 entry 5) (S112)
 AnimInit5E:
     ld a, $01

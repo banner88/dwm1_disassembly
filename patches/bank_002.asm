@@ -1526,7 +1526,7 @@ AnimTimelineTable:
     dw AnimTimeline_29_BigBang     ; [$29] BigBang
     dw AnimTimeline_2a_MegaMagic   ; [$2a] MegaMagic
     dw AnimTimeline_2b_DeMagic     ; [$2b] DeMagic
-    dw AnimTimeline_2c_FEEDMEAT    ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    dw AnimTimeline_2c_FEEDMEAT    ; [$2c] the NOTE (S172: a music note ♪ over the foe, not a meat) — skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 BeefJerky / 20 PorkChop / 21 Rib / 23 Sirloin
 AnimTimeline_00_Blaze:   ; $46fb — Blaze
     db $00, $05   ; frame  0 for 6 frames
     db $fd, $74   ; sound $74
@@ -2469,7 +2469,9 @@ AnimTimeline_2b_DeMagic:   ; $4ddf — DeMagic
     db $08, $02   ; frame  8 for 3 frames
     db $1f, $02   ; blank for 3 frames
     db $ff, $ff   ; end
-AnimTimeline_2c_FEEDMEAT:   ; $4dff — FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+AnimTimeline_2c_FEEDMEAT:   ; $4dff — the NOTE: frames 0-9 = one 16x16 music note (tiles 0-3) rising
+                            ; over the foe (S172, rendered — the label's FEEDMEAT is the skill name);
+                            ; skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 / 20 / 21 / 23
     db $00, $04   ; frame  0 for 5 frames
     db $01, $03   ; frame  1 for 4 frames
     db $02, $06   ; frame  2 for 7 frames

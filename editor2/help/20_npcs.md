@@ -3,7 +3,8 @@
 Select a cell (Select tool, V), then on the **Object** page (or **+ NPC (N)** on the toolbar):
 
 - **Add NPC here…** — pick a sprite. The **People & objects** tab lists the
-  vanilla NPC sprites; the **Monsters** tab lists every monster, drawn like
+  vanilla NPC sprites (with **Foods instead of meats** on — Items tab — also the
+  five foods, $58-$5C; they always show their one picture); the **Monsters** tab lists every monster, drawn like
   its follower (up to **4 different monsters per screen**; Diago, Samsi,
   Bazoo and the last species are not offered — they crash the game).
 - **Add examine spot here…** / More ▾ → **Step-on trigger here…** — text or

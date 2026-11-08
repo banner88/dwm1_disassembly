@@ -50,7 +50,9 @@ SECTIONS = ('monsters', 'enemies', 'encounters', 'skills', 'exp_curves',
             'text',            # S150: the game's own texts, edited (gametext.py)
             'item_rules',      # S157: the one-only items' "already has" line (items.py)
             'ai_fixes',        # S164: the original enemy AI's bugs as switches (ai_fixes.py)
-            'window_words')    # S165: the words drawn in the windows as tiles (window_words.py)
+            'window_words',    # S165: the words drawn in the windows as tiles (window_words.py)
+            'foods',           # S172: the foods instead of the meats — a tick (foods.py)
+            'food_art')        # S172 r2: the foods' pictures as drawn in the editor (foods.py)
 
 # S104 (P3.10a): per-family settings. Arena-lobby party dialogue comes in four
 # VOICES (bank $04 FamilyTextGroup_A-D, 8 lines each); vanilla gives every

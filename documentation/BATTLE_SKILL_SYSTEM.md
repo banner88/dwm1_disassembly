@@ -322,6 +322,17 @@ to the meat-feeding/recruitment handler **`$58:$591E`** (dispatch entry 9), whic
 computes the recruitment result (`call $5c0b`) and sets a result message from the
 table at `$58:$5937`. (`$52:$4625` and the meat branch are annotated.)
 
+**S172 (rendered + PyBoy):** the skill ids are item id + `$AF`, so the skill-name table's
+names are ONE OFF for three of them: `$C2` "FEEDMEAT" = item 19 BeefJerky, `$C3` "BEFFJERKY" =
+20 PorkChop, `$C4` "PORKCHOP" = 21 Rib; `$C5` BADMEAT = 22 BadMeat and `$C6` SIRLOIN = 23 Sirloin
+match. Their record powers (party / enemy) are 5 / 10, 10 / 30, 20 / 100, 5 / 5, 100 / 400. The
+look: `$C2-$C4` / `$C6` show animation **`$2C` = a music NOTE** (one 16 × 16 note, white + orange,
+rising over the foe — `AnimTimeline_2c_FEEDMEAT`'s label is the skill name, not the picture; the
+S172 audit mis-described it as "a flying meat" from the label — KEY_LESSONS S172); `$C5` BadMeat
+shows `$15` (the purple Sleep / poison cloud). No meat is drawn in battle; the feeding lines
+(`battle_effect` rows 3-8) say "the treat". With `gamedata.foods` (PROJECT_COMPILER §2.78) only the
+items' names change here.
+
 **Authoring an item-outcome skill:** heal/cure/seed shapes → new id + record +
 handler `$4625` (no new code). Novel outcomes (meat/recruitment, granting an
 inventory item) → a custom handler (free bank, crib `NovelEffect52`) that calls

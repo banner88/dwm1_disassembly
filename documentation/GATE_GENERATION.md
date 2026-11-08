@@ -410,6 +410,39 @@ built by the game on the S157 demo ROM, SetBrd_6db0 and CallBrd_6ddb run on each
 floor items, 3,200 chests, 1,600 rare-chest slots, no one-only item; the original ROM, the
 same floors: 43 WarpWings on the floors, 119 in the chests.
 
+### The pickup icons (S172 r2, code-read + PyBoy-measured)
+
+A floor item is drawn every frame by bank $01 **`CheckDirectionBit7`** from the `$D793` list
+(`[kind, item, X, Y]`; at the far call DE = entry + 3, B = $40 — NOT the item): icon =
+**`PickupIconOfItem`** (`$01:$60B7`, 48 B, per item id) when kind < 8, else icon = kind; tile base
+**`PickupIconTiles`** (`$01:$6037`, 64 B) → `$FFC9`, OAM attribute **`PickupIconAttr`** (`$01:$6077`,
+64 B) → `$FFCA`, then `ld hl, $0400 / rst $10` (bank $04 entry 0: a 2 × 2 of 8 × 8 OBJ pieces). The
+tables were mgbdis fake code until S172 r2 (re-sectioned byte-neutral in both trees,
+`tools/resection_npc_sprite_tables.py`). The 8 icons' tiles are gfx **$2E15** loaded to
+`$8500-$86FF` by bank $16 **`jr_016_6002`** (`EncounterSeedOnRoomLoad` entry 6) at EVERY gate room
+load (a new floor, back from the field menu / a battle):
+
+| icon | tiles | OBJ palette | items |
+|---|---|---|---|
+| 0 | $50 | green | Herb, the books |
+| 1 | $54 | light blue | cure / MP bottles |
+| 2 | $58 | orange | item 9 (bell) |
+| 3 | $5C | brown | nuts / seeds |
+| 4 | $60 | red | **all five meats** (19-23) |
+| 5 | $64 | brown | staffs |
+| 6 | $68 | amber | WarpWing |
+| 7 | $6C | amber | TinyMedal / none |
+
+The art style (what new icons must match): a 1-px cream halo (8-neighbour) round a thin black
+outline, ONE accent fill, a cream highlight, ≈ 9-11 px of art in the 16 × 16; OBJ colour 1 cream,
+2 the accent, 3 black. The loader runs **before** a new floor's items are placed, so it cannot
+choose icons from the list (the forced list of a test is overwritten by the placement — measured).
+VRAM bank 1 is unused on gate floors (the gate NPC sheets sit at `$8700+`, bank 0). Patched builds
+with `gamedata.foods` give each food its own icon from VRAM bank 1 (bank $77 entries 33
+`FoodIconsLoad` / 34 `FoodIconDraw` hooked into the two places above — PROJECT_COMPILER §2.78).
+Meats on floors: about a third of the floor items in contents rows 1-15; none in row 0 (the Gate
+of Beginning), so a food pickup is first seen past that gate.
+
 ## 5.1 Damage tiles ✅ (resolved S37, code-derived + watchpoint-confirmed)
 
 Late-gate floors that drain party HP per step. Fully traced:

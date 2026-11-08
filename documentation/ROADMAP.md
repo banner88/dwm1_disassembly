@@ -2631,7 +2631,30 @@ recipes are pure authoring.
       self-check ALL PASSED. *User accept:* download from Releases, `xattr -cr`, open, locate the
       ROM, open the project, Build, Play (SameBoy from the app). Same session (user-reported):
       the stray empty window over the Arena tab fixed (EDITOR_DESIGN §5.0, KEY_LESSONS S171) and
-      tabs made on first need (open 6.6 s → 0.3 s).
+      tabs made on first need (open 6.6 s → 0.3 s). **S172:** the known Balance-tab first-show
+      stall (≈ 2-4 s) fixed — the cache peek runs in the load task (`balance_tab.peek_ctx`; 3.7 s →
+      0.16 s on the user's project; EDITOR_DESIGN §5.0).
+- [x] **P3.19 — Foods instead of meats, a tick (user S172)** — **built S172; r2 USER-CONFIRMED 2026-11-08 13:17 ("Yeah everything works … Other than that its freat");
+      r3 (each food its own description by strength — "Tames monsters a little … greatly") built,
+      PyBoy-verified, USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please")** (user: "replace the meats and meat icons in the game with different items …
+      Toast, Apple, Biscuit, Honey … Make this a TICK on the editor that I can turn on/off. When off
+      its vanilla behaviour"; BadMeat → "BadApple is good"; "Dont care about story"; field sprite "YES,
+      and disambiguate so not everything is meat"). `gamedata.foods` (PROJECT_COMPILER §2.78):
+      items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (defaults under the project's
+      edits), each food its own NPC sprite $58-$5C (16 × 16 pictures, `editor2/assets/foods/`), the
+      meat prop $5F = the Apple, bank $77 `NpcDrawPlain` holds those one-frame objects on frame 0;
+      off = the game's bytes in both regions. The battle draws no meat (animation $2C is the note —
+      the audit's "flying meat" was wrong, KEY_LESSONS S172). Items tab tick; the sprite picker
+      lists the foods. r2: the pictures in the game's pickup style; each food its own gate-floor
+      pickup icon (VRAM bank 1, bank $77 entries 33 / 34); the pictures drawn in the Items tab
+      (`gamedata.food_art`, Apply / Restore default). *Accept (machine):* `tools/walk_foods.py`
+      52 / 52 with r3's `descs` (`--negative` 12 FAIL), test_compiler `test_s172`, test_app
+      `s172_foods`. *User accept:* r2 confirmed 13:17; r3 `DWM-S172r3-foods-test.gbc` (the bag's INFO box) confirmed 19:19;
+      r2 was `DWM-S172r2-foods-test.gbc` — the PANTRY GUIDE in Cities_FOUNT, food pickups in a
+      gate past the Gate of Beginning; the editor's tick and drawing on the user's own project.
+      Same session (the "outstanding fixes"): `editor2/tests/test_canvas.py` passes again (S168 page 2
+      / S171 r4 matched Borrow drift — PROJECT_STATE "Found, NOT fixed" S171), the Balance stall
+      above, and the NPC sprite tables re-sectioned in both trees (Iron Rule 6).
 
 ### ARC CAP — campaign-scale capacity (S133; user: "Actual romhack will have HUNDREDS OF CUSTOM ROOMS")
 User direction (S133): distinct places, each its own tileset ("Reusing tileset is NOT ideal

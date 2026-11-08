@@ -10,6 +10,73 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-08 (Session 172 — **FOODS INSTEAD OF MEATS: A TICK ON THE ITEMS TAB (TOAST / APPLE / BISCUIT /
+> BADAPPLE / HONEY, EACH WITH ITS OWN NPC SPRITE; OFF = THE GAME'S MEATS) + THE OUTSTANDING FIXES: test_canvas PASSES AGAIN,
+> THE BALANCE TAB NO LONGER HOLDS THE WINDOW** (the user: "Please identify outstanding fixes and ideally wrap them up … I want
+> to replace the meats and meat icons in the game with different items … Toast, Apple, Biscuit, Honey … Make this a TICK on
+> the editor that I can turn on/off. When off its vanilla behaviour. No idea about BadMeat, thoughts?"; the audit conferred →
+> "1) THERE IS NO MEAT ANIMATION IN FLYING ARC IN GAME. Only a note appears. Did you hallucinate this???? 2) BadApple is good.
+> 3) Dont care about story … 4) Field sprite - YES, and disambiguate so not everything is meat. Apple becomes an apple icon,
+> honey becomes a honey icon. 5) See 1. 6) Yes fix everything please"; r2 on the pictures: "They are big and bright and not
+> at all muted like the game … look at what the game is like in terms of pickups in gates … NOT animated", then each art
+> approved one by one, and "allow me to edit PNG using draw pixel tools same as tile … apply and restore default (yours)").
+> **r2 USER-CONFIRMED 2026-11-08 13:17 ("Yeah everything works … Other than that its freat")** — test ROM `DWM-S172r2-foods-test.gbc` (`b9deda81…`, patched, historical) = the user's project +
+> `examples/s172_foods_demo` (tick ON); round 1's `a784dd16…` (patched, historical) was never tested.
+> **r3 (user: "I want description to reflect strength (Tames monsters a little, tames monsters a moderate amount, tames
+> monsters a lot, tames monsters greatly)"): built S172, PyBoy-verified, USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please")** — each food its own bag
+> description (`foods.DESCRIPTIONS` as `item_description` defaults under the project's edits): Toast "Tames monsters / a
+> little", Apple "… / a moderate amount", Biscuit "… / a lot", BadApple "… / but poisons them", Honey "… / greatly". Test
+> ROM **`DWM-S172r3-foods-test.gbc`** (`ed6083c1…`, patched); `walk_foods.py` + step `descs` **52 / 52** (negative 12 FAIL).
+> The example has the tick off: its pin is unchanged.
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler `--rom`
+> ALL 2095 PASSED at start; HEAD's test_canvas stopped at line 297 (worse than S171's note: line 627).
+> **The audit's error (KEY_LESSONS S172):** it said the meats fly in an arc as a meat icon in battle — animation `$2C`
+> (`AnimTimeline_2c_FEEDMEAT`) is a music NOTE (rendered: one 16 × 16 note, white + orange); the label is the skill-name
+> table's word. Both trees' comments now say so (zero bytes); BATTLE_SKILL_SYSTEM §8: `$C2-$C4` / `$C6` show `$2C`, `$C5`
+> BadMeat the poison cloud `$15`; the skill names are one off (`$C2` "FEEDMEAT" = item 19 BeefJerky …).
+> **Built (PROJECT_COMPILER §2.78):** `gamedata.foods` — names (19 Toast, 20 Apple, 21 Biscuit, 22 BadApple, 23 Honey) as
+> `gamedata.text` defaults under the project's own edits; records / prices / shops / battle power untouched; the story's
+> words untouched (user). Field sprites: plain ids $58-$5C (the game's unused copies of $50) = the five foods
+> (`editor2/assets/foods/*.png`, 16 × 16, one field OBJ palette each), $5F (the meat prop: the spring, the ending bedroom) =
+> the Apple: ROM0 region `npc_food_sheets` (gfx-IDs $7717-$771B = bank $77's $4001 rows 23-27, `FoodSheet0-4`) + bank
+> $05 region `npc_food_pals` (NEW `patches/bank_005.asm`, the re-sectioned bank). One frame: the objects' lists hold ONE
+> frame and a standing NPC steps 0 / 1 (measured) — bank $77 `NpcDrawPlain` → `NpcStaticFrame77` holds `NpcStaticIds`
+> on frame 0. Editor: the Items tab's tick (pictures + a line), the NPC sprite picker's foods, `Document.set_foods`; help
+> 74 / 20 / glossary; `EDITOR_REVISION` S172.
+> **r2 — the pictures and the gate pickups (PROJECT_COMPILER §2.78 item 4, GATE_GENERATION §5 "The pickup icons"):** the
+> five pictures redrawn in the game's pickup style (cream halo, thin black outline, one accent, ≈ 9-11 px; not animated):
+> Toast orange 6 (a notch each side), Apple red 0, Biscuit brown 7, Honey (the pot) amber 3, BadApple = the Apple in grey 5.
+> Each food its OWN gate-floor pickup icon (all five meats shared the red meat icon 4): bank $77 rows 28-32 `FoodIcon0-4`,
+> entry 33 `FoodIconsLoad` (bank $16 `jr_016_6002`, every gate room load: the five icons into VRAM bank 1 $8500-$863F, then
+> the game's own load) and entry 34 `FoodIconDraw` (bank $01 `CheckDirectionBit7`: a food → tile $50 + 4k in bank 1, its
+> palette); off / a DMG = the game's path; the floor-item tables re-sectioned byte-neutral. **Drawing:** the Items tab's
+> pictures are buttons → *Draw the … picture* (the Draw tab's pad; Apply / Restore default / Undo stroke; one undo step) →
+> `gamedata.food_art`, used by the NPC sheets and the pickup icons. `TEMPLATE_SIZE[$77]` 3087.
+> **Annotation (Iron Rule 6):** ROM0 `NpcSheetGfxTable` (both trees) and bank $05 `NpcSpriteFrameTable` / `NpcFramesMeat`
+> / `NpcFrameMeat0` / `NpcSpritePalTable` re-sectioned from fake code (`tools/resection_npc_sprite_tables.py`; the labels
+> other bytes jump to kept, `DataLookup_2B08` splits its word); clean build `1ca6579…`; ROOM_DATA_FORMAT "NPC sprite tables
+> (S172)".
+> **Measured:** `tools/walk_foods.py` on the user's save + the demo **32 / 32** (VRAM sheets == the pictures, OAM palettes,
+> 2 × 2; 300 frames a room on the one frame; a talk from the side; the stall draws Toast / Apple / Biscuit / Honey and sells
+> a Toast for 20 G; the HUNGRY SLIME battle: wItemInUse 19, "Toast" in the name buffer, the feeding line, won);
+> `--negative` (NpcStaticIds emptied) **3 FAIL** (304 / 600, 468 / 900, 240 / 240 frames junk). **r2:** + the `pickups` step
+> (gate 0 floor 1, five foods + a Herb on the floor list; on the floor, after the field menu, after a battle) — the whole
+> walk **47 / 47** on the r2 ROM and 47 / 47 on a demo with DRAWN Toast / Honey; `--negative` (+ `FoodIconCount` 0) **9
+> FAIL**. Tick off: both regions = the ROM's, `FoodIconCount` 0.
+> **The outstanding fixes:** (1) `editor2/tests/test_canvas.py` PASSES (the S171 "Found, NOT fixed"): the raw-Borrow block
+> unticks Match colours (S171 r4), slot budgets of 256 (S168), the release block (the import now fits on page 2), the
+> sharing check and v6_split fill both pages (and re-place slots a fill cell covered), page-2 slot keys. (2) The Balance
+> tab's first show: `balance_tab.peek_ctx` works out the cache's answers in the load task — the longest GUI stall 3.7 s →
+> 0.16 s on the user's project, the same rows both ways (a seeded cache). (3) `items_tab._undo_changed` ignores a torn-down
+> undo stack.
+> **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 2134 PASSED (+ `test_s172` r2; REGRESSION == the new
+> pin `18e6f102…`, patched; round 1 `9ee0b97b…`, patched, historical; was `7aae0e95…`, patched, historical); test_app `--rom`
+> PASS (+ `s172_foods` r2: a food drawn); test_canvas PASS.
+> **Checks (r3):** test_compiler `--rom` ALL 2140 PASSED (+ 6 `test_s172` r3 checks; the pin unchanged — the example's tick
+> is off); test_app `--rom` PASS; test_canvas PASS; verify_integrity PASS.
+> **Next:** S172 is closed (handed off as `DWM-S172-handoff.zip`). The "Awaiting a user test" list; the editor's
+> finalization (the user: "I want to move towards the finalization of the editor so I can get cracking").
+
 > Last verified: 2026-11-06 (Session 171 — **ROADMAP P3.17 PACKAGING BUILT: THE EDITOR AS ONE MAC APP WITH EVERYTHING
 > INSIDE (ITS OWN PYTHON, QT, PYBOY, RGBDS v0.6.1, SAMEBOY; THE ROM ASKED FOR ONCE, NEVER INSIDE), MADE BY A SCRIPT ON THE
 > MAC OR BY A GITHUB BUILD; THE BUILD WITHOUT `make`, OUT OF TREE; THE STRAY EMPTY WINDOW FIXED; TABS MADE ON FIRST NEED
@@ -115,48 +182,8 @@
 > `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
 > Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
 
-> Last verified: 2026-11-05 (Session 170 — **MONSTER ART PAST THE THREE ART BANKS: ALL 215 ORIGINAL MONSTERS CAN BE
-> RE-ARTED — THE ART SPILLS INTO THE 4 MB ROM'S BANKS $80+ (THE LAST KIND), EVERY STREAM STORED COMPRESSED (≈ 31 %
-> SMALLER, THE GAME'S OWN SPEED); NO ENGINE CHANGE (EVERY READER MAPS ANY BANK — MEASURED)** (the user: "This session: I
-> want to expand the monster graphics"; the audit conferred → "1) Yes sounds good. Compression is fine for me … 2) I will
-> be replacing monster graphics 1 by 1 … 3) Thats fine not an issue 4) Thats fine"). **Built S170; user-tested S170 r2 ("everything works").**
-> Test ROM **`DWM-S170-mirror-test.gbc`** (`c2a899d7…`, patched) = the user's project + `examples/s170_mirror_demo`: EVERY
-> original monster re-arted — its battle pose MIRRORED, its walking art with colours 1 / 2 SWAPPED, its own walk style and
-> colours; 129 of the 215 poses live in banks $82-$86. Example pin unchanged `7aae0e95…` (patched; the example has no art).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler `--rom`
-> ALL 2071 PASSED at start.
-> **The audit (for the user, in chat):** outstanding fixes = none reported broken (S168 editor half, S169 await the user's
-> test); the re-art budget: 3 banks, literal streams (838 B a monster) → ≈ 58; every reader (13 battle sites — bank $07's
-> two more reads are DEAD, annotated — and the eight walking copies) hands the gfx-ID to ROM0 `DecompressTileLayout`, any
-> bank $01-$FF; the user's project uses 2 of the 128 banks $80+; our encoder on the 215 originals 581 vs 838 B a monster.
-> **Built (PROJECT_COMPILER §2.77):** `editor2/core/art.py` — `place`: $7F / $7C / $7A first, then banks $80+ taken LAST
-> (after page 2; `_number_earlier_kinds` runs every other planner first — the S164 rule), cached `_art_plan`; `pack`: the
-> smallest of the file / its literal / a compressed re-encode (the picture asserted equal; assets untouched); the ext art
-> banks as whole files (`art_ext`, `bank_ext.asm` INCLUDEs them); a full ROM → an art error in words.
-> `dwm/sprite_codec._find_match` indexed by 4-byte keys — byte-identical output (462 payloads == `_find_match_scan`), ≈ 11×
-> faster (every other encoder user unchanged; the pin proves it). Editor: the Monsters tab's meter "(+ N in the ROM space)",
-> the Name & art note, the Capacity row without a limit of its own; help 52 / 90; `EDITOR_REVISION` S170.
-> **Measured:** NEW `tools/walk_art.py` on the user's save + the demo: static (all 215 battle rows and all eight walking
-> copies → the BUILT ROM's streams == the pictures), a decode log on `WaitDMATransfer` / `WaitLCDTransfer` (every unpack
-> of a monster's art == its picture, no original stream unpacked), followers after CONTINUE and after a party swap to three
-> monsters in banks $80+, the field menu's pages, three forced battles ($83 / $86 / $7C poses), all 430 streams unpacked
-> by the game's own `WaitDMATransfer` == their pictures: **47 / 47**; `--negative` (each art bank $80+'s pointer table
-> rotated within its kind) **25 FAIL**, the home-bank monsters pass. Speed (LY sampled by the stub): avg 411 scan lines
-> an unpack vs 409 for the original streams and 397 literal. Stored: 125,089 B vs 180,170 B literal (69 %).
-> **Annotation:** `MonsterBattleGfxTable` header (both trees: any bank, measured), bank $07's two dead parent reads (both
-> trees); clean build `1ca6579…`.
-> **A / B:** the user's project (no re-art) built with HEAD and with S170: the same ROM (`958869db…`, patched).
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2090 PASSED (+ `test_s170`; the S107 budget case now builds
-> 60; REGRESSION == the pin); test_app `--rom` PASS (+ `s170_art_space`; the GUI build == the pin `7aae0e95…`, patched).
-> **User test (S170 r2):** "Great everything works. Interestingly monster NPCs on farm have not been affected (which is
-> GREAT!)" — traced: the farm's monsters are PLAIN NPC ids `$3A-$4C` whose sheets ROM0 `$2ADF` names (19 monsters'
-> ORIGINAL walking streams, shared); re-art repoints only the species tables. Measured (walk step `farm`, 47 / 47),
-> annotated ROM0 `$2ADF` (both trees), MONSTER_DATA / ROOM_DATA_FORMAT / PROJECT_COMPILER §2.77.
-> **Next:** the user's test (`DWM-S170-mirror-test.gbc`: any monster anywhere faces the other way / walks in swapped
-> colours — battles, the party menu and INFO, the library, breeding, followers, monster NPCs); P3.17 packaging; the
-> "Awaiting a user test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S172** (2026-11-08): Foods instead of meats (ROADMAP P3.19, user-directed) — `gamedata.foods`, a tick on the Items tab: items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's edits), each food its own plain NPC sprite $58-$5C from `editor2/assets/foods/*.png`, the meat prop $5F = the Apple; regions `npc_food_sheets` (ROM0) / `npc_food_pals` (bank $05, new overlay copy), sheets in bank $77 (gfx-IDs $7717-$771B), `NpcDrawPlain` → `NpcStaticFrame77` (one-frame objects held on frame 0); NPC sprite tables re-sectioned both trees (`tools/resection_npc_sprite_tables.py`); animation $2C annotated as the NOTE (the audit's "flying meat" was wrong — KEY_LESSONS S172); `tools/walk_foods.py` 32 / 32; the outstanding fixes: `test_canvas.py` passes again, the Balance tab's first-show stall 3.7 s → 0.16 s (`peek_ctx`). r2: the pictures redrawn in the game's pickup style; each food its own gate pickup icon (VRAM bank 1; bank $77 entries 33 / 34 hooked into banks $16 / $01); `gamedata.food_art` drawn in the Items tab (Apply / Restore default); walk 47 / 47 (negative 9 FAIL) — r2 USER-CONFIRMED 2026-11-08 13:17. r3: each food its own bag description by strength (walk 52 / 52) — USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please"). Pin `18e6f102…` (patched; round 1 `9ee0b97b…`, patched, historical).
 - **S171** (2026-11-06): ROADMAP P3.17 packaging — `DWM1 Editor.app` with its own Python / Qt / PyBoy / RGBDS v0.6.1 / SameBoy (`tools/package_app.py`, `editor2/packaging/launch.py` + `selftest.py`, `editor2/app/appmode.py`, `.github/workflows/editor-app.yml` → pre-release `editor-latest`; ad hoc signed; the ROM never inside); the builder without `make`, out of tree (byte-identical); the stray empty window (Arena "opens when" list: `setParent(None)` without `hide()` + Qt's queued show — `qt_safe.discard`, `StrayWindowGuard`); tabs made on first need (open 6.6 s → 0.3 s). EDITOR_DESIGN §4.1 / §5.0, PROJECT_COMPILER §3, KEY_LESSONS S171. r3 Borrow from your rooms (P3.3h), r4 colour-true tiles (P3.3i), r5 parked metatiles (P3.3j, `editor2/core/parking.py`), r6 recolour without changing shapes + Draw undo (P3.3k). Byte-neutral for the ROM (pin `7aae0e95…`, patched). Built S171, NOT yet user-tested.
 - **S170** (2026-11-05): monster art past the three art banks — all 215 originals re-artable: the art spills into banks $80+ (the LAST kind, after page 2), every stream stored compressed (`art.pack`, ≈ 31 % smaller, the game's own unpack speed); no engine change (every reader maps any bank — `tools/walk_art.py` 47 / 47, negative 25 FAIL); `sprite_codec` encoder indexed (same bytes, ≈ 11× faster); the meters / Capacity row; bank $07's two dead parent reads annotated. PROJECT_COMPILER §2.77. Test ROM `DWM-S170-mirror-test.gbc` (patched); pin `7aae0e95…` (patched) unchanged. Built S170, NOT yet user-tested.
 - **S169** (2026-11-05): the window + ROADMAP P3.12 residual (a) — no tab resizes the window any more (`editor2/app/page_tabs.py`: a scrolling tab row, every page in a scroll area sized from its minimum; the window minimum 1,530 × 911 → 412 × 273; geometry + docks kept between runs); the Breeding tab's Try a cross page shows the BABY (`editor2/core/cross.py` over the S130 raising model: max level, stats, AI with the dropped carry, resistances, gender, the learn queue with sources + the level each skill is learned; parents typical or from a .sav; `tools/walk_cross.py` 2,694 / 2,694 on the user's save, negative 166 FAIL); help `58_raising.md`; EID 0 skipped as a typical row. Byte-neutral (pin `7aae0e95…`, patched, unchanged). Built S169, NOT yet user-tested. Next: S170 more than 58 re-arted monsters.
@@ -485,6 +512,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | Gate swirls follow each gate's cleared flag (new gates, re-bossed vanilla gates, re-routed portals) + the cleared mark of custom bosses | 🟢 built S117 (ROADMAP NG2), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works") | GATE_GENERATION §7.9; PROJECT_COMPILER §2.32 |
 | Shops — the game's five lists, the project's own shops (any NPC a shopkeeper), item buy prices | 🟢 built S117 (ROADMAP P3.13c), test ROM USER-REPORTED 2026-10-03 21:57 ("The rest works"; the menu colours in free-colour rooms + the leftover box fixed S117b, NOT yet user-tested) | DATA_STRUCTURES "Shops (S117)"; PROJECT_COMPILER §2.32; EDITOR_DESIGN §5.6b |
 | Items — every field of the game's 43 items (used-up %, field use, the WHO window, lines, power, sellable, kept on a lost battle, battle power), new items 44-127 working like a game item, the Items tab | 🟢 built S151 (ROADMAP E9), PyBoy-verified (census 1,607 / 1,607; walk 62 / 62 on r3), USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3); the S72 "single-slot" spec asked — **answered S157: ONE-ONLY items** (used up 0 % → at most one in the bag + Vault, shops hide a held one and sell one at a time, a give of one held shows its own "already has" line — the game's scripts too, never in the random gates' floors / chests / rare chest / Coliseum prizes, kept after a lost battle; built S157, PyBoy-verified (walk 28 / 28 incl. 400 game-made floors; negative 14 FAIL), USER-CONFIRMED 2026-10-26 13:12 ("Great, it works")) | DATA_STRUCTURES "Items (S151)" + "One-only items (S157)"; PROJECT_COMPILER §2.59 / §2.65; EDITOR_DESIGN §5.6d |
+| Foods instead of meats — a tick (`gamedata.foods`): items 19-23 named Toast / Apple / Biscuit / BadApple / Honey, each food its own NPC sprite $58-$5C, the meat prop $5F = the Apple | 🟢 **built S172, r2 USER-CONFIRMED 2026-11-08 13:17 ("Yeah everything works"); r3 each food its own description by strength built, PyBoy-verified (walk_foods 52 / 52, negative 12 FAIL), USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please")** — test ROM `DWM-S172r3-foods-test.gbc` | PROJECT_COMPILER §2.78, ROOM_DATA_FORMAT "NPC sprite tables (S172)", `editor2/core/foods.py` |
 | The project's own cutscenes (named NPCs, cast that appears / disappears, walks / faces / programs in cells, texts / YES-NO / flags / items / battles / tiles / effects; 4 triggers + flag conditions) + op editing of copied rooms' scripts + copies' tile patches | 🟢 built S119 (ROADMAP P3.8 parts B / c / d), test ROM `DWM_S119_cutscenes_test.gbc` never reported on by itself; P3.8 CROSSED OFF by the user at the S122 start ("Cutscenes you can cross off"); later cutscene features (S152 / S153) USER-CONFIRMED — row corrected S164 | `custom.rooms[].cutscenes[]` → `cutscene_build.py`; bank $60 entries 9 / 10; PROJECT_COMPILER §2.33 |
 | The Milly hook (the game goes on as MILLY after the dresser: her sprite, naming icon, default name; arrival room of the project's choice; Roots room (Milly) with grey Warubou) + the Name the hero step | 🟢 built S121 (ROADMAP P3.16 + E7), test ROMs `DWM-S121-milly-hook-test.gbc` / `-naming-test.gbc` USER-CONFIRMED 2026-10-05 ("everything works"); r2 (Terry kept through the whirl) NOT yet user-tested — row corrected S164 | `custom.milly_hook` → `milly.py`; bank $79; PROJECT_COMPILER §2.34 |
 | New game… — where a NEW GAME starts (the intro, or one of your rooms: screen / cell / facing), the original opening as played (its flags + room bytes), a farm keeper who hands over the first monster (Pulio's way: the farm, the naming screen, PICK UP), Give a monster into the party / named | 🟢 built S152 (ROADMAP E3 a2), PyBoy-verified (walk_opening: room 39 / 39, intro 41 / 41 on r3; controls FAIL), test ROMs `DWM-S152r3-greatlog-room-test.gbc` / `-intro-test.gbc` USER-CONFIRMED 2026-10-18 17:20 ("Great it all works", on r3) | `custom.new_game` → `newgame.py`; banks $15 / $79 / $77; PROJECT_COMPILER §2.60; help 75 |
@@ -561,6 +589,8 @@ real project starts, so these are best confirmed on the way into it:
 - S171 r6/r7: Draw (⌘Z / ⌘⇧Z; a quarter keeps its row — black paints one pixel; row buttons,
   *Recolour…*; palette edits show at once); Borrow *colours: into row N* + the preview;
   right-click → *Copy in row*.
+- S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —
+  USER-CONFIRMED 2026-11-08 13:17 / 19:19; this fix was not mentioned).
 
 ### Not yet implemented
 

@@ -171,6 +171,10 @@ def edits(prj_or_data):
             if str(k).startswith('_'):
                 continue
             out[(src, _norm_key(src, k))] = v
+    # S172 (gamedata.foods): the foods' names under the project's own edits
+    from . import foods as FD
+    for key, v in FD.text_defaults(prj_or_data).items():
+        out.setdefault(key, v)
     return out
 
 

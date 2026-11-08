@@ -4439,6 +4439,119 @@ def s171_recolour(app, w):
           'undone exactly')
 
 
+def s172_foods(app, w):
+    """S172 (user: "replace the meats and meat icons … Toast, Apple, Biscuit, Honey … Make
+    this a TICK on the editor that I can turn on/off. When off its vanilla behaviour"):
+    the Items tab's "Foods instead of meats" — on: the five names (19-23), the pictures,
+    the NPC sprite picker lists $58-$5C as the foods drawn from editor2/assets/foods (the
+    meat prop $5F the Apple); one undo step each way; a name the project typed wins."""
+    from editor2.app.rooms.canvas import SpriteCache
+    from editor2.app.rooms.npc_panel import SpritePicker
+    from editor2.core import foods as FD
+    s = w.session
+    doc = s.doc
+    it = w.items_tab
+    w.tabs.setCurrentWidget(it)
+    app.processEvents()
+    it.refresh()
+    assert not it.foods.isChecked() and not doc.foods_on()
+    assert doc.item_names_all()[19] == 'BeefJerky'
+    n0 = s.undo.index()
+    it.foods.setChecked(True)
+    it._foods_clicked(True)
+    app.processEvents()
+    assert doc.foods_on() and s.undo.index() == n0 + 1
+    names = doc.item_names_all()
+    assert [names[i] for i in range(19, 24)] == ['Toast', 'Apple', 'Biscuit', 'BadApple', 'Honey'], names
+    rows = {it.list.item(r).data(0x100): it.list.item(r).text() for r in range(it.list.count())}
+    assert 'Honey' in rows[23] and 'Toast' in rows[19], rows[23]
+    assert len(it.food_btns) == 5 and all(not b.icon().isNull() for b in it.food_btns)
+    assert 'click to draw' in it.food_btns[4].toolTip()
+    assert 'Toast (was BeefJerky' in it.food_note.text(), it.food_note.text()
+    # the sprite picker: the foods are offered, drawn from their pictures
+    pm = SpriteCache.get(0x5C)
+    assert pm is not None and not pm.isNull() and pm.width() == 16
+    img = pm.toImage()
+    g = FD.picture('honey', 3)
+    cols = FD.obj_palette(3)
+    x, y = next((x, y) for y in range(16) for x in range(16) if g[y][x] == 2)
+    c = img.pixelColor(x, y)
+    assert (c.red(), c.green(), c.blue()) == cols[2], ((c.red(), c.green(), c.blue()), cols[2])
+    dlg = SpritePicker(current=None, parent=w, monsters=False, project_data=doc.data)
+    shown = dlg.info.text()
+    from PySide6.QtWidgets import QToolButton
+    tips = [b.toolTip() for b in dlg.scroll.widget().findChildren(QToolButton)]
+    dlg.deleteLater()
+    for sid, nm in ((0x58, 'Toast'), (0x5C, 'Honey'), (0x5F, 'Apple')):
+        assert any(t.startswith(f'${sid:02X} {nm}') for t in tips), (sid, shown)
+    # S172 r2: draw a food (the Draw tab's pad): Apply = one undo step, the NPC sprite
+    # redrawn at once; Restore default = one undo step back to the editor's picture
+    from editor2.app import food_art_dialog as FAD
+    from PySide6.QtCore import QPointF, QEvent
+    from PySide6.QtGui import QMouseEvent
+    seen = {}
+
+    def fake_exec(dlg, action='paint'):
+        seen['title'] = dlg.windowTitle()
+        if action == 'restore':
+            dlg._restore()
+            return 1
+        z = dlg.pad.zoom
+        dlg._set_colour(2)
+        for btn, mods in ((Qt.LeftButton, Qt.NoModifier),):
+            ev = QMouseEvent(QEvent.MouseButtonPress, QPointF(3 + 0.5 * z, 3 + 0.5 * z),
+                             QPointF(0, 0), btn, btn, mods)
+            dlg.pad.mousePressEvent(ev)
+        seen['undo'] = len(dlg._undo)
+        dlg._apply()
+        return 1
+    real = FAD.FoodArtDialog.exec
+    from PySide6.QtCore import Qt
+    try:
+        FAD.FoodArtDialog.exec = lambda dlg: fake_exec(dlg)
+        n1 = s.undo.index()
+        it._food_art(4)                                     # Honey
+        assert seen['title'] == 'Draw the Honey picture' and seen['undo'] == 1, seen
+        assert s.undo.index() == n1 + 1 and doc.food_art_is_own('honey')
+        assert doc.food_art_grid('honey')[0][0] == 2
+        img = SpriteCache.get(0x5C).toImage()
+        c = img.pixelColor(0, 0)
+        assert (c.red(), c.green(), c.blue()) == cols[2] and c.alpha() == 255, c
+        assert 'your drawing' in it.food_btns[4].toolTip()
+        FAD.FoodArtDialog.exec = lambda dlg: fake_exec(dlg, 'restore')
+        it._food_art(4)
+        assert s.undo.index() == n1 + 2 and not doc.food_art_is_own('honey')
+        assert SpriteCache.get(0x5C).toImage().pixelColor(0, 0).alpha() == 0
+        s.undo.undo()
+        assert doc.food_art_is_own('honey') and SpriteCache.get(0x5C).toImage().pixelColor(0, 0).alpha() == 255
+        s.undo.undo()
+        assert not doc.food_art_is_own('honey') and s.undo.index() == n1
+    finally:
+        FAD.FoodArtDialog.exec = real
+    # a typed name wins; Original takes it back to the food
+    from editor2.app.rooms import commands as C
+    s.undo.push(C.SnapshotCommand(s, 'name', lambda d: d.set_game_text('item_name', '23',
+                                                                       'Nectar')))
+    assert doc.item_names_all()[23] == 'Nectar'
+    s.undo.undo()
+    assert doc.item_names_all()[23] == 'Honey'
+    # off again: the game's meats, one undo step; undo brings the foods back
+    it.foods.setChecked(False)
+    it._foods_clicked(False)
+    app.processEvents()
+    assert not doc.foods_on() and doc.item_names_all()[23] == 'Sirloin'
+    assert SpriteCache.food(0x5C) is None
+    s.undo.undo()
+    assert doc.foods_on() and doc.item_names_all()[23] == 'Honey'
+    s.undo.undo()
+    it.refresh()
+    assert not doc.foods_on() and not it.foods.isChecked() and s.undo.index() == n0
+    print('OK: S172 foods — the tick (one undo step each way), the five names in the list, '
+          'the pictures + note, the sprite picker offers $58-$5C / $5F as the foods (drawn '
+          'in their own colours), a typed name wins; r2: a food drawn (Apply / Restore '
+          'default, one undo step each, the sprite redrawn)')
+
+
 def s171_borrow_custom(app, w):
     """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
     its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
@@ -6638,6 +6751,7 @@ def main():
     s171_colour_true(app, w)
     s171_parking(app, w)
     s171_recolour(app, w)
+    s172_foods(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

@@ -310,6 +310,10 @@ def emit_bank_077(prj, warnings, head):
     # S154: the memorial — BreedClose's tail (MemorialRedraw77)
     from . import memorial as MM
     out.extend(MM.bank77_lines(prj))
+    out.append("")
+    # S172 (gamedata.foods): NpcStaticIds + the foods' sheets (FoodSheet0-4, rows 23-27)
+    from . import foods as FD
+    out.extend(FD.bank77_lines(prj))
     if nv != 5:
         raise ShopError('internal: the template assumes five vanilla shops')
     return "\n".join(out) + "\n"

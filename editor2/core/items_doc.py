@@ -151,6 +151,57 @@ class ItemsMixin:
             gd.pop('item_rules', None)
         self.touch()
 
+    # ---- S172: the foods tick (gamedata.foods, editor2/core/foods.py)
+    def foods_on(self):
+        from . import foods as FD
+        return FD.enabled(self.data)
+
+    def set_foods(self, on):
+        """Turn "Foods instead of meats" on (gamedata.foods = true) or off (removed: the
+        game's meats). The project's own item names / sprites are left as they are."""
+        gd = self.data.setdefault('gamedata', {})
+        if on:
+            gd['foods'] = True
+        else:
+            gd.pop('foods', None)
+        self.touch()
+
+    # ---- S172 r2: the foods' pictures (gamedata.food_art) — drawn in the Items tab
+    def food_art_grid(self, name):
+        """16 x 16 colour numbers (0 see-through, 1 cream, 2 the food's colour, 3 black) of a
+        food picture: the project's drawing, else the editor's default."""
+        from . import foods as FD
+        pal = next(f[4] for f in FD.FOODS if f[5] == name)
+        return FD.picture(name, pal, self.data)
+
+    def food_art_is_own(self, name):
+        from . import foods as FD
+        return name in FD.art_rows(self.data)
+
+    def set_food_art(self, name, grid):
+        """Store a food's picture (16 x 16 numbers 0-3); None or the default picture =
+        back to the default (the key removed)."""
+        from . import foods as FD
+        if name not in FD.ART_NAMES:
+            raise KeyError(name)
+        gd = self.data.setdefault('gamedata', {})
+        art = gd.setdefault('food_art', {})
+        pal = next(f[4] for f in FD.FOODS if f[5] == name)
+        if grid is None or [list(r) for r in grid] == FD.default_picture(name, pal):
+            art.pop(name, None)
+        else:
+            rows = FD.rows_from_grid(grid)
+            FD.grid_from_rows(rows, f'the {name} picture')            # validates
+            art[name] = rows
+        if not art:
+            gd.pop('food_art', None)
+        self.touch()
+
+    def foods_summary(self):
+        """[(item id, food name, the game's name, sprite id, picture name, OBJ palette)]."""
+        from . import foods as FD
+        return [(f[0], f[1], f[2], f[3], f[5], f[4]) for f in FD.FOODS]
+
     def one_only_names(self):
         """[(id, name)] of the project's one-only items."""
         names = self.item_names_all()

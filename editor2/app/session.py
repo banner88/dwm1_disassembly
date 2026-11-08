@@ -49,8 +49,9 @@ class Session(QObject):
         self.last_rom = None
         self.renderer = self._make_renderer()
         # S106: monster thumbnails of the project's own species (canvas, pickers)
-        from editor2.app.rooms.canvas import MonsterCache
+        from editor2.app.rooms.canvas import MonsterCache, SpriteCache
         MonsterCache.bind(self.doc)
+        SpriteCache.bind_doc(self.doc)           # S172: the food sprites (gamedata.foods)
         # S121: text previews draw the default hero name as the build will (MILLY
         # with the Milly hook on, else TERRY) — re-applied after every structural
         # edit / undo (the Milly hook dialog pushes SnapshotCommands)

@@ -1,5 +1,46 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-05 (Session 170 — **MONSTER ART PAST THE THREE ART BANKS: ALL 215 ORIGINAL MONSTERS CAN BE
+> RE-ARTED — THE ART SPILLS INTO THE 4 MB ROM'S BANKS $80+ (THE LAST KIND), EVERY STREAM STORED COMPRESSED (≈ 31 %
+> SMALLER, THE GAME'S OWN SPEED); NO ENGINE CHANGE (EVERY READER MAPS ANY BANK — MEASURED)** (the user: "This session: I
+> want to expand the monster graphics"; the audit conferred → "1) Yes sounds good. Compression is fine for me … 2) I will
+> be replacing monster graphics 1 by 1 … 3) Thats fine not an issue 4) Thats fine"). **Built S170; user-tested S170 r2 ("everything works").**
+> Test ROM **`DWM-S170-mirror-test.gbc`** (`c2a899d7…`, patched) = the user's project + `examples/s170_mirror_demo`: EVERY
+> original monster re-arted — its battle pose MIRRORED, its walking art with colours 1 / 2 SWAPPED, its own walk style and
+> colours; 129 of the 215 poses live in banks $82-$86. Example pin unchanged `7aae0e95…` (patched; the example has no art).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler `--rom`
+> ALL 2071 PASSED at start.
+> **The audit (for the user, in chat):** outstanding fixes = none reported broken (S168 editor half, S169 await the user's
+> test); the re-art budget: 3 banks, literal streams (838 B a monster) → ≈ 58; every reader (13 battle sites — bank $07's
+> two more reads are DEAD, annotated — and the eight walking copies) hands the gfx-ID to ROM0 `DecompressTileLayout`, any
+> bank $01-$FF; the user's project uses 2 of the 128 banks $80+; our encoder on the 215 originals 581 vs 838 B a monster.
+> **Built (PROJECT_COMPILER §2.77):** `editor2/core/art.py` — `place`: $7F / $7C / $7A first, then banks $80+ taken LAST
+> (after page 2; `_number_earlier_kinds` runs every other planner first — the S164 rule), cached `_art_plan`; `pack`: the
+> smallest of the file / its literal / a compressed re-encode (the picture asserted equal; assets untouched); the ext art
+> banks as whole files (`art_ext`, `bank_ext.asm` INCLUDEs them); a full ROM → an art error in words.
+> `dwm/sprite_codec._find_match` indexed by 4-byte keys — byte-identical output (462 payloads == `_find_match_scan`), ≈ 11×
+> faster (every other encoder user unchanged; the pin proves it). Editor: the Monsters tab's meter "(+ N in the ROM space)",
+> the Name & art note, the Capacity row without a limit of its own; help 52 / 90; `EDITOR_REVISION` S170.
+> **Measured:** NEW `tools/walk_art.py` on the user's save + the demo: static (all 215 battle rows and all eight walking
+> copies → the BUILT ROM's streams == the pictures), a decode log on `WaitDMATransfer` / `WaitLCDTransfer` (every unpack
+> of a monster's art == its picture, no original stream unpacked), followers after CONTINUE and after a party swap to three
+> monsters in banks $80+, the field menu's pages, three forced battles ($83 / $86 / $7C poses), all 430 streams unpacked
+> by the game's own `WaitDMATransfer` == their pictures: **47 / 47**; `--negative` (each art bank $80+'s pointer table
+> rotated within its kind) **25 FAIL**, the home-bank monsters pass. Speed (LY sampled by the stub): avg 411 scan lines
+> an unpack vs 409 for the original streams and 397 literal. Stored: 125,089 B vs 180,170 B literal (69 %).
+> **Annotation:** `MonsterBattleGfxTable` header (both trees: any bank, measured), bank $07's two dead parent reads (both
+> trees); clean build `1ca6579…`.
+> **A / B:** the user's project (no re-art) built with HEAD and with S170: the same ROM (`958869db…`, patched).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2090 PASSED (+ `test_s170`; the S107 budget case now builds
+> 60; REGRESSION == the pin); test_app `--rom` PASS (+ `s170_art_space`; the GUI build == the pin `7aae0e95…`, patched).
+> **User test (S170 r2):** "Great everything works. Interestingly monster NPCs on farm have not been affected (which is
+> GREAT!)" — traced: the farm's monsters are PLAIN NPC ids `$3A-$4C` whose sheets ROM0 `$2ADF` names (19 monsters'
+> ORIGINAL walking streams, shared); re-art repoints only the species tables. Measured (walk step `farm`, 47 / 47),
+> annotated ROM0 `$2ADF` (both trees), MONSTER_DATA / ROOM_DATA_FORMAT / PROJECT_COMPILER §2.77.
+> **Next:** the user's test (`DWM-S170-mirror-test.gbc`: any monster anywhere faces the other way / walks in swapped
+> colours — battles, the party menu and INFO, the library, breeding, followers, monster NPCs); P3.17 packaging; the
+> "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 169 — **THE WINDOW (NO TAB RESIZES IT ANY MORE; IT REOPENS AS IT WAS CLOSED) + ROADMAP
 > P3.12 RESIDUAL (a): THE BREEDING TAB'S "TRY A CROSS" PAGE — THE BABY ITSELF (MAX LEVEL, STATS, AI, RESISTANCES, GENDER,
 > ITS LEARN QUEUE WITH WHERE EACH SKILL CAME FROM AND THE LEVEL IT LEARNS IT), PARENTS TYPICAL OR FROM A .SAV; THE HELP'S

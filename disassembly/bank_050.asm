@@ -5453,7 +5453,7 @@ AnimGfxTable:
     dw $5b13   ; [$29] BigBang
     dw $5b14   ; [$2a] MegaMagic
     dw $5b15   ; [$2b] DeMagic
-    dw $5b16   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    dw $5b16   ; [$2c] the NOTE (S172: a music note ♪ over the foe, not a meat) — skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 BeefJerky / 20 PorkChop / 21 Rib / 23 Sirloin
 Jump_050_5ede:
     ld a, [$dd62]
     or a

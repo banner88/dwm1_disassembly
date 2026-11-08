@@ -5,6 +5,37 @@
 The **Items** tab (S151) holds every item: the game's 43 (Herb … BookMark),
 then your own. Orange = a game item you changed; green = yours.
 
+**Foods instead of meats** (S172, the tick at the top): the five meats become
+foods — BeefJerky → **Toast**, PorkChop → **Apple**, Rib → **Biscuit**,
+BadMeat → **BadApple**, Sirloin → **Honey**. What they do (+10 / +30 / +100 /
++400 in battle, BadApple poisons), what they cost and where they are sold stay
+the game's. Each food also gets its **own NPC sprite** — $58 Toast, $59 Apple,
+$5A Biscuit, $5B BadApple, $5C Honey (pick them under *People & objects* when
+you add an NPC) — and the game's own meat prop ($5F: the spring scene, the
+ending bedroom) shows the Apple. Each food has **its own description** in the
+bag, by strength: Toast "Tames monsters a little", Apple "… a moderate amount",
+Biscuit "… a lot", Honey "… greatly", BadApple "… but poisons them" (the game
+gives all five meats the one line "Tames monsters"); type your own on the item
+to change one. On gate floors each food lying on the ground
+gets **its own pickup icon** too (the game draws all five meats with the same
+red meat); meats are found on the floors of every gate after the Gate of
+Beginning. Off = the game's meats exactly. One undo step each way. A name or
+description you type yourself still wins; the story's words are not changed (edit them on the
+Text tab). The battle shows no meat: feeding shows the game's note (♪) as
+before.
+
+**Drawing a food:** click one of the five pictures beside the tick. *Draw the …
+picture* opens: 16 × 16 pixels in that food's colours — **0** see-through, **1**
+cream, **2** the food's colour, **3** black. Left-click paints with the colour
+picked on the right, Shift+left-click fills (inside one quarter),
+right-click picks the colour under the mouse; **Undo stroke** (⌘Z / Ctrl+Z) takes
+back the last stroke. The small pictures show it at the game's size.
+**Apply** keeps it (one undo step); **Restore default** goes back to the
+editor's picture. The same picture is the NPC sprite and the gate pickup icon.
+You can draw with the tick off — the drawing is used when it is on. Tip: keep
+the game's look — a one-pixel cream edge round a thin black outline, one
+colour, a small cream shine.
+
 **Words:** the **Name** (at most 9 letters — the bag and the shops draw it in
 a fixed column) and the **Description** (the bag's INFO box: two lines of up
 to 18 letters; **Apply** stores it). A game item's words are the same ones
@@ -18,7 +49,7 @@ the gate. The blue line says what that code does with the item's **Power**:
 
 - heal items: power + 0-10 HP (the SageStone: the whole party);
 - the seeds: + power to the stat (up to 999; AGL 511, INT 255);
-- the meats: the monster's wildness drops by the power;
+- the meats (foods): the monster's wildness drops by the power;
 - the others (cures, revive, books, staffs, the gate tools) ignore the power.
 
 **Used up** is the chance that one use uses the item up: 100 % = always (the

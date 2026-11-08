@@ -2697,7 +2697,9 @@ label16_5fe4:  ; original label
     ret
 
 
-jr_016_6002:
+jr_016_6002:   ; S172 r2: the 8 gate PICKUP ICONS (gfx $2E15-$2E1C, 4 tiles each) -> $8500-$86FF
+               ; (bank $01 PickupIconTiles); the 4th is $2E18 (mgbdis printed the
+               ; ROM0 label MenuBorderFillLeft, whose address happens to be $2E18)
     ld de, $2e15
     ld hl, $8500
     call WaitDMATransfer

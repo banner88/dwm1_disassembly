@@ -266,7 +266,12 @@ project: Document + live renderer + QUndoStack + change signals.)*
   page while the tabs go (it did: the current index walked across them). `open_project` 6.6 s →
   0.28 s; a tab's first show costs what its construction cost before. Known, NOT changed: the
   Balance tab's first show still holds the window ≈ 2-4 s (its `story.populate` fingerprints
-  every fight in the GUI thread after the background read; the same on S170).
+  every fight in the GUI thread after the background read; the same on S170). **FIXED S172:**
+  `balance_tab.peek_ctx` — what the project's cache already knows (every timeline fight, the
+  extras, the dives of their gates, the step kits) is worked out in the load task right after
+  `load_ctx` (`Ctx.peek`); `_peek_cache` copies it once, the old GUI-thread walk stays as the
+  fallback. Measured offscreen on the user's project (a 10 ms heartbeat): the longest GUI stall
+  3.7 s → 0.16 s; a seeded cache gives the same rows both ways.
 - **No stray windows (S171; user: "when I change tabs a random empty window pops up that never
   loads, and I have to close it", screenshot over the Arena tab):** measured offscreen on the
   user's project — `ClassArenaBox.show_class` twice in one event-loop turn (a quick change of
@@ -2190,6 +2195,22 @@ session". A tab before Shops.
 * **r2:** the conversation dialog's and the cutscene editor's Give steps carry "No room: the
   conversation stops here / carry on with the steps below" (`on_full`, default stop); the
   step's line ends "— no room: stop here".
+
+**S172 (Foods instead of meats; built, PyBoy-verified, USER-CONFIRMED 2026-11-08 13:17 (r2) and 19:19 (r3) — PROJECT_COMPILER
+§2.78):** a tick at the top of the tab, the five pictures beside it as the game draws them (faded
+when off) and a line naming each food, what it was and its sprite. `Document.set_foods` is one
+SnapshotCommand each way; the names come from `gamedata.text` defaults (the list and the item's
+words show them; a name typed on the item wins, `game_text(...)['preset']`). The NPC sprite
+picker lists $58-$5C (+ $5F) as the foods when on (`SpriteCache.bind_doc` / `food`). **r2 (user: "allow me
+to edit PNG using draw pixel tools same as tile (no flipping or anything necessary, just draw). Allow to apply
+and restore default (yours)"):** the five pictures are buttons; a click opens `app/food_art_dialog.py
+FoodArtDialog` — the Draw tab's `FramePad` (2 × 2 tiles, zoom 20; left paint, Shift+left fill inside a
+quarter, right pick), swatches 0-3 in the food's OBJ palette (0 see-through shown as a dull floor), Undo
+stroke (Ctrl+Z, local), previews ×2 / ×4, **Apply** / **Restore default** / Cancel. Apply = one
+SnapshotCommand `Document.set_food_art(name, grid)` (a grid equal to the default removes the key: the
+project stays clean), Restore default = `set_food_art(name, None)`. The pictures always draw from
+`foods.picture(name, pal, doc.data)`; `SpriteCache` keys its food pixmaps on the drawing, so the rooms
+redraw at once after an edit or its undo. Drawing works with the tick off too (stored, used when on).
 
 **S157 (ROADMAP E9 — one-only items; built, PyBoy-verified, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works")):** an item
 used up 0 % shows a note under **Used up** — permanent = ONE-ONLY (at most one in the bag +

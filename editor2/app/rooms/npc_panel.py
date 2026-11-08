@@ -158,10 +158,16 @@ class SpritePicker(QDialog):
         g = QGridLayout(w)
         g.setSpacing(2)
         ids = sorted(self.cat) or list(range(0x60))
+        # S172: with "Foods instead of meats" on, $58-$5C are the foods (+ $5F the Apple)
+        from editor2.core import foods as FD
+        foods = FD.sprites(self.project_data or {}) if self.project_data is not None else {}
         n = 0
         for sid in ids:
             meta = self.cat.get(sid, {})
             cat = meta.get('category', 'normal')
+            if sid in foods:
+                cat = 'normal'
+                meta = dict(meta, name=foods[sid][2])
             if not self.show_all.isChecked() and cat != 'normal':
                 continue
             b = QToolButton()

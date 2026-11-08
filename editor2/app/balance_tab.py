@@ -399,6 +399,7 @@ class Ctx:
             src, data, tl, extras, cache, gen
         self.whatif = copy.copy(data)
         self.whatif.enemy_overrides = {}
+        self.peek = None                 # S172: peek_ctx's (results, kits), used once
 
     def fight(self, key):
         return self.tl.fights.get(key)
@@ -440,6 +441,54 @@ def load_ctx(src, payload, gen, caches=None):
         if caches is not None and path:
             caches[path] = cache       # one cache object per file (re-reads share it)
     return Ctx(src, data, tl, extras, cache, gen)
+
+
+def peek_ctx(ctx, teams, battles, kit_budget):
+    """(worker, S172) What the project's cache already knows for every row the Story page
+    will show — the fights of the timeline + the extras and the dives of their gates — as
+    ({('prj', profile, row key): result}, {step index: kit}). The GUI thread used to work
+    this out at the first show (fingerprints of every fight: 2-4 s with the window held —
+    EDITOR_DESIGN §5.0 S171 "known"); now the load task does it and the page copies it."""
+    res, kits = {}, {}
+    keys, gids = [], []
+    for st in ctx.tl.steps:
+        keys += [k for k in st['fights'] if k not in keys]
+        if st['kind'] == 'gate' and st['id'] not in gids:
+            gids.append(st['id'])
+    for f in ctx.extras:
+        if f['key'] not in keys:
+            keys.append(f['key'])
+        if f['key'].startswith('gate') and '.f' in f['key']:
+            g = int(f['key'][4:].split('.')[0])
+            if g not in gids:
+                gids.append(g)
+    for g in gids:
+        for prof in PROFILES:
+            try:
+                d = BL.cached_dive_result(ctx.data, ctx.tl, g, prof, ctx.cache)
+            except Exception:                               # noqa: BLE001
+                d = None
+            for walk in BL.WALKS:
+                r = dive_row_result(d, walk)
+                if r is not None:
+                    res[('prj', prof, f'dive{g}.{walk}')] = r
+    for k in keys:
+        f = ctx.fight(k)
+        if f is None:
+            continue
+        for prof in PROFILES:
+            r = BL.cached_fight_result(ctx.data, ctx.tl, f, prof, ctx.cache, teams, battles)
+            if r is not None:
+                res[('prj', prof, k)] = r
+    for st in ctx.tl.steps:
+        try:
+            kit = BL.get_kit(ctx.data, ctx.tl, st['index'], ctx.cache, compute=False,
+                             **kit_budget)
+        except Exception:                                   # noqa: BLE001
+            kit = None
+        if kit:
+            kits[st['index']] = kit
+    return res, kits
 
 
 def purge_memo(ids):
@@ -1072,6 +1121,14 @@ class StoryPage(QWidget):
         self.row_kind[k] = 'dive'
 
     def _peek_cache(self, pc):
+        # S172: the load task already looked (peek_ctx) — copy it, once per context
+        peek = getattr(pc, 'peek', None)
+        if peek is not None:
+            pc.peek = None
+            res, kits = peek
+            self.res.update(res)
+            self.kits_prj.update(kits)
+            return
         for k in self.items:
             if k.startswith('dive'):
                 g = int(k[4:].split('.')[0])
@@ -2564,7 +2621,14 @@ class BalanceTab(QWidget):
                 self._project_loaded(ctx)
             for cb_, _f in waiters:
                 cb_(ctx)
-        self.run_task(lambda _t: load_ctx(src, payload, gen, self._caches), on_done=done)
+        teams, battles, budget = self.teams, self.battles, dict(self.kit_budget)
+
+        def work(_t):
+            c = load_ctx(src, payload, gen, self._caches)
+            if src == PROJECT:                  # S172: the cache's answers, off the GUI thread
+                c.peek = peek_ctx(c, teams, battles, budget)
+            return c
+        self.run_task(work, on_done=done)
 
     def _anchor_kits(self, ctx):
         """The original game's step kits come from the anchor (when it is the

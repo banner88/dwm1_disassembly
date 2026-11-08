@@ -126,7 +126,8 @@ where you left them.
 **Opening is quick (S171).** The window appears at once and the last project opens a
 moment later. Each tab is made the first time you click it (the Rooms tab at once), so the
 first click on a big tab (Breeding, Text, Monsters, Balance) can take a second; after that it
-is instant.
+is instant. (S172: the Balance tab no longer holds the window while it reads what it already
+knows — that happens in the background with the rest of its reading.)
 
 **A window that pops up on its own (S171).** It was an editor bug (the Arena tab's "opens
 when" list and two other pages could leave a copy of themselves as an empty window when a

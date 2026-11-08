@@ -11,19 +11,19 @@ SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
     dw label5_400f
 
 ; Bank $05 = the NPC sprites (S121 trace): entries 0 / 1 build sprite type $FFC7
-; with the level-1 table $407F[id] (6 frames: down A/B, side A/B, up A/B; side
+; with the level-1 table $407F[id] (NpcSpriteFrameTable; 6 frames: down A/B, side A/B, up A/B; side
 ; frames face right) and OR the palette $4152[id] into $FFCA (NPCSpritePaletteOr);
-; the sheet is ROM0 $2ADF[id] (gfx-ID, 16 tiles). E.g. Milayou $14 (palette 3,
+; the sheet is ROM0 $2ADF[id] (NpcSheetGfxTable; gfx-ID, 16 tiles). E.g. Milayou $14 (palette 3,
 ; gfx $3114), grey Warubou $39, Watabou $21, the old man $08, Terry as an NPC $5E.
 label5_4005:
     call NPCSpritePaletteOr
-    ld de, $407f
+    ld de, NpcSpriteFrameTable   ; $407F
     call $0d91
     ret
 
 label5_400f:
     call NPCSpritePaletteOr
-    ld de, $407f
+    ld de, NpcSpriteFrameTable   ; $407F
     push af
     push bc
     push de
@@ -98,14 +98,14 @@ jr_005_4069:
     ret
 
 
-; NPCSpritePaletteOr (S123 label, was HramAudE_406e): $FFCA |= NPCSpritePalTable
+; NPCSpritePaletteOr (S123 label, was HramAudE_406e): $FFCA |= NpcSpritePalTable
 ; [$FFC7] — the sprite id's OBJ palette (0-7; the table at $05:$4152, one byte per id,
 ; e.g. the gate swirl $4D = 2, Milayou $14 = 3). An OR, so a slot's own attr bits
 ; can only add palette bits; S123's NPC colours rewrite the OAM pieces after the
 ; draw instead (bank $60 entry 11 NpcColourDraw).
 NPCSpritePaletteOr:
     ldh a, [$c7]
-    ld hl, $4152                 ; NPCSpritePalTable (1 B per sprite id)
+    ld hl, NpcSpritePalTable     ; $4152 (1 B per sprite id)
     add l
     ld l, a
     ld a, $00
@@ -115,279 +115,227 @@ NPCSpritePaletteOr:
     or [hl]
     ldh [$ca], a
     ret
-
-
-    or d
-    ld b, c
-    inc h
-    ld b, d
-    sub [hl]
-    ld b, d
-    ld [$7a43], sp
-    ld b, e
-    db $ec
-    ld b, e
-    ld e, [hl]
-    ld b, h
-    ret nc
-
-    ld b, h
-    ld b, d
-    ld b, l
-    or h
-    ld b, l
-    ld h, $46
-    sbc b
-    ld b, [hl]
-    ld a, [bc]
-    ld b, a
-    ld a, h
-    ld b, a
-    xor $47
-    ld h, b
-    ld c, b
-    jp nc, Jump_005_4448
-
-    ld c, c
-    or [hl]
-    ld c, c
-    jr z, @+$4c
-
-    sbc d
-    ld c, d
-    inc c
-    ld c, e
-    xor [hl]
-    ld c, e
-    jr nz, jr_005_40fb
-
-    sub d
-    ld c, h
-    db $e3
-    ld c, h
-    add l
-    ld c, l
-    rst $30
-    ld c, l
-    ld l, c
-    ld c, [hl]
-    db $db
-    ld c, [hl]
-    ld [hl], l
-    ld c, a
-    rla
-    ld d, b
-    adc d
-    ld d, b
-    inc d
-    ld d, c
-    add [hl]
-    ld d, c
-    scf
-    ld d, d
-    db $f4
-    ld d, d
-    xor l
-    ld d, e
-    ret nz
-
-    ld d, e
-    ld de, $f254
-    ld d, h
-    ld b, c
-    ld d, [hl]
-    ld [de], a
-    ld d, a
-    ld c, e
-    ld d, a
-    sub a
-    ld d, a
-    add sp, $57
-    or l
-    ld e, b
-    and d
-    ld e, c
-    sbc e
-    ld e, d
-    add h
-    ld e, e
-    ld [hl], c
-    ld e, h
-    ld l, d
-    ld e, l
-    cp a
-    ld e, a
-    adc b
-    ld h, b
-    xor b
-    ld h, d
-    ld l, d
-    ld h, h
-    call c, $4e64
-    ld h, l
-    ret nz
-
-    ld h, l
-    ld a, [de]
-    ld h, [hl]
-    adc h
-    ld h, [hl]
-    cp $66
-
-jr_005_40fb:
-    ld h, b
-    ld h, a
-    jp nc, Jump_005_4467
-
-    ld l, b
-    or [hl]
-    ld l, b
-    jr z, jr_005_416e
-
-    sbc d
-    ld l, c
-    inc c
-    ld l, d
-    ld a, [hl]
-    ld l, d
-    ldh a, [rOCPS]
-    ld h, d
-    ld l, e
-    call nc, CalcAudE_466b
-    ld l, h
-    cp b
-    ld l, h
-    ld a, [hl+]
-    ld l, l
-    sbc h
-    ld l, l
-    or $6d
-    or d
-    ld b, c
-    or d
-    ld b, c
-    add hl, bc
-    ld l, [hl]
-    inc e
-    ld l, [hl]
-    cpl
-    ld l, [hl]
-    ld l, b
-    ld l, [hl]
-    ld l, a
-    ld l, [hl]
-    pop bc
-    ld l, [hl]
-    ld h, [hl]
-    ld l, a
-    ret c
-
-    ld l, a
-    add hl, bc
-    ld l, [hl]
-    add hl, bc
-    ld l, [hl]
-    add hl, bc
-    ld l, [hl]
-    add hl, bc
-    ld l, [hl]
-    add hl, bc
-    ld l, [hl]
-    add hl, bc
-    ld l, [hl]
-    ld [de], a
-    ld [hl], b
-    ccf
-    ld b, c
-    ld b, c
-    ld b, c
-    ldh a, [$f8]
-    nop
-    db $10
-    ldh a, [rP1]
-    ld bc, $f810
-    ld hl, sp+$02
-    db $10
-    ld hl, sp+$00
-    inc bc
-    db $10
-    add b
-    ld bc, $0206
-    inc b
-    nop
-    ld [bc], a
-    ld bc, $0507
-    dec b
-    nop
-    nop
-    ld b, $00
-    inc b
-    ld bc, $0204
-    ld [bc], a
-    ld b, $03
-    dec b
-    ld [bc], a
-    ld [bc], a
-    inc bc
-    rlca
-    inc bc
-    ld [bc], a
-
-jr_005_416e:
-    ld bc, $0207
-    rlca
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld bc, $0701
-    nop
-    ld b, $03
-    inc b
-    inc bc
-    dec b
-    dec b
-    inc b
-    inc b
-    ld [bc], a
-    inc b
-    ld b, $01
-    inc bc
-    ld bc, $0401
-    inc b
-    ld b, $05
-    ld [bc], a
-    inc bc
-    ld b, $03
-    nop
-    ld [bc], a
-    inc b
-    rlca
-    dec b
-    inc b
-    nop
-    dec b
-    inc b
-    nop
-    rlca
-    ld bc, CopyDEtoHLByte
-    dec b
-    ld [bc], a
-    ld bc, $0201
-    inc bc
-    rlca
-    rlca
-    nop
-    inc bc
-    ld [bc], a
-    rlca
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    ld [bc], a
-    nop
+; ---------------------------------------------------------------------------
+; NpcSpriteFrameTable ($05:$407F, S172 re-section; was mgbdis fake code): per plain NPC
+; sprite id $00-$5F the level-1 pointer = a list of 6 frame pointers (down A, down B,
+; side A, side B, up A, up B; side faces right, the left side = the same with the
+; X-flip) — entries 0 / 1 pick [list + 2 * $FFC8] through ROM0 $0D91 with bank $05
+; mapped; a frame = 4-byte pieces (dy, dx, tile, attr) up to $80. The OBJECTS
+; ($50 / $51 the heads in bed, $5F the meat, $58-$5D = $50's) have ONE frame: their
+; list's second word is the frame itself, so a frame index 1-5 reads junk (standing
+; NPCs step between frames 0 and 1 — PyBoy S172; the vanilla objects are shown by
+; scripts only). Patched builds with gamedata.foods: bank $77 NpcDrawPlain holds the
+; food props on frame 0 (NpcStaticIds).
+; ---------------------------------------------------------------------------
+NpcSpriteFrameTable:
+    dw $41B2   ; [$00]
+    dw $4224   ; [$01]
+    dw $4296   ; [$02]
+    dw $4308   ; [$03]
+    dw $437A   ; [$04]
+    dw $43EC   ; [$05]
+    dw $445E   ; [$06]
+    dw $44D0   ; [$07]
+    dw $4542   ; [$08]
+    dw $45B4   ; [$09]
+    dw $4626   ; [$0A]
+    dw $4698   ; [$0B]
+    dw $470A   ; [$0C]
+    dw $477C   ; [$0D]
+    dw $47EE   ; [$0E]
+    dw $4860   ; [$0F]
+    dw $48D2   ; [$10]
+    dw $4944   ; [$11]
+    dw $49B6   ; [$12]
+    dw $4A28   ; [$13]
+    dw $4A9A   ; [$14] Milayou
+    dw $4B0C   ; [$15]
+    dw $4BAE   ; [$16]
+    dw $4C20   ; [$17]
+    dw $4C92   ; [$18]
+    dw $4CE3   ; [$19]
+    dw $4D85   ; [$1A]
+    dw $4DF7   ; [$1B]
+    dw $4E69   ; [$1C]
+    dw $4EDB   ; [$1D]
+    dw $4F75   ; [$1E]
+    dw $5017   ; [$1F]
+    dw $508A   ; [$20]
+    dw $5114   ; [$21] Watabou
+    dw $5186   ; [$22]
+    dw $5237   ; [$23]
+    dw $52F4   ; [$24]
+    dw $53AD   ; [$25]
+    dw $53C0   ; [$26]
+    dw $5411   ; [$27]
+    dw $54F2   ; [$28]
+    dw $5641   ; [$29]
+    dw $5712   ; [$2A]
+    dw $574B   ; [$2B]
+    dw $5797   ; [$2C]
+    dw $57E8   ; [$2D]
+    dw $58B5   ; [$2E]
+    dw $59A2   ; [$2F]
+    dw $5A9B   ; [$30]
+    dw $5B84   ; [$31]
+    dw $5C71   ; [$32]
+    dw $5D6A   ; [$33]
+    dw $5FBF   ; [$34]
+    dw $6088   ; [$35]
+    dw $62A8   ; [$36]
+    dw $646A   ; [$37]
+    dw $64DC   ; [$38]
+    dw $654E   ; [$39] Warubou (grey)
+    dw $65C0   ; [$3A]
+    dw $661A   ; [$3B]
+    dw $668C   ; [$3C]
+    dw $66FE   ; [$3D]
+    dw $6760   ; [$3E]
+    dw $67D2   ; [$3F]
+    dw $6844   ; [$40]
+    dw $68B6   ; [$41]
+    dw $6928   ; [$42]
+    dw $699A   ; [$43]
+    dw $6A0C   ; [$44]
+    dw $6A7E   ; [$45]
+    dw $6AF0   ; [$46]
+    dw $6B62   ; [$47]
+    dw $6BD4   ; [$48]
+    dw $6C46   ; [$49]
+    dw $6CB8   ; [$4A]
+    dw $6D2A   ; [$4B]
+    dw $6D9C   ; [$4C]
+    dw $6DF6   ; [$4D] the gate swirl
+    dw $41B2   ; [$4E]
+    dw $41B2   ; [$4F]
+    dw $6E09   ; [$50]
+    dw $6E1C   ; [$51]
+    dw $6E2F   ; [$52]
+    dw $6E68   ; [$53]
+    dw $6E6F   ; [$54]
+    dw $6EC1   ; [$55]
+    dw $6F66   ; [$56]
+    dw $6FD8   ; [$57]
+    dw $6E09   ; [$58] unused: $50's sheet and frames
+    dw $6E09   ; [$59] unused: $50's sheet and frames
+    dw $6E09   ; [$5A] unused: $50's sheet and frames
+    dw $6E09   ; [$5B] unused: $50's sheet and frames
+    dw $6E09   ; [$5C] unused: $50's sheet and frames
+    dw $6E09   ; [$5D] unused: $50's sheet and frames
+    dw $7012   ; [$5E] Terry as an NPC
+    dw $413F   ; [$5F] the meat (an object, one frame)
+NpcFramesMeat:   ; $413F — $5F's level-1 list: frame 0 only (the next word is the frame)
+    dw $4141   ; down A
+NpcFrameMeat0:   ; $4141 — the meat: 2x2 pieces (dy, dx, tile, attr), $80
+    db $f0, $f8, $00, $10   ; top-left: tile 0
+    db $f0, $00, $01, $10   ; top-right: tile 1
+    db $f8, $f8, $02, $10   ; bottom-left: tile 2
+    db $f8, $00, $03, $10   ; bottom-right: tile 3
+    db $80   ; end
+; ---------------------------------------------------------------------------
+; NpcSpritePalTable ($05:$4152, S172 re-section): the OBJ palette (0-7) of each plain
+; NPC sprite id $00-$5F, ORed into $FFCA by NPCSpritePaletteOr. The field OBJ
+; palettes ($17:$5615) are colour 1 cream, 2 the accent, 3 black: 0 red, 1 green,
+; 2 light blue, 3 amber, 4 purple, 5 grey, 6 orange, 7 brown. Patched builds: ids
+; $58-$5F are region npc_food_pals (S172, gamedata.foods).
+; ---------------------------------------------------------------------------
+NpcSpritePalTable:
+    db $01   ; [$00]
+    db $06   ; [$01]
+    db $02   ; [$02]
+    db $04   ; [$03]
+    db $00   ; [$04]
+    db $02   ; [$05]
+    db $01   ; [$06]
+    db $07   ; [$07]
+    db $05   ; [$08]
+    db $05   ; [$09]
+    db $00   ; [$0A]
+    db $00   ; [$0B]
+    db $06   ; [$0C]
+    db $00   ; [$0D]
+    db $04   ; [$0E]
+    db $01   ; [$0F]
+    db $04   ; [$10]
+    db $02   ; [$11]
+    db $02   ; [$12]
+    db $06   ; [$13]
+    db $03   ; [$14] Milayou
+    db $05   ; [$15]
+    db $02   ; [$16]
+    db $02   ; [$17]
+    db $03   ; [$18]
+    db $07   ; [$19]
+    db $03   ; [$1A]
+    db $02   ; [$1B]
+    db $01   ; [$1C]
+    db $07   ; [$1D]
+    db $02   ; [$1E]
+    db $07   ; [$1F]
+    db $07   ; [$20]
+    db $02   ; [$21] Watabou
+    db $02   ; [$22]
+    db $01   ; [$23]
+    db $01   ; [$24]
+    db $07   ; [$25]
+    db $00   ; [$26]
+    db $06   ; [$27]
+    db $03   ; [$28]
+    db $04   ; [$29]
+    db $03   ; [$2A]
+    db $05   ; [$2B]
+    db $05   ; [$2C]
+    db $04   ; [$2D]
+    db $04   ; [$2E]
+    db $02   ; [$2F]
+    db $04   ; [$30]
+    db $06   ; [$31]
+    db $01   ; [$32]
+    db $03   ; [$33]
+    db $01   ; [$34]
+    db $01   ; [$35]
+    db $04   ; [$36]
+    db $04   ; [$37]
+    db $06   ; [$38]
+    db $05   ; [$39] Warubou (grey)
+    db $02   ; [$3A]
+    db $03   ; [$3B]
+    db $06   ; [$3C]
+    db $03   ; [$3D]
+    db $00   ; [$3E]
+    db $02   ; [$3F]
+    db $04   ; [$40]
+    db $07   ; [$41]
+    db $05   ; [$42]
+    db $04   ; [$43]
+    db $00   ; [$44]
+    db $05   ; [$45]
+    db $04   ; [$46]
+    db $00   ; [$47]
+    db $07   ; [$48]
+    db $01   ; [$49]
+    db $01   ; [$4A]
+    db $06   ; [$4B]
+    db $05   ; [$4C]
+    db $02   ; [$4D] the gate swirl
+    db $01   ; [$4E]
+    db $01   ; [$4F]
+    db $02   ; [$50]
+    db $03   ; [$51]
+    db $07   ; [$52]
+    db $07   ; [$53]
+    db $00   ; [$54]
+    db $03   ; [$55]
+    db $02   ; [$56]
+    db $07   ; [$57]
+    db $02   ; [$58] unused: $50's sheet and frames
+    db $02   ; [$59] unused: $50's sheet and frames
+    db $02   ; [$5A] unused: $50's sheet and frames
+    db $02   ; [$5B] unused: $50's sheet and frames
+    db $02   ; [$5C] unused: $50's sheet and frames
+    db $02   ; [$5D] unused: $50's sheet and frames
+    db $02   ; [$5E] Terry as an NPC
+    db $00   ; [$5F] the meat (an object, one frame)
     cp [hl]
     ld b, c
     rst $08

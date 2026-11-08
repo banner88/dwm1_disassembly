@@ -422,6 +422,8 @@ def names(prj_or_data=None, repo_root=None):
     """{id: name} of every item of the project (the game's 43 + the new ones)."""
     out = {i: n for i, n in game_names(repo_root).items() if 1 <= i < GAME_ITEMS}
     if prj_or_data is not None:
+        from . import foods as FD               # S172: the foods' names (gamedata.foods)
+        out.update(FD.item_names(prj_or_data))
         for e in new_items(prj_or_data):
             if isinstance(e, dict) and isinstance(e.get('id'), int):
                 out[e['id']] = e.get('name') or f"item {e['id']}"

@@ -1489,6 +1489,18 @@ def _shop_regions():
 REGISTRY += _shop_regions()
 
 
+def _food_regions():
+    # S172 (gamedata.foods, editor2/core/foods.py, PROJECT_COMPILER §2.78): the foods' NPC
+    # sheets (ROM0 NpcSheetGfxTable ids $58-$5F) and colours (bank $05 NpcSpritePalTable
+    # ids $58-$5F). Off == the original bytes.
+    from . import foods as FD
+    return [(name, "gamedata.foods", f"region:{path}#{name}", fn, [bank])
+            for name, path, fn, bank in FD.REGIONS]
+
+
+REGISTRY += _food_regions()
+
+
 def _loot_regions():
     # S157 (ROADMAP E9): the random gates' item tables without the ONE-ONLY items (used-up
     # chance 0) — the floor items / treasure chests (bank $16 FloorLayoutData), the rare

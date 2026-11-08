@@ -406,6 +406,15 @@ names the item from **`wItemInUse` $D565**; the count lists cover 128 ids. Measu
 `tools/walk_items.py` (the user's save: bought, used, given, sold, in battle, the WarpWing /
 a WarpWing-based item out of a gate, a lost battle — 33 / 33).
 
+**The meats as foods (S172, `gamedata.foods`, PROJECT_COMPILER §2.78):** a tick names items 19-23
+Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's own edits) and gives
+each food its own plain NPC sprite (`$58-$5C`; the meat prop `$5F` shows the Apple — ROOM_DATA_FORMAT
+"NPC sprite tables (S172)") and, r2, its own gate-floor pickup icon (GATE_GENERATION §5 "The
+pickup icons"; the pictures can be drawn — `gamedata.food_art`); the records above are untouched. The five meats share one description
+row (`ItemDesc_19`, "Tames monsters") and the use lines 20-22 ("… eats it happily!"): no meat word.
+With the tick on (S172 r3) each food gets its own description by strength through the text
+overrides (one entry per item id — the shared row in bank $41 is not touched).
+
 **The field-only items (S160, ROADMAP E13).** Exactly 14 item records say "not usable in battle"
 (battle skill record +10 = 1): LifeAcorn, MysticNut, AtkSeed, DefSeed, AglSeed, IntSeed (items
 13-18 → skills `$BC-$C1`) and WarpWing, TinyMedal and the six books (29-36 → `$CC-$D3`); every

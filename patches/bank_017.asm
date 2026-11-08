@@ -2735,7 +2735,7 @@ AttrMapDataB:   ; fake-decode label kept at its exact offset $6b0d (referenced b
     dw $0000, $7fd9, $47ff, $7d37   ; [$29] BigBang
     dw $0000, $63f9, $01df, $0015   ; [$2a] MegaMagic
     dw $0000, $7ffd, $7ea5, $7f0e   ; [$2b] DeMagic
-    dw $0000, $7fff, $7fff, $01bf   ; [$2c] FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN
+    dw $0000, $7fff, $7fff, $01bf   ; [$2c] the NOTE (S172: a music note ♪ over the foe, not a meat) — skills FEEDMEAT, BEFFJERKY, PORKCHOP, SIRLOIN = items 19 BeefJerky / 20 PorkChop / 21 Rib / 23 Sirloin
 
 ; ---------------------------------------------------------------------------
 ; CustomAttrCheck: intercept for the attr-map (entry 1) AND palette (entry 0)
