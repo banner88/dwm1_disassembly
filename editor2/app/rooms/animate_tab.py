@@ -227,6 +227,7 @@ class AnimateTab(QWidget):
     replaceRequested = Signal(object)    # dict + 'aid' (edit = replace in one undo step)
     removeRequested = Signal(str)
     useSelectionRequested = Signal()
+    importRequested = Signal()           # S173 r3: frames from a PNG onto the selected cells
     showRequested = Signal(str)          # select an animation's cells on the canvas
     stillRequested = Signal(object)      # metatile: stop the VANILLA animation moving it
     status = Signal(str)
@@ -286,6 +287,17 @@ class AnimateTab(QWidget):
                               'several, then press this. Double-clicking a cell does the same.')
         self.b_use.clicked.connect(self.useSelectionRequested.emit)
         cr.addWidget(self.b_use)
+        # S173 r3 (user: "Allow the editor to import them then, please, rather than fiddling
+        # with my project"): a PNG of frames straight onto the selected cells
+        self.b_import = QPushButton('Import frames from PNG…')
+        self.b_import.setToolTip(
+            'Select the cells on the canvas, then pick a PNG whose frames are the size of the '
+            'selection (16 pixels a cell), side by side or one under the other, at 1× or a '
+            'whole zoom. Frame 1 becomes the tiles of the cells, the rest the animation; each '
+            '8×8 piece gets a palette row that holds its colours (a free row gets new colours '
+            'when none does). One undo step.')
+        self.b_import.clicked.connect(self.importRequested.emit)
+        cr.addWidget(self.b_import)
         cr.addStretch(1)
         v.addLayout(cr)
         self.cells_lbl = _wrap('No cells yet: select them on the canvas (click, or drag for '

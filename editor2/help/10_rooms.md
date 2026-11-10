@@ -81,7 +81,8 @@ opens Tiles. The editor remembers the page you used last.
 
 **The two bars above the canvas (S173).** The **tools**: **Select (V)**, **Paint (B)**,
 **Eyedrop (I)** (or right-click), **Walkability (W)**, **Still (S)** (click a moving cell, pick
-a frame: that cell stops moving — see *Animated tiles*),
+a frame: that cell stops moving — see *Animated tiles*), **Stamp (T)** (a picture on top of
+the tiles — see *Stamps* below),
 then **+ Door (D)**, **+ Examine (X)**, **+ NPC (N)** and **+ More** — the memorial
 **+ Statue (U)** and the breeding-hint **+ Monument (O)** / **+ Archive (K)** (their keys
 work without opening the menu). A **statue** shows a monster that won a boss battle, an
@@ -136,6 +137,32 @@ cells, on every cell of the room drawing the original, or only into My
 metatiles). Once a quarter moved to another row, use *Save as a new metatile* (on every
 cell drawing the original): *everywhere* would leave other cells in their old row. Tiles the room animates are changed in the Animate tab; the common
 font / frame tiles ($80-$AF) only as a new metatile.
+
+**Stamps (S174):** a stamp is a picture put ON TOP of the tiles — a wall torch with its
+glow, and anything like it later. The tiles under it are **never changed**: the build draws
+the stamp into a copy of your project, so moving or removing a stamp leaves the tiles
+exactly as they were, with no leftover tiles. The **Stamps** page (right) is the library:
+**Import PNG…** (the frames side by side or one under the other, each the stamp's size in
+16-pixel cells — "3x2" in the file name fills the size in; in the picture **clear** pixels
+let the tiles show, **half-clear** pixels LIGHT them — their colour, except where the tiles
+are black, so the grain shows through — and solid pixels are drawn), **Rename…**,
+**Remove…** (from the library and every screen it is on), **Speed** (32 = the game's own
+torches), **Show the stamps on the canvas** (off: the tiles under them). Choose one, then the **Stamp tool (T)**: its picture follows the mouse (the cursor
+on its middle column, top row — a wall torch's flame); **click** to put it down; **drag** a
+stamp to move it; **Del** removes the selected one; **⌘C / ⌘V** copy it and paste it under
+the mouse — on another screen or another of your rooms too; **right-click** a stamp:
+**Light** on / off (off = without its glow: a sign, a plant) and the **Light colour** (the
+glow and the stamp's own glow colour inside it — a torch's hot core). Each placement has
+its own light. Stamps cannot overlap (a red outline says so). It shows on the screen you
+put it on only. Each step is one undo.
+The canvas shows every stamp exactly as the game will draw it (▶ Play: moving). **Colours:**
+an 8×8 piece shows 4 colours at most (one of them black), and the room's palette has 4
+rows. A stamp's colours take free rows of the palette (any room using that palette counts);
+when none is left, or a piece over busy tiles would need a 5th colour, the **nearest**
+colours are used and the stamp is marked **!** — the Stamps page and the Build log say how
+many pixels. A second light colour in one room usually needs rows the room no longer has.
+Over a MOVING tile (swaying bark) a stamp's pieces keep the first frame of what is under
+them.
 
 **Whole room (S173):** every screen of the room joined into one picture in a window of
 its own — the screen edges dashed, the screen on the canvas outlined, the state of your

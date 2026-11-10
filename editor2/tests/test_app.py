@@ -1877,7 +1877,8 @@ def s132_rooms_ui(app, w):
     before = _json.dumps(doc.data, sort_keys=True)
     start = w.session.undo.index()
     # --- the rail
-    assert rt.rail.order == ['tiles', 'palettes', 'object', 'room', 'screen', 'gates'], rt.rail.order
+    assert rt.rail.order == ['tiles', 'stamps', 'palettes', 'object', 'room', 'screen', 'gates'], \
+        rt.rail.order                              # S174: + Stamps
     rt.rail.show_page('room')
     assert rt.rail.current_key() == 'room' and rt.sec_insp.is_expanded()
     rt._set_tool('paint')
@@ -4960,6 +4961,322 @@ def s173_room_aids(app, w):
           f'room ({len(keys)} screens); Reference (read-only, brush on the same tiles)')
 
 
+def s173_anim_import(app, w):
+    """S173 r3 (user: "Allow the editor to import them then, please, rather than fiddling with
+    my project"): Animate → "Import frames from PNG…" (editor2/core/anim_import). On a room
+    that borrows a game tileset (medal_vault: made its own first) with one free palette row:
+    a 2-frame strip (red / cream / orange / black — no row has them) → ONE new row (colour 1
+    the cream: own colour 1 stays off), frame 1 = the cell's tiles (same wall side), the cell's
+    row, its metatile in My metatiles, a flip animation of 2 frames every 32; the canvas cell
+    moves; exact undo (project + assets). The window shows the frames; a wrong size is refused
+    with no undo step; a 3x-zoomed strip reads the same; r5: see-through pixels keep the map
+    (alpha 0) or light it (half-clear, the map's black kept)."""
+    import os
+    import tempfile
+    from PIL import Image
+    from editor2.app.rooms import tab as TABm
+    from editor2.core import anim_import as AI
+    from editor2.core import page2 as P2
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'medal_vault':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.current_room()['id'] == 'medal_vault'
+    room = rt.current_room()
+    assert 'tileset' not in room['record'], 'the test wants a borrowed game tileset'
+    adir = os.path.join(doc.project_dir, 'assets')
+    assets0 = sorted(os.listdir(adir))
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # the art: 2 frames 16x16 in four colours no row of the room has
+    RED, CREAM, ORANGE, BLACK = (224, 24, 16), (248, 248, 208), (248, 160, 0), (0, 0, 0)
+    tmp = tempfile.mkdtemp(prefix='s173imp_')
+    strip = Image.new('RGB', (32, 16), ORANGE)
+    for f in (0, 1):
+        for y in range(16):
+            for x in range(16):
+                c = ORANGE
+                if 4 <= x <= 11 and 2 + f <= y <= 13:
+                    c = RED if (x + y + f) % 3 else CREAM
+                if x in (3, 12) or y in (1 + f, 14):
+                    c = BLACK
+                strip.putpixel((f * 16 + x, y), c)
+    p1 = os.path.join(tmp, 'flame.png')
+    strip.save(p1)
+    strip.resize((96, 48), Image.NEAREST).save(os.path.join(tmp, 'flame_x3.png'))
+    fr3, info3 = AI.read_frames(Image.open(os.path.join(tmp, 'flame_x3.png')), 1, 1)
+    fr1, info1 = AI.read_frames(Image.open(p1), 1, 1)
+    assert info3['scale'] == 3 and info3['n'] == 2 and \
+        [list(f.getdata()) for f in fr3] == [list(f.getdata()) for f in fr1], '3x reads the same'
+    # refusals: the wrong size, a see-through pixel (no undo step)
+    warned = []
+    keep_w = TABm.QMessageBox.warning
+    TABm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    try:
+        cell = next((c, r) for r in range(8) for c in range(10))
+        cv.set_selection((cell[0], cell[1], cell[0], cell[1]))
+        Image.new('RGB', (20, 16)).save(os.path.join(tmp, 'bad.png'))
+        rt._tanim_import_png(os.path.join(tmp, 'bad.png'))
+        assert warned and 'each frame is 16×16' in warned[-1], warned
+        assert s.undo.index() == n0 and doc.dumps() == pre
+    finally:
+        TABm.QMessageBox.warning = keep_w
+    # the import (the window: the frames, one new row, speed 32 by default)
+    seen = {}
+
+    def auto(dlg):
+        seen['plan'] = dlg.plan
+        seen['vals'] = dlg.values()
+        return dlg.values()
+    rt._import_auto = auto
+    k_before = [list(r_) for r_ in cv.tiles]
+    wall_before = [P2.is_wall(P2.slot_key(k_before[cell[1] * 2 + j][cell[0] * 2 + i]),
+                              val(room['record']['collision_threshold']))
+                   for j in (0, 1) for i in (0, 1)]
+    try:
+        rt._tanim_import_png(p1)
+    finally:
+        rt._import_auto = None
+    app.processEvents()
+    plan = seen['plan']
+    assert seen['vals']['speed'] == 32, 'the game\'s torch speed by default'
+    assert list(plan['new_rows']) == [2] and not plan['free1'] and plan['off_px'] == 0, \
+        (plan['new_rows'], plan['free1'], plan['off_px'])
+    assert s.undo.index() == n0 + 1, 'one undo step'
+    room = doc.room('medal_vault')
+    assert 'tileset' in room['record'], 'the game tileset was made the room\'s own'
+    pid = doc.effective_palette(room, rt.key, rt.state_idx)
+    row2 = [int(v, 16) if isinstance(v, str) else v for v in doc.palette(pid)['colors_rgb555'][2]]
+    from editor2.core import png_import as PI
+    assert set(row2) == {PI.to555(c) for c in (RED, CREAM, ORANGE, BLACK)} and row2[1] == 0x6BFF \
+        and row2[3] == 0, [hex(v) for v in row2]
+    items = doc.tile_anims(room)
+    assert len(items) == 1 and int(str(items[0]['speed']), 0) == 32 and \
+        len(items[0].get('frames') or []) == 1, items
+    cx, cy = cell
+    T = doc.layout(cv.lid)['tiles']
+    A = doc.layout(cv.attr_lid)['attr']
+    thr = val(room['record']['collision_threshold'])
+    for n, (j, i) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+        r_, c_ = cy * 2 + j, cx * 2 + i
+        assert A[r_][c_] & 7 == 2, 'the cell is drawn with the new row'
+        assert P2.is_wall(P2.slot_key(T[r_][c_]), thr) == wall_before[n], 'same wall side'
+        sl = P2.slot_key(T[r_][c_])
+        assert bytes(doc.read_sheet(doc.tileset_key(room))[sl * 16:sl * 16 + 16]) == \
+            plan['gfx'][0][(r_, c_)], 'frame 1 = the tiles'
+    tiles_now = [T[cy * 2][cx * 2], T[cy * 2][cx * 2 + 1], T[cy * 2 + 1][cx * 2], T[cy * 2 + 1][cx * 2 + 1]]
+    assert any(m['tiles'] == tiles_now for m in doc.metatiles(doc.tileset_key(room))), \
+        'the cell is in My metatiles'
+    assert cv.cell_moves(cx, cy), 'the cell moves on the canvas'
+    assert 'Imported' in rt.status_line.text(), rt.status_line.text()
+    # S173 r5 see-through pixels (user: "because you drew OVER other tiles I am concerned the
+    # background wont fit together"): alpha 0 keeps the map, half-clear = light (its colour,
+    # except where the map is black) — planned against what the screen shows
+    under = s.renderer.render_screen(room, rt.key, rt.state_idx).convert('RGB')
+    cell2 = next((c, r) for r in range(8) for c in range(10) if (c, r) != cell)
+    ov = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            if x >= 8:
+                ov.putpixel((x, y), ORANGE + (128,))          # light on the right half
+    rf, rinfo = AI.read_frames(ov, 1, 1)
+    assert rinfo['alpha']
+    pl2 = AI.plan(doc, s.renderer, room, rt.key, rt.state_idx, cv.lid, cv.attr_lid,
+                  (cell2[0], cell2[1], cell2[0], cell2[1]), rf)
+    for y in range(16):
+        for x in range(16):
+            u = under.getpixel((cell2[0] * 16 + x, cell2[1] * 16 + y))
+            want = u if (x < 8 or u == (0, 0, 0)) else ORANGE
+            r_, c_ = cell2[1] * 2 + y // 8, cell2[0] * 2 + x // 8
+            got = pl2['rgb'][0][(r_, c_)][(y % 8) * 8 + x % 8]
+            assert tuple(got) == tuple(want), (x, y, got, want)
+    # the window itself
+    from editor2.app.rooms.anim_import_dialog import AnimImportDialog
+    dlg = AnimImportDialog(plan, info1, 50, 'flame.png')
+    assert dlg.values()['order'] == 'loop' and dlg.values()['name'] == 'flame'
+    dlg.deleteLater()
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'the import undoes exactly'
+    assert sorted(os.listdir(adir)) == assets0, 'no asset left behind'
+    print(f'OK: S173 r3 Import frames from PNG — 2 frames (and the same at 3x), one new row (row 2,'
+          f' colour 1 the cream), the game tileset made the room\'s own, frame 1 = the tiles '
+          f'(same wall side), the row, My metatiles, a flip every 32; a wrong size refused with no '
+          f'undo step; see-through = the map / light; exact undo')
+
+
+def s174_stamps(app, w):
+    """S174 (ROADMAP P3.3m; user: "Allow me to 'stamp' these types of things … on top of any
+    tiles … I should be able to remove this stamp and put it elsewhere or copy and paste etc.
+    When I remove it put the tiles back as before and don't create a million random crappy
+    broken tiles"): Rooms → Stamps. On medal_vault (a game tileset it borrows; its room-level
+    colour grid island_s0 is SHARED with five rooms): import a 2-frame 3×2 see-through strip (the size
+    from the name), place it with the Stamp tool, an overlapping one refused, move, copy + paste,
+    light colour / unlit; the project's tiles / layouts / palettes / tileset files never change;
+    the canvas draws what stamps.simulate plans; the BAKE (the build's copy) writes only
+    a colour grid medal_vault alone uses (island_s0 untouched) and draws exactly the canvas picture, every frame;
+    the space meters bake too; delete, remove from the library; undo back to the start."""
+    import json
+    import os
+    import shutil
+    import tempfile
+    from PIL import Image, ImageQt as IQ
+    from editor2.core import stamps as ST
+    from editor2.core import tileanim as TAm
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import compiler as CMP
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'medal_vault':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'medal_vault'
+    adir = os.path.join(doc.project_dir, 'assets')
+    assets0 = {f: open(os.path.join(adir, f), 'rb').read() for f in os.listdir(adir)
+               if f.endswith('.2bpp')}
+    had_dir = os.path.isdir(os.path.join(adir, 'stamps'))
+    n0 = s.undo.index()
+    pre = doc.dumps()
+
+    def bare(text):
+        d = json.loads(text)
+        d['custom'].pop('stamps', None)
+        for r in d['custom'].get('rooms') or []:
+            r.pop('stamps', None)
+        return json.dumps(d, sort_keys=True)
+    # the art: a half-clear round glow, a 2-frame flame (opaque), clear elsewhere — 3 x 2 cells
+    AMB, RED, CRM, BLK = (240, 192, 72), (216, 32, 16), (248, 248, 208), (0, 0, 0)
+    strip = Image.new('RGBA', (96, 32), (0, 0, 0, 0))
+    for f in (0, 1):
+        for y in range(32):
+            for x in range(48):
+                if (x - 24) ** 2 + (y - 8) ** 2 <= (11 + f) ** 2:
+                    strip.putpixel((f * 48 + x, y), AMB + (128,))
+        for y in range(3 + f, 15):
+            for x in range(21, 27):
+                strip.putpixel((f * 48 + x, y), (CRM if x in (21, 26) else RED) + (255,))
+        for y in range(16, 26):
+            strip.putpixel((f * 48 + 24, y), BLK + (255,))
+    tmp = tempfile.mkdtemp(prefix='s174st_')
+    path = os.path.join(tmp, 'torch_3x2.png')
+    strip.save(path)
+    rt._import_auto = lambda dlg: dict(dlg.values(), name='Torch')
+    try:
+        sid = rt._stamp_import(path)
+    finally:
+        rt._import_auto = None
+    app.processEvents()
+    st = ST.stamp_of(doc.custom, sid)
+    assert st and (st['w'], st['h'], st['frames'], st['speed']) == (3, 2, 2, 32), st
+    assert os.path.exists(os.path.join(doc.project_dir, st['png']))
+    assert rt.stamps_panel.current_id() == sid and rt.stamps_panel.list.count() == 1
+    rt._set_tool('stamp')
+    app.processEvents()
+    assert cv.tool == 'stamp' and cv.stamp_brush == sid
+    # place: the cursor on the middle column, top row
+    i0 = rt._stamp_place((4, 1))
+    app.processEvents()
+    assert i0 == 0 and room['stamps'][0] == {'stamp': sid, 'screen': rt.key, 'x': 3, 'y': 1}, \
+        room.get('stamps')
+    assert bare(doc.dumps()) == bare(pre), 'placing changed nothing but the stamps'
+    info = cv.stamp_info(0)
+    assert info and info['rect'] == (3, 1, 5, 2) and len(info['frames']) == 2, info
+    pm = IQ.fromqpixmap(cv.base.pixmap()).convert('RGB')
+    assert pm.crop((48, 16, 96, 48)).tobytes() == info['frames'][0].tobytes(), \
+        'the canvas draws the planned stamp'
+    # overlapping: refused, no undo step
+    n1 = s.undo.index()
+    assert rt._stamp_place((5, 2)) is None and 'overlap' in rt.status_line.text()
+    assert s.undo.index() == n1
+    # move, copy + paste, the light
+    rt._stamp_move(0, 0, 1)
+    room = rt.current_room()
+    assert (room['stamps'][0]['x'], room['stamps'][0]['y']) == (0, 1), \
+        (room['stamps'], rt.status_line.text())
+    rt._stamp_copy(0)
+    i1 = rt._stamp_paste((7, 4))
+    assert i1 == 1 and (room['stamps'][1]['x'], room['stamps'][1]['y']) == (6, 4)
+    cv.stamp_sel = 1
+    rt._stamp_set_light(light='#88b8f8')
+    assert room['stamps'][1]['light'] == '#88b8f8'
+    cv.stamp_sel = 0
+    rt._stamp_set_light(lit=False)
+    assert room['stamps'][0].get('lit') is False
+    app.processEvents()
+    assert bare(doc.dumps()) == bare(pre)
+    for f, b in assets0.items():
+        assert open(os.path.join(adir, f), 'rb').read() == b, f'{f} changed'
+    # the bake == the canvas, every frame; the shared colour grid not touched
+    sim = ST.simulate(doc, s.renderer)
+    bdir, bwarn = ST.baked_dir(doc.data, doc.project_dir, REPO)
+    from editor2.core.document import Document
+    bd = Document(os.path.join(bdir, 'project.json'))
+    br = ProjectRenderer(REPO, bd.project_dir, bd.data)
+    broom = bd.room('medal_vault')
+    assert 'stamps' not in broom and 'stamps' not in bd.custom
+    a_id = ST._attr_id(br, broom, rt.key, 0)
+    _tu, au = ST._users(bd, br)
+    assert a_id and {u[0] for u in au[a_id]} == {'medal_vault'}, ('a colour grid of its own', a_id)
+    assert bd.layout('island_s0').get('attr') == doc.layout('island_s0').get('attr'), \
+        'island_s0 (shared) untouched'
+    items = bd.tile_anims(broom)
+    sh0 = bytes(bd.read_sheet(broom['record']['tileset']))
+    for f in (0, 1):
+        sh = bytearray(sh0)
+        if f:
+            for it in items:
+                for s_, hx in zip(TAm.slots_of(it), it['frames'][0]):
+                    sh[s_ * 16:s_ * 16 + 16] = bytes.fromhex(hx)
+        stt = br.screen_state(broom, rt.key, 0)
+        grid, _l = br.layout_grid(stt['layout'])
+        at, _n = br.attr_grid(broom, rt.key, 0)
+        img = br.compose(bytes(sh), grid, at, br.room_palettes(broom, rt.key, 0))
+        for k in (0, 1):
+            inf = sim[('medal_vault', k, 0)]
+            c0, r0, c1, r1 = inf['rect']
+            assert img.crop((c0 * 16, r0 * 16, (c1 + 1) * 16, (r1 + 1) * 16)).tobytes() == \
+                inf['frames'][f].tobytes(), ('bake == canvas', k, f)
+    warn_any = any(sim[('medal_vault', k, 0)]['warn'] for k in (0, 1))
+    assert warn_any == bool(bwarn), (bwarn, [sim[('medal_vault', k, 0)]['warn'] for k in (0, 1)])
+    usage, errs = CMP.measure_banks(doc.data, doc.project_dir, REPO)
+    assert not errs and usage, errs
+    # delete one, remove the stamp from the library (with its other placement)
+    rt._stamp_delete(1)
+    assert len(rt.current_room()['stamps']) == 1
+    rt._stamp_remove_lib(sid, ask=False)
+    assert 'stamps' not in rt.current_room() and 'stamps' not in doc.custom
+    assert bare(doc.dumps()) == bare(pre)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undone exactly'
+    rt._set_tool('select')
+    shutil.rmtree(tmp, ignore_errors=True)
+    if not had_dir:
+        shutil.rmtree(os.path.join(adir, 'stamps'), ignore_errors=True)
+    else:
+        os.remove(os.path.join(doc.project_dir, st['png']))
+    assert {f: open(os.path.join(adir, f), 'rb').read() for f in os.listdir(adir)
+            if f.endswith('.2bpp')} == assets0
+    print(f'OK: S174 stamps — import (3×2 from the name, 2 frames, speed 32), place under the '
+          f'cursor, overlap refused, move, copy + paste, light colour / unlit; nothing but the '
+          f'stamps changed in the project; canvas == plan; the bake writes a colour grid only '
+          f'medal_vault uses (island_s0 untouched) and == the canvas both frames'
+          f'{" (warned: nearest colours)" if bwarn else ""}; meters bake; delete, remove; '
+          f'undone exactly')
+
+
 def s171_app_window(app, w):
     """S171 (the user: "when I change tabs a random empty window pops up that never loads"
     + a screenshot over the Arena tab; "when I open editor its a bit slow at first"):
@@ -7080,6 +7397,8 @@ def main():
     s171_recolour(app, w)
     s172_foods(app, w)
     s173_room_aids(app, w)
+    s173_anim_import(app, w)
+    s174_stamps(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

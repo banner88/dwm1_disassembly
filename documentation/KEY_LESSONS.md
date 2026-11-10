@@ -8073,3 +8073,51 @@ the old path kept beside it (`_find_match_scan`).
   read as "only make X", check it against the user's original wording before dropping the
   original effect; and diagnose a "does not work in game" report by diffing the user's build
   against their project before suspecting the engine.
+
+
+### A glow round a flame is at least the flame's own 8×8 pieces (S173 r3)
+- **Symptom:** three rounds of torch art: a red square (r1: "needs to be a round halo"), a round
+  halo 3 cells wide (r2: "a bit too big … It should be 1 or 2 tiles").
+- **Root cause:** an 8×8 piece shows one 4-colour row, colour 3 black (colour 1 cream unless
+  own colour 1). The bark needs brown + tan + black, the flame red + orange (+ cream) + black:
+  a piece holding flame colours cannot show the bark, so every flame piece is fully "lit"
+  (the game's own torches: the bricks recoloured, a lit square). Only the pieces AROUND the
+  flame (bark + one light colour, own colour 1) can draw a round edge.
+- **Rule:** before drawing art across palette rows, count each 8×8 piece's colours (≤ 4 with
+  black) and check them by script; a round glow needs light pieces round the flame pieces, so
+  its size is set by the flame's pieces, not by taste — say so with the first mock-up.
+
+### A recording can show a rhythm the game does not have (S173 r4)
+- **Symptom:** "It seems to wiggle slightly faster ever x cycles? why?" — on an emulator GIF of a
+  2-frame torch.
+- **Root cause:** the GIF sampled every 4th frame and played each at a fixed 67 ms (GIF delays
+  are in 10 ms steps): some swaps were shown early. The game, measured frame by frame: every
+  piece every 32 frames exactly (8 pieces on one frame, the rest the next — the 8-tile groups).
+- **Rule:** answer a timing question by measuring the emulator per frame first; record GIFs
+  from EVERY frame with each picture held for its true time (`walk_anim_import.py --gif`).
+
+### "Look at how the game does it" means its pixels, first (S173 → S174)
+- **Symptom:** ten rounds of torch PNGs; the user: "It just looks like shit. IDK how to explain
+  it. LOOK AT HOW FLAMES IN THE ACTUAL GAME MOVE. PLEASE."
+- **Root cause:** the flames were invented (black-outlined blobs, a shear "wave", two blob
+  shapes) and judged by eye. The game's torch, read pixel by pixel from the renderer (both
+  frames of the Room of Beginning's torch cell as letters): a THIN CREAM OUTLINE round a RED
+  flame, the hot core the field colour at the bottom, no black outline; the two frames are two
+  different OUTLINES (a slim single tip; leaning left, wider, a second tongue) — nothing waves.
+  Drawn that way (round 9 / 10) the user said "VERY NICE" and "Perfect" at once.
+- **Rule:** when art must look like the game's, dump the game's own pixels (both frames, as a
+  character grid) before drawing, copy its structure (outline colour, fill, what changes), and
+  show the side-by-side; and when the user says "just give me PNGs", give PNGs — no code, no
+  emulator runs until asked.
+
+### A picture on top of the map is data, not paint (S174)
+- **Symptom (asked for):** "When I remove it put the tiles back as before and don't create a
+  million random crappy broken tiles."
+- **Root cause:** the S173 import wrote the picture into the cells' tiles for good — removing
+  it would need the old tiles kept and every new tile / row / animation found and freed.
+- **Rule:** keep an overlay as a record (what, where, options) and let the BUILD draw it into a
+  copy; the editor draws the same plan on the canvas. Removal is then deleting the record, and
+  "nothing left behind" is checkable: the ROM of the project with the overlay removed has the
+  md5 it had before (`walk_stamps.py`). And only a cell's bottom-right tile decides walking —
+  an overlay's other pieces may take any free slot (the first bake over a ladder ran out of
+  walkable slots by keeping every piece's side).

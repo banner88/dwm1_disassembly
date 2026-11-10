@@ -72,7 +72,24 @@ def splice(base_text, name, new_content):
 
 def compile_project(project_path, repo_root):
     """Returns (outputs {relpath: text}, prj, warnings)."""
-    prj = Project.load(project_path)
+    # S174 (ROADMAP P3.3m): a project with stamps compiles a COPY with them baked into its
+    # tiles (stamps.py) — the project itself never holds the stamped tiles; without stamps
+    # nothing changes (the same file is loaded, byte-identical builds)
+    stamp_warnings = []
+    jpath = os.path.abspath(project_path)
+    if os.path.isdir(jpath):
+        jpath = os.path.join(jpath, 'project.json')
+    from . import stamps as _ST
+    with open(jpath, encoding='utf-8') as f:
+        _data = json.load(f)
+    if _ST.has_stamps(_data):
+        try:
+            _d, folder, stamp_warnings = _ST.stamped(_data, os.path.dirname(jpath), repo_root)
+        except Exception as e:                       # noqa: BLE001 — said plainly
+            raise CompileError(f"stamps: {e}")
+        prj = Project.load(folder)
+    else:
+        prj = Project.load(project_path)
     prj.repo_root = repo_root          # music libraries are repo-relative
 
     # content validation BEFORE emit: schema errors surface as validation
@@ -92,7 +109,7 @@ def compile_project(project_path, repo_root):
 
     # post-emit: bank-space accounting on the generated text
     aerr, awarn = validators.validate(prj, generated=gen1)
-    warnings = warnings + w1 + awarn
+    warnings = stamp_warnings + warnings + w1 + awarn
     if aerr:
         raise CompileError(
             "validation failed:\n  - " + "\n  - ".join(aerr))
@@ -121,6 +138,12 @@ def measure_banks(data, project_dir, repo_root, banks=None):
     anything. Returns (usage, errors) — errors = the validation failures
     that stopped the measurement (then usage is {})."""
     from editor2.core.document import fast_copy     # S142: 5x a deep copy
+    from . import stamps as _ST                      # S174: stamps count as the build bakes them
+    if _ST.has_stamps(data):
+        try:
+            data, project_dir, _sw = _ST.stamped(data, project_dir, repo_root)
+        except Exception as e:                       # noqa: BLE001
+            return {}, [f'stamps: {e}']
     prj = Project(fast_copy(data), project_dir)
     prj.repo_root = repo_root
     errors, _w = validators.validate(prj)

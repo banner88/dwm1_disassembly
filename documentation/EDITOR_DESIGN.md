@@ -1321,11 +1321,90 @@ including the existing Grid toggle and the 1-6× zoom, sat behind the » overflo
   place (the bounding box), dashed screen edges, the canvas's screen outlined, labels; state =
   the canvas's (*Follow the canvas*) or a number; cell grid; zoom / Fit; refreshes on every
   layout / structure / palette signal; double-click a screen = `select_screen`.
+- **Import frames from PNG (S173 r3**; user: "Allow the editor to import them then, please,
+  rather than fiddling with my project" — the Animate tab only had frames painted by hand).
+  Animate tab → *Import frames from PNG…* on the canvas selection → `editor2/core/anim_import`:
+  `read_frames` (frames the selection's size, 16 px a cell, side by side or stacked, 1-8× zoom
+  with uniform blocks; colours snapped to 5 bits; a see-through pixel refused — a BG tile has
+  no transparency) → `plan` (per 8×8 piece the union of its colours over every frame: a row of
+  the effective palette holding them all, the piece's own row first; else NEW rows on rows
+  0-3 that no screen / state of any room using this palette draws (`_rows_drawn`), pieces
+  packed into one row while ≤ 3 colours besides black; colour 1 = the cream when it fits, else
+  the lightest colour and `free_color1` on — refused in the notes when a drawn row's colour 1
+  is not $6BFF; else the nearest row, the pixels counted) → `AnimImportDialog` (the frames as
+  the game draws them, the rows, own colour 1, the tiles, speed 32 by default = the game's
+  torches, loop / back and forth, name) → `apply` in one `SnapshotCommand`: the rows; the
+  tileset made the room's own when borrowed; frame 1 → a free slot per piece on the SAME
+  wall / walkable side as the tile it replaces (a piece that never changes reuses an identical
+  tile); the layout tiles + the colour grid's rows (`canvas.attr_lid`, as painting does); the
+  cells' metatiles in My metatiles (painting them elsewhere animates for free — the animation
+  is per slot); 2+ frames → `add_tile_anim('flip', private=True)`. Measured:
+  `tools/walk_anim_import.py` on the user's save (two torches, 16×32 and 16×16) 9 / 9;
+  `--negative` 4 FAIL. test_app `s173_anim_import`. **r4 see-through** (user: "because you drew
+  OVER other tiles I am concerned the background wont fit together properly"): `read_frames`
+  keeps alpha; `plan` composites every frame over `renderer.render_screen` of the screen —
+  alpha 0 = the map's pixel, 0 < alpha < 255 = LIGHT (the PNG colour unless the map pixel is
+  black), 255 = the PNG — so an overlay with no wall in it fits any wall (measured: the halo
+  torch overlay at GreatLog screen 5 (0,0)-(2,1), bark it was never drawn on, 9 / 9, the grain
+  continuous through the halo edge); the plan keeps the composited pixels (`'rgb'`).
 - **Reference** (`room_view.ReferenceWindow`): any room (your rooms, then the game's; a search
   box), screen, state, Grid, Markers, ▶ Play, On top, zoom — the canvas is `ReferenceCanvas`
   (a `RoomCanvas` that never edits: no paint, drag, double-click; left click only marks a cell).
   Right-click → `brushOffered(mt, sheet)` → `RoomsTab._reference_brush`: the brush when the
   four quarters' graphics are the same in this room's sheet, else a line pointing to Borrow.
+
+**As built S174 (ROADMAP P3.3m — stamps; built, NOT yet user-tested).** The user: "Allow me to
+'stamp' these types of things … on top of any tiles … remove this stamp and put it elsewhere or
+copy and paste etc. When I remove it put the tiles back as before and don't create a million
+random crappy broken tiles"; conferred: nearest colours with a warning, 16-pixel cells, only the
+screen it is put on, an unlit option, the halo colour settable.
+- **The model (`editor2/core/stamps.py`, PROJECT_COMPILER §2.79):** a stamp is DATA —
+  `custom.stamps[]` (the library) + `rooms[].stamps[]` (placements). Placing, moving, removing
+  touch ONLY those lists; the layouts, colour grids, palettes, tile animations and tileset files
+  are never written (test_app `s174_stamps` and `walk_stamps.py` compare them). The build bakes
+  a copy (`stamps.baked_dir`, from `compiler.compile_project` / `measure_banks` /
+  `capacity.measure`), so removing a stamp leaves exactly the tiles there were — the measured
+  ROM md5 of the project with its stamps removed == the md5 before they were added.
+- **What the canvas shows = what the bake draws.** `stamps.simulate(doc, renderer)` plans every
+  stamp in build order (rooms, placements, states) with `anim_import.plan(taken=, attr=)` — the
+  rows earlier stamps take on the same palette counted as drawn — and returns the frames as the
+  game draws them (`anim_import.preview`). `RoomCanvas._update_stamps` caches it per document
+  revision; `_render` pastes the frame of each stamp on this screen / state over the composed
+  tiles (▶ Play: frame = anim clock // speed). Measured equal to the baked screen, every frame
+  (walk_stamps, test_app). The Stamps page's *Show the stamps on the canvas* hides them (`layers['stamps']`; the tiles
+  under them). **The tools row's labels lost their keys** ("Select", "Paint" … "Stamp" — the key
+  in each tooltip): with the Stamp tool the row no longer fitted at 1,512 px (+ More behind »,
+  test_app `s173_room_aids`); a Stamps toggle on the view row likewise pushed Reference off it.
+- **The Stamp tool (T)** (`canvas.TOOLS` 'stamp'): the chosen library stamp follows the mouse
+  (the PNG's frame 1 at 80 %, the cursor on its middle column, top row — `stamps.anchor`; a red
+  outline when it would overlap); click → `RoomsTab._stamp_place` → `stamps.place` (refused on
+  overlap — overlapping stamps would bake one over the other's first frame); click a stamp =
+  select (yellow) + drag → `stamps.move`; Del → `stamps.remove`; ⌘C / ⌘V (`QKeySequence.Copy` /
+  `Paste` on the canvas) copy the placement and paste it under the mouse — any screen, any of
+  the user's rooms; right-click → Light (on / off) and Light colour (the swatches
+  `stamps.LIGHTS` + Custom…). A stamp may hang off the screen edge (the part off it is
+  dropped). Each action one `SnapshotCommand`. All stamps outlined while the tool is on; "!"
+  on one the build draws partly in the nearest colours.
+- **The Stamps rail page** (NEW `editor2/app/rooms/stamps_panel.py`): the library (frames over
+  a checkerboard, size, frames, how often placed), **Import PNG…** → `StampImportDialog` (the
+  frame size from "WxH" in the file name, else the picture; frames side by side / stacked, 1-8×
+  zoom — `anim_import.read_frames`; speed, 32 by default) → `stamps.add_to_library` (the PNG
+  copied to `assets/stamps/<id>.png`), Rename…, Remove… (and every placement), Speed; the
+  selected placement: Light, Light colour, Copy, Remove, its warning text.
+- **Light:** unlit drops the half-clear pixels; a light colour replaces them AND the stamp's
+  own light colour among its solid pixels (`stamps.own_light`: the commonest half-clear
+  colour — a torch's hot core), else the flame's pieces would need a 5th colour.
+- **The bake (`stamps.bake`):** per placement, the screen's states grouped by (layout, colour
+  grid, palette); each group gets a layout and a colour grid that only it uses — copied
+  (appended, `<room>_s<k>_stamps`) only when another screen / room / state uses them
+  (`_users`); `anim_import.plan` (the see-through composite over the screen as it is); the
+  rows (existing / a new row on a row nothing on that palette draws / nearest, warned); the
+  tiles: a still piece reuses an identical used tile, a moving piece reuses a slot the room
+  already animates with the same frames (two torches on identical bark cost one), else a free
+  slot — only a cell's BOTTOM-RIGHT tile must keep its wall / walkable side (S94: the engine
+  reads that one), the others any slot (`page2.pick_order`; the first bake over a ladder ran out
+  of walkable slots); one flip animation per placement (≤ 32 tiles an item, `tileanim.problems`
+  checked). Over a moving tile a stamp's pieces keep its first frame.
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 

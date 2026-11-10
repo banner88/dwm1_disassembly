@@ -135,6 +135,13 @@ def measure(data, project_dir, repo_root, names=None):
     from . import validators as V
     from .compiler import _emit_all
     t0 = time.perf_counter()
+    from . import stamps as _ST                      # S174: stamps count as the build bakes them
+    stamp_error = None
+    if _ST.has_stamps(data):
+        try:
+            data, project_dir, _sw = _ST.stamped(data, project_dir, repo_root)
+        except Exception as e:                       # noqa: BLE001 — reported below
+            stamp_error = f'stamps: {e}'
     prj = Project(fast_copy(data), project_dir)
     prj.repo_root = repo_root
     rep = {'rows': [], 'usage': {}, 'errors': [], 'content': {}, 'rooms': {}, 'left': {}}
@@ -142,7 +149,7 @@ def measure(data, project_dir, repo_root, names=None):
         errors, _w = V.validate(prj)
     except Exception as e:                       # noqa: BLE001 — never break the page
         errors = [str(e)]
-    rep['errors'] = list(errors)
+    rep['errors'] = list(errors) + ([stamp_error] if stamp_error else [])
     usage = {}
     if not errors:
         try:

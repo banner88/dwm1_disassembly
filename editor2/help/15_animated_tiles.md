@@ -39,6 +39,36 @@ sparkles — drawn by you, at the speed you choose.
 7. **Create animation**. The canvas starts playing it (**■ Stop** /
    **▶ Play** on the screen row); the **Anim** layer outlines moving tiles.
 
+**Import frames from a PNG (S173 r3).** Drawn your animation in a paint program? Select the
+cells on the canvas (Select tool, click or drag), then Animate tab → **Import frames from
+PNG…**. The PNG holds the frames **side by side** (or one under the other), each the size of
+the selection — 16 pixels a cell: one cell = 16×16 frames, one cell over another = 16×32 —
+at 1× or any whole zoom (2×, 3× …, every block one colour). **See-through pixels** (S173 r4):
+a fully clear pixel keeps what the map shows there; a **half-clear** pixel is **light** — its
+colour, except where the map is black (the wall's grain shows through a glow). So a torch with
+a halo can be drawn with NO wall in it and fits whatever wall it lands on. A window shows the
+frames as the game will draw them (over the wall that is there) and what happens:
+
+- every 8×8 piece is drawn with a **palette row that holds all its colours** (in every
+  frame). When no row does, a row that nothing using this palette draws gets the piece's
+  colours — several pieces share it when their colours fit 4 (one of them black). A row whose
+  colour 1 is not the cream turns **own colour 1** on (your rows keep their cream). When no
+  row is left, the nearest colours are used and the window says how many pixels;
+- **frame 1 becomes the cells' tiles** (each on the same wall / walkable side as before),
+  the other frames the animation (*Flip through frames*); **speed** 32 by default — the
+  game's own torches swap every 32 game frames — loop or back and forth, and a name;
+- the cells join **My metatiles**: paint them anywhere else in the room and they move too,
+  for no extra tiles.
+
+An import CHANGES the cells' tiles for good. For a picture you may want to move or remove
+later — a wall torch — use a **stamp** instead (S174, Rooms → **Stamps** page + the **Stamp
+tool (T)**, see *Rooms*): the same PNG, but the tiles under it are never changed; the build
+draws it in.
+
+One undo step. With one frame it just places the picture. Measured in the game
+(`tools/walk_anim_import.py`): the rows in the palette, only the imported frames, a step
+every 32 frames, walls kept.
+
 **Change or remove:** the list *Animations in this room* → **Edit** (its
 cells are selected and it loads below; **Save changes**) or **Remove** (the
 tiles show their first frame again). Everything is one undo step.

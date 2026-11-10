@@ -1083,8 +1083,40 @@ recipes are pure authoring.
       animating in-game"): r1 made the tile but changed no cell — the clicked cell now gets
       it (`place`); `walk_still.py --place` 8 / 8 on the user's project (the clicked cell 1
       picture, the tile it came from 8), `--negative` (r1: nothing placed) FAILS like the
-      user's build. EDITOR_DESIGN §5.1
+      user's build.
+      **S173 r3** (user: "Allow the editor to import them then, please, rather than fiddling
+      with my project"): Animate → **Import frames from PNG…** (NEW `editor2/core/anim_import.py`
+      + `anim_import_dialog.py`): a PNG strip onto the selected cells — palette rows planned
+      (existing / new on free rows / own colour 1 only when needed), frame 1 as tiles (same wall
+      side), the cells in My metatiles, the flip animation (speed 32 = the game's torches);
+      `tools/walk_anim_import.py` 9 / 9 on the user's save, `--negative` 4 FAIL; test_app
+      `s173_anim_import`. **r4:** see-through pixels (clear = the map, half-clear = light over it)
+      — an overlay fits any wall (9 / 9 on bark it was never drawn on). EDITOR_DESIGN §5.1
       "As built S173", help 10_rooms / 15_animated_tiles / glossary. Byte-neutral for the ROM.
+- [x] **P3.3m — Stamps: pictures on top of the tiles, baked by the build** — **built S174, NOT
+      yet user-tested** (user, after the S173 torch art: "Allow me to 'stamp' these types of
+      things (torches but there might be more in the future so we need this TYPE of image) on
+      top of any tiles. This should automatically use the tiles behind to deal with
+      transparency etc. I should be able to remove this stamp and put it elsewhere or copy and
+      paste etc. When I remove it put the tiles back as before and don't create a million
+      random crappy broken tiles … please allow me to set the colour of the halo"; conferred:
+      "The palette budget needs to be respected and worked within … Nearest should be fine but
+      warn … 16 pixel is fine … only that screen … Unlit option is fine"). A stamp is DATA,
+      not paint: `custom.stamps[]` (the library: a project PNG, the frame size in cells, the
+      speed) + `rooms[].stamps[]` (stamp, screen, top-left cell, lit, light colour); the room's
+      tiles, layouts, colour grids, palettes and tileset files are never touched by placing,
+      moving or removing one. The compiler bakes a COPY (`editor2/core/stamps.py`; per screen
+      state a layout + colour grid of its own — copied only when shared; the S173 r4 see-through
+      plan; rows existing / new free / nearest, warned; identical pieces reuse tiles and
+      animated slots; one flip per placement). Editor: the Stamp tool (T: ghost under the mouse,
+      click, drag, Del, ⌘C / ⌘V, right-click light on / off + colour), the Stamps rail page
+      (Import PNG… / Rename / Remove / Speed / Show / the selected stamp's light + warnings);
+      the canvas draws exactly what the bake will (`stamps.simulate`).
+      Measured: `tools/walk_stamps.py` 12 / 12 on the user's project + save (the project
+      unchanged by placing; editor picture == bake every frame; rows, tiles, frames, 32-frame
+      steps, walls; removed = the very same ROM md5), `--negative` 6 FAIL; test_app
+      `s174_stamps`. PROJECT_COMPILER §2.79, EDITOR_DESIGN §5.1 "As built S174". Byte-neutral
+      for a project without stamps.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

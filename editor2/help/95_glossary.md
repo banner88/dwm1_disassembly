@@ -126,6 +126,9 @@ gate). [Gates](60_gates.md)
 
 ## I
 
+**Import frames** — Animate tab: a PNG strip of frames onto the selected cells — tiles,
+palette rows and the animation in one step. [Animated tiles](15_animated_tiles.md)
+
 **Item** — the game's 43 items and your own (44-127), each working like one of
 the game's. [Items](74_items.md)
 
@@ -257,6 +260,10 @@ family recipes. [Breeding](58_breeding.md#Special%20recipes)
 
 **Step-on trigger** — a cell that runs something when the player steps on it.
 [Doors](11_doors.md#One-way%20teleports,%20step-on%20triggers,%20stairs)
+
+**Stamp** — a picture put on top of a room's tiles (a wall torch with its glow): clear
+parts show the tiles, half-clear parts light them. The tiles are never changed — the build
+draws it in, so moving or removing it leaves them as they were. [Rooms](10_rooms.md)
 
 **Still tile** — a copy of one frame of a moving tile that never moves; the Still tool (S)
 puts it on the cell you click. [Animated tiles](15_animated_tiles.md)

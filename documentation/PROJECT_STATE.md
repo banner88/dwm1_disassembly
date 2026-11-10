@@ -10,6 +10,53 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
+> PNGs (CLEAR = THE TILES SHOW, HALF-CLEAR = LIGHT, FRAMES = MOVEMENT), THE STAMP TOOL (T: PLACE / DRAG / DEL / ⌘C ⌘V /
+> RIGHT-CLICK LIGHT ON-OFF + COLOUR), THE TILES NEVER CHANGED — THE BUILD BAKES THE STAMPS INTO A COPY** (the user, after
+> the S173 torch art: "1) The two different torch PNGs to be importable into editor for a stamp. 2) Allow me to 'stamp'
+> these types of things (torches but there might be more in the future so we need this TYPE of image) on top of any
+> tiles. This should automatically use the tiles behind to deal with transparency etc. I should be able to remove this
+> stamp and put it elsewhere or copy and paste etc. When I remove it put the tiles back as before and don't create a
+> million random crappy broken tiles … Also please allow me to set the colour of the halo"; conferred → "The palette
+> budget needs to be respected and worked within … 2) Nearest should be fine but warn. 3) 16 pixel is fine 4) only that
+> screen. 5) Unlit option is fine. Proceed please.").
+> **Built S174, NOT yet user-tested.** Byte-neutral for a project without stamps (the same project.json is compiled; the
+> example pin unchanged).
+> **The torch art (end of S173, session material — PNGs, not repo content):** after the user's "LOOK AT HOW FLAMES IN
+> THE ACTUAL GAME MOVE", the Room of Beginning's torch cell read pixel by pixel (both frames as letters): a thin CREAM
+> outline round a RED flame, the hot core = the field colour, two different OUTLINES (slim single tip / leaning, wider,
+> forked) — nothing waves (KEY_LESSONS S174). The S173 round-6 halo (12 / 13 px, the dither moving) + stick kept, the
+> flame redrawn: "VERY NICE" (tall flame) and "Perfect" (the game-size flame's spade shape drawn 15 px tall); both
+> 9 / 9 with `walk_anim_import.py`. Delivered as the stamps `Wall torch - tall flame 3x2.png` /
+> `Wall torch - spade flame 3x2.png`.
+> **Built (EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79):** NEW `editor2/core/stamps.py` — the library
+> `custom.stamps[]` + placements `rooms[].stamps[]` (placing / moving / removing touch only these), `simulate` (the
+> editor's picture = every stamp in build order through `anim_import.plan(taken=, attr=)`), `bake` (per screen-state
+> group a layout + colour grid of its own, copied only when shared; rows existing / new free / nearest, warned; an
+> identical still piece reuses a tile, an identical moving piece a slot the room already animates; only a cell's
+> bottom-right tile keeps its wall side; one flip animation per placement); `compiler.compile_project`,
+> `measure_banks`, `capacity.measure` compile / measure the baked copy when there are stamps. Editor: the Stamp tool
+> (T) (the tools row's labels now without their keys — the keys in the tooltips — so the row fits at 1,512 px), the
+> Stamps rail page (NEW `editor2/app/rooms/stamps_panel.py`: Import PNG… window with
+> the size from "3x2" in the name, Rename, Remove, Speed; the selected stamp's Light, Light colour (Amber / Gold /
+> Orange / Red / Pale blue / Green / Violet / Custom…: the glow AND the stamp's own glow colour among its solid pixels),
+> Copy, Remove, its warning; *Show the stamps on the canvas*); the canvas draws `simulate`'s frames (▶ Play moves them), the ghost under the mouse (red =
+> overlap, refused), "!" when nearest colours. Help 10_rooms / 15_animated_tiles / glossary; `EDITOR_REVISION` S174.
+> **Measured in the game:** NEW `tools/walk_stamps.py` on the user's project + save, GreatLog screen 5 (the tall-flame
+> torch at (0,0), the spade torch at (3,0), the tall one gold-lit at (8,0)): **12 / 12** — placing changed nothing but
+> the stamps; the editor's picture == the baked screen, every frame; the baked rows in BG palette RAM; the tiles + rows;
+> 32 moving pieces show only + every baked frame; a step every 32 frames (median gap 32); walls kept; and REMOVED, the
+> project builds the very ROM it built before (`a57ac630…`, patched, both). `--negative` (nothing placed) 6 FAIL. Warned
+> as agreed: the spade torch 13 px nearest (2 pieces over that bark would need a 5th colour), the gold one 134 px (no
+> row left on that palette for a second light colour).
+> **Test ROM:** `DWM-S174-stamps-test.gbc` (`1e7140ad…`, patched) = the user's project + the two torches stamped at
+> GreatLog screen 5 (0,0) and (3,0); `walk_stamps.py` 12 / 12 on it (23 moving pieces; the spade torch 13 px nearest, warned; removed = `a57ac630…`, patched).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin `18e6f102…`, patched, unchanged); test_app
+> `--rom` PASS (+ `s174_stamps`; the S132 rail order + Stamps; the GUI build == the pin); test_canvas PASS (one after another).
+> Help picture `tab_rooms.png` regenerated.
+> **Next:** the user's test of stamps (import the two PNGs, place / move / copy / paste / remove, the light colours,
+> ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
+
 > Last verified: 2026-11-10 (Session 173 — **ROOM-BUILDING AIDS (ROADMAP P3.3l): TWO BARS OVER THE CANVAS (THE TOOLS;
 > THE VIEW), STATUE / MONUMENT / ARCHIVE IN + MORE, ZOOM 1-12× WITH HALF STEPS + FIT, CLEAN VIEW (HOLD H), THE STILL TOOL
 > (A NEW TILE FROM A CHOSEN FRAME OF A MOVING CELL — THE GAME'S ANIMATION OR YOUR OWN), THE BRUSH UNDER THE MOUSE, WHERE A
@@ -61,77 +108,39 @@
 > still (frame 5). test_app `s173_room_aids` (the clicked cell only); `EDITOR_REVISION` S173r2; help 10 / 15 /
 > glossary. Built S173 r2, NOT yet user-tested. **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 2140
 > PASSED; test_app `--rom` PASS; test_canvas PASS (run one after another).
+> **r3 (user: "1) Allow the editor to import them then, please, rather than fiddling with my project. 2) Nah that's a
+> bit too big … It should be 1 or 2 tiles (1 or 2 vertically). 3) … use the same number of frames and look as the other
+> torches in the game"):** Animate tab → **Import frames from PNG…** — NEW `editor2/core/anim_import.py` (read_frames /
+> plan / preview / apply) + `editor2/app/rooms/anim_import_dialog.py`; EDITOR_DESIGN §5.1 "As built S173" (the import
+> bullet), help 15 / glossary; `EDITOR_REVISION` S173r3. Measured: NEW `tools/walk_anim_import.py` on the user's project +
+> save — a 16×32 torch at GreatLog screen 5 (2,0)-(2,1) and a 16×16 one at (5,0): **9 / 9** (rows 1 + 2 in the palette RAM,
+> each piece on its planned row, only + every imported frame, a step every 32 frames (median gap 32), walls kept);
+> `--negative` **4 FAIL**. test_app `s173_anim_import`. The torch art (2 frames, the Room of Beginning's torch row orange /
+> cream / red / black + a light row brown / orange / tan / black over the bark; KEY_LESSONS S173 r3 on why a glow is at
+> least the flame's own 8×8 pieces) is session material, not repo content. Test ROM `DWM-torch-import-test.gbc`
+> (`34b96212…`, patched) = the user's r4 project + both torches. Built S173 r3, NOT yet user-tested. **Checks (r3):** verify_integrity PASS; test_compiler `--rom` ALL 2140
+> PASSED; test_app `--rom` PASS (+ `s173_anim_import`); test_canvas PASS (one after another).
+> **r4 (user: "Narrow is worse and looks square. But because you drew OVER other tiles I am concerned the background
+> wont fit together properly … Can you also show me animated?"):** the import takes SEE-THROUGH pixels — clear = the
+> map stays, half-clear = light (the colour unless the map is black) — composited over the screen as it is
+> (`anim_import.plan`); the halo torch (the round-2 look the user loved, 2 frames, halo 12 / 13 px, flame in 1 cell +
+> stick below) is now an OVERLAY PNG with no wall in it: imported at GreatLog screen 5 (0,0)-(2,1) — bark it was never
+> drawn on — `walk_anim_import.py` 9 / 9, the grain continuous through the halo (the tool gained `--gif`: the screen
+> animated). Test ROM `DWM-halo-overlay-test.gbc` (patched). `EDITOR_REVISION` S173r4. Built, NOT yet user-tested.
+> Then (user: "transparency is great … Only tip wiggles I'd like the whole shape to move a little more … It seems to
+> wiggle slightly faster ever x cycles? why?"): the whole flame now leans −2 / +2 px at the top (the base on the stick);
+> (then, user: "it needs to change in shape not just wave back and forth … The halo is perfect": two DIFFERENT
+> flames — tall / narrow, one tip; wider / lower, a split tip, the foot wider — 9 / 9, test ROM
+> `DWM-halo-shapes-test.gbc` (`f0ca2897…`, patched)); MEASURED 1,200 frames: every piece changes every 32 frames exactly (8 pieces on one frame, the other 4 the next — the
+> 8-tile groups); the unevenness was the GIF (every 4th frame at a fixed 67 ms) — `walk_anim_import.py --gif` now holds
+> each picture for its true time (KEY_LESSONS S173 r4). 24 pieces (6 cells), 12 new tiles, 12 moving. 9 / 9; test ROM
+> `DWM-halo-sway-test.gbc` (`07959500…`, patched). **Checks (r4):** verify_integrity PASS; test_compiler `--rom` ALL 2140
+> PASSED; test_app `--rom` PASS; test_canvas PASS.
 > **Next:** the user's test of the Rooms tab at their window size; then the "Awaiting a user test" list / the
 > editor's finalization.
 
-> Last verified: 2026-11-08 (Session 172 — **FOODS INSTEAD OF MEATS: A TICK ON THE ITEMS TAB (TOAST / APPLE / BISCUIT /
-> BADAPPLE / HONEY, EACH WITH ITS OWN NPC SPRITE; OFF = THE GAME'S MEATS) + THE OUTSTANDING FIXES: test_canvas PASSES AGAIN,
-> THE BALANCE TAB NO LONGER HOLDS THE WINDOW** (the user: "Please identify outstanding fixes and ideally wrap them up … I want
-> to replace the meats and meat icons in the game with different items … Toast, Apple, Biscuit, Honey … Make this a TICK on
-> the editor that I can turn on/off. When off its vanilla behaviour. No idea about BadMeat, thoughts?"; the audit conferred →
-> "1) THERE IS NO MEAT ANIMATION IN FLYING ARC IN GAME. Only a note appears. Did you hallucinate this???? 2) BadApple is good.
-> 3) Dont care about story … 4) Field sprite - YES, and disambiguate so not everything is meat. Apple becomes an apple icon,
-> honey becomes a honey icon. 5) See 1. 6) Yes fix everything please"; r2 on the pictures: "They are big and bright and not
-> at all muted like the game … look at what the game is like in terms of pickups in gates … NOT animated", then each art
-> approved one by one, and "allow me to edit PNG using draw pixel tools same as tile … apply and restore default (yours)").
-> **r2 USER-CONFIRMED 2026-11-08 13:17 ("Yeah everything works … Other than that its freat")** — test ROM `DWM-S172r2-foods-test.gbc` (`b9deda81…`, patched, historical) = the user's project +
-> `examples/s172_foods_demo` (tick ON); round 1's `a784dd16…` (patched, historical) was never tested.
-> **r3 (user: "I want description to reflect strength (Tames monsters a little, tames monsters a moderate amount, tames
-> monsters a lot, tames monsters greatly)"): built S172, PyBoy-verified, USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please")** — each food its own bag
-> description (`foods.DESCRIPTIONS` as `item_description` defaults under the project's edits): Toast "Tames monsters / a
-> little", Apple "… / a moderate amount", Biscuit "… / a lot", BadApple "… / but poisons them", Honey "… / greatly". Test
-> ROM **`DWM-S172r3-foods-test.gbc`** (`ed6083c1…`, patched); `walk_foods.py` + step `descs` **52 / 52** (negative 12 FAIL).
-> The example has the tick off: its pin is unchanged.
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS and test_compiler `--rom`
-> ALL 2095 PASSED at start; HEAD's test_canvas stopped at line 297 (worse than S171's note: line 627).
-> **The audit's error (KEY_LESSONS S172):** it said the meats fly in an arc as a meat icon in battle — animation `$2C`
-> (`AnimTimeline_2c_FEEDMEAT`) is a music NOTE (rendered: one 16 × 16 note, white + orange); the label is the skill-name
-> table's word. Both trees' comments now say so (zero bytes); BATTLE_SKILL_SYSTEM §8: `$C2-$C4` / `$C6` show `$2C`, `$C5`
-> BadMeat the poison cloud `$15`; the skill names are one off (`$C2` "FEEDMEAT" = item 19 BeefJerky …).
-> **Built (PROJECT_COMPILER §2.78):** `gamedata.foods` — names (19 Toast, 20 Apple, 21 Biscuit, 22 BadApple, 23 Honey) as
-> `gamedata.text` defaults under the project's own edits; records / prices / shops / battle power untouched; the story's
-> words untouched (user). Field sprites: plain ids $58-$5C (the game's unused copies of $50) = the five foods
-> (`editor2/assets/foods/*.png`, 16 × 16, one field OBJ palette each), $5F (the meat prop: the spring, the ending bedroom) =
-> the Apple: ROM0 region `npc_food_sheets` (gfx-IDs $7717-$771B = bank $77's $4001 rows 23-27, `FoodSheet0-4`) + bank
-> $05 region `npc_food_pals` (NEW `patches/bank_005.asm`, the re-sectioned bank). One frame: the objects' lists hold ONE
-> frame and a standing NPC steps 0 / 1 (measured) — bank $77 `NpcDrawPlain` → `NpcStaticFrame77` holds `NpcStaticIds`
-> on frame 0. Editor: the Items tab's tick (pictures + a line), the NPC sprite picker's foods, `Document.set_foods`; help
-> 74 / 20 / glossary; `EDITOR_REVISION` S172.
-> **r2 — the pictures and the gate pickups (PROJECT_COMPILER §2.78 item 4, GATE_GENERATION §5 "The pickup icons"):** the
-> five pictures redrawn in the game's pickup style (cream halo, thin black outline, one accent, ≈ 9-11 px; not animated):
-> Toast orange 6 (a notch each side), Apple red 0, Biscuit brown 7, Honey (the pot) amber 3, BadApple = the Apple in grey 5.
-> Each food its OWN gate-floor pickup icon (all five meats shared the red meat icon 4): bank $77 rows 28-32 `FoodIcon0-4`,
-> entry 33 `FoodIconsLoad` (bank $16 `jr_016_6002`, every gate room load: the five icons into VRAM bank 1 $8500-$863F, then
-> the game's own load) and entry 34 `FoodIconDraw` (bank $01 `CheckDirectionBit7`: a food → tile $50 + 4k in bank 1, its
-> palette); off / a DMG = the game's path; the floor-item tables re-sectioned byte-neutral. **Drawing:** the Items tab's
-> pictures are buttons → *Draw the … picture* (the Draw tab's pad; Apply / Restore default / Undo stroke; one undo step) →
-> `gamedata.food_art`, used by the NPC sheets and the pickup icons. `TEMPLATE_SIZE[$77]` 3087.
-> **Annotation (Iron Rule 6):** ROM0 `NpcSheetGfxTable` (both trees) and bank $05 `NpcSpriteFrameTable` / `NpcFramesMeat`
-> / `NpcFrameMeat0` / `NpcSpritePalTable` re-sectioned from fake code (`tools/resection_npc_sprite_tables.py`; the labels
-> other bytes jump to kept, `DataLookup_2B08` splits its word); clean build `1ca6579…`; ROOM_DATA_FORMAT "NPC sprite tables
-> (S172)".
-> **Measured:** `tools/walk_foods.py` on the user's save + the demo **32 / 32** (VRAM sheets == the pictures, OAM palettes,
-> 2 × 2; 300 frames a room on the one frame; a talk from the side; the stall draws Toast / Apple / Biscuit / Honey and sells
-> a Toast for 20 G; the HUNGRY SLIME battle: wItemInUse 19, "Toast" in the name buffer, the feeding line, won);
-> `--negative` (NpcStaticIds emptied) **3 FAIL** (304 / 600, 468 / 900, 240 / 240 frames junk). **r2:** + the `pickups` step
-> (gate 0 floor 1, five foods + a Herb on the floor list; on the floor, after the field menu, after a battle) — the whole
-> walk **47 / 47** on the r2 ROM and 47 / 47 on a demo with DRAWN Toast / Honey; `--negative` (+ `FoodIconCount` 0) **9
-> FAIL**. Tick off: both regions = the ROM's, `FoodIconCount` 0.
-> **The outstanding fixes:** (1) `editor2/tests/test_canvas.py` PASSES (the S171 "Found, NOT fixed"): the raw-Borrow block
-> unticks Match colours (S171 r4), slot budgets of 256 (S168), the release block (the import now fits on page 2), the
-> sharing check and v6_split fill both pages (and re-place slots a fill cell covered), page-2 slot keys. (2) The Balance
-> tab's first show: `balance_tab.peek_ctx` works out the cache's answers in the load task — the longest GUI stall 3.7 s →
-> 0.16 s on the user's project, the same rows both ways (a seeded cache). (3) `items_tab._undo_changed` ignores a torn-down
-> undo stack.
-> **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 2134 PASSED (+ `test_s172` r2; REGRESSION == the new
-> pin `18e6f102…`, patched; round 1 `9ee0b97b…`, patched, historical; was `7aae0e95…`, patched, historical); test_app `--rom`
-> PASS (+ `s172_foods` r2: a food drawn); test_canvas PASS.
-> **Checks (r3):** test_compiler `--rom` ALL 2140 PASSED (+ 6 `test_s172` r3 checks; the pin unchanged — the example's tick
-> is off); test_app `--rom` PASS; test_canvas PASS; verify_integrity PASS.
-> **Next:** S172 is closed (handed off as `DWM-S172-handoff.zip`). The "Awaiting a user test" list; the editor's
-> finalization (the user: "I want to move towards the finalization of the editor so I can get cracking").
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S174** (2026-11-10): ROADMAP P3.3m stamps — pictures on top of a room's tiles: `custom.stamps[]` + `rooms[].stamps[]` are data (the project's tiles never change), the build bakes a copy (NEW `editor2/core/stamps.py`; `compile_project` / `measure_banks` / `capacity.measure`); the Stamp tool (T), the Stamps page (NEW `stamps_panel.py`), light on / off + colour, nearest colours warned; the canvas == the bake; `tools/walk_stamps.py` 12 / 12 on the user's save (removed = the same ROM md5), negative 6 FAIL; the S173 torch art redrawn from the game's own torch pixels (the user's two picks, as stamp PNGs). EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79, KEY_LESSONS S174. Byte-neutral without stamps. Built S174, NOT yet user-tested.
 - **S173** (2026-11-10): ROADMAP P3.3l room-building aids — the measured cause of the user's asks (one tool bar overflowing at 1,512 px: Eyedrop, Walkability, Grid and Zoom existed behind »); two bars (tools / view), + More ▸ Statue · Monument · Archive, zoom 1-12× with half steps + Fit + pinch, clean view (H held), the Still tool (`animate.cell_frames` → a frame chooser → `make_still_tile`: a new still metatile; r2: on the clicked cell — r1 changed no cell and the user's cell kept moving; the game's animation and the room's own), brush preview, where-used outline, NEW `room_view.py` (Whole room, Reference); `tools/walk_still.py` 9 / 9 on the user's save (negative 2 FAIL); HEAD's test_app Capacity block fixed. EDITOR_DESIGN §5.1 "As built S173", KEY_LESSONS S173. Byte-neutral for the ROM. Built S173, NOT yet user-tested.
 - **S172** (2026-11-08): Foods instead of meats (ROADMAP P3.19, user-directed) — `gamedata.foods`, a tick on the Items tab: items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's edits), each food its own plain NPC sprite $58-$5C from `editor2/assets/foods/*.png`, the meat prop $5F = the Apple; regions `npc_food_sheets` (ROM0) / `npc_food_pals` (bank $05, new overlay copy), sheets in bank $77 (gfx-IDs $7717-$771B), `NpcDrawPlain` → `NpcStaticFrame77` (one-frame objects held on frame 0); NPC sprite tables re-sectioned both trees (`tools/resection_npc_sprite_tables.py`); animation $2C annotated as the NOTE (the audit's "flying meat" was wrong — KEY_LESSONS S172); `tools/walk_foods.py` 32 / 32; the outstanding fixes: `test_canvas.py` passes again, the Balance tab's first-show stall 3.7 s → 0.16 s (`peek_ctx`). r2: the pictures redrawn in the game's pickup style; each food its own gate pickup icon (VRAM bank 1; bank $77 entries 33 / 34 hooked into banks $16 / $01); `gamedata.food_art` drawn in the Items tab (Apply / Restore default); walk 47 / 47 (negative 9 FAIL) — r2 USER-CONFIRMED 2026-11-08 13:17. r3: each food its own bag description by strength (walk 52 / 52) — USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please"). Pin `18e6f102…` (patched; round 1 `9ee0b97b…`, patched, historical).
 - **S171** (2026-11-06): ROADMAP P3.17 packaging — `DWM1 Editor.app` with its own Python / Qt / PyBoy / RGBDS v0.6.1 / SameBoy (`tools/package_app.py`, `editor2/packaging/launch.py` + `selftest.py`, `editor2/app/appmode.py`, `.github/workflows/editor-app.yml` → pre-release `editor-latest`; ad hoc signed; the ROM never inside); the builder without `make`, out of tree (byte-identical); the stray empty window (Arena "opens when" list: `setParent(None)` without `hide()` + Qt's queued show — `qt_safe.discard`, `StrayWindowGuard`); tabs made on first need (open 6.6 s → 0.3 s). EDITOR_DESIGN §4.1 / §5.0, PROJECT_COMPILER §3, KEY_LESSONS S171. r3 Borrow from your rooms (P3.3h), r4 colour-true tiles (P3.3i), r5 parked metatiles (P3.3j, `editor2/core/parking.py`), r6 recolour without changing shapes + Draw undo (P3.3k). Byte-neutral for the ROM (pin `7aae0e95…`, patched). Built S171, NOT yet user-tested.
@@ -541,6 +550,8 @@ real project starts, so these are best confirmed on the way into it:
   right-click → *Copy in row*.
 - S173: the Rooms tab's two bars at your window size, + More, zoom / Fit / pinch, Clean / hold H, the Still tool (a frame
   chosen; the new tile in My metatiles), the brush preview, where-used, Whole room, Reference.
+- S174: stamps — import, the Stamp tool (place / drag / Del / ⌘C ⌘V / right-click light), light colours, the "!"
+  warnings, ▶ Play here with stamps (`DWM-S174-stamps-test.gbc`).
 - S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —
   USER-CONFIRMED 2026-11-08 13:17 / 19:19; this fix was not mentioned).
 

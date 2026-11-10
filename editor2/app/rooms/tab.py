@@ -222,8 +222,15 @@ class RoomsTab(QWidget):
                 ('walk', 'Walkability', 'W', True, 'click a cell to flip wall / walkable'),
                 ('still', 'Still', 'S', True, 'click a MOVING cell, choose one of its frames: '
                  'that cell stops (a new tile that never moves) — the tile is also in My '
-                 'metatiles, your brush for other cells')):
-            a = QAction(f'{text} ({key})', self)
+                 'metatiles, your brush for other cells'),
+                # S174 (ROADMAP P3.3m): pictures on top of the tiles (stamps.py)
+                ('stamp', 'Stamp', 'T', True, 'put the picture chosen on the Stamps page on top '
+                 'of the tiles (a wall torch…): click to place, drag to move, Del removes, '
+                 '⌘C / ⌘V copy and paste, right-click for its light — the tiles under it are '
+                 'never changed')):
+            # S174: the label without its key (in the tooltip) — with the Stamp tool the row no
+            # longer fitted at 1,512 px (+ More went behind »; KEY_LESSONS S173)
+            a = QAction(text, self)
             a.setCheckable(True)
             a.setShortcut(QKeySequence(key))
             a.setShortcutContext(Qt.WidgetWithChildrenShortcut)
@@ -340,7 +347,8 @@ class RoomsTab(QWidget):
                                 ('markers', 'Markers', 'NPC / spawn / exit markers'),
                                 ('anim', 'Anim', 'outline the tiles this room animates in game '
                                  '(dashed teal) — vanilla: the room\'s own animation; custom: '
-                                 'the inspector\'s "Animated tiles" setting')):
+                                 'the inspector\'s "Animated tiles" setting'),
+                                ):
             b = QToolButton()
             b.setText(text)
             b.setToolTip(tip)
@@ -524,6 +532,15 @@ class RoomsTab(QWidget):
         self.canvas.walkFlipRequested.connect(self._flip_walk)
         self.canvas.zoomChanged.connect(self._zoom_changed)
         self.canvas.stillRequested.connect(self._still_cell)            # S173
+        # S174: the Stamp tool
+        self.canvas.stampPlaceRequested.connect(self._stamp_place)
+        self.canvas.stampSelected.connect(self._stamp_selected)
+        self.canvas.stampMoveRequested.connect(self._stamp_move)
+        self.canvas.stampDeleteRequested.connect(self._stamp_delete)
+        self.canvas.stampCopyRequested.connect(self._stamp_copy)
+        self.canvas.stampPasteRequested.connect(self._stamp_paste)
+        self.canvas.stampMenuRequested.connect(self._stamp_menu)
+        self._stamp_clip = None
         self.canvas.cleanChanged.connect(self._clean_changed)          # S173
         self._zoom_changed(self.canvas.zoom())
         self.canvas.editRequested.connect(self._edit_requested)
@@ -719,6 +736,7 @@ class RoomsTab(QWidget):
         self.animate_tab.replaceRequested.connect(self._tanim_replace)
         self.animate_tab.removeRequested.connect(self._tanim_remove)
         self.animate_tab.useSelectionRequested.connect(self._tanim_use_selection)
+        self.animate_tab.importRequested.connect(self._tanim_import_png)      # S173 r3
         self.animate_tab.showRequested.connect(self._tanim_show)
         self.animate_tab.stillRequested.connect(self._make_still)
         self.animate_tab.status.connect(self.status_line.setText)
@@ -749,6 +767,25 @@ class RoomsTab(QWidget):
             'tiles', 'Tiles', self.picker_tabs, scroll=False,
             tip='Metatiles to paint with (click = brush · corner dot: red wall / green '
                 'walkable), Borrow from other rooms, the Tileset, Animate, Draw')
+        # S174 (ROADMAP P3.3m): the stamp library + the selected stamp's light
+        from editor2.app.rooms.stamps_panel import StampsPanel
+        self.stamps_panel = StampsPanel()
+        self.stamps_panel.importRequested.connect(self._stamp_import)
+        self.stamps_panel.chosen.connect(self._stamp_chosen)
+        self.stamps_panel.renameRequested.connect(self._stamp_rename)
+        self.stamps_panel.removeRequested.connect(self._stamp_remove_lib)
+        self.stamps_panel.speedChanged.connect(self._stamp_speed)
+        self.stamps_panel.litToggled.connect(lambda on: self._stamp_set_light(lit=on))
+        self.stamps_panel.lightChosen.connect(lambda c: self._stamp_set_light(light=c))
+        self.stamps_panel.deleteRequested.connect(
+            lambda: self.canvas.stamp_sel is not None and self._stamp_delete(self.canvas.stamp_sel))
+        self.stamps_panel.showToggled.connect(lambda on: self.canvas.set_layer('stamps', on))
+        self.stamps_panel.copyRequested.connect(
+            lambda: self.canvas.stamp_sel is not None and self._stamp_copy(self.canvas.stamp_sel))
+        self.sec_stamps = self.rail.add_page(
+            'stamps', 'Stamps', self.stamps_panel,
+            tip='Pictures on top of the tiles (a wall torch…): import, choose, then the Stamp '
+                'tool (T)')
         palbox = QWidget()
         pl = QVBoxLayout(palbox)
         pl.setContentsMargins(6, 6, 6, 6)
@@ -1183,6 +1220,7 @@ class RoomsTab(QWidget):
         self._set_state_widgets(True)
         self._refresh_side()
         self._refresh_minimap()
+        self._refresh_stamps()
 
     def _show_vanilla(self):
         mid = self.vanilla_mid
@@ -2281,6 +2319,10 @@ class RoomsTab(QWidget):
         if name in ('paint', 'rect', 'fill', 'pick'):
             # S132: painting needs the brushes — open the Tiles page
             self.rail.show_page('tiles')
+        elif name == 'stamp':                     # S174: the stamps to choose from
+            self.rail.show_page('stamps')
+            if self.canvas.stamp_brush is None:
+                self.canvas.set_stamp_brush(self.stamps_panel.current_id())
         b = self.layer_buttons.get('walk')
         if b is not None and b.isChecked() != (name == 'walk'):
             b.blockSignals(True)
@@ -2397,6 +2439,221 @@ class RoomsTab(QWidget):
         self._brush_selected(mt)
         self.status_line.setText(f"Brush from the reference: {mt['tiles']} palette "
                                  f"{mt.get('pal')} — this room's colours.")
+
+    # ------------------------------------------------------------ S174 stamps
+    def _refresh_stamps(self):
+        try:
+            self.stamps_panel.set_library(self.s.doc)
+        except Exception as e:                                   # noqa: BLE001
+            self.status_line.setText(f'Stamps: {e}')
+        self._stamp_selected(self.canvas.stamp_sel)
+
+    def _stamp_room(self, what):
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None:
+            self.status_line.setText(f'{what}: open one of your rooms (a game room: Make editable '
+                                     'first).')
+            return None
+        return room
+
+    def _stamp_run(self, label, op, select=None):
+        cmd = C.SnapshotCommand(self.s, label, op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            self.status_line.setText(f'{label}: {cmd.error}')
+            return None
+        if select is not None:
+            self.canvas.stamp_sel = select(cmd.result)
+        self._show()
+        return cmd.result
+
+    def _stamp_import(self, path=None):
+        from PySide6.QtWidgets import QFileDialog
+        from editor2.core import stamps as ST
+        from editor2.app.rooms.stamps_panel import StampImportDialog
+        if path is None:
+            path, _f = QFileDialog.getOpenFileName(self, 'Import a stamp', '',
+                                                   'PNG pictures (*.png)')
+            if not path:
+                return None
+        try:
+            dlg = StampImportDialog(path, self)
+        except Exception as e:                                   # noqa: BLE001
+            QMessageBox.warning(self, 'Import a stamp', str(e))
+            return None
+        if getattr(self, '_import_auto', None) is not None:      # tests
+            vals = self._import_auto(dlg)
+            if vals is None:
+                return None
+        else:
+            if dlg.exec() != QDialog.Accepted:
+                return None
+            vals = dlg.values()
+        cmd = C.SnapshotCommand(self.s, f"Stamp library: {vals['name']}",
+                                lambda d: ST.add_to_library(d, path, vals['name'], vals['w'],
+                                                            vals['h'], vals['speed']))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Import a stamp', str(cmd.error))
+            return None
+        self._refresh_stamps()
+        self.stamps_panel.choose(cmd.result)
+        self.rail.show_page('stamps')
+        self.status_line.setText(f"Stamp '{vals['name']}' added — the Stamp tool (T) puts it "
+                                 'down: click a cell on the canvas.')
+        return cmd.result
+
+    def _stamp_chosen(self, sid):
+        self.canvas.set_stamp_brush(sid)
+        if sid and self.canvas.tool != 'stamp':
+            self._set_tool('stamp')
+
+    def _stamp_rename(self, sid):
+        from PySide6.QtWidgets import QInputDialog
+        from editor2.core import stamps as ST
+        st = ST.stamp_of(self.s.doc.custom, sid)
+        if st is None:
+            return
+        name, ok = QInputDialog.getText(self, 'Rename stamp', 'Name', text=st['name'])
+        if ok and name.strip():
+            self._stamp_run('Rename stamp', lambda d: ST.set_library(d, sid, name=name.strip()[:40]))
+
+    def _stamp_remove_lib(self, sid, ask=True):
+        from editor2.core import stamps as ST
+        st = ST.stamp_of(self.s.doc.custom, sid)
+        if st is None:
+            return
+        n = len(ST.uses(self.s.doc, sid))
+        if ask and QMessageBox.question(
+                self, 'Remove stamp',
+                f"Take '{st['name']}' out of the library"
+                + (f" and off the {n} place{'s' if n != 1 else ''} it is on" if n else '')
+                + '? The tiles under it stay as they are (they were never changed).')                 != QMessageBox.Yes:
+            return
+        self.canvas.stamp_sel = None
+        if self.canvas.stamp_brush == sid:
+            self.canvas.set_stamp_brush(None)
+        self._stamp_run('Remove stamp', lambda d: ST.remove_from_library(d, sid))
+
+    def _stamp_speed(self, sid, v):
+        from editor2.core import stamps as ST
+        self._stamp_run('Stamp speed', lambda d: ST.set_library(d, sid, speed=int(v)))
+
+    def _stamp_warn_status(self, idx, verb):
+        info = self.canvas.stamp_info(idx) if idx is not None else None
+        if info and (info.get('warn') or info.get('error')):
+            self.status_line.setText(f"{verb} — ⚠ {info.get('error') or info['warn']}")
+        else:
+            self.status_line.setText(f'{verb}. The tiles under it are unchanged; the build '
+                                     'draws it in.')
+
+    def _stamp_place(self, cell, sid=None, lit=True, light=None, label='Stamp'):
+        from editor2.core import stamps as ST
+        room = self._stamp_room('Stamp')
+        if room is None:
+            return None
+        sid = sid or self.canvas.stamp_brush or self.stamps_panel.current_id()
+        st = ST.stamp_of(self.s.doc.custom, sid) if sid else None
+        if st is None:
+            self.rail.show_page('stamps')
+            self.status_line.setText('Stamp: choose a stamp on the Stamps page first (or Import '
+                                     'PNG… one).')
+            return None
+        x, y = ST.anchor(st, cell)
+        rid, key = room['id'], self.key
+        i = self._stamp_run(label, lambda d: ST.place(d, rid, sid, key, x, y, lit=lit, light=light),
+                            select=lambda r: r)
+        if i is not None:
+            self._stamp_warn_status(i, f"{label}: '{st['name']}' at cell ({x},{y})")
+        return i
+
+    def _stamp_selected(self, idx):
+        from editor2.core import stamps as ST
+        room = self.current_room()
+        if room is None or idx is None or idx >= len(room.get('stamps') or []):
+            self.stamps_panel.show_placement(None)
+            return
+        pl = room['stamps'][idx]
+        self.stamps_panel.show_placement(pl, ST.stamp_of(self.s.doc.custom, pl['stamp']),
+                                         self.canvas.stamp_info(idx))
+
+    def _stamp_move(self, idx, x, y):
+        from editor2.core import stamps as ST
+        room = self._stamp_room('Move stamp')
+        if room is None:
+            return
+        rid = room['id']
+        cmd = C.SnapshotCommand(self.s, 'Move stamp', lambda d: ST.move(d, rid, idx, x, y))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            self.status_line.setText(f'Move stamp: {cmd.error}')
+            self._show()
+            return
+        self.canvas.stamp_sel = idx
+        self._show()
+        self._stamp_warn_status(idx, f'Stamp moved to cell ({x},{y})')
+
+    def _stamp_delete(self, idx):
+        from editor2.core import stamps as ST
+        room = self._stamp_room('Remove stamp')
+        if room is None:
+            return
+        rid = room['id']
+        self.canvas.stamp_sel = None
+        cmd = C.SnapshotCommand(self.s, 'Remove stamp', lambda d: ST.remove(d, rid, idx))
+        self.s.undo.push(cmd)
+        self._show()
+        self.status_line.setText(f'Remove stamp: {cmd.error}' if cmd.error is not None else
+                                 'Stamp removed — the tiles under it are exactly as they were.')
+
+    def _stamp_copy(self, idx):
+        room = self.current_room()
+        if room is None or idx is None:
+            return
+        self._stamp_clip = dict(room['stamps'][idx])
+        self.status_line.setText('Stamp copied — ⌘V puts it under the mouse (any screen, any of '
+                                 'your rooms).')
+
+    def _stamp_paste(self, cell):
+        c = self._stamp_clip
+        if not c:
+            self.status_line.setText('Paste: copy a stamp first (Stamp tool, select it, ⌘C).')
+            return None
+        return self._stamp_place(cell, sid=c['stamp'], lit=c.get('lit', True),
+                                 light=c.get('light'), label='Paste stamp')
+
+    def _stamp_set_light(self, lit=None, light=False):
+        from editor2.core import stamps as ST
+        room = self._stamp_room('Stamp light')
+        idx = self.canvas.stamp_sel
+        if room is None or idx is None:
+            return
+        rid = room['id']
+        self._stamp_run('Stamp light', lambda d: ST.set_light(d, rid, idx, lit=lit, light=light),
+                        select=lambda _r: idx)
+        self._stamp_warn_status(idx, 'Stamp light changed')
+
+    def _stamp_menu(self, idx, pos):
+        from editor2.core import stamps as ST
+        room = self.current_room()
+        if room is None:
+            return
+        pl = room['stamps'][idx]
+        m = QMenu(self)
+        a = m.addAction('Light (its glow)')
+        a.setCheckable(True)
+        a.setChecked(pl.get('lit', True))
+        a.triggered.connect(lambda on: self._stamp_set_light(lit=on))
+        sub = m.addMenu('Light colour')
+        for name, rgb in ST.LIGHTS:
+            sub.addAction(name, lambda v=(ST.colour_text(rgb) if rgb else None):
+                          self._stamp_set_light(light=v))
+        sub.addAction('Custom…', lambda: (self.stamps_panel.light.setCurrentIndex(
+            self.stamps_panel.light.count() - 1), self.stamps_panel._light(0)))
+        m.addSeparator()
+        m.addAction('Copy (⌘C)', lambda: self._stamp_copy(idx))
+        m.addAction('Remove (Del)', lambda: self._stamp_delete(idx))
+        m.exec(pos)
 
     def _still_cell(self, cell):
         """S173 the Still tool (user: "Select a tile and click on it to stop all animation
@@ -4521,6 +4778,74 @@ class RoomsTab(QWidget):
         van = doc.room_animation(room)['slots']
         self.animate_tab.set_still_candidate(
             mt if any(P2.slot_key(t) in van for t in mt['tiles']) else None)
+
+    def _tanim_import_png(self, path=None):
+        """S173 r3 (user: "Allow the editor to import them then, please, rather than fiddling
+        with my project"): a PNG of animation frames onto the selected cells —
+        editor2/core/anim_import (read_frames → plan → the window → apply, one undo step)."""
+        import os
+        from PIL import Image
+        from editor2.core import anim_import as AI
+        from editor2.app.rooms.anim_import_dialog import AnimImportDialog
+        room = self._animate_context_ok()
+        if room is None or self.vanilla_mid is not None:
+            self.status_line.setText('Import frames: open one of your rooms (a game room: Make '
+                                     'editable first).')
+            return None
+        rect = self.canvas.selection()
+        if rect is None:
+            self.status_line.setText('Import frames: select the cells first — Select tool (V), '
+                                     'click a cell or drag over several.')
+            return None
+        c0, r0, c1, r1 = rect
+        if path is None:
+            from PySide6.QtWidgets import QFileDialog
+            path, _f = QFileDialog.getOpenFileName(
+                self, 'Import frames from PNG', '', 'PNG pictures (*.png)')
+            if not path:
+                return None
+        try:
+            frames, info = AI.read_frames(Image.open(path), c1 - c0 + 1, r1 - r0 + 1)
+            plan = AI.plan(self.s.doc, self.s.renderer, room, self.key, self.state_idx,
+                           self.canvas.lid, self.canvas.attr_lid, rect, frames)
+        except (AI.ImportError_, OSError) as e:
+            QMessageBox.warning(self, 'Import frames from PNG', str(e))
+            return None
+        doc = self.s.doc
+        rec = room['record']
+        free = None
+        if 'tileset' in rec:
+            tid = rec['tileset']
+            used = doc.used_tiles(tid) | doc.animated_slots(tid) | doc.service_slots(tid) | \
+                doc.own_anim_slots_tileset(tid)
+            free = sum(1 for s_ in range(P2.SLOTS) if s_ not in used)
+        dlg = AnimImportDialog(plan, info, free if free is not None else 999,
+                               os.path.basename(path), self)
+        if getattr(self, '_import_auto', None) is not None:        # tests
+            vals = self._import_auto(dlg)
+            if vals is None:
+                return None
+        else:
+            if dlg.exec() != QDialog.Accepted:
+                return None
+            vals = dlg.values()
+        own = bytes(self.canvas.gfx.sheet[:2048])
+        cmd = C.SnapshotCommand(self.s, 'Import frames',
+                                lambda d: AI.apply(d, plan, speed=vals['speed'],
+                                                   order=vals['order'], name=vals['name'],
+                                                   own_sheet=own))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Import frames from PNG', str(cmd.error))
+            return None
+        note = getattr(doc, 'last_import_note', '')
+        self._show()
+        if info['n'] > 1:
+            self.play_btn.setChecked(True)
+        self.status_line.setText('Imported — ' + note + '. The cells\' metatiles are in My '
+                                 'metatiles: paint them elsewhere and they move too, for no '
+                                 'extra tiles.')
+        return cmd.result
 
     def _tanim_run(self, label, op):
         room = self.current_room()

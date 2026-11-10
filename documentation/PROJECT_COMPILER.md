@@ -5843,6 +5843,46 @@ game's pickup style — 1-px cream halo, thin black outline, one accent fill, a 
   regression block's "foods off" check; `test_app` `s172_foods` (+ r2: a food drawn through the
   dialog — Apply / Restore default one undo step each, the NPC sprite redrawn, undo).
 
+## §2.79 S174 — STAMPS: pictures on top of a room's tiles, baked into a copy (ROADMAP P3.3m)
+
+Built S174, NOT yet user-tested. Byte-neutral for a project without stamps (the same
+project.json is loaded; the example pin unchanged).
+
+```json
+"custom": {
+  "stamps": [ {"id": "wall_torch", "name": "Wall torch", "png": "assets/stamps/wall_torch.png",
+               "w": 3, "h": 2, "frames": 2, "speed": 32} ],
+  "rooms": [ { …, "stamps": [ {"stamp": "wall_torch", "screen": 5, "x": 0, "y": 0},
+                              {"stamp": "wall_torch", "screen": 5, "x": 3, "y": 0,
+                               "lit": false},
+                              {"stamp": "wall_torch", "screen": 6, "x": 1, "y": 0,
+                               "light": "#f8d878"} ] } ]
+}
+```
+- The library item: a project-relative RGBA PNG; `w` × `h` = ONE frame in 16-pixel cells
+  (≤ 10 × 8); frames side by side or stacked, 1-8× zoom (`anim_import.read_frames`), ≤ 8;
+  `speed` = game frames per step (1-255). Alpha 0 = the tiles behind stay; 0 < alpha < 255 =
+  LIGHT (the colour, except where the tiles are black); 255 = drawn.
+- A placement: the screen key, the top-left cell (may hang off the screen; the part off it is
+  dropped), `lit` (default true; false = the half-clear pixels left out), `light` ("#rrggbb":
+  the half-clear pixels and the stamp's own light colour among its solid pixels take it).
+  Placements on one screen never overlap (the editor refuses).
+- **The compiler** (`compile_project`): when `stamps.has_stamps(data)`, `stamps.stamped` copies
+  the project folder (not build/) to a temporary folder, bakes (`stamps.bake`, below) and
+  compiles THAT; the stamps' warnings come first in the build's warnings. `measure_banks` and
+  `capacity.measure` measure the baked copy too. The project itself never holds stamped tiles.
+- **The bake**, per placement in order (rooms, placements), per group of the screen's states
+  with the same layout / colour grid / palette: a layout + colour grid only that group uses
+  (a copy appended when shared — the $64 order of existing entries is unchanged); the S173 r4
+  see-through plan over the screen as it is (`anim_import.plan`); new palette rows on rows no
+  screen using that palette draws, else the nearest (a warning with the pixel count); tiles —
+  identical still pieces reuse a used tile, identical moving pieces a slot this room already
+  animates with the same frames; a new slot keeps the replaced tile's wall / walkable side for a
+  cell's bottom-right tile only; the moving slots → one `tile_anims` flip item per placement
+  ("stamp <name>", ≤ 32 tiles each). Then the stamps keys are removed from the copy. Errors
+  (no free slot, too many animation groups) stop the build with "stamps: …".
+- Measured: `tools/walk_stamps.py` (TOOLS_AND_DATA S174). Tests: test_app `s174_stamps`.
+
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 
 *Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good").* **`gamedata.window_words`** = `{"<bank>:<addr>/<row>/<col>":

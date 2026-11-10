@@ -435,8 +435,16 @@ class RoomCanvas(QGraphicsView):
     cellsSelected = Signal(object)            # S102: (c0, r0, c1, r1) drag / Shift+click
     stillRequested = Signal(object)           # S173: (cx, cy) clicked with the Still tool
     cleanChanged = Signal(bool)               # S173: clean view on / off
+    # S174 (ROADMAP P3.3m): the Stamp tool — placements are room['stamps'] (stamps.py)
+    stampPlaceRequested = Signal(object)      # (cx, cy): put the chosen stamp here
+    stampSelected = Signal(object)            # placement index or None
+    stampMoveRequested = Signal(int, int, int)    # index, new x, new y (top-left cell)
+    stampDeleteRequested = Signal(int)
+    stampCopyRequested = Signal(int)
+    stampPasteRequested = Signal(object)      # (cx, cy) under the mouse
+    stampMenuRequested = Signal(int, object)  # index, global QPoint
 
-    TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk', 'still')
+    TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk', 'still', 'stamp')
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -449,7 +457,14 @@ class RoomCanvas(QGraphicsView):
         self.tool = 'select'
         self.brush = None            # metatile dict
         self.layers = {'grid': True, 'attr': False, 'walk': False, 'markers': True,
-                       'anim': True}      # S99: outline the animated tiles
+                       'anim': True,      # S99: outline the animated tiles
+                       'stamps': True}    # S174: draw the stamps (off: the tiles under them)
+        self.stamp_brush = None           # S174: library stamp id the Stamp tool puts down
+        self.stamp_sel = None             # S174: the selected placement (index) on this screen
+        self._stamp_drag = None           # [index, grab offset (dx, dy), current cell]
+        self._stamp_view = {}             # index -> stamps.simulate info (this screen / state)
+        self._stamp_fkey = None
+        self._stamp_ghost = {}
         # S99 (P3.3e): the room's tile animation — map ID whose bank-$01
         # handler runs (vanilla: the room itself; custom: its `animation`)
         self.anim_mid = None
@@ -609,7 +624,7 @@ class RoomCanvas(QGraphicsView):
         assert tool in self.TOOLS
         self.tool = tool
         self.setCursor({'select': Qt.ArrowCursor, 'walk': Qt.PointingHandCursor,
-                        'still': Qt.PointingHandCursor}
+                        'still': Qt.PointingHandCursor, 'stamp': Qt.ArrowCursor}
                        .get(tool, Qt.CrossCursor))
         self._rect_anchor = self._rect_cur = None
         self.viewport().update()
@@ -704,6 +719,15 @@ class RoomCanvas(QGraphicsView):
             self._build_markers(st)
             self._mark_entrances(room)
             self._mark_gate_arrival(room)
+        self._stamp_view = {}
+        if self.room is not None and not self.is_vanilla():
+            n = len(self.room.get('stamps') or [])
+            if self.stamp_sel is not None and (self.stamp_sel >= n or int(
+                    self.room['stamps'][self.stamp_sel].get('screen', -1)) != int(self.key)):
+                self.stamp_sel = None
+            self._update_stamps()
+        else:
+            self.stamp_sel = None
         self._update_anim()
         self._render()
 
@@ -972,7 +996,7 @@ class RoomCanvas(QGraphicsView):
         self._anim_frames = want
         a = n and self._player.step(n)
         b = n and self._tplayer is not None and self._tplayer.step(n)
-        if a or b:
+        if a or b or (self._stamp_view and self._stamp_frames_key() != self._stamp_fkey):
             self._render()
 
     def _render(self):
@@ -985,8 +1009,154 @@ class RoomCanvas(QGraphicsView):
                 sh[s_ * 16:s_ * 16 + 16] = self._tplayer.sheet[s_ * 16:s_ * 16 + 16]
             sheet = bytes(sh)
         img = self.s.renderer.compose(sheet, self.tiles, self.attr, self.pals)
+        self._paste_stamps(img)
         self.base.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
         self.viewport().update()
+
+    # ------------------------------------------------------------- S174 stamps
+    def _stamp_frame_index(self, info):
+        n = len(info.get('frames') or [])
+        if n <= 1 or self._player is None:
+            return 0
+        return (self._anim_frames // max(1, int(info.get('speed') or 32))) % n
+
+    def _stamp_frames_key(self):
+        return tuple(self._stamp_frame_index(i) for _k, i in sorted(self._stamp_view.items()))
+
+    def _paste_stamps(self, img):
+        """The stamps as the build will draw them (stamps.simulate) over the tiles."""
+        self._stamp_fkey = self._stamp_frames_key()
+        if not self.layers.get('stamps', True):
+            return
+        for _i, info in sorted(self._stamp_view.items()):
+            fr = info.get('frames') or []
+            if not fr or not info.get('rect'):
+                continue
+            c0, r0, _c1, _r1 = info['rect']
+            img.paste(fr[self._stamp_frame_index(info)], (c0 * CELL, r0 * CELL))
+
+    def stamps_here(self):
+        """[(index, placement)] of the stamps on this screen."""
+        if self.room is None or self.is_vanilla():
+            return []
+        return [(i, pl) for i, pl in enumerate(self.room.get('stamps') or [])
+                if int(pl.get('screen', -1)) == int(self.key)]
+
+    def _update_stamps(self):
+        """Recompute this screen's stamp pictures (cached per document revision)."""
+        self._stamp_view = {}
+        here = self.stamps_here()
+        if not here:
+            return
+        from editor2.core import stamps as ST
+        doc = self.s.doc
+        k = (id(doc), getattr(doc, 'revision', 0), id(self.s.renderer))
+        c = getattr(self.s, '_stamp_sim', None)
+        if c is None or c[0] != k:
+            try:
+                sim = ST.simulate(doc, self.s.renderer)
+            except Exception:                                    # noqa: BLE001
+                sim = {}
+            self.s._stamp_sim = c = (k, sim)
+        for i, _pl in here:
+            info = c[1].get((self.room['id'], i, self.state_idx))
+            if info is not None:
+                self._stamp_view[i] = info
+
+    def stamp_info(self, idx):
+        return self._stamp_view.get(idx)
+
+    def _stamp_at(self, cell):
+        if cell is None or self.room is None:
+            return None
+        from editor2.core import stamps as ST
+        return ST.at_cell(self.s.doc.custom, self.room, self.key, cell)
+
+    def set_stamp_brush(self, sid):
+        self.stamp_brush = sid
+        self.viewport().update()
+
+    def select_stamp(self, idx):
+        self.stamp_sel = idx
+        self.viewport().update()
+        self.stampSelected.emit(idx)
+
+    def _stamp_ghost_pm(self, sid):
+        """The library stamp's frame 1 as drawn in the PNG (cached)."""
+        from editor2.core import stamps as ST
+        st = ST.stamp_of(self.s.doc.custom, sid)
+        if st is None:
+            return None, None
+        k = (sid, st.get('png'), st.get('w'), st.get('h'))
+        if k not in self._stamp_ghost:
+            try:
+                fr = ST.stamp_frames(self.s.doc.project_dir, st)[0]
+                self._stamp_ghost[k] = QPixmap.fromImage(ImageQt.ImageQt(fr.convert('RGBA')))
+            except Exception:                                    # noqa: BLE001
+                self._stamp_ghost[k] = None
+        return self._stamp_ghost[k], st
+
+    def _draw_stamps_overlay(self, painter):
+        from editor2.core import stamps as ST
+        here = self.stamps_here()
+        custom = self.s.doc.custom if self.room is not None else {}
+        show_all = self.tool == 'stamp'
+        for i, pl in here:
+            st = ST.stamp_of(custom, pl.get('stamp'))
+            if st is None:
+                continue
+            x, y = int(pl['x']), int(pl['y'])
+            if self._stamp_drag is not None and self._stamp_drag[0] == i and self._stamp_drag[2]:
+                dx, dy = self._stamp_drag[1]
+                x, y = self._stamp_drag[2][0] - dx, self._stamp_drag[2][1] - dy
+                pm, _st = self._stamp_ghost_pm(pl['stamp'])
+                if pm is not None:
+                    painter.setOpacity(0.75)
+                    painter.drawPixmap(QRectF(x * CELL, y * CELL, int(st['w']) * CELL,
+                                              int(st['h']) * CELL), pm, QRectF(pm.rect()))
+                    painter.setOpacity(1.0)
+            rr = QRectF(x * CELL, y * CELL, int(st['w']) * CELL, int(st['h']) * CELL)
+            info = self._stamp_view.get(i) or {}
+            sel = i == self.stamp_sel
+            if not (show_all or sel):
+                continue
+            col = SEL if sel else QColor(120, 220, 255)
+            for c_, w_, style in ((QColor(0, 0, 0, 190), 4 if sel else 3, Qt.SolidLine),
+                                  (col, 2 if sel else 1, Qt.SolidLine if sel else Qt.DashLine)):
+                pen = QPen(c_)
+                pen.setCosmetic(True)
+                pen.setWidth(w_)
+                pen.setStyle(style)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(rr.adjusted(0.5, 0.5, -0.5, -0.5))
+            if info.get('warn') or info.get('error'):
+                # a warning mark: the build draws some of it in the nearest colours
+                tr = QRectF(rr.right() - 7, rr.top() + 1, 6, 6)
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(QBrush(QColor(255, 60, 40) if info.get('error')
+                                        else QColor(255, 170, 0)))
+                painter.drawEllipse(tr)
+                painter.setPen(QColor(0, 0, 0))
+                painter.setFont(QFont('Helvetica', 5, QFont.Bold))
+                painter.drawText(tr, Qt.AlignCenter, '!')
+        if self.tool == 'stamp' and self._hover and self._stamp_drag is None and self.stamp_brush \
+                and self._stamp_at(self._hover) is None and not self.is_vanilla():
+            pm, st = self._stamp_ghost_pm(self.stamp_brush)
+            if pm is not None:
+                x, y = ST.anchor(st, self._hover)
+                rr = QRectF(x * CELL, y * CELL, int(st['w']) * CELL, int(st['h']) * CELL)
+                pl = {'x': x, 'y': y, 'screen': self.key}
+                bad = self.room is not None and ST.clash(custom, self.room, self.key, pl, st) is not None
+                painter.setOpacity(0.8)
+                painter.drawPixmap(rr, pm, QRectF(pm.rect()))
+                painter.setOpacity(1.0)
+                pen = QPen(QColor(255, 60, 60) if bad else QColor(255, 255, 255, 200))
+                pen.setCosmetic(True)
+                pen.setStyle(Qt.DashLine)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(rr.adjusted(0.5, 0.5, -0.5, -0.5))
 
     def _on_layout_changed(self, lid):
         if lid in (self.lid, self.attr_lid) and self._stroke is None:
@@ -1201,7 +1371,8 @@ class RoomCanvas(QGraphicsView):
                 painter.drawPixmap(QRectF(cx * CELL, cy * CELL, CELL, CELL), pm,
                                    QRectF(0, 0, 16, 16))
                 painter.setOpacity(1.0)
-        if self._hover and self.tool != 'select':
+        self._draw_stamps_overlay(painter)          # S174
+        if self._hover and self.tool not in ('select', 'stamp'):
             cx, cy = self._hover
             pen = QPen(QColor(255, 255, 255, 200))
             pen.setCosmetic(True)
@@ -1388,6 +1559,12 @@ class RoomCanvas(QGraphicsView):
             return
         cell = self._cell_at(ev.position().toPoint())
         if ev.button() == Qt.RightButton:
+            if self.tool == 'stamp':                    # S174: the stamp's menu
+                i = self._stamp_at(cell)
+                if i is not None:
+                    self.select_stamp(i)
+                    self.stampMenuRequested.emit(i, ev.globalPosition().toPoint())
+                return
             self._pick(cell)
             return
         if ev.button() != Qt.LeftButton:
@@ -1432,6 +1609,21 @@ class RoomCanvas(QGraphicsView):
         if self.tool == 'still':
             if cell is not None:
                 self.stillRequested.emit(cell)
+            return
+        if self.tool == 'stamp':                        # S174
+            if cell is None or self.is_vanilla() or self.room is None:
+                if self.is_vanilla():
+                    self.editRequested.emit()
+                return
+            i = self._stamp_at(cell)
+            if i is not None:
+                pl = self.room['stamps'][i]
+                self.select_stamp(i)
+                self._stamp_drag = [i, (cell[0] - int(pl['x']), cell[1] - int(pl['y'])), None]
+            else:
+                self.select_stamp(None)
+                self.stampPlaceRequested.emit(cell)
+            self.setFocus()
             return
         if cell is None or not self._can_paint():
             return
@@ -1486,6 +1678,11 @@ class RoomCanvas(QGraphicsView):
             self._drag[2] = cell
             self.viewport().update()
             return
+        if self._stamp_drag is not None and ev.buttons() & Qt.LeftButton:
+            if cell != self._stamp_drag[2]:
+                self._stamp_drag[2] = cell
+                self.viewport().update()
+            return
         if self._sel_drag is not None and ev.buttons() & Qt.LeftButton:
             self._set_sel(self._sel_drag, cell)
             return
@@ -1508,6 +1705,16 @@ class RoomCanvas(QGraphicsView):
             self.viewport().update()
             if cur and cur != start:
                 self.markerMoveRequested.emit(ref, cur[0], cur[1])
+            return
+        if self._stamp_drag is not None:                # S174: a stamp dragged
+            i, (dx, dy), cur = self._stamp_drag
+            self._stamp_drag = None
+            self.viewport().update()
+            if cur is not None:
+                pl = self.room['stamps'][i]
+                nx, ny = cur[0] - dx, cur[1] - dy
+                if (nx, ny) != (int(pl['x']), int(pl['y'])):
+                    self.stampMoveRequested.emit(i, nx, ny)
             return
         if self._sel_drag is not None:
             self._sel_drag = None
@@ -1578,6 +1785,17 @@ class RoomCanvas(QGraphicsView):
 
     def keyPressEvent(self, ev):
         k = ev.key()
+        if self.tool == 'stamp' and self.room is not None and not self.is_vanilla():
+            from PySide6.QtGui import QKeySequence
+            if k in (Qt.Key_Delete, Qt.Key_Backspace) and self.stamp_sel is not None:
+                self.stampDeleteRequested.emit(self.stamp_sel)
+                return
+            if ev.matches(QKeySequence.Copy) and self.stamp_sel is not None:
+                self.stampCopyRequested.emit(self.stamp_sel)
+                return
+            if ev.matches(QKeySequence.Paste):
+                self.stampPasteRequested.emit(self._hover or self.selected_cell or (4, 3))
+                return
         if k == Qt.Key_Space:
             self._space = True
             self.setCursor(Qt.OpenHandCursor)
