@@ -1058,6 +1058,28 @@ recipes are pure authoring.
       pixel's own row, row changes only by the row buttons, palette edits reach the drawing
       (`DrawTab.set_rows`), *Recolour…* (a colour in the drawing → a swatch) replaces the six
       swap buttons. EDITOR_DESIGN §5.1 "S171 r7".
+- [x] **P3.3l — Room-building aids: two bars, zoom, clean view, the Still tool, brush preview,
+      where-used, Whole room, Reference** — **built S173, NOT yet user-tested** (user: "What is
+      statue vs monument? … Move archive button and something else button to the side arrow
+      and put eyedrops and walkability as button … Allow removal of grid (toggle) … 'De-animate'
+      button … Allow zooming in … 1.5x and 2x. Maybe even 3x. Anything else you can suggest";
+      after the audit: "No stop entirely … Make a new un-animated tile I can use. Do NOT count
+      the previous animated tile as used … [own animations] yes … I want to choose a frame …
+      Brush preview … Show where tile is used … Whole room view … Reference window - YES").
+      The audit measured the cause: at 1,512 px the one tool bar hid everything after + NPC
+      (Paint, Eyedrop, Walkability, the Grid toggle and the 1-6× zoom all existed behind »).
+      Built: a tools row (Select / Paint / Eyedrop / Walkability / **Still** / + Door /
+      + Examine / + NPC / **+ More** ▸ Statue · Monument · Archive, keys kept) and a view row
+      (Grid / Palettes / Markers / Anim / **Clean** (or hold H) / ▶ Play / zoom − box + **Fit**,
+      1-12× with 1.5× / 2.5× / pinch / **Whole room** / **Reference**), short state-row labels;
+      the Still tool = `animate.cell_frames` (the game's handler + the room's own animations
+      replayed together) → a frame chooser → `Document.make_still_tile` (a NEW metatile in still
+      slots, the brush; no cell changes; the moving tile untouched); the brush drawn under the
+      mouse; a picker metatile's cells outlined (+ counts); NEW `editor2/app/rooms/room_view.py`.
+      Measured: `tools/walk_still.py` on the user's save (GreatLog screen 5, the sway, frame 4)
+      9 / 9 — the still cell 1 picture over 1,200 frames, the moving one 8, every game picture
+      one the editor offered; `--negative` 2 FAIL. test_app `s173_room_aids`. EDITOR_DESIGN §5.1
+      "As built S173", help 10_rooms / 15_animated_tiles / glossary. Byte-neutral for the ROM.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

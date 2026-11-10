@@ -132,7 +132,7 @@ are on each page.
 
 A game room shows *Vanilla room — clone it to see its slot budget as yours.*
 
-**Walkability (W)** (or **Walk** on the toolbar) flips a cell between wall
+**Walkability (W)** on the tool bar flips a cell between wall
 and walkable: the editor gives its bottom-right tile a twin on the other
 side of the split, so it needs a free slot and a tileset in your project (it
 offers to copy the game's). Use it rather than **collision ≥** in the *Room*

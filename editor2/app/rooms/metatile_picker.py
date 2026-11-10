@@ -39,6 +39,7 @@ HDR = 18
 class MetatilePicker(QWidget):
     brushSelected = Signal(object)
     hoverInfo = Signal(str)
+    hoverMetatile = Signal(object)         # S173: this room's metatile under the mouse (or None)
     removeRequested = Signal(int)          # index in the custom list
     editRequested = Signal(object)         # metatile dict (to seed the editor)
     importRequested = Signal(object)       # foreign metatile dict (other tileset)
@@ -361,6 +362,10 @@ class MetatilePicker(QWidget):
         if h != self._hover:
             self._hover = h
             self.update()
+            hm = None
+            if h is not None and h[0] in ('found', 'custom') and h[1] < len(self._list(h[0])):
+                hm = self._list(h[0])[h[1]]
+            self.hoverMetatile.emit(hm)
             if h is None:
                 self.hoverInfo.emit('')
             else:
@@ -393,6 +398,7 @@ class MetatilePicker(QWidget):
 
     def leaveEvent(self, ev):
         self._hover = None
+        self.hoverMetatile.emit(None)
         self.update()
 
     def mousePressEvent(self, ev):

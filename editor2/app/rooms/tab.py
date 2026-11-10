@@ -13,7 +13,7 @@ Every edit goes through rooms/commands.py so ⌘Z always works.
 
 import os
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                                QGroupBox, QLineEdit,
@@ -116,7 +116,7 @@ class RoomsTab(QWidget):
     gatesRequested = Signal(str)            # S100: room id -> the Gates tab
     hintsRequested = Signal()               # S158: the Breeding tab's Hints page
     HELP = ('V select · D / X add a door / examine spot on the selected cell · double-click to edit · B paint · I / right-click eyedrop · W walkability · '
-            'Esc select · ⌘/Ctrl+wheel zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
+            'S still tile · hold H clean view · Esc select · ⌘/Ctrl+wheel or + − zoom · space-drag pan · , . state · 0-9 screen · ⌘Z undo')
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -201,19 +201,28 @@ class RoomsTab(QWidget):
         cv = QVBoxLayout(centre)
         cv.setContentsMargins(0, 0, 0, 0)
         cv.setSpacing(2)
+        # S173 (user: "Move archive button and something else button to the side arrow and
+        # put eyedrops and walkability as button because those are far more important";
+        # measured: at 1,512 px the one bar hid everything after + NPC — Paint, Eyedrop,
+        # Walkability, Grid, Zoom): TWO rows — the tools, then the view; Statue / Monument
+        # / Archive ("very situational") in the + More menu, their keys unchanged
         self.tools = QToolBar('Tools')
         self.tools.setMovable(False)
         self.tools.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.tool_group = QActionGroup(self)
         self.tool_actions = {}
         # S98 r2: Rect / Fill dropped from the bar (user: "kinda pointless")
-        # — their R / F keys still work. "Add door" sits next to Select.
+        # — their R / F keys still work.
         for name, text, key, shown, tip in (
                 ('select', 'Select', 'V', True, 'select cells and markers; drag markers to move'),
-                ('paint', 'Paint', 'B', True, 'paint the picked metatile'),
+                ('paint', 'Paint', 'B', True, 'paint the picked metatile (its picture follows '
+                 'the mouse before you click)'),
                 ('rect', 'Rect', 'R', False, ''), ('fill', 'Fill', 'F', False, ''),
                 ('pick', 'Eyedrop', 'I', True, 'copy a cell\'s metatile (also right-click)'),
-                ('walk', 'Walkability', 'W', True, 'click a cell to flip wall / walkable')):
+                ('walk', 'Walkability', 'W', True, 'click a cell to flip wall / walkable'),
+                ('still', 'Still', 'S', True, 'click a MOVING cell, choose one of its frames: '
+                 'you get a new tile that never moves (in My metatiles, ready to paint). '
+                 'Nothing on the map changes')):
             a = QAction(f'{text} ({key})', self)
             a.setCheckable(True)
             a.setShortcut(QKeySequence(key))
@@ -227,67 +236,77 @@ class RoomsTab(QWidget):
             else:
                 self.addAction(a)
             self.tool_actions[name] = a
-            if name == 'select':
-                # S98 r2 (user design): select a cell, press Add door — the
-                # door appears there; double-click it to name / connect it
-                self.act_add_door = QAction('+ Door (D)', self)
-                self.act_add_door.setShortcut(QKeySequence('D'))
-                self.act_add_door.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_door.setToolTip('Add a door on the selected cell — then '
-                                             'double-click it to name it and connect it to '
-                                             'another door')
-                self.act_add_door.triggered.connect(self._add_door_selected)
-                self.tools.addAction(self.act_add_door)
-                # S98 r2 (user: "Why is examine spot not a button?")
-                self.act_add_examine = QAction('+ Examine (X)', self)
-                self.act_add_examine.setShortcut(QKeySequence('X'))
-                self.act_add_examine.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_examine.setToolTip('Add an examine spot on the selected cell (a '
-                                                'sign, a book, a pot…): the player presses A '
-                                                'on or facing it. Double-click it to edit.')
-                self.act_add_examine.triggered.connect(
-                    lambda: self._add_on_selected(lambda c: self._add_spot(c, 'examine')))
-                self.tools.addAction(self.act_add_examine)
-                # S154: a memorial statue (editor2/core/memorial.py, help 77)
-                self.act_add_statue = QAction('+ Statue (U)', self)
-                self.act_add_statue.setShortcut(QKeySequence('U'))
-                self.act_add_statue.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_statue.setToolTip(
-                    'Add a memorial statue: its pedestal on the selected cell, the monster on the '
-                    'cell above. It shows a monster that won a boss battle, an arena class or '
-                    'Starry Night with the player and has left since (bred, released, traded). '
-                    'Every statue of a room a different one.')
-                self.act_add_statue.triggered.connect(
-                    lambda: self._add_on_selected(self._add_statue))
-                self.tools.addAction(self.act_add_statue)
-                # S158: the breeding hints (editor2/core/hints.py, help 78)
-                self.act_add_monument = QAction('+ Monument (O)', self)
-                self.act_add_monument.setShortcut(QKeySequence('O'))
-                self.act_add_monument.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_monument.setToolTip(
-                    'Add a hint MONUMENT on the selected cell (put it on your own art: a '
-                    'stone, a pillar): read, it teaches a breeding cross the player has not '
-                    'found yet — typically in a room served on gate floors.')
-                self.act_add_monument.triggered.connect(
-                    lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'monument')))
-                self.tools.addAction(self.act_add_monument)
-                self.act_add_archive = QAction('+ Archive (K)', self)
-                self.act_add_archive.setShortcut(QKeySequence('K'))
-                self.act_add_archive.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_archive.setToolTip(
-                    'Add a hint ARCHIVE on the selected cell (a bookcase with a family\'s '
-                    'emblem): it lists the crosses of ONE family the player has unlocked.')
-                self.act_add_archive.triggered.connect(
-                    lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'archive')))
-                self.tools.addAction(self.act_add_archive)
-                # S132: + NPC on the bar too (the "Add NPC here…" button now
-                # sits on the Object page, one click away)
-                self.act_add_npc = QAction('+ NPC (N)', self)
-                self.act_add_npc.setShortcut(QKeySequence('N'))
-                self.act_add_npc.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-                self.act_add_npc.setToolTip('Add an NPC on the selected cell')
-                self.act_add_npc.triggered.connect(lambda: self._add_on_selected(self._add_npc))
-                self.tools.addAction(self.act_add_npc)
+        self.tools.addSeparator()
+        # S98 r2 (user design): select a cell, press Add door — the
+        # door appears there; double-click it to name / connect it
+        self.act_add_door = QAction('+ Door', self)
+        self.act_add_door.setShortcut(QKeySequence('D'))
+        self.act_add_door.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_door.setToolTip('+ Door (D) — add a door on the selected cell — then '
+                                     'double-click it to name it and connect it to '
+                                     'another door')
+        self.act_add_door.triggered.connect(self._add_door_selected)
+        self.tools.addAction(self.act_add_door)
+        # S98 r2 (user: "Why is examine spot not a button?")
+        self.act_add_examine = QAction('+ Examine', self)
+        self.act_add_examine.setShortcut(QKeySequence('X'))
+        self.act_add_examine.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_examine.setToolTip('+ Examine (X) — add an examine spot on the selected cell (a '
+                                        'sign, a book, a pot…): the player presses A '
+                                        'on or facing it. Double-click it to edit.')
+        self.act_add_examine.triggered.connect(
+            lambda: self._add_on_selected(lambda c: self._add_spot(c, 'examine')))
+        self.tools.addAction(self.act_add_examine)
+        # S132: + NPC on the bar too (the "Add NPC here…" button now
+        # sits on the Object page, one click away)
+        self.act_add_npc = QAction('+ NPC', self)
+        self.act_add_npc.setShortcut(QKeySequence('N'))
+        self.act_add_npc.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_npc.setToolTip('+ NPC (N) — add an NPC on the selected cell')
+        self.act_add_npc.triggered.connect(lambda: self._add_on_selected(self._add_npc))
+        self.tools.addAction(self.act_add_npc)
+        # S154: a memorial statue (editor2/core/memorial.py, help 77)
+        self.act_add_statue = QAction('+ Statue (U)', self)
+        self.act_add_statue.setShortcut(QKeySequence('U'))
+        self.act_add_statue.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_statue.setToolTip(
+            'Add a memorial statue: its pedestal on the selected cell, the monster on the '
+            'cell above. It shows a monster that won a boss battle, an arena class or '
+            'Starry Night with the player and has left since (bred, released, traded). '
+            'Every statue of a room a different one.')
+        self.act_add_statue.triggered.connect(
+            lambda: self._add_on_selected(self._add_statue))
+        # S158: the breeding hints (editor2/core/hints.py, help 78)
+        self.act_add_monument = QAction('+ Monument (O)', self)
+        self.act_add_monument.setShortcut(QKeySequence('O'))
+        self.act_add_monument.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_monument.setToolTip(
+            'Add a hint MONUMENT on the selected cell (put it on your own art: a '
+            'stone, a pillar): read, it teaches a breeding cross the player has not '
+            'found yet — typically in a room served on gate floors.')
+        self.act_add_monument.triggered.connect(
+            lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'monument')))
+        self.act_add_archive = QAction('+ Archive (K)', self)
+        self.act_add_archive.setShortcut(QKeySequence('K'))
+        self.act_add_archive.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_archive.setToolTip(
+            'Add a hint ARCHIVE on the selected cell (a bookcase with a family\'s '
+            'emblem): it lists the crosses of ONE family the player has unlocked.')
+        self.act_add_archive.triggered.connect(
+            lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'archive')))
+        self.more_btn = QToolButton()
+        self.more_btn.setText('+ More')
+        self.more_btn.setStyleSheet('QToolButton::menu-indicator { image: none; }')
+        self.more_btn.setPopupMode(QToolButton.InstantPopup)
+        self.more_btn.setToolTip('Add on the selected cell: a memorial Statue (U), a breeding-'
+                                 'hint Monument (O) or Archive (K)')
+        mm = QMenu(self.more_btn)
+        mm.setToolTipsVisible(True)
+        for a in (self.act_add_statue, self.act_add_monument, self.act_add_archive):
+            mm.addAction(a)
+            self.addAction(a)               # the keys work without opening the menu
+        self.more_btn.setMenu(mm)
+        self.tools.addWidget(self.more_btn)
         self.tool_actions['select'].setChecked(True)
         for seq, fn in ((',', lambda: self.select_state(self.state_idx - 1)),
                         ('.', lambda: self.select_state(self.state_idx + 1)),
@@ -307,9 +326,15 @@ class RoomsTab(QWidget):
         self.tools.addSeparator()
         self.brush_label = QLabel('  brush: none  ')
         self.tools.addWidget(self.brush_label)
-        self.tools.addSeparator()
+        cv.addWidget(self.tools)
+
+        # ---- S173: the view row (overlays, clean view, animation preview, zoom, windows)
+        self.view_bar = QToolBar('View')
+        self.view_bar.setMovable(False)
+        self.view_bar.setToolButtonStyle(Qt.ToolButtonTextOnly)
         self.layer_buttons = {}
-        for name, text, tip in (('grid', 'Grid', 'cell grid (16px) + subtile grid'),
+        for name, text, tip in (('grid', 'Grid', 'cell grid (16px) + subtile grid — off = the '
+                                 'tiles side by side with nothing between them'),
                                 ('attr', 'Palettes', 'palette-slot overlay per cell'),
                                 ('walk', 'Walk', 'walkability overlay: red = wall'),
                                 ('markers', 'Markers', 'NPC / spawn / exit markers'),
@@ -330,8 +355,20 @@ class RoomsTab(QWidget):
                 b.setToolTip('Walkability: click a cell to flip wall / walkable (red = wall). '
                              'Same as the W tool.')
                 b.clicked.connect(self._walk_button)
-            self.tools.addWidget(b)
+            else:
+                # S173: the Walkability tool on the tools row IS this button (S98 r2) —
+                # not shown twice; kept in sync by _tool_changed
+                self.view_bar.addWidget(b)
             self.layer_buttons[name] = b
+        # S173 (user: "Allow removal of grid (toggle) so I can see how it all fits together
+        # neatly"): Clean = the art only — no grid, markers, outlines or selection
+        self.clean_btn = QToolButton()
+        self.clean_btn.setText('Clean')
+        self.clean_btn.setCheckable(True)
+        self.clean_btn.setToolTip('Clean view: only the art — no grid, markers, outlines or '
+                                  'selection. Or HOLD H on the canvas for a quick look.')
+        self.clean_btn.toggled.connect(lambda on: self.canvas.set_clean(on))
+        self.view_bar.addWidget(self.clean_btn)
         # S99 (user: "Can preview animation (maybe button or something so it
         # doesnt take up right hand side room unless used)"): one toggle
         self.play_btn = QToolButton()
@@ -341,12 +378,46 @@ class RoomsTab(QWidget):
                                  'speed (water, torches, swirls…). Measured from the game '
                                  '(ROOM_DATA_FORMAT "Animated tiles").')
         self.play_btn.toggled.connect(self._play_toggled)
-        self.tools.addWidget(QLabel(' Zoom '))
+        self.view_bar.addWidget(self.play_btn)
+        from editor2.app.rooms.canvas import ZOOMS, zoom_text
+        self._zooms = ZOOMS
+        zout = QToolButton()
+        zout.setText('−')
+        zout.setToolTip('Zoom out (−, or ⌘/Ctrl + wheel, or pinch)')
+        zout.clicked.connect(lambda: self.canvas.zoom_step(-1))
+        self.view_bar.addWidget(zout)
         self.zoom_box = QComboBox()
-        self.zoom_box.addItems([f'{z}×' for z in range(1, 7)])
-        self.zoom_box.currentIndexChanged.connect(lambda i: self.canvas.set_zoom(i + 1))
-        self.tools.addWidget(self.zoom_box)
-        cv.addWidget(self.tools)
+        self.zoom_box.addItems([zoom_text(z) for z in ZOOMS])
+        self.zoom_box.setToolTip('Zoom (1× = the Game Boy\'s own size). Half steps are '
+                                 'sharp on a Retina screen.')
+        self.zoom_box.currentIndexChanged.connect(
+            lambda i: i >= 0 and self.canvas.set_zoom(self._zooms[i]))
+        self.view_bar.addWidget(self.zoom_box)
+        zin = QToolButton()
+        zin.setText('+')
+        zin.setToolTip('Zoom in (+, or ⌘/Ctrl + wheel, or pinch)')
+        zin.clicked.connect(lambda: self.canvas.zoom_step(1))
+        self.view_bar.addWidget(zin)
+        zfit = QToolButton()
+        zfit.setText('Fit')
+        zfit.setToolTip('The biggest zoom at which the whole screen fits')
+        zfit.clicked.connect(lambda: self.canvas.fit_zoom())
+        self.view_bar.addWidget(zfit)
+        self.view_bar.addSeparator()
+        # S173 (user: "Whole room view - yes. Reference window - YES")
+        self.room_view_btn = QToolButton()
+        self.room_view_btn.setText('Whole room')
+        self.room_view_btn.setToolTip('Every screen of this room joined into one picture '
+                                      '(the screen edges marked) — click a screen to edit it')
+        self.room_view_btn.clicked.connect(self._open_room_view)
+        self.view_bar.addWidget(self.room_view_btn)
+        self.ref_btn = QToolButton()
+        self.ref_btn.setText('Reference')
+        self.ref_btn.setToolTip('Open any room — the game\'s or yours — in a window of its '
+                                'own beside the editor, to look at while you build')
+        self.ref_btn.clicked.connect(self._open_reference)
+        self.view_bar.addWidget(self.ref_btn)
+        cv.addWidget(self.view_bar)
 
         sb = QHBoxLayout()
         sb.setContentsMargins(6, 0, 6, 0)
@@ -369,7 +440,9 @@ class RoomsTab(QWidget):
         sb.addWidget(self.state_box)
         sb.addWidget(self.state_next)
         self.state_add = QToolButton()
-        self.state_add.setText('+ Add state')
+        self.state_add.setText('+ State')        # S173: short labels — the row fits
+        self.state_add.setToolTip('Add a state to this screen (a copy of this one, with or '
+                                  'without its own layout, or an empty one)')
         self.state_add.setPopupMode(QToolButton.InstantPopup)
         m = QMenu(self.state_add)
         m.addAction('Duplicate this state (shares layout)', lambda: self._add_state(True, False))
@@ -377,16 +450,17 @@ class RoomsTab(QWidget):
         m.addAction('Empty state (no NPCs / exits)', lambda: self._add_state(False, False))
         self.state_add.setMenu(m)
         self.state_del = QToolButton()
-        self.state_del.setText('− Remove state')
+        self.state_del.setText('− State')
+        self.state_del.setToolTip('Remove the state shown')
         self.state_del.clicked.connect(self._remove_state)
         sb.addWidget(self.state_add)
         sb.addWidget(self.state_del)
         # S144 (ROADMAP ARC CAP4c; user: "select states and play with states, vanilla and
         # custom"): keep only some states of every screen, pick the one each starts in
         self.state_keep = QToolButton()
-        self.state_keep.setText('Keep states…')
+        self.state_keep.setText('Keep…')
         self.state_keep.setToolTip(
-            'Choose which states every screen of this room keeps and the one it starts in — '
+            'Keep states… — choose which states every screen of this room keeps and the one it starts in — '
             'the room\'s scripts follow the new numbers; a state the room\'s own scripts '
             'switch to is remembered by a flag (it stays after a save). A copy of a game '
             'room can also answer its talk at a moment of the original story.')
@@ -394,8 +468,8 @@ class RoomsTab(QWidget):
         sb.addWidget(self.state_keep)
         # S122: this screen/state starts from a real maze screen of the gates
         self.maze_btn = QToolButton()
-        self.maze_btn.setText('Maze screen…')
-        self.maze_btn.setToolTip('Replace this screen (this state) with one of the gates\' maze '
+        self.maze_btn.setText('Maze…')
+        self.maze_btn.setToolTip('Maze screen… — replace this screen (this state) with one of the gates\' maze '
                                  'screens — tiles and palette slots. Best in a room on a gate theme '
                                  '(New room / Change tileset → a gate theme). Undo restores it.')
         self.maze_btn.clicked.connect(self._maze_screen)
@@ -423,11 +497,7 @@ class RoomsTab(QWidget):
         a.triggered.connect(self._play_here_now)
         self.addAction(a)
         sb.addWidget(self.play_here_btn)
-        sb.addSpacing(6)
-        # S99: the animation preview sits on the screen/state row (always
-        # visible; the tool bar overflows on narrow windows)
-        sb.addWidget(self.play_btn)
-        sb.addSpacing(8)
+        sb.addSpacing(8)          # S173: ▶ Play (the animation preview) is on the view row
         self.cap_label = QLabel('')
         sb.addWidget(self.cap_label)
         cv.addLayout(sb)
@@ -452,7 +522,10 @@ class RoomsTab(QWidget):
         self.canvas.markerMoveRequested.connect(self._move_marker)
         self.canvas.cellSelected.connect(self._cell_selected)
         self.canvas.walkFlipRequested.connect(self._flip_walk)
-        self.canvas.zoomChanged.connect(lambda z: self.zoom_box.setCurrentIndex(z - 1))
+        self.canvas.zoomChanged.connect(self._zoom_changed)
+        self.canvas.stillRequested.connect(self._still_cell)            # S173
+        self.canvas.cleanChanged.connect(self._clean_changed)          # S173
+        self._zoom_changed(self.canvas.zoom())
         self.canvas.editRequested.connect(self._edit_requested)
         self.canvas.markerActivated.connect(self._marker_activated)
         self.canvas.cellActivated.connect(self._animate_cell)
@@ -487,6 +560,7 @@ class RoomsTab(QWidget):
         self.picker = MetatilePicker(sections=('found', 'custom'))
         self.picker.brushSelected.connect(self._brush_selected)
         self.picker.hoverInfo.connect(self._hover)
+        self.picker.hoverMetatile.connect(self._picker_hover_mt)        # S173: where it is used
         self.picker.editRequested.connect(self._edit_metatile)
         self.picker.removeRequested.connect(self._remove_metatile)
         self.picker.parkedPicked.connect(self._unpark)              # S171 r5
@@ -1073,6 +1147,7 @@ class RoomsTab(QWidget):
     def _show(self):
         # the canvas drops its selection on every (re)show — so does the
         # NPC form (S97; an edit re-selects through _after_npc_edit)
+        QTimer.singleShot(0, self._sync_room_view)        # S173: the Whole room window
         self._sel_npc = None
         self.inspector.show_selection(None)
         if self.vanilla_mid is not None:
@@ -1133,7 +1208,9 @@ class RoomsTab(QWidget):
         self.state_box.blockSignals(False)
         self.state_prev.setEnabled(self.state_idx > 0)
         self.state_next.setEnabled(self.state_idx < nst - 1)
-        self.screen_label.setText(f'Screen {self.key}  (col {self.key % 4}, row {self.key // 4})')
+        self.screen_label.setText(f'Screen {self.key}')          # S173: the row fits
+        self.screen_label.setToolTip(f'Screen {self.key}: column {self.key % 4}, row {self.key // 4} '
+                                     'of the 4 × 4 screen grid')
         self.cap_label.setText('')
         self.shown_when.setText('')
         self.shown_when.setVisible(False)
@@ -1780,7 +1857,9 @@ class RoomsTab(QWidget):
         self.state_prev.setEnabled(self.state_idx > 0)
         self.state_next.setEnabled(self.state_idx < len(sts) - 1)
         self.state_del.setEnabled(len(sts) > 1)
-        self.screen_label.setText(f'Screen {self.key}  (col {self.key % GRID_COLS}, row {self.key // GRID_COLS})')
+        self.screen_label.setText(f'Screen {self.key}')          # S173: the row fits
+        self.screen_label.setToolTip(f'Screen {self.key}: column {self.key % GRID_COLS}, row '
+                                     f'{self.key // GRID_COLS} of the 4 × 4 screen grid')
         rules = self.s.doc.rules_for_state(room, self.key, self.state_idx)
         self.shown_when.setVisible(bool(rules))
         self.shown_when.setText(('State shown when: ' + '  |  '.join(
@@ -2220,6 +2299,157 @@ class RoomsTab(QWidget):
         b = self.canvas.brush
         self.brush_label.setText('  brush: none  ' if not b else
                                  f"  brush: {b.get('name', 'metatile')} {b['tiles']} pal {b.get('pal')}  ")
+        self.brush_label.setToolTip(self.brush_label.text().strip())
+
+    # ------------------------------------------------------------- S173 view aids
+    def _zoom_changed(self, z):
+        zs = self._zooms
+        i = min(range(len(zs)), key=lambda j: abs(zs[j] - z))
+        self.zoom_box.blockSignals(True)
+        self.zoom_box.setCurrentIndex(i)
+        self.zoom_box.blockSignals(False)
+
+    def _clean_changed(self, on):
+        if on and not self.clean_btn.isChecked():
+            self.status_line.setText('Clean view (H held): the art only — release H for the '
+                                     'grid and markers again.')
+        elif not on:
+            self.status_line.setText(self.HELP)
+
+    def _picker_hover_mt(self, mt):
+        """S173 (user: "Show where tile is used is good"): the cells of this screen
+        drawn with the metatile under the mouse in the picker, outlined in magenta; the
+        status line counts them (this screen / the whole room)."""
+        n = self.canvas.set_used(mt)
+        if mt is None:
+            return
+        room = self.current_room()
+        total = None
+        if room is not None and self.vanilla_mid is None:
+            try:
+                total = len(self.s.doc._cells_of(room, mt))
+            except Exception:                                    # noqa: BLE001
+                total = None
+        where = (f'used on {n} cell{"s" if n != 1 else ""} of this screen'
+                 + (f', {total} in the whole room' if total is not None else ''))
+        if n == 0 and not total:
+            where = 'not used in this room yet'
+        self.status_line.setText(self.status_line.text().split('   ⟶ ')[0] + '   ⟶ ' + where)
+
+    def _view_source(self):
+        if self.vanilla_mid is not None:
+            return ('vanilla', self.vanilla_mid)
+        if self.room_id is not None:
+            return ('custom', self.room_id)
+        return None
+
+    def _open_room_view(self):
+        """S173 (user: "Whole room view - yes")."""
+        from editor2.app.rooms.room_view import WholeRoomView
+        if getattr(self, 'room_view', None) is None:
+            self.room_view = WholeRoomView(self.s, self)
+            self.room_view.screenPicked.connect(self.select_screen)
+        self.room_view.show()
+        self.room_view.raise_()
+        self.room_view.activateWindow()
+        self._sync_room_view()
+
+    def _sync_room_view(self):
+        rv = getattr(self, 'room_view', None)
+        if rv is None or not rv.isVisible():
+            return
+        src = self._view_source()
+        if src is not None:
+            rv.show_room(src, self.key, self.state_idx)
+
+    def _open_reference(self):
+        """S173 (user: "Reference window - YES"): any room in a window of its own."""
+        from editor2.app.rooms.room_view import ReferenceWindow
+        first = getattr(self, 'ref_win', None) is None
+        if first:
+            self.ref_win = ReferenceWindow(self.s, self)
+            self.ref_win.brushOffered.connect(self._reference_brush)
+        self.ref_win.show()
+        self.ref_win.raise_()
+        self.ref_win.activateWindow()
+
+    def _reference_brush(self, mt, sheet):
+        """Right-click in the reference window: the cell becomes the brush when that room
+        draws with the same tiles as this one; else say how to bring it over (Borrow)."""
+        room = self.current_room()
+        cv = self.canvas
+        if room is None or cv.gfx is None or self.vanilla_mid is not None:
+            self.status_line.setText('Reference: open one of YOUR rooms to paint with what '
+                                     'you take from the reference.')
+            return
+        mine = P2.pad_sheet(bytes(cv.gfx.sheet))
+        theirs = P2.pad_sheet(bytes(sheet or b''))
+        same = all(mine[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16]
+                   == theirs[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16]
+                   for t in mt['tiles'])
+        if not same:
+            self.status_line.setText(
+                'Reference: that room draws with other tiles — Tiles page → Borrow → pick '
+                'that room to bring its tiles into this one.')
+            return
+        mt = dict(mt, name='from the reference')
+        self.picker.select_metatile(mt)
+        self._brush_selected(mt)
+        self.status_line.setText(f"Brush from the reference: {mt['tiles']} palette "
+                                 f"{mt.get('pal')} — this room's colours.")
+
+    def _still_cell(self, cell):
+        """S173 the Still tool (user: "Select a tile and click on it to stop all animation
+        for that tile" → "stop entirely … Make a new un-animated tile I can use. Do NOT count
+        the previous animated tile as used … yes [own animations too] … I want to choose a
+        frame"): the frames of the clicked cell → choose one → a NEW still metatile in My
+        metatiles (animate.make_still_tile), the brush; no cell of the map changes."""
+        cv = self.canvas
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None or cv.tiles is None:
+            self.status_line.setText('Still: a game room is read-only — Make editable first.')
+            return
+        cx, cy = cell
+        if not cv.cell_moves(cx, cy):
+            self.status_line.setText(
+                f'Still: cell ({cx},{cy}) does not move in this room. The Anim layer outlines '
+                'the tiles that do (dashed teal).')
+            return
+        from editor2.core import animate as AN
+        from editor2.app.rooms.room_view import StillFrameDialog
+        mt = cv.cell_metatile(cx, cy)
+        frames = AN.cell_frames(cv.anim_mid, self.s.doc.tile_anims(room), cv.gfx.sheet,
+                                mt['tiles'])
+        start = 0
+        if cv.previewing():
+            now = cv.cell_gfx_now(cx, cy)
+            start = frames.index(now) if now in frames else 0
+        dlg = StillFrameDialog(self.s.renderer, cv.gfx.sheet, cv.pals, mt, frames, start,
+                               cell=(cx, cy), parent=self)
+        if dlg.exec() != QDialog.Accepted:
+            return
+        k = dlg.chosen()
+        self._make_still_tile(mt, frames[k], k)
+
+    def _make_still_tile(self, mt, gfx, frame):
+        room = self.current_room()
+        rid = room['id']
+        own = bytes(self.canvas.gfx.sheet[:2048])
+        cmd = C.SnapshotCommand(self.s, 'Still tile',
+                                lambda doc: doc.make_still_tile(rid, mt, list(gfx),
+                                                                own_sheet=own, frame=frame))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Still tile', str(cmd.error))
+            return None
+        note = getattr(self.s.doc, 'last_import_note', '')
+        self._show()
+        if cmd.result is not None:
+            self.picker.select_metatile(cmd.result)
+            self._brush_selected(cmd.result)
+        self.status_line.setText('Still: ' + note + ' — it is your brush now (Paint); the '
+                                 'moving tile is unchanged.')
+        return cmd.result
 
     def _foreign_brush(self, mt):
         """Same-sheet brush from another room (S99 r2): if that room animates
@@ -2249,7 +2479,7 @@ class RoomsTab(QWidget):
     def _brush_selected(self, mt):
         self.canvas.set_brush(mt)
         self._update_brush_label()
-        if self.canvas.tool in ('select', 'walk', 'pick'):
+        if self.canvas.tool in ('select', 'walk', 'pick', 'still'):
             self._set_tool('paint')
         self.canvas.setFocus()
 

@@ -70,7 +70,7 @@ with the old numbers would mix up what the player learned.
 
 1. Draw the monument's art on a cell: a stone, a pillar, a tablet. The editor does not
    draw anything for you.
-2. Select the cell (the Select tool, **V**) and press **+ Monument (O)**.
+2. Select the cell (the Select tool, **V**) and press **+ More → + Monument** on the tool bar (or the key **O**).
 3. The monument is an **examine spot**: the player presses A while facing it. Its marker
    on the canvas is **Mo**.
 
@@ -108,7 +108,7 @@ floor the room appears on is a new visit.
 ## 3. An archive (Rooms tab, + Archive (K))
 
 1. Draw the archive's art: a bookcase with the family's emblem.
-2. Select the cell and press **+ Archive (K)**. The editor asks for the family.
+2. Select the cell and press **+ More → + Archive** (or the key **K**). The editor asks for the family.
 3. The marker shows in the **family's colour** with its letters, for example **ASl**,
    **ADr**, **ABe**. Change the family in the panel.
 

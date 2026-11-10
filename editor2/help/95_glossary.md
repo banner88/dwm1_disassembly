@@ -57,6 +57,9 @@ changed. [Build](80_build.md)
 **Cast member** — a person or monster that appears only in a cutscene.
 [Cutscenes](63_cutscenes.md)
 
+**Clean view** — the canvas with the art only (no grid, markers, outlines): **Clean** on
+the view bar, or hold H. [Rooms](10_rooms.md)
+
 **Conversation** — what an NPC says and does when talked to: texts, YES / NO,
 flags, items, battles, moves. [Conversations](40_conversations.md)
 
@@ -222,6 +225,9 @@ upgrades and combinations, max level. [Raising monsters](58_raising.md)
 **Re-plan colours** — Palettes page: work out the room's 4 colour rows again from its
 tiles' real colours; plans side by side, re-roll, keep rows. [Tilesets, metatiles and palettes](13_tilesets.md)
 
+**Reference** — a window beside the editor showing any room (the game's or yours),
+read-only; right-click a cell for a brush on the same tiles. [Rooms](10_rooms.md)
+
 **Region** — the editor's own group of 128 rooms; it hands them out by itself and
 never shows them. [Limits](90_limits.md)
 
@@ -251,6 +257,9 @@ family recipes. [Breeding](58_breeding.md#Special%20recipes)
 
 **Step-on trigger** — a cell that runs something when the player steps on it.
 [Doors](11_doors.md#One-way%20teleports,%20step-on%20triggers,%20stairs)
+
+**Still tile** — a copy of one frame of a moving tile that never moves (the Still tool,
+S). [Animated tiles](15_animated_tiles.md)
 
 **Story check** — a question the game answers (items, gold, monsters, levels…),
 usable wherever a flag is checked. [Story checks](71_story_quests.md#Story%20checks%20%E2%80%94%20questions%20the%20game%20answers)
@@ -285,6 +294,9 @@ flag. [Cutscenes](63_cutscenes.md)
 
 **Walkability** — whether the player can walk on a cell (the corner dot on a
 metatile: red wall, green walkable). [Rooms](10_rooms.md)
+
+**Whole room** — every screen of a room joined into one picture, in a window of its
+own. [Rooms](10_rooms.md)
 
 **Window words** — the short words in the game's windows (INFO, ITEM, YES / NO…).
 [Text](56_text.md#Window%20words%20(S165,%20S166))

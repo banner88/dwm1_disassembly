@@ -1267,6 +1267,58 @@ EMPTY — brown on the Tileset tab, never offered to any search; making the NPC 
 an older project moves the tiles placed there to page 2 (same picture, same side of the split); the
 status line / the open log say how many (user report: Grandpa's words over the gallery's floor).
 
+**As built S173 (ROADMAP P3.3l — room-building aids; built, NOT yet user-tested).** The audit
+measured the user's "put eyedrops and walkability as button" / "allow removal of grid" /
+"allow zooming": at a 1,512 px window the ONE canvas tool bar (Select, + Door … + NPC, Paint,
+Eyedrop, Walkability, brush, Grid … Anim, Zoom) showed up to + NPC — everything after it,
+including the existing Grid toggle and the 1-6× zoom, sat behind the » overflow.
+- **Two bars.** `RoomsTab.tools`: Select (V) · Paint (B) · Eyedrop (I) · Walkability (W) ·
+  **Still (S)** | + Door · + Examine · + NPC · **+ More** (a menu: + Statue (U), + Monument (O),
+  + Archive (K) — the user: "very situational"; the three QActions are also added to the tab so
+  their keys work with the menu shut) | the brush label (the first thing to overflow).
+  `RoomsTab.view_bar`: Grid · Palettes · Markers · Anim · **Clean** · ▶ Play (moved from the
+  state row) · − zoom + · **Fit** · **Whole room** · **Reference**. The *Walk* layer button is no
+  longer on a bar (S98 r2 made it the Walkability mode, now visible as the tool; it stays in
+  `layer_buttons` for `_tool_changed`). The state row's labels are short (+ State, − State,
+  Keep…, Maze…, "Screen n" — the long words in the tooltips). All shown at 1,512 px (test_app
+  `s173_room_aids` checks every one).
+- **Zoom** (`canvas.ZOOMS` 1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12): `set_zoom` takes a float,
+  `zoom_step(±1)` (the ± buttons, the + / − keys, ⌘/Ctrl + wheel, a macOS pinch through
+  `viewportEvent` NativeGesture), `fit_zoom` = the largest step at which the 160 × 128 screen
+  fits. Half steps are crisp on a Retina screen (1.5× = 3 device pixels a game pixel).
+- **Clean view**: `RoomCanvas.set_clean` (the Clean button, sticky) or H held on the canvas
+  (`_clean_hold`, cleared on focus-out) — `drawForeground` draws nothing; identical to every
+  overlay off (checked).
+- **The Still tool** (user: "stop entirely … Make a new un-animated tile I can use. Do NOT count
+  the previous animated tile as used … [own animations] yes … I want to choose a frame"):
+  click a moving cell (`cell_moves`: a subtile in `anim_slots` = the game handler's ∪ the room's
+  own) → `animate.cell_frames` replays `animation.Player` (the measured 1,024-frame schedule)
+  and `tileanim.Player` together over the sheet for 4,096 frames and lists the cell's distinct
+  pictures (first = at rest; ≤ 64) → `room_view.StillFrameDialog` (pictures; the frame on
+  screen preselected while ▶ Play runs) → `Document.make_still_tile`: each moving quarter's
+  chosen graphic in a still slot on the same side of the split (a used slot that already holds
+  it, else a free one — page 1, then page 2; never an animated / statue / service slot), a NEW
+  metatile in My metatiles (or the same one if there), the brush; no layout cell changes and
+  the moving tile is not touched (reading of "do not count the previous animated tile as
+  used"). The Animate tab's older *Make the selected cell still* (`make_still`: every cell of
+  the room remapped, vanilla slots only, the resting picture) is kept. Measured in the game:
+  `tools/walk_still.py` (the editor's own code on a copy of the project, a build, the user's
+  save): 9 / 9 on GreatLog's sway; `--negative` (the moving tile painted) 2 FAIL.
+- **Brush preview**: with Paint / Rect / Fill on an editable room, the brush's 16 × 16 picture
+  (this room's sheet and colours, `_ghost_pixmap`, cached) at 80 % over the hovered cell.
+- **Where used**: `MetatilePicker.hoverMetatile` → `RoomCanvas.set_used` outlines the screen's
+  cells drawn with it (tiles + palettes, `metatile_key`) in magenta; the status line adds "used
+  on N cells of this screen, M in the whole room" (`_cells_of`).
+- **Whole room** (`room_view.WholeRoomView`, a window): every screen pasted at its 4 × 4 grid
+  place (the bounding box), dashed screen edges, the canvas's screen outlined, labels; state =
+  the canvas's (*Follow the canvas*) or a number; cell grid; zoom / Fit; refreshes on every
+  layout / structure / palette signal; double-click a screen = `select_screen`.
+- **Reference** (`room_view.ReferenceWindow`): any room (your rooms, then the game's; a search
+  box), screen, state, Grid, Markers, ▶ Play, On top, zoom — the canvas is `ReferenceCanvas`
+  (a `RoomCanvas` that never edits: no paint, drag, double-click; left click only marks a cell).
+  Right-click → `brushOffered(mt, sheet)` → `RoomsTab._reference_brush`: the brush when the
+  four quarters' graphics are the same in this room's sheet, else a line pointing to Borrow.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

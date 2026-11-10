@@ -21,10 +21,10 @@ built from it (the original ROM is never changed).
   — see *Your own opening*. **Title & ending…** (S153) puts your words on the title
   screen and sets the credits pages; the scene steps *Story point*, *Roll the credits* and
   *TO BE CONTINUED* end your story — see *Your title screen and your ending*.
-  (S154) **＋ Statue** on the Rooms tab's tool bar adds a **memorial statue**: it shows a
+  (S154) **+ More → + Statue (U)** on the Rooms tab's tool bar adds a **memorial statue**: it shows a
   monster that won a boss battle, an arena class or Starry Night with you and has left
   since — see *The memorial: statues of the monsters that left*.
-  (S158) **＋ Monument** / **＋ Archive** add **breeding hints**: a monument teaches the
+  (S158) **+ More → + Monument (O)** / **+ Archive (K)** add **breeding hints**: a monument teaches the
   player a breeding cross they have not found yet, an archive lists one family's learned
   crosses (the pool: Breeding tab → **Hints**) — see *Breeding hints: monuments and
   archives*.

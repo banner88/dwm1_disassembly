@@ -1,5 +1,110 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-06 (Session 171 — **ROADMAP P3.17 PACKAGING BUILT: THE EDITOR AS ONE MAC APP WITH EVERYTHING
+> INSIDE (ITS OWN PYTHON, QT, PYBOY, RGBDS v0.6.1, SAMEBOY; THE ROM ASKED FOR ONCE, NEVER INSIDE), MADE BY A SCRIPT ON THE
+> MAC OR BY A GITHUB BUILD; THE BUILD WITHOUT `make`, OUT OF TREE; THE STRAY EMPTY WINDOW FIXED; TABS MADE ON FIRST NEED
+> (OPEN 6.6 s → 0.3 s)** (the user: "This session: I want to have the editor be a proper app I can run with everything
+> included inside. also when I open editor its a bit slow at first. Also when I change tabs a random empty window pops
+> up that never loads"; the audit conferred → "M3 Max, Sequoia 15.7.7 … both sounds good as long as I can download app
+> from github … No I dont have it nor want it [an Apple Developer ID] … [SameBoy inside] Sounds good … maybe always
+> arena? … Screenshot attached … No example project. Draw icon."). **Built S171, NOT yet user-tested; byte-neutral for
+> the ROM** (the example pin stays `7aae0e95…`, patched; the user's project builds to `e0acf026…`, patched, with the old
+> builder, the new one and inside the app) — no test ROM; the deliverable to test is the app (GitHub Releases →
+> "DWM1 Editor (latest)" after the push, or `python3 tools/package_app.py` on the Mac).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The stray window (measured offscreen on the user's project):** none of 23 plain tab switches made a window; the
+> screenshot pointed at the Arena tab: `ClassArenaBox.show_class` twice in one event-loop turn left the first "opens
+> when" `FlagTerms` as a TOP-LEVEL window — `addWidget` into a shown page queues `_q_showIfNotHidden`, `setParent(None)`
+> clears the "explicitly hidden" mark, the queued show then makes the parentless widget a window. Also the Encounters
+> room-battle list and the Skills tab's parameter rows. `qt_safe.discard` (hide first) + the app's `StrayWindowGuard`
+> (kept off screen, named in the Build log); test_app `s171_app_window` (negative: 5 FlagTerms windows). KEY_LESSONS S171.
+> **Start-up:** the window appeared after all 23 tabs were built (6.6 s; Breeding 3.3 s). Window first, the project 50 ms
+> later; every tab but Rooms made on first show / first name (`PageTabs.addLazyTab`, `MainWindow.__getattr__`,
+> `built_tab`); a re-open no longer makes the old tabs (`PageTabs.clear`). 6.6 s → 0.28 s. Known, unchanged: the Balance
+> tab's first show holds the window ≈ 2-4 s (its fight fingerprints in the GUI thread; the same on S170). EDITOR_DESIGN §5.0.
+> **The builder (PROJECT_COMPILER §3 S171):** rgbasm / rgblink / rgbfix in a private temporary folder, disassembly/ =
+> the include path (rgbasm tries the working directory first: the overlay wins) — no `make` (a fresh Mac has none), the
+> tree never written; `check_toolchain` + `DWM_RGBDS_DIR`. Same md5 and game.sym for the example and the user's project.
+> **The app (EDITOR_DESIGN §4.1):** NEW `tools/package_app.py` (python-build-standalone CPython 3.12.16 + PySide6 cut to
+> the editor's bindings and their library closure 654 → 184 MB + PyBoy without its C sources + RGBDS + SameBoy v1.0.5 +
+> the repo's runtime folders, .pyc, ad hoc signature, zip; never a ROM — checked), NEW `editor2/packaging/launch.py` (a
+> workspace of links + a real `data/` in Application Support; the log file), `selftest.py`, `make_icon.py` (+
+> `editor2/app/icon.png`, `AppIcon.icns`: a cracked pixel-art egg), NEW `editor2/app/appmode.py` (the ROM copy, the
+> first-start prompt, the bundled SameBoy / RGBDS), NEW `.github/workflows/editor-app.yml` (macos-15 → the pre-release
+> `editor-latest` on every push to master). Not PyInstaller: the editor's helper processes use `sys.executable`.
+> **Measured (Linux build of the same layout):** the self-check with no system Python / RGBDS and a failing `make` first
+> on PATH: ALL PASSED (own RGBDS v0.6.1; the clean disassembly assembled by it = `1ca6579…`; the example = the pin;
+> nothing written into the app; QtMultimedia; 23 tabs; no stray window; the Playback process); as a NON-ROOT user on a
+> read-only copy: first FAIL (`shutil.copy` carried the read-only mode — `copyfile` now; KEY_LESSONS S171), then ALL
+> PASSED, no file of the app changed; the real app on the user's project + ROM ran 25 s with an empty error log; the
+> user's project built by the app's Python / RGBDS = `e0acf026…` (patched). NOT measured: anything on macOS — the
+> workflow's self-check is the first Mac run.
+> **Help:** `00_start.md` (start-up, stray windows, "The app": getting it, `xattr -cr`, the ROM, the log), `80_build.md`,
+> the glossary (App). `EDITOR_REVISION` S171.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2095 PASSED (+ `test_s171`; REGRESSION == the pin);
+> test_app `--rom` PASS (+ `s171_app_window`; the GUI build == the pin `7aae0e95…`, patched).
+> **r2:** the GitHub build hit "The configuration 'macos-14-arm64-us-default' is not supported" —
+> GitHub retired the macos-14 image 2026-11-02; the workflow runs on `macos-15`.
+> **r3 (user-directed, the user starting a project):** ROADMAP P3.3h — the Rooms tab's Borrow tab
+> lists YOUR rooms ("Your room") and the game's ("Game room" + gate themes), each A-Z, one clears
+> the other; a metatile of your room imported into another tileset (both pages). Measured on the
+> user's project: GreatTree ← Cities_FOUNT ×4, graphics identical, page 2 used. test_app
+> `s171_borrow_custom`. EDITOR_DESIGN §5.1 "S171 r3", help 13_tilesets.
+> **Found, NOT fixed (pre-existing, HEAD 7cb910a too):** `editor2/tests/test_canvas.py` stops at
+> `v3_round_trip` line 627 — its slot counts assume one 128-slot page (S168 made free_counts count
+> both pages; further asserts expect "not enough free tileset slots" where page 2 now has room).
+> Not one of the mandated suites; the S168+ sessions did not run it. Needs its own pass (rewrite
+> the slot-budget asserts for 256 slots).
+> **r4 (user-directed: "Now please … Do the whole thing"):** ROADMAP P3.3i — colour-true tiles:
+> Borrow *Match colours* (each piece in the closest row of this room, the real colours
+> remembered), several at once, *A picture (PNG)…* straight in; Palettes → *Re-plan colours…
+> (re-roll)* (plans with pictures, keep rows, one undo step); Draw offers every row (a
+> quarter moves to the row of its colour). NEW `editor2/core/recolour.py`,
+> `rooms/replan_dialog.py`, `rooms/png_source.py`. Measured on the user's project: GreatTree +
+> 8 Cities_FOUNT + 8 Mermaids Cave cells → plan 1 92 % exact (error 0.36), applied, built,
+> and the room in PyBoy matches the editor. test_app `s171_colour_true`. EDITOR_DESIGN §5.1
+> "S171 r4", help 13_tilesets / 10_rooms / 14_import_art.
+> **r5 (user: "I added 38 metatiles and immediately get 'The tileset has no free walkable slot' …
+> there is a difference between having more than possible tiles AVAILABLE versus ACTUALLY HAVING
+> THEM DOWN ON THE SCREEN"; then "Yes please implement it"):** ROADMAP P3.3j — parked metatiles:
+> only tiles placed on screens hold slots. NEW `editor2/core/parking.py` (`custom._editor.parked`;
+> a parked metatile keeps its pictures, rows, walkable side and real colours, 0 slots);
+> `Document.NoFreeSlot`; Borrow (matched and raw), a picture, Draw → new, Re-plan park the
+> unplaced My metatiles when the sheet is full and try again; still full = the import is parked;
+> the picker's *Parked* section (click = back into the tileset + the brush; right-click = delete);
+> Tileset tab *Park unplaced (N)* / *Delete parked (N)* (were the Purge buttons); a brush whose
+> slots were freed by parking is dropped. Fixed on the way: `tile_draw.plan_new` could reuse a
+> slot an earlier quarter of the same metatile had just taken (wrong graphic). Measured on the
+> user's project: GreatTree ← Cities_FOUNT 78 + SBOSS 98 + New roomS ~170 imports, none refused
+> (254 parked, 0 slots); 16 parked ones painted onto screen 0 (5th one parked 85 unplaced to
+> make room), built (`5993502b…`, patched test build), the room in PyBoy = the editor's picture.
+> test_app `s171_parking`; test_canvas's tileset block updated (that file still stops earlier,
+> see above). EDITOR_DESIGN §5.1 "S171 r5", PROJECT_COMPILER `_editor.parked`, KEY_LESSONS S171
+> r5, help 13_tilesets / glossary.
+> **r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole quarter a blank
+> colour …"; "I may want some tiles to be 1 colour and some other tiles to be a different
+> (palette-compatible) colour"; "Yes I want everything … only RECOLOR ALL PIXELS THAT ARE EXACTLY
+> THE SAME COLOUR. Only me clicking individual pixels should change STRUCTURE"):** ROADMAP P3.3k —
+> matching is one-to-one (`recolour.quantize`: shapes never merged); Draw keeps colour numbers on
+> a row change (the r4 flat-quarter bug), *row 0-3* / *swap a⇄b*, Redo, ⌘Z / ⌘⇧Z = strokes;
+> Borrow → *colours: into row N* + *show as they will look here*; right-click → *Copy in row ▸ N*
+> (no slot). Measured on the user's project: Mermaids Cave cells shown in their own colours /
+> the closest rows / row 1, 12 imported into row 1, two twins in rows 2 and 0 (no slot), placed,
+> built (`3b962c03…`, patched test build), the room in PyBoy = the editor; a Draw stroke undone
+> by ⌘Z, the project untouched. test_app `s171_recolour`. EDITOR_DESIGN §5.1 "S171 r6", help
+> 10_rooms / 13_tilesets.
+> **r7 (user: "why does clicking on some pixels change that pixel and clicking on other pixels
+> change the entire regions? … I click on black and it recolours other colours? Does it get
+> identity from the original tile and not from current drawing window"; "Yes I want that"):**
+> Draw — painting never moves a quarter (own row; shared colours like black paint as its own;
+> others refused and dimmed), right-click picks the pixel's own row, palette edits reach the
+> drawing at once, *Recolour…* (a colour in the drawing → a swatch) replaces the swap buttons.
+> (The user's "play does nothing" was the ▶ Play animation preview in a room without animated
+> tiles — normal.) test_app `s171_recolour` extended; EDITOR_DESIGN §5.1 "S171 r7".
+> **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
+> `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
+> Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
+
 > Last verified: 2026-11-05 (Session 170 — **MONSTER ART PAST THE THREE ART BANKS: ALL 215 ORIGINAL MONSTERS CAN BE
 > RE-ARTED — THE ART SPILLS INTO THE 4 MB ROM'S BANKS $80+ (THE LAST KIND), EVERY STREAM STORED COMPRESSED (≈ 31 %
 > SMALLER, THE GAME'S OWN SPEED); NO ENGINE CHANGE (EVERY READER MAPS ANY BANK — MEASURED)** (the user: "This session: I

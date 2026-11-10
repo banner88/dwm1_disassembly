@@ -3,7 +3,8 @@
 The unit of editing is the 16×16 CELL the player walks on (10×8 per
 screen); a cell's graphic is a METATILE = 4 subtiles (tl, tr, bl, br) +
 one palette slot. Subtile-level editing exists only inside the metatile
-editor. One screen at native 160×128, zoom 1–6×, pixel-exact.
+editor. One screen at native 160×128, zoom 1–12× in steps (S173: 1.5× / 2.5×
+half steps, Fit), pixel-exact.
 
 Tools (V = Select is the default):
   select  V   click a cell → Selection panel; click an NPC/spawn/exit marker
@@ -14,6 +15,9 @@ Tools (V = Select is the default):
   walk    W   walkability mode: cells red (wall) / green (walkable); click flips
               — only the BOTTOM-RIGHT subtile decides (PyBoy-measured S94), so a
               flip swaps that subtile for its cross-threshold twin
+  still   S   (S173) click a MOVING cell: choose one of its frames → a new tile
+              that never moves (My metatiles; no cell changes)
+Hold H = clean view (no grid / markers / outlines) while held (S173).
 Sources: a CUSTOM room (editable when its layout is a project item) or a
 VANILLA room (read-only; "Make editable" clones it).
 """
@@ -36,6 +40,13 @@ from editor2.app.session import REPO
 TILE = 8
 CELL = 16
 CELLS_W, CELLS_H = 10, 8
+# S173 (user: "Allow zooming in … 1.5x and 2x. Maybe even 3x"): the zoom steps; the
+# half steps are crisp on a Retina screen (1.5× = 3 screen pixels a game pixel)
+ZOOMS = (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12)
+
+
+def zoom_text(z):
+    return (f'{z:g}×')
 SPRITE_DIR = os.path.join(REPO, 'extracted', 'npc_field_sprites')
 
 PAL_TINTS = [QColor(255, 80, 80, 70), QColor(80, 160, 255, 70),
@@ -415,15 +426,17 @@ class RoomCanvas(QGraphicsView):
     markerSelected = Signal(object)           # dict or None
     cellSelected = Signal(object)             # (cx, cy) or None
     walkFlipRequested = Signal(int, int)      # cx, cy
-    zoomChanged = Signal(int)
+    zoomChanged = Signal(float)
     editRequested = Signal()                  # painting attempted on read-only
     toolChanged = Signal(str)
     markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
     markerActivated = Signal(object)          # S98 r2: double-click on a marker
     cellActivated = Signal(object)            # S99 r3: double-click on a plain cell
     cellsSelected = Signal(object)            # S102: (c0, r0, c1, r1) drag / Shift+click
+    stillRequested = Signal(object)           # S173: (cx, cy) clicked with the Still tool
+    cleanChanged = Signal(bool)               # S173: clean view on / off
 
-    TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk')
+    TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk', 'still')
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
@@ -469,6 +482,15 @@ class RoomCanvas(QGraphicsView):
         self._drag = None            # S97: [marker ref, start cell, current cell]
         self.sel_rect = None         # S102: (c0, r0, c1, r1) selected cells
         self._sel_drag = None        # S102: anchor cell of a selection drag
+        # S173: clean view (button = sticky, H held = while held), the cells drawn
+        # with a picker metatile (hover), the brush's picture under the cursor
+        self.clean = False
+        self._clean_hold = False
+        self.used_key = None
+        self.ghost = True
+        self._ghost_pm = None
+        self._ghost_key = None
+        self._gesture = 0.0
 
         self.scene_ = QGraphicsScene(self)
         self.setScene(self.scene_)
@@ -491,19 +513,103 @@ class RoomCanvas(QGraphicsView):
 
     # ----------------------------------------------------------------- view
     def set_zoom(self, z):
-        z = max(1, min(6, int(z)))
+        z = max(ZOOMS[0], min(ZOOMS[-1], float(z)))
+        z = int(z) if z == int(z) else z
         self._zoom = z
         self.resetTransform()
         self.scale(z, z)
-        self.zoomChanged.emit(z)
+        self.zoomChanged.emit(float(z))
 
     def zoom(self):
         return self._zoom
 
+    def zoom_step(self, d):
+        """S173: the next zoom step up (d > 0) or down."""
+        z = self._zoom
+        if d > 0:
+            nxt = next((s for s in ZOOMS if s > z + 1e-6), ZOOMS[-1])
+        else:
+            nxt = next((s for s in reversed(ZOOMS) if s < z - 1e-6), ZOOMS[0])
+        self.set_zoom(nxt)
+
+    def fit_zoom(self):
+        """S173: the biggest zoom step at which the whole screen fits the view."""
+        vp = self.viewport().size()
+        w, h = SCREEN_W * TILE, SCREEN_H * TILE
+        best = ZOOMS[0]
+        for s_ in ZOOMS:
+            if w * s_ <= vp.width() - 4 and h * s_ <= vp.height() - 4:
+                best = s_
+        self.set_zoom(best)
+        return best
+
+    def set_clean(self, on):
+        """S173: clean view — the art only (no grid, markers, outlines, selection)."""
+        self.clean = bool(on)
+        self.viewport().update()
+        self.cleanChanged.emit(self.is_clean())
+
+    def is_clean(self):
+        return self.clean or self._clean_hold
+
+    def set_used(self, mt):
+        """S173: outline every cell of this screen drawn with metatile `mt` (None = off).
+        Returns how many cells of the screen show it."""
+        self.used_key = metatile_key(mt) if mt else None
+        self.viewport().update()
+        return len(self.used_cells())
+
+    def used_cells(self):
+        if self.used_key is None or self.tiles is None:
+            return []
+        return [(cx, cy) for cy in range(CELLS_H) for cx in range(CELLS_W)
+                if metatile_key(self.cell_metatile(cx, cy)) == self.used_key]
+
+    def current_sheet(self):
+        """S173: the sheet as the canvas shows it now (the animation frame on screen
+        while ▶ Play runs)."""
+        sheet = bytes(self._player.sheet) if self._player is not None else self.gfx.sheet
+        if self._tplayer is not None:
+            sh = bytearray(P2.pad_sheet(sheet))
+            for s_ in self.own_slots:
+                sh[s_ * 16:s_ * 16 + 16] = self._tplayer.sheet[s_ * 16:s_ * 16 + 16]
+            sheet = bytes(sh)
+        return sheet
+
+    def cell_gfx_now(self, cx, cy):
+        """S173: the 4 subtile graphics the cell shows at this moment."""
+        sh = P2.pad_sheet(self.current_sheet())
+        return tuple(bytes(sh[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                     for t in self.cell_metatile(cx, cy)['tiles'])
+
+    def cell_moves(self, cx, cy):
+        return any(P2.slot_key(t) in self.anim_slots for t in self.cell_metatile(cx, cy)['tiles'])
+
+    def _ghost_pixmap(self):
+        """S173: the brush drawn with this room's sheet and colours (cached)."""
+        b = self.brush
+        if not b or self.gfx is None or self.pals is None:
+            return None
+        key = (metatile_key(b), id(self.gfx), id(self.pals))
+        if key != self._ghost_key:
+            from PIL import Image
+            img = Image.new('RGB', (16, 16))
+            pals = metatile_pals(b) or [0] * 4
+            try:
+                for i, t in enumerate(b['tiles']):
+                    img.paste(self.s.renderer.render_tile(self.gfx.sheet, int(t), self.pals,
+                                                          pals[i]), ((i % 2) * 8, (i // 2) * 8))
+                self._ghost_pm = QPixmap.fromImage(ImageQt.ImageQt(img))
+            except Exception:                                    # noqa: BLE001
+                self._ghost_pm = None
+            self._ghost_key = key
+        return self._ghost_pm
+
     def set_tool(self, tool):
         assert tool in self.TOOLS
         self.tool = tool
-        self.setCursor({'select': Qt.ArrowCursor, 'walk': Qt.PointingHandCursor}
+        self.setCursor({'select': Qt.ArrowCursor, 'walk': Qt.PointingHandCursor,
+                        'still': Qt.PointingHandCursor}
                        .get(tool, Qt.CrossCursor))
         self._rect_anchor = self._rect_cur = None
         self.viewport().update()
@@ -916,6 +1022,8 @@ class RoomCanvas(QGraphicsView):
     def drawForeground(self, painter, rect):
         if self.tiles is None:
             return
+        if self.is_clean():
+            return                  # S173: the art only
         painter.save()
         z = self._zoom
         walk_mode = self.tool == 'walk' or self.layers['walk']
@@ -1075,6 +1183,24 @@ class RoomCanvas(QGraphicsView):
             painter.setPen(pen)
             painter.setBrush(QBrush(QColor(255, 230, 0, 50)))
             painter.drawRect(rr)
+        if self.used_key is not None:
+            # S173: the cells drawn with the picker metatile under the mouse
+            pen = QPen(QColor(255, 60, 255))
+            pen.setCosmetic(True)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 60, 255, 60)))
+            for cx, cy in self.used_cells():
+                painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
+        if self._hover and self.tool in ('paint', 'rect', 'fill') and self.ghost \
+                and self.is_editable() and self._rect_anchor is None and self._stroke is None:
+            pm = self._ghost_pixmap()          # S173: the brush's picture before you click
+            if pm is not None:
+                cx, cy = self._hover
+                painter.setOpacity(0.8)
+                painter.drawPixmap(QRectF(cx * CELL, cy * CELL, CELL, CELL), pm,
+                                   QRectF(0, 0, 16, 16))
+                painter.setOpacity(1.0)
         if self._hover and self.tool != 'select':
             cx, cy = self._hover
             pen = QPen(QColor(255, 255, 255, 200))
@@ -1303,6 +1429,10 @@ class RoomCanvas(QGraphicsView):
             if cell is not None:
                 self.walkFlipRequested.emit(*cell)
             return
+        if self.tool == 'still':
+            if cell is not None:
+                self.stillRequested.emit(cell)
+            return
         if cell is None or not self._can_paint():
             return
         if self.tool == 'paint':
@@ -1423,10 +1553,28 @@ class RoomCanvas(QGraphicsView):
 
     def wheelEvent(self, ev):
         if ev.modifiers() & (Qt.ControlModifier | Qt.MetaModifier):
-            self.set_zoom(self._zoom + (1 if ev.angleDelta().y() > 0 else -1))
+            if ev.angleDelta().y():
+                self.zoom_step(1 if ev.angleDelta().y() > 0 else -1)
             ev.accept()
             return
         super().wheelEvent(ev)
+
+    def viewportEvent(self, ev):
+        # S173: a trackpad pinch (macOS) steps the zoom
+        from PySide6.QtCore import QEvent
+        if ev.type() == QEvent.NativeGesture:
+            try:
+                if ev.gestureType() == Qt.ZoomNativeGesture:
+                    self._gesture += ev.value()
+                    while abs(self._gesture) >= 0.12:
+                        self.zoom_step(1 if self._gesture > 0 else -1)
+                        self._gesture -= 0.12 if self._gesture > 0 else -0.12
+                    return True
+                if ev.gestureType() == Qt.EndNativeGesture:
+                    self._gesture = 0.0
+            except Exception:                                    # noqa: BLE001
+                pass
+        return super().viewportEvent(ev)
 
     def keyPressEvent(self, ev):
         k = ev.key()
@@ -1436,9 +1584,14 @@ class RoomCanvas(QGraphicsView):
         elif k == Qt.Key_Escape:
             self.set_tool('select')
         elif k in (Qt.Key_Plus, Qt.Key_Equal):
-            self.set_zoom(self._zoom + 1)
+            self.zoom_step(1)
         elif k == Qt.Key_Minus:
-            self.set_zoom(self._zoom - 1)
+            self.zoom_step(-1)
+        elif k == Qt.Key_H and not (ev.modifiers() & (Qt.ControlModifier | Qt.MetaModifier)):
+            if not ev.isAutoRepeat() and not self._clean_hold:
+                self._clean_hold = True          # S173: clean view while H is held
+                self.viewport().update()
+                self.cleanChanged.emit(True)
         else:
             super().keyPressEvent(ev)
 
@@ -1446,8 +1599,20 @@ class RoomCanvas(QGraphicsView):
         if ev.key() == Qt.Key_Space:
             self._space = False
             self.set_tool(self.tool)
+        elif ev.key() == Qt.Key_H:
+            if not ev.isAutoRepeat() and self._clean_hold:
+                self._clean_hold = False
+                self.viewport().update()
+                self.cleanChanged.emit(self.is_clean())
         else:
             super().keyReleaseEvent(ev)
+
+    def focusOutEvent(self, ev):
+        if self._clean_hold:                     # S173: H released elsewhere
+            self._clean_hold = False
+            self.viewport().update()
+            self.cleanChanged.emit(self.is_clean())
+        super().focusOutEvent(ev)
 
     def _emit_hover(self, cell):
         if cell is None or self.tiles is None:

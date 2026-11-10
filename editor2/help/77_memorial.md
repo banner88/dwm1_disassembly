@@ -34,7 +34,7 @@ A statue takes **two cells**: its **pedestal** and, on the cell above it, the
 
 1. Click the cell where the pedestal goes (the Select tool, **V**). Pick a cell below the
    top row, because the monster needs the cell above.
-2. Press **＋ Statue (U)** on the tool bar.
+2. Press **+ More → + Statue** on the tool bar (or the key **U**).
 3. The editor does the following:
    - **The pedestal cell** gets the room's **Pedestal** metatile. The room's first statue
      makes it (a stone column drawn over the floor that was on the cell). Every later

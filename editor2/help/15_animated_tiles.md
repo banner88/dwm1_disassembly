@@ -60,10 +60,23 @@ tiles show their first frame again). Everything is one undo step.
 - **Animation groups** — up to 32 per room (every 8 tiles of one animation
   is one group).
 
+**The Still tool (S173) — a tile that never moves.** **Still (S)** on the tool bar, then
+click a MOVING cell (the **Anim** layer outlines them): a window shows every picture that
+cell shows while the room animates — the game's animation (the GreatTree sway, water …)
+or one of your own. Pick one (**at rest** = the map as drawn; while **▶ Play** runs, the
+picture on screen is picked first) → **Make the still tile**: a NEW metatile that shows
+that picture and never moves joins *My metatiles* and becomes your brush (Paint). Nothing
+on the map changes and the moving tile stays as it was — paint the still one where you
+want it. It costs one free tile of the tileset for each moving 8×8 quarter (none when that
+picture is already on the tileset). One undo step. Measured in the game: the still copy
+never changes over 1,200 frames while the original keeps moving (`tools/walk_still.py`).
+
 **Copy a vanilla room's animation…** (bottom of the Animate tab) — optional:
 also play one of the game's own room animations here (it moves fixed tiles
 of the sheet; a room copied from a vanilla room plays that room's by
 default). Your own animations run next to it. *Make the selected cell
-still* stops a cell that the vanilla animation moves.
+still* stops EVERY cell of the room drawn with that tile (the vanilla animation's tiles
+only; it keeps the resting picture) — the Still tool above makes a new still tile instead
+and changes nothing on the map.
 
 Animations pause while a text box or menu is open, like the game's own.

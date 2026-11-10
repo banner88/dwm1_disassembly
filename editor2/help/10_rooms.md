@@ -62,7 +62,7 @@ the open log naming the room and the screens. A copy of one of the game's
 rooms (Make editable) keeps the original room's shape — its gaps are walled
 off in the game, so they are left alone and not reported.
 
-**Maze screen…** (on the screen / state row) fills the shown screen and
+**Maze…** (Maze screen…, on the screen / state row) fills the shown screen and
 state with one of the gates' maze screens, tiles and palette slots — see
 *Gate themes*.
 
@@ -79,8 +79,26 @@ bottom of Room / Screen. Your 129th room and on go into a later REGION by themse
 (see *Limits*); you never pick one. Choosing Paint or Eyedrop
 opens Tiles. The editor remembers the page you used last.
 
+**The two bars above the canvas (S173).** The **tools**: **Select (V)**, **Paint (B)**,
+**Eyedrop (I)** (or right-click), **Walkability (W)**, **Still (S)** (see *Animated tiles*),
+then **+ Door (D)**, **+ Examine (X)**, **+ NPC (N)** and **+ More** — the memorial
+**+ Statue (U)** and the breeding-hint **+ Monument (O)** / **+ Archive (K)** (their keys
+work without opening the menu). A **statue** shows a monster that won a boss battle, an
+arena class or Starry Night with you and has left since (see *The memorial*); a
+**monument** teaches a breeding cross the player has not found, an **archive** lists one
+family's learned crosses (see *Breeding hints*). The **view**: **Grid**, **Palettes**,
+**Markers**, **Anim** (overlays on / off), **Clean** — the art only, no grid, markers,
+outlines or selection (or HOLD **H** on the canvas for a quick look), **▶ Play** (the
+room's animation), the **zoom** (**−** / **+**, the box, **Fit** = the biggest that fits;
+1× to 12× with half steps 1.5× / 2.5× — sharp on a Retina screen; also ⌘/Ctrl + wheel, a
+trackpad pinch, or the + / − keys), **Whole room** and **Reference**.
+
 **Painting:** pick a metatile (Tiles page) and paint with the canvas tools; the
-Walk tool shows / flips walkability. Painting is immediate (S132: only the cells
+**Walkability** tool shows / flips walkability. While you paint, the brush is drawn
+under the mouse **before** you click (S173), so you see how it sits among its
+neighbours. **Where is it used?** Hover a metatile on the Tiles page: every cell of the
+screen drawn with it is outlined in magenta, and the line under the canvas counts them
+(this screen, the whole room). Painting is immediate (S132: only the cells
 you paint are redrawn; the side panels update once when you let go; the space
 meters measure in the background — see *Capacity*).
 
@@ -118,9 +136,22 @@ metatiles). Once a quarter moved to another row, use *Save as a new metatile* (o
 cell drawing the original): *everywhere* would leave other cells in their old row. Tiles the room animates are changed in the Animate tab; the common
 font / frame tiles ($80-$AF) only as a new metatile.
 
+**Whole room (S173):** every screen of the room joined into one picture in a window of
+its own — the screen edges dashed, the screen on the canvas outlined, the state of your
+choice (or the canvas's: *Follow the canvas*), *Cell grid*, zoom / Fit. It follows every
+edit; double-click a screen to show it on the canvas. Use it to check that screens line
+up.
+
+**Reference (S173):** any room — the game's or yours, any screen and state — in a
+window of its own beside the editor (*On top* keeps it above). It is the room canvas,
+read-only: grid, markers, **▶ Play**, zoom, hold **H**. **Right-click** a cell there: it
+becomes your brush when that room draws with the same tiles as the room you edit (a
+copy of it, a room on the same tileset); otherwise the line says to bring it over with
+**Borrow**.
+
 **States:** a screen can have several **states** (versions) — e.g. "boss
-present" and "boss beaten". **+ Add state** (duplicate this state, with or
-without its own layout copy, or an empty state); **− Remove state**; ◀ ▶
+present" and "boss beaten". **+ State** (duplicate this state, with or
+without its own layout copy, or an empty state); **− State** removes the one shown; ◀ ▶
 switch the state shown.
 
 **Make editable: which states the copy keeps (S144).** A game room's screens have their
@@ -164,7 +195,7 @@ there since is left alone and reported (`WARNING: …`): make that copy again, o
 it with the game's scene in the Cutscenes tab. Copies of every other room were
 complete.
 
-**Keep states…** (on the state row) does the same for any room of yours with states —
+**Keep…** (Keep states…, on the state row) does the same for any room of yours with states —
 a copy you made earlier with every state (your GreatTree), or a room you built: tick,
 pick the start, OK; every script that names the screen's state uses the new numbers
 (a state you dropped: its checks are never true, its writes are left out). Undo restores.

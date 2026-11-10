@@ -81,6 +81,57 @@ def units_of(tiles, frames_a, frames_b, effect, cur=None):
     return out
 
 
+def cell_frames(anim_mid, own_items, sheet, tiles, limit=64, run=4096):
+    """S173 (the Still tool; user: "I want to choose a frame"): every distinct picture
+    the 4 subtiles `tiles` show while the room animates — the game's handler of
+    `anim_mid` (animation.Player, its measured 1024-frame schedule) and the room's own
+    animations `own_items` (tileanim.Player) replayed together over `sheet` for `run`
+    field frames. -> [(g_tl, g_tr, g_bl, g_br)] (16 bytes each), first = the tiles at
+    rest (the sheet as drawn), then in the order they first appear; at most `limit`."""
+    from editor2.core import tileanim as TA
+    van = A.Player(anim_mid, sheet) if anim_mid is not None else None
+    vslots = A.slots(anim_mid) if anim_mid is not None else set()
+    own = None
+    oslots = set()
+    if own_items:
+        try:
+            own = TA.Player(list(own_items), sheet)
+            for it in own_items:
+                oslots |= set(TA.slots_of(it))
+        except Exception:                                        # noqa: BLE001
+            own = None
+    keys = [_sk(t) for t in tiles]
+    base = P2.pad_sheet(bytes(sheet))
+
+    def snap():
+        out = []
+        for k in keys:
+            if own is not None and k in oslots:
+                src = own.sheet
+            elif van is not None and k in vslots:
+                src = van.sheet
+            else:
+                src = base
+            g = bytes(src[k * 16:k * 16 + 16])
+            out.append(g if len(g) == 16 else bytes(16))
+        return tuple(out)
+
+    frames = [snap()]
+    seen = {frames[0]}
+    for _ in range(run):
+        a = van.step(1) if van is not None else False
+        b = own.step(1) if own is not None else False
+        if not (a or b):
+            continue
+        f = snap()
+        if f not in seen:
+            seen.add(f)
+            frames.append(f)
+            if len(frames) >= limit:
+                break
+    return frames
+
+
 class AnimateMixin:
     # ------------------------------------------------------------ queries
     def anim_of_metatile(self, room, mt):
@@ -567,6 +618,78 @@ class AnimateMixin:
                                  + ', '.join(f'{a}->{b}' for a, b in new_of.items()))
         self.touch()
         return {'name': nm, 'tiles': [_tv(t) for t in new_tiles], 'pal': mt.get('pal', 0)}
+
+    def make_still_tile(self, room_id, mt, gfx, own_sheet=None, frame=None):
+        """S173 (the Still tool; user: "Make a new un-animated tile I can use. Do NOT
+        count the previous animated tile as used"): a NEW metatile that shows `gfx` (the
+        4 subtile graphics of one chosen frame, `cell_frames`) and never moves — each
+        subtile in a slot this room animates (the game's animation or the room's own)
+        gets the frame's graphic in a still slot on the same side of the collision
+        threshold (one that already holds exactly that graphic, else a free one; page 1,
+        then page 2); the other subtiles keep their tiles. NO cell of the room changes
+        and the moving tile is left as it was. The new metatile joins My metatiles
+        (the same one when it is there already). Returns it."""
+        from editor2.core.document import metatile_key
+        room = self.room(room_id)
+        rec = room['record']
+        if 'tileset' not in rec:
+            if own_sheet is None:
+                raise RuntimeError('room borrows a vanilla tileset — pass own_sheet')
+            self.localize_tileset(room, own_sheet)
+        tid = rec['tileset']
+        thr = _val(rec['collision_threshold'])
+        moving = self.room_animation(room)['slots'] | self.own_anim_slots(room)
+        hot = [k for k, t in enumerate(mt['tiles']) if _sk(t) in moving]
+        if not hot:
+            raise RuntimeError('this tile does not move in this room')
+        if len(gfx) != 4 or any(len(bytes(g)) != 16 for g in gfx):
+            raise RuntimeError('a frame is 4 subtile graphics of 16 bytes')
+        sheet = self.read_sheet(tid)
+        used = self.used_tiles(tid)
+        avoid = self.animated_slots(tid) | self.service_slots(tid) | moving
+        new_tiles = list(mt['tiles'])
+        took = []
+        placed = {}                        # (graphic, wall side) -> slot, inside this call
+        for k in hot:
+            sl = _sk(mt['tiles'][k])
+            g = bytes(gfx[k])
+            wall = P2.is_wall(sl, thr)
+            same = placed.get((g, wall))
+            if same is None:
+                same = next((f for f in range(P2.SLOTS) if f not in avoid and f in used
+                             and P2.is_wall(f, thr) == wall
+                             and bytes(sheet[f * 16:f * 16 + 16]) == g), None)
+            if same is None:
+                free = [f for f in range(P2.SLOTS) if f not in used and f not in avoid]
+                side = P2.wall_first(free, thr) if wall else P2.walk_first(free, thr)
+                if not side:
+                    raise RuntimeError(
+                        f"no free {'wall' if wall else 'walkable'} tile on this tileset for "
+                        'the still copy — free one (Tileset tab: purge / release) and try again')
+                same = side[0]
+                sheet[same * 16:same * 16 + 16] = g
+                used.add(same)
+                took.append(same)
+            placed[(g, wall)] = same
+            new_tiles[k] = P2.remap_value(mt['tiles'][k], sl, same)
+        self.write_sheet(tid, sheet)
+        tiles = [_tv(t) for t in new_tiles]
+        pal = mt.get('pal', 0)
+        base = mt.get('name') or 'tile'
+        if str(base).startswith('still '):
+            base = str(base)[6:]
+        nm = f"still {base}" + (f' (frame {frame + 1})' if frame is not None else '')
+        want = metatile_key({'tiles': tiles, 'pal': pal})
+        have = next((m for m in self._metatiles_mut(tid) if metatile_key(m) == want), None)
+        if have is None:
+            self.add_metatile(tid, nm, tiles, pal)
+        else:
+            nm = have.get('name', nm)
+        self.last_import_note = (f"new still tile '{nm}'"
+                                 + (f" — {len(took)} free tile(s) used ({', '.join(map(str, took))})"
+                                    if took else ' — no free tile needed (the graphic was there)'))
+        self.touch()
+        return {'name': nm, 'tiles': tiles, 'pal': pal}
 
     # ------------------------------------------------------------ the op
     def make_animated(self, room_id, mt, effect, mid, frames_a, frames_b=None,

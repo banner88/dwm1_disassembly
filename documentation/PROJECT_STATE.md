@@ -10,6 +10,49 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-10 (Session 173 — **ROOM-BUILDING AIDS (ROADMAP P3.3l): TWO BARS OVER THE CANVAS (THE TOOLS;
+> THE VIEW), STATUE / MONUMENT / ARCHIVE IN + MORE, ZOOM 1-12× WITH HALF STEPS + FIT, CLEAN VIEW (HOLD H), THE STILL TOOL
+> (A NEW TILE FROM A CHOSEN FRAME OF A MOVING CELL — THE GAME'S ANIMATION OR YOUR OWN), THE BRUSH UNDER THE MOUSE, WHERE A
+> TILE IS USED, THE WHOLE ROOM, A REFERENCE WINDOW** (the user: "What is statue vs monument? Unclear. Move archive button
+> and something else button to the side arrow and put eyedrops and walkability as button … Allow removal of grid (toggle)
+> … 'De-animate' button … Allow zooming in … 1.5x and 2x. Maybe even 3x. Anything else you can suggest"; the audit
+> conferred → "1) Yes good. Those are very situational. 2) No stop entirely. 3) Make a new un-animated tile I can use. Do
+> NOT count the previous animated tile as used. 4) yes. 5) I want to choose a frame. Others: Brush preview … Show where
+> tile is used … Whole room view - yes. Reference window - YES. proceed").
+> **Built S173, NOT yet user-tested; byte-neutral for the ROM** (no compiler / engine change; the example pin unchanged).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start; HEAD's
+> test_app `--rom` STOPPED at the Capacity block (a deleted `QTreeWidgetItem` — on a clean HEAD copy too; fixed in the
+> test, KEY_LESSONS S173).
+> **The audit (measured, offscreen grab of the user's project at 1,512 px):** the one canvas tool bar showed up to + NPC;
+> Paint, Eyedrop, Walkability, the Grid toggle and the 1-6× zoom all existed behind the » overflow (KEY_LESSONS S173 "A
+> control the user cannot see does not exist"). Statue = the S154 memorial (a monster that won a big battle and has left);
+> Monument = the S158 breeding hint (teaches a cross); Archive = one family's learned crosses.
+> **Built (EDITOR_DESIGN §5.1 "As built S173"):** the tools row (Select / Paint / Eyedrop / Walkability / Still / + Door /
+> + Examine / + NPC / + More ▸ Statue · Monument · Archive — keys U / O / K kept) and the view row (Grid / Palettes /
+> Markers / Anim / Clean / ▶ Play / − zoom + / Fit / Whole room / Reference), short state-row labels — every control
+> shown at 1,512 px; `canvas.ZOOMS` (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12; ± keys, ⌘ + wheel, pinch); clean view (the
+> button or H held); the Still tool: `animate.cell_frames` (the game handler's measured schedule + the room's own
+> animations, replayed together) → `room_view.StillFrameDialog` (the frame on screen preselected while ▶ Play runs) →
+> `Document.make_still_tile` (a NEW metatile in still slots on the same side of the split, the brush; no cell changes,
+> the moving tile untouched — the reading of "do not count the previous animated tile as used"; the Animate tab's
+> older *Make the selected cell still* kept); the brush drawn under the mouse; the picker's hover outlines the cells
+> using a metatile (+ counts); NEW `editor2/app/rooms/room_view.py` (Whole room, Reference — a read-only `RoomCanvas`,
+> right-click = brush on the same tiles). Help 10_rooms / 15_animated_tiles / 00 / 13 / 77 / 78 / glossary;
+> `EDITOR_REVISION` S173.
+> **Measured in the game:** NEW `tools/walk_still.py` (the editor's own code on a copy, a build, the user's save) —
+> GreatLog screen 5, the GreatTree sway, frame 4: **9 / 9** (the still cell 1 picture over 1,200 frames == the chosen
+> frame; the moving cell 8; every game picture one the editor offered); `--negative` (the moving tile painted) **2
+> FAIL**. The copy took page-2 slot 201 (page 1's wall side was full).
+> **Test ROM (optional; editor-only session):** `DWM-S173-still-test.gbc` (`2aa6a330…`, patched) = the user's project + a still tile (frame 4 of
+> the swaying bark at GreatLog screen 5 cell (2,2)) painted on cell (4,1) of that screen.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin unchanged); test_app `--rom` PASS
+> (+ `s173_room_aids`; the GUI build == the pin); test_canvas PASS. (Run alone: test_app and test_compiler at the same time
+> share the example project — a test_compiler "stray sheet file" FAIL then was a crashed debug run's leftover
+> `ts_2A_08.2bpp`, removed; a passing `s173_room_aids` leaves the assets unchanged.) Help picture `tab_rooms.png` regenerated
+> (`tools/help_screenshots.py --only Rooms`).
+> **Next:** the user's test of the Rooms tab at their window size; then the "Awaiting a user test" list / the
+> editor's finalization.
+
 > Last verified: 2026-11-08 (Session 172 — **FOODS INSTEAD OF MEATS: A TICK ON THE ITEMS TAB (TOAST / APPLE / BISCUIT /
 > BADAPPLE / HONEY, EACH WITH ITS OWN NPC SPRITE; OFF = THE GAME'S MEATS) + THE OUTSTANDING FIXES: test_canvas PASSES AGAIN,
 > THE BALANCE TAB NO LONGER HOLDS THE WINDOW** (the user: "Please identify outstanding fixes and ideally wrap them up … I want
@@ -77,112 +120,8 @@
 > **Next:** S172 is closed (handed off as `DWM-S172-handoff.zip`). The "Awaiting a user test" list; the editor's
 > finalization (the user: "I want to move towards the finalization of the editor so I can get cracking").
 
-> Last verified: 2026-11-06 (Session 171 — **ROADMAP P3.17 PACKAGING BUILT: THE EDITOR AS ONE MAC APP WITH EVERYTHING
-> INSIDE (ITS OWN PYTHON, QT, PYBOY, RGBDS v0.6.1, SAMEBOY; THE ROM ASKED FOR ONCE, NEVER INSIDE), MADE BY A SCRIPT ON THE
-> MAC OR BY A GITHUB BUILD; THE BUILD WITHOUT `make`, OUT OF TREE; THE STRAY EMPTY WINDOW FIXED; TABS MADE ON FIRST NEED
-> (OPEN 6.6 s → 0.3 s)** (the user: "This session: I want to have the editor be a proper app I can run with everything
-> included inside. also when I open editor its a bit slow at first. Also when I change tabs a random empty window pops
-> up that never loads"; the audit conferred → "M3 Max, Sequoia 15.7.7 … both sounds good as long as I can download app
-> from github … No I dont have it nor want it [an Apple Developer ID] … [SameBoy inside] Sounds good … maybe always
-> arena? … Screenshot attached … No example project. Draw icon."). **Built S171, NOT yet user-tested; byte-neutral for
-> the ROM** (the example pin stays `7aae0e95…`, patched; the user's project builds to `e0acf026…`, patched, with the old
-> builder, the new one and inside the app) — no test ROM; the deliverable to test is the app (GitHub Releases →
-> "DWM1 Editor (latest)" after the push, or `python3 tools/package_app.py` on the Mac).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
-> **The stray window (measured offscreen on the user's project):** none of 23 plain tab switches made a window; the
-> screenshot pointed at the Arena tab: `ClassArenaBox.show_class` twice in one event-loop turn left the first "opens
-> when" `FlagTerms` as a TOP-LEVEL window — `addWidget` into a shown page queues `_q_showIfNotHidden`, `setParent(None)`
-> clears the "explicitly hidden" mark, the queued show then makes the parentless widget a window. Also the Encounters
-> room-battle list and the Skills tab's parameter rows. `qt_safe.discard` (hide first) + the app's `StrayWindowGuard`
-> (kept off screen, named in the Build log); test_app `s171_app_window` (negative: 5 FlagTerms windows). KEY_LESSONS S171.
-> **Start-up:** the window appeared after all 23 tabs were built (6.6 s; Breeding 3.3 s). Window first, the project 50 ms
-> later; every tab but Rooms made on first show / first name (`PageTabs.addLazyTab`, `MainWindow.__getattr__`,
-> `built_tab`); a re-open no longer makes the old tabs (`PageTabs.clear`). 6.6 s → 0.28 s. Known, unchanged: the Balance
-> tab's first show holds the window ≈ 2-4 s (its fight fingerprints in the GUI thread; the same on S170). EDITOR_DESIGN §5.0.
-> **The builder (PROJECT_COMPILER §3 S171):** rgbasm / rgblink / rgbfix in a private temporary folder, disassembly/ =
-> the include path (rgbasm tries the working directory first: the overlay wins) — no `make` (a fresh Mac has none), the
-> tree never written; `check_toolchain` + `DWM_RGBDS_DIR`. Same md5 and game.sym for the example and the user's project.
-> **The app (EDITOR_DESIGN §4.1):** NEW `tools/package_app.py` (python-build-standalone CPython 3.12.16 + PySide6 cut to
-> the editor's bindings and their library closure 654 → 184 MB + PyBoy without its C sources + RGBDS + SameBoy v1.0.5 +
-> the repo's runtime folders, .pyc, ad hoc signature, zip; never a ROM — checked), NEW `editor2/packaging/launch.py` (a
-> workspace of links + a real `data/` in Application Support; the log file), `selftest.py`, `make_icon.py` (+
-> `editor2/app/icon.png`, `AppIcon.icns`: a cracked pixel-art egg), NEW `editor2/app/appmode.py` (the ROM copy, the
-> first-start prompt, the bundled SameBoy / RGBDS), NEW `.github/workflows/editor-app.yml` (macos-15 → the pre-release
-> `editor-latest` on every push to master). Not PyInstaller: the editor's helper processes use `sys.executable`.
-> **Measured (Linux build of the same layout):** the self-check with no system Python / RGBDS and a failing `make` first
-> on PATH: ALL PASSED (own RGBDS v0.6.1; the clean disassembly assembled by it = `1ca6579…`; the example = the pin;
-> nothing written into the app; QtMultimedia; 23 tabs; no stray window; the Playback process); as a NON-ROOT user on a
-> read-only copy: first FAIL (`shutil.copy` carried the read-only mode — `copyfile` now; KEY_LESSONS S171), then ALL
-> PASSED, no file of the app changed; the real app on the user's project + ROM ran 25 s with an empty error log; the
-> user's project built by the app's Python / RGBDS = `e0acf026…` (patched). NOT measured: anything on macOS — the
-> workflow's self-check is the first Mac run.
-> **Help:** `00_start.md` (start-up, stray windows, "The app": getting it, `xattr -cr`, the ROM, the log), `80_build.md`,
-> the glossary (App). `EDITOR_REVISION` S171.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2095 PASSED (+ `test_s171`; REGRESSION == the pin);
-> test_app `--rom` PASS (+ `s171_app_window`; the GUI build == the pin `7aae0e95…`, patched).
-> **r2:** the GitHub build hit "The configuration 'macos-14-arm64-us-default' is not supported" —
-> GitHub retired the macos-14 image 2026-11-02; the workflow runs on `macos-15`.
-> **r3 (user-directed, the user starting a project):** ROADMAP P3.3h — the Rooms tab's Borrow tab
-> lists YOUR rooms ("Your room") and the game's ("Game room" + gate themes), each A-Z, one clears
-> the other; a metatile of your room imported into another tileset (both pages). Measured on the
-> user's project: GreatTree ← Cities_FOUNT ×4, graphics identical, page 2 used. test_app
-> `s171_borrow_custom`. EDITOR_DESIGN §5.1 "S171 r3", help 13_tilesets.
-> **Found, NOT fixed (pre-existing, HEAD 7cb910a too):** `editor2/tests/test_canvas.py` stops at
-> `v3_round_trip` line 627 — its slot counts assume one 128-slot page (S168 made free_counts count
-> both pages; further asserts expect "not enough free tileset slots" where page 2 now has room).
-> Not one of the mandated suites; the S168+ sessions did not run it. Needs its own pass (rewrite
-> the slot-budget asserts for 256 slots).
-> **r4 (user-directed: "Now please … Do the whole thing"):** ROADMAP P3.3i — colour-true tiles:
-> Borrow *Match colours* (each piece in the closest row of this room, the real colours
-> remembered), several at once, *A picture (PNG)…* straight in; Palettes → *Re-plan colours…
-> (re-roll)* (plans with pictures, keep rows, one undo step); Draw offers every row (a
-> quarter moves to the row of its colour). NEW `editor2/core/recolour.py`,
-> `rooms/replan_dialog.py`, `rooms/png_source.py`. Measured on the user's project: GreatTree +
-> 8 Cities_FOUNT + 8 Mermaids Cave cells → plan 1 92 % exact (error 0.36), applied, built,
-> and the room in PyBoy matches the editor. test_app `s171_colour_true`. EDITOR_DESIGN §5.1
-> "S171 r4", help 13_tilesets / 10_rooms / 14_import_art.
-> **r5 (user: "I added 38 metatiles and immediately get 'The tileset has no free walkable slot' …
-> there is a difference between having more than possible tiles AVAILABLE versus ACTUALLY HAVING
-> THEM DOWN ON THE SCREEN"; then "Yes please implement it"):** ROADMAP P3.3j — parked metatiles:
-> only tiles placed on screens hold slots. NEW `editor2/core/parking.py` (`custom._editor.parked`;
-> a parked metatile keeps its pictures, rows, walkable side and real colours, 0 slots);
-> `Document.NoFreeSlot`; Borrow (matched and raw), a picture, Draw → new, Re-plan park the
-> unplaced My metatiles when the sheet is full and try again; still full = the import is parked;
-> the picker's *Parked* section (click = back into the tileset + the brush; right-click = delete);
-> Tileset tab *Park unplaced (N)* / *Delete parked (N)* (were the Purge buttons); a brush whose
-> slots were freed by parking is dropped. Fixed on the way: `tile_draw.plan_new` could reuse a
-> slot an earlier quarter of the same metatile had just taken (wrong graphic). Measured on the
-> user's project: GreatTree ← Cities_FOUNT 78 + SBOSS 98 + New roomS ~170 imports, none refused
-> (254 parked, 0 slots); 16 parked ones painted onto screen 0 (5th one parked 85 unplaced to
-> make room), built (`5993502b…`, patched test build), the room in PyBoy = the editor's picture.
-> test_app `s171_parking`; test_canvas's tileset block updated (that file still stops earlier,
-> see above). EDITOR_DESIGN §5.1 "S171 r5", PROJECT_COMPILER `_editor.parked`, KEY_LESSONS S171
-> r5, help 13_tilesets / glossary.
-> **r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole quarter a blank
-> colour …"; "I may want some tiles to be 1 colour and some other tiles to be a different
-> (palette-compatible) colour"; "Yes I want everything … only RECOLOR ALL PIXELS THAT ARE EXACTLY
-> THE SAME COLOUR. Only me clicking individual pixels should change STRUCTURE"):** ROADMAP P3.3k —
-> matching is one-to-one (`recolour.quantize`: shapes never merged); Draw keeps colour numbers on
-> a row change (the r4 flat-quarter bug), *row 0-3* / *swap a⇄b*, Redo, ⌘Z / ⌘⇧Z = strokes;
-> Borrow → *colours: into row N* + *show as they will look here*; right-click → *Copy in row ▸ N*
-> (no slot). Measured on the user's project: Mermaids Cave cells shown in their own colours /
-> the closest rows / row 1, 12 imported into row 1, two twins in rows 2 and 0 (no slot), placed,
-> built (`3b962c03…`, patched test build), the room in PyBoy = the editor; a Draw stroke undone
-> by ⌘Z, the project untouched. test_app `s171_recolour`. EDITOR_DESIGN §5.1 "S171 r6", help
-> 10_rooms / 13_tilesets.
-> **r7 (user: "why does clicking on some pixels change that pixel and clicking on other pixels
-> change the entire regions? … I click on black and it recolours other colours? Does it get
-> identity from the original tile and not from current drawing window"; "Yes I want that"):**
-> Draw — painting never moves a quarter (own row; shared colours like black paint as its own;
-> others refused and dimmed), right-click picks the pixel's own row, palette edits reach the
-> drawing at once, *Recolour…* (a colour in the drawing → a swatch) replaces the swap buttons.
-> (The user's "play does nothing" was the ▶ Play animation preview in a room without animated
-> tiles — normal.) test_app `s171_recolour` extended; EDITOR_DESIGN §5.1 "S171 r7".
-> **Next:** the user's test — push, download "DWM1 Editor (latest)" from Releases (or `python3 tools/package_app.py`),
-> `xattr -cr`, open: the ROM prompt (or the checkout's ROM taken), the project, every tab (no empty window; quick open),
-> Build, Play (the app's SameBoy), a Playback / storyboard; the Dock name and icon. Then the "Awaiting a user test" list.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S173** (2026-11-10): ROADMAP P3.3l room-building aids — the measured cause of the user's asks (one tool bar overflowing at 1,512 px: Eyedrop, Walkability, Grid and Zoom existed behind »); two bars (tools / view), + More ▸ Statue · Monument · Archive, zoom 1-12× with half steps + Fit + pinch, clean view (H held), the Still tool (`animate.cell_frames` → a frame chooser → `make_still_tile`: a new still metatile, no cell changed; the game's animation and the room's own), brush preview, where-used outline, NEW `room_view.py` (Whole room, Reference); `tools/walk_still.py` 9 / 9 on the user's save (negative 2 FAIL); HEAD's test_app Capacity block fixed. EDITOR_DESIGN §5.1 "As built S173", KEY_LESSONS S173. Byte-neutral for the ROM. Built S173, NOT yet user-tested.
 - **S172** (2026-11-08): Foods instead of meats (ROADMAP P3.19, user-directed) — `gamedata.foods`, a tick on the Items tab: items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's edits), each food its own plain NPC sprite $58-$5C from `editor2/assets/foods/*.png`, the meat prop $5F = the Apple; regions `npc_food_sheets` (ROM0) / `npc_food_pals` (bank $05, new overlay copy), sheets in bank $77 (gfx-IDs $7717-$771B), `NpcDrawPlain` → `NpcStaticFrame77` (one-frame objects held on frame 0); NPC sprite tables re-sectioned both trees (`tools/resection_npc_sprite_tables.py`); animation $2C annotated as the NOTE (the audit's "flying meat" was wrong — KEY_LESSONS S172); `tools/walk_foods.py` 32 / 32; the outstanding fixes: `test_canvas.py` passes again, the Balance tab's first-show stall 3.7 s → 0.16 s (`peek_ctx`). r2: the pictures redrawn in the game's pickup style; each food its own gate pickup icon (VRAM bank 1; bank $77 entries 33 / 34 hooked into banks $16 / $01); `gamedata.food_art` drawn in the Items tab (Apply / Restore default); walk 47 / 47 (negative 9 FAIL) — r2 USER-CONFIRMED 2026-11-08 13:17. r3: each food its own bag description by strength (walk 52 / 52) — USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please"). Pin `18e6f102…` (patched; round 1 `9ee0b97b…`, patched, historical).
 - **S171** (2026-11-06): ROADMAP P3.17 packaging — `DWM1 Editor.app` with its own Python / Qt / PyBoy / RGBDS v0.6.1 / SameBoy (`tools/package_app.py`, `editor2/packaging/launch.py` + `selftest.py`, `editor2/app/appmode.py`, `.github/workflows/editor-app.yml` → pre-release `editor-latest`; ad hoc signed; the ROM never inside); the builder without `make`, out of tree (byte-identical); the stray empty window (Arena "opens when" list: `setParent(None)` without `hide()` + Qt's queued show — `qt_safe.discard`, `StrayWindowGuard`); tabs made on first need (open 6.6 s → 0.3 s). EDITOR_DESIGN §4.1 / §5.0, PROJECT_COMPILER §3, KEY_LESSONS S171. r3 Borrow from your rooms (P3.3h), r4 colour-true tiles (P3.3i), r5 parked metatiles (P3.3j, `editor2/core/parking.py`), r6 recolour without changing shapes + Draw undo (P3.3k). Byte-neutral for the ROM (pin `7aae0e95…`, patched). Built S171, NOT yet user-tested.
 - **S170** (2026-11-05): monster art past the three art banks — all 215 originals re-artable: the art spills into banks $80+ (the LAST kind, after page 2), every stream stored compressed (`art.pack`, ≈ 31 % smaller, the game's own unpack speed); no engine change (every reader maps any bank — `tools/walk_art.py` 47 / 47, negative 25 FAIL); `sprite_codec` encoder indexed (same bytes, ≈ 11× faster); the meters / Capacity row; bank $07's two dead parent reads annotated. PROJECT_COMPILER §2.77. Test ROM `DWM-S170-mirror-test.gbc` (patched); pin `7aae0e95…` (patched) unchanged. Built S170, NOT yet user-tested.
@@ -589,6 +528,8 @@ real project starts, so these are best confirmed on the way into it:
 - S171 r6/r7: Draw (⌘Z / ⌘⇧Z; a quarter keeps its row — black paints one pixel; row buttons,
   *Recolour…*; palette edits show at once); Borrow *colours: into row N* + the preview;
   right-click → *Copy in row*.
+- S173: the Rooms tab's two bars at your window size, + More, zoom / Fit / pinch, Clean / hold H, the Still tool (a frame
+  chosen; the new tile in My metatiles), the brush preview, where-used, Whole room, Reference.
 - S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —
   USER-CONFIRMED 2026-11-08 13:17 / 19:19; this fix was not mentioned).
 

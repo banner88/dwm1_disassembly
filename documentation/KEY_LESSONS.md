@@ -8028,3 +8028,33 @@ the old path kept beside it (`_find_match_scan`).
   (DE = the entry + 3 after the X / Y reads).
 - **Rule:** read a far-call entry's registers in PyBoy at the entry (a hook) before relying on
   one; prefer re-reading the data through a pointer that is measured.
+
+### A control the user cannot see does not exist (S173)
+- **Symptom:** the user asked for a grid toggle, a zoom and "eyedrops and walkability as
+  button" — all four were already on the Rooms tab's tool bar.
+- **Root cause:** one `QToolBar` held 17 controls; at the user's window (1,512 px, the canvas
+  column 652 px) everything after + NPC went into the » overflow menu, which nobody opens.
+- **Fix:** two bars (tools / view), the situational adds in a + More menu, short labels;
+  test_app asserts every control `isVisible()` at 1,512 px.
+- **Rule:** before building a control the user "wants", check whether it exists and is merely
+  hidden — render the window at the user's size (offscreen grab) and list what each bar shows.
+  Any bar that gains a control gets a visibility check at that size.
+
+### Two PySide traps met in one session (S173)
+- **Symptom 1:** the Reference window opened on the wrong room; `QComboBox.findData(('vanilla',
+  0))` returned -1. **Root cause:** a Python tuple stored as item data comes back as a new
+  object and findData does not compare it by value. **Fix:** compare `tuple(itemData(i))` by hand.
+- **Symptom 2:** the Still frame chooser's selected frame looked grey-green, the others brown.
+  **Root cause:** an IconMode `QListWidget` draws the selected item's icon in `QIcon.Selected`
+  mode — Qt tints it with the highlight colour. **Fix:** `icon.addPixmap(pm, QIcon.Selected)`.
+- **Rule:** never `findData` a Python container — store a string key or compare by hand; any
+  icon that shows art the user judges by colour gets the same pixmap for the Selected mode.
+
+### A test that holds Qt items across an action that refills the view (S173)
+- **Symptom:** test_app stopped at the Capacity block ("Internal C++ object
+  (QTreeWidgetItem) already deleted") — on a clean HEAD copy too.
+- **Root cause:** the test read the tree's rows, opened a room (the Rooms tab showing refills
+  the Capacity tree) and then used the rows read before.
+- **Fix:** read the rows again after the action.
+- **Rule:** in GUI tests, re-read widgets' items after every action that can show another tab
+  or emit a project signal; never keep a QTreeWidgetItem / QListWidgetItem across one.

@@ -2827,6 +2827,11 @@ def s145_capacity(app, w):
         app.processEvents()
         assert w.tabs.currentWidget() is w.rooms_tab and w.rooms_tab.room_id == rid, \
             (w.rooms_tab.room_id, rid)
+        # S173: opening the room refills the tree (the project's rooms tab shows) — the
+        # rows read above are gone; read them again (HEAD failed here: "Internal C++
+        # object (QTreeWidgetItem) already deleted")
+        rows = [it for it in (t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount()))
+                if it.data(0, Qt.UserRole)]
         it = next(x for x in rows if x.data(0, Qt.UserRole)['key'] == 'song_ids')
         t._open(it, 0)
         app.processEvents()
@@ -4631,6 +4636,316 @@ def s171_borrow_custom(app, w):
     print(f'OK: S171 r3 Borrow — "Your room" ({len(cust)} rooms, A-Z, this room left out) and '
           f'"Game room" (A-Z, 16 gate themes); one list clears the other; a metatile of your '
           f'room imported into another tileset (graphics + wall side), undone')
+
+
+def s173_room_aids(app, w):
+    """S173 (the user: "Move archive button and something else button to the side arrow and
+    put eyedrops and walkability as button … Allow removal of grid (toggle) … 'De-animate'
+    button … Allow zooming in … 1.5x and 2x. Maybe even 3x"; then "No stop entirely … Make a
+    new un-animated tile I can use … [own animations] yes … I want to choose a frame …
+    Brush preview … Show where tile is used … Whole room view … Reference window"):
+    (1) two bars — the tools (Select / Paint / Eyedrop / Walkability / Still / + Door /
+    + Examine / + NPC / + More ▸ Statue · Monument · Archive, keys kept) and the view (Grid /
+    Palettes / Markers / Anim / Clean / ▶ Play / zoom / Whole room / Reference), all shown at
+    1,512 px; (2) zoom steps 1-12 with half steps, ± and Fit; (3) clean view (button, H
+    held) draws the art only; (4) the Still tool on the game's animation AND on an own
+    animation: the frames listed, the chosen one becomes a NEW tile in still slots, no cell
+    changes, it is the brush, exact undo; a still cell is refused with no undo step; (5) the
+    brush preview under the mouse; (6) the picker's hover outlines the cells drawn with it;
+    (7) the Whole room window (every screen; double-click = edit it); (8) the Reference
+    window (any room, read-only; right-click = brush when the tiles are the same)."""
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QDialog as _QD
+    from editor2.app.rooms import commands as C
+    from editor2.app.rooms import room_view as RV
+    from editor2.app.rooms.canvas import ZOOMS
+    from editor2.core import animate as AN
+    from editor2.core import page2 as P2
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+
+    def pick(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+
+    # (1) the bars
+    size0 = w.size()
+    w.resize(1512, 945)
+    for _ in range(5):
+        app.processEvents()
+    for bar, want in ((rt.tools, [rt.tool_actions[n] for n in ('select', 'paint', 'pick',
+                                                                'walk', 'still')]
+                       + [rt.act_add_door, rt.act_add_examine, rt.act_add_npc]),
+                      (rt.view_bar, [])):
+        for a in want:
+            wd = bar.widgetForAction(a)
+            assert wd is not None and wd.isVisible(), f'{a.text()} hidden at 1512 px'
+    for wd in (rt.more_btn, rt.clean_btn, rt.zoom_box, rt.room_view_btn, rt.ref_btn,
+               rt.play_btn, rt.layer_buttons['grid']):
+        assert wd.isVisible(), f'{wd} hidden at 1512 px'
+    assert not rt.layer_buttons['walk'].isVisible(), 'Walk = the Walkability tool, shown once'
+    assert [a.text() for a in rt.more_btn.menu().actions()] == \
+        ['+ Statue (U)', '+ Monument (O)', '+ Archive (K)']
+    for a in (rt.act_add_statue, rt.act_add_monument, rt.act_add_archive):
+        assert a in rt.actions(), 'the key works without opening + More'
+    w.resize(size0)
+    app.processEvents()
+
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # a copy of the GreatTree: the game's sway (16 slots) moves its leaves
+    from editor2.core import place_names as PN
+    from editor2.app.session import REPO as _REPO
+    cl = C.SnapshotCommand(s, 'Make editable', lambda d: d.clone_vanilla(
+        0x01, PN.vanilla_name(0x01), _REPO, s.renderer))
+    s.undo.push(cl)
+    assert cl.error is None, cl.error
+    rt._fill_rooms(keep=cl.result)
+    app.processEvents()
+    rooms = {r['id']: r for r in doc.rooms}
+    rid = cl.result
+    assert doc.room_animation(rooms[rid])['slots'], 'the GreatTree copy sways'
+    pick(rid)
+
+    # (2) zoom
+    cv.set_zoom(1.5)
+    assert rt.zoom_box.currentText() == '1.5×' and abs(cv.transform().m11() - 1.5) < 1e-9
+    cv.zoom_step(1)
+    assert cv.zoom() == 2
+    rt.zoom_box.setCurrentIndex(ZOOMS.index(10))
+    assert cv.zoom() == 10 and abs(cv.transform().m11() - 10) < 1e-9
+    cv.zoom_step(1)
+    cv.zoom_step(1)
+    assert cv.zoom() == 12, 'the top step holds'
+    z = cv.fit_zoom()
+    vp = cv.viewport().size()
+    assert z in ZOOMS and 160 * z <= vp.width() and 128 * z <= vp.height(), (z, vp)
+    cv.set_zoom(3)
+
+    # (3) clean view
+    def shot():
+        app.processEvents()
+        return cv.viewport().grab().toImage()
+    cv._hover = None
+    cv.selected_cell = None
+    cv.sel_rect = None
+    a_ = shot()
+    rt.clean_btn.setChecked(True)
+    b_ = shot()
+    assert a_ != b_, 'clean view hides the grid / markers'
+    rt.clean_btn.setChecked(False)
+    for n in ('grid', 'markers', 'anim'):
+        rt.layer_buttons[n].setChecked(False)
+    c_ = shot()
+    assert c_ == b_, 'clean view == every overlay off'
+    for n in ('grid', 'markers', 'anim'):
+        rt.layer_buttons[n].setChecked(True)
+    cv.setFocus()
+    QTest.keyPress(cv, _Qt.Key_H)
+    assert cv.is_clean() and shot() == b_, 'H held = clean'
+    QTest.keyRelease(cv, _Qt.Key_H)
+    assert not cv.is_clean() and shot() == a_, 'H released = the overlays back'
+
+    # (4) Still — the game's animation
+    still_tid = doc.tileset_key(rooms[rid]) if 'tileset' in rooms[rid]['record'] else None
+    cell = next((c, r) for r in range(8) for c in range(10) if cv.cell_moves(c, r))
+    mt = cv.cell_metatile(*cell)
+    frames = AN.cell_frames(cv.anim_mid, doc.tile_anims(rooms[rid]), cv.gfx.sheet, mt['tiles'])
+    assert len(frames) >= 2, frames
+    assert frames[0] == tuple(bytes(cv.gfx.sheet[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                              for t in mt['tiles']), 'frame 1 = at rest'
+    pick_k = [len(frames) - 1]
+    seen = {}
+
+    def fake_exec(dlg):
+        seen['n'] = dlg.list.count()
+        dlg.list.setCurrentRow(pick_k[0])
+        return _QD.Accepted
+    old_exec = RV.StillFrameDialog.exec
+    RV.StillFrameDialog.exec = fake_exec
+    try:
+        grid0 = [list(r_) for r_ in cv.tiles]
+        rt._set_tool('still')
+        assert cv.tool == 'still'
+        rt._still_cell(cell)
+        app.processEvents()
+        assert seen['n'] == len(frames), 'every frame offered'
+        new = cv.brush
+        assert new and new['tiles'] != mt['tiles'], new
+        assert cv.tool == 'paint', 'the new tile is the brush'
+        r_now = doc.room(rid)
+        tid = doc.tileset_key(r_now)
+        moving = doc.room_animation(r_now)['slots'] | doc.own_anim_slots(r_now)
+        sheet = doc.read_sheet(tid)
+        from editor2.core.document import val as _val
+        thr = _val(r_now['record']['collision_threshold'])
+        for k_, (t_old, t_new) in enumerate(zip(mt['tiles'], new['tiles'])):
+            ko, kn = P2.slot_key(t_old), P2.slot_key(t_new)
+            if ko in moving:
+                assert kn not in moving, 'the copy never moves'
+                assert bytes(sheet[kn * 16:kn * 16 + 16]) == frames[-1][k_], 'the chosen frame'
+                assert P2.is_wall(kn, thr) == P2.is_wall(ko, thr), 'same side'
+            else:
+                assert t_new == t_old
+        rt._show()
+        app.processEvents()
+        assert [list(r_) for r_ in cv.tiles] == grid0, 'no cell changed'
+        assert any(m['tiles'] == new['tiles'] for m in doc.metatiles(tid)), 'in My metatiles'
+        assert 'Still:' in rt.status_line.text(), rt.status_line.text()
+        # a cell that does not move: refused, no undo step
+        k0 = s.undo.index()
+        cv2 = next(((c, r) for r in range(8) for c in range(10) if not cv.cell_moves(c, r)), None)
+        if cv2 is not None:
+            rt._still_cell(cv2)
+            assert s.undo.index() == k0 and 'does not move' in rt.status_line.text()
+        pre1 = None
+        s.undo.undo()
+        app.processEvents()
+        assert s.undo.index() == n0 + 1
+        pre1 = doc.dumps()
+        s.undo.redo()
+        s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == pre1, 'Still undoes exactly'
+
+        # (4b) Still — an OWN animation (a cell of a room without the game's animation)
+        rid2 = next(r for r in rooms if not doc.room_animation(rooms[r])['slots']
+                    and doc.screen_keys(rooms[r]))
+        pick(rid2)
+        sh0 = cv.gfx.sheet
+        cell2 = next((c, r) for r in range(8) for c in range(10)
+                     if len({bytes(sh0[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                             for t in cv.cell_metatile(c, r)['tiles']}) > 1
+                     and not cv.cell_moves(c, r))
+        lid = cv.lid
+        rect = (cell2[0], cell2[1], cell2[0], cell2[1])
+        cmd = C.SnapshotCommand(s, 'test anim', lambda d: d.add_tile_anim(
+            rid2, lid, rect, 'drift_right', 8, own_sheet=bytes(sh0[:2048])))
+        s.undo.push(cmd)
+        assert cmd.error is None, cmd.error
+        rt._show()
+        app.processEvents()
+        assert cv.cell_moves(*cell2), 'the own animation moves the cell'
+        mt2 = cv.cell_metatile(*cell2)
+        fr2 = AN.cell_frames(cv.anim_mid, doc.tile_anims(doc.room(rid2)), cv.gfx.sheet,
+                             mt2['tiles'])
+        assert len(fr2) >= 3, len(fr2)
+        pick_k[0] = 2
+        grid1 = [list(r_) for r_ in cv.tiles]
+        k1 = s.undo.index()
+        rt._still_cell(cell2)
+        app.processEvents()
+        assert s.undo.index() == k1 + 1
+        new2 = cv.brush
+        r2 = doc.room(rid2)
+        sheet2 = doc.read_sheet(doc.tileset_key(r2))
+        own = doc.own_anim_slots(r2)
+        for k_, (t_old, t_new) in enumerate(zip(mt2['tiles'], new2['tiles'])):
+            if P2.slot_key(t_old) in own:
+                kn = P2.slot_key(t_new)
+                assert kn not in own and bytes(sheet2[kn * 16:kn * 16 + 16]) == fr2[2][k_]
+        rt._show()
+        app.processEvents()
+        assert [list(r_) for r_ in cv.tiles] == grid1, 'no cell changed (own animation)'
+        assert fr2[2] != fr2[0]
+    finally:
+        RV.StillFrameDialog.exec = old_exec
+    # the dialog itself shows (pictures, the start frame preselected)
+    dlg = RV.StillFrameDialog(s.renderer, cv.gfx.sheet, cv.pals, mt2, fr2, start=1)
+    assert dlg.list.count() == len(fr2) and dlg.chosen() == 1
+    dlg.deleteLater()
+    while s.undo.index() > n0 + 1:            # the GreatTree copy stays for (5)-(8)
+        s.undo.undo()
+    app.processEvents()
+
+    # (5) the brush preview
+    pick(rid)
+    rt._set_tool('paint')
+    cv.set_zoom(3)
+    far = cv.cell_metatile(0, 0)
+    other = next(cv.cell_metatile(c, r) for r in range(8) for c in range(10)
+                 if cv.cell_metatile(c, r) != far)
+    rt._brush_selected(other)
+    cv._hover = (0, 0)
+    g_on = shot()
+    cv.ghost = False
+    g_off = shot()
+    cv.ghost = True
+    assert g_on != g_off, 'the brush shows under the mouse'
+    cv._hover = None
+    rt._set_tool('select')
+
+    # (6) where a metatile is used
+    used_mt = cv.cell_metatile(*cell)
+    rt._picker_hover_mt(used_mt)
+    assert cell in cv.used_cells() and 'used on' in rt.status_line.text(), rt.status_line.text()
+    u_on = shot()
+    rt._picker_hover_mt(None)
+    assert cv.used_cells() == [] and shot() != u_on
+
+    # (7) the whole room
+    room = doc.room(rid)
+    keys = [int(k) for k in doc.screen_keys(room)]
+    rt._open_room_view()
+    app.processEvents()
+    rv = rt.room_view
+    assert sorted(rv.view.keys) == sorted(keys)
+    pm = rv.view.item.pixmap()
+    assert pm.width() == rv.view.cols * 160 and pm.height() == rv.view.rows * 128
+    if len(keys) > 1:
+        other_k = [k for k in keys if k != rt.key][0]
+        rv.view.screenClicked.emit(other_k)
+        app.processEvents()
+        assert rt.key == other_k and rv.view.current == other_k, 'double-click = edit it'
+        rt.select_screen(keys[0])
+    rv.close()
+
+    # (8) the reference window
+    rt._open_reference()
+    app.processEvents()
+    rw = rt.ref_win
+    rw.show_source(('vanilla', 0x00))
+    app.processEvents()
+    assert rw.canvas.source == ('vanilla', 0x00) and rw.canvas.tiles is not None
+    assert rw.screen.count() >= 1 and rw.state.count() >= 1
+    rw.search.setText('zzzz-no-room')
+    assert rw.rooms.count() == 0
+    rw.search.setText('')
+    rw.show_source(('custom', rid))
+    app.processEvents()
+    assert rw.canvas.source == ('custom', rid) and not rw.canvas.is_editable()
+    ref_mt = rw.canvas.cell_metatile(*cell)
+    rw.brushOffered.emit(ref_mt, bytes(cv.gfx.sheet))
+    assert cv.brush and cv.brush['tiles'] == ref_mt['tiles'], 'same tiles -> the brush'
+    rw.brushOffered.emit(ref_mt, bytes(4096))
+    assert 'Borrow' in rt.status_line.text()
+    tiles_before = [list(r_) for r_ in rw.canvas.tiles]
+    QTest.mouseClick(rw.canvas.viewport(), _Qt.LeftButton)
+    assert [list(r_) for r_ in rw.canvas.tiles] == tiles_before
+    pre8 = doc.dumps()
+    QTest.mouseClick(rw.canvas.viewport(), _Qt.RightButton)
+    assert [list(r_) for r_ in rw.canvas.tiles] == tiles_before and doc.dumps() == pre8, \
+        'the reference never edits'
+    rw.close()
+    rt._set_tool('select')
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'everything undone'
+    print(f'OK: S173 room aids — two bars (all shown at 1512 px; Statue / Monument / Archive '
+          f'in + More, keys kept), zoom 1-12 with half steps / ± / Fit ({z}×), clean view '
+          f'(button + H held == every overlay off), Still on the game\'s animation '
+          f'({len(frames)} frames) and an own one ({len(fr2)} frames): a new still tile, no '
+          f'cell changed, the brush, exact undo; brush preview; where-used outline; Whole '
+          f'room ({len(keys)} screens); Reference (read-only, brush on the same tiles)')
 
 
 def s171_app_window(app, w):
@@ -6752,6 +7067,7 @@ def main():
     s171_parking(app, w)
     s171_recolour(app, w)
     s172_foods(app, w)
+    s173_room_aids(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:
