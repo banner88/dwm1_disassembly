@@ -64,10 +64,10 @@ tiles show their first frame again). Everything is one undo step.
 click a MOVING cell (the **Anim** layer outlines them): a window shows every picture that
 cell shows while the room animates — the game's animation (the GreatTree sway, water …)
 or one of your own. Pick one (**at rest** = the map as drawn; while **▶ Play** runs, the
-picture on screen is picked first) → **Make the still tile**: a NEW metatile that shows
-that picture and never moves joins *My metatiles* and becomes your brush (Paint). Nothing
-on the map changes and the moving tile stays as it was — paint the still one where you
-want it. It costs one free tile of the tileset for each moving 8×8 quarter (none when that
+picture on screen is picked first) → **Make the still tile**: the cell you clicked now
+shows that picture and never moves (S173 r2 — before, only the tile was made and the cell
+kept moving in the game). The new tile is also in *My metatiles* and becomes your brush
+(Paint) for any other cell; other cells drawn with the moving tile keep moving. It costs one free tile of the tileset for each moving 8×8 quarter (none when that
 picture is already on the tileset). One undo step. Measured in the game: the still copy
 never changes over 1,200 frames while the original keeps moving (`tools/walk_still.py`).
 

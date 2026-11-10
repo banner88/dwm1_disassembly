@@ -1298,9 +1298,17 @@ including the existing Grid toggle and the 1-6× zoom, sat behind the » overflo
   screen preselected while ▶ Play runs) → `Document.make_still_tile`: each moving quarter's
   chosen graphic in a still slot on the same side of the split (a used slot that already holds
   it, else a free one — page 1, then page 2; never an animated / statue / service slot), a NEW
-  metatile in My metatiles (or the same one if there), the brush; no layout cell changes and
-  the moving tile is not touched (reading of "do not count the previous animated tile as
-  used"). The Animate tab's older *Make the selected cell still* (`make_still`: every cell of
+  metatile in My metatiles (or the same one if there), the brush; the moving tile is not
+  touched. **S173 r2** (user: "I made the animation still but the play here button shows it
+  still animating in-game"): r1 changed NO cell (an over-literal reading of "Make a new
+  un-animated tile I can use"), so the clicked cell kept its moving tile — the user's build was
+  byte-identical to a project where the still tile was only in My metatiles. Now
+  `make_still_tile(..., place=(canvas.lid, cx, cy))` puts the new tile on the CLICKED cell
+  (palettes unchanged; one undo step with the tile); other cells drawn with the moving tile
+  keep moving. Measured on the user's r2 project: page-2 tiles never move (VRAM bank 1 `$40-$4F`
+  1 picture over 600 idle frames + walking while bank 0's sway showed 8 — the game's handler
+  never touches bank 1); `walk_still.py --place` 8 / 8, `--negative` (nothing placed = r1)
+  the clicked cell 8 pictures (FAIL, as the user saw). The Animate tab's older *Make the selected cell still* (`make_still`: every cell of
   the room remapped, vanilla slots only, the resting picture) is kept. Measured in the game:
   `tools/walk_still.py` (the editor's own code on a copy of the project, a build, the user's
   save): 9 / 9 on GreatLog's sway; `--negative` (the moving tile painted) 2 FAIL.

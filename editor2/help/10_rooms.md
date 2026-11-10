@@ -80,7 +80,8 @@ bottom of Room / Screen. Your 129th room and on go into a later REGION by themse
 opens Tiles. The editor remembers the page you used last.
 
 **The two bars above the canvas (S173).** The **tools**: **Select (V)**, **Paint (B)**,
-**Eyedrop (I)** (or right-click), **Walkability (W)**, **Still (S)** (see *Animated tiles*),
+**Eyedrop (I)** (or right-click), **Walkability (W)**, **Still (S)** (click a moving cell, pick
+a frame: that cell stops moving — see *Animated tiles*),
 then **+ Door (D)**, **+ Examine (X)**, **+ NPC (N)** and **+ More** — the memorial
 **+ Statue (U)** and the breeding-hint **+ Monument (O)** / **+ Archive (K)** (their keys
 work without opening the menu). A **statue** shows a monster that won a boss battle, an

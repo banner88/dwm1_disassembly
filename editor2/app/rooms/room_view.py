@@ -547,8 +547,8 @@ class StillFrameDialog(QDialog):
         lab = QLabel(
             f'This tile{where} shows <b>{len(frames)}</b> different picture'
             f'{"s" if len(frames) != 1 else ""} while the room animates. Pick the one to keep: '
-            'you get a <b>new tile that never moves</b> (in My metatiles, ready to paint). '
-            'The moving tile and the map stay as they are.'
+            'this cell gets a <b>new tile that never moves</b> — also in My metatiles, your '
+            'brush for other cells. Other cells drawn with the moving tile keep moving.'
             + (' <i>(at most 64 shown)</i>' if len(frames) >= 64 else ''))
         lab.setWordWrap(True)
         v.addWidget(lab)

@@ -17,10 +17,16 @@ moves in the game while the tile it was taken from keeps moving. This tool measu
        the chosen frame is among them (the editor's frames are the game's).
   --negative: the ORIGINAL (moving) metatile is painted instead — the "never changes"
   check MUST fail.
+  S173 r2 --place: the Still tool as the editor runs it since r2 — `make_still_tile(...,
+  place=(layout, the clicked cell))` puts the new tile on the CLICKED cell itself (--put is
+  that cell); the animation is then watched in the moving tile's own VRAM data (or on
+  --watch X Y, another cell drawn with the moving tile). With --negative nothing is placed
+  (the r1 behaviour the user hit: the clicked cell kept moving).
 
     python3 tools/walk_still.py --project <dir> --sav <.sav> --room <name> --screen K
         --cell X Y --put X Y [--frame N] [--stand X Y] [--keep DIR] [--negative]
         [--rom-out FILE]          (a copy of the built ROM, e.g. a test ROM)
+        [--place [--watch X Y]]   (r2: the clicked cell itself made still)
 """
 import argparse
 import os
@@ -64,6 +70,15 @@ def prepare(a, proj):
     print(f'{a.room} screen {key} cell {tuple(a.cell)}: tiles {mt["tiles"]}, '
           f'{len(frames)} frames offered')
     k = min(a.frame, len(frames) - 1)
+    if a.place:
+        new = d.make_still_tile(room['id'], mt, list(frames[k]),
+                                own_sheet=bytes(gfx.sheet[:2048]), frame=k,
+                                place=None if a.negative else (lid, a.cell[0], a.cell[1]))
+        print('  ' + d.last_import_note)
+        d.touch()
+        d.save()
+        return {'mid': val(room['mapID']), 'key': key, 'moving': mt,
+                'painted': mt if a.negative else new, 'frames': frames, 'k': k}
     new = d.make_still_tile(room['id'], mt, list(frames[k]), own_sheet=bytes(gfx.sheet[:2048]),
                             frame=k)
     print('  ' + d.last_import_note)
@@ -105,13 +120,20 @@ def main():
     ap.add_argument('--room', required=True)
     ap.add_argument('--screen', type=int, required=True)
     ap.add_argument('--cell', type=int, nargs=2, required=True)
-    ap.add_argument('--put', type=int, nargs=2, required=True)
+    ap.add_argument('--put', type=int, nargs=2, default=None)
+    ap.add_argument('--place', action='store_true')
+    ap.add_argument('--watch', type=int, nargs=2, default=None)
     ap.add_argument('--stand', type=int, nargs=2, default=None)
     ap.add_argument('--frame', type=int, default=3)
     ap.add_argument('--keep')
     ap.add_argument('--negative', action='store_true')
     ap.add_argument('--rom-out')
     a = ap.parse_args()
+    if a.place:
+        a.put = list(a.cell)
+    elif a.put is None:
+        raise SystemExit('--put X Y (or --place)')
+    watch = a.watch if a.place else a.cell        # None = the moving tile's VRAM data
     keep = a.keep or tempfile.mkdtemp(prefix='walk_still_')
     os.makedirs(keep, exist_ok=True)
     proj = os.path.join(keep, 'project')
@@ -144,24 +166,30 @@ def main():
     mv = [(int(t) & 0xFF, (int(t) >> 8) & 1) for t in info['moving']['tiles']]
     w.check('the painted cell shows its 4 tiles', [x[0] for x in cell_now(m, *a.put)] == pt,
             f"{[x[0] for x in cell_now(m, *a.put)]} vs {pt}")
-    w.check('the moving cell shows its 4 tiles', [x[0] for x in cell_now(m, *a.cell)] == mv,
-            f"{[x[0] for x in cell_now(m, *a.cell)]} vs {mv}")
+    if watch is not None:
+        w.check('the moving cell shows its 4 tiles', [x[0] for x in cell_now(m, *watch)] == mv,
+                f"{[x[0] for x in cell_now(m, *watch)]} vs {mv}")
+
+    def moving_now():
+        if watch is not None:
+            return tuple(g for _t, g in cell_now(m, *watch))
+        return tuple(_tile16(m, b, t) for t, b in mv)      # the tile itself, drawn or not
     seen_put, seen_mov = set(), set()
     for _ in range(300):
         adv(w.p, 4)
         seen_put.add(tuple(g for _t, g in cell_now(m, *a.put)))
-        seen_mov.add(tuple(g for _t, g in cell_now(m, *a.cell)))
+        seen_mov.add(moving_now())
     fr = info['frames']
     w.check('the painted cell NEVER changes (1,200 frames)', len(seen_put) == 1,
             f'{len(seen_put)} pictures')
     want = fr[info['k']]
-    got = next(iter(seen_put))
-    w.check(f"… and it shows frame {info['k'] + 1} of the moving cell", got == tuple(want))
-    w.check('the moving cell DOES change (the room animates)', len(seen_mov) > 1,
+    w.check(f"… and it shows frame {info['k'] + 1} of the moving cell",
+            seen_put == {tuple(want)})
+    w.check('the moving tile DOES change (the room animates)', len(seen_mov) > 1,
             f'{len(seen_mov)} pictures')
-    w.check("every picture of the moving cell is one the editor offered",
+    w.check("every picture of the moving tile is one the editor offered",
             seen_mov <= set(fr), f'{len(seen_mov - set(fr))} unknown')
-    w.check('the chosen frame is shown by the moving cell in the game', tuple(want) in seen_mov)
+    w.check('the chosen frame is shown by the moving tile in the game', tuple(want) in seen_mov)
     w.snap('after')
     print(f'{w.checks - w.fails} / {w.checks} checks passed'
           + (' (NEGATIVE: failures expected)' if a.negative else ''))

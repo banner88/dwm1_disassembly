@@ -258,8 +258,8 @@ family recipes. [Breeding](58_breeding.md#Special%20recipes)
 **Step-on trigger** — a cell that runs something when the player steps on it.
 [Doors](11_doors.md#One-way%20teleports,%20step-on%20triggers,%20stairs)
 
-**Still tile** — a copy of one frame of a moving tile that never moves (the Still tool,
-S). [Animated tiles](15_animated_tiles.md)
+**Still tile** — a copy of one frame of a moving tile that never moves; the Still tool (S)
+puts it on the cell you click. [Animated tiles](15_animated_tiles.md)
 
 **Story check** — a question the game answers (items, gold, monsters, levels…),
 usable wherever a flag is checked. [Story checks](71_story_quests.md#Story%20checks%20%E2%80%94%20questions%20the%20game%20answers)

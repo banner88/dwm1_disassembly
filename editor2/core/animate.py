@@ -619,16 +619,18 @@ class AnimateMixin:
         self.touch()
         return {'name': nm, 'tiles': [_tv(t) for t in new_tiles], 'pal': mt.get('pal', 0)}
 
-    def make_still_tile(self, room_id, mt, gfx, own_sheet=None, frame=None):
+    def make_still_tile(self, room_id, mt, gfx, own_sheet=None, frame=None, place=None):
         """S173 (the Still tool; user: "Make a new un-animated tile I can use. Do NOT
         count the previous animated tile as used"): a NEW metatile that shows `gfx` (the
         4 subtile graphics of one chosen frame, `cell_frames`) and never moves — each
         subtile in a slot this room animates (the game's animation or the room's own)
         gets the frame's graphic in a still slot on the same side of the collision
         threshold (one that already holds exactly that graphic, else a free one; page 1,
-        then page 2); the other subtiles keep their tiles. NO cell of the room changes
-        and the moving tile is left as it was. The new metatile joins My metatiles
-        (the same one when it is there already). Returns it."""
+        then page 2); the other subtiles keep their tiles. The moving tile is left as it
+        was. The new metatile joins My metatiles (the same one when it is there already).
+        S173 r2 (user: "I made the animation still but the play here button shows it still
+        animating in-game"): `place` = (layout id, cx, cy) — the clicked cell gets the new
+        tile (its palettes unchanged); no other cell changes. Returns the metatile."""
         from editor2.core.document import metatile_key
         room = self.room(room_id)
         rec = room['record']
@@ -675,6 +677,16 @@ class AnimateMixin:
         self.write_sheet(tid, sheet)
         tiles = [_tv(t) for t in new_tiles]
         pal = mt.get('pal', 0)
+        placed_at = None
+        if place is not None:
+            lid, cx, cy = place
+            if lid is None or not self.has_layout(lid) or lid not in self._room_layout_ids(room):
+                raise RuntimeError('the clicked cell\'s layout is not this room\'s own — '
+                                   'nothing to put the still tile on')
+            T = self.layout(lid)['tiles']
+            r_, c_ = cy * 2, cx * 2
+            T[r_][c_], T[r_][c_ + 1], T[r_ + 1][c_], T[r_ + 1][c_ + 1] = [int(t) for t in new_tiles]
+            placed_at = (cx, cy)
         base = mt.get('name') or 'tile'
         if str(base).startswith('still '):
             base = str(base)[6:]
@@ -685,7 +697,8 @@ class AnimateMixin:
             self.add_metatile(tid, nm, tiles, pal)
         else:
             nm = have.get('name', nm)
-        self.last_import_note = (f"new still tile '{nm}'"
+        self.last_import_note = ((f"cell ({placed_at[0]},{placed_at[1]}) is still now — " if placed_at else '')
+                                 + f"new still tile '{nm}'"
                                  + (f" — {len(took)} free tile(s) used ({', '.join(map(str, took))})"
                                     if took else ' — no free tile needed (the graphic was there)'))
         self.touch()

@@ -221,8 +221,8 @@ class RoomsTab(QWidget):
                 ('pick', 'Eyedrop', 'I', True, 'copy a cell\'s metatile (also right-click)'),
                 ('walk', 'Walkability', 'W', True, 'click a cell to flip wall / walkable'),
                 ('still', 'Still', 'S', True, 'click a MOVING cell, choose one of its frames: '
-                 'you get a new tile that never moves (in My metatiles, ready to paint). '
-                 'Nothing on the map changes')):
+                 'that cell stops (a new tile that never moves) — the tile is also in My '
+                 'metatiles, your brush for other cells')):
             a = QAction(f'{text} ({key})', self)
             a.setCheckable(True)
             a.setShortcut(QKeySequence(key))
@@ -2429,15 +2429,21 @@ class RoomsTab(QWidget):
         if dlg.exec() != QDialog.Accepted:
             return
         k = dlg.chosen()
-        self._make_still_tile(mt, frames[k], k)
+        self._make_still_tile(mt, frames[k], k, cell=(cx, cy))
 
-    def _make_still_tile(self, mt, gfx, frame):
+    def _make_still_tile(self, mt, gfx, frame, cell=None):
+        """S173 r2 (user: "I made the animation still but the play here button shows it
+        still animating in-game"): the clicked cell gets the new still tile too (r1 only
+        made the tile — nothing on the map changed, so the cell kept moving)."""
         room = self.current_room()
         rid = room['id']
         own = bytes(self.canvas.gfx.sheet[:2048])
+        place = (self.canvas.lid, cell[0], cell[1]) \
+            if cell is not None and self.canvas.lid is not None else None
         cmd = C.SnapshotCommand(self.s, 'Still tile',
                                 lambda doc: doc.make_still_tile(rid, mt, list(gfx),
-                                                                own_sheet=own, frame=frame))
+                                                                own_sheet=own, frame=frame,
+                                                                place=place))
         self.s.undo.push(cmd)
         if cmd.error is not None:
             QMessageBox.warning(self, 'Still tile', str(cmd.error))
@@ -2447,8 +2453,8 @@ class RoomsTab(QWidget):
         if cmd.result is not None:
             self.picker.select_metatile(cmd.result)
             self._brush_selected(cmd.result)
-        self.status_line.setText('Still: ' + note + ' — it is your brush now (Paint); the '
-                                 'moving tile is unchanged.')
+        self.status_line.setText('Still: ' + note + ' — it is your brush now (Paint) for '
+                                 'other cells; the moving tile is unchanged elsewhere.')
         return cmd.result
 
     def _foreign_brush(self, mt):

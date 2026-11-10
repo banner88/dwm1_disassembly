@@ -1078,7 +1078,12 @@ recipes are pure authoring.
       mouse; a picker metatile's cells outlined (+ counts); NEW `editor2/app/rooms/room_view.py`.
       Measured: `tools/walk_still.py` on the user's save (GreatLog screen 5, the sway, frame 4)
       9 / 9 — the still cell 1 picture over 1,200 frames, the moving one 8, every game picture
-      one the editor offered; `--negative` 2 FAIL. test_app `s173_room_aids`. EDITOR_DESIGN §5.1
+      one the editor offered; `--negative` 2 FAIL. test_app `s173_room_aids`.
+      **S173 r2** (user: "I made the animation still but the play here button shows it still
+      animating in-game"): r1 made the tile but changed no cell — the clicked cell now gets
+      it (`place`); `walk_still.py --place` 8 / 8 on the user's project (the clicked cell 1
+      picture, the tile it came from 8), `--negative` (r1: nothing placed) FAILS like the
+      user's build. EDITOR_DESIGN §5.1
       "As built S173", help 10_rooms / 15_animated_tiles / glossary. Byte-neutral for the ROM.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters

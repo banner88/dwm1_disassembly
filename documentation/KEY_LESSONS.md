@@ -8058,3 +8058,18 @@ the old path kept beside it (`_find_match_scan`).
 - **Fix:** read the rows again after the action.
 - **Rule:** in GUI tests, re-read widgets' items after every action that can show another tab
   or emit a project signal; never keep a QTreeWidgetItem / QListWidgetItem across one.
+
+### A tool that makes something must also do the thing the user clicked for (S173 r2)
+- **Symptom:** "I made the animation still but the play here button shows it still animating
+  in-game" — the user's build was byte-identical to a project where the new still tile sat in
+  My metatiles and no cell drew it.
+- **Root cause:** the Still tool (r1) made the tile and changed no cell — a literal reading of
+  "Make a new un-animated tile I can use", against the first ask "click on it to stop all
+  animation for that tile". The status line said "it is your brush now", which is easy to miss.
+- **Fix:** the clicked cell gets the new tile (`make_still_tile(place=…)`), the tile also stays
+  the brush; `walk_still.py --place` measures the clicked cell in the game.
+- **Rule:** when a tool is used by clicking ON something, the thing clicked must visibly change
+  (or the tool must say loudly that it did not). When an answer to a clarifying question can be
+  read as "only make X", check it against the user's original wording before dropping the
+  original effect; and diagnose a "does not work in game" report by diffing the user's build
+  against their project before suspecting the engine.

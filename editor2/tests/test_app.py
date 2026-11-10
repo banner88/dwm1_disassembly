@@ -4797,7 +4797,14 @@ def s173_room_aids(app, w):
                 assert t_new == t_old
         rt._show()
         app.processEvents()
-        assert [list(r_) for r_ in cv.tiles] == grid0, 'no cell changed'
+        # S173 r2 (user: "I made the animation still but the play here button shows it
+        # still animating in-game"): the clicked cell gets the still tile; no other cell
+        want0 = [list(r_) for r_ in grid0]
+        (c0, r0) = cell
+        want0[r0 * 2][c0 * 2], want0[r0 * 2][c0 * 2 + 1], want0[r0 * 2 + 1][c0 * 2], \
+            want0[r0 * 2 + 1][c0 * 2 + 1] = new['tiles']
+        assert [list(r_) for r_ in cv.tiles] == want0, 'only the clicked cell changed'
+        assert not cv.cell_moves(*cell), 'the clicked cell is still now'
         assert any(m['tiles'] == new['tiles'] for m in doc.metatiles(tid)), 'in My metatiles'
         assert 'Still:' in rt.status_line.text(), rt.status_line.text()
         # a cell that does not move: refused, no undo step
@@ -4854,7 +4861,12 @@ def s173_room_aids(app, w):
                 assert kn not in own and bytes(sheet2[kn * 16:kn * 16 + 16]) == fr2[2][k_]
         rt._show()
         app.processEvents()
-        assert [list(r_) for r_ in cv.tiles] == grid1, 'no cell changed (own animation)'
+        want1 = [list(r_) for r_ in grid1]
+        (c1, r1) = cell2
+        want1[r1 * 2][c1 * 2], want1[r1 * 2][c1 * 2 + 1], want1[r1 * 2 + 1][c1 * 2], \
+            want1[r1 * 2 + 1][c1 * 2 + 1] = new2['tiles']
+        assert [list(r_) for r_ in cv.tiles] == want1, 'only the clicked cell changed (own)'
+        assert not cv.cell_moves(*cell2), 'the clicked cell is still now (own animation)'
         assert fr2[2] != fr2[0]
     finally:
         RV.StillFrameDialog.exec = old_exec
@@ -4943,8 +4955,8 @@ def s173_room_aids(app, w):
     print(f'OK: S173 room aids — two bars (all shown at 1512 px; Statue / Monument / Archive '
           f'in + More, keys kept), zoom 1-12 with half steps / ± / Fit ({z}×), clean view '
           f'(button + H held == every overlay off), Still on the game\'s animation '
-          f'({len(frames)} frames) and an own one ({len(fr2)} frames): a new still tile, no '
-          f'cell changed, the brush, exact undo; brush preview; where-used outline; Whole '
+          f'({len(frames)} frames) and an own one ({len(fr2)} frames): a new still tile on '
+          f'the clicked cell only (r2), the brush, exact undo; brush preview; where-used outline; Whole '
           f'room ({len(keys)} screens); Reference (read-only, brush on the same tiles)')
 
 
