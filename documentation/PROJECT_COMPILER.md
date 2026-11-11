@@ -5885,6 +5885,49 @@ project.json is loaded; the example pin unchanged).
   (no free slot, too many animation groups) stop the build with "stamps: …".
 - Measured: `tools/walk_stamps.py` (TOOLS_AND_DATA S174). Tests: test_app `s174_stamps`.
 
+## §2.80 S175 — JUMPING POINTS + the screen tools (ROADMAP P3.3n)
+
+Built S175, NOT yet user-tested. Byte-neutral for a project without jumps (no engine or
+template change; the example pin unchanged).
+
+```json
+"screens": {"1": {"npcs": [ {"kind": "jump", "x": 3, "y": 7, "land_y": 3},
+                            {"kind": "jump", "x": 6, "y": 6, "land_y": 4, "sound": "0x60"} ]}}
+```
+- A **jump** is an entry of a screen's (or a state's) `npcs[]` — present in each state that
+  lists it (like the statues). (x, y) = the jump cell of screen k; the player lands on (x,
+  `land_y`) of screen k + 4 (the screen directly below; same column); `sound` default `$55`.
+- **Lowering** (`editor2/core/jumps.py` `lower`, from `Project.__init__` after the hints):
+  each jump → a `step` entry (`db $90, $FF, x, y, idx` — emitted with the spots, before the
+  NPCs) whose script is the game's own recipe (GreatTree_Script19; ROOM_DATA_FORMAT "Jumping
+  points"): `write_ram $D9E8 1` / `$21 sound` / `$22` (scriptgen `begin_walk`) / `npc_walk_y 0,
+  (8 − y + land_y) × 16` / `wait_movement` / `end` — one generated script per room, fall and
+  sound (`_jump_<room id>_<px>[_s<sound>]`), added to the room's script table (an entry
+  script `_jump_<room>_entry` = `end` when the room had none). The step entry keeps
+  `_jump: {screen, land_y}` for the validators.
+- **Errors** (`Project.jump_error`, reported by `validators.validate`, the build stops; the
+  editor still opens): a jump on the bottom grid row or over a missing screen ("a jump must
+  land on the screen directly below (landing on the same screen locks the player for
+  good)"), a cell / landing row off the screen, a sound past 255, a jump in a room with no map
+  id. **Warnings** (`jumps.problems`): the jump or landing cell is a wall (the bottom-right
+  subtile, project layouts only); an exit on a cell the fall crosses (a scripted walk onto an
+  exit fires it, S152 r3).
+- **The screen tools** (`editor2/core/screen_tools.py`, editor-only — nothing new reaches the
+  compiler): `screen_visual` (a snapshot of a screen / state: tiles, attr grid, palette id,
+  its stamps) and `paste_screen_visual` (same room only: a NEW layout item with the tiles +
+  attr → the target state's `layout` + `attr`, its palette, the screen's stamps replaced and
+  re-claimed; the target's old layout items removed when nothing else names them); 
+  `shift_screen_objects(room, key, dx, dy)` — every object of the screen in every state (typed
+  / raw NPCs, spots, statues, monuments, archives, jumps, exit rows / doors except the edge
+  exits x = 0 / 9, y = 0), its stamps, its cutscenes' cells, the room's `gate_arrival` /
+  the arena `return` there, every exit row INTO it (`screen_byte` low nibble = k, any room,
+  `entrance_redirects`, `vanilla_exit_extensions`), every `{dest|room, screen, x, y}` naming
+  it (+ a helper's `land`), raw `map_transition` / `warp_fade` ops into it (absolute px), the
+  landing rows of the jumps above; refuses (`ShiftBlocked`, nothing changed) when anything on
+  the screen would leave it or an exit would become an edge exit.
+- Measured: `tools/walk_jumps.py` (TOOLS_AND_DATA S175). Tests: test_compiler `test_s175`,
+  test_app `s175_jumps_screens`.
+
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 
 *Built S165, USER-CONFIRMED 2026-11-04 19:44 ("Yep looks good").* **`gamedata.window_words`** = `{"<bank>:<addr>/<row>/<col>":

@@ -134,6 +134,9 @@ the game's. [Items](74_items.md)
 
 ## J
 
+**Jump (jumping point)** — a cell the player walks onto and falls from, straight down, to
+a cell of the screen below (the GreatTree cliff jump): + More ▸ + Jump. [Rooms](10_rooms.md)
+
 **Join version** — the monster the player gets instead of the one they fought
 (the game does this for its story bosses: a strong fight row, a weaker one that
 joins). [Enemies](50_enemies.md)
@@ -239,8 +242,9 @@ never shows them. [Limits](90_limits.md)
 
 ## S
 
-**Screen** — one 10 × 8-cell part of a room; a room is up to 4 × 4 screens.
-[Rooms](10_rooms.md)
+**Screen** — one 10 × 8-cell part of a room; a room is up to 4 × 4 screens. Copy screen /
+Paste over another screen of the room copies its art (tiles, colours, stamps); Shift objects
+moves everything on it one cell. [Rooms](10_rooms.md)
 
 **Service NPC** — a Vault keeper, farm keeper, librarian, namer, Medal Man, egg
 appraiser or gate guide of your own. [Services](67_services.md)

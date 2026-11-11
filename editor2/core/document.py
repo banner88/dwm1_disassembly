@@ -58,6 +58,8 @@ from editor2.core.newgame_doc import NewGameMixin         # S152 (E3 a2: the new
 from editor2.core.ending_doc import EndingMixin           # S153 (E5: the title + the credits)
 from editor2.core.memorial_doc import MemorialMixin      # S154: the memorial statues
 from editor2.core.hints_doc import HintsMixin            # S158: the breeding hints
+from editor2.core.jumps import JumpsMixin                # S175: jumping points
+from editor2.core.screen_tools import ScreenToolsMixin    # S175: screen copy / shift
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -244,7 +246,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                ArenaMixin, SkillsMixin, AnimsMixin, BreedingMixin, EncountersMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
-               NewGameMixin, EndingMixin, MemorialMixin, HintsMixin):
+               NewGameMixin, EndingMixin, MemorialMixin, HintsMixin,
+               JumpsMixin, ScreenToolsMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -3232,6 +3235,11 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             # S154: a memorial statue (memorial_doc.py) — an examine spot in the game
             return {'kind': 'statue', 'x': int(entry['x']), 'y': int(entry['y']),
                     'statue': entry.get('statue'), 'facing': 'any', 'raw': False}
+        if k == 'jump':
+            # S175: a jumping point (jumps.py) — a step-on trigger in the game
+            return {'kind': 'jump', 'x': int(entry['x']), 'y': int(entry['y']),
+                    'land_y': int(entry.get('land_y', 0)), 'sound': entry.get('sound'),
+                    'raw': False}
         if k in ('monument', 'archive'):
             # S158: a breeding-hint monument / archive (hints_doc.py) — an examine spot
             return {'kind': k, 'x': int(entry['x']), 'y': int(entry['y']),

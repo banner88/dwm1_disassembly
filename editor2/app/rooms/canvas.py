@@ -71,7 +71,9 @@ MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
           # S154: a memorial statue
           'statue': QColor(200, 200, 220),
           # S158: a breeding-hint monument; archives (below) take their family's colour
-          'monument': QColor(170, 190, 255)}
+          'monument': QColor(170, 190, 255),
+          # S175: a jumping point / where a jump from the screen above lands
+          'jump': QColor(255, 120, 40), 'jump_land': QColor(255, 120, 40)}
 # S158 (user: "Colour it in editor"): an archive's marker = its family's colour + letters
 ARCHIVE_COLOURS = [QColor(80, 160, 255), QColor(255, 90, 60), QColor(220, 160, 80),
                    QColor(120, 220, 255), QColor(110, 220, 90), QColor(190, 220, 60),
@@ -88,7 +90,7 @@ MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
                'step': 'T',
                'stairs': 'S↓', 'gate_arrival': 'G',
                'portal': 'P', 'world_land': 'W↓', 'hub': 'H', 'statue': 'M',
-               'monument': 'Mo', 'archive': 'A?'}
+               'monument': 'Mo', 'archive': 'A?', 'jump': 'J↓', 'jump_land': '↓J'}
 MARKER_TEXT.update({f'archive{_i}': 'A' + _t for _i, _t in enumerate(ARCHIVE_TAGS)})
 SEL = QColor(255, 230, 0)
 
@@ -108,6 +110,10 @@ def classify_npc(entry):
     if k == 'step':
         return ('step', int(entry['x']), int(entry['y']), None,
                 f"step-on trigger → {entry.get('script')}")
+    if k == 'jump':                                     # S175: a jumping point
+        return ('jump', int(entry['x']), int(entry['y']), None,
+                f"jump: walking onto it, the player falls to row {entry.get('land_y')} of the "
+                f"screen below (a step-on trigger in the game)")
     if k == 'statue':                                   # S154: a memorial statue
         return ('statue', int(entry['x']), int(entry['y']), None,
                 f"memorial statue '{entry.get('statue')}' (examine it in the game)")
@@ -719,6 +725,7 @@ class RoomCanvas(QGraphicsView):
             self._build_markers(st)
             self._mark_entrances(room)
             self._mark_gate_arrival(room)
+            self._mark_jump_landings(room)
         self._stamp_view = {}
         if self.room is not None and not self.is_vanilla():
             n = len(self.room.get('stamps') or [])
@@ -760,6 +767,17 @@ class RoomCanvas(QGraphicsView):
                                  f"screen {val(rd['screen_byte']) & 0x0F} "
                                  f"spawn ({rd['spawn_x']},{rd['spawn_y']})",
                                  ('redirect', i, rd)))
+
+    def _mark_jump_landings(self, room):
+        """S175: where the jumps of the screen above land on this screen ('↓J')."""
+        try:
+            lands = self.s.doc.jumps_landing_on(room, self.key)
+        except Exception:                                        # noqa: BLE001
+            return
+        for src, x, y, ly in lands:
+            self.markers.append(('jump_land', x, ly, None,
+                                 f'landing of the jump at ({x},{y}) on screen {src}',
+                                 ('jump_land', src, (x, y))))
 
     def _mark_entrances(self, room):
         for i, rd in self.s.doc.redirects_to(room['id']):
@@ -1188,6 +1206,21 @@ class RoomCanvas(QGraphicsView):
                 return m
         return None
 
+    def _draw_jump_falls(self, painter):
+        """S175: a dotted line from a jump down off the screen / from the top edge down to a
+        landing — the way the player falls (straight down, through anything)."""
+        pen = QPen(MARKER['jump'])
+        pen.setCosmetic(True)
+        pen.setStyle(Qt.DotLine)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        for kind, x, y, _spr, _label, _ref in self.markers:
+            cx = x * CELL + CELL / 2
+            if kind == 'jump':
+                painter.drawLine(QPointF(cx, (y + 1) * CELL), QPointF(cx, CELLS_H * CELL))
+            elif kind == 'jump_land':
+                painter.drawLine(QPointF(cx, 0), QPointF(cx, y * CELL))
+
     # ------------------------------------------------------------- overlays
     def drawForeground(self, painter, rect):
         if self.tiles is None:
@@ -1324,6 +1357,7 @@ class RoomCanvas(QGraphicsView):
         if self.layers['markers']:
             self._draw_npc_extras(painter)
             self._draw_door_arrival(painter)
+            self._draw_jump_falls(painter)
         if self.selected_cell and self.selected_marker is None:
             cx, cy = self.selected_cell
             pen = QPen(SEL)
@@ -1577,9 +1611,9 @@ class RoomCanvas(QGraphicsView):
             # S98: doors, one-way exits and examine/step spots too
             if (m and m[0] in ('npc', 'spawn', 'examine', 'step', 'door', 'door_open',
                                'door_dead', 'exit', 'stairs', 'gate_arrival', 'portal',
-                               'world_land')
+                               'world_land', 'jump', 'jump_land')
                     and not self.is_vanilla() and m[5]
-                    and m[5][0] in ('npc', 'exit', 'gate_arrival', 'world_land')):
+                    and m[5][0] in ('npc', 'exit', 'gate_arrival', 'world_land', 'jump_land')):
                 self._drag = [m[5], cell, cell]
             self.viewport().update()
             if m:

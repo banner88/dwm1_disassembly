@@ -101,14 +101,14 @@ class _ObjectPanels:
         t = self.tab
         if not on:
             for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel, t.statue_panel,
-                      t.hint_panel):
+                      t.hint_panel, t.jump_panel):
                 p.setVisible(False)
             t.npc_hint.setVisible(True)
 
     def isHidden(self):
         t = self.tab
         return all(p.isHidden() for p in (t.npc_panel, t.door_panel, t.tele_panel, t.spot_panel,
-                                          t.statue_panel, t.hint_panel))
+                                          t.statue_panel, t.hint_panel, t.jump_panel))
 
 
 class RoomsTab(QWidget):
@@ -188,12 +188,54 @@ class RoomsTab(QWidget):
         lsplit.addWidget(cbox)
         lsplit.setSizes([260, 300])
         lv.addWidget(lsplit, 1)
-        lv.addWidget(QLabel('Screens (4×4 grid — click + to add, right-click to remove)'))
+        lv.addWidget(QLabel('Screens (4×4 grid — click + to add, right-click: copy / paste / '
+                             'shift / remove)'))
         self.minimap = MiniMap()
         self.minimap.screenSelected.connect(self.select_screen)
         self.minimap.addScreenRequested.connect(self._add_screen)
         self.minimap.removeScreenRequested.connect(self._remove_screen)
+        # S175 (ROADMAP P3.3n): bank a screen's art elsewhere in the room; shift its objects
+        self.minimap.copyScreenRequested.connect(self._copy_screen)
+        self.minimap.pasteScreenRequested.connect(self._paste_screen)
+        self.minimap.shiftRequested.connect(self._shift_objects)
+        self._screen_clip = None
         lv.addWidget(self.minimap, 0, Qt.AlignHCenter)
+        srow = QHBoxLayout()
+        srow.setSpacing(2)
+        self.btn_copy_screen = QPushButton('Copy screen')
+        self.btn_copy_screen.setToolTip('Copy screen (⌘⇧C) — the tiles, colours and stamps of '
+                                        'the screen shown, in the state shown, to paste over '
+                                        'another screen of this room (a backup of the art)')
+        self.btn_copy_screen.clicked.connect(lambda: self._copy_screen(self.key))
+        self.btn_paste_screen = QPushButton('Paste here')
+        self.btn_paste_screen.setToolTip('Paste over this screen (⌘⇧V) — the copied tiles, '
+                                         'colours and stamps; its NPCs, doors, triggers, jumps, '
+                                         'cutscenes and scripts stay as they are')
+        self.btn_paste_screen.clicked.connect(lambda: self._paste_screen(self.key))
+        self.btn_paste_screen.setEnabled(False)
+        srow.addWidget(self.btn_copy_screen)
+        srow.addWidget(self.btn_paste_screen)
+        srow.addSpacing(8)
+        srow.addWidget(QLabel('Objects'))
+        for txt, d, tip in (('◀', (-1, 0), 'left'), ('▶', (1, 0), 'right'),
+                            ('▲', (0, -1), 'up'), ('▼', (0, 1), 'down')):
+            b_ = QToolButton()
+            b_.setText(txt)
+            b_.setToolTip(f'Shift objects {tip} one cell — every NPC, spot, trigger, jump, door, '
+                          'exit, stamp and cutscene place of this screen (every state), and every '
+                          'arrival INTO it from anywhere (doors, warps, moves). Edge exits stay on '
+                          'the edge. Nothing moves if something would leave the screen.')
+            b_.clicked.connect(lambda _c=False, dd=d: self._shift_objects(self.key, *dd))
+            srow.addWidget(b_)
+        srow.addStretch(1)
+        lv.addLayout(srow)
+        for seq, fn in (('Ctrl+Shift+C', lambda: self._copy_screen(self.key)),
+                        ('Ctrl+Shift+V', lambda: self._paste_screen(self.key))):
+            a_ = QAction(self)
+            a_.setShortcut(QKeySequence(seq))
+            a_.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+            a_.triggered.connect(fn)
+            self.addAction(a_)
 
         # ---------- centre
         centre = QWidget()
@@ -301,15 +343,25 @@ class RoomsTab(QWidget):
             'emblem): it lists the crosses of ONE family the player has unlocked.')
         self.act_add_archive.triggered.connect(
             lambda: self._add_on_selected(lambda c: self._add_hint_object(c, 'archive')))
+        # S175 (ROADMAP P3.3n): a jumping point (editor2/core/jumps.py)
+        self.act_add_jump = QAction('+ Jump (J)', self)
+        self.act_add_jump.setShortcut(QKeySequence('J'))
+        self.act_add_jump.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.act_add_jump.setToolTip(
+            'Add a JUMPING POINT on the selected cell (the GreatTree cliff jump): walking onto '
+            'it, the player jumps straight down to a cell of the screen below — choose where '
+            'on its page. Paint the cell like a ledge so the player can see it.')
+        self.act_add_jump.triggered.connect(lambda: self._add_on_selected(self._add_jump))
         self.more_btn = QToolButton()
         self.more_btn.setText('+ More')
         self.more_btn.setStyleSheet('QToolButton::menu-indicator { image: none; }')
         self.more_btn.setPopupMode(QToolButton.InstantPopup)
-        self.more_btn.setToolTip('Add on the selected cell: a memorial Statue (U), a breeding-'
-                                 'hint Monument (O) or Archive (K)')
+        self.more_btn.setToolTip('Add on the selected cell: a Jump (J), a memorial Statue (U), '
+                                 'a breeding-hint Monument (O) or Archive (K)')
         mm = QMenu(self.more_btn)
         mm.setToolTipsVisible(True)
-        for a in (self.act_add_statue, self.act_add_monument, self.act_add_archive):
+        for a in (self.act_add_jump, self.act_add_statue, self.act_add_monument,
+                  self.act_add_archive):
             mm.addAction(a)
             self.addAction(a)               # the keys work without opening the menu
         self.more_btn.setMenu(mm)
@@ -927,6 +979,10 @@ class RoomsTab(QWidget):
         self.hint_panel = HintObjectPanel()
         self.hint_panel.setVisible(False)
         nl.addWidget(self.hint_panel)
+        from editor2.app.rooms.object_panels import JumpPanel            # S175
+        self.jump_panel = JumpPanel()
+        self.jump_panel.setVisible(False)
+        nl.addWidget(self.jump_panel)
         nl.addStretch(1)
         self.inspector.npc = _ObjectPanels(self)
         npc.fieldsEdited.connect(self._npc_fields)
@@ -979,6 +1035,11 @@ class RoomsTab(QWidget):
         hp.settingsRequested.connect(lambda: self.hintsRequested.emit())
         hp.presenceToggled.connect(self._hint_presence)
         hp.deleteRequested.connect(self._hint_delete)
+        jp = self.jump_panel                                             # S175
+        jp.fieldsEdited.connect(self._jump_fields)
+        jp.presenceToggled.connect(self._jump_presence)
+        jp.deleteRequested.connect(self._jump_delete)
+        jp.goBelowRequested.connect(lambda: self._jump_screen(self.key + 4))
         self.sec_npc = self.rail.add_page(
             'object', 'Object', npcbox,
             tip='The selected cell, NPC, door, exit or spot — opens by itself when you '
@@ -2820,6 +2881,11 @@ class RoomsTab(QWidget):
             elif (sel['kind'] == 'monument' or sel['kind'].startswith('archive')) \
                     and ref and ref[0] == 'npc':                           # S158
                 self._show_hint_panel(ref[1])
+            elif sel['kind'] == 'jump' and ref and ref[0] == 'npc':          # S175
+                self._show_jump_panel(ref[1])
+            elif sel['kind'] == 'jump_land' and ref and ref[0] == 'jump_land':
+                self.status_line.setText(sel['label'] + ' — drag it up / down to change where '
+                                         'the player lands; double-click: the jump')
             elif sel['kind'] in ('door', 'door_open', 'door_dead') and ref:
                 self._show_door_panel(ref)
             elif sel['kind'] in ('exit', 'stairs', 'portal') and ref and ref[0] == 'exit':
@@ -2827,7 +2893,7 @@ class RoomsTab(QWidget):
 
     def _show_object(self, panel):
         for p in (self.npc_panel, self.door_panel, self.tele_panel, self.spot_panel,
-                  self.statue_panel, self.hint_panel):
+                  self.statue_panel, self.hint_panel, self.jump_panel):
             p.setVisible(p is panel)
         self.npc_hint.setVisible(panel is None)
         if panel is not None:
@@ -2882,6 +2948,11 @@ class RoomsTab(QWidget):
         if not sel:
             return
         ref = sel.get('ref')
+        if sel['kind'] == 'jump_land' and ref and ref[0] == 'jump_land':     # S175: to the jump
+            src, (jx, jy) = ref[1], ref[2]
+            self._jump_screen(src)
+            self._reselect_jump((jx, jy))
+            return
         if sel['kind'] in ('door', 'door_open', 'door_dead') or \
                 (self.vanilla_mid is not None and sel['kind'] in ('exit', 'redirect')):
             did = self._door_id_of_ref(ref)
@@ -3625,10 +3696,29 @@ class RoomsTab(QWidget):
                 self._show()
                 self._select_exit_at((cx, cy))
             return
+        if ref[0] == 'jump_land':                  # S175: drag the landing up / down
+            src, (jx, jy) = ref[1], ref[2]
+
+            def op(doc, r, k, st):
+                for s_ in range(len(doc.states(r, src))):
+                    for i, e in enumerate(doc.npc_entries(r, src, s_)):
+                        if e.get('kind') == 'jump' and (int(e['x']), int(e['y'])) == (jx, jy):
+                            return doc.update_jump(r, src, s_, i, land_y=cy)
+                raise ValueError('the jump is gone')
+            if self._npc_op(f'Jump landing row {cy}', op) is not None:
+                self._show()
+            return
         if ref[0] != 'npc':
             return
         idx = ref[1]
         v = self.s.doc.npc_view(room, self.s.doc.npc_entries(room, self.key, self.state_idx)[idx])
+        if v['kind'] == 'jump':                    # S175: the landing column moves with it
+            cmd = self._npc_op(f'Move jump to ({cx},{cy})',
+                               lambda doc, r, k, st: doc.update_jump(r, k, st, idx, x=cx, y=cy))
+            if cmd is not None:
+                self._show()
+                self._reselect_jump((cx, cy))
+            return
         if v['kind'] in ('examine', 'step', 'spawn'):
             cmd = self._npc_op(f'Move spot to ({cx},{cy})',
                                lambda doc, r, k, st: doc.update_spot(r, k, st, idx, x=cx, y=cy))
@@ -4489,6 +4579,118 @@ class RoomsTab(QWidget):
         _room, kind, _oid, idx = sel
         if self._npc_op(f'Remove {kind}', lambda doc, r, k, st: doc.remove_hint_object_here(
                 r, k, st, idx)) is not None:
+            self._sel_npc = None
+            self._show()
+            self.inspector.show_selection(None)
+
+    # ------------------------------------------------- jumping points (S175)
+    def _cell_walkable(self, key, x, y, state=0):
+        room = self.current_room()
+        r = self.s.renderer
+        st = r.screen_state(room, key, min(state, len(self.s.doc.states(room, key)) - 1))
+        g, _lid = r.layout_grid(st['layout'])
+        from editor2.core import jumps as JU
+        return JU.cell_walkable(g, r.room_gfx(room).threshold, x, y)
+
+    def _add_jump(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        from editor2.core import jumps as JU
+        cx, cy = cell
+        below = JU.landing_key(self.key)
+        if below is None or str(below) not in (room.get('screens') or {}):
+            QMessageBox.information(
+                self, 'Add jump',
+                f'A jump lands on the screen directly below (screen {below if below is not None else "—"}), '
+                'and this screen has none. Add that screen on the mini-map first. (Measured: a '
+                'jump that lands on its own screen locks the player for good.)')
+            return
+        ly = self.s.doc.default_landing(room, self.key, cx, cy,
+                                        walkable=lambda k, x, y: self._cell_walkable(k, x, y))
+        cmd = self._npc_op(f'Add jump at ({cx},{cy})',
+                           lambda doc, r, k, st: doc.add_jump(r, k, st, cx, cy, ly))
+        if cmd is not None:
+            self._show()
+            self._reselect_jump((cx, cy))
+            self.status_line.setText(f'Jump at ({cx},{cy}): lands on screen {below} ({cx},{ly}) '
+                                     '— change the landing on the Object page (click the '
+                                     'picture) or drag the ↓J marker on that screen.')
+
+    def _reselect_jump(self, cell):
+        room = self.current_room()
+        if room is None:
+            return
+        for i, e in enumerate(self.s.doc.npc_entries(room, self.key, self.state_idx)):
+            if e.get('kind') == 'jump' and (int(e['x']), int(e['y'])) == tuple(cell):
+                ref = self.canvas.select_npc(i)
+                if ref is not None:
+                    m = next(m for m in self.canvas.markers if m[5] is ref)
+                    self.inspector.show_selection({'kind': m[0], 'x': m[1], 'y': m[2],
+                                                   'sprite': m[3], 'label': m[4], 'ref': ref},
+                                                  editable=True)
+                self._show_jump_panel(i)
+                return
+
+    def _show_jump_panel(self, index):
+        room = self.current_room()
+        if room is None:
+            return
+        from editor2.core import jumps as JU
+        doc = self.s.doc
+        lst = doc.npc_entries(room, self.key, self.state_idx)
+        if not 0 <= index < len(lst) or lst[index].get('kind') != 'jump':
+            return
+        self._sel_npc = index
+        v = doc.npc_view(room, lst[index])
+        below = JU.landing_key(self.key)
+        img, walls = None, []
+        try:
+            img = self.s.renderer.render_screen(room, str(below), 0)
+            walls = [not self._cell_walkable(below, v['x'], r) for r in range(8)]
+        except Exception:                                        # noqa: BLE001
+            pass
+        try:
+            warns = JU.warnings_for(doc, room, self.key, self.state_idx, v)
+        except Exception as ex:                                  # noqa: BLE001
+            warns = [str(ex)]
+        self.jump_panel.show_jump(v, self.key, below, img, walls,
+                                  doc.jump_presence(room, self.key, self.state_idx, index),
+                                  warns)
+        self._show_object(self.jump_panel)
+
+    def _jump_fields(self, fields):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        what = ', '.join(f'{k}={v}' for k, v in fields.items())
+        room = self.current_room()
+        e = self.s.doc.npc_entries(room, self.key, self.state_idx)[idx]
+        cell = (int(e['x']), int(e['y']))
+        if self._npc_op(f'Jump {what}',
+                        lambda doc, r, k, st: doc.update_jump(r, k, st, idx, **fields)) is not None:
+            self._show()
+            self._reselect_jump(cell)
+
+    def _jump_presence(self, state, on):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        room = self.current_room()
+        e = self.s.doc.npc_entries(room, self.key, self.state_idx)[idx]
+        cell = (int(e['x']), int(e['y']))
+        if self._npc_op(f"Jump {'in' if on else 'out of'} state {state}",
+                        lambda doc, r, k, st: doc.set_jump_presence(r, k, st, idx, state, on)) \
+                is not None:
+            self._show()
+            self._reselect_jump(cell)
+
+    def _jump_delete(self):
+        idx = self._sel_npc
+        if idx is None:
+            return
+        if self._npc_op('Remove jump', lambda doc, r, k, st: doc.remove_jump(r, k, st, idx)) \
+                is not None:
             self._sel_npc = None
             self._show()
             self.inspector.show_selection(None)
@@ -5410,6 +5612,95 @@ class RoomsTab(QWidget):
             return
         self.s.undo.push(C.RemoveScreen(self.s, self.room_id, key))
         self._show()
+
+    # ------------------------------------------- S175: copy / paste a screen, shift objects
+    def _copy_screen(self, key):
+        """Copy the screen's visual layer (tiles + colours + palette + stamps) in the state
+        shown — a snapshot (editor2/core/screen_tools.py)."""
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None:
+            self.status_line.setText('Copy screen: open one of your rooms (a game room: Make '
+                                     'editable first).')
+            return
+        key = int(key)
+        st = self.state_idx if key == self.key else 0
+        try:
+            self._screen_clip = self.s.doc.screen_visual(room, key, st, self.s.renderer)
+        except Exception as ex:                                  # noqa: BLE001
+            QMessageBox.warning(self, 'Copy screen', str(ex))
+            return
+        nst = len(self.s.doc.states(room, key))
+        label = f"screen {key}" + (f" (state {st})" if nst > 1 else '')
+        self.minimap.can_paste = f"{self.s.doc.room_name(room)} {label}"
+        self.btn_paste_screen.setEnabled(True)
+        n = len(self._screen_clip['stamps'])
+        self.status_line.setText(f'Copied {label}: its tiles, colours'
+                                 + (f' and {n} stamp(s)' if n else '')
+                                 + ' — right-click another screen of this room (or ⌘⇧V on it): '
+                                 'Paste. The copy is kept as it is now.')
+
+    def _paste_screen(self, key):
+        room = self.current_room()
+        clip = self._screen_clip
+        if room is None or self.vanilla_mid is not None:
+            self.status_line.setText('Paste screen: open one of your rooms.')
+            return
+        if clip is None:
+            self.status_line.setText('Paste screen: Copy a screen first (right-click it on the '
+                                     'mini-map, or ⌘⇧C).')
+            return
+        if clip['room'] != room['id']:
+            QMessageBox.information(self, 'Paste screen',
+                                    'A screen pastes only into another screen of the room it '
+                                    'was copied from (for now).')
+            return
+        key = int(key)
+        st = self.state_idx if key == self.key else 0
+        rid = room['id']
+        what = f"screen {clip['screen']}" + (f" state {clip['state']}" if clip['state'] else '')
+        cmd = C.SnapshotCommand(self.s, f'Paste {what} over screen {key}',
+                                lambda d: d.paste_screen_visual(d.room(rid), key, st, clip,
+                                                                repo=REPO))
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Paste screen', str(cmd.error))
+            return
+        self.s.renderer.invalidate()
+        self.key, self.state_idx = key, st
+        self._show()
+        notes = [n for n in (cmd.result or []) if n]
+        self.status_line.setText(f'Pasted {what} over screen {key}: tiles, colours'
+                                 + (', stamps' if clip['stamps'] or any('stamps' in n for n in notes)
+                                    else '')
+                                 + ' — its objects, doors, triggers and scripts stayed.'
+                                 + (' ' + '; '.join(notes) if notes else ''))
+
+    def _shift_objects(self, key, dx, dy):
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None:
+            self.status_line.setText('Shift objects: open one of your rooms.')
+            return
+        rid, key = room['id'], int(key)
+
+        def op(d):
+            from editor2.core import stamps as ST
+            res = d.shift_screen_objects(d.room(rid), key, dx, dy)
+            for j in res['stamps']:                       # the tiles under them changed
+                ST.claim(d, REPO, rid, j)
+            return res
+        arrow = {(-1, 0): '◀', (1, 0): '▶', (0, -1): '▲', (0, 1): '▼'}.get((dx, dy), '')
+        cmd = C.SnapshotCommand(self.s, f'Shift objects {arrow} (screen {key})', op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.information(self, 'Shift objects', str(cmd.error))
+            return
+        res = cmd.result or {}
+        self.key = key
+        self._show()
+        moved = ', '.join(res.get('moved') or []) or 'nothing on this screen'
+        self.status_line.setText(f'Shifted {arrow} on screen {key}: {moved}.'
+                                 + (' ' + ' '.join(res.get('notes') or []) if res.get('notes')
+                                    else ''))
 
     def _threshold_edited(self, v):
         room = self.current_room()

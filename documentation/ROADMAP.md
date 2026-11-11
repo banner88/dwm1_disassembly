@@ -1121,6 +1121,33 @@ recipes are pure authoring.
       the Palettes page, kept by Re-plan, protected from other stamps, usable by tiles, left
       when the stamp goes) — user: "populate the palette so that it reflects what the torches
       do".
+- [x] **P3.3n — Screens: copy / paste a screen's art, Shift objects; JUMPING POINTS** — **built
+      S175, NOT yet user-tested** (user: "On multi screen rooms I need the ability to copy-paste
+      a whole room into a different screen. That way I can keep backups of the rooms I have …
+      Jumping points. I want to be able to set in ui a jumping point like in GreatTree (where
+      you step on the jumping steps) and set where it dumps you on the screen below";
+      conferred: copy ONLY within the same multi-screen room, tiles + stamps ("sprites"),
+      walkability with them, the target keeps its cutscenes / triggers / entries / doors /
+      scripts; Shift objects ◀▶▲▼ "perfect"; no screen-grid insert / shift ("dont worry about
+      inserting columns")). Audit (PyBoy, original ROM): a GreatTree jump = a STEP-ON trigger
+      + the script `$D9E8 := 1, sound $55, walk_fast, npc_walk_y player +N px, wait_movement`
+      (bank $0C GreatTree_Script18-20); the scroll starts only after the script ends and is the
+      only clear of `$D9E8` (bank $06 `ScrollEndCommit`, re-sectioned + annotated this session)
+      — a landing on the same screen = a soft lock, two screens down = odd controls, one
+      screen down any row = works (ROOM_DATA_FORMAT "Jumping points"). Built:
+      `editor2/core/jumps.py` (the Jump object `{"kind": "jump", x, y, land_y}`, lowered to
+      exactly that trigger + script; errors / warnings), `editor2/core/screen_tools.py`
+      (screen_visual / paste_screen_visual / shift_screen_objects with every arrival into the
+      screen), the Rooms tab (+ More ▸ + Jump (J), J↓ / ↓J markers, JumpPanel with the screen
+      below as a picker, Whole-room arrows; the mini-map menu + Copy screen / Paste here /
+      Objects ◀▶▲▼, ⌘⇧C / ⌘⇧V). PROJECT_COMPILER §2.80, EDITOR_DESIGN §5.1 "As built S175",
+      help 10 / 11 / glossary. *Accept (machine):* `tools/walk_jumps.py` on the user's
+      project + save (GreatLog screen 1 (3,7) → screen 5 row 3, screen 5 (3,7) → screen 9 row 1):
+      16 / 16; `--negative` FAILs; test_compiler `test_s175`; test_app `s175_jumps_screens`.
+      *User accept:* place jumps in the editor and play them; bank a screen and paste it back;
+      Shift objects after moving art. Not done (not asked): recognising the game's own jumps in
+      Make editable copies of GreatTree as Jump objects (they stay raw step-on spots + scripts,
+      which work).
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

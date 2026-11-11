@@ -13081,6 +13081,120 @@ def test_s168r2():
        d4.layout(lid)['tiles'][2][0] == 0x46, d4.migration_warnings)
 
 
+def test_s175(with_rom=False):
+    """S175 (ROADMAP P3.3n): JUMPING POINTS (editor2/core/jumps.py — the GreatTree cliff jump:
+    a step-on trigger + the game's own script, landing on the screen below) and the screen
+    tools (editor2/core/screen_tools.py — copy / paste a screen's art, shift its objects)."""
+    import copy as _cp
+    import shutil as _sh
+    import tempfile as _tf
+    from editor2.core import jumps as JU
+    from editor2.core.document import Document
+    out0 = out1_ex[0]
+    d = base()
+    r = d['custom']['rooms'][0]                         # gate_island: screens 0 and 4
+    r['screens']['0']['npcs'].append({'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 2})
+    out, prj, _w = compile_data(d)
+    b60 = out['patches/bank_060.asm']
+    ok("S175: a jump -> a step-on trigger ($90) on its cell, before the NPCs",
+       'db $90, $FF, $04, $06,' in b60, )
+    sid = '_jump_gate_island_64'
+    lines = b60.splitlines()
+    lab = next((ln.split()[1] for ln in lines if ln.rstrip().endswith('] ' + sid)), None)
+    body = []
+    if lab:
+        for ln in lines[lines.index(lab + ':') + 1:]:
+            if not ln.strip():
+                break
+            body.append(ln.split(';')[0].strip())
+    ok("S175: its script is GreatTree_Script19's words, the fall in pixels (64 = 4 cells)",
+       body == ['dw $FF12', 'dw $D9E8', 'dw $0001', 'dw $FF21', 'dw $0055', 'dw $FF22',
+                'dw $FF1B', 'dw $0000', 'dw $0040', 'dw $FF19', 'dw $FFFF'], body)
+    ok("S175: only bank $60 (+ wram / place tables) differs from the example build",
+       {k for k in out if out[k] != out0.get(k)} <= {'patches/bank_060.asm'},
+       sorted(k for k in out if out[k] != out0.get(k)))
+    ok("S175: fall_px — row 7 to row 0 of the screen below is one cell; row 0 to 7 is 15",
+       JU.fall_px(7, 0) == 16 and JU.fall_px(0, 7) == 240)
+    # refused: no screen below / the bottom row / a row off the screen
+    from editor2.core import validators as V
+    for what, scr, e, needle in (
+            ('a jump on screen 4 (no screen 8 below)', '4',
+             {'kind': 'jump', 'x': 4, 'y': 3, 'land_y': 2}, 'no screen below'),
+            ('a landing row 8', '0', {'kind': 'jump', 'x': 4, 'y': 3, 'land_y': 8},
+             'landing row 8')):
+        d = base()
+        d['custom']['rooms'][0]['screens'][scr]['npcs'].append(e)
+        try:
+            out, prj, _w = compile_data(d)
+            msg = ''
+        except Exception as ex:                          # noqa: BLE001
+            msg = str(ex)
+        ok(f"S175: {what} stops the build ({needle!r})", needle in msg, msg[:200])
+    # the document: add / update / presence / remove; the shift (with the arrival from
+    # dusk_mirror's exit into gate_island screen 0, room:$6B) and refusal at the edge
+    tmp = _tf.mkdtemp(prefix='t175_')
+    _sh.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'))
+    doc = Document(os.path.join(tmp, 'p', 'project.json'))
+    gi = doc.room('gate_island')
+    pre = doc.dumps()
+    i = doc.add_jump(gi, 0, 0, 4, 6, 2)
+    ok("S175: add_jump writes {kind: jump, x, y, land_y}",
+       doc.npc_entries(gi, 0, 0)[i] == {'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 2})
+    try:
+        doc.add_jump(gi, 4, 0, 1, 1, 1)
+        refused = False
+    except ValueError:
+        refused = True
+    ok("S175: add_jump refuses a screen with no screen below", refused)
+    doc.update_jump(gi, 0, 0, i, land_y=5, sound=0x60)
+    ok("S175: update_jump (landing row, own sound)",
+       doc.npc_entries(gi, 0, 0)[i] == {'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 5,
+                                         'sound': '0x60'})
+    ok("S175: the landing shows on the screen below", doc.jumps_landing_on(gi, 4) == [(0, 4, 6, 5)])
+    doc.remove_jump(gi, 0, 0, i)
+    ok("S175: remove_jump leaves the project as it was", doc.dumps() == pre)
+    arrivals = [e for rr in doc.rooms for sc in (rr.get('screens') or {}).values()
+                for st in (sc.get('states') or [sc]) for e in st.get('exits') or []
+                if str(e.get('dest')) == 'room:$6B' and (int(str(e.get('screen_byte')), 16) & 15) == 0]
+    before = [(e['spawn_x'], e['spawn_y']) for e in arrivals]
+    npcs0 = _cp.deepcopy(gi['screens']['0']['npcs'])
+    res = doc.shift_screen_objects(gi, 0, -1, 0)
+    ok("S175: shift ◀ moves the screen's NPCs / spots one cell left",
+       [n['x'] for n in gi['screens']['0']['npcs']] == [n['x'] - 1 for n in npcs0], res)
+    ok("S175: … and every arrival into the screen (the exits of other rooms)",
+       [(e['spawn_x'], e['spawn_y']) for e in arrivals]
+       == [(x - 1, y) for x, y in before] and bool(arrivals), before)
+    doc.shift_screen_objects(gi, 0, 1, 0)
+    ok("S175: shift ▶ undoes shift ◀ exactly", doc.dumps() == pre)
+    from editor2.core.screen_tools import ShiftBlocked
+    try:
+        for _n in range(20):
+            doc.shift_screen_objects(gi, 0, 0, 1)
+        blocked = False
+    except ShiftBlocked as ex:
+        blocked = 'leave the screen' in str(ex)
+    ok("S175: a shift that would push something off the screen is refused (nothing moved)",
+       blocked)
+    if with_rom:
+        from editor2.core.render_project import ProjectRenderer
+        doc = Document(os.path.join(tmp, 'p', 'project.json'))
+        rend = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        doc.vanilla = rend
+        gi = doc.room('gate_island')
+        clip = doc.screen_visual(gi, 4, 0, rend)
+        npcs0 = _cp.deepcopy(doc.states(gi, 0))
+        doc.paste_screen_visual(gi, 0, 0, clip, repo=REPO)
+        r2 = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        ok("S175: paste — screen 0 now draws screen 4's picture",
+           r2.render_screen(gi, '0', 0).tobytes() == r2.render_screen(gi, '4', 0).tobytes())
+        ok("S175: paste kept screen 0's NPCs / spots / exits",
+           [{k: v for k, v in st.items() if k in ('npcs', 'exits')} for st in doc.states(gi, 0)]
+           == [{k: v for k, v in st.items() if k in ('npcs', 'exits')} for st in npcs0])
+        ok("S175: paste — the clip is a snapshot (the source grid is not shared)",
+           clip['tiles'] is not doc.layout(doc.screen(gi, 0)['layout']['id'])['tiles'])
+    _sh.rmtree(tmp, ignore_errors=True)
+
+
 def test_s168_rom(tmp, rid):
     """S168 --rom: the fixture in PyBoy (no save: the bedroom, then a warp)."""
     from editor2.core import builder as B
@@ -14042,6 +14156,7 @@ def main():
     test_s170('--rom' in sys.argv)
     test_s171('--rom' in sys.argv)
     test_s172('--rom' in sys.argv)
+    test_s175('--rom' in sys.argv)
 
     if '--rom' in sys.argv:
         from editor2.core import builder as B

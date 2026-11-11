@@ -1,5 +1,87 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-10 (Session 173 — **ROOM-BUILDING AIDS (ROADMAP P3.3l): TWO BARS OVER THE CANVAS (THE TOOLS;
+> THE VIEW), STATUE / MONUMENT / ARCHIVE IN + MORE, ZOOM 1-12× WITH HALF STEPS + FIT, CLEAN VIEW (HOLD H), THE STILL TOOL
+> (A NEW TILE FROM A CHOSEN FRAME OF A MOVING CELL — THE GAME'S ANIMATION OR YOUR OWN), THE BRUSH UNDER THE MOUSE, WHERE A
+> TILE IS USED, THE WHOLE ROOM, A REFERENCE WINDOW** (the user: "What is statue vs monument? Unclear. Move archive button
+> and something else button to the side arrow and put eyedrops and walkability as button … Allow removal of grid (toggle)
+> … 'De-animate' button … Allow zooming in … 1.5x and 2x. Maybe even 3x. Anything else you can suggest"; the audit
+> conferred → "1) Yes good. Those are very situational. 2) No stop entirely. 3) Make a new un-animated tile I can use. Do
+> NOT count the previous animated tile as used. 4) yes. 5) I want to choose a frame. Others: Brush preview … Show where
+> tile is used … Whole room view - yes. Reference window - YES. proceed").
+> **Built S173, NOT yet user-tested; byte-neutral for the ROM** (no compiler / engine change; the example pin unchanged).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start; HEAD's
+> test_app `--rom` STOPPED at the Capacity block (a deleted `QTreeWidgetItem` — on a clean HEAD copy too; fixed in the
+> test, KEY_LESSONS S173).
+> **The audit (measured, offscreen grab of the user's project at 1,512 px):** the one canvas tool bar showed up to + NPC;
+> Paint, Eyedrop, Walkability, the Grid toggle and the 1-6× zoom all existed behind the » overflow (KEY_LESSONS S173 "A
+> control the user cannot see does not exist"). Statue = the S154 memorial (a monster that won a big battle and has left);
+> Monument = the S158 breeding hint (teaches a cross); Archive = one family's learned crosses.
+> **Built (EDITOR_DESIGN §5.1 "As built S173"):** the tools row (Select / Paint / Eyedrop / Walkability / Still / + Door /
+> + Examine / + NPC / + More ▸ Statue · Monument · Archive — keys U / O / K kept) and the view row (Grid / Palettes /
+> Markers / Anim / Clean / ▶ Play / − zoom + / Fit / Whole room / Reference), short state-row labels — every control
+> shown at 1,512 px; `canvas.ZOOMS` (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12; ± keys, ⌘ + wheel, pinch); clean view (the
+> button or H held); the Still tool: `animate.cell_frames` (the game handler's measured schedule + the room's own
+> animations, replayed together) → `room_view.StillFrameDialog` (the frame on screen preselected while ▶ Play runs) →
+> `Document.make_still_tile` (a NEW metatile in still slots on the same side of the split, the brush; no cell changes,
+> the moving tile untouched — the reading of "do not count the previous animated tile as used"; the Animate tab's
+> older *Make the selected cell still* kept); the brush drawn under the mouse; the picker's hover outlines the cells
+> using a metatile (+ counts); NEW `editor2/app/rooms/room_view.py` (Whole room, Reference — a read-only `RoomCanvas`,
+> right-click = brush on the same tiles). Help 10_rooms / 15_animated_tiles / 00 / 13 / 77 / 78 / glossary;
+> `EDITOR_REVISION` S173.
+> **Measured in the game:** NEW `tools/walk_still.py` (the editor's own code on a copy, a build, the user's save) —
+> GreatLog screen 5, the GreatTree sway, frame 4: **9 / 9** (the still cell 1 picture over 1,200 frames == the chosen
+> frame; the moving cell 8; every game picture one the editor offered); `--negative` (the moving tile painted) **2
+> FAIL**. The copy took page-2 slot 201 (page 1's wall side was full).
+> **Test ROM (optional; editor-only session):** `DWM-S173-still-test.gbc` (`2aa6a330…`, patched) = the user's project + a still tile (frame 4 of
+> the swaying bark at GreatLog screen 5 cell (2,2)) painted on cell (4,1) of that screen.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin unchanged); test_app `--rom` PASS
+> (+ `s173_room_aids`; the GUI build == the pin); test_canvas PASS. (Run alone: test_app and test_compiler at the same time
+> share the example project — a test_compiler "stray sheet file" FAIL then was a crashed debug run's leftover
+> `ts_2A_08.2bpp`, removed; a passing `s173_room_aids` leaves the assets unchanged.) Help picture `tab_rooms.png` regenerated
+> (`tools/help_screenshots.py --only Rooms`).
+> **r2 (user: "I made the animation still but the play here button shows it still animating in-game? … The rest of
+> mechanics seem fine"):** diagnosed on the user's r2 project — their 12:15 build (`5cc6aa67…`, patched) == a build of the
+> project they sent, in which the still tile `[14, 15, 30, $149]` was in My metatiles and NO layout drew it: r1's Still
+> tool changed no cell (KEY_LESSONS S173 r2). Not the engine: VRAM bank 1 `$40-$4F` (the page-2 twins of the sway's
+> tiles) 1 picture over 600 idle frames + walking while bank 0 showed 8. Fix: the clicked cell gets the still tile
+> (`make_still_tile(place=…)`, one undo step); `walk_still.py --place` **8 / 8** on the user's project (cell (2,2),
+> frame 5: 1 picture; the moving tile 8), `--negative` (nothing placed) FAIL — the user's report reproduced. Test ROM
+> `DWM-S173r2-still-test.gbc` (`b1115881…`, patched) = the user's r2 project with cell (2,2) of GreatLog screen 5 made
+> still (frame 5). test_app `s173_room_aids` (the clicked cell only); `EDITOR_REVISION` S173r2; help 10 / 15 /
+> glossary. Built S173 r2, NOT yet user-tested. **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 2140
+> PASSED; test_app `--rom` PASS; test_canvas PASS (run one after another).
+> **r3 (user: "1) Allow the editor to import them then, please, rather than fiddling with my project. 2) Nah that's a
+> bit too big … It should be 1 or 2 tiles (1 or 2 vertically). 3) … use the same number of frames and look as the other
+> torches in the game"):** Animate tab → **Import frames from PNG…** — NEW `editor2/core/anim_import.py` (read_frames /
+> plan / preview / apply) + `editor2/app/rooms/anim_import_dialog.py`; EDITOR_DESIGN §5.1 "As built S173" (the import
+> bullet), help 15 / glossary; `EDITOR_REVISION` S173r3. Measured: NEW `tools/walk_anim_import.py` on the user's project +
+> save — a 16×32 torch at GreatLog screen 5 (2,0)-(2,1) and a 16×16 one at (5,0): **9 / 9** (rows 1 + 2 in the palette RAM,
+> each piece on its planned row, only + every imported frame, a step every 32 frames (median gap 32), walls kept);
+> `--negative` **4 FAIL**. test_app `s173_anim_import`. The torch art (2 frames, the Room of Beginning's torch row orange /
+> cream / red / black + a light row brown / orange / tan / black over the bark; KEY_LESSONS S173 r3 on why a glow is at
+> least the flame's own 8×8 pieces) is session material, not repo content. Test ROM `DWM-torch-import-test.gbc`
+> (`34b96212…`, patched) = the user's r4 project + both torches. Built S173 r3, NOT yet user-tested. **Checks (r3):** verify_integrity PASS; test_compiler `--rom` ALL 2140
+> PASSED; test_app `--rom` PASS (+ `s173_anim_import`); test_canvas PASS (one after another).
+> **r4 (user: "Narrow is worse and looks square. But because you drew OVER other tiles I am concerned the background
+> wont fit together properly … Can you also show me animated?"):** the import takes SEE-THROUGH pixels — clear = the
+> map stays, half-clear = light (the colour unless the map is black) — composited over the screen as it is
+> (`anim_import.plan`); the halo torch (the round-2 look the user loved, 2 frames, halo 12 / 13 px, flame in 1 cell +
+> stick below) is now an OVERLAY PNG with no wall in it: imported at GreatLog screen 5 (0,0)-(2,1) — bark it was never
+> drawn on — `walk_anim_import.py` 9 / 9, the grain continuous through the halo (the tool gained `--gif`: the screen
+> animated). Test ROM `DWM-halo-overlay-test.gbc` (patched). `EDITOR_REVISION` S173r4. Built, NOT yet user-tested.
+> Then (user: "transparency is great … Only tip wiggles I'd like the whole shape to move a little more … It seems to
+> wiggle slightly faster ever x cycles? why?"): the whole flame now leans −2 / +2 px at the top (the base on the stick);
+> (then, user: "it needs to change in shape not just wave back and forth … The halo is perfect": two DIFFERENT
+> flames — tall / narrow, one tip; wider / lower, a split tip, the foot wider — 9 / 9, test ROM
+> `DWM-halo-shapes-test.gbc` (`f0ca2897…`, patched)); MEASURED 1,200 frames: every piece changes every 32 frames exactly (8 pieces on one frame, the other 4 the next — the
+> 8-tile groups); the unevenness was the GIF (every 4th frame at a fixed 67 ms) — `walk_anim_import.py --gif` now holds
+> each picture for its true time (KEY_LESSONS S173 r4). 24 pieces (6 cells), 12 new tiles, 12 moving. 9 / 9; test ROM
+> `DWM-halo-sway-test.gbc` (`07959500…`, patched). **Checks (r4):** verify_integrity PASS; test_compiler `--rom` ALL 2140
+> PASSED; test_app `--rom` PASS; test_canvas PASS.
+> **Next:** the user's test of the Rooms tab at their window size; then the "Awaiting a user test" list / the
+> editor's finalization.
+
 > Last verified: 2026-11-08 (Session 172 — **FOODS INSTEAD OF MEATS: A TICK ON THE ITEMS TAB (TOAST / APPLE / BISCUIT /
 > BADAPPLE / HONEY, EACH WITH ITS OWN NPC SPRITE; OFF = THE GAME'S MEATS) + THE OUTSTANDING FIXES: test_canvas PASSES AGAIN,
 > THE BALANCE TAB NO LONGER HOLDS THE WINDOW** (the user: "Please identify outstanding fixes and ideally wrap them up … I want

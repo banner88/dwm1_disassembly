@@ -731,7 +731,7 @@ the code S118f, cited; "script" = inferred from the script word streams only).
 | `$D9E3` | the King's speech for the next Castle arrival | GATE_GENERATION §7.7 |
 | `$D9E4` | the Well boss's tile event seen | script only (map `$38` s16) |
 | `$D9E5` | the party is falling through a hole | script only (the hole scripts → 1, the next room's entry scene → 0) |
-| `$D9E8` | player input locked (scripted scroll) | code: non-zero skips free walking (bank_006:3697), cleared by the scroll handler (bank_006:4367) |
+| `$D9E8` | player input locked (scripted scroll) | code: non-zero skips free walking (bank $06 FieldStateDispatch), cleared ONLY at the end of a screen scroll (bank $06 `ScrollEndCommit`, S175). S175 (PyBoy): a script that sets it and ends without a scroll (a GreatTree-style jump landing on its own screen) locks the player for good — ROOM_DATA_FORMAT "Jumping points" |
 | `$DA02-$DA07` | the battle set-up | count − 1, enemy rows (the storyboard names the monsters) |
 
 **NPC slot `+$10` / `+$14`** (code, the animation player bank_002 `SeqStepper` on the

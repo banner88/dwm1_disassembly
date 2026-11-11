@@ -1418,6 +1418,43 @@ screen it is put on, an unlit option, the halo colour settable.
   `stamps.rows_report`); Re-plan colours opens with those rows' "keep" ticked and labelled.
   Removing a stamp leaves the colours (the user's to reuse).
 
+**As built S175 (ROADMAP P3.3n — screen copy / paste, Shift objects, jumping points; built,
+NOT yet user-tested).** The user: "On multi screen rooms I need the ability to copy-paste a
+whole room into a different screen. That way I can keep backups … Jumping points. I want to be
+able to set in ui a jumping point like in GreatTree … and set where it dumps you on the screen
+below"; conferred: "Copying should ONLY work on the same screen of multi-screen rooms for now.
+It's a way to bank a room somewhere else. Should copy sprites + tiles but nothing else. If you
+paste you should keep underlying cutscenes, triggers, entries, doors, scripts, etc. It's just a
+visual thing" ("sprites" = the stamps; "Also keeps walkability etc."), Shift objects agreed
+("perfect"), no screen-grid insert / shift ("dont worry about inserting columns").
+- **Copy / paste a screen** (`editor2/core/screen_tools.py`, PROJECT_COMPILER §2.80): the
+  mini-map's right-click menu (Copy screen k / Paste over screen k / Shift objects ▸ / Remove
+  screen k — `MiniMap.copyScreenRequested` / `pasteScreenRequested` / `shiftRequested`), the
+  buttons **Copy screen** / **Paste here** under it, ⌘⇧C / ⌘⇧V on the tab
+  (`RoomsTab._copy_screen` / `_paste_screen`). Copy = `Document.screen_visual` through the
+  renderer (the state shown on the canvas, else 0) — a snapshot kept in `RoomsTab._screen_clip`;
+  paste = one `SnapshotCommand` → `paste_screen_visual(…, repo=REPO)` (the pasted stamps' colour
+  rows re-claimed, `stamps.claim`). Same room only (a message otherwise), an existing screen
+  only. Walkability is the tiles' (the bottom-right subtile), so it travels with them.
+- **Shift objects ◀ ▶ ▲ ▼** (the four buttons under the mini-map, the menu's submenu):
+  `RoomsTab._shift_objects` → `shift_screen_objects` (+ `stamps.claim` for each moved stamp —
+  the tiles under it changed) in one SnapshotCommand; the status line counts what moved
+  ("1 × arrival, 2 × stamp …") and the notes (a jump above keeps its column; raw script walks
+  not moved); a refusal is a message naming what is in the way, nothing changed.
+- **Jumps** (`editor2/core/jumps.py`): **+ More ▸ + Jump (J)** (`act_add_jump`, on the selected
+  cell) → `Document.add_jump` (every state of the screen; refused when there is no screen
+  below — a message); the default landing = the first walkable row of the column on the screen
+  below (`default_landing` with the renderer's walk test). Canvas: the jump marker **J↓** (orange,
+  `MARKER['jump']`, draggable — `update_jump(x, y)`, the landing column moves with it) with a
+  dotted fall line to the bottom edge; on the screen below the landing marker **↓J**
+  (`_mark_jump_landings` ← `jumps_landing_on`, ref `('jump_land', src, (x, y))`) with a dotted
+  line from the top edge — dragged up / down = `land_y`; double-click = back to the jump. The
+  Object page's **JumpPanel** (`object_panels.py`): the screen below as a picture
+  (`_LandingPicker`: the column yellow, walls red crosses, the landing cyan; a click picks the
+  row), **row** spin, the fall in cells, **sound** ($55), warnings (`jumps.warnings_for`), **in
+  states**, **Go to the screen below**, **Remove jump** (every state). The **Whole room** window
+  draws every jump as an orange arrow (`_StitchView.jumps`).
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

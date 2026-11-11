@@ -17,7 +17,7 @@ No ROM bytes: the editor only.
 """
 
 from PIL import Image, ImageQt
-from PySide6.QtCore import QRectF, Qt, QTimer, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QBrush, QColor, QFont, QPen, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QHBoxLayout,
@@ -90,6 +90,7 @@ class _StitchView(QGraphicsView):
         self.edges = True
         self.cells = False
         self.labels = True
+        self.jumps = []                  # S175: [(screen, x, y, land_y)] — drawn as arrows
 
     def set_zoom(self, z):
         self.zoom = z
@@ -140,10 +141,26 @@ class _StitchView(QGraphicsView):
                 painter.drawRect(rc.adjusted(1, 1, -1, -1))
             if self.labels:
                 painter.setFont(QFont('Menlo', 6))
+                # (the screen's label; S175's jump arrows are drawn after the loop)
                 tr = QRectF(rc.left() + 2, rc.top() + 2, 44, 9)
                 painter.fillRect(tr, QColor(0, 0, 0, 170))
                 painter.setPen(QColor(255, 230, 120))
                 painter.drawText(tr, Qt.AlignCenter, f'screen {k}')
+        # S175: every jump as an arrow from its cell down to its landing (screen below)
+        pen = QPen(QColor(255, 120, 40))
+        pen.setCosmetic(True)
+        pen.setWidth(2)
+        for k, x, y, ly in self.jumps:
+            c = k % GRID_COLS - self.origin[0]
+            r = k // GRID_COLS - self.origin[1]
+            x0 = c * SW + x * CELL + CELL / 2
+            y0 = r * SH + y * CELL + CELL / 2
+            y1 = (r + 1) * SH + ly * CELL + CELL / 2
+            painter.setPen(pen)
+            painter.drawLine(QPointF(x0, y0), QPointF(x0, y1))
+            painter.drawLine(QPointF(x0, y1), QPointF(x0 - 4, y1 - 5))
+            painter.drawLine(QPointF(x0, y1), QPointF(x0 + 4, y1 - 5))
+            painter.drawRect(QRectF(x0 - CELL / 2 + 1, y0 - CELL / 2 + 1, CELL - 2, CELL - 2))
         painter.restore()
 
 
@@ -281,6 +298,18 @@ class WholeRoomView(QWidget):
                 continue
             img.paste(pic, ((k % GRID_COLS - c0) * SW, (k // GRID_COLS - r0) * SH))
         v.origin, v.cols, v.rows, v.keys = (c0, r0), cols, rows, list(keys)
+        v.jumps = []
+        if self.src[0] == 'custom':                     # S175: the room's jumps
+            try:
+                from editor2.core import jumps as JU
+                seen = set()
+                for k, _s, _i, e in JU.room_jumps(self.s.doc.room(self.src[1])):
+                    t = (k, int(e['x']), int(e['y']), int(e['land_y']))
+                    if t not in seen and k + GRID_COLS in keys:
+                        seen.add(t)
+                        v.jumps.append(t)
+            except Exception:                                    # noqa: BLE001
+                v.jumps = []
         v.current = self.current
         v.item.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
         v.scene_.setSceneRect(0, 0, cols * SW, rows * SH)

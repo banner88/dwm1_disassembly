@@ -248,7 +248,7 @@ class HintsMixin:
         for e in self.npc_entries(room, key, state_idx):
             v = self.npc_view(room, e)
             if (v['x'], v['y']) == (int(x), int(y)) and v['kind'] in (
-                    'examine', 'step', 'spawn', 'statue', 'monument', 'archive'):
+                    'examine', 'step', 'spawn', 'statue', 'monument', 'archive', 'jump'):
                 raise ValueError(f"cell ({x},{y}) already has a {v['kind']} here")
 
     def _hint_new_id(self, room, base):

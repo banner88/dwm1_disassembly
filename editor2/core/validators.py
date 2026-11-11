@@ -151,6 +151,10 @@ def validate(prj, generated=None):
     _e, _w = _HT.problems(prj)
     errors += _e
     warnings += _w
+    from . import jumps as _JU                          # S175: jumping points
+    _e, _w = _JU.problems(prj)
+    errors += _e
+    warnings += _w
     from . import page2 as _P2                          # S168: page 2 (VRAM bank 1 tiles)
     _e, _w = _P2.problems(prj)
     errors += _e

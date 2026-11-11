@@ -10,6 +10,52 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-11 (Session 175 — **SCREENS + JUMPING POINTS (ROADMAP P3.3n): COPY A SCREEN'S ART AND PASTE
+> IT OVER ANOTHER SCREEN OF THE ROOM (A BACKUP), SHIFT EVERYTHING ON A SCREEN ONE CELL (+ EVERY ARRIVAL INTO IT), AND THE
+> GREATTREE CLIFF JUMP AS AN EDITOR OBJECT — WALK ONTO IT, FALL STRAIGHT DOWN TO A CELL OF THE SCREEN BELOW** (the user: "1)
+> On multi screen rooms I need the ability to copy-paste a whole room into a different screen. That way I can keep backups
+> of the rooms I have. Also I want to be able to insert a row/shift the entire set of rooms … 2) Jumping points. I want to
+> be able to set in ui a jumping point like in GreatTree (where you step on the jumping steps) and set where it dumps you on
+> the screen below"; conferred → "dont worry about inserting columns copying is enough. Copying should ONLY work on the
+> same screen of multi-screen rooms for now. It's a way to bank a room somewhere else. Should copy sprites + tiles but
+> nothing else. If you paste you should keep underlying cutscenes, triggers, entries, doors, scripts, etc. It's just a
+> visual thing. I assume I am able to shift all the scripts left/right and up/down easily in case tiles adjust? The jump
+> sounds great" → "1) perfect. 2) Stamps is fine. 3) Yes great. Also keeps walkability etc.").
+> **Built S175, NOT yet user-tested.** Byte-neutral for a project without jumps (no engine / template change; the example
+> pin unchanged).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.x, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (PyBoy, the original ROM — ROOM_DATA_FORMAT "Jumping points"):** a GreatTree jump is NOT a tile behaviour —
+> a `$90` STEP-ON trigger on the bump cell (screen 0 (6,6) from state 2, screen 4 (6,6), screen 8 (6,7); found by
+> `extract_room.py --step N` over the states — the hijacked state 0 had none on screen 0) running bank $0C
+> GreatTree_Script18-20: `$D9E8 := 1, sound $55, walk_fast, npc_walk_y player +96 / +48 px, wait_movement`. The player
+> walks 2 px a frame under the view, the script ends, THEN the screen scrolls; `$D9E8` is cleared only by the scroll's end
+> (bank $06 `ScrollEndCommit`). One byte of script 19 patched in ROM copies: a landing on the SAME screen = a soft lock;
+> TWO screens down = odd controls; the screen directly below, any row = works (in a wall = stuck in it).
+> **Built:** NEW `editor2/core/jumps.py` (the Jump object `{"kind": "jump", "x", "y", "land_y"}` in a screen's / state's
+> npcs, lowered by `Project.__init__` to exactly the game's trigger + script; errors: no screen below / off the screen;
+> warnings: a wall at the jump or the landing, an exit on the way down), NEW `editor2/core/screen_tools.py` (`screen_visual` /
+> `paste_screen_visual` — tiles, colours, palette, stamps, same room; `shift_screen_objects` — every object of the screen in
+> every state, its stamps and cutscene cells, and every arrival into it from anywhere; edge exits stay; a refusal moves
+> nothing); the Rooms tab: + More ▸ + Jump (J), J↓ / ↓J markers + fall lines, the Jump page (the screen below as a picker),
+> Whole-room arrows; the mini-map menu (Copy screen / Paste over / Shift objects ▸ / Remove), Copy screen / Paste here /
+> Objects ◀▶▲▼ under it, ⌘⇧C / ⌘⇧V. PROJECT_COMPILER §2.80, EDITOR_DESIGN §5.1 "As built S175", help 10 / 11 / glossary;
+> `EDITOR_REVISION` S175. **Annotation (Iron Rule 6):** bank $06's screen-scroll machine re-sectioned in both trees
+> (`ScreenScrollTick`, was `Jump_006_62f6`; the four direction tables `ScrollLeft` / `Right` / `Up` / `Down` → `Begin` /
+> `$66B8` (the new screen's NPCs) / `$66C7` (the room's script 0 runs at every scroll) / `Step` / `ScrollEndCommit`) —
+> clean build `1ca65793…`.
+> **Measured in the game:** NEW `tools/walk_jumps.py` on the user's project + save (GreatLog: screen 1 (3,7) → screen 5
+> row 3, screen 5 (3,7) → screen 9 row 1): **16 / 16** (only those entries changed; the script == GreatTree_Script19's
+> words; the lock; 2 px a frame; the scroll + the lock cleared; the landing tile; the player walks away); `--negative`
+> (planned, not added) **8 FAIL**.
+> **Test ROM:** `DWM-S175-jumps-test.gbc` (`0c03d1b3…`, patched) = the user's project 7 + those two jumps in GreatLog.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2158 PASSED (+ `test_s175`; the pin `18e6f102…`, patched,
+> unchanged); test_app `--rom` PASS (+ `s175_jumps_screens`; `s173_room_aids` now expects + Jump first in + More; the GUI
+> build == the pin); test_canvas `--rom` PASS (one after another). Help picture `tab_rooms.png` regenerated.
+> **Not done (not asked):** the game's own jumps in a Make-editable copy of GreatTree stay raw step-on spots + scripts
+> (they work; not shown as Jump objects).
+> **Next:** the user's test of jumps / Copy screen / Paste / Shift objects in the editor + the test ROM; then the "Awaiting
+> a user test" list / the editor's finalization.
+
 > Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
 > PNGs (CLEAR = THE TILES SHOW, HALF-CLEAR = LIGHT, FRAMES = MOVEMENT), THE STAMP TOOL (T: PLACE / DRAG / DEL / ⌘C ⌘V /
 > RIGHT-CLICK LIGHT ON-OFF + COLOUR), THE TILES NEVER CHANGED — THE BUILD BAKES THE STAMPS INTO A COPY** (the user, after
@@ -77,89 +123,8 @@
 > **Next:** the user's test of stamps (import the two PNGs, place / move / copy / paste / remove, the light colours,
 > the rows on the Palettes page, ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
 
-> Last verified: 2026-11-10 (Session 173 — **ROOM-BUILDING AIDS (ROADMAP P3.3l): TWO BARS OVER THE CANVAS (THE TOOLS;
-> THE VIEW), STATUE / MONUMENT / ARCHIVE IN + MORE, ZOOM 1-12× WITH HALF STEPS + FIT, CLEAN VIEW (HOLD H), THE STILL TOOL
-> (A NEW TILE FROM A CHOSEN FRAME OF A MOVING CELL — THE GAME'S ANIMATION OR YOUR OWN), THE BRUSH UNDER THE MOUSE, WHERE A
-> TILE IS USED, THE WHOLE ROOM, A REFERENCE WINDOW** (the user: "What is statue vs monument? Unclear. Move archive button
-> and something else button to the side arrow and put eyedrops and walkability as button … Allow removal of grid (toggle)
-> … 'De-animate' button … Allow zooming in … 1.5x and 2x. Maybe even 3x. Anything else you can suggest"; the audit
-> conferred → "1) Yes good. Those are very situational. 2) No stop entirely. 3) Make a new un-animated tile I can use. Do
-> NOT count the previous animated tile as used. 4) yes. 5) I want to choose a frame. Others: Brush preview … Show where
-> tile is used … Whole room view - yes. Reference window - YES. proceed").
-> **Built S173, NOT yet user-tested; byte-neutral for the ROM** (no compiler / engine change; the example pin unchanged).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start; HEAD's
-> test_app `--rom` STOPPED at the Capacity block (a deleted `QTreeWidgetItem` — on a clean HEAD copy too; fixed in the
-> test, KEY_LESSONS S173).
-> **The audit (measured, offscreen grab of the user's project at 1,512 px):** the one canvas tool bar showed up to + NPC;
-> Paint, Eyedrop, Walkability, the Grid toggle and the 1-6× zoom all existed behind the » overflow (KEY_LESSONS S173 "A
-> control the user cannot see does not exist"). Statue = the S154 memorial (a monster that won a big battle and has left);
-> Monument = the S158 breeding hint (teaches a cross); Archive = one family's learned crosses.
-> **Built (EDITOR_DESIGN §5.1 "As built S173"):** the tools row (Select / Paint / Eyedrop / Walkability / Still / + Door /
-> + Examine / + NPC / + More ▸ Statue · Monument · Archive — keys U / O / K kept) and the view row (Grid / Palettes /
-> Markers / Anim / Clean / ▶ Play / − zoom + / Fit / Whole room / Reference), short state-row labels — every control
-> shown at 1,512 px; `canvas.ZOOMS` (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12; ± keys, ⌘ + wheel, pinch); clean view (the
-> button or H held); the Still tool: `animate.cell_frames` (the game handler's measured schedule + the room's own
-> animations, replayed together) → `room_view.StillFrameDialog` (the frame on screen preselected while ▶ Play runs) →
-> `Document.make_still_tile` (a NEW metatile in still slots on the same side of the split, the brush; no cell changes,
-> the moving tile untouched — the reading of "do not count the previous animated tile as used"; the Animate tab's
-> older *Make the selected cell still* kept); the brush drawn under the mouse; the picker's hover outlines the cells
-> using a metatile (+ counts); NEW `editor2/app/rooms/room_view.py` (Whole room, Reference — a read-only `RoomCanvas`,
-> right-click = brush on the same tiles). Help 10_rooms / 15_animated_tiles / 00 / 13 / 77 / 78 / glossary;
-> `EDITOR_REVISION` S173.
-> **Measured in the game:** NEW `tools/walk_still.py` (the editor's own code on a copy, a build, the user's save) —
-> GreatLog screen 5, the GreatTree sway, frame 4: **9 / 9** (the still cell 1 picture over 1,200 frames == the chosen
-> frame; the moving cell 8; every game picture one the editor offered); `--negative` (the moving tile painted) **2
-> FAIL**. The copy took page-2 slot 201 (page 1's wall side was full).
-> **Test ROM (optional; editor-only session):** `DWM-S173-still-test.gbc` (`2aa6a330…`, patched) = the user's project + a still tile (frame 4 of
-> the swaying bark at GreatLog screen 5 cell (2,2)) painted on cell (4,1) of that screen.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin unchanged); test_app `--rom` PASS
-> (+ `s173_room_aids`; the GUI build == the pin); test_canvas PASS. (Run alone: test_app and test_compiler at the same time
-> share the example project — a test_compiler "stray sheet file" FAIL then was a crashed debug run's leftover
-> `ts_2A_08.2bpp`, removed; a passing `s173_room_aids` leaves the assets unchanged.) Help picture `tab_rooms.png` regenerated
-> (`tools/help_screenshots.py --only Rooms`).
-> **r2 (user: "I made the animation still but the play here button shows it still animating in-game? … The rest of
-> mechanics seem fine"):** diagnosed on the user's r2 project — their 12:15 build (`5cc6aa67…`, patched) == a build of the
-> project they sent, in which the still tile `[14, 15, 30, $149]` was in My metatiles and NO layout drew it: r1's Still
-> tool changed no cell (KEY_LESSONS S173 r2). Not the engine: VRAM bank 1 `$40-$4F` (the page-2 twins of the sway's
-> tiles) 1 picture over 600 idle frames + walking while bank 0 showed 8. Fix: the clicked cell gets the still tile
-> (`make_still_tile(place=…)`, one undo step); `walk_still.py --place` **8 / 8** on the user's project (cell (2,2),
-> frame 5: 1 picture; the moving tile 8), `--negative` (nothing placed) FAIL — the user's report reproduced. Test ROM
-> `DWM-S173r2-still-test.gbc` (`b1115881…`, patched) = the user's r2 project with cell (2,2) of GreatLog screen 5 made
-> still (frame 5). test_app `s173_room_aids` (the clicked cell only); `EDITOR_REVISION` S173r2; help 10 / 15 /
-> glossary. Built S173 r2, NOT yet user-tested. **Checks (r2):** verify_integrity PASS; test_compiler `--rom` ALL 2140
-> PASSED; test_app `--rom` PASS; test_canvas PASS (run one after another).
-> **r3 (user: "1) Allow the editor to import them then, please, rather than fiddling with my project. 2) Nah that's a
-> bit too big … It should be 1 or 2 tiles (1 or 2 vertically). 3) … use the same number of frames and look as the other
-> torches in the game"):** Animate tab → **Import frames from PNG…** — NEW `editor2/core/anim_import.py` (read_frames /
-> plan / preview / apply) + `editor2/app/rooms/anim_import_dialog.py`; EDITOR_DESIGN §5.1 "As built S173" (the import
-> bullet), help 15 / glossary; `EDITOR_REVISION` S173r3. Measured: NEW `tools/walk_anim_import.py` on the user's project +
-> save — a 16×32 torch at GreatLog screen 5 (2,0)-(2,1) and a 16×16 one at (5,0): **9 / 9** (rows 1 + 2 in the palette RAM,
-> each piece on its planned row, only + every imported frame, a step every 32 frames (median gap 32), walls kept);
-> `--negative` **4 FAIL**. test_app `s173_anim_import`. The torch art (2 frames, the Room of Beginning's torch row orange /
-> cream / red / black + a light row brown / orange / tan / black over the bark; KEY_LESSONS S173 r3 on why a glow is at
-> least the flame's own 8×8 pieces) is session material, not repo content. Test ROM `DWM-torch-import-test.gbc`
-> (`34b96212…`, patched) = the user's r4 project + both torches. Built S173 r3, NOT yet user-tested. **Checks (r3):** verify_integrity PASS; test_compiler `--rom` ALL 2140
-> PASSED; test_app `--rom` PASS (+ `s173_anim_import`); test_canvas PASS (one after another).
-> **r4 (user: "Narrow is worse and looks square. But because you drew OVER other tiles I am concerned the background
-> wont fit together properly … Can you also show me animated?"):** the import takes SEE-THROUGH pixels — clear = the
-> map stays, half-clear = light (the colour unless the map is black) — composited over the screen as it is
-> (`anim_import.plan`); the halo torch (the round-2 look the user loved, 2 frames, halo 12 / 13 px, flame in 1 cell +
-> stick below) is now an OVERLAY PNG with no wall in it: imported at GreatLog screen 5 (0,0)-(2,1) — bark it was never
-> drawn on — `walk_anim_import.py` 9 / 9, the grain continuous through the halo (the tool gained `--gif`: the screen
-> animated). Test ROM `DWM-halo-overlay-test.gbc` (patched). `EDITOR_REVISION` S173r4. Built, NOT yet user-tested.
-> Then (user: "transparency is great … Only tip wiggles I'd like the whole shape to move a little more … It seems to
-> wiggle slightly faster ever x cycles? why?"): the whole flame now leans −2 / +2 px at the top (the base on the stick);
-> (then, user: "it needs to change in shape not just wave back and forth … The halo is perfect": two DIFFERENT
-> flames — tall / narrow, one tip; wider / lower, a split tip, the foot wider — 9 / 9, test ROM
-> `DWM-halo-shapes-test.gbc` (`f0ca2897…`, patched)); MEASURED 1,200 frames: every piece changes every 32 frames exactly (8 pieces on one frame, the other 4 the next — the
-> 8-tile groups); the unevenness was the GIF (every 4th frame at a fixed 67 ms) — `walk_anim_import.py --gif` now holds
-> each picture for its true time (KEY_LESSONS S173 r4). 24 pieces (6 cells), 12 new tiles, 12 moving. 9 / 9; test ROM
-> `DWM-halo-sway-test.gbc` (`07959500…`, patched). **Checks (r4):** verify_integrity PASS; test_compiler `--rom` ALL 2140
-> PASSED; test_app `--rom` PASS; test_canvas PASS.
-> **Next:** the user's test of the Rooms tab at their window size; then the "Awaiting a user test" list / the
-> editor's finalization.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in PROJECT_STATE.
 - **S174** (2026-11-10): ROADMAP P3.3m stamps — pictures on top of a room's tiles: `custom.stamps[]` + `rooms[].stamps[]` are data (the project's tiles never change), the build bakes a copy (NEW `editor2/core/stamps.py`; `compile_project` / `measure_banks` / `capacity.measure`); the Stamp tool (T), the Stamps page (NEW `stamps_panel.py`), light on / off + colour, nearest colours warned; the canvas == the bake; `tools/walk_stamps.py` 12 / 12 on the user's save (removed = the same ROM md5), negative 6 FAIL; the S173 torch art redrawn from the game's own torch pixels (the user's two picks, as stamp PNGs). EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79, KEY_LESSONS S174. Byte-neutral without stamps. **r2 (2026-11-11):** the rows a stamp needs are written into the project's palette when placed (`stamps.claim`, recorded on the placement, named on the Palettes page, kept by Re-plan, usable by tiles). Built S174, NOT yet user-tested.
 - **S173** (2026-11-10): ROADMAP P3.3l room-building aids — the measured cause of the user's asks (one tool bar overflowing at 1,512 px: Eyedrop, Walkability, Grid and Zoom existed behind »); two bars (tools / view), + More ▸ Statue · Monument · Archive, zoom 1-12× with half steps + Fit + pinch, clean view (H held), the Still tool (`animate.cell_frames` → a frame chooser → `make_still_tile`: a new still metatile; r2: on the clicked cell — r1 changed no cell and the user's cell kept moving; the game's animation and the room's own), brush preview, where-used outline, NEW `room_view.py` (Whole room, Reference); `tools/walk_still.py` 9 / 9 on the user's save (negative 2 FAIL); HEAD's test_app Capacity block fixed. EDITOR_DESIGN §5.1 "As built S173", KEY_LESSONS S173. Byte-neutral for the ROM. Built S173, NOT yet user-tested.
 - **S172** (2026-11-08): Foods instead of meats (ROADMAP P3.19, user-directed) — `gamedata.foods`, a tick on the Items tab: items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's edits), each food its own plain NPC sprite $58-$5C from `editor2/assets/foods/*.png`, the meat prop $5F = the Apple; regions `npc_food_sheets` (ROM0) / `npc_food_pals` (bank $05, new overlay copy), sheets in bank $77 (gfx-IDs $7717-$771B), `NpcDrawPlain` → `NpcStaticFrame77` (one-frame objects held on frame 0); NPC sprite tables re-sectioned both trees (`tools/resection_npc_sprite_tables.py`); animation $2C annotated as the NOTE (the audit's "flying meat" was wrong — KEY_LESSONS S172); `tools/walk_foods.py` 32 / 32; the outstanding fixes: `test_canvas.py` passes again, the Balance tab's first-show stall 3.7 s → 0.16 s (`peek_ctx`). r2: the pictures redrawn in the game's pickup style; each food its own gate pickup icon (VRAM bank 1; bank $77 entries 33 / 34 hooked into banks $16 / $01); `gamedata.food_art` drawn in the Items tab (Apply / Restore default); walk 47 / 47 (negative 9 FAIL) — r2 USER-CONFIRMED 2026-11-08 13:17. r3: each food its own bag description by strength (walk 52 / 52) — USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please"). Pin `18e6f102…` (patched; round 1 `9ee0b97b…`, patched, historical).
@@ -572,6 +537,8 @@ real project starts, so these are best confirmed on the way into it:
   chosen; the new tile in My metatiles), the brush preview, where-used, Whole room, Reference.
 - S174: stamps — import, the Stamp tool (place / drag / Del / ⌘C ⌘V / right-click light), light colours, the "!"
   warnings, ▶ Play here with stamps (`DWM-S174-stamps-test.gbc`).
+- S175: jumps (+ More ▸ + Jump, the landing picker, ↓J drag, `DWM-S175-jumps-test.gbc`: GreatLog's two ledges), Copy
+  screen / Paste over (a backup and back), Shift objects ◀▶▲▼ (with the GreatTree door into GreatLog screen 5).
 - S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —
   USER-CONFIRMED 2026-11-08 13:17 / 19:19; this fix was not mentioned).
 

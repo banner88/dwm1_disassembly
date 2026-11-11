@@ -8126,3 +8126,28 @@ the old path kept beside it (`_find_match_scan`).
   torches — the user (angrily): "currently it just pretends its not there". Anything an
   overlay takes from a shared budget (palette rows) is written where the user looks
   (`stamps.claim`) and labelled; only what is truly per-build (the tiles) stays in the bake.
+
+### A "jumping step" was a step-on trigger, and a lock only a scroll clears (S175)
+- **Symptom (the ask):** "set in ui a jumping point like in GreatTree … and set where it dumps
+  you on the screen below". Walking onto the bump in a fresh hijacked state did nothing — the
+  player just stopped there.
+- **Root cause:** the jump is not a tile behaviour (no `$AA` class, nothing in the movement
+  code): it is a `$90` step-on trigger whose script walks the player down — and GreatTree
+  screen 0 has it only from state 2 (after the opening's cliff scene); the hijacked bedroom
+  state had every counter at 0. `extract_room.py --step N` over the states found the three
+  `$90` entries in seconds. The script locks input (`$D9E8 := 1`) and the ONLY clear is the
+  end of a screen scroll (bank $06 `ScrollEndCommit`), which starts after the script ends.
+  Patching the fall length in ROM copies (one byte) measured the consequences: same screen =
+  locked for good, two screens = odd controls, the screen below = fine.
+- **Rule:** before modelling a "special tile", list the room's interact entries in EVERY state
+  (a story state hides them) and read the script; then A/B the one parameter that matters by
+  patching a ROM copy — the editor offers only what the game measurably survives (a jump lands
+  on the screen directly below).
+
+### An offscreen GUI script hangs on a message box (S175)
+- **Symptom:** a Qt-offscreen driver of the Rooms tab never returned (600 s timeout).
+- **Root cause:** a refusal opened a modal `QMessageBox` — `exec()` waits for a click nobody
+  makes.
+- **Rule:** in GUI drivers, start a `QTimer` that rejects `QApplication.activeModalWidget()` and
+  prints its text, plus `faulthandler.dump_traceback_later`; a hang then becomes a line of
+  output.

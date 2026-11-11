@@ -5,7 +5,9 @@ Shows the 4x2 screen grid of the custom-room schema (ROOM_DATA_FORMAT
 schema exposes 4x2 today) with a live thumbnail per declared screen and
 the screen in view highlighted — so "what is THE room" vs "the screen I
 am editing" is always visible. Click a screen to page to it; click an
-empty cell to add a screen there; right-click a screen to remove it.
+empty cell to add a screen there; right-click a screen for its menu: Copy screen /
+Paste screen here (S175: the tiles, colours and stamps — editor2/core/screen_tools.py),
+Shift objects ◀ ▶ ▲ ▼, Remove screen.
 """
 
 from PIL import ImageQt
@@ -23,12 +25,16 @@ class MiniMap(QWidget):
     screenSelected = Signal(int)
     addScreenRequested = Signal(int)
     removeScreenRequested = Signal(int)
+    copyScreenRequested = Signal(int)          # S175
+    pasteScreenRequested = Signal(int)         # S175
+    shiftRequested = Signal(int, int, int)     # S175: key, dx, dy
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.thumbs = {}         # key -> QPixmap
         self.current = 0
         self._hover = None
+        self.can_paste = None    # S175: the copied screen's label (None = nothing copied)
         self.setMouseTracking(True)
         self.setFixedSize(self.sizeHint())
 
@@ -100,9 +106,31 @@ class MiniMap(QWidget):
         if ev.button() == Qt.RightButton:
             if k in self.thumbs:
                 m = QMenu(self)
-                a = m.addAction(f'Remove screen {k}')
-                if m.exec(ev.globalPosition().toPoint()) == a:
+                m.setToolTipsVisible(True)
+                cp = m.addAction(f'Copy screen {k}  (⌘⇧C)')
+                cp.setToolTip('Its tiles, colours and stamps in the state shown — to paste over '
+                              'another screen of this room (a backup of the art)')
+                ps = m.addAction(f'Paste over screen {k}  (⌘⇧V)'
+                                 + (f' — {self.can_paste}' if self.can_paste else ''))
+                ps.setEnabled(bool(self.can_paste))
+                ps.setToolTip('The tiles, colours and stamps only: its NPCs, doors, triggers, '
+                              'cutscenes and scripts stay')
+                sm = m.addMenu('Shift objects')
+                acts = {}
+                for txt, d in (('◀ left', (-1, 0)), ('▶ right', (1, 0)), ('▲ up', (0, -1)),
+                               ('▼ down', (0, 1))):
+                    acts[sm.addAction(txt)] = d
+                m.addSeparator()
+                rm = m.addAction(f'Remove screen {k}')
+                got = m.exec(ev.globalPosition().toPoint())
+                if got == rm:
                     self.removeScreenRequested.emit(k)
+                elif got == cp:
+                    self.copyScreenRequested.emit(k)
+                elif got == ps:
+                    self.pasteScreenRequested.emit(k)
+                elif got in acts:
+                    self.shiftRequested.emit(k, *acts[got])
             return
         if k in self.thumbs:
             self.screenSelected.emit(k)

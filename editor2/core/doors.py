@@ -816,7 +816,7 @@ class DoorsMixin:
         lst = self.npc_entries(room, key, state_idx)
         for e in lst:
             v = self.npc_view(room, e)
-            if v['kind'] in ('examine', 'step', 'spawn') and (v['x'], v['y']) == (int(x), int(y)):
+            if v['kind'] in ('examine', 'step', 'spawn', 'jump') and (v['x'], v['y']) == (int(x), int(y)):
                 raise ValueError(f'cell ({x},{y}) already has an {v["kind"]} spot')
         e = {'kind': kind, 'x': int(x), 'y': int(y), 'script': script}
         if kind == 'examine':

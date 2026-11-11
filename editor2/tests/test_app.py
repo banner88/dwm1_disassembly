@@ -4694,7 +4694,7 @@ def s173_room_aids(app, w):
         assert wd.isVisible(), f'{wd} hidden at 1512 px'
     assert not rt.layer_buttons['walk'].isVisible(), 'Walk = the Walkability tool, shown once'
     assert [a.text() for a in rt.more_btn.menu().actions()] == \
-        ['+ Statue (U)', '+ Monument (O)', '+ Archive (K)']
+        ['+ Jump (J)', '+ Statue (U)', '+ Monument (O)', '+ Archive (K)']   # S175: + Jump
     for a in (rt.act_add_statue, rt.act_add_monument, rt.act_add_archive):
         assert a in rt.actions(), 'the key works without opening + More'
     w.resize(size0)
@@ -5298,6 +5298,81 @@ def s174_stamps(app, w):
           f'medal_vault uses (island_s0 untouched) and == the canvas both frames'
           f'{" (warned: nearest colours)" if bwarn else ""}; meters bake; delete, remove; '
           f'undone exactly')
+
+
+def s175_jumps_screens(app, w):
+    """S175 (ROADMAP P3.3n; user: "copy-paste a whole room into a different screen … keep
+    backups"; "shift all the scripts left/right and up/down"; "Jumping points … set where it
+    dumps you on the screen below"): Rooms → + More ▸ Jump (J) on gate_island screen 0 —
+    the landing picked by row (panel), the ↓J marker on screen 4, dragged; the Whole room
+    arrows; Copy screen 4 / Paste over screen 0 (the art only, its objects stay); Shift
+    objects ◀ (+ the arrivals into it) and back; every step undone to the start."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'gate_island':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'gate_island'
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt.select_screen(0)
+    app.processEvents()
+    assert rt.act_add_jump in rt.more_btn.menu().actions(), '+ Jump not in + More'
+    rt.canvas.selected_cell = (4, 6)
+    rt.act_add_jump.trigger()
+    app.processEvents()
+    jumps = [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump']
+    assert len(jumps) == 1 and (jumps[0]['x'], jumps[0]['y']) == (4, 6), jumps
+    assert rt.jump_panel.isVisible() is not None and not rt.jump_panel.isHidden(), \
+        'the Jump panel is not shown'
+    assert any(m[0] == 'jump' and (m[1], m[2]) == (4, 6) for m in rt.canvas.markers)
+    rt._jump_fields({'land_y': 3})
+    app.processEvents()
+    assert [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump'][0]['land_y'] == 3
+    rt.select_screen(4)
+    app.processEvents()
+    land = [m for m in rt.canvas.markers if m[0] == 'jump_land']
+    assert land and (land[0][1], land[0][2]) == (4, 3), land
+    rt._move_marker(land[0][5], 4, 5)               # what a drag of the ↓J marker does
+    app.processEvents()
+    assert [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump'][0]['land_y'] == 5
+    from editor2.app.rooms.room_view import WholeRoomView
+    v = WholeRoomView(s, w)
+    v.show_room(('custom', 'gate_island'), 4, 0)
+    app.processEvents()
+    assert v.view.jumps == [(0, 4, 6, 5)], v.view.jumps
+    v.close()
+    # copy screen 4, paste over screen 0: the art; screen 0 keeps its objects
+    objs0 = [{k: x for k, x in st.items() if k in ('npcs', 'exits')}
+             for st in doc.states(room, 0)]
+    rt._copy_screen(4)
+    assert rt.btn_paste_screen.isEnabled()
+    rt._paste_screen(0)
+    app.processEvents()
+    r = s.renderer
+    assert r.render_screen(room, '0', 0).tobytes() == r.render_screen(room, '4', 0).tobytes()
+    assert [{k: x for k, x in st.items() if k in ('npcs', 'exits')}
+            for st in doc.states(room, 0)] == objs0, 'paste changed the objects'
+    # shift ◀ and ▶
+    xs = [e['x'] for e in doc.npc_entries(room, 0, 0)]
+    rt._shift_objects(0, -1, 0)
+    app.processEvents()
+    assert [e['x'] for e in doc.npc_entries(room, 0, 0)] == [x - 1 for x in xs]
+    assert 'Shifted' in rt.status_line.text(), rt.status_line.text()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    rt._screen_clip = None
+    rt.btn_paste_screen.setEnabled(False)
+    rt.minimap.can_paste = None
+    print('OK: S175 jumps + screens — + More ▸ Jump on gate_island (4,6), the landing row from '
+          'the panel and by dragging ↓J on screen 4, Whole room arrow; Copy screen 4 / Paste over '
+          '0 (picture == screen 4, objects kept); Shift objects ◀; undone exactly')
 
 
 def s171_app_window(app, w):
@@ -7422,6 +7497,7 @@ def main():
     s173_room_aids(app, w)
     s173_anim_import(app, w)
     s174_stamps(app, w)
+    s175_jumps_screens(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

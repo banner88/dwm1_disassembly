@@ -430,6 +430,22 @@ class Project:
                                                    in ('monument', 'archive'))]
             self.custom['scripts'] = [s for s in self.custom.get('scripts') or []
                                       if not str(s.get('id', '')).startswith(_HT.SCRIPT_PREFIX)]
+        # S175 (ROADMAP P3.3n): the jumping points -> step-on triggers + the GreatTree
+        # jump script (jumps.py); a bad jump is reported by validators.validate (jump_error)
+        # and every jump dropped
+        from . import jumps as _JU
+        self.jump_error = None
+        try:
+            _JU.lower(self)
+        except _JU.JumpError as ex:
+            self.jump_error = str(ex)
+            for _r in self.custom.get('rooms') or []:
+                if isinstance(_r, dict):
+                    for _scr in (_r.get('screens') or {}).values():
+                        if isinstance(_scr, dict):
+                            for _st in _JU._states(_scr):
+                                _st['npcs'] = [n for n in (_st.get('npcs') or [])
+                                               if not _JU.is_jump(n)]
         self._lower_talk_scripts()
         self._lower_shop_scripts()
         # S126 (ROADMAP P3.14e1): service NPCs (+ shop line sets) — the vanilla

@@ -445,7 +445,7 @@ class MemorialMixin:
                                      f'({ex},{ey - 1}) and ({ex},{ey})')
                 continue
             v = self.npc_view(room, e)
-            if v['kind'] in ('examine', 'step', 'spawn') and (v['x'], v['y']) == (int(x), int(y)):
+            if v['kind'] in ('examine', 'step', 'spawn', 'jump') and (v['x'], v['y']) == (int(x), int(y)):
                 raise ValueError(f'cell ({x},{y}) already has an {v["kind"]} here')
 
     def place_statue(self, room, key, state_idx, x, y, sid, pal=None):

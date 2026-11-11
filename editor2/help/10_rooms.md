@@ -62,6 +62,49 @@ the open log naming the room and the screens. A copy of one of the game's
 rooms (Make editable) keeps the original room's shape — its gaps are walled
 off in the game, so they are left alone and not reported.
 
+**Copy / paste a screen (S175)** — a backup of a screen's art in another screen of the
+same room. Right-click a screen on the mini-map → **Copy screen** (or the **Copy screen**
+button under the mini-map, **⌘⇧C**): its tiles (walkability comes with them — it is the
+tiles'), its colours (palette slots + the palette it shows) and its **stamps**, in the
+state shown, are kept as they are NOW. Then right-click another screen of the room →
+**Paste over screen N** (or **Paste here**, **⌘⇧V**): that screen (the state shown) gets the
+copied art — and keeps everything else: its NPCs, examine spots, triggers, jumps, doors,
+exits, cutscenes, scripts and states. Its stamps are replaced by the copied ones. One Undo
+puts it back. A paste goes only into a screen of the room it was copied from, and only a
+screen that exists (add it first). Tip: keep a spare screen (an empty corner of the grid
+nobody walks to) as the bank — remember it is still part of the room the player walks in.
+
+**Shift objects ◀ ▶ ▲ ▼ (S175)** — under the mini-map (or right-click a screen → *Shift
+objects*): moves EVERYTHING placed on the screen one cell — NPCs, examine spots, step-on
+triggers, jumps, statues, monuments, archives, doors and exits, stamps, and its cutscenes'
+places (trigger cell, start, walks, appear / fly targets, tile pieces) — in every state;
+and every ARRIVAL into the screen from anywhere follows: doors and exits of any room that
+lead here, routed game doors, cutscene / conversation / talk moves, the Milly arrival, the
+new game's start, the hub, gate arrivals, raw script warps. Use it after the art moved
+(a pasted backup a cell off). **Edge exits** (on the left / right column or the top row:
+they fire when the player pushes into the screen's edge) stay on the edge. If anything
+would leave the screen (or a door would land on an edge), **nothing moves** and the
+message names what is in the way. A jump from the screen above keeps its column (a jump
+falls straight down) — its landing row follows an up / down shift. Raw script walks to
+absolute pixels are not moved (the line says how many). One Undo puts it all back.
+
+**Jumping points (S175)** — the GreatTree cliff jump: **+ More ▸ + Jump (J)** on the
+selected cell. When the player WALKS onto that cell the game plays the jump sound and
+walks him straight down — through anything — to the landing cell on the **screen below**,
+then scrolls there (exactly what the game's own three GreatTree jumps do). The Object
+page shows the screen below: click a cell of the yellow column (or set **row**) to choose
+where he lands — red crosses are walls (he would be stuck inside one). The landing is
+shown on the screen below as **↓J**: drag it up or down; double-click it to go back to the
+jump. **sound** ($55 = the game's), **in states** (a jump can be there only in some states —
+GreatTree's first jump appears after the opening scene), **Go to the screen below**,
+**Remove jump**. Rules (measured in the game): a jump always lands on the screen directly
+below, in the same column — a landing on the same screen would lock the player for good,
+two screens down leaves the controls odd, so the editor refuses both; a screen with no
+screen below cannot have one. Warnings: the jump or landing cell is a wall; an exit on the
+way down (a scripted walk onto an exit fires it). Paint the jump cell so it looks like a
+ledge — players cannot see an invisible one. In the **Whole room** window every jump is an
+arrow from its cell to its landing.
+
 **Maze…** (Maze screen…, on the screen / state row) fills the shown screen and
 state with one of the gates' maze screens, tiles and palette slots — see
 *Gate themes*.
@@ -83,7 +126,8 @@ opens Tiles. The editor remembers the page you used last.
 **Eyedrop (I)** (or right-click), **Walkability (W)**, **Still (S)** (click a moving cell, pick
 a frame: that cell stops moving — see *Animated tiles*), **Stamp (T)** (a picture on top of
 the tiles — see *Stamps* below),
-then **+ Door (D)**, **+ Examine (X)**, **+ NPC (N)** and **+ More** — the memorial
+then **+ Door (D)**, **+ Examine (X)**, **+ NPC (N)** and **+ More** — a **+ Jump (J)**
+(see *Jumping points* above), the memorial
 **+ Statue (U)** and the breeding-hint **+ Monument (O)** / **+ Archive (K)** (their keys
 work without opening the menu). A **statue** shows a monster that won a boss battle, an
 arena class or Starry Night with you and has left since (see *The memorial*); a
@@ -171,7 +215,8 @@ them.
 
 **Whole room (S173):** every screen of the room joined into one picture in a window of
 its own — the screen edges dashed, the screen on the canvas outlined, the state of your
-choice (or the canvas's: *Follow the canvas*), *Cell grid*, zoom / Fit. It follows every
+choice (or the canvas's: *Follow the canvas*), *Cell grid*, zoom / Fit, every jump as an
+orange arrow (S175). It follows every
 edit; double-click a screen to show it on the canvas. Use it to check that screens line
 up.
 

@@ -305,6 +305,38 @@ kinds really are:
   is exactly that (validator warning, S98). KEY_LESSONS "Spawn point NPC entry can be
   'talked to' — ghost NPC" was this mechanism.
 
+### Jumping points (S175, PyBoy-measured on the original ROM)
+
+The GreatTree cliff jumps ("Jump down the cliff or use the stairs", FAQ) are NOT a tile
+behaviour: each is an ordinary STEP-ON trigger (`$90`) on the bump cell under a plank's
+edge, whose script walks the player straight down. GreatTree map `$01` (every state from 1 /
+2 on — state 0, before the opening's "man falls off the cliff" scene, has none on screen 0):
+
+| Screen | Jump cell | Script (bank $0C) | Fall | Lands on |
+|---|---|---|---|---|
+| 0 | (6,6) | 18 `GreatTree_Script18` | `$60` px = 6 cells | screen 4 (6,4) |
+| 4 | (6,6) | 19 `GreatTree_Script19` | `$60` px | screen 8 (6,4) |
+| 8 | (6,7) | 20 `GreatTree_Script20` | `$30` px = 3 cells | screen 12 (6,2) |
+
+The script: `write_ram $D9E8, 1` (player input locked) · `sound $55` · `$22` walk_fast · `$1B
+npc_walk_y 0, +N px` (actor 0 = the player; a scripted walk ignores walls) ·
+`wait_movement` · `end` (script 18 also zeroes the held / pressed buttons `$C842` / `$C846`).
+Measured (PyBoy, frames from the step onto the bump, screen 4): the script fires on the step
+(`$D8D7` = `$81`), the player walks 2 px a frame (96 px in 64 frames) **below the bottom of the
+view**, the script ends, and only THEN does the screen scroll (wGameState bit 2, screen 4 → 8,
+27 frames); `$D9E8` is cleared at the end of that scroll by bank $06 `ScrollEndCommit` — its only
+clear. Holding Down after landing walks on (and onto the next jump: a chain).
+**The fall length changed in copies of the ROM (one byte of script 19):**
+- 16 px (landing on the SAME screen): no scroll ever starts, `$D9E8` stays 1 — the player
+  can never move again (soft lock);
+- 80 / 64 px (a row of the screen below): works; a landing in a wall leaves the player inside
+  it (can only leave where a neighbour is walkable);
+- 160 px (two screens down): scrolls twice; the controls behave oddly after.
+So a jump must land on the screen DIRECTLY below, same column (the walk is vertical).
+Editor: the Jump object (`{"kind": "jump", "x", "y", "land_y"}`, PROJECT_COMPILER §2.80,
+`editor2/core/jumps.py`) is lowered into exactly this trigger + script; `tools/walk_jumps.py`
+re-measures it on a project build.
+
 ### NPC entries (type byte $00-$7F):
 | Byte | Field |
 |------|-------|

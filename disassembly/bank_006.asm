@@ -3705,7 +3705,7 @@ DispMapS_566b:  ; fake-decode ARTIFACT at offset $566b (mid-table byte, NOT an e
 ;   bit 3  -> bank $19 entry 0 (rst $10 $1900)
 ;   bit 6  battle request latch -> bank $13 entry 3 (rst $10 $1303, the
 ;          battle-transition machine; known_RAM_map $C8EB)
-;   bit 2  -> Jump_006_62f6
+;   bit 2  -> ScreenScrollTick (the screen-to-screen scroll, S175)
 ; then: $D9E8 != 0 or $D8D7 != 0 (script running) -> Jump_006_6284;
 ; else falls through into the free-walk / input handling at $607E.
 ; =============================================================================
@@ -3752,7 +3752,7 @@ FieldStateDispatch:  ; $06:$6034 (was the artifact label `label6_6034`)
 
 .notBattle:
     bit 2, a
-    jp nz, Jump_006_62f6
+    jp nz, ScreenScrollTick
 
     ld a, [$d9e8]
     or a
@@ -4196,28 +4196,45 @@ jr_006_62c6:
     ret
 
 
-Jump_006_62f6:
-    ld a, [$c91d]
+; =============================================================================
+; ScreenScrollTick — $06:$62F6 (was `Jump_006_62f6`; re-sectioned S175 from a
+; misdecoded `rst $00` table). wGameState ($C8EB) bit 2 = a screen-to-screen
+; scroll inside a multi-screen room (FieldStateDispatch routes it here every
+; frame). $C91D = the direction, $C91E = the sub-state of that direction:
+;   [0] ScrollXBegin   wScreenIndex -/+ 1 (left / right) or -/+ 4 (up / down),
+;                      LoadMapS_66e5, bank $0B entry 3 (builds the new screen in
+;                      the $C500 buffer), $C91F = the step counter
+;   [1] $66B8          not in a gate: bank $0B entry 7 (RoomEntry7_RoomInit —
+;                      the new screen's NPC list)
+;   [2] $66C7          not in a gate and no script running: wScriptNPCId := 0,
+;                      wScriptMapType := wMapID, bank $04 entry 5 (ScriptInit —
+;                      the room's script 0 runs at every scroll)
+;   [3] ScrollXStep    move the view 8 px a frame ($FFBB/$FFBC), copy the
+;                      incoming row / column, count $C91F
+;   [4] ScrollEndCommit (shared) — $C500 -> $C300, wGameState bit 2 off, the
+;                      party trail rebuilt, the standing tile, $D9E8 := 0
+; S175 (PyBoy, the GreatTree jumps — ROOM_DATA_FORMAT "Jumping points"): the
+; ONLY place that clears $D9E8 (player input locked by a script); a jump script
+; that ends without a scroll leaves the player locked for good.
+; =============================================================================
+ScreenScrollTick:
+    ld a, [$c91d]                       ; the scroll direction 0-3
     rst $00
-    ld [bc], a
-    ld h, e
-    ld b, [hl]
-    ld h, h
-    dec de
-    ld h, l
-    ld [$fa65], a
-    ld e, $c9
-    rst $00
-    db $10
-    ld h, e
-    cp b
-    ld h, [hl]
-    rst $00
-    ld h, [hl]
-    jr z, @+$65
+    dw ScrollLeft                       ; 0: wScreenIndex - 1
+    dw ScrollRight                      ; 1: wScreenIndex + 1
+    dw ScrollUp                         ; 2: wScreenIndex - 4
+    dw ScrollDown                       ; 3: wScreenIndex + 4
 
-    rst $10
-    ld h, e
+ScrollLeft:                             ; $06:$6302
+    ld a, [$c91e]                       ; the sub-state
+    rst $00
+    dw ScrollLeftBegin                  ; [0]
+    dw $66B8                            ; [1] the new screen's NPCs (bank $0B entry 7)
+    dw $66C7                            ; [2] the room's script 0 (bank $04 entry 5)
+    dw ScrollLeftStep                   ; [3]
+    dw ScrollEndCommit                  ; [4]
+
+ScrollLeftBegin:                        ; $06:$6310
     ld a, [wScreenIndex]
     dec a
     ld [wScreenIndex], a
@@ -4231,6 +4248,7 @@ Jump_006_62f6:
     ret
 
 
+ScrollLeftStep:                         ; the view 8 px a frame
     ldh a, [$bb]
     and $f8
     ld l, a
@@ -4356,6 +4374,12 @@ jr_006_63af:
     ret
 
 
+; ScrollEndCommit — $06:$63D7, sub-state [4] of every scroll direction (S175):
+; the new screen's buffer $C500 -> $C300 (the walk / tile shadow), wGameState
+; bit 2 off, LoadMapS_66f0, the party's follow trail refilled ($31 points at the
+; player), TileAtPixel (the standing tile -> $AA), bank $01 entry $0A, then
+; $D9E8 := 0 — the only clear of the scripted-scroll input lock (PyBoy S175).
+ScrollEndCommit:
     ld hl, $c300
     ld de, $c500
     ld bc, $0200
@@ -4430,18 +4454,16 @@ jr_006_6427:
     ret
 
 
-    ld a, [$c91e]
+ScrollRight:                             ; $06:$6446
+    ld a, [$c91e]                       ; the sub-state
     rst $00
-    ld d, h
-    ld h, h
-    cp b
-    ld h, [hl]
-    rst $00
-    ld h, [hl]
-    ld l, e
-    ld h, h
-    rst $10
-    ld h, e
+    dw ScrollRightBegin                  ; [0]
+    dw $66B8                            ; [1] the new screen's NPCs (bank $0B entry 7)
+    dw $66C7                            ; [2] the room's script 0 (bank $04 entry 5)
+    dw ScrollRightStep                   ; [3]
+    dw ScrollEndCommit                  ; [4]
+
+ScrollRightBegin:                        ; $06:$6454
     ld a, [wScreenIndex]
     inc a
     ld [wScreenIndex], a
@@ -4455,6 +4477,7 @@ jr_006_6427:
     ret
 
 
+ScrollRightStep:                         ; the view 8 px a frame
     ldh a, [$bb]
     and $f8
     ld l, a
@@ -4578,18 +4601,16 @@ jr_006_64f3:
     ret
 
 
-    ld a, [$c91e]
+ScrollUp:                             ; $06:$651B
+    ld a, [$c91e]                       ; the sub-state
     rst $00
-    add hl, hl
-    ld h, l
-    cp b
-    ld h, [hl]
-    rst $00
-    ld h, [hl]
-    ld b, d
-    ld h, l
-    rst $10
-    ld h, e
+    dw ScrollUpBegin                  ; [0]
+    dw $66B8                            ; [1] the new screen's NPCs (bank $0B entry 7)
+    dw $66C7                            ; [2] the room's script 0 (bank $04 entry 5)
+    dw ScrollUpStep                   ; [3]
+    dw ScrollEndCommit                  ; [4]
+
+ScrollUpBegin:                        ; $06:$6529
     ld a, [wScreenIndex]
     sub $04
     ld [wScreenIndex], a
@@ -4603,6 +4624,7 @@ jr_006_64f3:
     ret
 
 
+ScrollUpStep:                         ; the view 8 px a frame
     ldh a, [$bb]
     and $f8
     ld l, a
@@ -4722,17 +4744,16 @@ jr_006_65b4:
     ret
 
 
-    ld a, [$c91e]
+ScrollDown:                             ; $06:$65EA
+    ld a, [$c91e]                       ; the sub-state
     rst $00
-    ld hl, sp+$65
-    cp b
-    ld h, [hl]
-    rst $00
-    ld h, [hl]
-    db $10
-    ld h, [hl]
-    rst $10
-    ld h, e
+    dw ScrollDownBegin                  ; [0]
+    dw $66B8                            ; [1] the new screen's NPCs (bank $0B entry 7)
+    dw $66C7                            ; [2] the room's script 0 (bank $04 entry 5)
+    dw ScrollDownStep                   ; [3]
+    dw ScrollEndCommit                  ; [4]
+
+ScrollDownBegin:                        ; $06:$65F8
     ld a, [wScreenIndex]
     add $04
     ld [wScreenIndex], a
@@ -4746,6 +4767,7 @@ jr_006_65b4:
     ret
 
 
+ScrollDownStep:                         ; the view 8 px a frame
     ldh a, [$bb]
     and $f8
     ld l, a

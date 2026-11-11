@@ -593,3 +593,143 @@ class HintObjectPanel(QGroupBox):
                   self.btn_del, self.states):
             w.setEnabled(editable)
         self._loading = False
+
+
+class _LandingPicker(QWidget):
+    """S175: the screen below as a picture; click a cell of the jump's column = where the
+    player lands (the column is the jump's own — a jump falls straight down)."""
+    rowPicked = Signal(int)
+    SCALE = 1
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.pix = None
+        self.col = 0
+        self.row = 0
+        self.walls = []
+        self.setFixedSize(160, 128)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip('The screen below. Click a cell of the yellow column: the player lands '
+                        'there (red cross = a wall: he would be stuck inside it).')
+
+    def show_screen(self, pil_img, col, row, walls):
+        from PIL import ImageQt
+        from PySide6.QtGui import QPixmap
+        self.pix = QPixmap.fromImage(ImageQt.ImageQt(pil_img.convert('RGB'))) if pil_img else None
+        self.col, self.row, self.walls = int(col), int(row), list(walls or [])
+        self.update()
+
+    def paintEvent(self, ev):
+        from PySide6.QtGui import QColor, QPainter, QPen
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(28, 28, 32))
+        if self.pix is not None:
+            p.drawPixmap(0, 0, self.pix)
+        p.fillRect(self.col * 16, 0, 16, 128, QColor(255, 230, 0, 50))
+        pen = QPen(QColor(255, 60, 60))
+        pen.setWidth(1)
+        p.setPen(pen)
+        for r, wall in enumerate(self.walls):
+            if wall:
+                x, y = self.col * 16, r * 16
+                p.drawLine(x + 4, y + 4, x + 11, y + 11)
+                p.drawLine(x + 11, y + 4, x + 4, y + 11)
+        pen = QPen(QColor(80, 245, 255))
+        pen.setWidth(2)
+        p.setPen(pen)
+        p.drawRect(self.col * 16 + 1, self.row * 16 + 1, 14, 14)
+        p.end()
+
+    def mousePressEvent(self, ev):
+        r = int(ev.position().y() // 16)
+        if 0 <= r < 8:
+            self.rowPicked.emit(r)
+
+
+class JumpPanel(QGroupBox):
+    """S175: a JUMPING POINT (editor2/core/jumps.py, help 10_rooms "Jumping points")."""
+    fieldsEdited = Signal(dict)          # land_y / sound
+    presenceToggled = Signal(int, bool)
+    deleteRequested = Signal()
+    goBelowRequested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__('Jumping point', parent)
+        from PySide6.QtWidgets import QSpinBox
+        f = QFormLayout(self)
+        f.setLabelAlignment(Qt.AlignRight)
+        self.form = f
+        self.what = _lbl('The GreatTree cliff jump: when the player WALKS onto this cell the game '
+                         'plays the jump sound and walks him straight down — through anything — '
+                         'to the landing cell on the screen below, then scrolls there. Paint a '
+                         'cell that looks like a ledge (Iron Rule: nothing invisible).')
+        self.what.setStyleSheet('color:#aaa;')
+        f.addRow(self.what)
+        self.pos = _lbl()
+        f.addRow('cell', self.pos)
+        self.picker = _LandingPicker()
+        self.picker.rowPicked.connect(lambda r: self.fieldsEdited.emit({'land_y': r}))
+        f.addRow('lands on', self.picker)
+        row = QHBoxLayout()
+        self.land = QSpinBox()
+        self.land.setRange(0, 7)
+        self.land.setToolTip('The landing row on the screen below (0 = its top row)')
+        self.land.valueChanged.connect(self._land)
+        row.addWidget(QLabel('row'))
+        row.addWidget(self.land)
+        self.fall = _lbl()
+        row.addWidget(self.fall, 1)
+        f.addRow('', row)
+        self.sound = QSpinBox()
+        self.sound.setRange(0, 255)
+        self.sound.setDisplayIntegerBase(16)
+        self.sound.setPrefix('$')
+        self.sound.setToolTip('The sound effect of the jump ($55 = the GreatTree jump)')
+        self.sound.valueChanged.connect(self._sound)
+        f.addRow('sound', self.sound)
+        self.warn = _lbl()
+        self.warn.setStyleSheet('color:#ff8a65;')
+        f.addRow(self.warn)
+        self.states = _StatesRow()
+        self.states.toggled.connect(self.presenceToggled.emit)
+        f.addRow('in states', self.states)
+        row2 = QHBoxLayout()
+        self.btn_go = QPushButton('Go to the screen below')
+        self.btn_go.clicked.connect(self.goBelowRequested.emit)
+        self.btn_del = QPushButton('Remove jump')
+        self.btn_del.setToolTip('Remove this jump from every state of the screen')
+        self.btn_del.clicked.connect(self.deleteRequested.emit)
+        row2.addWidget(self.btn_go)
+        row2.addWidget(self.btn_del)
+        f.addRow('', row2)
+        self._loading = False
+
+    def _land(self, v):
+        if not self._loading:
+            self.fieldsEdited.emit({'land_y': int(v)})
+
+    def _sound(self, v):
+        if not self._loading:
+            self.fieldsEdited.emit({'sound': int(v)})
+
+    def show_jump(self, view, key, below, below_img, walls, presence, warnings, editable=True):
+        from editor2.core import jumps as JU
+        self._loading = True
+        x, y, ly = view['x'], view['y'], view['land_y']
+        self.pos.setText(f'({x},{y}) on screen {key} — a step-on trigger in the game')
+        self.picker.show_screen(below_img, x, ly, walls)
+        self.land.setValue(ly)
+        self.fall.setText(f'screen {below} ({x},{ly}) — a fall of '
+                          f'{JU.fall_px(y, ly) // 16} cells')
+        s = view.get('sound')
+        self.sound.setValue(JU.SOUND_DEFAULT if s is None else val(s))
+        self.warn.setText('\n'.join(f'⚠ {w}' for w in warnings))
+        self.form.setRowVisible(self.warn, bool(warnings))
+        if presence and len(presence) > 1:
+            self.states.show_states(presence, 'the jump is there in state {n} of this screen')
+            self.form.setRowVisible(self.states, True)
+        else:
+            self.form.setRowVisible(self.states, False)
+        for w in (self.picker, self.land, self.sound, self.btn_del, self.states):
+            w.setEnabled(editable)
+        self._loading = False

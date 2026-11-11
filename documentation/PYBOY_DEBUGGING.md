@@ -1476,3 +1476,20 @@ The same snapshot gives "slots written while the room showed" — how the breedi
   `register_file` has no H / DE attributes — use `HL` and `(D << 8) | E`.
 - **A far-call entry's register at entry:** a hook at the entry address with a callback
   reading `register_file` (FoodIconDraw's B was $40, not the item — KEY_LESSONS S172 r2).
+
+## S175 techniques — a script parameter A/B'd in ROM copies, a scripted walk timed (tools/walk_jumps.py)
+
+- **A/B one script parameter without a build:** find the script's words in the ROM by its
+  byte signature (GreatTree_Script19 `12 FF E8 D9 01 00 21 FF 55 00 22 FF 1B FF 00 00 60 00 19 FF
+  FF FF`, one hit), write copies with the one byte changed (the fall `$60` → `$10` / `$40` /
+  `$50` / `$A0`), and run the SAME savestate on each (a state saved on the original loads on a
+  same-layout copy; the header checksum is not checked). Four runs answered "what lands where"
+  in minutes (ROOM_DATA_FORMAT "Jumping points").
+- **The trigger is in a later state:** a hijacked bedroom state has every step counter at 0 —
+  poke the room's counters (`$D92D-$D934` for GreatTree) BEFORE the warp, the room loads the
+  state's interact list.
+- **Timing a scripted walk:** log `$D8D7` (script), `$D9E8` (lock), `wScreenIndex`, `$FF95/96`
+  (player Y) every frame from the step: the fall runs 2 px a frame under the view, the script
+  ends, then the scroll (wGameState bit 2, 27 frames) and the lock clears.
+- `walk_jumps.py` releases the D-pad the frame the script starts (held Down walks on after the
+  landing — and chains into the next jump, measured).

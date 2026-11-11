@@ -655,6 +655,9 @@
                  $71 entry 10 call (stale saves, ARCHITECTURE "Stale places at CONTINUE")
    1:D9E8   1    Player input locked during a scripted scroll (non-zero skips free
                  walking, bank_006:3697; cleared by the scroll handler) [S118f]
+                 S175: cleared ONLY by bank $06 ScrollEndCommit (the end of a screen
+                 scroll); set by the GreatTree jump scripts — a jump landing on its own
+                 screen never scrolls = a soft lock (ROOM_DATA_FORMAT "Jumping points")
    1:D9E6   1    Breeding "rare breed" flag — only the UNREFERENCED mutation $16:$44DA sets it; never set (S113)
                  CAUTION: shares byte with event flag indices $0258-$025F
    1:D9E9   1    Current step in multi-step screens

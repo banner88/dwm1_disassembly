@@ -87,7 +87,8 @@ Select a cell → **More ▾**:
   flags, moving the player). It runs when the player **walks** onto the cell,
   not when he arrives there through a door. Invisible, marked T. Its panel
   has **script**, **New talk…**, **Edit talk…**, **in states**, **Delete**.
-  (Examine spots: see *NPCs*.)
+  (Examine spots: see *NPCs*.) A cliff jump to the screen below is its own object:
+  **+ More ▸ + Jump (J)** (see *Rooms → Jumping points*).
 - **Stairs down here (gate rooms)** — the cell gets the next-floor well; its
   panel *Stairs down* goes to *the next floor of the gate being dived*. It
   only works while the room is served inside a gate — see *Gates*.
