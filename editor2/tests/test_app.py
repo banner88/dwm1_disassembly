@@ -5150,10 +5150,17 @@ def s174_stamps(app, w):
     pre = doc.dumps()
 
     def bare(text):
+        """The project minus the stamps and the palettes (S174 r2: placing writes the rows a
+        stamp owns into the palette; a borrowed palette becomes the room's own)."""
         d = json.loads(text)
         d['custom'].pop('stamps', None)
+        d['custom'].pop('palettes', None)
         for r in d['custom'].get('rooms') or []:
             r.pop('stamps', None)
+            (r.get('render') or {}).pop('palette', None)
+            for sc in (r.get('screens') or {}).values():
+                for st_ in sc.get('states') or []:
+                    st_.pop('palette', None)
         return json.dumps(d, sort_keys=True)
     # the art: a half-clear round glow, a 2-frame flame (opaque), clear elsewhere — 3 x 2 cells
     AMB, RED, CRM, BLK = (240, 192, 72), (216, 32, 16), (248, 248, 208), (0, 0, 0)
@@ -5187,9 +5194,21 @@ def s174_stamps(app, w):
     # place: the cursor on the middle column, top row
     i0 = rt._stamp_place((4, 1))
     app.processEvents()
-    assert i0 == 0 and room['stamps'][0] == {'stamp': sid, 'screen': rt.key, 'x': 3, 'y': 1}, \
+    room = rt.current_room()
+    assert i0 == 0 and {k: v for k, v in room['stamps'][0].items() if k != 'rows'} == \
+        {'stamp': sid, 'screen': rt.key, 'x': 3, 'y': 1}, \
         room.get('stamps')
-    assert bare(doc.dumps()) == bare(pre), 'placing changed nothing but the stamps'
+    assert bare(doc.dumps()) == bare(pre), 'placing changed nothing but the stamps + palette'
+    # S174 r2: the rows it owns are IN the palette (shown under it on the Palettes page)
+    room = rt.current_room()
+    pid = doc.effective_palette(room, rt.key, 0)
+    own = (room['stamps'][0].get('rows') or {}).get(pid)
+    assert pid and own is not None, room['stamps'][0]
+    words = doc.palette(pid)['colors_rgb555']
+    if own:
+        assert not rt.pal_stamps.isHidden(), 'the Palettes page names them'
+        assert 'Torch' in rt.pal_stamps.text() and f'row {own[0]}' in rt.pal_stamps.text(), \
+            rt.pal_stamps.text()
     info = cv.stamp_info(0)
     assert info and info['rect'] == (3, 1, 5, 2) and len(info['frames']) == 2, info
     pm = IQ.fromqpixmap(cv.base.pixmap()).convert('RGB')
@@ -5252,11 +5271,14 @@ def s174_stamps(app, w):
     usage, errs = CMP.measure_banks(doc.data, doc.project_dir, REPO)
     assert not errs and usage, errs
     # delete one, remove the stamp from the library (with its other placement)
+    words = [list(x) for x in doc.palette(pid)['colors_rgb555']]
     rt._stamp_delete(1)
     assert len(rt.current_room()['stamps']) == 1
     rt._stamp_remove_lib(sid, ask=False)
     assert 'stamps' not in rt.current_room() and 'stamps' not in doc.custom
     assert bare(doc.dumps()) == bare(pre)
+    assert doc.palette(pid)['colors_rgb555'] == words, 'the colours stay in the palette for tiles'
+    assert rt.pal_stamps.isHidden() and not rt.pal_stamps.text()
     while s.undo.index() > n0:
         s.undo.undo()
     app.processEvents()
@@ -5271,7 +5293,8 @@ def s174_stamps(app, w):
             if f.endswith('.2bpp')} == assets0
     print(f'OK: S174 stamps — import (3×2 from the name, 2 frames, speed 32), place under the '
           f'cursor, overlap refused, move, copy + paste, light colour / unlit; nothing but the '
-          f'stamps changed in the project; canvas == plan; the bake writes a colour grid only '
+          f'stamps + their palette rows {own} (named on the Palettes page, kept after removal) '
+          f'changed in the project; canvas == plan; the bake writes a colour grid only '
           f'medal_vault uses (island_s0 untouched) and == the canvas both frames'
           f'{" (warned: nearest colours)" if bwarn else ""}; meters bake; delete, remove; '
           f'undone exactly')

@@ -6,15 +6,17 @@ editor's own code (editor2/core/stamps — the same data the Rooms tab writes), 
 (tools/build_project.py --build: the compiler bakes the stamps into a copy), CONTINUEs a real
 save, warps onto the screen and checks:
 
-  * placing stamps changed none of the project's tiles / layouts / colour grids / palettes /
-    animations / tileset files (a stamp is not paint);
+  * placing stamps changed none of the project's tiles / layouts / colour grids / animations /
+    tileset files (a stamp is not paint) — only the palette: the rows the stamps own (S174 r2:
+    written there when placed, recorded on the placement), on rows no tile drew;
   * the editor's picture of every stamp (stamps.simulate) == the baked screen, every frame;
   * the palette rows the bake planned are in the game's BG palette RAM;
   * the cells show the baked tiles, each piece on its baked palette row;
   * every moving piece shows only the baked frames, each of them, over 4 loops; a step every
     `speed` frames;
   * every cell keeps its wall / walkable side;
-  * REMOVED again, the project builds the very ROM it built before (md5) — nothing left behind.
+  * REMOVED again, the project is what it was but for those palette rows (kept for tiles) —
+    nothing else left behind.
   --negative: nothing placed (only planned) — the tile / frame checks must FAIL.
 
     python3 tools/walk_stamps.py --project DIR --sav FILE --room NAME --screen K
@@ -82,11 +84,18 @@ def build(proj):
 
 
 def snapshot(proj):
-    """Everything a stamp must never change: project.json minus the stamps, every asset."""
+    """Everything a stamp must never change: project.json minus the stamps and the palettes
+    (+ which palette a room / screen / state uses — a stamp on a borrowed palette makes it the
+    room's own, S174 r2), every asset."""
     d = json.load(open(os.path.join(proj, 'project.json')))
     d.get('custom', {}).pop('stamps', None)
+    d.get('custom', {}).pop('palettes', None)
     for r in d.get('custom', {}).get('rooms') or []:
         r.pop('stamps', None)
+        (r.get('render') or {}).pop('palette', None)
+        for sc in (r.get('screens') or {}).values():
+            for st_ in sc.get('states') or []:
+                st_.pop('palette', None)
     files = {}
     for root, _ds, fs in os.walk(os.path.join(proj, 'assets')):
         for f in fs:
@@ -118,10 +127,7 @@ def main():
     shutil.rmtree(proj, ignore_errors=True)
     shutil.copytree(a.project, proj, ignore=shutil.ignore_patterns('build'))
     before = snapshot(proj)
-    md5_before = None
-    if not a.no_remove:
-        _b, md5_before = build(proj)
-        print(f'the project as it was: {md5_before}')
+    pal_before = json.load(open(os.path.join(proj, 'project.json')))['custom'].get('palettes')
     d = Document(os.path.join(proj, 'project.json'))
     room = next(x for x in d.rooms if d.room_name(x) == a.room)
     os.makedirs(os.path.join(proj, 'assets', 'stamps'), exist_ok=True)
@@ -142,6 +148,11 @@ def main():
             pl['lit'] = False
         pls.append(pl)
     room['stamps'] = [] if a.negative else pls
+    claim_warn = []
+    for i in range(len(room['stamps'])):            # S174 r2: as the editor does when placing
+        wt = ST.claim(d, REPO, room['id'], i)
+        if wt:
+            claim_warn.append(wt)
     d.touch()
     d.save()
     after = snapshot(proj)
@@ -160,7 +171,7 @@ def main():
     sim_doc = d
     if a.negative:
         sim_doc = Document(os.path.join(proj, 'project.json'))
-        sim_doc.room(room['id'])['stamps'] = pls
+        sim_doc.room(room['id'])['stamps'] = copy.deepcopy(pls)
         sim_doc.vanilla = r0 = ProjectRenderer(REPO, sim_doc.project_dir, sim_doc.data)
     sim = ST.simulate(sim_doc, r0)
     ok_sim = True
@@ -195,11 +206,20 @@ def main():
     print(f'with the stamps: {md5_stamped}' + (f'; {len(bwarn)} warning(s)' if bwarn else ''))
     for wtxt in bwarn:
         print('  ! ' + wtxt)
+    for wtxt in claim_warn:
+        print('  placing: ' + wtxt)
     if a.rom_out:
         shutil.copy(os.path.join(build_dir, 'rom.gbc'), a.rom_out)
     w = Walk(build_dir, a.sav, keep)
-    w.check('placing the stamps changed none of the project\'s tiles, layouts, colours, '
+    w.check('placing the stamps changed none of the project\'s tiles, layouts, colour grids, '
             'animations or tileset files', before == after)
+    pid0 = d.effective_palette(d.room(room['id']), a.screen, 0)
+    own = sorted({x for pl in (d.room(room['id']).get('stamps') or [])
+                  for x in (pl.get('rows') or {}).get(pid0, [])})
+    shown_rows = d.palette(pid0)['colors_rgb555'] if pid0 else []
+    w.check('the rows the stamps own are written in the project\'s palette (Palettes page)',
+            a.negative or (bool(own) and pid0 is not None), f'{pid0} rows {own}: '
+            + '; '.join(f'{x} {shown_rows[x]}' for x in own))
     w.check('the editor\'s picture of every stamp == the baked screen, every frame', ok_sim)
     s_continue(w)
     w.goto(val(room['mapID']), 0, (key % 4) * 10 + a.stand[0], (key // 4) * 8 + a.stand[1])
@@ -299,9 +319,10 @@ def main():
         d2.custom.pop('stamps', None)
         d2.touch()
         d2.save()
-        _b, md5_removed = build(proj)
-        w.check('the stamps removed: the very ROM the project built before', md5_removed == md5_before,
-                f'{md5_removed} vs {md5_before}')
+        pal_after = json.load(open(os.path.join(proj, 'project.json')))['custom'].get('palettes')
+        w.check('the stamps removed: the project is what it was but for the palette rows they '
+                'wrote (kept for tiles)', snapshot(proj) == before,
+                'palette changed' if pal_after != pal_before else 'palette as before')
     print(f'{w.checks - w.fails} / {w.checks} checks passed'
           + (' (NEGATIVE: failures expected)' if a.negative else ''))
     sys.exit(1 if w.fails else 0)

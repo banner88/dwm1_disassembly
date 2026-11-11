@@ -155,12 +155,17 @@ the mouse — on another screen or another of your rooms too; **right-click** a 
 glow and the stamp's own glow colour inside it — a torch's hot core). Each placement has
 its own light. Stamps cannot overlap (a red outline says so). It shows on the screen you
 put it on only. Each step is one undo.
-The canvas shows every stamp exactly as the game will draw it (▶ Play: moving). **Colours:**
-an 8×8 piece shows 4 colours at most (one of them black), and the room's palette has 4
-rows. A stamp's colours take free rows of the palette (any room using that palette counts);
-when none is left, or a piece over busy tiles would need a 5th colour, the **nearest**
-colours are used and the stamp is marked **!** — the Stamps page and the Build log say how
-many pixels. A second light colour in one room usually needs rows the room no longer has.
+The canvas shows every stamp exactly as the game will draw it (▶ Play: moving). **Colours
+(S174 r2):** an 8×8 piece shows 4 colours at most (one of them black), and the room's
+palette has 4 rows. Putting a stamp down **writes the colour rows it needs into your
+palette** — rows no tile uses yet (any room using that palette counts) — so you SEE them on
+the **Palettes** page (under the rows: "Rows stamps use: row 2: Wall torch…") and can paint
+tiles with them too; no other stamp takes those rows, and *Re-plan colours* starts with them
+kept. Don't recolour them, or the stamp changes with them. Removing the stamp leaves the
+colours in the palette. When no row is free, or a piece over busy tiles would need a 5th
+colour, the **nearest** colours are used and the stamp is marked **!** — the Stamps page and
+the Build log say how many pixels. A second light colour in one room usually needs rows the
+room no longer has.
 Over a MOVING tile (swaying bark) a stamp's pieces keep the first frame of what is under
 them.
 

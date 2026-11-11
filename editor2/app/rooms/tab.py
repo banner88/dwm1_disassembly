@@ -813,6 +813,11 @@ class RoomsTab(QWidget):
         prow.addWidget(self.pal_free1)
         prow.addStretch(1)
         pl.addLayout(prow)
+        self.pal_stamps = QLabel('')               # S174 r2: the rows stamps use
+        self.pal_stamps.setWordWrap(True)
+        self.pal_stamps.setStyleSheet('color: #f0c060;')
+        self.pal_stamps.setVisible(False)
+        pl.addWidget(self.pal_stamps)
         # S132 (user: "borrow palette from any other room without having to
         # recreate it"): any room / screen / step / gate theme, whole or by rows
         self.btn_borrow_pal = QPushButton('Borrow palette from another room…')
@@ -1707,6 +1712,12 @@ class RoomsTab(QWidget):
         pid = scope.pid
         free1 = bool(pid and doc.palette(pid).get('free_color1'))
         dlg = ReplanDialog(doc, scope, self.key, self.state_idx, free1, self)
+        # S174 r2: the rows stamps use start kept (the stamps' colours stay as written)
+        from editor2.core import stamps as ST
+        for rr, names in (ST.rows_report(doc, pid) if pid else {}).items():
+            if rr < 4:
+                dlg.locks[rr].setText(f"row {rr} (stamps: {', '.join(names)})")
+                dlg.locks[rr].setChecked(True)
         self._replan_dlg = dlg                      # tests drive it
         if scope.problems:
             dlg.box.button(QDialogButtonBox.Apply).setEnabled(False)
@@ -1946,6 +1957,7 @@ class RoomsTab(QWidget):
         self.pal_free1.setChecked(free1)
         self.pal_free1.setEnabled(bool(words))
         self.pal_free1.blockSignals(False)
+        self._refresh_stamp_rows()                     # S174 r2
         self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, self.state_idx)
         self.animate_tab.show_room(self.s.doc, room, self.s.renderer)
         self._update_brush_label()
@@ -2442,11 +2454,42 @@ class RoomsTab(QWidget):
 
     # ------------------------------------------------------------ S174 stamps
     def _refresh_stamps(self):
+        from editor2.core import stamps as ST
+        todo = ST.unclaimed(self.s.doc)
+        if todo and not getattr(self, '_claiming', False):
+            # r2: stamps placed before S174 r2 — their colour rows into the palette, once
+            self._claiming = True
+            try:
+                cmd = C.SnapshotCommand(self.s, 'Stamps: their colours into the palette',
+                                        lambda d: [ST.claim(d, REPO, rid, i) for rid, i in todo])
+                self.s.undo.push(cmd)
+                if cmd.error is None:
+                    self.status_line.setText(f'{len(todo)} stamp(s): their colour rows are now in '
+                                             'the palette (Palettes page).')
+                    self._show()
+                    return
+            finally:
+                self._claiming = False
+        self._refresh_stamp_rows()
         try:
             self.stamps_panel.set_library(self.s.doc)
         except Exception as e:                                   # noqa: BLE001
             self.status_line.setText(f'Stamps: {e}')
         self._stamp_selected(self.canvas.stamp_sel)
+
+    def _refresh_stamp_rows(self):
+        """r2: under the palette — which rows stamps use (they stay theirs)."""
+        from editor2.core import stamps as ST
+        room = self.current_room()
+        pid = None
+        if room is not None and self.vanilla_mid is None:
+            pid, words = self.s.renderer.room_palettes_555(room, self.key, self.state_idx)
+            pid = pid if words else None
+        rep = ST.rows_report(self.s.doc, pid) if pid else {}
+        self.pal_stamps.setText('' if not rep else 'Rows stamps use (written here when placed; '
+                                'paint tiles with them freely — do not recolour them): '
+                                + '; '.join(f"row {r}: {', '.join(n)}" for r, n in sorted(rep.items())))
+        self.pal_stamps.setVisible(bool(rep))
 
     def _stamp_room(self, what):
         room = self.current_room()
@@ -2561,8 +2604,12 @@ class RoomsTab(QWidget):
             return None
         x, y = ST.anchor(st, cell)
         rid, key = room['id'], self.key
-        i = self._stamp_run(label, lambda d: ST.place(d, rid, sid, key, x, y, lit=lit, light=light),
-                            select=lambda r: r)
+
+        def op(d):
+            j = ST.place(d, rid, sid, key, x, y, lit=lit, light=light)
+            ST.claim(d, REPO, rid, j)          # r2: its colour rows into the palette
+            return j
+        i = self._stamp_run(label, op, select=lambda r: r)
         if i is not None:
             self._stamp_warn_status(i, f"{label}: '{st['name']}' at cell ({x},{y})")
         return i
@@ -2583,7 +2630,8 @@ class RoomsTab(QWidget):
         if room is None:
             return
         rid = room['id']
-        cmd = C.SnapshotCommand(self.s, 'Move stamp', lambda d: ST.move(d, rid, idx, x, y))
+        cmd = C.SnapshotCommand(self.s, 'Move stamp', lambda d: (ST.move(d, rid, idx, x, y),
+                                                                 ST.claim(d, REPO, rid, idx)))
         self.s.undo.push(cmd)
         if cmd.error is not None:
             self.status_line.setText(f'Move stamp: {cmd.error}')
@@ -2629,7 +2677,8 @@ class RoomsTab(QWidget):
         if room is None or idx is None:
             return
         rid = room['id']
-        self._stamp_run('Stamp light', lambda d: ST.set_light(d, rid, idx, lit=lit, light=light),
+        self._stamp_run('Stamp light', lambda d: (ST.set_light(d, rid, idx, lit=lit, light=light),
+                                                  ST.claim(d, REPO, rid, idx)),
                         select=lambda _r: idx)
         self._stamp_warn_status(idx, 'Stamp light changed')
 

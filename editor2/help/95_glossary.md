@@ -263,7 +263,8 @@ family recipes. [Breeding](58_breeding.md#Special%20recipes)
 
 **Stamp** — a picture put on top of a room's tiles (a wall torch with its glow): clear
 parts show the tiles, half-clear parts light them. The tiles are never changed — the build
-draws it in, so moving or removing it leaves them as they were. [Rooms](10_rooms.md)
+draws it in, so moving or removing it leaves them as they were; the colour rows it needs are
+written into your palette (shown on the Palettes page, usable by tiles). [Rooms](10_rooms.md)
 
 **Still tile** — a copy of one frame of a moving tile that never moves; the Still tool (S)
 puts it on the cell you click. [Animated tiles](15_animated_tiles.md)

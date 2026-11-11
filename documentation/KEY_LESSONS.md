@@ -8121,3 +8121,8 @@ the old path kept beside it (`_find_match_scan`).
   md5 it had before (`walk_stamps.py`). And only a cell's bottom-right tile decides walking —
   an overlay's other pieces may take any free slot (the first bake over a ladder ran out of
   walkable slots by keeping every piece's side).
+- **r2 addendum:** "data, not paint" must not mean INVISIBLE. r1 put the stamps' colour rows
+  only into the build's copy; the Palettes page kept showing rows that, in the game, held the
+  torches — the user (angrily): "currently it just pretends its not there". Anything an
+  overlay takes from a shared budget (palette rows) is written where the user looks
+  (`stamps.claim`) and labelled; only what is truly per-build (the tiles) stays in the bake.

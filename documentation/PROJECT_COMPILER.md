@@ -5864,7 +5864,9 @@ project.json is loaded; the example pin unchanged).
   `speed` = game frames per step (1-255). Alpha 0 = the tiles behind stay; 0 < alpha < 255 =
   LIGHT (the colour, except where the tiles are black); 255 = drawn.
 - A placement: the screen key, the top-left cell (may hang off the screen; the part off it is
-  dropped), `lit` (default true; false = the half-clear pixels left out), `light` ("#rrggbb":
+  dropped), `rows` (S174 r2, written by the editor: `{palette id: [rows]}` — the rows of that
+  palette it uses that no tile drew when it was placed; their colours are ALREADY in the
+  palette, the bake counts them as used for every other stamp), `lit` (default true; false = the half-clear pixels left out), `light` ("#rrggbb":
   the half-clear pixels and the stamp's own light colour among its solid pixels take it).
   Placements on one screen never overlap (the editor refuses).
 - **The compiler** (`compile_project`): when `stamps.has_stamps(data)`, `stamps.stamped` copies

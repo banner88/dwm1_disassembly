@@ -1405,6 +1405,18 @@ screen it is put on, an unlit option, the halo colour settable.
   reads that one), the others any slot (`page2.pick_order`; the first bake over a ladder ran out
   of walkable slots); one flip animation per placement (≤ 32 tiles an item, `tileanim.problems`
   checked). Over a moving tile a stamp's pieces keep its first frame.
+- **r2 — the rows are explicit** (user: "populate the palette so that it reflects what the
+  torches do then I can use that colour combination in specific tiles currently it just
+  pretends its not there"): `stamps.claim(doc, repo, room, i)` runs inside the same
+  SnapshotCommand as place / move / light (and once, from `RoomsTab._refresh_stamps`, for
+  placements without `rows`): it plans the stamp against the project's palette with the rows
+  other placements record counted as drawn (`_protected` → `plan(taken=)`), WRITES the new rows
+  into the palette (a borrowed palette made the room's own, `free_color1` set when needed) and
+  records `pl["rows"] = {pid: rows}` (the rows it uses that no tile draws). `simulate` and
+  `bake` protect recorded rows the same way, so the build finds them as existing rows. The
+  Palettes page shows `RoomsTab.pal_stamps` ("Rows stamps use … row 2: Wall torch …",
+  `stamps.rows_report`); Re-plan colours opens with those rows' "keep" ticked and labelled.
+  Removing a stamp leaves the colours (the user's to reuse).
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 

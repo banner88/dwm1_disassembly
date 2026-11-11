@@ -134,7 +134,9 @@ class StampsPanel(QWidget):
         v.setContentsMargins(6, 6, 6, 6)
         head = QLabel('<b>Stamps</b> — pictures put on top of the tiles (a wall torch…). The '
                       'tiles under a stamp are never changed: the build draws the stamp into a '
-                      'copy, so moving or removing one leaves the tiles exactly as they were.')
+                      'copy, so moving or removing one leaves the tiles exactly as they were. '
+                      'The colour rows a stamp needs are written into your palette when you put '
+                      'it down (Palettes page) — use them for tiles too.')
         head.setWordWrap(True)
         v.addWidget(head)
         self.list = QListWidget()

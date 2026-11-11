@@ -1116,7 +1116,11 @@ recipes are pure authoring.
       unchanged by placing; editor picture == bake every frame; rows, tiles, frames, 32-frame
       steps, walls; removed = the very same ROM md5), `--negative` 6 FAIL; test_app
       `s174_stamps`. PROJECT_COMPILER §2.79, EDITOR_DESIGN §5.1 "As built S174". Byte-neutral
-      for a project without stamps.
+      for a project without stamps. **r2:** the colour rows a stamp needs are WRITTEN into the
+      project's palette when it is placed (`stamps.claim`; recorded on the placement, named on
+      the Palettes page, kept by Re-plan, protected from other stamps, usable by tiles, left
+      when the stamp goes) — user: "populate the palette so that it reflects what the torches
+      do".
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

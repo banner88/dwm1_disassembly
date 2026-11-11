@@ -14,8 +14,10 @@ A stamp is NOT paint. project.json keeps
   rooms[].stamps[]      the placements: {"stamp", "screen", "x", "y" (the top-left cell; may
                         hang off the screen — the part off it is dropped), "lit" (default
                         true), "light" ("#rrggbb" or absent = as drawn)}
-and nothing else: the room's layouts, colour grids, tileset and palette rows are never touched
-by placing, moving or removing one. The BUILD bakes the stamps into a COPY of the project
+and the colour rows it needs (S174 r2, below: written into the project's palette when it is
+placed — visible, reusable by tiles — and recorded on the placement as "rows"); the room's
+layouts, colour grids, tiles, animations and tileset files are never touched by placing,
+moving or removing one. The BUILD bakes the stamps into a COPY of the project
 (`baked_dir` → compiler.compile_project / measure_banks, capacity.measure): per screen state,
 its own layout + colour grid (copied only when shared — "only that screen"), the picture
 composited over the tiles as they are (anim_import.plan: clear = the tiles stay, half-clear =
@@ -340,6 +342,111 @@ def set_light(doc, room_id, idx, lit=None, light=False):
     doc.touch()
 
 
+# ------------------------------------------------------------------ the rows a stamp owns (r2)
+# S174 r2 (user: "Make the fucking torches explicit and populate the fucking palette so that it
+# reflects what the torches do then I can use that colour combination in specific tiles
+# currently it just fucking pretends its not there."): placing (moving, re-lighting) a stamp
+# WRITES the colour rows it needs into the project's palette — they show on the Palettes page
+# and any tile can be painted with them — and the placement records them
+# (`"rows": {palette id: [rows]}`). A row a stamp records counts as used: no other stamp (and no
+# build) takes it for other colours. Removing the stamp leaves the colours in the palette.
+def claimed_rows(doc, pid, skip=None):
+    """Rows of palette `pid` that placements record (except `skip` = (room id, index))."""
+    out = set()
+    for r in doc.rooms:
+        if not isinstance(r, dict):
+            continue
+        for i, pl in enumerate(r.get('stamps') or []):
+            if (r['id'], i) == skip:
+                continue
+            out |= set((pl.get('rows') or {}).get(pid) or [])
+    return out
+
+
+def rows_report(doc, pid):
+    """{row: [stamp names]} — which stamps use which rows of palette `pid` (Palettes page)."""
+    out = {}
+    for r in doc.rooms:
+        if not isinstance(r, dict):
+            continue
+        for pl in r.get('stamps') or []:
+            st = stamp_of(doc.custom, pl.get('stamp'))
+            for row in (pl.get('rows') or {}).get(pid) or []:
+                nm = st['name'] if st else pl.get('stamp')
+                if nm not in out.setdefault(int(row), []):
+                    out[int(row)].append(nm)
+    return out
+
+
+def _protected(doc, renderer, room, key, s, pid, skip):
+    """plan(taken=…): the rows other stamps own on this palette, as they are, counted drawn."""
+    shown = renderer.room_palettes(room, key, s)
+    return {'rows': {r: shown[r] for r in claimed_rows(doc, pid, skip) if r < 4}, 'free1': False}
+
+
+def claim(doc, repo, room_id, idx):
+    """Write the colour rows placement `idx` needs into the project's palette (rows no tile and
+    no other stamp uses), record them on the placement. -> warning text ('' = it fits)."""
+    from editor2.core.render_project import ProjectRenderer
+    room = doc.room(room_id)
+    pl = room['stamps'][idx]
+    st = stamp_of(doc.custom, pl.get('stamp'))
+    key = int(pl.get('screen', -1))
+    pl['rows'] = {}
+    if st is None or str(key) not in (room.get('screens') or {}):
+        doc.touch()
+        return ''
+    rect, fr = visible(pl, st, dressed(stamp_frames(doc.project_dir, st), pl))
+    if rect is None:
+        doc.touch()
+        return ''
+    warns = []
+    old_vanilla = getattr(doc, 'vanilla', None)
+    try:
+        _claim_states(doc, repo, room, room_id, idx, pl, key, rect, fr, warns)
+    finally:
+        doc.vanilla = old_vanilla
+    doc.touch()
+    return '; '.join(warns)
+
+
+def _claim_states(doc, repo, room, room_id, idx, pl, key, rect, fr, warns):
+    from editor2.core.render_project import ProjectRenderer
+    for s in range(len(doc.states(room, key))):
+        r = ProjectRenderer(repo, doc.project_dir, doc.data)
+        doc.vanilla = r
+        pid = doc.effective_palette(room, key, s)
+        if not pid:
+            cur = r.room_palettes(room, key, s)
+            pid = doc.localize_palette(room, key, s, [[PI.to555(c) for c in row] for row in cur[:8]])
+            r = ProjectRenderer(repo, doc.project_dir, doc.data)
+            doc.vanilla = r
+        A, _n = r.attr_grid(room, key, s)
+        p = AI.plan(doc, r, room, key, s, None, None, rect, fr,
+                    taken=_protected(doc, r, room, key, s, pid, (room_id, idx)),
+                    attr=[list(x) for x in (A or _zero_attr())])
+        pal = doc.palette(pid)
+        for rr, cs in p['new_rows'].items():
+            pal['colors_rgb555'][rr] = [f'0x{PI.to555(c):04X}' for c in cs[:3]] + ['0x0000']
+        if p['free1']:
+            pal['free_color1'] = True
+        # the rows it uses that no TILE draws (yet) — its own; a tile row it shares (the bark's
+        # row 0 under a clear corner) stays the tiles'
+        tiles_rows = AI._rows_drawn(doc, r, pid)
+        mine = set((pl['rows'].get(pid) or [])) | {int(v) for v in p['assign'].values()
+                                                    if int(v) not in tiles_rows}
+        pl['rows'][pid] = sorted(mine)
+        w = warn_text(p)
+        if w and w not in warns:
+            warns.append(w)
+
+
+def unclaimed(doc):
+    """[(room id, index)] of placements without recorded rows (placed before S174 r2)."""
+    return [(r['id'], i) for r in doc.rooms if isinstance(r, dict)
+            for i, pl in enumerate(r.get('stamps') or []) if 'rows' not in pl]
+
+
 # ------------------------------------------------------------------ editor preview
 def _zero_attr():
     return [[0] * (CELLS_W * 2) for _ in range(CELLS_H * 2)]
@@ -375,8 +482,10 @@ def simulate(doc, renderer):
                 pid = doc.effective_palette(room, key, s)
                 tk = taken.setdefault(pid or ('own', room['id'], key, s), {'rows': {}, 'free1': False})
                 A, _n = renderer.attr_grid(room, key, s)
+                prot = _protected(doc, renderer, room, key, s, pid, (room['id'], i))  # r2
+                tk2 = {'rows': {**prot['rows'], **tk['rows']}, 'free1': tk['free1']}
                 try:
-                    p = AI.plan(doc, renderer, room, key, s, None, None, rect, fr, taken=tk,
+                    p = AI.plan(doc, renderer, room, key, s, None, None, rect, fr, taken=tk2,
                                 attr=[list(r) for r in (A or _zero_attr())])
                 except Exception as e:                       # noqa: BLE001 — shown, never fatal
                     out[(room['id'], i, s)] = {'rect': rect, 'frames': [], 'speed': 32, 'n': 0,
@@ -567,12 +676,15 @@ def bake(doc, repo):
     warnings = []
     custom = doc.custom
     cache = {}
+    # r2: the rows each placement owns, kept from other stamps' new rows during the bake
+    owned = {(r['id'], i): dict(pl.get('rows') or {}) for r in doc.rooms if isinstance(r, dict)
+             for i, pl in enumerate(r.get('stamps') or [])}
     for room in doc.rooms:
         if not isinstance(room, dict) or not room.get('stamps'):
             continue
         pls = room.pop('stamps')
         rname = room.get('name') or room['id']
-        for pl in pls:
+        for i, pl in enumerate(pls):
             st = stamp_of(custom, pl.get('stamp'))
             key = int(pl.get('screen', -1))
             if st is None:
@@ -590,7 +702,12 @@ def bake(doc, repo):
             for sts, lid, alid in _targets(doc, repo, room, key):
                 r = ProjectRenderer(repo, doc.project_dir, doc.data)
                 doc.vanilla = r
-                p = AI.plan(doc, r, room, key, sts[0], lid, alid, rect, fr)
+                pid = doc.effective_palette(room, key, sts[0])
+                shown = r.room_palettes(room, key, sts[0])
+                prot = {x for k_, rows_ in owned.items() if k_ != (room['id'], i)
+                        for x in (rows_.get(pid) or [])}
+                p = AI.plan(doc, r, room, key, sts[0], lid, alid, rect, fr,
+                            taken={'rows': {x: shown[x] for x in prot if x < 4}, 'free1': False})
                 w = warn_text(p)
                 if w:
                     warnings.append(f"room {rname} screen {key}: stamp {st['name']} at "
