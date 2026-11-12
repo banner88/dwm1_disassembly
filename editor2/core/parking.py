@@ -51,7 +51,7 @@ def _threshold(doc, tid, threshold=None):
 def _held(doc, tid):
     """Slots whose NUMBER matters (an animation writes them, a statue / service menu draws
     there): a metatile on one of them is never parked."""
-    out = set(doc.animated_slots(tid)) | set(doc.service_slots(tid))
+    out = set(doc.animated_slots(tid)) | set(doc.service_slots_anywhere(tid))   # S177
     try:
         out |= set(doc.statue_slots(tid))
     except Exception:                                            # noqa: BLE001

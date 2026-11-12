@@ -543,7 +543,12 @@ wHintTmp:: ds 4 ;d5b8 — the monument's slot / families lo / hi / scratch
 ; of the tile the own-animation player copies (bit 0 of its destination word).
 wPage2On:: db ;d5bc — 1 = this room draws page-2 tiles (transient)
 wTileAnimDstVBK:: db ;d5bd — the tile animation's destination VRAM bank (scratch)
-wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 - 35 - 2 ;d5be-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map; S158 35: the breeding hints; S168 2: wPage2On + wTileAnimDstVBK)
+; S177 r2 — bank $77 PushRunIsMenu (a menu letter whose slot number equals the room tile
+; under it): the row / end column / verdict of the run analysed last (transient).
+wPushRunRow:: db ;d5be
+wPushRunEnd:: db ;d5bf
+wPushRunMenu:: db ;d5c0
+wCustomPool:: ds $5A4 - 132 - 5 - 2 * TILEANIM_MAX_GROUPS - 2 - 18 - 26 - 8 - 256 - 1 - 2 - 160 - 12 - 1 - 514 - 23 - 1 - 1 - 43 - 2 - 2 * LINK_IDS - 1 - 3 - 2 - 7 - 44 - 35 - 2 - 3 ;d5c1-d5e4 — transient reserve (was $664; FX1 carved 64+128; S97 132; S102 69; S105 2; S111 18; S114 26; S115 8; S117 256 wExtFlags + 1 wShopID; S117b 2 push scratch; S121 160 wMillyLayout; S123 12 NPC colours; S125 1 wHubReason; S126 514: the service tile save + wServiceLines; S127 23: wBreedLast + wBreedSlots + the roll scratch; S129 1: wStoryFlag; S136 1: wPlaceIdx; S137 43: the render walk block; S140 42: wMapRegion + wWarpRegion + wExitLinks; S141 1: wNpcSheetIdx; S150 3: wTextOvrMode + wTextOvrPtr; S151 2: wItemBase + wItemInUse; S153 7: wCreditsAfter; S154 43: the memorial; S154 r2 + 1: the shade map; S158 35: the breeding hints; S168 2: wPage2On + wTileAnimDstVBK; S177 r2 3: wPushRunRow / wPushRunEnd / wPushRunMenu)
 ; FX1 (S71): wPoolBounce — 128-byte staging for sleep-pool bank-2 record
 ; swaps (per-byte scratch in CF3PoolSwapRecord). Transient. (The v1 drain's
 ; halved-pending scratch use was removed with the S71v2 exp-scale veto.)

@@ -136,21 +136,34 @@ def walk_first(free, thr):
     return sorted(k, key=lambda s: (s >= 0x80, s))
 
 
-def pick_order(free, thr, want_wall, strict, walls_down=True):
+def pick_order(free, thr, want_wall, strict, walls_down=True, last=()):
     """Free slots in the order an import takes them (S168). The bottom-right subtile
-    (strict) must sit on its side: page 1, then page 2. Any other subtile prefers its
-    side on page 1, then page 1's other side, then page 2 — page 2 opens only when page
-    1 is full. walls_down=False: wall slots upward (the Draw tab's pre-S168 order)."""
+    (strict) must sit on its side: page 1, then page 2. Any other subtile never decides
+    walking (S94) — S177: it takes the side with MORE free slots first (both pages counted),
+    so the scarce side stays for the bottom-right quarters that need it (measured S177 on
+    the user's GreatLog: 31 of 42 walkable slots held top / left quarters while a stamp
+    found no walkable slot), then the other side; page 2 opens only when page 1 is full.
+    walls_down=False: wall slots upward (the Draw tab's pre-S168 order). `last` (S177) =
+    slots taken only when nothing else is free (a service menu keeps them free on some
+    screen and the caller does not know where its tile goes)."""
     def walls(f):
         return wall_first(f, thr) if walls_down else sorted(
             [x for x in f if is_wall(x, thr)], key=lambda x: (x >= 0x80, x))
-    same = walls(free) if want_wall else walk_first(free, thr)
-    if strict:
-        return same
-    other = walk_first(free, thr) if want_wall else walls(free)
-    p1 = [s for s in same if s < 0x80] + [s for s in other if s < 0x80]
-    p2 = [s for s in same if s >= 0x80] + [s for s in other if s >= 0x80]
-    return p1 + p2
+    last = set(last or ())
+    first = [x for x in free if x not in last]
+    tail = [x for x in free if x in last]
+
+    def order(f):
+        same = walls(f) if want_wall else walk_first(f, thr)
+        if strict:
+            return same
+        nw = sum(1 for x in free if is_wall(x, thr))
+        roomy_wall = nw >= len(free) - nw
+        a = walls(f) if roomy_wall else walk_first(f, thr)
+        b = walk_first(f, thr) if roomy_wall else walls(f)
+        return ([s for s in a if s < 0x80] + [s for s in b if s < 0x80]
+                + [s for s in a if s >= 0x80] + [s for s in b if s >= 0x80])
+    return order(first) + order(tail)
 
 
 def pad_sheet(sheet):

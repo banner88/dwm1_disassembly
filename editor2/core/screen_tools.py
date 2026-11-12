@@ -260,6 +260,10 @@ class ScreenToolsMixin:
                     plan_xy(e, f'statue{tag}', cat='statue', lo_y=1)        # its monster sits on the cell above
                 else:
                     plan_xy(e, f'{name}{tag}', cat=name)
+                tf = e.get('talks_for')             # S177: a podium's NPC moves with it
+                if isinstance(tf, dict) and 'x' in tf and 'y' in tf:
+                    moves.append((tf, 'x', _v(tf['x']) + dx))
+                    moves.append((tf, 'y', _v(tf['y']) + dy))
             for e in st.get('exits') or []:
                 if not isinstance(e, dict) or 'x' not in e:
                     continue

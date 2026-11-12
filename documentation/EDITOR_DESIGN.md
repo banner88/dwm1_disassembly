@@ -1548,6 +1548,28 @@ question. It needs to be visually intuitive and clear"; Apply "Let me decide".
 - test_app `s176_colours_draw_stamps` (the three parts on the example, undone to the start);
   `s132_rooms_ui` / `s171_colour_true` / `s171_recolour` moved to the new controls.
 
+**As built S177 (ROADMAP P3.3q — a podium, a menu's slots per screen, Repack; built, NOT yet
+user-tested).** The user: "The 'podium' in the library below the librarian — can it proxy the
+NPC exactly?"; "Why am I getting so few tiles? I thought a room could have 256 tiles";
+conferred → "If grandpa or other services require tiles … push this into their own
+subroutines on that screen only".
+- **Spot page → talks for** (an examine spot): *nobody — its own script* or one of the
+  screen state's NPCs. Chosen, the spot answers exactly as the NPC (its first lines, flags and
+  menus — `editor2/core/podium.py`, the original Library counter's recipe) and the NPC turns
+  to the player; *answers A* becomes the front (the player faces the NPC across the spot) when
+  the NPC is next to it; the script row and New talk hide, the preview says whose talk it is,
+  problems show in the note (no NPC there now / not next to it). The canvas tooltip: *podium →
+  talks for the NPC at (x,y)*. Moving the NPC moves the reference; Shift objects moves both.
+- **Tileset tab**: *kept free on their own screen only* lists which screens keep which slots
+  for a breeding / farm / egg menu (the brown room-wide status is now only for a menu the
+  room's entry script opens); the split line (*split at $50: 160 wall / 96 walkable … N
+  walkable slots hold a deciding quarter, M hold other quarters*); **Repack (N)** (one undo
+  step; nothing changes on screen).
+- **The stamp's "no free slot" error** names the split, what holds that side and the fixes
+  (Repack / Release / Park) — `tile_budget.explain`.
+- New tiles put the quarters that do not decide walking on the roomier side; imports take a
+  menu's slots last; the stamp bake avoids only its own screen's.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

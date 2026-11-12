@@ -839,7 +839,10 @@ class DoorsMixin:
              'script': fields.get('script', v.get('script'))}
         if kind == 'examine':
             e['facing'] = fields.get('facing', v.get('facing', 'any'))
-        if e['script'] in (None, 'none'):
+            if old.get('talks_for') is not None and 'script' not in fields:   # S177: a podium
+                e['talks_for'] = dict(old['talks_for'])
+                e.pop('script', None)
+        if e.get('talks_for') is None and e['script'] in (None, 'none'):
             raise ValueError('a spot needs a script')
         lst[index] = e
         self.touch()

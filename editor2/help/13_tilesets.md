@@ -118,6 +118,14 @@ while the room shows), red dot = picture changed, yellow line = wall | walkable 
 colours. The summary counts free wall / walkable slots and how many of them
 are on each page.
 
+**Why fewer than 256 for walking?** (S177) A room's 256 slots are shared by ALL its
+screens, and the **wall | walkable split** cuts each page in two: a slot below the split
+is a wall, above it walkable (a copy of GreatTree splits at $50: 80 wall + 48 walkable a
+page). Only a cell's **bottom-right** quarter decides whether you can walk on it — the
+other three quarters may sit on either side. The summary says how many walkable slots hold
+a deciding quarter and how many only hold other quarters (those could move: **Repack**).
+New tiles now put the quarters that do not decide on the side with more room.
+
 - **Release unused vocabulary** — the original room's tiles are kept so
   *This room's tiles* still offers them. Ticked, imports and walkability
   flips may use the ones placed nowhere. Untick to protect them again.
@@ -127,6 +135,13 @@ are on each page.
   the tileset is full. The summary counts the parked ones (0 slots).
 - **Delete parked (N)** — forget the parked metatiles (they use no slot; this only tidies
   the picker). Undo brings them back.
+- **Repack (N)** (S177) — moves tiles that are never the bottom-right quarter of a cell
+  from the side that is running out (usually walkable) to free slots of the other side,
+  until both have about as many free. Every screen and metatile follows: nothing changes
+  on screen and every cell keeps its wall / walkable side. Undo puts them back.
+- When a stamp, an import or a drawing finds no free slot, the message now says what holds
+  that side (placed, the deciding quarters, My metatiles, unreleased vocabulary, animated,
+  a menu's slots) and which of Repack / Release / Park would help.
 - **Give this room its own copy** — shown when other rooms draw with the
   same tileset (*SHARED with: …*): this room gets a copy of its own.
 
@@ -207,10 +222,12 @@ with a room of other colours (the message names it).
   page-2 tiles, and battles leave them as they were.
 - **Animated tiles** work on page 2 like on page 1 (see *Animated tiles*).
 - **Grandpa, breeders, the farm keeper, the egg appraiser** draw their menus
-  into page-1 slots while the room shows (breeding: 56 of them, $38-$7F). A
-  room with one of them keeps those slots empty: making the NPC (or opening
-  an older project) moves the tiles there to page 2 — nothing changes on
-  screen (S168 r2).
+  into page-1 slots while the room shows (breeding: $38-$7F). Since S177 those
+  slots are kept empty only on the **screen where that NPC stands** — the menu can
+  only be open while that screen shows, and closing it gives every slot back — so
+  the room's other screens may use them. Tiles there on the NPC's own screen move
+  (page 2 first) when you make the NPC or open the project — nothing changes on
+  screen (S168 r2 / S177).
 - **Memorial statues** draw their monster into page 1: when page 1 is full,
   adding a statue moves a few ordinary tiles to page 2 first (nothing changes
   on screen).

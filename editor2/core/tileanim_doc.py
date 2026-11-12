@@ -277,7 +277,8 @@ class TileAnimMixin:
             if clash or s in vanilla or s in taken or inside_other or (private and outside):
                 ps = [p for p in moving if key_of[p] == k]
                 br = any(p[0] % 2 == 1 and p[1] % 2 == 1 for p in ps)
-                cand = P2.pick_order(free, thr, P2.is_wall(s, thr), br)
+                cand = P2.pick_order(free, thr, P2.is_wall(s, thr), br,
+                                     last=self.service_slots_anywhere(tid))   # S177
                 if not cand:
                     raise RuntimeError('no free tile left on the tileset for an own copy'
                                        + (' on the right wall/walkable side' if br else ''))

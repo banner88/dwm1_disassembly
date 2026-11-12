@@ -227,8 +227,18 @@ class TilesetMap(QWidget):
         self.purge_o.setToolTip('Forget the parked metatiles of this tileset (they hold no slot '
                                 'anyway — this only tidies the picker). Undo brings them back.')
         self.purge_o.clicked.connect(lambda: self.purgeRequested.emit('delete_parked'))
+        # S177 (the user: "Why am I getting so few tiles?"): only a cell's bottom-right
+        # quarter decides walking — the others may live on either side
+        self.repack_b = QPushButton('Repack')
+        self.repack_b.setToolTip('Move tiles that are never the bottom-right quarter of a cell '
+                                 '(the only quarter that decides walking) from the side that is '
+                                 'running out to free slots of the other side. Every screen and '
+                                 'metatile follows — nothing changes on screen. Undo puts them '
+                                 'back.')
+        self.repack_b.clicked.connect(lambda: self.purgeRequested.emit('repack'))
         prow.addWidget(self.purge_b)
         prow.addWidget(self.purge_o)
+        prow.addWidget(self.repack_b)
         prow.addStretch(1)
         v.addLayout(prow)
         self.grid = SlotGrid()
@@ -299,9 +309,11 @@ class TilesetMap(QWidget):
             f" · parked metatiles <b>{len(PK.parked(self.doc, tid))}</b> (0 slots)"
             + anim_line
             + (f"<br>kept free for a service menu: <b>{sum(1 for u in usage if u.get('service'))}"
-               '</b> slot(s) (brown) — the breeding / farm / egg screen of a room on this sheet '
-               'draws its words there while the room shows'
-               if any(u.get('service') for u in usage) else ''))
+               '</b> slot(s) (brown) — the room\'s ENTRY script opens a breeding / farm / egg '
+               'menu, which draws its words there on any screen'
+               if any(u.get('service') for u in usage) else '')
+            + self._kept_line(usage)
+            + self._sides_line(tid))
         try:
             n, fr = PK.preview(self.doc, tid, self.threshold)
         except Exception:                                        # noqa: BLE001
@@ -322,6 +334,39 @@ class TilesetMap(QWidget):
         self.release.setChecked(self.doc.released(tid))
         self.release.setEnabled(any(u['vocab'] for u in usage))
         self._building = False
+
+    def _kept_line(self, usage):
+        """S177: the slots a menu keeps free on its own screen only (free elsewhere)."""
+        kept = {}
+        for u in usage:
+            for rid, k in u.get('kept_off') or []:
+                if u['status'] == 'service':
+                    continue
+                kept.setdefault((rid, k), 0)
+                kept[(rid, k)] += 1
+        if not kept:
+            return ''
+        bits = [f"{self.doc.room_name(self.doc.room(rid)) if self.doc.room(rid) else rid} screen {k} "
+                f"({n})" for (rid, k), n in sorted(kept.items())]
+        return ('<br>kept free on their own screen only (a breeding / farm / egg menu there '
+                'draws into them; every other screen may use them): ' + ', '.join(bits))
+
+    def _sides_line(self, tid):
+        """S177: the walkability split in words + what Repack would free."""
+        from editor2.core import tile_budget as TB
+        try:
+            b = TB.budget(self.doc, tid, self.threshold)
+            plan = TB.repack_plan(self.doc, tid, self.threshold)
+        except Exception:                                        # noqa: BLE001
+            return ''
+        w, k = b['walkable'], b['wall']
+        self.repack_b.setText(f'Repack ({len(plan)})' if plan else 'Repack (nothing to move)')
+        self.repack_b.setEnabled(bool(plan) and ':' not in str(tid))
+        return (f"<br>split at ${self.threshold:02X}: <b>{k['total']}</b> wall / "
+                f"<b>{w['total']}</b> walkable slots (both pages). Only a cell's bottom-right "
+                f"quarter decides walking: {w['placed_br']} walkable slots hold one, "
+                f"{w['placed_movable']} hold other quarters that could sit on the wall side "
+                '(Repack).')
 
     def _release(self, on):
         if not self._building:

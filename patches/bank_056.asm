@@ -2847,323 +2847,323 @@ LoadB56_4dba:
 ; =============================================================================
 ; @BUILD_PROJECT BEGIN gd_skill_desc
 SkillDescStrings:
-SkillDesc_000_Blaze:  ; $502F "Inflicts damage/with a small fire/ball"
+SkillDesc_000_Blaze:  ; "Inflicts damage/with a small fire/ball"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $54, $46, $51, $45, $62, $3E, $62, $50, $4A, $3E, $49, $49, $62, $43, $46, $4F, $42, $F1, $3F, $3E, $49, $49, $F0
-SkillDesc_001_Blazemore:  ; $5056 "Inflicts damage/with a giant/fire ball"
+SkillDesc_001_Blazemore:  ; "Inflicts damage/with a giant/fire ball"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $54, $46, $51, $45, $62, $3E, $62, $44, $46, $3E, $4B, $51, $F1, $43, $46, $4F, $42, $62, $3F, $3E, $49, $49, $F0
-SkillDesc_002_Blazemost:  ; $507D "Inflicts damage/with pillars of/fire"
+SkillDesc_002_Blazemost:  ; "Inflicts damage/with pillars of/fire"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $54, $46, $51, $45, $62, $4D, $46, $49, $49, $3E, $4F, $50, $62, $4C, $43, $F1, $43, $46, $4F, $42, $F0
-SkillDesc_003_Firebal:  ; $50A2 "Inflicts damage to/all enemies with/a small blaze"
+SkillDesc_003_Firebal:  ; "Inflicts damage to/all enemies with/a small blaze"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $50, $4A, $3E, $49, $49, $62, $3F, $49, $3E, $57, $42, $F0
-SkillDesc_004_Firebane:  ; $50D4 "Inflicts damage to/all enemies with/a huge blaze"
+SkillDesc_004_Firebane:  ; "Inflicts damage to/all enemies with/a huge blaze"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $45, $52, $44, $42, $62, $3F, $49, $3E, $57, $42, $F0
-SkillDesc_005_Firebolt:  ; $5105 "Inflicts damage to/all the enemies/with a big blaze"
+SkillDesc_005_Firebolt:  ; "Inflicts damage to/all the enemies/with a big blaze"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $62, $3F, $46, $44, $62, $3F, $49, $3E, $57, $42, $F0
-SkillDesc_006_Bang:  ; $5139 "Inflicts damage to/all enemies with/an explosion"
+SkillDesc_006_Bang:  ; "Inflicts damage to/all enemies with/an explosion"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $4B, $62, $42, $55, $4D, $49, $4C, $50, $46, $4C, $4B, $F0
-SkillDesc_007_Boom:  ; $516A "Inflicts damage to/all enemies with/explosions"
+SkillDesc_007_Boom:  ; "Inflicts damage to/all enemies with/explosions"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $42, $55, $4D, $49, $4C, $50, $46, $4C, $4B, $50, $F0
-SkillDesc_008_Explodet:  ; $5199 "Inflicts damage to/all enemies with/a HUGE explosion"
+SkillDesc_008_Explodet:  ; "Inflicts damage to/all enemies with/a HUGE explosion"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $2B, $38, $2A, $28, $62, $42, $55, $4D, $49, $4C, $50, $46, $4C, $4B, $F0
-SkillDesc_009_Infernos:  ; $51CE "Inflicts damages/to all enemies/with a whirlwind"
+SkillDesc_009_Infernos:  ; "Inflicts damages/to all enemies/with a whirlwind"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $50, $F1, $51, $4C, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $62, $54, $45, $46, $4F, $49, $54, $46, $4B, $41, $F0
-SkillDesc_010_Infermore:  ; $51FF "Inflicts damages/to all enemies/with a tornado"
+SkillDesc_010_Infermore:  ; "Inflicts damages/to all enemies/with a tornado"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $50, $F1, $51, $4C, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $62, $51, $4C, $4F, $4B, $3E, $41, $4C, $F0
-SkillDesc_011_Infermost:  ; $522E "Inflicts damages/to all enemies/with a hurricane"
+SkillDesc_011_Infermost:  ; "Inflicts damages/to all enemies/with a hurricane"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $50, $F1, $51, $4C, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $62, $45, $52, $4F, $4F, $46, $40, $3E, $4B, $42, $F0
-SkillDesc_012_IceBolt:  ; $525F "Freezes all/enemies with ice"
+SkillDesc_012_IceBolt:  ; "Freezes all/enemies with ice"
     db $29, $4F, $42, $42, $57, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $46, $40, $42, $F0
-SkillDesc_013_SnowStorm:  ; $527C "Turns all enemies/into ice"
+SkillDesc_013_SnowStorm:  ; "Turns all enemies/into ice"
     db $37, $52, $4F, $4B, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $46, $4B, $51, $4C, $62, $46, $40, $42, $F0
-SkillDesc_014_Blizzard:  ; $5297 "Attacks all/enemies with a/frigid blizzard"
+SkillDesc_014_Blizzard:  ; "Attacks all/enemies with a/frigid blizzard"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $F1, $43, $4F, $46, $44, $46, $41, $62, $3F, $49, $46, $57, $57, $3E, $4F, $41, $F0
-SkillDesc_015_Bolt:  ; $52C2 "Strikes all/enemies with/lightning"
+SkillDesc_015_Bolt:  ; "Strikes all/enemies with/lightning"
     db $36, $51, $4F, $46, $48, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $49, $46, $44, $45, $51, $4B, $46, $4B, $44, $F0
-SkillDesc_016_Zap:  ; $52E5 "Strikes all/enemies with/a thunderbolt"
+SkillDesc_016_Zap:  ; "Strikes all/enemies with/a thunderbolt"
     db $36, $51, $4F, $46, $48, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $51, $45, $52, $4B, $41, $42, $4F, $3F, $4C, $49, $51, $F0
-SkillDesc_017_Thordain:  ; $530C "Strikes all/enemies with/thunderbolts"
+SkillDesc_017_Thordain:  ; "Strikes all/enemies with/thunderbolts"
     db $36, $51, $4F, $46, $48, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $51, $45, $52, $4B, $41, $42, $4F, $3F, $4C, $49, $51, $50, $F0
-SkillDesc_018_Beat:  ; $5332 "Instantly knocks/out an enemy"
+SkillDesc_018_Beat:  ; "Instantly knocks/out an enemy"
     db $2C, $4B, $50, $51, $3E, $4B, $51, $49, $56, $62, $48, $4B, $4C, $40, $48, $50, $F1, $4C, $52, $51, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_019_Defeat:  ; $5350 "Instantly knocks/out all enemies"
+SkillDesc_019_Defeat:  ; "Instantly knocks/out all enemies"
     db $2C, $4B, $50, $51, $3E, $4B, $51, $49, $56, $62, $48, $4B, $4C, $40, $48, $50, $F1, $4C, $52, $51, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_020_Sacrifice:  ; $5371 "Knocks out the/caster and/all enemies"
+SkillDesc_020_Sacrifice:  ; "Knocks out the/caster and/all enemies"
     db $2E, $4B, $4C, $40, $48, $50, $62, $4C, $52, $51, $62, $51, $45, $42, $F1, $40, $3E, $50, $51, $42, $4F, $62, $3E, $4B, $41, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_021_Sleep:  ; $5397 "Puts an enemy/to sleep"
+SkillDesc_021_Sleep:  ; "Puts an enemy/to sleep"
     db $33, $52, $51, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $51, $4C, $62, $50, $49, $42, $42, $4D, $F0
-SkillDesc_022_SleepAll:  ; $53AE "Puts all enemies/to sleep"
+SkillDesc_022_SleepAll:  ; "Puts all enemies/to sleep"
     db $33, $52, $51, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $51, $4C, $62, $50, $49, $42, $42, $4D, $F0
-SkillDesc_023_StopSpell:  ; $53C8 "Suspends all the/enemies from/casting spells"
+SkillDesc_023_StopSpell:  ; "Suspends all the/enemies from/casting spells"
     db $36, $52, $50, $4D, $42, $4B, $41, $50, $62, $3E, $49, $49, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $43, $4F, $4C, $4A, $F1, $40, $3E, $50, $51, $46, $4B, $44, $62, $50, $4D, $42, $49, $49, $50, $F0
-SkillDesc_024_Surround:  ; $53F5 "Engulfs all the/enemies with an/illusion"
+SkillDesc_024_Surround:  ; "Engulfs all the/enemies with an/illusion"
     db $28, $4B, $44, $52, $49, $43, $50, $62, $3E, $49, $49, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $4B, $F1, $46, $49, $49, $52, $50, $46, $4C, $4B, $F0
-SkillDesc_025_PanicAll:  ; $541E "Confuses all/enemies"
+SkillDesc_025_PanicAll:  ; "Confuses all/enemies"
     db $26, $4C, $4B, $43, $52, $50, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_026_RobMagic:  ; $5433 "Steals enemy's MP"
+SkillDesc_026_RobMagic:  ; "Steals enemy's MP"
     db $36, $51, $42, $3E, $49, $50, $62, $42, $4B, $42, $4A, $56, $68, $62, $30, $33, $F0
-SkillDesc_027_TakeMagic:  ; $5444 "Absorbs the MP of/a spell cast by/an enemy"
+SkillDesc_027_TakeMagic:  ; "Absorbs the MP of/a spell cast by/an enemy"
     db $24, $3F, $50, $4C, $4F, $3F, $50, $62, $51, $45, $42, $62, $30, $33, $62, $4C, $43, $F1, $3E, $62, $50, $4D, $42, $49, $49, $62, $40, $3E, $50, $51, $62, $3F, $56, $F1, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_028_Sap:  ; $546F "Lowers an/enemy's DEFENSE"
+SkillDesc_028_Sap:  ; "Lowers an/enemy's DEFENSE"
     db $2F, $4C, $54, $42, $4F, $50, $62, $3E, $4B, $F1, $42, $4B, $42, $4A, $56, $68, $62, $27, $28, $29, $28, $31, $36, $28, $F0
-SkillDesc_029_Defence:  ; $5488 "Lowers all the/enemies' DEFENSE"
+SkillDesc_029_Defence:  ; "Lowers all the/enemies' DEFENSE"
     db $2F, $4C, $54, $42, $4F, $50, $62, $3E, $49, $49, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $46, $42, $50, $5C, $62, $27, $28, $29, $28, $31, $36, $28, $F0
-SkillDesc_030_Upper:  ; $54A8 "Increases DEFENSE/for an ally"
+SkillDesc_030_Upper:  ; "Increases DEFENSE/for an ally"
     db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $50, $62, $27, $28, $29, $28, $31, $36, $28, $F1, $43, $4C, $4F, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_031_Increase:  ; $54C6 "Increases DEFENSE/for all allies"
+SkillDesc_031_Increase:  ; "Increases DEFENSE/for all allies"
     db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $50, $62, $27, $28, $29, $28, $31, $36, $28, $F1, $43, $4C, $4F, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_032_Slow:  ; $54E7 "Decreases AGILITY/of an enemy"
+SkillDesc_032_Slow:  ; "Decreases AGILITY/of an enemy"
     db $27, $42, $40, $4F, $42, $3E, $50, $42, $50, $62, $24, $2A, $2C, $2F, $2C, $37, $3C, $F1, $4C, $43, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_033_SlowAll:  ; $5505 "Decreases AGILITY/of all enemies"
+SkillDesc_033_SlowAll:  ; "Decreases AGILITY/of all enemies"
     db $27, $42, $40, $4F, $42, $3E, $50, $42, $50, $62, $24, $2A, $2C, $2F, $2C, $37, $3C, $F1, $4C, $43, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_034_Speed:  ; $5526 "Increases AGILITY/for an ally"
+SkillDesc_034_Speed:  ; "Increases AGILITY/for an ally"
     db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $50, $62, $24, $2A, $2C, $2F, $2C, $37, $3C, $F1, $43, $4C, $4F, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_035_SpeedUp:  ; $5544 "Increases AGILITY/for all allies"
+SkillDesc_035_SpeedUp:  ; "Increases AGILITY/for all allies"
     db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $50, $62, $24, $2A, $2C, $2F, $2C, $37, $3C, $F1, $43, $4C, $4F, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_036_Barrier:  ; $5565 "All allies become/more resistant to/breath attacks"
+SkillDesc_036_Barrier:  ; "All allies become/more resistant to/breath attacks"
     db $24, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $62, $3F, $42, $40, $4C, $4A, $42, $F1, $4A, $4C, $4F, $42, $62, $4F, $42, $50, $46, $50, $51, $3E, $4B, $51, $62, $51, $4C, $F1, $3F, $4F, $42, $3E, $51, $45, $62, $3E, $51, $51, $3E, $40, $48, $50, $F0
-SkillDesc_037_TwinHits:  ; $5598 "Inflicts double/the damage to/an enemy"
+SkillDesc_037_TwinHits:  ; "Inflicts double/the damage to/an enemy"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $4C, $52, $3F, $49, $42, $F1, $51, $45, $42, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_038_MagicWall:  ; $55BF "Increases/resistance to/the enemy spells"
+SkillDesc_038_MagicWall:  ; "Increases/resistance to/the enemy spells"
     db $2C, $4B, $40, $4F, $42, $3E, $50, $42, $50, $F1, $4F, $42, $50, $46, $50, $51, $3E, $4B, $40, $42, $62, $51, $4C, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $62, $50, $4D, $42, $49, $49, $50, $F0
-SkillDesc_039_MagicBack:  ; $55E8 "Reflects the magic/cast by the enemy/for one turn"
+SkillDesc_039_MagicBack:  ; "Reflects the magic/cast by the enemy/for one turn"
     db $35, $42, $43, $49, $42, $40, $51, $50, $62, $51, $45, $42, $62, $4A, $3E, $44, $46, $40, $F1, $40, $3E, $50, $51, $62, $3F, $56, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F1, $43, $4C, $4F, $62, $4C, $4B, $42, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_040_Bounce:  ; $561A "Reflects the enemy/spells that the/caster receives"
+SkillDesc_040_Bounce:  ; "Reflects the enemy/spells that the/caster receives"
     db $35, $42, $43, $49, $42, $40, $51, $50, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F1, $50, $4D, $42, $49, $49, $50, $62, $51, $45, $3E, $51, $62, $51, $45, $42, $F1, $40, $3E, $50, $51, $42, $4F, $62, $4F, $42, $40, $42, $46, $53, $42, $50, $F0
-SkillDesc_041_Transform:  ; $564D "Transform into/the same species/as the enemy"
+SkillDesc_041_Transform:  ; "Transform into/the same species/as the enemy"
     db $37, $4F, $3E, $4B, $50, $43, $4C, $4F, $4A, $62, $46, $4B, $51, $4C, $F1, $51, $45, $42, $62, $50, $3E, $4A, $42, $62, $50, $4D, $42, $40, $46, $42, $50, $F1, $3E, $50, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_042_Ironize:  ; $567A "Turns all allies/into a protective/lump of iron"
+SkillDesc_042_Ironize:  ; "Turns all allies/into a protective/lump of iron"
     db $37, $52, $4F, $4B, $50, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F1, $46, $4B, $51, $4C, $62, $3E, $62, $4D, $4F, $4C, $51, $42, $40, $51, $46, $53, $42, $F1, $49, $52, $4A, $4D, $62, $4C, $43, $62, $46, $4F, $4C, $4B, $F0
-SkillDesc_043_Heal:  ; $56AA "Heals between/30 to 40 HP for an/ally"
+SkillDesc_043_Heal:  ; "Heals between/30 to 40 HP for an/ally"
     db $2B, $42, $3E, $49, $50, $62, $3F, $42, $51, $54, $42, $42, $4B, $F1, $03, $00, $62, $51, $4C, $62, $04, $00, $62, $2B, $33, $62, $43, $4C, $4F, $62, $3E, $4B, $F1, $3E, $49, $49, $56, $F0
-SkillDesc_044_HealMore:  ; $56D0 "Heals between/75 and 90 HP for/all allies"
+SkillDesc_044_HealMore:  ; "Heals between/75 and 90 HP for/all allies"
     db $2B, $42, $3E, $49, $50, $62, $3F, $42, $51, $54, $42, $42, $4B, $F1, $07, $05, $62, $3E, $4B, $41, $62, $09, $00, $62, $2B, $33, $62, $43, $4C, $4F, $F1, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_045_HealAll:  ; $56FA "Heals HP to max/for an ally"
+SkillDesc_045_HealAll:  ; "Heals HP to max/for an ally"
     db $2B, $42, $3E, $49, $50, $62, $2B, $33, $62, $51, $4C, $62, $4A, $3E, $55, $F1, $43, $4C, $4F, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_046_HealUs:  ; $5716 "Heals between/90 to 120 HP for/all allies"
+SkillDesc_046_HealUs:  ; "Heals between/90 to 120 HP for/all allies"
     db $2B, $42, $3E, $49, $50, $62, $3F, $42, $51, $54, $42, $42, $4B, $F1, $09, $00, $62, $51, $4C, $62, $01, $02, $00, $62, $2B, $33, $62, $43, $4C, $4F, $F1, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_047_HealUsAll:  ; $5740 "Heals HP to max/for all allies"
+SkillDesc_047_HealUsAll:  ; "Heals HP to max/for all allies"
     db $2B, $42, $3E, $49, $50, $62, $2B, $33, $62, $51, $4C, $62, $4A, $3E, $55, $F1, $43, $4C, $4F, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_048_Vivify:  ; $575F "Revives an ally"
+SkillDesc_048_Vivify:  ; "Revives an ally"
     db $35, $42, $53, $46, $53, $42, $50, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_049_Revive:  ; $576F "Revives an ally"
+SkillDesc_049_Revive:  ; "Revives an ally"
     db $35, $42, $53, $46, $53, $42, $50, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_050_Farewell:  ; $577F "Revives all other/allies but the/caster collapses"
+SkillDesc_050_Farewell:  ; "Revives all other/allies but the/caster collapses"
     db $35, $42, $53, $46, $53, $42, $50, $62, $3E, $49, $49, $62, $4C, $51, $45, $42, $4F, $F1, $3E, $49, $49, $46, $42, $50, $62, $3F, $52, $51, $62, $51, $45, $42, $F1, $40, $3E, $50, $51, $42, $4F, $62, $40, $4C, $49, $49, $3E, $4D, $50, $42, $50, $F0
-SkillDesc_051_Antidote:  ; $57B1 "Cures poison"
+SkillDesc_051_Antidote:  ; "Cures poison"
     db $26, $52, $4F, $42, $50, $62, $4D, $4C, $46, $50, $4C, $4B, $F0
-SkillDesc_052_NumbOff:  ; $57BE "Cures paralysis/or wakes up/an ally"
+SkillDesc_052_NumbOff:  ; "Cures paralysis/or wakes up/an ally"
     db $26, $52, $4F, $42, $50, $62, $4D, $3E, $4F, $3E, $49, $56, $50, $46, $50, $F1, $4C, $4F, $62, $54, $3E, $48, $42, $50, $62, $52, $4D, $F1, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_053_DeChaos:  ; $57E2 "Cures confusion"
+SkillDesc_053_DeChaos:  ; "Cures confusion"
     db $26, $52, $4F, $42, $50, $62, $40, $4C, $4B, $43, $52, $50, $46, $4C, $4B, $F0
-SkillDesc_054_CurseOff:  ; $57F2 "Breaks a curse"
+SkillDesc_054_CurseOff:  ; "Breaks a curse"
     db $25, $4F, $42, $3E, $48, $50, $62, $3E, $62, $40, $52, $4F, $50, $42, $F0
-SkillDesc_055_StepGuard:  ; $5801 "Protects from/land hazards/while traveling"
+SkillDesc_055_StepGuard:  ; "Protects from/land hazards/while traveling"
     db $33, $4F, $4C, $51, $42, $40, $51, $50, $62, $43, $4F, $4C, $4A, $F1, $49, $3E, $4B, $41, $62, $45, $3E, $57, $3E, $4F, $41, $50, $F1, $54, $45, $46, $49, $42, $62, $51, $4F, $3E, $53, $42, $49, $46, $4B, $44, $F0
-SkillDesc_056_MapMagic:  ; $582C "Reveals the entire/map of the/landscape"
+SkillDesc_056_MapMagic:  ; "Reveals the entire/map of the/landscape"
     db $35, $42, $53, $42, $3E, $49, $50, $62, $51, $45, $42, $62, $42, $4B, $51, $46, $4F, $42, $F1, $4A, $3E, $4D, $62, $4C, $43, $62, $51, $45, $42, $F1, $49, $3E, $4B, $41, $50, $40, $3E, $4D, $42, $F0
-SkillDesc_057_Chance:  ; $5854 "A random spell,/can be good or bad"
+SkillDesc_057_Chance:  ; "A random spell,/can be good or bad"
     db $24, $62, $4F, $3E, $4B, $41, $4C, $4A, $62, $50, $4D, $42, $49, $49, $5E, $F1, $40, $3E, $4B, $62, $3F, $42, $62, $44, $4C, $4C, $41, $62, $4C, $4F, $62, $3F, $3E, $41, $F0
-SkillDesc_058_Attack:  ; $5877 ""
+SkillDesc_058_Attack:  ; ""
     db $F0
-SkillDesc_059_TwinSlash:  ; $5878 "Fearless attack"
+SkillDesc_059_TwinSlash:  ; "Fearless attack"
     db $29, $42, $3E, $4F, $49, $42, $50, $50, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_060_Ramming:  ; $5888 "Attacks like a ram/with its true/inner strength"
+SkillDesc_060_Ramming:  ; "Attacks like a ram/with its true/inner strength"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $49, $46, $48, $42, $62, $3E, $62, $4F, $3E, $4A, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $51, $4F, $52, $42, $F1, $46, $4B, $4B, $42, $4F, $62, $50, $51, $4F, $42, $4B, $44, $51, $45, $F0
-SkillDesc_061_Beserker:  ; $58B8 "Attacks like there/is no tomorrow"
+SkillDesc_061_Beserker:  ; "Attacks like there/is no tomorrow"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $49, $46, $48, $42, $62, $51, $45, $42, $4F, $42, $F1, $46, $50, $62, $4B, $4C, $62, $51, $4C, $4A, $4C, $4F, $4F, $4C, $54, $F0
-SkillDesc_062_Kamikaze:  ; $58DA "A suicide attack/to knock out the/enemy"
+SkillDesc_062_Kamikaze:  ; "A suicide attack/to knock out the/enemy"
     db $24, $62, $50, $52, $46, $40, $46, $41, $42, $62, $3E, $51, $51, $3E, $40, $48, $F1, $51, $4C, $62, $48, $4B, $4C, $40, $48, $62, $4C, $52, $51, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_063_Massacre:  ; $5902 "Inflicts great/damage to an ally/or an enemy"
+SkillDesc_063_Massacre:  ; "Inflicts great/damage to an ally/or an enemy"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F1, $4C, $4F, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_064_EvilSlash:  ; $592F "Attacks like a/ruthless demon"
+SkillDesc_064_EvilSlash:  ; "Attacks like a/ruthless demon"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $49, $46, $48, $42, $62, $3E, $F1, $4F, $52, $51, $45, $49, $42, $50, $50, $62, $41, $42, $4A, $4C, $4B, $F0
-SkillDesc_065_ChargeUP:  ; $594D "Inflicts huge/damage to an enemy/on the next turn"
+SkillDesc_065_ChargeUP:  ; "Inflicts huge/damage to an enemy/on the next turn"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $45, $52, $44, $42, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $4C, $4B, $62, $51, $45, $42, $62, $4B, $42, $55, $51, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_066_HighJump:  ; $597F "Jumps into the air/and attacks on/the next turn"
+SkillDesc_066_HighJump:  ; "Jumps into the air/and attacks on/the next turn"
     db $2D, $52, $4A, $4D, $50, $62, $46, $4B, $51, $4C, $62, $51, $45, $42, $62, $3E, $46, $4F, $F1, $3E, $4B, $41, $62, $3E, $51, $51, $3E, $40, $48, $50, $62, $4C, $4B, $F1, $51, $45, $42, $62, $4B, $42, $55, $51, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_067_SuckAir:  ; $59AF "Sucks in air power/to inflict damage/on the next turn"
+SkillDesc_067_SuckAir:  ; "Sucks in air power/to inflict damage/on the next turn"
     db $36, $52, $40, $48, $50, $62, $46, $4B, $62, $3E, $46, $4F, $62, $4D, $4C, $54, $42, $4F, $F1, $51, $4C, $62, $46, $4B, $43, $49, $46, $40, $51, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $4C, $4B, $62, $51, $45, $42, $62, $4B, $42, $55, $51, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_068_FireSlash:  ; $59E5 "Burning blade/sword attack"
+SkillDesc_068_FireSlash:  ; "Burning blade/sword attack"
     db $25, $52, $4F, $4B, $46, $4B, $44, $62, $3F, $49, $3E, $41, $42, $F1, $50, $54, $4C, $4F, $41, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_069_BoltSlash:  ; $5A00 "Thunderbolt/sword attack"
+SkillDesc_069_BoltSlash:  ; "Thunderbolt/sword attack"
     db $37, $45, $52, $4B, $41, $42, $4F, $3F, $4C, $49, $51, $F1, $50, $54, $4C, $4F, $41, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_070_VacuSlash:  ; $5A19 "Whirling vacuum/sword attack"
+SkillDesc_070_VacuSlash:  ; "Whirling vacuum/sword attack"
     db $3A, $45, $46, $4F, $49, $46, $4B, $44, $62, $53, $3E, $40, $52, $52, $4A, $F1, $50, $54, $4C, $4F, $41, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_071_IceSlash:  ; $5A36 "Freezing ice/sword attack"
+SkillDesc_071_IceSlash:  ; "Freezing ice/sword attack"
     db $29, $4F, $42, $42, $57, $46, $4B, $44, $62, $46, $40, $42, $F1, $50, $54, $4C, $4F, $41, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_072_MetalCut:  ; $5A50 "Inflicts great/damage to metal/enemies"
+SkillDesc_072_MetalCut:  ; "Inflicts great/damage to metal/enemies"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $4A, $42, $51, $3E, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_073_DrakSlash:  ; $5A77 "Inflicts great/damage to dragons"
+SkillDesc_073_DrakSlash:  ; "Inflicts great/damage to dragons"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $41, $4F, $3E, $44, $4C, $4B, $50, $F0
-SkillDesc_074_BeastCut:  ; $5A98 "Inflicts great/damage to beasts"
+SkillDesc_074_BeastCut:  ; "Inflicts great/damage to beasts"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3F, $42, $3E, $50, $51, $50, $F0
-SkillDesc_075_BirdBlow:  ; $5AB8 "Inflicts great/damage to birds"
+SkillDesc_075_BirdBlow:  ; "Inflicts great/damage to birds"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3F, $46, $4F, $41, $50, $F0
-SkillDesc_076_DevilCut:  ; $5AD7 "Inflicts great/damage on devils"
+SkillDesc_076_DevilCut:  ; "Inflicts great/damage on devils"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $4C, $4B, $62, $41, $42, $53, $46, $49, $50, $F0
-SkillDesc_077_ZombieCut:  ; $5AF7 "Inflict great/damage to zombies"
+SkillDesc_077_ZombieCut:  ; "Inflict great/damage to zombies"
     db $2C, $4B, $43, $49, $46, $40, $51, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $57, $4C, $4A, $3F, $46, $42, $50, $F0
-SkillDesc_078_CleanCut:  ; $5B17 "Inflicts great/damage to/materials"
+SkillDesc_078_CleanCut:  ; "Inflicts great/damage to/materials"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $4A, $3E, $51, $42, $4F, $46, $3E, $49, $50, $F0
-SkillDesc_079_MultiCut:  ; $5B3A "Inflicts damage/to all enemies/with many cuts"
+SkillDesc_079_MultiCut:  ; "Inflicts damage/to all enemies/with many cuts"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $51, $4C, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $4A, $3E, $4B, $56, $62, $40, $52, $51, $50, $F0
-SkillDesc_080_BiAttack:  ; $5B68 "Attacks twice in/one turn"
+SkillDesc_080_BiAttack:  ; "Attacks twice in/one turn"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $51, $54, $46, $40, $42, $62, $46, $4B, $F1, $4C, $4B, $42, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_081_QuadHits:  ; $5B82 "Attacks 4 times/in one turn"
+SkillDesc_081_QuadHits:  ; "Attacks 4 times/in one turn"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $04, $62, $51, $46, $4A, $42, $50, $F1, $46, $4B, $62, $4C, $4B, $42, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_082_CallHelp:  ; $5B9E "Calls for a backup"
+SkillDesc_082_CallHelp:  ; "Calls for a backup"
     db $26, $3E, $49, $49, $50, $62, $43, $4C, $4F, $62, $3E, $62, $3F, $3E, $40, $48, $52, $4D, $F0
-SkillDesc_083_YellHelp:  ; $5BB1 "Calls a group of/monsters for help"
+SkillDesc_083_YellHelp:  ; "Calls a group of/monsters for help"
     db $26, $3E, $49, $49, $50, $62, $3E, $62, $44, $4F, $4C, $52, $4D, $62, $4C, $43, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $43, $4C, $4F, $62, $45, $42, $49, $4D, $F0
-SkillDesc_084_Focus:  ; $5BD4 "Two attacks/on the next/turn"
+SkillDesc_084_Focus:  ; "Two attacks/on the next/turn"
     db $37, $54, $4C, $62, $3E, $51, $51, $3E, $40, $48, $50, $F1, $4C, $4B, $62, $51, $45, $42, $62, $4B, $42, $55, $51, $F1, $51, $52, $4F, $4B, $F0
-SkillDesc_085_SquallHit:  ; $5BF1 "Allows you to/attack first/in the turn"
+SkillDesc_085_SquallHit:  ; "Allows you to/attack first/in the turn"
     db $24, $49, $49, $4C, $54, $50, $62, $56, $4C, $52, $62, $51, $4C, $F1, $3E, $51, $51, $3E, $40, $48, $62, $43, $46, $4F, $50, $51, $F1, $46, $4B, $62, $51, $45, $42, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_086_PsycheUp:  ; $5C18 "Inflicts Great/damage to an enemy/at the last turn"
+SkillDesc_086_PsycheUp:  ; "Inflicts Great/damage to an enemy/at the last turn"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $2A, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $3E, $51, $62, $51, $45, $42, $62, $49, $3E, $50, $51, $62, $51, $52, $4F, $4B, $F0
-SkillDesc_087_RainSlash:  ; $5C4B "Attacks all/enemies in one/attack"
+SkillDesc_087_RainSlash:  ; "Attacks all/enemies in one/attack"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $46, $4B, $62, $4C, $4B, $42, $F1, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_088_WindBeast:  ; $5C6D "Attacks an enemy/with a violent/whirlwind"
+SkillDesc_088_WindBeast:  ; "Attacks an enemy/with a violent/whirlwind"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $54, $46, $51, $45, $62, $3E, $62, $53, $46, $4C, $49, $42, $4B, $51, $F1, $54, $45, $46, $4F, $49, $54, $46, $4B, $41, $F0
-SkillDesc_089_Vacuum:  ; $5C97 "Attacks all/enemies with a/giant vacuum"
+SkillDesc_089_Vacuum:  ; "Attacks all/enemies with a/giant vacuum"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $F1, $44, $46, $3E, $4B, $51, $62, $53, $3E, $40, $52, $52, $4A, $F0
-SkillDesc_090_Lightning:  ; $5CBF "Inflicts damage on/all enemies with/lightning"
+SkillDesc_090_Lightning:  ; "Inflicts damage on/all enemies with/lightning"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $4C, $4B, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $49, $46, $44, $45, $51, $4B, $46, $4B, $44, $F0
-SkillDesc_091_RockThrow:  ; $5CED "Throws a huge rock/on all enemies"
+SkillDesc_091_RockThrow:  ; "Throws a huge rock/on all enemies"
     db $37, $45, $4F, $4C, $54, $50, $62, $3E, $62, $45, $52, $44, $42, $62, $4F, $4C, $40, $48, $F1, $4C, $4B, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_092_FireAir:  ; $5D0F "Breathes out fire/to inflict damage/on all enemies"
+SkillDesc_092_FireAir:  ; "Breathes out fire/to inflict damage/on all enemies"
     db $25, $4F, $42, $3E, $51, $45, $42, $50, $62, $4C, $52, $51, $62, $43, $46, $4F, $42, $F1, $51, $4C, $62, $46, $4B, $43, $49, $46, $40, $51, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $4C, $4B, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_093_BlazeAir:  ; $5D42 "Blows out a blaze/to inflict damage/on all enemies"
+SkillDesc_093_BlazeAir:  ; "Blows out a blaze/to inflict damage/on all enemies"
     db $25, $49, $4C, $54, $50, $62, $4C, $52, $51, $62, $3E, $62, $3F, $49, $3E, $57, $42, $F1, $51, $4C, $62, $46, $4B, $43, $49, $46, $40, $51, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $4C, $4B, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_094_Scorching:  ; $5D75 "Burns all enemies/with a devastating/flame"
+SkillDesc_094_Scorching:  ; "Burns all enemies/with a devastating/flame"
     db $25, $52, $4F, $4B, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $62, $41, $42, $53, $3E, $50, $51, $3E, $51, $46, $4B, $44, $F1, $43, $49, $3E, $4A, $42, $F0
-SkillDesc_095_WhiteFire:  ; $5DA0 "Attacks all/enemies with an/unimaginable blaze"
+SkillDesc_095_WhiteFire:  ; "Attacks all/enemies with an/unimaginable blaze"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $4B, $F1, $52, $4B, $46, $4A, $3E, $44, $46, $4B, $3E, $3F, $49, $42, $62, $3F, $49, $3E, $57, $42, $F0
-SkillDesc_096_FrigidAir:  ; $5DCF "Inflicts damage to/all enemies with/its frigid breath"
+SkillDesc_096_FrigidAir:  ; "Inflicts damage to/all enemies with/its frigid breath"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $46, $51, $50, $62, $43, $4F, $46, $44, $46, $41, $62, $3F, $4F, $42, $3E, $51, $45, $F0
-SkillDesc_097_IceAir:  ; $5E05 "Freezes all/enemies"
+SkillDesc_097_IceAir:  ; "Freezes all/enemies"
     db $29, $4F, $42, $42, $57, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_098_IceStorm:  ; $5E19 "Inflicts damage to/all enemies with a/violent ice storm"
+SkillDesc_098_IceStorm:  ; "Inflicts damage to/all enemies with a/violent ice storm"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $F1, $53, $46, $4C, $49, $42, $4B, $51, $62, $46, $40, $42, $62, $50, $51, $4C, $4F, $4A, $F0
-SkillDesc_099_WhiteAir:  ; $5E51 "Attacks all/enemies with an/incandescent air"
+SkillDesc_099_WhiteAir:  ; "Attacks all/enemies with an/incandescent air"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $4B, $F1, $46, $4B, $40, $3E, $4B, $41, $42, $50, $40, $42, $4B, $51, $62, $3E, $46, $4F, $F0
-SkillDesc_100_Hellblast:  ; $5E7E "Hell powered/lightning blast/attacks all foes"
+SkillDesc_100_Hellblast:  ; "Hell powered/lightning blast/attacks all foes"
     db $2B, $42, $49, $49, $62, $4D, $4C, $54, $42, $4F, $42, $41, $F1, $49, $46, $44, $45, $51, $4B, $46, $4B, $44, $62, $3F, $49, $3E, $50, $51, $F1, $3E, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $62, $43, $4C, $42, $50, $F0
-SkillDesc_101_BigBang:  ; $5EAC "Creates a huge/explosion to/attack all enemies"
+SkillDesc_101_BigBang:  ; "Creates a huge/explosion to/attack all enemies"
     db $26, $4F, $42, $3E, $51, $42, $50, $62, $3E, $62, $45, $52, $44, $42, $F1, $42, $55, $4D, $49, $4C, $50, $46, $4C, $4B, $62, $51, $4C, $F1, $3E, $51, $51, $3E, $40, $48, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_102_MegaMagic:  ; $5EDB "The most powerful/spell that affects/all enemies"
+SkillDesc_102_MegaMagic:  ; "The most powerful/spell that affects/all enemies"
     db $37, $45, $42, $62, $4A, $4C, $50, $51, $62, $4D, $4C, $54, $42, $4F, $43, $52, $49, $F1, $50, $4D, $42, $49, $49, $62, $51, $45, $3E, $51, $62, $3E, $43, $43, $42, $40, $51, $50, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_103_PoisonHit:  ; $5F0C "Poisons the enemy/that attacked the/ally"
+SkillDesc_103_PoisonHit:  ; "Poisons the enemy/that attacked the/ally"
     db $33, $4C, $46, $50, $4C, $4B, $50, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F1, $51, $45, $3E, $51, $62, $3E, $51, $51, $3E, $40, $48, $42, $41, $62, $51, $45, $42, $F1, $3E, $49, $49, $56, $F0
-SkillDesc_104_NapAttack:  ; $5F35 "Sends the enemy/that attacked/the ally to sleep"
+SkillDesc_104_NapAttack:  ; "Sends the enemy/that attacked/the ally to sleep"
     db $36, $42, $4B, $41, $50, $62, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F1, $51, $45, $3E, $51, $62, $3E, $51, $51, $3E, $40, $48, $42, $41, $F1, $51, $45, $42, $62, $3E, $49, $49, $56, $62, $51, $4C, $62, $50, $49, $42, $42, $4D, $F0
-SkillDesc_105_Paralyze:  ; $5F65 "Paralyzes the/enemy that/attacked the ally"
+SkillDesc_105_Paralyze:  ; "Paralyzes the/enemy that/attacked the ally"
     db $33, $3E, $4F, $3E, $49, $56, $57, $42, $50, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $56, $62, $51, $45, $3E, $51, $F1, $3E, $51, $51, $3E, $40, $48, $42, $41, $62, $51, $45, $42, $62, $3E, $49, $49, $56, $F0
-SkillDesc_106_SleepAir:  ; $5F90 "Send all enemies/to sleep"
+SkillDesc_106_SleepAir:  ; "Send all enemies/to sleep"
     db $36, $42, $4B, $41, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $51, $4C, $62, $50, $49, $42, $42, $4D, $F0
-SkillDesc_107_PalsyAir:  ; $5FAA "Paralyzes all/enemies"
+SkillDesc_107_PalsyAir:  ; "Paralyzes all/enemies"
     db $33, $3E, $4F, $3E, $49, $56, $57, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_108_PoisonGas:  ; $5FC0 "Poisons all/enemies"
+SkillDesc_108_PoisonGas:  ; "Poisons all/enemies"
     db $33, $4C, $46, $50, $4C, $4B, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_109_PoisonAir:  ; $5FD4 "Severly poisons/all enemies"
+SkillDesc_109_PoisonAir:  ; "Severly poisons/all enemies"
     db $36, $42, $53, $42, $4F, $49, $56, $62, $4D, $4C, $46, $50, $4C, $4B, $50, $F1, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_110_PaniDance:  ; $5FF0 "Confuses all/enemies"
+SkillDesc_110_PaniDance:  ; "Confuses all/enemies"
     db $26, $4C, $4B, $43, $52, $50, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_111_Curse:  ; $6005 "Curses all enemies"
+SkillDesc_111_Curse:  ; "Curses all enemies"
     db $26, $52, $4F, $50, $42, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_112_Ahhh:  ; $6018 "Makes you feel/happy"
+SkillDesc_112_Ahhh:  ; "Makes you feel/happy"
     db $30, $3E, $48, $42, $50, $62, $56, $4C, $52, $62, $43, $42, $42, $49, $F1, $45, $3E, $4D, $4D, $56, $F0
-SkillDesc_113_KODance:  ; $602D "Instantly knocks/out all enemies"
+SkillDesc_113_KODance:  ; "Instantly knocks/out all enemies"
     db $2C, $4B, $50, $51, $3E, $4B, $51, $49, $56, $62, $48, $4B, $4C, $40, $48, $50, $F1, $4C, $52, $51, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_114_SandStorm:  ; $604E "Attacks all/enemies with/a sandstorm"
+SkillDesc_114_SandStorm:  ; "Attacks all/enemies with/a sandstorm"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $50, $3E, $4B, $41, $50, $51, $4C, $4F, $4A, $F0
-SkillDesc_115_Radiant:  ; $6073 "Blinds all enemies/with its bright/light"
+SkillDesc_115_Radiant:  ; "Blinds all enemies/with its bright/light"
     db $25, $49, $46, $4B, $41, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $3F, $4F, $46, $44, $45, $51, $F1, $49, $46, $44, $45, $51, $F0
-SkillDesc_116_EerieLite:  ; $609C "Makes all enemies/less resistant/to magic spells"
+SkillDesc_116_EerieLite:  ; "Makes all enemies/less resistant/to magic spells"
     db $30, $3E, $48, $42, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $49, $42, $50, $50, $62, $4F, $42, $50, $46, $50, $51, $3E, $4B, $51, $F1, $51, $4C, $62, $4A, $3E, $44, $46, $40, $62, $50, $4D, $42, $49, $49, $50, $F0
-SkillDesc_117_OddDance:  ; $60CD "Drops an enemy's/MP with its odd/dancing steps"
+SkillDesc_117_OddDance:  ; "Drops an enemy's/MP with its odd/dancing steps"
     db $27, $4F, $4C, $4D, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $68, $F1, $30, $33, $62, $54, $46, $51, $45, $62, $46, $51, $50, $62, $4C, $41, $41, $F1, $41, $3E, $4B, $40, $46, $4B, $44, $62, $50, $51, $42, $4D, $50, $F0
-SkillDesc_118_RobDance:  ; $60FB "Steals an enemy's/MP with its/mesmerizing dance"
+SkillDesc_118_RobDance:  ; "Steals an enemy's/MP with its/mesmerizing dance"
     db $36, $51, $42, $3E, $49, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $68, $F1, $30, $33, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $4A, $42, $50, $4A, $42, $4F, $46, $57, $46, $4B, $44, $62, $41, $3E, $4B, $40, $42, $F0
-SkillDesc_119_SideStep:  ; $612A "Sidesteps an/attack"
+SkillDesc_119_SideStep:  ; "Sidesteps an/attack"
     db $36, $46, $41, $42, $50, $51, $42, $4D, $50, $62, $3E, $4B, $F1, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_120_LureDance:  ; $613E "Lures an enemy to/a trap with its/dance"
+SkillDesc_120_LureDance:  ; "Lures an enemy to/a trap with its/dance"
     db $2F, $52, $4F, $42, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $62, $51, $4C, $F1, $3E, $62, $51, $4F, $3E, $4D, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $41, $3E, $4B, $40, $42, $F0
-SkillDesc_121_LushLicks:  ; $6166 "Licks an enemy/to stop it from/attacking"
+SkillDesc_121_LushLicks:  ; "Licks an enemy/to stop it from/attacking"
     db $2F, $46, $40, $48, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $51, $4C, $62, $50, $51, $4C, $4D, $62, $46, $51, $62, $43, $4F, $4C, $4A, $F1, $3E, $51, $51, $3E, $40, $48, $46, $4B, $44, $F0
-SkillDesc_122_SickLick:  ; $618F "Lowers DEFENSE/by giving an enemy/a sickly lick"
+SkillDesc_122_SickLick:  ; "Lowers DEFENSE/by giving an enemy/a sickly lick"
     db $2F, $4C, $54, $42, $4F, $50, $62, $27, $28, $29, $28, $31, $36, $28, $F1, $3F, $56, $62, $44, $46, $53, $46, $4B, $44, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F1, $3E, $62, $50, $46, $40, $48, $49, $56, $62, $49, $46, $40, $48, $F0
-SkillDesc_123_LegSweep:  ; $61BF "Trips an enemy by/sweeping its legs"
+SkillDesc_123_LegSweep:  ; "Trips an enemy by/sweeping its legs"
     db $37, $4F, $46, $4D, $50, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $62, $3F, $56, $F1, $50, $54, $42, $42, $4D, $46, $4B, $44, $62, $46, $51, $50, $62, $49, $42, $44, $50, $F0
-SkillDesc_124_BigTrip:  ; $61E3 "Trips all enemies"
+SkillDesc_124_BigTrip:  ; "Trips all enemies"
     db $37, $4F, $46, $4D, $50, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_125_WarCry:  ; $61F5 "Freezes all/enemies with a/very loud roar"
+SkillDesc_125_WarCry:  ; "Freezes all/enemies with a/very loud roar"
     db $29, $4F, $42, $42, $57, $42, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $F1, $53, $42, $4F, $56, $62, $49, $4C, $52, $41, $62, $4F, $4C, $3E, $4F, $F0
-SkillDesc_126_Whistle:  ; $621F "Summons monsters"
+SkillDesc_126_Whistle:  ; "Summons monsters"
     db $36, $52, $4A, $4A, $4C, $4B, $50, $62, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $F0
-SkillDesc_127_Imitate:  ; $6230 "Imitates the/enemy's attack"
+SkillDesc_127_Imitate:  ; "Imitates the/enemy's attack"
     db $2C, $4A, $46, $51, $3E, $51, $42, $50, $62, $51, $45, $42, $F1, $42, $4B, $42, $4A, $56, $68, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_128_DeMagic:  ; $624B "Dispels magic/effects on all/allies"
+SkillDesc_128_DeMagic:  ; "Dispels magic/effects on all/allies"
     db $27, $46, $50, $4D, $42, $49, $50, $62, $4A, $3E, $44, $46, $40, $F1, $42, $43, $43, $42, $40, $51, $50, $62, $4C, $4B, $62, $3E, $49, $49, $F1, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_129_Surge:  ; $626F "Cures any ailments/for all allies"
+SkillDesc_129_Surge:  ; "Cures any ailments/for all allies"
     db $26, $52, $4F, $42, $50, $62, $3E, $4B, $56, $62, $3E, $46, $49, $4A, $42, $4B, $51, $50, $F1, $43, $4C, $4F, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_130_UltraDown:  ; $6291 "Greatly weakens/the enemy"
+SkillDesc_130_UltraDown:  ; "Greatly weakens/the enemy"
     db $2A, $4F, $42, $3E, $51, $49, $56, $62, $54, $42, $3E, $48, $42, $4B, $50, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_131_ThickFog:  ; $62AB "Creates a thick/fog to suspend/magic spells"
+SkillDesc_131_ThickFog:  ; "Creates a thick/fog to suspend/magic spells"
     db $26, $4F, $42, $3E, $51, $42, $50, $62, $3E, $62, $51, $45, $46, $40, $48, $F1, $43, $4C, $44, $62, $51, $4C, $62, $50, $52, $50, $4D, $42, $4B, $41, $F1, $4A, $3E, $44, $46, $40, $62, $50, $4D, $42, $49, $49, $50, $F0
-SkillDesc_132_TatsuCall:  ; $62D7 "Summons Tatsu/monsters to attack/the enemy"
+SkillDesc_132_TatsuCall:  ; "Summons Tatsu/monsters to attack/the enemy"
     db $36, $52, $4A, $4A, $4C, $4B, $50, $62, $37, $3E, $51, $50, $52, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $51, $4C, $62, $3E, $51, $51, $3E, $40, $48, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_133_DiagoCall:  ; $6302 "Summons Diago/monsters to attack/the enemy"
+SkillDesc_133_DiagoCall:  ; "Summons Diago/monsters to attack/the enemy"
     db $36, $52, $4A, $4A, $4C, $4B, $50, $62, $27, $46, $3E, $44, $4C, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $51, $4C, $62, $3E, $51, $51, $3E, $40, $48, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_134_SamsiCall:  ; $632D "Summons Samsi/monsters to attack/the enemy"
+SkillDesc_134_SamsiCall:  ; "Summons Samsi/monsters to attack/the enemy"
     db $36, $52, $4A, $4A, $4C, $4B, $50, $62, $36, $3E, $4A, $50, $46, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $51, $4C, $62, $3E, $51, $51, $3E, $40, $48, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_135_BazooCall:  ; $6358 "Summons Bazoo/monsters to attack/the enemy"
+SkillDesc_135_BazooCall:  ; "Summons Bazoo/monsters to attack/the enemy"
     db $36, $52, $4A, $4A, $4C, $4B, $50, $62, $25, $3E, $57, $4C, $4C, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $51, $4C, $62, $3E, $51, $51, $3E, $40, $48, $F1, $51, $45, $42, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_136_Cover:  ; $6383 "Throws itself in/front of the/attack for an ally"
+SkillDesc_136_Cover:  ; "Throws itself in/front of the/attack for an ally"
     db $37, $45, $4F, $4C, $54, $50, $62, $46, $51, $50, $42, $49, $43, $62, $46, $4B, $F1, $43, $4F, $4C, $4B, $51, $62, $4C, $43, $62, $51, $45, $42, $F1, $3E, $51, $51, $3E, $40, $48, $62, $43, $4C, $4F, $62, $3E, $4B, $62, $3E, $49, $49, $56, $F0
-SkillDesc_137_Guardian:  ; $63B4 "Takes all the/attacks from all/enemies"
+SkillDesc_137_Guardian:  ; "Takes all the/attacks from all/enemies"
     db $37, $3E, $48, $42, $50, $62, $3E, $49, $49, $62, $51, $45, $42, $F1, $3E, $51, $51, $3E, $40, $48, $50, $62, $43, $4F, $4C, $4A, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_138_TailWind:  ; $63DB "Reflects back Air/attack to an enemy"
+SkillDesc_138_TailWind:  ; "Reflects back Air/attack to an enemy"
     db $35, $42, $43, $49, $42, $40, $51, $50, $62, $3F, $3E, $40, $48, $62, $24, $46, $4F, $F1, $3E, $51, $51, $3E, $40, $48, $62, $51, $4C, $62, $3E, $4B, $62, $42, $4B, $42, $4A, $56, $F0
-SkillDesc_139_StormWind:  ; $6400 "Reflects back Air/attacks to all/enemies"
+SkillDesc_139_StormWind:  ; "Reflects back Air/attacks to all/enemies"
     db $35, $42, $43, $49, $42, $40, $51, $50, $62, $3F, $3E, $40, $48, $62, $24, $46, $4F, $F1, $3E, $51, $51, $3E, $40, $48, $50, $62, $51, $4C, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_140_Dodge:  ; $6429 "Dodges an attack"
+SkillDesc_140_Dodge:  ; "Dodges an attack"
     db $27, $4C, $41, $44, $42, $50, $62, $3E, $4B, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_141_Defence:  ; $643A "Prepares to defend/itself for an/enemy attack"
+SkillDesc_141_Defence:  ; "Prepares to defend/itself for an/enemy attack"
     db $33, $4F, $42, $4D, $3E, $4F, $42, $50, $62, $51, $4C, $62, $41, $42, $43, $42, $4B, $41, $F1, $46, $51, $50, $42, $49, $43, $62, $43, $4C, $4F, $62, $3E, $4B, $F1, $42, $4B, $42, $4A, $56, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_142_StrongD:  ; $6468 "Prepares a strong/defense against/any attack"
+SkillDesc_142_StrongD:  ; "Prepares a strong/defense against/any attack"
     db $33, $4F, $42, $4D, $3E, $4F, $42, $50, $62, $3E, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $41, $42, $43, $42, $4B, $50, $42, $62, $3E, $44, $3E, $46, $4B, $50, $51, $F1, $3E, $4B, $56, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_143_SuckAll:  ; $6495 "Sucks all the air/to inflict damage/on all enemies"
+SkillDesc_143_SuckAll:  ; "Sucks all the air/to inflict damage/on all enemies"
     db $36, $52, $40, $48, $50, $62, $3E, $49, $49, $62, $51, $45, $42, $62, $3E, $46, $4F, $F1, $51, $4C, $62, $46, $4B, $43, $49, $46, $40, $51, $62, $41, $3E, $4A, $3E, $44, $42, $F1, $4C, $4B, $62, $3E, $49, $49, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-SkillDesc_144_BladeD:  ; $64C8 "Defends against/a counterattack"
+SkillDesc_144_BladeD:  ; "Defends against/a counterattack"
     db $27, $42, $43, $42, $4B, $41, $50, $62, $3E, $44, $3E, $46, $4B, $50, $51, $F1, $3E, $62, $40, $4C, $52, $4B, $51, $42, $4F, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_145_DanceShut:  ; $64E8 "Suspends all/enemies' Dance/attacks"
+SkillDesc_145_DanceShut:  ; "Suspends all/enemies' Dance/attacks"
     db $36, $52, $50, $4D, $42, $4B, $41, $50, $62, $3E, $49, $49, $F1, $42, $4B, $42, $4A, $46, $42, $50, $5C, $62, $27, $3E, $4B, $40, $42, $F1, $3E, $51, $51, $3E, $40, $48, $50, $F0
-SkillDesc_146_MouthShut:  ; $650C "Suspends an/enemy's Air/attack"
+SkillDesc_146_MouthShut:  ; "Suspends an/enemy's Air/attack"
     db $36, $52, $50, $4D, $42, $4B, $41, $50, $62, $3E, $4B, $F1, $42, $4B, $42, $4A, $56, $68, $62, $24, $46, $4F, $F1, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_147_Meditate:  ; $652A "Restores 500 HP/by meditation"
+SkillDesc_147_Meditate:  ; "Restores 500 HP/by meditation"
     db $35, $42, $50, $51, $4C, $4F, $42, $50, $62, $05, $00, $00, $62, $2B, $33, $F1, $3F, $56, $62, $4A, $42, $41, $46, $51, $3E, $51, $46, $4C, $4B, $F0
-SkillDesc_148_Hustle:  ; $6548 "Restores between/70 to 80 HP to all/allies"
+SkillDesc_148_Hustle:  ; "Restores between/70 to 80 HP to all/allies"
     db $35, $42, $50, $51, $4C, $4F, $42, $50, $62, $3F, $42, $51, $54, $42, $42, $4B, $F1, $07, $00, $62, $51, $4C, $62, $08, $00, $62, $2B, $33, $62, $51, $4C, $62, $3E, $49, $49, $F1, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_149_LifeSong:  ; $6573 "Revives all allies"
+SkillDesc_149_LifeSong:  ; "Revives all allies"
     db $35, $42, $53, $46, $53, $42, $50, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_150_LifeDance:  ; $6586 "Revives all allies"
+SkillDesc_150_LifeDance:  ; "Revives all allies"
     db $35, $42, $53, $46, $53, $42, $50, $62, $3E, $49, $49, $62, $3E, $49, $49, $46, $42, $50, $F0
-SkillDesc_Blank:  ; $6599 ""
+SkillDesc_Blank:  ; ""
     db $F0
-SkillDesc_213_BeDragon:  ; $659A "Caster transforms/into a dragon"
+SkillDesc_213_BeDragon:  ; "Caster transforms/into a dragon"
     db $26, $3E, $50, $51, $42, $4F, $62, $51, $4F, $3E, $4B, $50, $43, $4C, $4F, $4A, $50, $F1, $46, $4B, $51, $4C, $62, $3E, $62, $41, $4F, $3E, $44, $4C, $4B, $F0
-SkillDesc_214_Smashlime:  ; $65BA "Inflicts great/damage to slimes"
+SkillDesc_214_Smashlime:  ; "Inflicts great/damage to slimes"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $50, $49, $46, $4A, $42, $50, $F0
-SkillDesc_215_Sheldodge:  ; $65DA "Inflicts great/damage to bugs"
+SkillDesc_215_Sheldodge:  ; "Inflicts great/damage to bugs"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $3F, $52, $44, $50, $F0
-SkillDesc_216_Branching:  ; $65F8 "Inflicts great/damage to plants"
+SkillDesc_216_Branching:  ; "Inflicts great/damage to plants"
     db $2C, $4B, $43, $49, $46, $40, $51, $50, $62, $44, $4F, $42, $3E, $51, $F1, $41, $3E, $4A, $3E, $44, $42, $62, $51, $4C, $62, $4D, $49, $3E, $4B, $51, $50, $F0
-SkillDesc_217_GigaSlash:  ; $6618 "Most destructive/sword attack"
+SkillDesc_217_GigaSlash:  ; "Most destructive/sword attack"
     db $30, $4C, $50, $51, $62, $41, $42, $50, $51, $4F, $52, $40, $51, $46, $53, $42, $F1, $50, $54, $4C, $4F, $41, $62, $3E, $51, $51, $3E, $40, $48, $F0
-SkillDesc_218_LIFE:  ; $6636 "Makes you feel/sick"
+SkillDesc_218_LIFE:  ; "Makes you feel/sick"
     db $30, $3E, $48, $42, $50, $62, $56, $4C, $52, $62, $43, $42, $42, $49, $F1, $50, $46, $40, $48, $F0
-SkillDesc_None:  ; $664A ""
+SkillDesc_None:  ; ""
     db $F0
 ; @BUILD_PROJECT END gd_skill_desc
 SkillDescModeTable:  ; $664B — `ld de, SkillDescModeTable` + CallTextEngine /
@@ -3392,7 +3392,7 @@ SkillDescPtrTable:  ; $6667 — 256 dw by skill id (mode 1)
     dw SkillDesc_Blank             ; [212] COMEDYBK
     dw SkillDesc_213_BeDragon      ; [213] BeDragon
     dw SkillDesc_214_Smashlime     ; [214] Smashlime
-    dw SkillDesc_215_Sheldodge     ; [215] Sheldodge
+    dw SkillDesc_215_Sheldodge     ; [215] BugCut
     dw SkillDesc_216_Branching     ; [216] Branching
     dw SkillDesc_217_GigaSlash     ; [217] GigaSlash
     dw SkillDesc_218_LIFE          ; [218] LIFE

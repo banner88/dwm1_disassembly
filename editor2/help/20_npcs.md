@@ -9,6 +9,16 @@ Select a cell (Select tool, V), then on the **Object** page (or **+ NPC (N)** on
   Bazoo and the last species are not offered — they crash the game).
 - **Add examine spot here…** / More ▾ → **Step-on trigger here…** — text or
   actions without a visible NPC.
+
+**A counter, a podium, a desk — talks for an NPC** (S177): put an examine spot on the
+cell in front of the NPC (the podium under the librarian, the counter before a
+shopkeeper) and set **talks for** on its page to that NPC. Pressing A there then does
+exactly what talking to the NPC does — the same first-time lines, flags, menus,
+everything — and the NPC turns to face the player, as the counter of the game's own
+Library does. The spot answers only from the front (**answers A**: the player faces the
+NPC across it); pick *from any direction* to change that. To change what is said, edit
+the NPC's talk — the spot follows it (and follows the NPC when you move it). *nobody* puts
+the spot back on a script of its own.
 - **Add door here** — a door you connect to another door (double-click).
   More ▾ → **One-way teleport here…**, **Stairs down here (gate rooms)**.
 

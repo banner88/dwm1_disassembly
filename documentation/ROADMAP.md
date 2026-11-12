@@ -1189,6 +1189,45 @@ recipes are pure authoring.
       *Not done (not asked):* a screen whose STATES differ in palette is shown per state as
       before (the strip names the state); a state change while standing on a screen is not
       part of this push (room entry and scrolls are).
+- [x] **P3.3q — The Library's colours, a PODIUM that talks for an NPC, the tile budget of a
+      big room** — **built S177 + r2, USER-VERIFIED 2026-11-13** ("Yep everything works") (user: "Visual glitches in library room.
+      Why is monster palette wrong? Why does description have part of a tile in it?"; "The
+      'podium' in the library below the librarian — can it proxy the NPC exactly?"; "Why project
+      could not be built? … no free walkable tile left on room GreatLog's tileset … I thought a
+      room could have 256 tiles at this point wtf?"; conferred → "1) yes 2) Yes that sounds
+      great. 3) Yes please. If grandpa or other services require tiles … can we not have this
+      drag down multi screen rooms but push this into their own subroutines on that screen
+      only"). Measured first (PyBoy, the user's build + save, the original ROM's map $12):
+      bank $77 `ScreenPush` re-wrote the attributes of the library's FULL screen on every push
+      in a free-colour / page-2 room — the picture on palette 7 (the original: palette 4 =
+      the monster's), and a letter whose slot number equalled the room tile under it ($C300)
+      given the room's attribute back (VRAM bank 1: a page-2 floor tile in the description);
+      the original's counter = an `$82` examine spot running `face_down 1` + the librarian's
+      own script; GreatLog's 256 slots: split $50 (96 walkable), Grandpa's $38-$7F kept off
+      all 16 screens (= every page-1 walkable slot), 31 of 42 walkable slots holding quarters
+      that never decide walking, 85 unreleased GreatTree slots. Built: bank $77 template (the
+      Library pushes tiles only; re-pinned, `TEMPLATE_SIZE[$77]` 3095, example pin `bdd3fb23…`,
+      patched); NEW `editor2/core/podium.py` (`talks_for`, lowered last: the NPC's face op +
+      a copy of its final script) + the Spot page's *talks for*; `services.screen_reservations`
+      (a menu's slots kept on its own screen only; the entry script's room-wide; measured:
+      Grandpa's menu writes 35 slots of $38-$7F and every one is back after it);
+      `page2.pick_order` (the roomy side for the non-deciding quarters, `last`); NEW
+      `editor2/core/tile_budget.py` (the breakdown in the "no free slot" words, **Repack**).
+      Bank $12 `LibraryScreen`'s two state tables re-sectioned (both trees). ROOM_DATA_FORMAT
+      "The game's menus draw into the room's tile slots" + "Interact entries", PROJECT_COMPILER
+      §2.83, EDITOR_DESIGN "As built S177", help 13 / 20 / 67 / glossary. *Accept (machine):*
+      `tools/walk_library.py --podium` 19 / 19 on the user's project + save (`--negative` FAILs
+      the picture; the user's own 16:19 build FAILs 37 cells), `tools/walk_service_screens.py`
+      6 / 6 (`--negative` FAILs the damage check), `walk_stamps.py` 13 / 13; test_compiler
+      `test_s177`. *User accept:* the library's monster page in GreatLog (the picture in its
+      colours, every letter clean); talk to the podium and to the librarian (the same first
+      lines); the project builds with its torches; Tileset tab → Repack.
+      **S177 r2** (the user on the S177 ROM: "glitch on screen when opening [the library] menu";
+      "Monster grandpa … visual glitches when selecting monsters"; "The rest seems to work"):
+      bank $77 entry 35 `LibraryOpenAttrs` + `PushRunIsMenu` (PROJECT_COMPILER §2.83 r2,
+      ROOM_DATA_FORMAT "The Library's attributes" / "A menu letter with the room tile's
+      number"); built S177 r2, user-verified 2026-11-13 — `walk_library.py` 19 / 19,
+      `walk_service_screens.py` 7 / 7, both negatives FAIL.
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

@@ -5201,15 +5201,20 @@ SaveItem_6052:
 
 ; LibraryScreen: screen effect type 8 — the Library (look up a family; text base $0740; a full screen, the room reloaded at the close by bank $0B entries 1 / 2); S126 annotation
 LibraryScreen:
-    ld a, [$c905]
+    ld a, [$c905]                       ; S177: the outer states ($C905), were decoded as code
     rst $00
-    ld l, a
-    ld h, b
-    call z, $d160
-    ld h, b
-    ldh a, [$60]
-    di
-    ld h, b
+    dw LibraryOpen                      ; 0 the full screen opens
+    dw LibraryStep1                     ; 1
+    dw LibraryStep2                     ; 2 the menu selections cleared
+    dw LibraryRun                       ; 3 the browse machine ($C906)
+    dw LibraryClose                     ; 4 the room comes back
+
+; S177: the open — the view's map address -> $C909, bank $17 entry 10 = EVERY BG
+; attribute palette 7 (VRAM bank 1), the frame layout pushed, the library's window
+; graphics ($2E14) into $9000 (the room sheet's slots), $C8EC := 1. A full screen: its
+; attributes are its own (bank $17 entries 10 / 6 / 7); patched builds push its tiles
+; only (bank $77 ScreenPush, S177).
+LibraryOpen:
     ld hl, $ffb7
     call ReadItem_4028
     ld hl, $ffbb
@@ -5240,8 +5245,9 @@ LibraryScreen:
     ld [$c909], a
     ld a, h
     ld [$c90a], a
-    ld hl, $170a
-    rst $10
+    ld hl, $7723                        ; S177 r2: was $170a (bank $17 entry 10, every BG
+    rst $10                             ;   attribute 7) -> bank $77 LibraryOpenAttrs: a blank
+                                        ;   screen first in a free-colour / page-2 room
     call SetItem_4221
     ld de, $2e07
     call ReadPtrFromDE
@@ -5257,11 +5263,13 @@ LibraryScreen:
     ret
 
 
+LibraryStep1:
     ld hl, $c905
     inc [hl]
     ret
 
 
+LibraryStep2:
     ld hl, $c905
     inc [hl]
     xor a
@@ -5277,9 +5285,14 @@ LibraryScreen:
     ret
 
 
-    jp Jump_012_6119
+LibraryRun:
+    jp LibraryBrowse
 
 
+; S177: the close — a blank screen pushed, the room's sheet + attributes reloaded (bank
+; $0B entries 1 / 2), the sprites, the BG map address, bank $06 entry 4; $C8EC := 0,
+; wGameState bit 4 off, $C905 := 0.
+LibraryClose:
     call SetItem_4221
     call ScreenPush12
     ld hl, $0b01
@@ -5299,38 +5312,29 @@ LibraryScreen:
     ret
 
 
-Jump_012_6119:
+; S177: the browse machine ($C906; was Jump_012_6119, its table decoded as code).
+LibraryBrowse:
     ld a, [$c906]
     rst $00
-    inc sp
-    ld h, c
-    jr c, @+$63
+    dw LibBrowseStart                   ; 0
+    dw LibFamilyListDraw                ; 1 (after the line) the family list drawn + pushed
+    dw LibFamilyPick                    ; 2 the family cursor (A / B)
+    dw LibFamilyOpen                    ; 3 the tab filled (SetItem_6242), "Look up which monster?" (+3)
+    dw LibMonsterListDraw               ; 4 (after the line) the monster list drawn + pushed
+    dw LibMonsterPick                   ; 5 the monster cursor
+    dw LibPageOpen                      ; 6 the monster's page: blank push, the picture + its palette, the page
+    dw LibPageBrowse                    ; 7 the page: up / down to the family's other monsters, B
+    dw LibPageBack                      ; 8 back to the monster list (state 5)
+    dw LibAnythingElse                  ; 9 (after the line) "Anything else to look up?" (+1) -> state 1
+    dw LibPageNext                      ; 10 another monster's page (-> state 7)
 
-    cp b
-    ld h, c
-    inc [hl]
-    ld h, d
-    sbc a
-    ld h, d
-    ld a, [hl+]
-    ld h, e
-    xor h
-    ld h, e
-    ret
-
-
-    ld h, h
-    ld d, h
-    ld h, l
-    ld l, c
-    ld h, l
-    ld a, d
-    ld h, l
+LibBrowseStart:
     ld hl, $c906
     inc [hl]
     ret
 
 
+LibFamilyListDraw:
     ld a, [$c825]
     or a
     ret nz
@@ -5403,6 +5407,7 @@ SetItem_61a0:
     ret
 
 
+LibFamilyPick:
     ld de, $6226
     ld hl, wMenu_selection
     ld c, $0b
@@ -5479,6 +5484,7 @@ Jump_012_6225:
     nop
     ld hl, $ff01
     rst $38
+LibFamilyOpen:
     call SetItem_6242
     ld hl, $0003
     call ScreenEffectSay12
@@ -5593,6 +5599,7 @@ SetItem_6242:
 ; lists under its original id-range tab). See DATA_STRUCTURES 'Library menu'.
 LibraryFamilyTabBounds:
     db $00, $14, $2d, $46, $5a, $6e, $82, $9b, $af, $c8, $d7
+LibMonsterListDraw:
     ld a, [$c825]
     or a
     ret nz
@@ -5687,6 +5694,7 @@ jr_012_6312:
     ret
 
 
+LibMonsterPick:
     ld de, $639e
     ld hl, $c8e2
     ld a, [$c8e9]
@@ -5769,6 +5777,11 @@ jr_012_639d:
     nop
     add hl, hl
     ld bc, $ffff
+; S177: the monster's page — a blank screen pushed, LoadItem_63d0 (the names / description
+; into tiles, the picture -> $8800, bank $17 entry 6 = its battle palette into BG slot 4 +
+; entry 7 = palette 4 on the picture's 6 x 6 cells), SetItem_63bd (the page's window,
+; pushed AFTER the attributes: a push that writes attributes undoes palette 4 — S177).
+LibPageOpen:
     call SetItem_4221
     call ScreenPush12
     call LoadItem_63d0
@@ -5921,6 +5934,7 @@ SaveItem_64a5:
     ret
 
 
+LibPageBrowse:
     ld a, [$c8e9]
     or a
     jr z, jr_012_6526
@@ -6020,6 +6034,7 @@ LoadItem_6544:
     ret
 
 
+LibPageBack:
     call SetItem_4221
     call ScreenPush12
     call LoadItem_616e
@@ -6030,6 +6045,7 @@ LoadItem_6544:
     ret
 
 
+LibAnythingElse:
     ld a, [$c825]
     or a
     ret nz
@@ -6041,6 +6057,7 @@ LoadItem_6544:
     ret
 
 
+LibPageNext:
     ld a, [wPLAN_selection]
     ld hl, wMonList  ; FX1: roster list -> wMonList
     add l

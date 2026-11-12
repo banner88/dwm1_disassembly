@@ -5467,6 +5467,62 @@ def s175_screen_music(app, w):
           "the project and assigns it in ONE undo step, ▶ preview renders; undone exactly")
 
 
+def s177_podium_repack(app, w):
+    """S177 (user: "can [the podium] proxy the NPC exactly?"; "Why am I getting so few
+    tiles?"): Rooms → an examine spot on dusk_mirror screen 0 → the Spot page's *talks for*
+    the NPC at (5,4): the spot keeps no script, faces up, the preview names the NPC, the
+    canvas tooltip says podium; *nobody* gives it the NPC's script back; the Tileset tab's
+    Repack button and its handler on a game sheet (nothing to move). Everything undone."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'dusk_mirror':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'dusk_mirror'
+    rt.select_screen(0)
+    app.processEvents()
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt._npc_op('Add examine spot', lambda d, r, k, st: d.add_spot(r, k, st, 'examine', 5, 5,
+                                                                  'teleport_6b', 'any'))
+    app.processEvents()
+    lst = doc.npc_entries(rt.current_room(), 0, 0)
+    idx = next(i for i, e in enumerate(lst) if e.get('kind') == 'examine' and (e['x'], e['y']) == (5, 5))
+    rt._show_spot_panel(idx)
+    app.processEvents()
+    sp = rt.spot_panel
+    datas = [sp.talks_for.itemData(i) for i in range(sp.talks_for.count())]
+    assert datas[0] is None and '5,4' in datas and '5,6' in datas, datas
+    sp.talks_for.setCurrentIndex(datas.index('5,4'))          # what picking it does
+    app.processEvents()
+    e = doc.npc_entries(rt.current_room(), 0, 0)[idx]
+    assert e.get('talks_for') == {'x': 5, 'y': 4} and e.get('facing') == 'up' and 'script' not in e, e
+    assert 'Answers exactly as the NPC at (5,4)' in sp.preview.text(), sp.preview.text()
+    assert sp.form.isRowVisible(sp.script) is False, 'the script row still shows for a podium'
+    assert any(m[0] == 'examine' and (m[1], m[2]) == (5, 5) and 'podium' in m[4]
+               for m in rt.canvas.markers), [m[4] for m in rt.canvas.markers if m[0] == 'examine']
+    rt._show_spot_panel(idx)
+    app.processEvents()
+    sp.talks_for.setCurrentIndex(0)                            # nobody: its own script again
+    app.processEvents()
+    e = doc.npc_entries(rt.current_room(), 0, 0)[idx]
+    assert e.get('script') == 'teleport_6b' and 'talks_for' not in e, e
+    tm = rt.tileset_map
+    assert tm.repack_b.text().startswith('Repack'), tm.repack_b.text()
+    n1 = s.undo.index()
+    rt._purge_metatiles('repack')                              # a game sheet: nothing moves
+    app.processEvents()
+    assert s.undo.index() in (n1, n1 + 1)
+    s.undo.setIndex(n0)
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    print('  ok: s177_podium_repack (talks for, the preview, the tooltip, nobody, Repack)')
+
+
 def s176_colours_draw_stamps(app, w):
     """S176 (the user: "Please allow per-screen palette! … Make it explicit visually"; the Draw
     panel "shows palette rows but wont let me change the row … make it fucking normal … if I
@@ -7885,6 +7941,7 @@ def main():
     s175_jumps_screens(app, w)
     s175_screen_music(app, w)
     s176_colours_draw_stamps(app, w)
+    s177_podium_repack(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

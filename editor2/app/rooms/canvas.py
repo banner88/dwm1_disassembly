@@ -105,6 +105,11 @@ def classify_npc(entry):
                 f"examine spot (legacy 'spawn' marker) → script {entry.get('script', 0)} "
                 "= the room ENTRY script")
     if k == 'examine':
+        tf = entry.get('talks_for')
+        if tf is not None:                                  # S177: a podium (podium.py)
+            return ('examine', int(entry['x']), int(entry['y']), None,
+                    f"podium ({entry.get('facing', 'any')}) → talks for the NPC at "
+                    f"({tf.get('x')},{tf.get('y')})")
         return ('examine', int(entry['x']), int(entry['y']), None,
                 f"examine spot ({entry.get('facing', 'any')}) → {entry.get('script')}")
     if k == 'step':

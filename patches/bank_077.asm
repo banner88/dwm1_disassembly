@@ -45,8 +45,15 @@
 ;   into the room's own tile slots ($9000, ids < $80: the gate names' bitmap
 ;   $38-$7F, the letters) — gets palette 7 on every cell (wPushAttrOn = $81;
 ;   measured S126: the gate names / letters took the room's palettes in a
-;   free-colour room). The library / farm CHECK / egg INFO full screens write
-;   their own attributes.
+;   free-colour room). The farm CHECK / egg INFO pages are bank $07's status
+;   page (its own push, never here).
+;   S177: the LIBRARY (8) pushes tiles only. It writes its own attributes
+;   (bank $17 entry 10 = every cell palette 7 before its first push; entries
+;   6 / 7 = the monster's battle palette into BG slot 4 + the picture's cells)
+;   and the attribute pass undid them on every later push (measured S177 on the
+;   user's GreatLog: the picture on palette 7, and a letter whose slot number
+;   equalled the room tile under it ($C300) given the room's attribute back —
+;   VRAM bank 1, a page-2 floor tile in the description).
 ;   S126: a room-row cell whose tile is < $80 but NOT the room's own tile
 ;   there ($C300 + the cell = the $C500 cell - $200: the composer copied the
 ;   room from $C300, so a real room cell always matches) is a picture the
@@ -237,6 +244,7 @@ SECTION "ROM Bank $077", ROMX[$4000], BANK[$77]
     dw FoodIcon4                        ; row 32: gfx-ID $7720 (Honey)
     dw FoodIconsLoad                    ; entry 33 (HL=$7721, S172 r2)
     dw FoodIconDraw                     ; entry 34 (HL=$7722, S172 r2)
+    dw LibraryOpenAttrs                 ; entry 35 (HL=$7723, S177 r2)
 
 ShopFill:
     ld a, [wShopID]
@@ -448,6 +456,11 @@ ScreenPush:
     bit 4, a                            ; a screen effect (op $04) running?
     jr z, .keep
     ld a, [$c8ef]
+    cp $08                              ; S177: the Library paints its own attributes (bank $17
+    jr nz, .notLibrary                  ;   entry 10: every cell 7 at the open; entries 6 / 7:
+    ld b, $00                           ;   the monster's palette 4 on the picture) and reloads
+    jr .keep                            ;   the room at the close -> tiles only, as the original
+.notLibrary:
     cp $0d                              ; S126: the list of Travelers' Gates
     jr z, .full
     cp $0f                              ; S126: the naming screen
@@ -458,6 +471,8 @@ ScreenPush:
     ld a, b
 .set:
     ld [wPushAttrOn], a                 ; $80 = also write attributes, +1 = all palette 7
+    ld a, $ff
+    ld [wPushRunRow], a                 ; S177 r2: no row's runs analysed yet (PushRunIsMenu)
     ld a, [$c909]
     ld l, a
     ld a, [$c90a]
@@ -669,6 +684,9 @@ PushCellAttr:
     pop hl
     jr nz, .put                         ; S126: a picture drawn into the room's tile slots
                                         ; (family icons, the gate names) -> palette 7
+    call PushRunIsMenu                  ; S177 r2: the same number as the room's tile — a
+    ld b, $07                           ;   menu letter inside a window, or the room?
+    jr c, .put
     ld a, [wPushAttrRow]
     push hl
     swap a                              ; row * 16
@@ -691,6 +709,186 @@ PushCellAttr:
     ret
 .skip:
     scf
+    ret
+
+; S177 r2 (the user: "Monster grandpa — when menu appears, there are visual glitches when
+; selecting monsters"; measured: Grandpa writes the monster's name into page-1 slots
+; $71-$75 and two of its letters had the same NUMBERS as the page-2 floor tiles under the
+; box ($72 / $73) — "== the room's tile" gave them the room's attribute, VRAM bank 1 +
+; palette 3: two cyan floor cells in the name). Carry = the cell at DE (column C, row
+; [wPushAttrRow]), whose tile < $80 equals the room's ($C300), is a MENU cell: its run of
+; tiles < $80 on the row is enclosed by font / frame tiles (>= $80 — never a room tile) on
+; BOTH sides and holds at least one cell that differs from the room. A gap of room between
+; two windows is enclosed too but never differs; a run that reaches the screen's edge is
+; the room. One analysis per run (wPushRunRow / wPushRunEnd / wPushRunMenu; ScreenPushRows
+; resets it). Keeps C / DE / HL; B destroyed.
+PushRunIsMenu:
+    push hl
+    ld a, [wPushAttrRow]
+    ld hl, wPushRunRow
+    cp [hl]
+    jr nz, .scan
+    ld a, [wPushRunEnd]
+    ld b, a
+    ld a, c
+    cp b
+    jr nc, .scan                        ; past the run analysed last
+    ld a, [wPushRunMenu]
+    jr .answer
+.scan:
+    ld a, [wPushAttrRow]
+    ld [wPushRunRow], a
+    ld a, e
+    and $e0
+    ld l, a
+    ld h, d                             ; HL = the row's column 0 in $C500 (rows 32-aligned)
+    ld b, $00                           ; bit 0 a differing cell, bit 1 left / bit 2 right end
+    push de
+    ld e, c
+    ld a, c
+    or a
+    jr z, .right
+.left:
+    dec e
+    ld a, l
+    and $e0
+    or e
+    ld l, a
+    ld a, [hl]
+    cp $80
+    jr nc, .leftEnd
+    dec h
+    dec h
+    sub [hl]                            ; (not cp: inc h below would clear its Z)
+    inc h
+    inc h
+    or a
+    jr z, .leftSame
+    set 0, b
+.leftSame:
+    ld a, e
+    or a
+    jr nz, .left
+    jr .rightStart
+.leftEnd:
+    set 1, b
+.rightStart:
+    ld e, c
+.right:
+    inc e
+    ld a, e
+    cp $14
+    jr z, .rightDone
+    ld a, l
+    and $e0
+    or e
+    ld l, a
+    ld a, [hl]
+    cp $80
+    jr nc, .rightEnd
+    dec h
+    dec h
+    sub [hl]
+    inc h
+    inc h
+    or a
+    jr z, .right
+    set 0, b
+    jr .right
+.rightEnd:
+    set 2, b
+.rightDone:
+    ld a, e
+    ld [wPushRunEnd], a
+    pop de
+    ld a, b
+    cp $07
+    ld a, $00
+    jr nz, .store
+    inc a
+.store:
+    ld [wPushRunMenu], a
+.answer:
+    pop hl
+    or a
+    ret z                               ; no carry: the room's own cell
+    scf
+    ret
+
+; -----------------------------------------------------------------------------
+; Entry 35: LibraryOpenAttrs (S177 r2) — bank $12 LibraryOpen's `ld hl, $170a / rst $10`
+; -> `ld hl, $7723` (same size). The original paints EVERY BG attribute palette 7 (bank $17
+; entry 10) a few frames before the library's first push: the room shows in the menu's
+; colours meanwhile — and in a page-2 room its page-2 cells read the page-1 tiles of the
+; same numbers (measured S177 r2 on the user's GreatLog: 2 frames of orange garbage; the
+; user: "glitch on screen when opening menu (very briefly in background just before menu
+; appears)"). In a free-colour / page-2 custom room each visible cell of the BG map gets
+; palette 7 (VRAM bank 0), a ROOM tile (< $80) first replaced by the blank $E0 (blank
+; in both VRAM banks, so never a wrong tile between the two writes) — the font tiles stay, as the original keeps the
+; box until the library's frame ($C500 is NOT a copy of the screen: it still holds older
+; menus' windows — measured S177 r2); then entry 10 as the original. Elsewhere entry 10
+; alone (the original's bytes' effect).
+; -----------------------------------------------------------------------------
+LibraryOpenAttrs:
+    call PushAttrActive
+    or a
+    jr z, .entry10
+    ld a, [$c909]
+    ld l, a
+    ld a, [$c90a]
+    ld h, a                             ; HL = the view's top-left map cell
+    ld c, $12                           ; 18 rows
+.row:
+    push hl
+    ld b, $14                           ; 20 visible columns
+.cell:
+    di
+.w0:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w0
+    ld a, [hl]                          ; the tile on screen (VRAM bank 0)
+    ei
+    cp $80
+    jr nc, .attr                        ; a font / box tile: it stays
+    di
+.w1:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w1
+    ld [hl], $e0                        ; a room cell -> the blank FIRST (blank in both banks)
+    ei
+.attr:
+    di
+.w2:
+    ldh a, [rSTAT]
+    bit 1, a
+    jr nz, .w2
+    ld a, $01
+    ldh [rVBK], a
+    ld [hl], $07                        ; then palette 7, VRAM bank 0
+    xor a
+    ldh [rVBK], a
+    ei
+    push bc
+    call PushNextCol
+    pop bc
+    dec b
+    jr nz, .cell
+    pop hl
+    ld a, l
+    add $20
+    ld l, a
+    ld a, h
+    adc $00
+    and $03
+    or $98
+    ld h, a
+    dec c
+    jr nz, .row
+.entry10:
+    ld hl, $170a
+    rst $10
     ret
 
 ; -----------------------------------------------------------------------------

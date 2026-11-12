@@ -1,15 +1,62 @@
-# APPLY_THESE_CHANGES (S175r3)
+# APPLY_THESE_CHANGES (S177)
 
-ADD     editor2/app/song_pick.py
-REPLACE documentation/EDITOR_DESIGN.md
-REPLACE documentation/KEY_LESSONS.md
-REPLACE documentation/PROJECT_STATE.md
-REPLACE documentation/ROADMAP.md
-REPLACE editor2/__init__.py
-REPLACE editor2/app/rooms/inspector.py
-REPLACE editor2/app/rooms/tab.py
-REPLACE editor2/app/story_widgets.py
-REPLACE editor2/help/10_rooms.md
-REPLACE editor2/help/61_music.md
-REPLACE editor2/help/_revision.md
-REPLACE editor2/tests/test_app.py
+REPLACE
+  disassembly/bank_012.asm
+  documentation/DATA_STRUCTURES.md
+  documentation/DOC_AUDIT.md
+  documentation/EDITOR_DESIGN.md
+  documentation/KEY_LESSONS.md
+  documentation/PROJECT_COMPILER.md
+  documentation/PROJECT_STATE.md
+  documentation/PYBOY_DEBUGGING.md
+  documentation/ROADMAP.md
+  documentation/ROOM_DATA_FORMAT.md
+  documentation/SESSION_HISTORY.md
+  documentation/TOOLS_AND_DATA.md
+  documentation/known_RAM_map.md
+  editor2/__init__.py
+  editor2/app/rooms/canvas.py
+  editor2/app/rooms/object_panels.py
+  editor2/app/rooms/tab.py
+  editor2/app/rooms/tileset_map.py
+  editor2/core/anim_import.py
+  editor2/core/animate.py
+  editor2/core/document.py
+  editor2/core/doors.py
+  editor2/core/page2.py
+  editor2/core/parking.py
+  editor2/core/project.py
+  editor2/core/recolour.py
+  editor2/core/screen_tools.py
+  editor2/core/services.py
+  editor2/core/stamps.py
+  editor2/core/templates/PINNED_SHA256
+  editor2/core/templates/bank_077_head.asm
+  editor2/core/tile_draw.py
+  editor2/core/tileanim_doc.py
+  editor2/core/validators.py
+  editor2/help/13_tilesets.md
+  editor2/help/20_npcs.md
+  editor2/help/67_services.md
+  editor2/help/95_glossary.md
+  editor2/help/_revision.md
+  editor2/tests/test_app.py
+  editor2/tests/test_compiler.py
+  patches/bank_004.asm
+  patches/bank_012.asm
+  patches/bank_04d.asm
+  patches/bank_056.asm
+  patches/bank_077.asm
+  patches/bank_07a.asm
+  patches/bank_07c.asm
+  patches/bank_07f.asm
+  patches/wram.asm
+
+ADD
+  editor2/core/podium.py
+  editor2/core/tile_budget.py
+  tools/walk_library.py
+  tools/walk_service_screens.py
+
+DELETE
+  (none)

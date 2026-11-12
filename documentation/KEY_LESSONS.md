@@ -8226,3 +8226,50 @@ the old path kept beside it (`_find_match_scan`).
 - **Rule:** anything that must hold after a save is loaded belongs in the path CONTINUE runs
   (here the resolver: a `MusicRuleTable` row per screen); test the save → CONTINUE leg of a
   feature, not only entering and walking.
+
+### An attribute pass over a screen the game paints itself undoes it (S177)
+- **Symptom (user):** "Visual glitches in library room. Why is monster palette wrong? Why does
+  description have part of a tile in it?" — S126 had written "the library … full screens write
+  their own attributes" and S168's walk had passed "the library (a full screen)".
+- **Root cause (PyBoy, the original's map $12 vs the user's build):** the library DOES paint
+  its own attributes (bank $17 entry 10: all 7; entries 6 / 7: palette 4 on the picture) — and
+  then pushes its window through bank $77 `ScreenPush`, whose free-colour / page-2 pass re-wrote
+  every cell: a font tile ≥ `$80` (the picture too) → palette 7, a tile < `$80` equal to the
+  room's tile under it (`$C300`) → the room's attribute. On a full screen that equality is a
+  coincidence (one cell: the "s" of "shell" = `$5C` = a page-2 floor tile → VRAM bank 1). S168's
+  check looked only at font tiles drawn from bank 1, so a letter in a ROOM slot passed.
+- **Fix:** a running type-8 screen pushes tiles only. `tools/walk_library.py` checks EVERY cell's
+  attribute of the family list and a monster's page against the original's (7, picture 4).
+- **Rule:** before adding a pass that writes attributes (or anything) over the game's screens,
+  list who already writes them (`grep` the far calls: `ld hl, $170a` / `$1706`) and compare
+  the result with the ORIGINAL ROM cell by cell — "it looks like a room cell" is not a test on
+  a screen that has no room cells.
+
+### A reservation is as wide as where the thing can happen — measure where (S177)
+- **Symptom (user):** "no free walkable tile left on room GreatLog's tileset … I thought a room
+  could have 256 tiles at this point wtf?"
+- **Root cause:** S168 r2 kept Grandpa's `$38-$7F` free on EVERY screen of the room — every
+  page-1 walkable slot of a $50-split sheet — while his menu can only be open on his own screen
+  and closing it reloads the sheet (measured S177: 35 slots written, all back after it). Then
+  the import order put a floor cell's every quarter on the walkable side (31 of 42 walkable
+  slots held quarters that never decide walking), and 85 slots still held unplaced vocabulary.
+  The error advised "release / purge", which alone would not have helped.
+- **Fix:** reservations per screen (`services.screen_reservations`), the non-deciding quarters
+  on the roomier side, Repack, and an error that counts what holds the side.
+- **Rule:** scope a reservation to where the reserving thing is measurably active (a screen,
+  a state), and when a budget runs out, report what holds it — the user cannot fix what the
+  message does not name.
+
+### `inc` / `dec` clear the flag the compare just set — and `$C500` is not the screen (S177 r2)
+- **Symptom:** the first S177 r2 build fixed Grandpa's name but put his letters into the room
+  GAP between two windows; the first library-opening fix wiped the dialog box, the next one
+  drew the start menu's old party window over the library.
+- **Root cause (PyBoy, hooks on the routine's local labels with `register_file`):** `dec h /
+  dec h / cp [hl] / inc h / inc h / jr z` — `inc h` sets Z from H, so the compare never
+  matched: every cell "differed". And `$C500` is the menu composer's buffer, not a copy of the
+  screen: before the library's first push it still held older menus' windows.
+- **Fix:** `sub [hl]` (the result stays in A) + `or a` after restoring HL; the opening reads
+  the tiles from the BG map itself.
+- **Rule:** after a compare, nothing that writes flags (inc / dec / add / and / or …) between
+  it and the branch — move the restore before the compare or keep the result in A. Never take
+  a RAM buffer for "what is on screen" without measuring it at that moment; read VRAM.

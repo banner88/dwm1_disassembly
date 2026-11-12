@@ -691,8 +691,11 @@ def _apply(doc, room, p, speed, name, cache):
             doc.palette(pid)['free_color1'] = True
     sheet = bytearray(P2.pad_sheet(doc.read_sheet(tid)))
     used = doc.used_tiles(tid)
-    avoid = doc.animated_slots(tid) | doc.service_slots(tid) | doc.own_anim_slots_tileset(tid)
+    # S177: a service menu keeps its slots free on ITS screen only (services.screen_reservations)
+    avoid = (doc.animated_slots(tid) | doc.service_slots_on(tid, room, p['key'])
+             | doc.own_anim_slots_tileset(tid))
     free = [s for s in range(P2.SLOTS) if s not in used and s not in avoid]
+    later = doc.service_slots_anywhere(tid)          # kept on another screen: taken last
     T = doc.layout(p['lid'])['tiles']
     A = doc.layout(p['attr_lid'])['attr']
     moving_new = []                                   # [(slot, (frame bytes …))]
@@ -717,11 +720,14 @@ def _apply(doc, room, p, speed, name, cache):
             if slot is not None:
                 reused += 1
         if slot is None:
-            cand = P2.pick_order(free, thr, wall, br)
+            cand = P2.pick_order(free, thr, wall, br, last=later)
             if not cand:
-                raise StampError(f"stamp {name}: no free {'wall' if wall else 'walkable'} tile left "
-                                 f"on room {room.get('name') or room['id']}'s tileset — free some "
-                                 '(Tileset tab: release / purge) or remove a stamp')
+                from editor2.core import tile_budget as TB
+                doc.write_sheet(tid, bytes(sheet))      # the words count what it took so far
+                raise StampError(f"stamp {name} on {room.get('name') or room['id']} screen "
+                                 f"{p['key']}: " + TB.explain(
+                                     doc, tid, thr, 'wall' if wall else 'walkable', room, p['key'],
+                                     what='its picture'))
             slot = cand[0]
             free.remove(slot)
             sheet[slot * 16:slot * 16 + 16] = g[0]
@@ -795,6 +801,14 @@ def bake(doc, repo):
                     warnings.append(f"room {rname} screen {key}: stamp {st['name']} at "
                                     f"({pl['x']},{pl['y']}): {w}")
                 _apply(doc, room, p, int(st.get('speed') or SPEED_DEFAULT), st['name'], cache)
+    # S177: a tile placed on a menu's own screen in a slot the menu draws into moves (the
+    # editor does this when it opens the project; the bake's copy may be newer)
+    for tid in sorted({(r.get('record') or {}).get('tileset') for r in doc.rooms
+                       if isinstance(r, dict) and (r.get('record') or {}).get('tileset')}):
+        _m, stuck = doc.vacate_service_slots(tid)
+        if stuck:
+            warnings.append(f'tileset {tid}: {len(stuck)} tile(s) sit in slots a service menu '
+                            'draws into on their screen and no free slot is left to move them')
     custom.pop('stamps', None)
     for room in doc.rooms:
         if isinstance(room, dict):

@@ -119,9 +119,28 @@ Grandpa's and a breeder's screens (BREED / HATCH / EXIT, the monster lists),
 the farm's family icons and the egg appraiser's eggs are drawn into some of
 the ROOM's own tile slots while the room still shows — a floor or wall tile
 in those slots would show the menu's words (*"EXIT INFO"* over the floor).
-So a room with such an NPC keeps them empty: breeding $38-$7F, farm $60-$6F,
-eggs $70-$78. Making the NPC moves any tile placed there to a free slot —
-page 2 first — with the same picture, and opening an older project does it
-for you (a line in the log). The Tileset tab shows those slots brown. If the
-sheet is completely full, Build warns which room still has cells there.
+So the NPC's own SCREEN keeps them empty: breeding $38-$7F, farm $60-$6F,
+eggs $70-$78. Since S177 only that screen (and a podium that talks for the NPC is on
+the same screen): the menu cannot be open while another screen shows, and every
+such menu gives the slots back when it closes (measured: Grandpa's menu wrote 35
+of them and all were back after it), so the other screens of a big room may use
+them. A menu the room's ENTRY script opens keeps them on every screen. Making the
+NPC moves any tile on its screen in those slots to a free slot — page 2 first —
+with the same picture, and opening the project does it for you (a line in the
+log). The Tileset tab lists which screens keep which slots. If the sheet is
+completely full, Build warns which screen still has cells there.
+
+## The Library's colours (S177)
+
+The library is a full screen with its own colours: the monster's picture in its
+battle colours, the rest in the menu's cream. In a room with its own colours or
+page-2 tiles the build used to repaint every cell of it — the picture came out in
+the menu's colours, and a letter could show a piece of a floor tile. It now
+keeps the library's own colours, exactly as in the game's Library. Opening it
+wipes the room to the menu's cream first (S177 r2), so the room's page-2 tiles
+never flash as other tiles.
+
+A menu's words sometimes land in tile slots whose numbers equal the room's tiles
+under the window (Grandpa's monster names, for one). Since S177 r2 the build tells
+them apart by the window around them, so a name never shows a piece of the floor.
 

@@ -206,6 +206,10 @@ only tiles placed on a screen hold slots. Click it in the picker to paint with i
 master, and a bred parent's own parents); each one that is not the player's makes the baby
 2 % stronger. [Raising monsters](58_raising.md#Breeding:%20the%20egg)
 
+**Podium** — an examine spot that **talks for** an NPC (a counter, a desk): A there does
+exactly what talking to that NPC does, and the NPC turns to the player. [NPCs, monsters,
+spots and doors](20_npcs.md)
+
 **Plus** — the "+" of a bred monster: the higher parent's plus + 1, more with high
 levels. [Breeding](58_breeding.md#How%20the%20game%20decides%20an%20egg)
 
@@ -227,6 +231,10 @@ in it. [Getting started](00_start.md)
 
 **Raising** — how the game grows a monster: stat gains per level, the learn check,
 upgrades and combinations, max level. [Raising monsters](58_raising.md)
+
+**Repack** — Tileset tab: moves tiles that never decide walking (not a cell's
+bottom-right quarter) to the side of the wall | walkable split with room to spare —
+nothing changes on screen. [Tilesets](13_tilesets.md)
 
 **Re-plan colours** — Palettes page: work out the room's 4 colour rows again from its
 tiles' real colours; plans side by side, re-roll, keep rows. [Tilesets, metatiles and palettes](13_tilesets.md)

@@ -966,435 +966,435 @@ LibRecipeText_215:  ; 215-220 (shared: combat-only species): "?????    ?????"
 ; (gamedata.monster_text, PROJECT_COMPILER §2.24).
 ; =============================================================================
 ; @BUILD_PROJECT BEGIN gd_monster_desc
-MonsterDesc_000_DrakSlime:  ; $53D3 "Moves & jumps with/its tail & wings"
+MonsterDesc_000_DrakSlime:  ; "Moves & jumps with/its tail & wings"
     db $30, $4C, $53, $42, $50, $62, $B6, $62, $47, $52, $4A, $4D, $50, $62, $54, $46, $51, $45, $F1, $46, $51, $50, $62, $51, $3E, $46, $49, $62, $B6, $62, $54, $46, $4B, $44, $50, $F0
-MonsterDesc_001_SpotSlime:  ; $53F7 "Larger than a/regular slime &/spotted"
+MonsterDesc_001_SpotSlime:  ; "Larger than a/regular slime &/spotted"
     db $2F, $3E, $4F, $44, $42, $4F, $62, $51, $45, $3E, $4B, $62, $3E, $F1, $4F, $42, $44, $52, $49, $3E, $4F, $62, $50, $49, $46, $4A, $42, $62, $B6, $F1, $50, $4D, $4C, $51, $51, $42, $41, $F0
-MonsterDesc_002_WingSlime:  ; $541D "Flies with wings/that grew on/its back"
+MonsterDesc_002_WingSlime:  ; "Flies with wings/that grew on/its back"
     db $29, $49, $46, $42, $50, $62, $54, $46, $51, $45, $62, $54, $46, $4B, $44, $50, $F1, $51, $45, $3E, $51, $62, $44, $4F, $42, $54, $62, $4C, $4B, $F1, $46, $51, $50, $62, $3F, $3E, $40, $48, $F0
-MonsterDesc_003_TreeSlime:  ; $5444 "Its leafy top/absorbs energy/from sunlight"
+MonsterDesc_003_TreeSlime:  ; "Its leafy top/absorbs energy/from sunlight"
     db $2C, $51, $50, $62, $49, $42, $3E, $43, $56, $62, $51, $4C, $4D, $F1, $3E, $3F, $50, $4C, $4F, $3F, $50, $62, $42, $4B, $42, $4F, $44, $56, $F1, $43, $4F, $4C, $4A, $62, $50, $52, $4B, $49, $46, $44, $45, $51, $F0
-MonsterDesc_004_Snaily:  ; $546F "Hides in its/shell when/under attack"
+MonsterDesc_004_Snaily:  ; "Hides in its/shell when/under attack"
     db $2B, $46, $41, $42, $50, $62, $46, $4B, $62, $46, $51, $50, $F1, $50, $45, $42, $49, $49, $62, $54, $45, $42, $4B, $F1, $52, $4B, $41, $42, $4F, $62, $3E, $51, $51, $3E, $40, $48, $F0
-MonsterDesc_005_SlimeNite:  ; $5494 "The knight riding/on this slime is/part of it's body"
+MonsterDesc_005_SlimeNite:  ; "The knight riding/on this slime is/part of it's body"
     db $37, $45, $42, $62, $48, $4B, $46, $44, $45, $51, $62, $4F, $46, $41, $46, $4B, $44, $F1, $4C, $4B, $62, $51, $45, $46, $50, $62, $50, $49, $46, $4A, $42, $62, $46, $50, $F1, $4D, $3E, $4F, $51, $62, $4C, $43, $62, $46, $51, $68, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_006_Babble:  ; $54C8 "Can transform/its body into/any shape"
+MonsterDesc_006_Babble:  ; "Can transform/its body into/any shape"
     db $26, $3E, $4B, $62, $51, $4F, $3E, $4B, $50, $43, $4C, $4F, $4A, $F1, $46, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $4B, $51, $4C, $F1, $3E, $4B, $56, $62, $50, $45, $3E, $4D, $42, $F0
-MonsterDesc_007_BoxSlime:  ; $54EE "Being trapped in a/box gives this/slime it's shape"
+MonsterDesc_007_BoxSlime:  ; "Being trapped in a/box gives this/slime it's shape"
     db $25, $42, $46, $4B, $44, $62, $51, $4F, $3E, $4D, $4D, $42, $41, $62, $46, $4B, $62, $3E, $F1, $3F, $4C, $55, $62, $44, $46, $53, $42, $50, $62, $51, $45, $46, $50, $F1, $50, $49, $46, $4A, $42, $62, $46, $51, $68, $62, $50, $45, $3E, $4D, $42, $F0
-MonsterDesc_008_Slime:  ; $5520 "The most abundant/of this popular/specie"
+MonsterDesc_008_Slime:  ; "The most abundant/of this popular/specie"
     db $37, $45, $42, $62, $4A, $4C, $50, $51, $62, $3E, $3F, $52, $4B, $41, $3E, $4B, $51, $F1, $4C, $43, $62, $51, $45, $46, $50, $62, $4D, $4C, $4D, $52, $49, $3E, $4F, $F1, $50, $4D, $42, $40, $46, $42, $F0
-MonsterDesc_009_Healer:  ; $5549 "Uses its powerful/tentacles to/move about"
+MonsterDesc_009_Healer:  ; "Uses its powerful/tentacles to/move about"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $4D, $4C, $54, $42, $4F, $43, $52, $49, $F1, $51, $42, $4B, $51, $3E, $40, $49, $42, $50, $62, $51, $4C, $F1, $4A, $4C, $53, $42, $62, $3E, $3F, $4C, $52, $51, $F0
-MonsterDesc_010_FangSlime:  ; $5573 "Has a red Mohawk/and is very brave/& proud"
+MonsterDesc_010_FangSlime:  ; "Has a red Mohawk/and is very brave/& proud"
     db $2B, $3E, $50, $62, $3E, $62, $4F, $42, $41, $62, $30, $4C, $45, $3E, $54, $48, $F1, $3E, $4B, $41, $62, $46, $50, $62, $53, $42, $4F, $56, $62, $3F, $4F, $3E, $53, $42, $F1, $B6, $62, $4D, $4F, $4C, $52, $41, $F0
-MonsterDesc_011_RockSlime:  ; $559E "Its skin is as/hard as rock"
+MonsterDesc_011_RockSlime:  ; "Its skin is as/hard as rock"
     db $2C, $51, $50, $62, $50, $48, $46, $4B, $62, $46, $50, $62, $3E, $50, $F1, $45, $3E, $4F, $41, $62, $3E, $50, $62, $4F, $4C, $40, $48, $F0
-MonsterDesc_012_SlimeBorg:  ; $55BA "Oil flows through/its body instead/of blood"
+MonsterDesc_012_SlimeBorg:  ; "Oil flows through/its body instead/of blood"
     db $32, $46, $49, $62, $43, $49, $4C, $54, $50, $62, $51, $45, $4F, $4C, $52, $44, $45, $F1, $46, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $4B, $50, $51, $42, $3E, $41, $F1, $4C, $43, $62, $3F, $49, $4C, $4C, $41, $F0
-MonsterDesc_013_Slabbit:  ; $55E6 "Flees very fast/with its strong/hind legs"
+MonsterDesc_013_Slabbit:  ; "Flees very fast/with its strong/hind legs"
     db $29, $49, $42, $42, $50, $62, $53, $42, $4F, $56, $62, $43, $3E, $50, $51, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $45, $46, $4B, $41, $62, $49, $42, $44, $50, $F0
-MonsterDesc_014_SpotKing:  ; $5610 "Several SpotSlimes/combined into one/to form this King"
+MonsterDesc_014_SpotKing:  ; "Several SpotSlimes/combined into one/to form this King"
     db $36, $42, $53, $42, $4F, $3E, $49, $62, $36, $4D, $4C, $51, $36, $49, $46, $4A, $42, $50, $F1, $40, $4C, $4A, $3F, $46, $4B, $42, $41, $62, $46, $4B, $51, $4C, $62, $4C, $4B, $42, $F1, $51, $4C, $62, $43, $4C, $4F, $4A, $62, $51, $45, $46, $50, $62, $2E, $46, $4B, $44, $F0
-MonsterDesc_015_KingSlime:  ; $5647 "Several Slimes/combined into one/to form this King"
+MonsterDesc_015_KingSlime:  ; "Several Slimes/combined into one/to form this King"
     db $36, $42, $53, $42, $4F, $3E, $49, $62, $36, $49, $46, $4A, $42, $50, $F1, $40, $4C, $4A, $3F, $46, $4B, $42, $41, $62, $46, $4B, $51, $4C, $62, $4C, $4B, $42, $F1, $51, $4C, $62, $43, $4C, $4F, $4A, $62, $51, $45, $46, $50, $62, $2E, $46, $4B, $44, $F0
-MonsterDesc_016_Metaly:  ; $567A "Its diet of iron/gives this slime/a metal body"
+MonsterDesc_016_Metaly:  ; "Its diet of iron/gives this slime/a metal body"
     db $2C, $51, $50, $62, $41, $46, $42, $51, $62, $4C, $43, $62, $46, $4F, $4C, $4B, $F1, $44, $46, $53, $42, $50, $62, $51, $45, $46, $50, $62, $50, $49, $46, $4A, $42, $F1, $3E, $62, $4A, $42, $51, $3E, $49, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_017_Metabble:  ; $56A9 "Produces strong/weapons from its/body"
+MonsterDesc_017_Metabble:  ; "Produces strong/weapons from its/body"
     db $33, $4F, $4C, $41, $52, $40, $42, $50, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $54, $42, $3E, $4D, $4C, $4B, $50, $62, $43, $4F, $4C, $4A, $62, $46, $51, $50, $F1, $3F, $4C, $41, $56, $F0
-MonsterDesc_018_MetalKing:  ; $56CF "Several Metalys/combined to form/this King"
+MonsterDesc_018_MetalKing:  ; "Several Metalys/combined to form/this King"
     db $36, $42, $53, $42, $4F, $3E, $49, $62, $30, $42, $51, $3E, $49, $56, $50, $F1, $40, $4C, $4A, $3F, $46, $4B, $42, $41, $62, $51, $4C, $62, $43, $4C, $4F, $4A, $F1, $51, $45, $46, $50, $62, $2E, $46, $4B, $44, $F0
-MonsterDesc_019_GoldSlime:  ; $56FA "The toughest/creature in the/slime family"
+MonsterDesc_019_GoldSlime:  ; "The toughest/creature in the/slime family"
     db $37, $45, $42, $62, $51, $4C, $52, $44, $45, $42, $50, $51, $F1, $40, $4F, $42, $3E, $51, $52, $4F, $42, $62, $46, $4B, $62, $51, $45, $42, $F1, $50, $49, $46, $4A, $42, $62, $43, $3E, $4A, $46, $49, $56, $F0
-MonsterDesc_020_DragonKid:  ; $5724 "It does not grow/any bigger than/this"
+MonsterDesc_020_DragonKid:  ; "It does not grow/any bigger than/this"
     db $2C, $51, $62, $41, $4C, $42, $50, $62, $4B, $4C, $51, $62, $44, $4F, $4C, $54, $F1, $3E, $4B, $56, $62, $3F, $46, $44, $44, $42, $4F, $62, $51, $45, $3E, $4B, $F1, $51, $45, $46, $50, $F0
-MonsterDesc_021_Tortragon:  ; $574A "It has a tough/shell but it can't/hide inside it"
+MonsterDesc_021_Tortragon:  ; "It has a tough/shell but it can't/hide inside it"
     db $2C, $51, $62, $45, $3E, $50, $62, $3E, $62, $51, $4C, $52, $44, $45, $F1, $50, $45, $42, $49, $49, $62, $3F, $52, $51, $62, $46, $51, $62, $40, $3E, $4B, $67, $F1, $45, $46, $41, $42, $62, $46, $4B, $50, $46, $41, $42, $62, $46, $51, $F0
-MonsterDesc_022_Pteranod:  ; $577A "Flaps its large/wings and flies/with authority"
+MonsterDesc_022_Pteranod:  ; "Flaps its large/wings and flies/with authority"
     db $29, $49, $3E, $4D, $50, $62, $46, $51, $50, $62, $49, $3E, $4F, $44, $42, $F1, $54, $46, $4B, $44, $50, $62, $3E, $4B, $41, $62, $43, $49, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $3E, $52, $51, $45, $4C, $4F, $46, $51, $56, $F0
-MonsterDesc_023_Gasgon:  ; $57A9 "Traps gas/in its belly to/float in the air"
+MonsterDesc_023_Gasgon:  ; "Traps gas/in its belly to/float in the air"
     db $37, $4F, $3E, $4D, $50, $62, $44, $3E, $50, $F1, $46, $4B, $62, $46, $51, $50, $62, $3F, $42, $49, $49, $56, $62, $51, $4C, $F1, $43, $49, $4C, $3E, $51, $62, $46, $4B, $62, $51, $45, $42, $62, $3E, $46, $4F, $F0
-MonsterDesc_024_FairyDrak:  ; $57D4 "Uses its tongue to/suck nectar from/flowers"
+MonsterDesc_024_FairyDrak:  ; "Uses its tongue to/suck nectar from/flowers"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $51, $4C, $4B, $44, $52, $42, $62, $51, $4C, $F1, $50, $52, $40, $48, $62, $4B, $42, $40, $51, $3E, $4F, $62, $43, $4F, $4C, $4A, $F1, $43, $49, $4C, $54, $42, $4F, $50, $F0
-MonsterDesc_025_LizardMan:  ; $5800 "Smart enough to/skillfully use a/sword & shield"
+MonsterDesc_025_LizardMan:  ; "Smart enough to/skillfully use a/sword & shield"
     db $36, $4A, $3E, $4F, $51, $62, $42, $4B, $4C, $52, $44, $45, $62, $51, $4C, $F1, $50, $48, $46, $49, $49, $43, $52, $49, $49, $56, $62, $52, $50, $42, $62, $3E, $F1, $50, $54, $4C, $4F, $41, $62, $B6, $62, $50, $45, $46, $42, $49, $41, $F0
-MonsterDesc_026_Poisongon:  ; $5830 "The fluid that is/secreted from its/fin is poisonous"
+MonsterDesc_026_Poisongon:  ; "The fluid that is/secreted from its/fin is poisonous"
     db $37, $45, $42, $62, $43, $49, $52, $46, $41, $62, $51, $45, $3E, $51, $62, $46, $50, $F1, $50, $42, $40, $4F, $42, $51, $42, $41, $62, $43, $4F, $4C, $4A, $62, $46, $51, $50, $F1, $43, $46, $4B, $62, $46, $50, $62, $4D, $4C, $46, $50, $4C, $4B, $4C, $52, $50, $F0
-MonsterDesc_027_Swordgon:  ; $5865 "Its body is/covered with/sword-like spikes"
+MonsterDesc_027_Swordgon:  ; "Its body is/covered with/sword-like spikes"
     db $2C, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $50, $F1, $40, $4C, $53, $42, $4F, $42, $41, $62, $54, $46, $51, $45, $F1, $50, $54, $4C, $4F, $41, $9C, $49, $46, $48, $42, $62, $50, $4D, $46, $48, $42, $50, $F0
-MonsterDesc_028_Dragon:  ; $5890 "The oldest living/species of dragon"
+MonsterDesc_028_Dragon:  ; "The oldest living/species of dragon"
     db $37, $45, $42, $62, $4C, $49, $41, $42, $50, $51, $62, $49, $46, $53, $46, $4B, $44, $F1, $50, $4D, $42, $40, $46, $42, $50, $62, $4C, $43, $62, $41, $4F, $3E, $44, $4C, $4B, $F0
-MonsterDesc_029_MiniDrak:  ; $58B4 "Runs by using/its hands & long/tail for balance"
+MonsterDesc_029_MiniDrak:  ; "Runs by using/its hands & long/tail for balance"
     db $35, $52, $4B, $50, $62, $3F, $56, $62, $52, $50, $46, $4B, $44, $F1, $46, $51, $50, $62, $45, $3E, $4B, $41, $50, $62, $B6, $62, $49, $4C, $4B, $44, $F1, $51, $3E, $46, $49, $62, $43, $4C, $4F, $62, $3F, $3E, $49, $3E, $4B, $40, $42, $F0
-MonsterDesc_030_MadDragon:  ; $58E4 "Runs by using/its hands & long/tail for balance"
+MonsterDesc_030_MadDragon:  ; "Runs by using/its hands & long/tail for balance"
     db $35, $52, $4B, $50, $62, $3F, $56, $62, $52, $50, $46, $4B, $44, $F1, $46, $51, $50, $62, $45, $3E, $4B, $41, $50, $62, $B6, $62, $49, $4C, $4B, $44, $F1, $51, $3E, $46, $49, $62, $43, $4C, $4F, $62, $3F, $3E, $49, $3E, $4B, $40, $42, $F0
-MonsterDesc_031_Rayburn:  ; $5914 "Can grab prey/with its talons/& fly off"
+MonsterDesc_031_Rayburn:  ; "Can grab prey/with its talons/& fly off"
     db $26, $3E, $4B, $62, $44, $4F, $3E, $3F, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $51, $3E, $49, $4C, $4B, $50, $F1, $B6, $62, $43, $49, $56, $62, $4C, $43, $43, $F0
-MonsterDesc_032_Chamelgon:  ; $593C "Changes its/skin color for/camouflage"
+MonsterDesc_032_Chamelgon:  ; "Changes its/skin color for/camouflage"
     db $26, $45, $3E, $4B, $44, $42, $50, $62, $46, $51, $50, $F1, $50, $48, $46, $4B, $62, $40, $4C, $49, $4C, $4F, $62, $43, $4C, $4F, $F1, $40, $3E, $4A, $4C, $52, $43, $49, $3E, $44, $42, $F0
-MonsterDesc_033_LizardFly:  ; $5962 "Hovers in/midair with its/thin wings"
+MonsterDesc_033_LizardFly:  ; "Hovers in/midair with its/thin wings"
     db $2B, $4C, $53, $42, $4F, $50, $62, $46, $4B, $F1, $4A, $46, $41, $3E, $46, $4F, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $51, $45, $46, $4B, $62, $54, $46, $4B, $44, $50, $F0
-MonsterDesc_034_Andreal:  ; $5987 "Sharp claws &/fangs are its most/deadly weapons"
+MonsterDesc_034_Andreal:  ; "Sharp claws &/fangs are its most/deadly weapons"
     db $36, $45, $3E, $4F, $4D, $62, $40, $49, $3E, $54, $50, $62, $B6, $F1, $43, $3E, $4B, $44, $50, $62, $3E, $4F, $42, $62, $46, $51, $50, $62, $4A, $4C, $50, $51, $F1, $41, $42, $3E, $41, $49, $56, $62, $54, $42, $3E, $4D, $4C, $4B, $50, $F0
-MonsterDesc_035_KingCobra:  ; $59B7 "Its poisonous bite/and sharp fangs/are deadly"
+MonsterDesc_035_KingCobra:  ; "Its poisonous bite/and sharp fangs/are deadly"
     db $2C, $51, $50, $62, $4D, $4C, $46, $50, $4C, $4B, $4C, $52, $50, $62, $3F, $46, $51, $42, $F1, $3E, $4B, $41, $62, $50, $45, $3E, $4F, $4D, $62, $43, $3E, $4B, $44, $50, $F1, $3E, $4F, $42, $62, $41, $42, $3E, $41, $49, $56, $F0
-MonsterDesc_036_Spikerous:  ; $59E5 "Its spiky hard/shell protects/itself from danger"
+MonsterDesc_036_Spikerous:  ; "Its spiky hard/shell protects/itself from danger"
     db $2C, $51, $50, $62, $50, $4D, $46, $48, $56, $62, $45, $3E, $4F, $41, $F1, $50, $45, $42, $49, $49, $62, $4D, $4F, $4C, $51, $42, $40, $51, $50, $F1, $46, $51, $50, $42, $49, $43, $62, $43, $4F, $4C, $4A, $62, $41, $3E, $4B, $44, $42, $4F, $F0
-MonsterDesc_037_GreatDrak:  ; $5A16 "The biggest/dragon in the/dragon family"
+MonsterDesc_037_GreatDrak:  ; "The biggest/dragon in the/dragon family"
     db $37, $45, $42, $62, $3F, $46, $44, $44, $42, $50, $51, $F1, $41, $4F, $3E, $44, $4C, $4B, $62, $46, $4B, $62, $51, $45, $42, $F1, $41, $4F, $3E, $44, $4C, $4B, $62, $43, $3E, $4A, $46, $49, $56, $F0
-MonsterDesc_038_Crestpent:  ; $5A3E "It shakes its/crest to terrorize/its enemies"
+MonsterDesc_038_Crestpent:  ; "It shakes its/crest to terrorize/its enemies"
     db $2C, $51, $62, $50, $45, $3E, $48, $42, $50, $62, $46, $51, $50, $F1, $40, $4F, $42, $50, $51, $62, $51, $4C, $62, $51, $42, $4F, $4F, $4C, $4F, $46, $57, $42, $F1, $46, $51, $50, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-MonsterDesc_039_WingSnake:  ; $5A6B "Glides through/the air with its/large wings"
+MonsterDesc_039_WingSnake:  ; "Glides through/the air with its/large wings"
     db $2A, $49, $46, $41, $42, $50, $62, $51, $45, $4F, $4C, $52, $44, $45, $F1, $51, $45, $42, $62, $3E, $46, $4F, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $49, $3E, $4F, $44, $42, $62, $54, $46, $4B, $44, $50, $F0
-MonsterDesc_040_Coatol:  ; $5A97 "Constricts its/enemies with its/powerful body"
+MonsterDesc_040_Coatol:  ; "Constricts its/enemies with its/powerful body"
     db $26, $4C, $4B, $50, $51, $4F, $46, $40, $51, $50, $62, $46, $51, $50, $F1, $42, $4B, $42, $4A, $46, $42, $50, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $4D, $4C, $54, $42, $4F, $43, $52, $49, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_041_Orochi:  ; $5AC5 "Its 5 heads can do/different things/at the same time"
+MonsterDesc_041_Orochi:  ; "Its 5 heads can do/different things/at the same time"
     db $2C, $51, $50, $62, $05, $62, $45, $42, $3E, $41, $50, $62, $40, $3E, $4B, $62, $41, $4C, $F1, $41, $46, $43, $43, $42, $4F, $42, $4B, $51, $62, $51, $45, $46, $4B, $44, $50, $F1, $3E, $51, $62, $51, $45, $42, $62, $50, $3E, $4A, $42, $62, $51, $46, $4A, $42, $F0
-MonsterDesc_042_BattleRex:  ; $5AFA "Attacks by/swinging its/powerful giant ax"
+MonsterDesc_042_BattleRex:  ; "Attacks by/swinging its/powerful giant ax"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3F, $56, $F1, $50, $54, $46, $4B, $44, $46, $4B, $44, $62, $46, $51, $50, $F1, $4D, $4C, $54, $42, $4F, $43, $52, $49, $62, $44, $46, $3E, $4B, $51, $62, $3E, $55, $F0
-MonsterDesc_043_SkyDragon:  ; $5B24 "Floats freely in/midair with its/magical powers"
+MonsterDesc_043_SkyDragon:  ; "Floats freely in/midair with its/magical powers"
     db $29, $49, $4C, $3E, $51, $50, $62, $43, $4F, $42, $42, $49, $56, $62, $46, $4B, $F1, $4A, $46, $41, $3E, $46, $4F, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $4A, $3E, $44, $46, $40, $3E, $49, $62, $4D, $4C, $54, $42, $4F, $50, $F0
-MonsterDesc_044_Divinegon:  ; $5B54 "If you defeat it,/your wish will/be granted"
+MonsterDesc_044_Divinegon:  ; "If you defeat it,/your wish will/be granted"
     db $2C, $43, $62, $56, $4C, $52, $62, $41, $42, $43, $42, $3E, $51, $62, $46, $51, $5E, $F1, $56, $4C, $52, $4F, $62, $54, $46, $50, $45, $62, $54, $46, $49, $49, $F1, $3F, $42, $62, $44, $4F, $3E, $4B, $51, $42, $41, $F0
-MonsterDesc_045_Tonguella:  ; $5B80 "Moves slowly/but its long/tongue is deadly"
+MonsterDesc_045_Tonguella:  ; "Moves slowly/but its long/tongue is deadly"
     db $30, $4C, $53, $42, $50, $62, $50, $49, $4C, $54, $49, $56, $F1, $3F, $52, $51, $62, $46, $51, $50, $62, $49, $4C, $4B, $44, $F1, $51, $4C, $4B, $44, $52, $42, $62, $46, $50, $62, $41, $42, $3E, $41, $49, $56, $F0
-MonsterDesc_046_Almiraj:  ; $5BAB "When cornered,it/charges with its/sharp horns"
+MonsterDesc_046_Almiraj:  ; "When cornered,it/charges with its/sharp horns"
     db $3A, $45, $42, $4B, $62, $40, $4C, $4F, $4B, $42, $4F, $42, $41, $5E, $46, $51, $F1, $40, $45, $3E, $4F, $44, $42, $50, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $50, $45, $3E, $4F, $4D, $62, $45, $4C, $4F, $4B, $50, $F0
-MonsterDesc_047_CatFly:  ; $5BD9 "Can see in the/dark and preys/at night"
+MonsterDesc_047_CatFly:  ; "Can see in the/dark and preys/at night"
     db $26, $3E, $4B, $62, $50, $42, $42, $62, $46, $4B, $62, $51, $45, $42, $F1, $41, $3E, $4F, $48, $62, $3E, $4B, $41, $62, $4D, $4F, $42, $56, $50, $F1, $3E, $51, $62, $4B, $46, $44, $45, $51, $F0
-MonsterDesc_048_PillowRat:  ; $5C00 "Soft & fluffy/fur covers its/body"
+MonsterDesc_048_PillowRat:  ; "Soft & fluffy/fur covers its/body"
     db $36, $4C, $43, $51, $62, $B6, $62, $43, $49, $52, $43, $43, $56, $F1, $43, $52, $4F, $62, $40, $4C, $53, $42, $4F, $50, $62, $46, $51, $50, $F1, $3F, $4C, $41, $56, $F0
-MonsterDesc_049_Saccer:  ; $5C22 "Lives in a/sack made out/of branches"
+MonsterDesc_049_Saccer:  ; "Lives in a/sack made out/of branches"
     db $2F, $46, $53, $42, $50, $62, $46, $4B, $62, $3E, $F1, $50, $3E, $40, $48, $62, $4A, $3E, $41, $42, $62, $4C, $52, $51, $F1, $4C, $43, $62, $3F, $4F, $3E, $4B, $40, $45, $42, $50, $F0
-MonsterDesc_050_GulpBeast:  ; $5C47 "It devours its/prey in one/big gulp"
+MonsterDesc_050_GulpBeast:  ; "It devours its/prey in one/big gulp"
     db $2C, $51, $62, $41, $42, $53, $4C, $52, $4F, $50, $62, $46, $51, $50, $F1, $4D, $4F, $42, $56, $62, $46, $4B, $62, $4C, $4B, $42, $F1, $3F, $46, $44, $62, $44, $52, $49, $4D, $F0
-MonsterDesc_051_Skullroo:  ; $5C6B "Attacks by/throwing skulls/at its enemies"
+MonsterDesc_051_Skullroo:  ; "Attacks by/throwing skulls/at its enemies"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3F, $56, $F1, $51, $45, $4F, $4C, $54, $46, $4B, $44, $62, $50, $48, $52, $49, $49, $50, $F1, $3E, $51, $62, $46, $51, $50, $62, $42, $4B, $42, $4A, $46, $42, $50, $F0
-MonsterDesc_052_WindBeast:  ; $5C95 "Creates tornadoes/with its legs to/defend itself"
+MonsterDesc_052_WindBeast:  ; "Creates tornadoes/with its legs to/defend itself"
     db $26, $4F, $42, $3E, $51, $42, $50, $62, $51, $4C, $4F, $4B, $3E, $41, $4C, $42, $50, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $49, $42, $44, $50, $62, $51, $4C, $F1, $41, $42, $43, $42, $4B, $41, $62, $46, $51, $50, $42, $49, $43, $F0
-MonsterDesc_053_Anteater:  ; $5CC6 "Uses its tongue to/attack & snare/its prey"
+MonsterDesc_053_Anteater:  ; "Uses its tongue to/attack & snare/its prey"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $51, $4C, $4B, $44, $52, $42, $62, $51, $4C, $F1, $3E, $51, $51, $3E, $40, $48, $62, $B6, $62, $50, $4B, $3E, $4F, $42, $F1, $46, $51, $50, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_054_SuperTen:  ; $5CF1 "It likes to show/off its dance/moves"
+MonsterDesc_054_SuperTen:  ; "It likes to show/off its dance/moves"
     db $2C, $51, $62, $49, $46, $48, $42, $50, $62, $51, $4C, $62, $50, $45, $4C, $54, $F1, $4C, $43, $43, $62, $46, $51, $50, $62, $41, $3E, $4B, $40, $42, $F1, $4A, $4C, $53, $42, $50, $F0
-MonsterDesc_055_IronTurt:  ; $5D16 "Its spiked shell/makes its body/slam attack deadly"
+MonsterDesc_055_IronTurt:  ; "Its spiked shell/makes its body/slam attack deadly"
     db $2C, $51, $50, $62, $50, $4D, $46, $48, $42, $41, $62, $50, $45, $42, $49, $49, $F1, $4A, $3E, $48, $42, $50, $62, $46, $51, $50, $62, $3F, $4C, $41, $56, $F1, $50, $49, $3E, $4A, $62, $3E, $51, $51, $3E, $40, $48, $62, $41, $42, $3E, $41, $49, $56, $F0
-MonsterDesc_056_Mommonja:  ; $5D49 "It follows you/like a dog"
+MonsterDesc_056_Mommonja:  ; "It follows you/like a dog"
     db $2C, $51, $62, $43, $4C, $49, $49, $4C, $54, $50, $62, $56, $4C, $52, $F1, $49, $46, $48, $42, $62, $3E, $62, $41, $4C, $44, $F0
-MonsterDesc_057_HammerMan:  ; $5D63 "It has a hammer/bigger than itself"
+MonsterDesc_057_HammerMan:  ; "It has a hammer/bigger than itself"
     db $2C, $51, $62, $45, $3E, $50, $62, $3E, $62, $45, $3E, $4A, $4A, $42, $4F, $F1, $3F, $46, $44, $44, $42, $4F, $62, $51, $45, $3E, $4B, $62, $46, $51, $50, $42, $49, $43, $F0
-MonsterDesc_058_Grizzly:  ; $5D86 "Uses its strong/arms to squeeze/its prey"
+MonsterDesc_058_Grizzly:  ; "Uses its strong/arms to squeeze/its prey"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $3E, $4F, $4A, $50, $62, $51, $4C, $62, $50, $4E, $52, $42, $42, $57, $42, $F1, $46, $51, $50, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_059_Yeti:  ; $5DAF "Its body is/covered with a/thick fur"
+MonsterDesc_059_Yeti:  ; "Its body is/covered with a/thick fur"
     db $2C, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $50, $F1, $40, $4C, $53, $42, $4F, $42, $41, $62, $54, $46, $51, $45, $62, $3E, $F1, $51, $45, $46, $40, $48, $62, $43, $52, $4F, $F0
-MonsterDesc_060_MadGopher:  ; $5DD4 "It can dig very/deep holes with/its shovel"
+MonsterDesc_060_MadGopher:  ; "It can dig very/deep holes with/its shovel"
     db $2C, $51, $62, $40, $3E, $4B, $62, $41, $46, $44, $62, $53, $42, $4F, $56, $F1, $41, $42, $42, $4D, $62, $45, $4C, $49, $42, $50, $62, $54, $46, $51, $45, $F1, $46, $51, $50, $62, $50, $45, $4C, $53, $42, $49, $F0
-MonsterDesc_061_FairyRat:  ; $5DFF "Its ears act as/wings allowing/it to fly"
+MonsterDesc_061_FairyRat:  ; "Its ears act as/wings allowing/it to fly"
     db $2C, $51, $50, $62, $42, $3E, $4F, $50, $62, $3E, $40, $51, $62, $3E, $50, $F1, $54, $46, $4B, $44, $50, $62, $3E, $49, $49, $4C, $54, $46, $4B, $44, $F1, $46, $51, $62, $51, $4C, $62, $43, $49, $56, $F0
-MonsterDesc_062_Unicorn:  ; $5E28 "Its horn is used/to make medicines"
+MonsterDesc_062_Unicorn:  ; "Its horn is used/to make medicines"
     db $2C, $51, $50, $62, $45, $4C, $4F, $4B, $62, $46, $50, $62, $52, $50, $42, $41, $F1, $51, $4C, $62, $4A, $3E, $48, $42, $62, $4A, $42, $41, $46, $40, $46, $4B, $42, $50, $F0
-MonsterDesc_063_Goategon:  ; $5E4B "Charges enemies/with its sharp &/twisted horns"
+MonsterDesc_063_Goategon:  ; "Charges enemies/with its sharp &/twisted horns"
     db $26, $45, $3E, $4F, $44, $42, $50, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $50, $45, $3E, $4F, $4D, $62, $B6, $F1, $51, $54, $46, $50, $51, $42, $41, $62, $45, $4C, $4F, $4B, $50, $F0
-MonsterDesc_064_WildApe:  ; $5E7A "Lives in groups/with one dominant/male boss"
+MonsterDesc_064_WildApe:  ; "Lives in groups/with one dominant/male boss"
     db $2F, $46, $53, $42, $50, $62, $46, $4B, $62, $44, $4F, $4C, $52, $4D, $50, $F1, $54, $46, $51, $45, $62, $4C, $4B, $42, $62, $41, $4C, $4A, $46, $4B, $3E, $4B, $51, $F1, $4A, $3E, $49, $42, $62, $3F, $4C, $50, $50, $F0
-MonsterDesc_065_Trumpeter:  ; $5EA6 "Its tusks are used/to create craft/work"
+MonsterDesc_065_Trumpeter:  ; "Its tusks are used/to create craft/work"
     db $2C, $51, $50, $62, $51, $52, $50, $48, $50, $62, $3E, $4F, $42, $62, $52, $50, $42, $41, $F1, $51, $4C, $62, $40, $4F, $42, $3E, $51, $42, $62, $40, $4F, $3E, $43, $51, $F1, $54, $4C, $4F, $48, $F0
-MonsterDesc_066_KingLeo:  ; $5ECE "Uses its 4 hands &/4 arms skillfully/in combat"
+MonsterDesc_066_KingLeo:  ; "Uses its 4 hands &/4 arms skillfully/in combat"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $04, $62, $45, $3E, $4B, $41, $50, $62, $B6, $F1, $04, $62, $3E, $4F, $4A, $50, $62, $50, $48, $46, $49, $49, $43, $52, $49, $49, $56, $F1, $46, $4B, $62, $40, $4C, $4A, $3F, $3E, $51, $F0
-MonsterDesc_067_DarkHorn:  ; $5EFD "Its pelt commands/a high price"
+MonsterDesc_067_DarkHorn:  ; "Its pelt commands/a high price"
     db $2C, $51, $50, $62, $4D, $42, $49, $51, $62, $40, $4C, $4A, $4A, $3E, $4B, $41, $50, $F1, $3E, $62, $45, $46, $44, $45, $62, $4D, $4F, $46, $40, $42, $F0
-MonsterDesc_068_MadCat:  ; $5F1C "Moves very swiftly/to catch its prey"
+MonsterDesc_068_MadCat:  ; "Moves very swiftly/to catch its prey"
     db $30, $4C, $53, $42, $50, $62, $53, $42, $4F, $56, $62, $50, $54, $46, $43, $51, $49, $56, $F1, $51, $4C, $62, $40, $3E, $51, $40, $45, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_069_BigEye:  ; $5F41 "Looks up at the/sky & dozes/off all day"
+MonsterDesc_069_BigEye:  ; "Looks up at the/sky & dozes/off all day"
     db $2F, $4C, $4C, $48, $50, $62, $52, $4D, $62, $3E, $51, $62, $51, $45, $42, $F1, $50, $48, $56, $62, $B6, $62, $41, $4C, $57, $42, $50, $F1, $4C, $43, $43, $62, $3E, $49, $49, $62, $41, $3E, $56, $F0
-MonsterDesc_070_Picky:  ; $5F69 "It's flightless/but it can run/quickly"
+MonsterDesc_070_Picky:  ; "It's flightless/but it can run/quickly"
     db $2C, $51, $68, $62, $43, $49, $46, $44, $45, $51, $49, $42, $50, $50, $F1, $3F, $52, $51, $62, $46, $51, $62, $40, $3E, $4B, $62, $4F, $52, $4B, $F1, $4E, $52, $46, $40, $48, $49, $56, $F0
-MonsterDesc_071_Wyvern:  ; $5F8F "It has an eagle's/head & a body/of a serpent"
+MonsterDesc_071_Wyvern:  ; "It has an eagle's/head & a body/of a serpent"
     db $2C, $51, $62, $45, $3E, $50, $62, $3E, $4B, $62, $42, $3E, $44, $49, $42, $68, $F1, $45, $42, $3E, $41, $62, $B6, $62, $3E, $62, $3F, $4C, $41, $56, $F1, $4C, $43, $62, $3E, $62, $50, $42, $4F, $4D, $42, $4B, $51, $F0
-MonsterDesc_072_BullBird:  ; $5FBB "Sleeps right after/it makes a kill"
+MonsterDesc_072_BullBird:  ; "Sleeps right after/it makes a kill"
     db $36, $49, $42, $42, $4D, $50, $62, $4F, $46, $44, $45, $51, $62, $3E, $43, $51, $42, $4F, $F1, $46, $51, $62, $4A, $3E, $48, $42, $50, $62, $3E, $62, $48, $46, $49, $49, $F0
-MonsterDesc_073_Florajay:  ; $5FDE "Its flower like/face lures bugs/to their doom"
+MonsterDesc_073_Florajay:  ; "Its flower like/face lures bugs/to their doom"
     db $2C, $51, $50, $62, $43, $49, $4C, $54, $42, $4F, $62, $49, $46, $48, $42, $F1, $43, $3E, $40, $42, $62, $49, $52, $4F, $42, $50, $62, $3F, $52, $44, $50, $F1, $51, $4C, $62, $51, $45, $42, $46, $4F, $62, $41, $4C, $4C, $4A, $F0
-MonsterDesc_074_DuckKite:  ; $600C "Spreads its/wings to make/itself look bigger"
+MonsterDesc_074_DuckKite:  ; "Spreads its/wings to make/itself look bigger"
     db $36, $4D, $4F, $42, $3E, $41, $50, $62, $46, $51, $50, $F1, $54, $46, $4B, $44, $50, $62, $51, $4C, $62, $4A, $3E, $48, $42, $F1, $46, $51, $50, $42, $49, $43, $62, $49, $4C, $4C, $48, $62, $3F, $46, $44, $44, $42, $4F, $F0
-MonsterDesc_075_MadPecker:  ; $6039 "Rips flesh from/its prey with its/strong beak"
+MonsterDesc_075_MadPecker:  ; "Rips flesh from/its prey with its/strong beak"
     db $35, $46, $4D, $50, $62, $43, $49, $42, $50, $45, $62, $43, $4F, $4C, $4A, $F1, $46, $51, $50, $62, $4D, $4F, $42, $56, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $50, $51, $4F, $4C, $4B, $44, $62, $3F, $42, $3E, $48, $F0
-MonsterDesc_076_MadRaven:  ; $6067 "Attacks by/dropping skulls/from the air"
+MonsterDesc_076_MadRaven:  ; "Attacks by/dropping skulls/from the air"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3F, $56, $F1, $41, $4F, $4C, $4D, $4D, $46, $4B, $44, $62, $50, $48, $52, $49, $49, $50, $F1, $43, $4F, $4C, $4A, $62, $51, $45, $42, $62, $3E, $46, $4F, $F0
-MonsterDesc_077_MistyWing:  ; $608F "Its mist like body/glows pinkish in/the dark"
+MonsterDesc_077_MistyWing:  ; "Its mist like body/glows pinkish in/the dark"
     db $2C, $51, $50, $62, $4A, $46, $50, $51, $62, $49, $46, $48, $42, $62, $3F, $4C, $41, $56, $F1, $44, $49, $4C, $54, $50, $62, $4D, $46, $4B, $48, $46, $50, $45, $62, $46, $4B, $F1, $51, $45, $42, $62, $41, $3E, $4F, $48, $F0
-MonsterDesc_078_Dracky:  ; $60BC "Prefers darkness/and sucks blood/with its fangs"
+MonsterDesc_078_Dracky:  ; "Prefers darkness/and sucks blood/with its fangs"
     db $33, $4F, $42, $43, $42, $4F, $50, $62, $41, $3E, $4F, $48, $4B, $42, $50, $50, $F1, $3E, $4B, $41, $62, $50, $52, $40, $48, $50, $62, $3F, $49, $4C, $4C, $41, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $43, $3E, $4B, $44, $50, $F0
-MonsterDesc_079_BigRoost:  ; $60EC "Its firm flesh/is good eating"
+MonsterDesc_079_BigRoost:  ; "Its firm flesh/is good eating"
     db $2C, $51, $50, $62, $43, $46, $4F, $4A, $62, $43, $49, $42, $50, $45, $F1, $46, $50, $62, $44, $4C, $4C, $41, $62, $42, $3E, $51, $46, $4B, $44, $F0
-MonsterDesc_080_StubBird:  ; $610A "A very stubborn/bird"
+MonsterDesc_080_StubBird:  ; "A very stubborn/bird"
     db $24, $62, $53, $42, $4F, $56, $62, $50, $51, $52, $3F, $3F, $4C, $4F, $4B, $F1, $3F, $46, $4F, $41, $F0
-MonsterDesc_081_LandOwl:  ; $611F "A flightless owl/with strong talons/& sharp claws"
+MonsterDesc_081_LandOwl:  ; "A flightless owl/with strong talons/& sharp claws"
     db $24, $62, $43, $49, $46, $44, $45, $51, $49, $42, $50, $50, $62, $4C, $54, $49, $F1, $54, $46, $51, $45, $62, $50, $51, $4F, $4C, $4B, $44, $62, $51, $3E, $49, $4C, $4B, $50, $F1, $B6, $62, $50, $45, $3E, $4F, $4D, $62, $40, $49, $3E, $54, $50, $F0
-MonsterDesc_082_MadGoose:  ; $6151 "A migratory/bird that can be/very violent"
+MonsterDesc_082_MadGoose:  ; "A migratory/bird that can be/very violent"
     db $24, $62, $4A, $46, $44, $4F, $3E, $51, $4C, $4F, $56, $F1, $3F, $46, $4F, $41, $62, $51, $45, $3E, $51, $62, $40, $3E, $4B, $62, $3F, $42, $F1, $53, $42, $4F, $56, $62, $53, $46, $4C, $49, $42, $4B, $51, $F0
-MonsterDesc_083_MadCondor:  ; $617B "It has big wings,/deadly sharp claws/& a powerful beak"
+MonsterDesc_083_MadCondor:  ; "It has big wings,/deadly sharp claws/& a powerful beak"
     db $2C, $51, $62, $45, $3E, $50, $62, $3F, $46, $44, $62, $54, $46, $4B, $44, $50, $5E, $F1, $41, $42, $3E, $41, $49, $56, $62, $50, $45, $3E, $4F, $4D, $62, $40, $49, $3E, $54, $50, $F1, $B6, $62, $3E, $62, $4D, $4C, $54, $42, $4F, $43, $52, $49, $62, $3F, $42, $3E, $48, $F0
-MonsterDesc_084_Blizzardy:  ; $61B2 "Breathes out/freezing air to/defeat its prey"
+MonsterDesc_084_Blizzardy:  ; "Breathes out/freezing air to/defeat its prey"
     db $25, $4F, $42, $3E, $51, $45, $42, $50, $62, $4C, $52, $51, $F1, $43, $4F, $42, $42, $57, $46, $4B, $44, $62, $3E, $46, $4F, $62, $51, $4C, $F1, $41, $42, $43, $42, $3E, $51, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_085_Phoenix:  ; $61DF "Roasts its prey/with its fiery/breath"
+MonsterDesc_085_Phoenix:  ; "Roasts its prey/with its fiery/breath"
     db $35, $4C, $3E, $50, $51, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $43, $46, $42, $4F, $56, $F1, $3F, $4F, $42, $3E, $51, $45, $F0
-MonsterDesc_086_ZapBird:  ; $6205 "Attacks with the/thundercloud that/covers its body"
+MonsterDesc_086_ZapBird:  ; "Attacks with the/thundercloud that/covers its body"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $54, $46, $51, $45, $62, $51, $45, $42, $F1, $51, $45, $52, $4B, $41, $42, $4F, $40, $49, $4C, $52, $41, $62, $51, $45, $3E, $51, $F1, $40, $4C, $53, $42, $4F, $50, $62, $46, $51, $50, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_087_WhipBird:  ; $6238 "Attacks with its/whip-like legs &/knife-like claws"
+MonsterDesc_087_WhipBird:  ; "Attacks with its/whip-like legs &/knife-like claws"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $54, $45, $46, $4D, $9C, $49, $46, $48, $42, $62, $49, $42, $44, $50, $62, $B6, $F1, $48, $4B, $46, $43, $42, $9C, $49, $46, $48, $42, $62, $40, $49, $3E, $54, $50, $F0
-MonsterDesc_088_FunkyBird:  ; $626B "Likes to dance/& sing"
+MonsterDesc_088_FunkyBird:  ; "Likes to dance/& sing"
     db $2F, $46, $48, $42, $50, $62, $51, $4C, $62, $41, $3E, $4B, $40, $42, $F1, $B6, $62, $50, $46, $4B, $44, $F0
-MonsterDesc_089_RainHawk:  ; $6281 "It has 4 strong/legs & a pair of/powerful wings"
+MonsterDesc_089_RainHawk:  ; "It has 4 strong/legs & a pair of/powerful wings"
     db $2C, $51, $62, $45, $3E, $50, $62, $04, $62, $50, $51, $4F, $4C, $4B, $44, $F1, $49, $42, $44, $50, $62, $B6, $62, $3E, $62, $4D, $3E, $46, $4F, $62, $4C, $43, $F1, $4D, $4C, $54, $42, $4F, $43, $52, $49, $62, $54, $46, $4B, $44, $50, $F0
-MonsterDesc_090_MadPlant:  ; $62B1 "Secretes sweet/sap to attract/bugs"
+MonsterDesc_090_MadPlant:  ; "Secretes sweet/sap to attract/bugs"
     db $36, $42, $40, $4F, $42, $51, $42, $50, $62, $50, $54, $42, $42, $51, $F1, $50, $3E, $4D, $62, $51, $4C, $62, $3E, $51, $51, $4F, $3E, $40, $51, $F1, $3F, $52, $44, $50, $F0
-MonsterDesc_091_FireWeed:  ; $62D4 "Its flame breath/is its deadly/weapon"
+MonsterDesc_091_FireWeed:  ; "Its flame breath/is its deadly/weapon"
     db $2C, $51, $50, $62, $43, $49, $3E, $4A, $42, $62, $3F, $4F, $42, $3E, $51, $45, $F1, $46, $50, $62, $46, $51, $50, $62, $41, $42, $3E, $41, $49, $56, $F1, $54, $42, $3E, $4D, $4C, $4B, $F0
-MonsterDesc_092_FloraMan:  ; $62FA "Can live several/hundred years/and is very wise"
+MonsterDesc_092_FloraMan:  ; "Can live several/hundred years/and is very wise"
     db $26, $3E, $4B, $62, $49, $46, $53, $42, $62, $50, $42, $53, $42, $4F, $3E, $49, $F1, $45, $52, $4B, $41, $4F, $42, $41, $62, $56, $42, $3E, $4F, $50, $F1, $3E, $4B, $41, $62, $46, $50, $62, $53, $42, $4F, $56, $62, $54, $46, $50, $42, $F0
-MonsterDesc_093_WingTree:  ; $632A "Stores gas inside/its body to/float in the air"
+MonsterDesc_093_WingTree:  ; "Stores gas inside/its body to/float in the air"
     db $36, $51, $4C, $4F, $42, $50, $62, $44, $3E, $50, $62, $46, $4B, $50, $46, $41, $42, $F1, $46, $51, $50, $62, $3F, $4C, $41, $56, $62, $51, $4C, $F1, $43, $49, $4C, $3E, $51, $62, $46, $4B, $62, $51, $45, $42, $62, $3E, $46, $4F, $F0
-MonsterDesc_094_CactiBall:  ; $6359 "Stores water/inside the body to/survive in deserts"
+MonsterDesc_094_CactiBall:  ; "Stores water/inside the body to/survive in deserts"
     db $36, $51, $4C, $4F, $42, $50, $62, $54, $3E, $51, $42, $4F, $F1, $46, $4B, $50, $46, $41, $42, $62, $51, $45, $42, $62, $3F, $4C, $41, $56, $62, $51, $4C, $F1, $50, $52, $4F, $53, $46, $53, $42, $62, $46, $4B, $62, $41, $42, $50, $42, $4F, $51, $50, $F0
-MonsterDesc_095_Gulpple:  ; $638C "Gulps up monsters/to stock up on its/evil powers"
+MonsterDesc_095_Gulpple:  ; "Gulps up monsters/to stock up on its/evil powers"
     db $2A, $52, $49, $4D, $50, $62, $52, $4D, $62, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $F1, $51, $4C, $62, $50, $51, $4C, $40, $48, $62, $52, $4D, $62, $4C, $4B, $62, $46, $51, $50, $F1, $42, $53, $46, $49, $62, $4D, $4C, $54, $42, $4F, $50, $F0
-MonsterDesc_096_Toadstool:  ; $63BD "Plants its spores/on its prey to/multiply"
+MonsterDesc_096_Toadstool:  ; "Plants its spores/on its prey to/multiply"
     db $33, $49, $3E, $4B, $51, $50, $62, $46, $51, $50, $62, $50, $4D, $4C, $4F, $42, $50, $F1, $4C, $4B, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $62, $51, $4C, $F1, $4A, $52, $49, $51, $46, $4D, $49, $56, $F0
-MonsterDesc_097_AmberWeed:  ; $63E7 "Secretes sap that/hardens its body"
+MonsterDesc_097_AmberWeed:  ; "Secretes sap that/hardens its body"
     db $36, $42, $40, $4F, $42, $51, $42, $50, $62, $50, $3E, $4D, $62, $51, $45, $3E, $51, $F1, $45, $3E, $4F, $41, $42, $4B, $50, $62, $46, $51, $50, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_098_Stubsuck:  ; $640A "Uses its roots/to suck out the/preys body fluid"
+MonsterDesc_098_Stubsuck:  ; "Uses its roots/to suck out the/preys body fluid"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $4F, $4C, $4C, $51, $50, $F1, $51, $4C, $62, $50, $52, $40, $48, $62, $4C, $52, $51, $62, $51, $45, $42, $F1, $4D, $4F, $42, $56, $50, $62, $3F, $4C, $41, $56, $62, $43, $49, $52, $46, $41, $F0
-MonsterDesc_099_Oniono:  ; $643A "Grows out its/roots when its/ready to breed"
+MonsterDesc_099_Oniono:  ; "Grows out its/roots when its/ready to breed"
     db $2A, $4F, $4C, $54, $50, $62, $4C, $52, $51, $62, $46, $51, $50, $F1, $4F, $4C, $4C, $51, $50, $62, $54, $45, $42, $4B, $62, $46, $51, $50, $F1, $4F, $42, $3E, $41, $56, $62, $51, $4C, $62, $3F, $4F, $42, $42, $41, $F0
-MonsterDesc_100_DanceVegi:  ; $6466 "Its bad balance/forces it to walk/like it's dancing"
+MonsterDesc_100_DanceVegi:  ; "Its bad balance/forces it to walk/like it's dancing"
     db $2C, $51, $50, $62, $3F, $3E, $41, $62, $3F, $3E, $49, $3E, $4B, $40, $42, $F1, $43, $4C, $4F, $40, $42, $50, $62, $46, $51, $62, $51, $4C, $62, $54, $3E, $49, $48, $F1, $49, $46, $48, $42, $62, $46, $51, $68, $62, $41, $3E, $4B, $40, $46, $4B, $44, $F0
-MonsterDesc_101_TreeBoy:  ; $6499 "A spirit that/lives in a very/old tree"
+MonsterDesc_101_TreeBoy:  ; "A spirit that/lives in a very/old tree"
     db $24, $62, $50, $4D, $46, $4F, $46, $51, $62, $51, $45, $3E, $51, $F1, $49, $46, $53, $42, $50, $62, $46, $4B, $62, $3E, $62, $53, $42, $4F, $56, $F1, $4C, $49, $41, $62, $51, $4F, $42, $42, $F0
-MonsterDesc_102_FaceTree:  ; $64C0 "Its roots suck/evil power from/the ground"
+MonsterDesc_102_FaceTree:  ; "Its roots suck/evil power from/the ground"
     db $2C, $51, $50, $62, $4F, $4C, $4C, $51, $50, $62, $50, $52, $40, $48, $F1, $42, $53, $46, $49, $62, $4D, $4C, $54, $42, $4F, $62, $43, $4F, $4C, $4A, $F1, $51, $45, $42, $62, $44, $4F, $4C, $52, $4B, $41, $F0
-MonsterDesc_103_HerbMan:  ; $64EA "Its roots can be/used to make/a cure medicine"
+MonsterDesc_103_HerbMan:  ; "Its roots can be/used to make/a cure medicine"
     db $2C, $51, $50, $62, $4F, $4C, $4C, $51, $50, $62, $40, $3E, $4B, $62, $3F, $42, $F1, $52, $50, $42, $41, $62, $51, $4C, $62, $4A, $3E, $48, $42, $F1, $3E, $62, $40, $52, $4F, $42, $62, $4A, $42, $41, $46, $40, $46, $4B, $42, $F0
-MonsterDesc_104_BeanMan:  ; $6518 "Travels to find/a place to plant/its seeds"
+MonsterDesc_104_BeanMan:  ; "Travels to find/a place to plant/its seeds"
     db $37, $4F, $3E, $53, $42, $49, $50, $62, $51, $4C, $62, $43, $46, $4B, $41, $F1, $3E, $62, $4D, $49, $3E, $40, $42, $62, $51, $4C, $62, $4D, $49, $3E, $4B, $51, $F1, $46, $51, $50, $62, $50, $42, $42, $41, $50, $F0
-MonsterDesc_105_EvilSeed:  ; $6543 "Clings on its/host with its/tentacles"
+MonsterDesc_105_EvilSeed:  ; "Clings on its/host with its/tentacles"
     db $26, $49, $46, $4B, $44, $50, $62, $4C, $4B, $62, $46, $51, $50, $F1, $45, $4C, $50, $51, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $51, $42, $4B, $51, $3E, $40, $49, $42, $50, $F0
-MonsterDesc_106_ManEater:  ; $6569 "Dissolves its/prey with its/digestive acid"
+MonsterDesc_106_ManEater:  ; "Dissolves its/prey with its/digestive acid"
     db $27, $46, $50, $50, $4C, $49, $53, $42, $50, $62, $46, $51, $50, $F1, $4D, $4F, $42, $56, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $41, $46, $44, $42, $50, $51, $46, $53, $42, $62, $3E, $40, $46, $41, $F0
-MonsterDesc_107_Snapper:  ; $6594 "The 3 buds sink/their teeth into/its prey"
+MonsterDesc_107_Snapper:  ; "The 3 buds sink/their teeth into/its prey"
     db $37, $45, $42, $62, $03, $62, $3F, $52, $41, $50, $62, $50, $46, $4B, $48, $F1, $51, $45, $42, $46, $4F, $62, $51, $42, $42, $51, $45, $62, $46, $4B, $51, $4C, $F1, $46, $51, $50, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_108_Rosevine:  ; $65BE "Squeezes its/prey with its/thorny vines"
+MonsterDesc_108_Rosevine:  ; "Squeezes its/prey with its/thorny vines"
     db $36, $4E, $52, $42, $42, $57, $42, $50, $62, $46, $51, $50, $F1, $4D, $4F, $42, $56, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $51, $45, $4C, $4F, $4B, $56, $62, $53, $46, $4B, $42, $50, $F0
-MonsterDesc_109_Watabou:  ; $65E6 "A mischievous/mystical creature"
+MonsterDesc_109_Watabou:  ; "A mischievous/mystical creature"
     db $24, $62, $4A, $46, $50, $40, $45, $46, $42, $53, $4C, $52, $50, $F1, $4A, $56, $50, $51, $46, $40, $3E, $49, $62, $40, $4F, $42, $3E, $51, $52, $4F, $42, $F0
-MonsterDesc_110_GiantSlug:  ; $6606 "Its mucus contains/digestive enzymes"
+MonsterDesc_110_GiantSlug:  ; "Its mucus contains/digestive enzymes"
     db $2C, $51, $50, $62, $4A, $52, $40, $52, $50, $62, $40, $4C, $4B, $51, $3E, $46, $4B, $50, $F1, $41, $46, $44, $42, $50, $51, $46, $53, $42, $62, $42, $4B, $57, $56, $4A, $42, $50, $F0
-MonsterDesc_111_Catapila:  ; $662B "This caterpillar/does not grow to/become a moth"
+MonsterDesc_111_Catapila:  ; "This caterpillar/does not grow to/become a moth"
     db $37, $45, $46, $50, $62, $40, $3E, $51, $42, $4F, $4D, $46, $49, $49, $3E, $4F, $F1, $41, $4C, $42, $50, $62, $4B, $4C, $51, $62, $44, $4F, $4C, $54, $62, $51, $4C, $F1, $3F, $42, $40, $4C, $4A, $42, $62, $3E, $62, $4A, $4C, $51, $45, $F0
-MonsterDesc_112_Gophecada:  ; $665B "Since it lives/underground, it/hates light"
+MonsterDesc_112_Gophecada:  ; "Since it lives/underground, it/hates light"
     db $36, $46, $4B, $40, $42, $62, $46, $51, $62, $49, $46, $53, $42, $50, $F1, $52, $4B, $41, $42, $4F, $44, $4F, $4C, $52, $4B, $41, $5E, $62, $46, $51, $F1, $45, $3E, $51, $42, $50, $62, $49, $46, $44, $45, $51, $F0
-MonsterDesc_113_Butterfly:  ; $6686 "Powder on its/wings have hallu-/cinogenic effect"
+MonsterDesc_113_Butterfly:  ; "Powder on its/wings have hallu-/cinogenic effect"
     db $33, $4C, $54, $41, $42, $4F, $62, $4C, $4B, $62, $46, $51, $50, $F1, $54, $46, $4B, $44, $50, $62, $45, $3E, $53, $42, $62, $45, $3E, $49, $49, $52, $9C, $F1, $40, $46, $4B, $4C, $44, $42, $4B, $46, $40, $62, $42, $43, $43, $42, $40, $51, $F0
-MonsterDesc_114_WeedBug:  ; $66B7 "Its weed-top sucks/up energy & emits/evil power"
+MonsterDesc_114_WeedBug:  ; "Its weed-top sucks/up energy & emits/evil power"
     db $2C, $51, $50, $62, $54, $42, $42, $41, $9C, $51, $4C, $4D, $62, $50, $52, $40, $48, $50, $F1, $52, $4D, $62, $42, $4B, $42, $4F, $44, $56, $62, $B6, $62, $42, $4A, $46, $51, $50, $F1, $42, $53, $46, $49, $62, $4D, $4C, $54, $42, $4F, $F0
-MonsterDesc_115_GiantWorm:  ; $66E7 "Finds its prey/with its acute/sense of smell"
+MonsterDesc_115_GiantWorm:  ; "Finds its prey/with its acute/sense of smell"
     db $29, $46, $4B, $41, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $3E, $40, $52, $51, $42, $F1, $50, $42, $4B, $50, $42, $62, $4C, $43, $62, $50, $4A, $42, $49, $49, $F0
-MonsterDesc_116_Lipsy:  ; $6714 "Paralyzes its prey/with its deadly/kiss"
+MonsterDesc_116_Lipsy:  ; "Paralyzes its prey/with its deadly/kiss"
     db $33, $3E, $4F, $3E, $49, $56, $57, $42, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $41, $42, $3E, $41, $49, $56, $F1, $48, $46, $50, $50, $F0
-MonsterDesc_117_StagBug:  ; $673C "Repels attacks/with its hard/shell"
+MonsterDesc_117_StagBug:  ; "Repels attacks/with its hard/shell"
     db $35, $42, $4D, $42, $49, $50, $62, $3E, $51, $51, $3E, $40, $48, $50, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $45, $3E, $4F, $41, $F1, $50, $45, $42, $49, $49, $F0
-MonsterDesc_118_ArmyAnt:  ; $675F "Its body is small,/but its jaw is/powerful"
+MonsterDesc_118_ArmyAnt:  ; "Its body is small,/but its jaw is/powerful"
     db $2C, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $50, $62, $50, $4A, $3E, $49, $49, $5E, $F1, $3F, $52, $51, $62, $46, $51, $50, $62, $47, $3E, $54, $62, $46, $50, $F1, $4D, $4C, $54, $42, $4F, $43, $52, $49, $F0
-MonsterDesc_119_GoHopper:  ; $678A "Makes a weird/sound when it/flies"
+MonsterDesc_119_GoHopper:  ; "Makes a weird/sound when it/flies"
     db $30, $3E, $48, $42, $50, $62, $3E, $62, $54, $42, $46, $4F, $41, $F1, $50, $4C, $52, $4B, $41, $62, $54, $45, $42, $4B, $62, $46, $51, $F1, $43, $49, $46, $42, $50, $F0
-MonsterDesc_120_TailEater:  ; $67AC "Sucks on its/prey with its/tail-like mouth"
+MonsterDesc_120_TailEater:  ; "Sucks on its/prey with its/tail-like mouth"
     db $36, $52, $40, $48, $50, $62, $4C, $4B, $62, $46, $51, $50, $F1, $4D, $4F, $42, $56, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $51, $3E, $46, $49, $9C, $49, $46, $48, $42, $62, $4A, $4C, $52, $51, $45, $F0
-MonsterDesc_121_ArmorPede:  ; $67D7 "A shell protects/its back but not/its belly"
+MonsterDesc_121_ArmorPede:  ; "A shell protects/its back but not/its belly"
     db $24, $62, $50, $45, $42, $49, $49, $62, $4D, $4F, $4C, $51, $42, $40, $51, $50, $F1, $46, $51, $50, $62, $3F, $3E, $40, $48, $62, $3F, $52, $51, $62, $4B, $4C, $51, $F1, $46, $51, $50, $62, $3F, $42, $49, $49, $56, $F0
-MonsterDesc_122_Eyeder:  ; $6803 "Each tentacle/has a specific/function"
+MonsterDesc_122_Eyeder:  ; "Each tentacle/has a specific/function"
     db $28, $3E, $40, $45, $62, $51, $42, $4B, $51, $3E, $40, $49, $42, $F1, $45, $3E, $50, $62, $3E, $62, $50, $4D, $42, $40, $46, $43, $46, $40, $F1, $43, $52, $4B, $40, $51, $46, $4C, $4B, $F0
-MonsterDesc_123_GiantMoth:  ; $6829 "Creates a violent/wind with its/huge wings"
+MonsterDesc_123_GiantMoth:  ; "Creates a violent/wind with its/huge wings"
     db $26, $4F, $42, $3E, $51, $42, $50, $62, $3E, $62, $53, $46, $4C, $49, $42, $4B, $51, $F1, $54, $46, $4B, $41, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $45, $52, $44, $42, $62, $54, $46, $4B, $44, $50, $F0
-MonsterDesc_124_Droll:  ; $6854 "Protruding eyes/gives a large/field of vision"
+MonsterDesc_124_Droll:  ; "Protruding eyes/gives a large/field of vision"
     db $33, $4F, $4C, $51, $4F, $52, $41, $46, $4B, $44, $62, $42, $56, $42, $50, $F1, $44, $46, $53, $42, $50, $62, $3E, $62, $49, $3E, $4F, $44, $42, $F1, $43, $46, $42, $49, $41, $62, $4C, $43, $62, $53, $46, $50, $46, $4C, $4B, $F0
-MonsterDesc_125_ArmyCrab:  ; $6882 "Attacks in a group/& cuts up its prey/with its claws"
+MonsterDesc_125_ArmyCrab:  ; "Attacks in a group/& cuts up its prey/with its claws"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $46, $4B, $62, $3E, $62, $44, $4F, $4C, $52, $4D, $F1, $B6, $62, $40, $52, $51, $50, $62, $52, $4D, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $40, $49, $3E, $54, $50, $F0
-MonsterDesc_126_MadHornet:  ; $68B7 "Paralyzes its prey/with its sting"
+MonsterDesc_126_MadHornet:  ; "Paralyzes its prey/with its sting"
     db $33, $3E, $4F, $3E, $49, $56, $57, $42, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $50, $51, $46, $4B, $44, $F0
-MonsterDesc_127_HornBeet:  ; $68D9 "Charges its prey/with its big horn"
+MonsterDesc_127_HornBeet:  ; "Charges its prey/with its big horn"
     db $26, $45, $3E, $4F, $44, $42, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $3F, $46, $44, $62, $45, $4C, $4F, $4B, $F0
-MonsterDesc_128_Armorpion:  ; $68FC "Unprotected joints/are its weakness"
+MonsterDesc_128_Armorpion:  ; "Unprotected joints/are its weakness"
     db $38, $4B, $4D, $4F, $4C, $51, $42, $40, $51, $42, $41, $62, $47, $4C, $46, $4B, $51, $50, $F1, $3E, $4F, $42, $62, $46, $51, $50, $62, $54, $42, $3E, $48, $4B, $42, $50, $50, $F0
-MonsterDesc_129_Digster:  ; $6920 "Digs caves to live/in a dark humid/home"
+MonsterDesc_129_Digster:  ; "Digs caves to live/in a dark humid/home"
     db $27, $46, $44, $50, $62, $40, $3E, $53, $42, $50, $62, $51, $4C, $62, $49, $46, $53, $42, $F1, $46, $4B, $62, $3E, $62, $41, $3E, $4F, $48, $62, $45, $52, $4A, $46, $41, $F1, $45, $4C, $4A, $42, $F0
-MonsterDesc_130_Pixy:  ; $6948 "Loves to play/pranks with its/magic spells"
+MonsterDesc_130_Pixy:  ; "Loves to play/pranks with its/magic spells"
     db $2F, $4C, $53, $42, $50, $62, $51, $4C, $62, $4D, $49, $3E, $56, $F1, $4D, $4F, $3E, $4B, $48, $50, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $4A, $3E, $44, $46, $40, $62, $50, $4D, $42, $49, $49, $50, $F0
-MonsterDesc_131_ArcDemon:  ; $6973 "Too fat to fly/but its strength/is incredible"
+MonsterDesc_131_ArcDemon:  ; "Too fat to fly/but its strength/is incredible"
     db $37, $4C, $4C, $62, $43, $3E, $51, $62, $51, $4C, $62, $43, $49, $56, $F1, $3F, $52, $51, $62, $46, $51, $50, $62, $50, $51, $4F, $42, $4B, $44, $51, $45, $F1, $46, $50, $62, $46, $4B, $40, $4F, $42, $41, $46, $3F, $49, $42, $F0
-MonsterDesc_132_AgDevil:  ; $69A1 "Very quick witted/& cunning"
+MonsterDesc_132_AgDevil:  ; "Very quick witted/& cunning"
     db $39, $42, $4F, $56, $62, $4E, $52, $46, $40, $48, $62, $54, $46, $51, $51, $42, $41, $F1, $B6, $62, $40, $52, $4B, $4B, $46, $4B, $44, $F0
-MonsterDesc_133_Demonite:  ; $69BD "Smart but, lacks/the power to cast/big spells"
+MonsterDesc_133_Demonite:  ; "Smart but, lacks/the power to cast/big spells"
     db $36, $4A, $3E, $4F, $51, $62, $3F, $52, $51, $5E, $62, $49, $3E, $40, $48, $50, $F1, $51, $45, $42, $62, $4D, $4C, $54, $42, $4F, $62, $51, $4C, $62, $40, $3E, $50, $51, $F1, $3F, $46, $44, $62, $50, $4D, $42, $49, $49, $50, $F0
-MonsterDesc_134_DarkEye:  ; $69EB "Catches its prey/with its tentacles"
+MonsterDesc_134_DarkEye:  ; "Catches its prey/with its tentacles"
     db $26, $3E, $51, $40, $45, $42, $50, $62, $46, $51, $50, $62, $4D, $4F, $42, $56, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $51, $42, $4B, $51, $3E, $40, $49, $42, $50, $F0
-MonsterDesc_135_EyeBall:  ; $6A0F "Hunts with its/large eye & fast/two legs"
+MonsterDesc_135_EyeBall:  ; "Hunts with its/large eye & fast/two legs"
     db $2B, $52, $4B, $51, $50, $62, $54, $46, $51, $45, $62, $46, $51, $50, $F1, $49, $3E, $4F, $44, $42, $62, $42, $56, $42, $62, $B6, $62, $43, $3E, $50, $51, $F1, $51, $54, $4C, $62, $49, $42, $44, $50, $F0
-MonsterDesc_136_SkulRider:  ; $6A38 "Revives dead/beasts to use/as slaves"
+MonsterDesc_136_SkulRider:  ; "Revives dead/beasts to use/as slaves"
     db $35, $42, $53, $46, $53, $42, $50, $62, $41, $42, $3E, $41, $F1, $3F, $42, $3E, $50, $51, $50, $62, $51, $4C, $62, $52, $50, $42, $F1, $3E, $50, $62, $50, $49, $3E, $53, $42, $50, $F0
-MonsterDesc_137_EvilBeast:  ; $6A5D "Trained hard/to attain its/evil strength"
+MonsterDesc_137_EvilBeast:  ; "Trained hard/to attain its/evil strength"
     db $37, $4F, $3E, $46, $4B, $42, $41, $62, $45, $3E, $4F, $41, $F1, $51, $4C, $62, $3E, $51, $51, $3E, $46, $4B, $62, $46, $51, $50, $F1, $42, $53, $46, $49, $62, $50, $51, $4F, $42, $4B, $44, $51, $45, $F0
-MonsterDesc_138_1EyeClown:  ; $6A86 "Uses its wand to/cast evil spells"
+MonsterDesc_138_1EyeClown:  ; "Uses its wand to/cast evil spells"
     db $38, $50, $42, $50, $62, $46, $51, $50, $62, $54, $3E, $4B, $41, $62, $51, $4C, $F1, $40, $3E, $50, $51, $62, $42, $53, $46, $49, $62, $50, $4D, $42, $49, $49, $50, $F0
-MonsterDesc_139_Gremlin:  ; $6AA8 "Mischievous &/likes to play/tricks with traps"
+MonsterDesc_139_Gremlin:  ; "Mischievous &/likes to play/tricks with traps"
     db $30, $46, $50, $40, $45, $46, $42, $53, $4C, $52, $50, $62, $B6, $F1, $49, $46, $48, $42, $50, $62, $51, $4C, $62, $4D, $49, $3E, $56, $F1, $51, $4F, $46, $40, $48, $50, $62, $54, $46, $51, $45, $62, $51, $4F, $3E, $4D, $50, $F0
-MonsterDesc_140_MedusaEye:  ; $6AD6 "A deadly ball of/snakes with an/eye in the center"
+MonsterDesc_140_MedusaEye:  ; "A deadly ball of/snakes with an/eye in the center"
     db $24, $62, $41, $42, $3E, $41, $49, $56, $62, $3F, $3E, $49, $49, $62, $4C, $43, $F1, $50, $4B, $3E, $48, $42, $50, $62, $54, $46, $51, $45, $62, $3E, $4B, $F1, $42, $56, $42, $62, $46, $4B, $62, $51, $45, $42, $62, $40, $42, $4B, $51, $42, $4F, $F0
-MonsterDesc_141_Lionex:  ; $6B08 "A natural born/evil fighter"
+MonsterDesc_141_Lionex:  ; "A natural born/evil fighter"
     db $24, $62, $4B, $3E, $51, $52, $4F, $3E, $49, $62, $3F, $4C, $4F, $4B, $F1, $42, $53, $46, $49, $62, $43, $46, $44, $45, $51, $42, $4F, $F0
-MonsterDesc_142_GoatHorn:  ; $6B24 "A powerful monster/with the horns &/legs of a goat"
+MonsterDesc_142_GoatHorn:  ; "A powerful monster/with the horns &/legs of a goat"
     db $24, $62, $4D, $4C, $54, $42, $4F, $43, $52, $49, $62, $4A, $4C, $4B, $50, $51, $42, $4F, $F1, $54, $46, $51, $45, $62, $51, $45, $42, $62, $45, $4C, $4F, $4B, $50, $62, $B6, $F1, $49, $42, $44, $50, $62, $4C, $43, $62, $3E, $62, $44, $4C, $3E, $51, $F0
-MonsterDesc_143_Orc:  ; $6B57 "Its dense pelt/acts as natural/armor"
+MonsterDesc_143_Orc:  ; "Its dense pelt/acts as natural/armor"
     db $2C, $51, $50, $62, $41, $42, $4B, $50, $42, $62, $4D, $42, $49, $51, $F1, $3E, $40, $51, $50, $62, $3E, $50, $62, $4B, $3E, $51, $52, $4F, $3E, $49, $F1, $3E, $4F, $4A, $4C, $4F, $F0
-MonsterDesc_144_Ogre:  ; $6B7C "Its flail has a/metal ball that's/bigger than a man"
+MonsterDesc_144_Ogre:  ; "Its flail has a/metal ball that's/bigger than a man"
     db $2C, $51, $50, $62, $43, $49, $3E, $46, $49, $62, $45, $3E, $50, $62, $3E, $F1, $4A, $42, $51, $3E, $49, $62, $3F, $3E, $49, $49, $62, $51, $45, $3E, $51, $68, $F1, $3F, $46, $44, $44, $42, $4F, $62, $51, $45, $3E, $4B, $62, $3E, $62, $4A, $3E, $4B, $F0
-MonsterDesc_145_GateGuard:  ; $6BAF "Uses a scythe/as tall as its own/towering height"
+MonsterDesc_145_GateGuard:  ; "Uses a scythe/as tall as its own/towering height"
     db $38, $50, $42, $50, $62, $3E, $62, $50, $40, $56, $51, $45, $42, $F1, $3E, $50, $62, $51, $3E, $49, $49, $62, $3E, $50, $62, $46, $51, $50, $62, $4C, $54, $4B, $F1, $51, $4C, $54, $42, $4F, $46, $4B, $44, $62, $45, $42, $46, $44, $45, $51, $F0
-MonsterDesc_146_ChopClown:  ; $6BE0 "Has achieved the/utmost limit of/swiftness"
+MonsterDesc_146_ChopClown:  ; "Has achieved the/utmost limit of/swiftness"
     db $2B, $3E, $50, $62, $3E, $40, $45, $46, $42, $53, $42, $41, $62, $51, $45, $42, $F1, $52, $51, $4A, $4C, $50, $51, $62, $49, $46, $4A, $46, $51, $62, $4C, $43, $F1, $50, $54, $46, $43, $51, $4B, $42, $50, $50, $F0
-MonsterDesc_147_Grendal:  ; $6C0B "Not too clever,/but uses its/weapons well"
+MonsterDesc_147_Grendal:  ; "Not too clever,/but uses its/weapons well"
     db $31, $4C, $51, $62, $51, $4C, $4C, $62, $40, $49, $42, $53, $42, $4F, $5E, $F1, $3F, $52, $51, $62, $52, $50, $42, $50, $62, $46, $51, $50, $F1, $54, $42, $3E, $4D, $4C, $4B, $50, $62, $54, $42, $49, $49, $F0
-MonsterDesc_148_Akubar:  ; $6C35 "Combined evil/power with super-/human strength"
+MonsterDesc_148_Akubar:  ; "Combined evil/power with super-/human strength"
     db $26, $4C, $4A, $3F, $46, $4B, $42, $41, $62, $42, $53, $46, $49, $F1, $4D, $4C, $54, $42, $4F, $62, $54, $46, $51, $45, $62, $50, $52, $4D, $42, $4F, $9C, $F1, $45, $52, $4A, $3E, $4B, $62, $50, $51, $4F, $42, $4B, $44, $51, $45, $F0
-MonsterDesc_149_MadKnight:  ; $6C64 "Covered with/armor that is/never removed"
+MonsterDesc_149_MadKnight:  ; "Covered with/armor that is/never removed"
     db $26, $4C, $53, $42, $4F, $42, $41, $62, $54, $46, $51, $45, $F1, $3E, $4F, $4A, $4C, $4F, $62, $51, $45, $3E, $51, $62, $46, $50, $F1, $4B, $42, $53, $42, $4F, $62, $4F, $42, $4A, $4C, $53, $42, $41, $F0
-MonsterDesc_150_Gigantes:  ; $6C8D "The biggest in the/devil family, but/not very smart"
+MonsterDesc_150_Gigantes:  ; "The biggest in the/devil family, but/not very smart"
     db $37, $45, $42, $62, $3F, $46, $44, $44, $42, $50, $51, $62, $46, $4B, $62, $51, $45, $42, $F1, $41, $42, $53, $46, $49, $62, $43, $3E, $4A, $46, $49, $56, $5E, $62, $3F, $52, $51, $F1, $4B, $4C, $51, $62, $53, $42, $4F, $56, $62, $50, $4A, $3E, $4F, $51, $F0
-MonsterDesc_151_Centasaur:  ; $6CC1 "A hybrid devil of/man & beast"
+MonsterDesc_151_Centasaur:  ; "A hybrid devil of/man & beast"
     db $24, $62, $45, $56, $3F, $4F, $46, $41, $62, $41, $42, $53, $46, $49, $62, $4C, $43, $F1, $4A, $3E, $4B, $62, $B6, $62, $3F, $42, $3E, $50, $51, $F0
-MonsterDesc_152_EvilArmor:  ; $6CDF "Its real identity/underneath the/armor is unknown"
+MonsterDesc_152_EvilArmor:  ; "Its real identity/underneath the/armor is unknown"
     db $2C, $51, $50, $62, $4F, $42, $3E, $49, $62, $46, $41, $42, $4B, $51, $46, $51, $56, $F1, $52, $4B, $41, $42, $4F, $4B, $42, $3E, $51, $45, $62, $51, $45, $42, $F1, $3E, $4F, $4A, $4C, $4F, $62, $46, $50, $62, $52, $4B, $48, $4B, $4C, $54, $4B, $F0
-MonsterDesc_153_Jamirus:  ; $6D11 "A hybrid devil of/an eagle & a lion"
+MonsterDesc_153_Jamirus:  ; "A hybrid devil of/an eagle & a lion"
     db $24, $62, $45, $56, $3F, $4F, $46, $41, $62, $41, $42, $53, $46, $49, $62, $4C, $43, $F1, $3E, $4B, $62, $42, $3E, $44, $49, $42, $62, $B6, $62, $3E, $62, $49, $46, $4C, $4B, $F0
-MonsterDesc_154_Durran:  ; $6D35 "A strong all-round/natural born/fighter."
+MonsterDesc_154_Durran:  ; "A strong all-round/natural born/fighter."
     db $24, $62, $50, $51, $4F, $4C, $4B, $44, $62, $3E, $49, $49, $9C, $4F, $4C, $52, $4B, $41, $F1, $4B, $3E, $51, $52, $4F, $3E, $49, $62, $3F, $4C, $4F, $4B, $F1, $43, $46, $44, $45, $51, $42, $4F, $5F, $F0
-MonsterDesc_155_Spooky:  ; $6D5E "Its hobby is to/scare people"
+MonsterDesc_155_Spooky:  ; "Its hobby is to/scare people"
     db $2C, $51, $50, $62, $45, $4C, $3F, $3F, $56, $62, $46, $50, $62, $51, $4C, $F1, $50, $40, $3E, $4F, $42, $62, $4D, $42, $4C, $4D, $49, $42, $F0
-MonsterDesc_156_Skullgon:  ; $6D7B "A dragon/that's risen from/the dead"
+MonsterDesc_156_Skullgon:  ; "A dragon/that's risen from/the dead"
     db $24, $62, $41, $4F, $3E, $44, $4C, $4B, $F1, $51, $45, $3E, $51, $68, $62, $4F, $46, $50, $42, $4B, $62, $43, $4F, $4C, $4A, $F1, $51, $45, $42, $62, $41, $42, $3E, $41, $F0
-MonsterDesc_157_Putrepup:  ; $6D9E "It's fearless/since it doesn't/feel any pain"
+MonsterDesc_157_Putrepup:  ; "It's fearless/since it doesn't/feel any pain"
     db $2C, $51, $68, $62, $43, $42, $3E, $4F, $49, $42, $50, $50, $F1, $50, $46, $4B, $40, $42, $62, $46, $51, $62, $41, $4C, $42, $50, $4B, $67, $F1, $43, $42, $42, $49, $62, $3E, $4B, $56, $62, $4D, $3E, $46, $4B, $F0
-MonsterDesc_158_RotRaven:  ; $6DC9 "Dozes all day/in its half rotted/body"
+MonsterDesc_158_RotRaven:  ; "Dozes all day/in its half rotted/body"
     db $27, $4C, $57, $42, $50, $62, $3E, $49, $49, $62, $41, $3E, $56, $F1, $46, $4B, $62, $46, $51, $50, $62, $45, $3E, $49, $43, $62, $4F, $4C, $51, $51, $42, $41, $F1, $3F, $4C, $41, $56, $F0
-MonsterDesc_159_Mummy:  ; $6DEF "Its body is filled/with herbs to/prevent its decay"
+MonsterDesc_159_Mummy:  ; "Its body is filled/with herbs to/prevent its decay"
     db $2C, $51, $50, $62, $3F, $4C, $41, $56, $62, $46, $50, $62, $43, $46, $49, $49, $42, $41, $F1, $54, $46, $51, $45, $62, $45, $42, $4F, $3F, $50, $62, $51, $4C, $F1, $4D, $4F, $42, $53, $42, $4B, $51, $62, $46, $51, $50, $62, $41, $42, $40, $3E, $56, $F0
-MonsterDesc_160_DarkCrab:  ; $6E22 "Its shell/resembles a/human face"
+MonsterDesc_160_DarkCrab:  ; "Its shell/resembles a/human face"
     db $2C, $51, $50, $62, $50, $45, $42, $49, $49, $F1, $4F, $42, $50, $42, $4A, $3F, $49, $42, $50, $62, $3E, $F1, $45, $52, $4A, $3E, $4B, $62, $43, $3E, $40, $42, $F0
-MonsterDesc_161_DeadNite:  ; $6E43 "Knight revived/as a zombie, who/never tires"
+MonsterDesc_161_DeadNite:  ; "Knight revived/as a zombie, who/never tires"
     db $2E, $4B, $46, $44, $45, $51, $62, $4F, $42, $53, $46, $53, $42, $41, $F1, $3E, $50, $62, $3E, $62, $57, $4C, $4A, $3F, $46, $42, $5E, $62, $54, $45, $4C, $F1, $4B, $42, $53, $42, $4F, $62, $51, $46, $4F, $42, $50, $F0
-MonsterDesc_162_Shadow:  ; $6E6F "Real identity is/unknown due to its/shadow-like body"
+MonsterDesc_162_Shadow:  ; "Real identity is/unknown due to its/shadow-like body"
     db $35, $42, $3E, $49, $62, $46, $41, $42, $4B, $51, $46, $51, $56, $62, $46, $50, $F1, $52, $4B, $48, $4B, $4C, $54, $4B, $62, $41, $52, $42, $62, $51, $4C, $62, $46, $51, $50, $F1, $50, $45, $3E, $41, $4C, $54, $9C, $49, $46, $48, $42, $62, $3F, $4C, $41, $56, $F0
-MonsterDesc_163_Hork:  ; $6EA4 "Its acidic saliva/will dissolve/anything"
+MonsterDesc_163_Hork:  ; "Its acidic saliva/will dissolve/anything"
     db $2C, $51, $50, $62, $3E, $40, $46, $41, $46, $40, $62, $50, $3E, $49, $46, $53, $3E, $F1, $54, $46, $49, $49, $62, $41, $46, $50, $50, $4C, $49, $53, $42, $F1, $3E, $4B, $56, $51, $45, $46, $4B, $44, $F0
-MonsterDesc_164_Mudron:  ; $6ECD "A swamp mud/infested spirit of/the dead"
+MonsterDesc_164_Mudron:  ; "A swamp mud/infested spirit of/the dead"
     db $24, $62, $50, $54, $3E, $4A, $4D, $62, $4A, $52, $41, $F1, $46, $4B, $43, $42, $50, $51, $42, $41, $62, $50, $4D, $46, $4F, $46, $51, $62, $4C, $43, $F1, $51, $45, $42, $62, $41, $42, $3E, $41, $F0
-MonsterDesc_165_NiteWhip:  ; $6EF5 "Flies in the/air leaving a/streak of light"
+MonsterDesc_165_NiteWhip:  ; "Flies in the/air leaving a/streak of light"
     db $29, $49, $46, $42, $50, $62, $46, $4B, $62, $51, $45, $42, $F1, $3E, $46, $4F, $62, $49, $42, $3E, $53, $46, $4B, $44, $62, $3E, $F1, $50, $51, $4F, $42, $3E, $48, $62, $4C, $43, $62, $49, $46, $44, $45, $51, $F0
-MonsterDesc_166_MadSpirit:  ; $6F20 "Lost spirits/fused together"
+MonsterDesc_166_MadSpirit:  ; "Lost spirits/fused together"
     db $2F, $4C, $50, $51, $62, $50, $4D, $46, $4F, $46, $51, $50, $F1, $43, $52, $50, $42, $41, $62, $51, $4C, $44, $42, $51, $45, $42, $4F, $F0
-MonsterDesc_167_WindMerge:  ; $6F3C "Strangely, there/is nothing under/its garment"
+MonsterDesc_167_WindMerge:  ; "Strangely, there/is nothing under/its garment"
     db $36, $51, $4F, $3E, $4B, $44, $42, $49, $56, $5E, $62, $51, $45, $42, $4F, $42, $F1, $46, $50, $62, $4B, $4C, $51, $45, $46, $4B, $44, $62, $52, $4B, $41, $42, $4F, $F1, $46, $51, $50, $62, $44, $3E, $4F, $4A, $42, $4B, $51, $F0
-MonsterDesc_168_Reaper:  ; $6F6A "Guides dead/spirits to the/underworld"
+MonsterDesc_168_Reaper:  ; "Guides dead/spirits to the/underworld"
     db $2A, $52, $46, $41, $42, $50, $62, $41, $42, $3E, $41, $F1, $50, $4D, $46, $4F, $46, $51, $50, $62, $51, $4C, $62, $51, $45, $42, $F1, $52, $4B, $41, $42, $4F, $54, $4C, $4F, $49, $41, $F0
-MonsterDesc_169_DeadNoble:  ; $6F90 "Rides on a horse &/attacks enemies/with its lance"
+MonsterDesc_169_DeadNoble:  ; "Rides on a horse &/attacks enemies/with its lance"
     db $35, $46, $41, $42, $50, $62, $4C, $4B, $62, $3E, $62, $45, $4C, $4F, $50, $42, $62, $B6, $F1, $3E, $51, $51, $3E, $40, $48, $50, $62, $42, $4B, $42, $4A, $46, $42, $50, $F1, $54, $46, $51, $45, $62, $46, $51, $50, $62, $49, $3E, $4B, $40, $42, $F0
-MonsterDesc_170_WhiteKing:  ; $6FC2 "Has retained its/high INT from/when it was alive"
+MonsterDesc_170_WhiteKing:  ; "Has retained its/high INT from/when it was alive"
     db $2B, $3E, $50, $62, $4F, $42, $51, $3E, $46, $4B, $42, $41, $62, $46, $51, $50, $F1, $45, $46, $44, $45, $62, $2C, $31, $37, $62, $43, $4F, $4C, $4A, $F1, $54, $45, $42, $4B, $62, $46, $51, $62, $54, $3E, $50, $62, $3E, $49, $46, $53, $42, $F0
-MonsterDesc_171_BoneSlave:  ; $6FF3 "Resurrected as a/zombie to serve/hard labor"
+MonsterDesc_171_BoneSlave:  ; "Resurrected as a/zombie to serve/hard labor"
     db $35, $42, $50, $52, $4F, $4F, $42, $40, $51, $42, $41, $62, $3E, $50, $62, $3E, $F1, $57, $4C, $4A, $3F, $46, $42, $62, $51, $4C, $62, $50, $42, $4F, $53, $42, $F1, $45, $3E, $4F, $41, $62, $49, $3E, $3F, $4C, $4F, $F0
-MonsterDesc_172_Skeletor:  ; $701F "Attacks with/a sword in each/of its 6 hands"
+MonsterDesc_172_Skeletor:  ; "Attacks with/a sword in each/of its 6 hands"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $54, $46, $51, $45, $F1, $3E, $62, $50, $54, $4C, $4F, $41, $62, $46, $4B, $62, $42, $3E, $40, $45, $F1, $4C, $43, $62, $46, $51, $50, $62, $06, $62, $45, $3E, $4B, $41, $50, $F0
-MonsterDesc_173_Servant:  ; $704B "Created from evil/powers,it has a/high INT"
+MonsterDesc_173_Servant:  ; "Created from evil/powers,it has a/high INT"
     db $26, $4F, $42, $3E, $51, $42, $41, $62, $43, $4F, $4C, $4A, $62, $42, $53, $46, $49, $F1, $4D, $4C, $54, $42, $4F, $50, $5E, $46, $51, $62, $45, $3E, $50, $62, $3E, $F1, $45, $46, $44, $45, $62, $2C, $31, $37, $F0
-MonsterDesc_174_Copycat:  ; $7076 "Can disguise as/any creature &/mimic any move"
+MonsterDesc_174_Copycat:  ; "Can disguise as/any creature &/mimic any move"
     db $26, $3E, $4B, $62, $41, $46, $50, $44, $52, $46, $50, $42, $62, $3E, $50, $F1, $3E, $4B, $56, $62, $40, $4F, $42, $3E, $51, $52, $4F, $42, $62, $B6, $F1, $4A, $46, $4A, $46, $40, $62, $3E, $4B, $56, $62, $4A, $4C, $53, $42, $F0
-MonsterDesc_175_JewelBag:  ; $70A4 "Likes to eat/things that are/precious & shiny"
+MonsterDesc_175_JewelBag:  ; "Likes to eat/things that are/precious & shiny"
     db $2F, $46, $48, $42, $50, $62, $51, $4C, $62, $42, $3E, $51, $F1, $51, $45, $46, $4B, $44, $50, $62, $51, $45, $3E, $51, $62, $3E, $4F, $42, $F1, $4D, $4F, $42, $40, $46, $4C, $52, $50, $62, $B6, $62, $50, $45, $46, $4B, $56, $F0
-MonsterDesc_176_EvilWand:  ; $70D2 "An evil spirit/possessing a/wizard's wand"
+MonsterDesc_176_EvilWand:  ; "An evil spirit/possessing a/wizard's wand"
     db $24, $4B, $62, $42, $53, $46, $49, $62, $50, $4D, $46, $4F, $46, $51, $F1, $4D, $4C, $50, $50, $42, $50, $50, $46, $4B, $44, $62, $3E, $F1, $54, $46, $57, $3E, $4F, $41, $68, $62, $54, $3E, $4B, $41, $F0
-MonsterDesc_177_MadCandle:  ; $70FB "Its candle will/remain lit until/it dies"
+MonsterDesc_177_MadCandle:  ; "Its candle will/remain lit until/it dies"
     db $2C, $51, $50, $62, $40, $3E, $4B, $41, $49, $42, $62, $54, $46, $49, $49, $F1, $4F, $42, $4A, $3E, $46, $4B, $62, $49, $46, $51, $62, $52, $4B, $51, $46, $49, $F1, $46, $51, $62, $41, $46, $42, $50, $F0
-MonsterDesc_178_CoilBird:  ; $7124 "Emits an/eerie noise"
+MonsterDesc_178_CoilBird:  ; "Emits an/eerie noise"
     db $28, $4A, $46, $51, $50, $62, $3E, $4B, $F1, $42, $42, $4F, $46, $42, $62, $4B, $4C, $46, $50, $42, $F0
-MonsterDesc_179_Facer:  ; $7139 "An evil spirit/has possessed/this wooden mask"
+MonsterDesc_179_Facer:  ; "An evil spirit/has possessed/this wooden mask"
     db $24, $4B, $62, $42, $53, $46, $49, $62, $50, $4D, $46, $4F, $46, $51, $F1, $45, $3E, $50, $62, $4D, $4C, $50, $50, $42, $50, $50, $42, $41, $F1, $51, $45, $46, $50, $62, $54, $4C, $4C, $41, $42, $4B, $62, $4A, $3E, $50, $48, $F0
-MonsterDesc_180_SpikyBoy:  ; $7167 "Explodes when/angered"
+MonsterDesc_180_SpikyBoy:  ; "Explodes when/angered"
     db $28, $55, $4D, $49, $4C, $41, $42, $50, $62, $54, $45, $42, $4B, $F1, $3E, $4B, $44, $42, $4F, $42, $41, $F0
-MonsterDesc_181_MadMirror:  ; $717D "Absorbs anything/that reflects on/its mirror"
+MonsterDesc_181_MadMirror:  ; "Absorbs anything/that reflects on/its mirror"
     db $24, $3F, $50, $4C, $4F, $3F, $50, $62, $3E, $4B, $56, $51, $45, $46, $4B, $44, $F1, $51, $45, $3E, $51, $62, $4F, $42, $43, $49, $42, $40, $51, $50, $62, $4C, $4B, $F1, $46, $51, $50, $62, $4A, $46, $4F, $4F, $4C, $4F, $F0
-MonsterDesc_182_RogueNite:  ; $71AA "Life was brought/to this armor & it/roams for prey"
+MonsterDesc_182_RogueNite:  ; "Life was brought/to this armor & it/roams for prey"
     db $2F, $46, $43, $42, $62, $54, $3E, $50, $62, $3F, $4F, $4C, $52, $44, $45, $51, $F1, $51, $4C, $62, $51, $45, $46, $50, $62, $3E, $4F, $4A, $4C, $4F, $62, $B6, $62, $46, $51, $F1, $4F, $4C, $3E, $4A, $50, $62, $43, $4C, $4F, $62, $4D, $4F, $42, $56, $F0
-MonsterDesc_183_Goopi:  ; $71DD "Grabs & paralyzes/any prey that/passes"
+MonsterDesc_183_Goopi:  ; "Grabs & paralyzes/any prey that/passes"
     db $2A, $4F, $3E, $3F, $50, $62, $B6, $62, $4D, $3E, $4F, $3E, $49, $56, $57, $42, $50, $F1, $3E, $4B, $56, $62, $4D, $4F, $42, $56, $62, $51, $45, $3E, $51, $F1, $4D, $3E, $50, $50, $42, $50, $F0
-MonsterDesc_184_Voodoll:  ; $7204 "A clay doll/brought to life"
+MonsterDesc_184_Voodoll:  ; "A clay doll/brought to life"
     db $24, $62, $40, $49, $3E, $56, $62, $41, $4C, $49, $49, $F1, $3F, $4F, $4C, $52, $44, $45, $51, $62, $51, $4C, $62, $49, $46, $43, $42, $F0
-MonsterDesc_185_MetalDrak:  ; $7220 "A dragon/constructed from/metal"
+MonsterDesc_185_MetalDrak:  ; "A dragon/constructed from/metal"
     db $24, $62, $41, $4F, $3E, $44, $4C, $4B, $F1, $40, $4C, $4B, $50, $51, $4F, $52, $40, $51, $42, $41, $62, $43, $4F, $4C, $4A, $F1, $4A, $42, $51, $3E, $49, $F0
-MonsterDesc_186_Balzak:  ; $7240 "A creature created/to be the/strongest monster"
+MonsterDesc_186_Balzak:  ; "A creature created/to be the/strongest monster"
     db $24, $62, $40, $4F, $42, $3E, $51, $52, $4F, $42, $62, $40, $4F, $42, $3E, $51, $42, $41, $F1, $51, $4C, $62, $3F, $42, $62, $51, $45, $42, $F1, $50, $51, $4F, $4C, $4B, $44, $42, $50, $51, $62, $4A, $4C, $4B, $50, $51, $42, $4F, $F0
-MonsterDesc_187_SabreMan:  ; $726F "Fashioned with so/much passion that/it came to life"
+MonsterDesc_187_SabreMan:  ; "Fashioned with so/much passion that/it came to life"
     db $29, $3E, $50, $45, $46, $4C, $4B, $42, $41, $62, $54, $46, $51, $45, $62, $50, $4C, $F1, $4A, $52, $40, $45, $62, $4D, $3E, $50, $50, $46, $4C, $4B, $62, $51, $45, $3E, $51, $F1, $46, $51, $62, $40, $3E, $4A, $42, $62, $51, $4C, $62, $49, $46, $43, $42, $F0
-MonsterDesc_188_CurseLamp:  ; $72A3 "Its been said that/there is an evil/genie in the lamp"
+MonsterDesc_188_CurseLamp:  ; "Its been said that/there is an evil/genie in the lamp"
     db $2C, $51, $50, $62, $3F, $42, $42, $4B, $62, $50, $3E, $46, $41, $62, $51, $45, $3E, $51, $F1, $51, $45, $42, $4F, $42, $62, $46, $50, $62, $3E, $4B, $62, $42, $53, $46, $49, $F1, $44, $42, $4B, $46, $42, $62, $46, $4B, $62, $51, $45, $42, $62, $49, $3E, $4A, $4D, $F0
-MonsterDesc_189_Roboster:  ; $72D9 "Last suviving war/robot made in/an ancient time"
+MonsterDesc_189_Roboster:  ; "Last suviving war/robot made in/an ancient time"
     db $2F, $3E, $50, $51, $62, $50, $52, $53, $46, $53, $46, $4B, $44, $62, $54, $3E, $4F, $F1, $4F, $4C, $3F, $4C, $51, $62, $4A, $3E, $41, $42, $62, $46, $4B, $F1, $3E, $4B, $62, $3E, $4B, $40, $46, $42, $4B, $51, $62, $51, $46, $4A, $42, $F0
-MonsterDesc_190_EvilPot:  ; $7309 "Lurks in a/pot to hide/its identity"
+MonsterDesc_190_EvilPot:  ; "Lurks in a/pot to hide/its identity"
     db $2F, $52, $4F, $48, $50, $62, $46, $4B, $62, $3E, $F1, $4D, $4C, $51, $62, $51, $4C, $62, $45, $46, $41, $42, $F1, $46, $51, $50, $62, $46, $41, $42, $4B, $51, $46, $51, $56, $F0
-MonsterDesc_191_Gismo:  ; $732D "Life was brought/to this ball of/energy"
+MonsterDesc_191_Gismo:  ; "Life was brought/to this ball of/energy"
     db $2F, $46, $43, $42, $62, $54, $3E, $50, $62, $3F, $4F, $4C, $52, $44, $45, $51, $F1, $51, $4C, $62, $51, $45, $46, $50, $62, $3F, $3E, $49, $49, $62, $4C, $43, $F1, $42, $4B, $42, $4F, $44, $56, $F0
-MonsterDesc_192_LavaMan:  ; $7355 "It's composed/of an energy/core & magma"
+MonsterDesc_192_LavaMan:  ; "It's composed/of an energy/core & magma"
     db $2C, $51, $68, $62, $40, $4C, $4A, $4D, $4C, $50, $42, $41, $F1, $4C, $43, $62, $3E, $4B, $62, $42, $4B, $42, $4F, $44, $56, $F1, $40, $4C, $4F, $42, $62, $B6, $62, $4A, $3E, $44, $4A, $3E, $F0
-MonsterDesc_193_IceMan:  ; $737C "It's composed/of an energy/core & ice"
+MonsterDesc_193_IceMan:  ; "It's composed/of an energy/core & ice"
     db $2C, $51, $68, $62, $40, $4C, $4A, $4D, $4C, $50, $42, $41, $F1, $4C, $43, $62, $3E, $4B, $62, $42, $4B, $42, $4F, $44, $56, $F1, $40, $4C, $4F, $42, $62, $B6, $62, $46, $40, $42, $F0
-MonsterDesc_194_Mimic:  ; $73A1 "Attacks anyone/who tries to steal/its treasure"
+MonsterDesc_194_Mimic:  ; "Attacks anyone/who tries to steal/its treasure"
     db $24, $51, $51, $3E, $40, $48, $50, $62, $3E, $4B, $56, $4C, $4B, $42, $F1, $54, $45, $4C, $62, $51, $4F, $46, $42, $50, $62, $51, $4C, $62, $50, $51, $42, $3E, $49, $F1, $46, $51, $50, $62, $51, $4F, $42, $3E, $50, $52, $4F, $42, $F0
-MonsterDesc_195_MudDoll:  ; $73D0 "A kneaded dried/clay doll that/came to life"
+MonsterDesc_195_MudDoll:  ; "A kneaded dried/clay doll that/came to life"
     db $24, $62, $48, $4B, $42, $3E, $41, $42, $41, $62, $41, $4F, $46, $42, $41, $F1, $40, $49, $3E, $56, $62, $41, $4C, $49, $49, $62, $51, $45, $3E, $51, $F1, $40, $3E, $4A, $42, $62, $51, $4C, $62, $49, $46, $43, $42, $F0
-MonsterDesc_196_Golem:  ; $73FC "A stack of rock/bricks that came/to life"
+MonsterDesc_196_Golem:  ; "A stack of rock/bricks that came/to life"
     db $24, $62, $50, $51, $3E, $40, $48, $62, $4C, $43, $62, $4F, $4C, $40, $48, $F1, $3F, $4F, $46, $40, $48, $50, $62, $51, $45, $3E, $51, $62, $40, $3E, $4A, $42, $F1, $51, $4C, $62, $49, $46, $43, $42, $F0
-MonsterDesc_197_StoneMan:  ; $7425 "A statue made/from rock that/came to life"
+MonsterDesc_197_StoneMan:  ; "A statue made/from rock that/came to life"
     db $24, $62, $50, $51, $3E, $51, $52, $42, $62, $4A, $3E, $41, $42, $F1, $43, $4F, $4C, $4A, $62, $4F, $4C, $40, $48, $62, $51, $45, $3E, $51, $F1, $40, $3E, $4A, $42, $62, $51, $4C, $62, $49, $46, $43, $42, $F0
-MonsterDesc_198_BombCrag:  ; $744F "Usually dormant/& looks like a/normal rock"
+MonsterDesc_198_BombCrag:  ; "Usually dormant/& looks like a/normal rock"
     db $38, $50, $52, $3E, $49, $49, $56, $62, $41, $4C, $4F, $4A, $3E, $4B, $51, $F1, $B6, $62, $49, $4C, $4C, $48, $50, $62, $49, $46, $48, $42, $62, $3E, $F1, $4B, $4C, $4F, $4A, $3E, $49, $62, $4F, $4C, $40, $48, $F0
-MonsterDesc_199_GoldGolem:  ; $747A "Made out of an/elastic & durable/metal"
+MonsterDesc_199_GoldGolem:  ; "Made out of an/elastic & durable/metal"
     db $30, $3E, $41, $42, $62, $4C, $52, $51, $62, $4C, $43, $62, $3E, $4B, $F1, $42, $49, $3E, $50, $51, $46, $40, $62, $B6, $62, $41, $52, $4F, $3E, $3F, $49, $42, $F1, $4A, $42, $51, $3E, $49, $F0
-MonsterDesc_200_DracoLord:  ; $74A1 "Tried to unite the/monsters to rule/the world"
+MonsterDesc_200_DracoLord:  ; "Tried to unite the/monsters to rule/the world"
     db $37, $4F, $46, $42, $41, $62, $51, $4C, $62, $52, $4B, $46, $51, $42, $62, $51, $45, $42, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $62, $51, $4C, $62, $4F, $52, $49, $42, $F1, $51, $45, $42, $62, $54, $4C, $4F, $49, $41, $F0
-MonsterDesc_201_DracoLord:  ; $74CF "This is the true/identity of/DracoLord"
+MonsterDesc_201_DracoLord:  ; "This is the true/identity of/DracoLord"
     db $37, $45, $46, $50, $62, $46, $50, $62, $51, $45, $42, $62, $51, $4F, $52, $42, $F1, $46, $41, $42, $4B, $51, $46, $51, $56, $62, $4C, $43, $F1, $27, $4F, $3E, $40, $4C, $2F, $4C, $4F, $41, $F0
-MonsterDesc_202_Hargon:  ; $74F6 "The one who/planned to revive/the Destructor"
+MonsterDesc_202_Hargon:  ; "The one who/planned to revive/the Destructor"
     db $37, $45, $42, $62, $4C, $4B, $42, $62, $54, $45, $4C, $F1, $4D, $49, $3E, $4B, $4B, $42, $41, $62, $51, $4C, $62, $4F, $42, $53, $46, $53, $42, $F1, $51, $45, $42, $62, $27, $42, $50, $51, $4F, $52, $40, $51, $4C, $4F, $F0
-MonsterDesc_203_Sidoh:  ; $7523 "An evil dragon/lord, ruler of/all destruction"
+MonsterDesc_203_Sidoh:  ; "An evil dragon/lord, ruler of/all destruction"
     db $24, $4B, $62, $42, $53, $46, $49, $62, $41, $4F, $3E, $44, $4C, $4B, $F1, $49, $4C, $4F, $41, $5E, $62, $4F, $52, $49, $42, $4F, $62, $4C, $43, $F1, $3E, $49, $49, $62, $41, $42, $50, $51, $4F, $52, $40, $51, $46, $4C, $4B, $F0
-MonsterDesc_204_Baramos:  ; $7551 "This evil lord/controls all/monsters"
+MonsterDesc_204_Baramos:  ; "This evil lord/controls all/monsters"
     db $37, $45, $46, $50, $62, $42, $53, $46, $49, $62, $49, $4C, $4F, $41, $F1, $40, $4C, $4B, $51, $4F, $4C, $49, $50, $62, $3E, $49, $49, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $F0
-MonsterDesc_205_Zoma:  ; $7576 "The source of/all evil"
+MonsterDesc_205_Zoma:  ; "The source of/all evil"
     db $37, $45, $42, $62, $50, $4C, $52, $4F, $40, $42, $62, $4C, $43, $F1, $3E, $49, $49, $62, $42, $53, $46, $49, $F0
-MonsterDesc_206_Pizzaro:  ; $758D "Attained its power/from the pearl of/evolution"
+MonsterDesc_206_Pizzaro:  ; "Attained its power/from the pearl of/evolution"
     db $24, $51, $51, $3E, $46, $4B, $42, $41, $62, $46, $51, $50, $62, $4D, $4C, $54, $42, $4F, $F1, $43, $4F, $4C, $4A, $62, $51, $45, $42, $62, $4D, $42, $3E, $4F, $49, $62, $4C, $43, $F1, $42, $53, $4C, $49, $52, $51, $46, $4C, $4B, $F0
-MonsterDesc_207_Esterk:  ; $75BC "Exists beyond/the boundries of/time and space"
+MonsterDesc_207_Esterk:  ; "Exists beyond/the boundries of/time and space"
     db $28, $55, $46, $50, $51, $50, $62, $3F, $42, $56, $4C, $4B, $41, $F1, $51, $45, $42, $62, $3F, $4C, $52, $4B, $41, $4F, $46, $42, $50, $62, $4C, $43, $F1, $51, $46, $4A, $42, $62, $3E, $4B, $41, $62, $50, $4D, $3E, $40, $42, $F0
-MonsterDesc_208_Mirudraas:  ; $75EA "An evil lord who/tried to rule/the human world"
+MonsterDesc_208_Mirudraas:  ; "An evil lord who/tried to rule/the human world"
     db $24, $4B, $62, $42, $53, $46, $49, $62, $49, $4C, $4F, $41, $62, $54, $45, $4C, $F1, $51, $4F, $46, $42, $41, $62, $51, $4C, $62, $4F, $52, $49, $42, $F1, $51, $45, $42, $62, $45, $52, $4A, $3E, $4B, $62, $54, $4C, $4F, $49, $41, $F0
-MonsterDesc_209_Mirudraas:  ; $7619 "This is the true/identity/of Mirudaas"
+MonsterDesc_209_Mirudraas:  ; "This is the true/identity/of Mirudaas"
     db $37, $45, $46, $50, $62, $46, $50, $62, $51, $45, $42, $62, $51, $4F, $52, $42, $F1, $46, $41, $42, $4B, $51, $46, $51, $56, $F1, $4C, $43, $62, $30, $46, $4F, $52, $41, $3E, $3E, $50, $F0
-MonsterDesc_210_Mudou:  ; $763F "This evil lord/controls all/monsters"
+MonsterDesc_210_Mudou:  ; "This evil lord/controls all/monsters"
     db $37, $45, $46, $50, $62, $42, $53, $46, $49, $62, $49, $4C, $4F, $41, $F1, $40, $4C, $4B, $51, $4F, $4C, $49, $50, $62, $3E, $49, $49, $F1, $4A, $4C, $4B, $50, $51, $42, $4F, $50, $F0
-MonsterDesc_211_DeathMore:  ; $7664 "An evil lord that/lives between/reality & fantasy"
+MonsterDesc_211_DeathMore:  ; "An evil lord that/lives between/reality & fantasy"
     db $24, $4B, $62, $42, $53, $46, $49, $62, $49, $4C, $4F, $41, $62, $51, $45, $3E, $51, $F1, $49, $46, $53, $42, $50, $62, $3F, $42, $51, $54, $42, $42, $4B, $F1, $4F, $42, $3E, $49, $46, $51, $56, $62, $B6, $62, $43, $3E, $4B, $51, $3E, $50, $56, $F0
-MonsterDesc_212_DeathMore:  ; $7696 "Shed off its/disguise to show/off its strength"
+MonsterDesc_212_DeathMore:  ; "Shed off its/disguise to show/off its strength"
     db $36, $45, $42, $41, $62, $4C, $43, $43, $62, $46, $51, $50, $F1, $41, $46, $50, $44, $52, $46, $50, $42, $62, $51, $4C, $62, $50, $45, $4C, $54, $F1, $4C, $43, $43, $62, $46, $51, $50, $62, $50, $51, $4F, $42, $4B, $44, $51, $45, $F0
-MonsterDesc_213_DeathMore:  ; $76C5 "Only a true/warrior can reveal/its real identity"
+MonsterDesc_213_DeathMore:  ; "Only a true/warrior can reveal/its real identity"
     db $32, $4B, $49, $56, $62, $3E, $62, $51, $4F, $52, $42, $F1, $54, $3E, $4F, $4F, $46, $4C, $4F, $62, $40, $3E, $4B, $62, $4F, $42, $53, $42, $3E, $49, $F1, $46, $51, $50, $62, $4F, $42, $3E, $49, $62, $46, $41, $42, $4B, $51, $46, $51, $56, $F0
-MonsterDesc_214_Darkdrium:  ; $76F6 "The master of/destruction &/carnage"
+MonsterDesc_214_Darkdrium:  ; "The master of/destruction &/carnage"
     db $37, $45, $42, $62, $4A, $3E, $50, $51, $42, $4F, $62, $4C, $43, $F1, $41, $42, $50, $51, $4F, $52, $40, $51, $46, $4C, $4B, $62, $B6, $F1, $40, $3E, $4F, $4B, $3E, $44, $42, $F0
 ; @BUILD_PROJECT END gd_monster_desc
 ; $771A: first byte of the bank's zero tail (was fused with the last
@@ -1440,7 +1440,7 @@ HighLine2Ptrs:                    ; line 2 (description) pointers, ids 221-239
     dw $53C4   ; [221] (none)
     dw $53C4   ; [222] (none)
     dw $53C4   ; [223] (none)
-    dw $60BC   ; [224] Gorbunok: species 78's description
+    dw MonsterDesc_078_Dracky   ; [224] Gorbunok: species 78's description
     dw $53C4   ; [225] (none)
     dw $53C4   ; [226] (none)
     dw $53C4   ; [227] (none)
@@ -1484,6 +1484,7 @@ NewSpeciesRecipeLine_224:   ; derived from the first special entry breeding 224
 ; species' own descriptions (gamedata.monster_text / custom.species[].description;
 ; PROJECT_COMPILER §2.24). Empty = nothing (the zero pad below).
 ; @BUILD_PROJECT BEGIN gd_monster_desc_extra
+; (none)
 ; @BUILD_PROJECT END gd_monster_desc_extra
 
     ds $8000 - @, $00             ; pad remainder of bank with $00 (byte-exact)

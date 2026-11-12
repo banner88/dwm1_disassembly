@@ -539,6 +539,21 @@ class Project:
             _SM.lower(self)
         except _SM.ScreenMusicError as ex:
             self.screen_music_error = str(ex)
+        # S177: an examine spot that TALKS FOR an NPC (a counter / podium) — LAST, so it
+        # copies the script the NPC finally runs (services, breeders, cutscenes above)
+        from . import podium as _PD
+        self.podium_error = None
+        try:
+            _PD.lower(self)
+        except _PD.PodiumError as ex:
+            self.podium_error = str(ex)
+            for _r in self.custom.get('rooms') or []:
+                if isinstance(_r, dict):
+                    for _scr in (_r.get('screens') or {}).values():
+                        if isinstance(_scr, dict):
+                            for _st in _PD._states(_scr):
+                                _st['npcs'] = [n for n in (_st.get('npcs') or [])
+                                               if not _PD.is_proxy(n)]
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}

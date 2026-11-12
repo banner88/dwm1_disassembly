@@ -1,5 +1,79 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-11 (Session 175 — **SCREENS + JUMPING POINTS (ROADMAP P3.3n): COPY A SCREEN'S ART AND PASTE
+> IT OVER ANOTHER SCREEN OF THE ROOM (A BACKUP), SHIFT EVERYTHING ON A SCREEN ONE CELL (+ EVERY ARRIVAL INTO IT), AND THE
+> GREATTREE CLIFF JUMP AS AN EDITOR OBJECT — WALK ONTO IT, FALL STRAIGHT DOWN TO A CELL OF THE SCREEN BELOW** (the user: "1)
+> On multi screen rooms I need the ability to copy-paste a whole room into a different screen. That way I can keep backups
+> of the rooms I have. Also I want to be able to insert a row/shift the entire set of rooms … 2) Jumping points. I want to
+> be able to set in ui a jumping point like in GreatTree (where you step on the jumping steps) and set where it dumps you on
+> the screen below"; conferred → "dont worry about inserting columns copying is enough. Copying should ONLY work on the
+> same screen of multi-screen rooms for now. It's a way to bank a room somewhere else. Should copy sprites + tiles but
+> nothing else. If you paste you should keep underlying cutscenes, triggers, entries, doors, scripts, etc. It's just a
+> visual thing. I assume I am able to shift all the scripts left/right and up/down easily in case tiles adjust? The jump
+> sounds great" → "1) perfect. 2) Stamps is fine. 3) Yes great. Also keeps walkability etc.").
+> **Built S175, NOT yet user-tested.** Byte-neutral for a project without jumps (no engine / template change; the example
+> pin unchanged).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.x, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (PyBoy, the original ROM — ROOM_DATA_FORMAT "Jumping points"):** a GreatTree jump is NOT a tile behaviour —
+> a `$90` STEP-ON trigger on the bump cell (screen 0 (6,6) from state 2, screen 4 (6,6), screen 8 (6,7); found by
+> `extract_room.py --step N` over the states — the hijacked state 0 had none on screen 0) running bank $0C
+> GreatTree_Script18-20: `$D9E8 := 1, sound $55, walk_fast, npc_walk_y player +96 / +48 px, wait_movement`. The player
+> walks 2 px a frame under the view, the script ends, THEN the screen scrolls; `$D9E8` is cleared only by the scroll's end
+> (bank $06 `ScrollEndCommit`). One byte of script 19 patched in ROM copies: a landing on the SAME screen = a soft lock;
+> TWO screens down = odd controls; the screen directly below, any row = works (in a wall = stuck in it).
+> **Built:** NEW `editor2/core/jumps.py` (the Jump object `{"kind": "jump", "x", "y", "land_y"}` in a screen's / state's
+> npcs, lowered by `Project.__init__` to exactly the game's trigger + script; errors: no screen below / off the screen;
+> warnings: a wall at the jump or the landing, an exit on the way down), NEW `editor2/core/screen_tools.py` (`screen_visual` /
+> `paste_screen_visual` — tiles, colours, palette, stamps, same room; `shift_screen_objects` — every object of the screen in
+> every state, its stamps and cutscene cells, and every arrival into it from anywhere; edge exits stay; a refusal moves
+> nothing); the Rooms tab: + More ▸ + Jump (J), J↓ / ↓J markers + fall lines, the Jump page (the screen below as a picker),
+> Whole-room arrows; the mini-map menu (Copy screen / Paste over / Shift objects ▸ / Remove), Copy screen / Paste here /
+> Objects ◀▶▲▼ under it, ⌘⇧C / ⌘⇧V. PROJECT_COMPILER §2.80, EDITOR_DESIGN §5.1 "As built S175", help 10 / 11 / glossary;
+> `EDITOR_REVISION` S175. **Annotation (Iron Rule 6):** bank $06's screen-scroll machine re-sectioned in both trees
+> (`ScreenScrollTick`, was `Jump_006_62f6`; the four direction tables `ScrollLeft` / `Right` / `Up` / `Down` → `Begin` /
+> `$66B8` (the new screen's NPCs) / `$66C7` (the room's script 0 runs at every scroll) / `Step` / `ScrollEndCommit`) —
+> clean build `1ca65793…`.
+> **Measured in the game:** NEW `tools/walk_jumps.py` on the user's project + save (GreatLog: screen 1 (3,7) → screen 5
+> row 3, screen 5 (3,7) → screen 9 row 1): **16 / 16** (only those entries changed; the script == GreatTree_Script19's
+> words; the lock; 2 px a frame; the scroll + the lock cleared; the landing tile; the player walks away); `--negative`
+> (planned, not added) **8 FAIL**.
+> **Test ROM:** `DWM-S175-jumps-test.gbc` (`0c03d1b3…`, patched) = the user's project 7 + those two jumps in GreatLog.
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2158 PASSED (+ `test_s175`; the pin `18e6f102…`, patched,
+> unchanged); test_app `--rom` PASS (+ `s175_jumps_screens`; `s173_room_aids` now expects + Jump first in + More; the GUI
+> build == the pin); test_canvas `--rom` PASS (one after another). Help picture `tab_rooms.png` regenerated.
+> **Not done (not asked):** the game's own jumps in a Make-editable copy of GreatTree stay raw step-on spots + scripts
+> (they work; not shown as Jump objects).
+> **S175 r3 — THE SCREEN PAGE'S SONG PICKER (built S175 r3, NOT yet user-tested)** (the user: "I can only select (on the
+> screen tab) random numerals for songs, no custom songs that I can see, also I cant preview it … where are the DWM2
+> songs?"). Cause: the list held only project songs (the user's project has none) + the game's songs as bare ids; the
+> library songs needed *Add* on the Music tab first; no preview. Built: NEW `editor2/app/song_pick.py` `SongPicker`
+> (grouped: your songs / DWM2 songs / MIDI library / the game's songs named by where the game plays them; a library song
+> is added to the project + assigned in one undo step; ▶ / ■ preview); the cutscene / ending song lists get the same
+> game-song names; help 10 / 61; `EDITOR_REVISION` S175r3; editor only (no ROM / compiler change). EDITOR_DESIGN
+> "S175 r3". **Checks r3:** see the Session Index entry.
+> **S175 r2 — A SCREEN'S OWN SONG (ROADMAP P3.3o; built, NOT yet user-tested)** (the user, after pushing S175: "is it
+> possible to have different pieces of music playing on different screens of a multi screen room" → "Yes make that now.
+> Song only switches if a screen's song is new"). Measured first (PyBoy, hooks on ROM0 SetBGM / InitBGM and bank $04
+> ScriptInit): the room's script 0 runs on room entry (the room's song still a PENDING request in `$C8B7`) and at every
+> scroll (bank $06 sub-state [2]); a script-only prototype played the screen's song on entry and at scrolls but a save
+> made there CONTINUEd to the room's song — CONTINUE re-derives the song without script 0 (KEY_LESSONS S175). Built: the
+> bank $71 template `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` ($10) + `wScreenIndex`
+> first (re-pinned, `TEMPLATE_SIZE[$71]` 1367; REFERENCE_MD5 `72801bf5…`, patched — only bank $71 + the checksum
+> differ from `18e6f102…`, patched, historical); NEW `editor2/core/screen_music.py` (script 0 := per screen the song
+> check — the pending / playing song equal → nothing, else the request byte — + the room's own entry script; the room's
+> base song for the other screens, $34 for an unassigned custom room; a room with music rules warned); `music.py`
+> (`MUSIC_RULE_SCREEN` rows, the model); the Screen page's **music**; help 10 / 61 / glossary, `EDITOR_REVISION`
+> S175r2. SOUND_SYSTEM §12, PROJECT_COMPILER §2.81, EDITOR_DESIGN "As built S175 r2". **Measured:** NEW
+> `tools/walk_screen_music.py` on the user's project + save (GreatLog 5 / 6 = $0C, 1 = $1E, room $34): **25 / 25**
+> (enter on 5: only $0C started; 5 → 6 → 5 no start; 5 → 1 → 5, 5 → 9 → 5 one start each; save on 5 → CONTINUE $0C);
+> `--negative` 12 FAIL; `census_music_resolve.py` (+ wScreenIndex) 3,000 / 3,000. **Test ROM:**
+> `DWM-S175r2-screen-music-test.gbc` (`896b5742…`, patched) = the user's project 7 + those three screen songs.
+> **Checks r2:** verify_integrity PASS; test_compiler `--rom` ALL 2169 PASSED (+ `test_s175_music`; the S138 TEMPLATE_SIZE
+> check now 1367); test_app `--rom` PASS (+ `s175_screen_music`; the GUI build == `72801bf5…`, patched); test_canvas `--rom`
+> PASS (one after another).
+> **Next:** the user's test of jumps / Copy screen / Paste / Shift objects / screen music in the editor + the test ROMs; then the "Awaiting
+> a user test" list / the editor's finalization.
+
 > Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
 > PNGs (CLEAR = THE TILES SHOW, HALF-CLEAR = LIGHT, FRAMES = MOVEMENT), THE STAMP TOOL (T: PLACE / DRAG / DEL / ⌘C ⌘V /
 > RIGHT-CLICK LIGHT ON-OFF + COLOUR), THE TILES NEVER CHANGED — THE BUILD BAKES THE STAMPS INTO A COPY** (the user, after

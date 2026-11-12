@@ -1513,3 +1513,29 @@ The same snapshot gives "slots written while the room showed" — how the breedi
 - **Counting a routine's runs:** `hook_register(bank, addr)` on `ScreenPalPushRows` (from
   game.sym) — 0 runs on a same-colours scroll is the "nothing pushed" proof.
 
+
+## S177 techniques — a screen against the original cell by cell, text ids by register, a planted negative
+
+- **"Is this screen right?" = the original ROM's cells.** Run the original ROM on the same save
+  (it CONTINUEs into its own map; warp to the game's room — the Library is map $12, screen 4,
+  stand (4,4) facing up), drive the same keys, and dump the 18 × 20 BG map with both VRAM banks
+  (`m[0, a]` tile, `m[1, a]` attribute). The difference was the whole diagnosis (picture cells
+  `$04` vs `$07`; one `$08` cell). On the original, poke the library bits `$CA94-$CAB1` := `$FF`
+  before the talk so every family has entries.
+- **Text ids by register:** PyBoy 2.x exposes `pyboy.register_file` — a hook on ROM0
+  `TextBankDispatch` reads `register_file.HL` = the game's text id (the docs' "registers are
+  not exposed" predates 2.x). Together with bank $60 `PlaceFwdText` (the project's texts) it
+  lists every line a talk speaks — how the podium was compared with the NPC.
+- **An NPC's facing is `+$06` of its RAM slot** (`$D7D2 + 32·(n-1)`), not the type byte
+  (ROOM_DATA_FORMAT "NPC RAM slot") — poke it to turn the NPC away before a talk, read it while
+  the talk runs.
+- **A negative planted in the map needs `$C300` too:** the menus' pushes re-copy the room from
+  `$C300`, so a tile poked into VRAM alone is gone at the first push (the S177 negative passed
+  until `$C300 + 32·row + col` got the same tile).
+- **Which slots does a menu write while the room shows?** Snapshot VRAM bank 0 `$9000-$97FF`
+  before the talk; every 2 frames of the menu's keys, collect the slots whose bytes differ
+  (minus the room's animated slots — sample them idle first); compare again after the close.
+- **Hook a routine's LOCAL labels (S177 r2):** the build's `game.sym` lists them
+  (`PushRunIsMenu.rightDone`); `hook_register(bank, addr, cb)` on each + `register_file`
+  (`.B`, `.E`, `.HL` — PyBoy has no `.H`) traced the scan iteration by iteration and showed
+  the compare's Z lost to `inc h` in one run.

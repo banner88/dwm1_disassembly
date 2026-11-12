@@ -1045,6 +1045,19 @@ referenced subset and **Session 27 finished the rest**, so the entire bank-`$12`
 data is now labeled `db`/`dw` (`tools/resection_library_tables.py`, labels/comments
 only — build still `1ca6579…`). All addresses are ROM-verified.
 
+**S177 correction + the state machine:** two jump tables were still decoded as code —
+`LibraryScreen` `$6061` (`ld a, [$C905] / rst $00`, 5 states: `LibraryOpen` $606F,
+`LibraryStep1` $60CC, `LibraryStep2` $60D1, `LibraryRun` $60F0 → `LibraryBrowse`,
+`LibraryClose` $60F3) and `LibraryBrowse` `$6119` (was `Jump_012_6119`; `$C906`, 11 states:
+`LibBrowseStart` $6133, `LibFamilyListDraw` $6138, `LibFamilyPick` $61B8, `LibFamilyOpen`
+$6234, `LibMonsterListDraw` $629F, `LibMonsterPick` $632A, `LibPageOpen` $63AC,
+`LibPageBrowse` $64C9, `LibPageBack` $6554, `LibAnythingElse` $6569, `LibPageNext` $657A) —
+re-sectioned as `dw` in both trees (16 pointers). The open calls bank $17 entry 10 (every BG
+attribute 7) before its first push; `LibPageOpen` → `LoadItem_63d0` loads the picture to
+`$8800` and calls bank $17 entry 6 (the monster's battle palette into BG slot 4; it falls into
+entry 7: palette 4 on the 6 × 6 picture) and entry 8, before `SetItem_63bd` pushes the page (ROOM_DATA_FORMAT "The
+Library's attributes").
+
 **`LibraryFamilyTabBounds` @ `$6294` — 11 bytes.** Family id-range boundaries:
 `00 14 2d 46 5a 6e 82 9b af c8 d7` (= 0,20,45,70,90,110,130,155,175,200,215).
 Read by `SetItem_6242`: a flat family index (column×5 + row, 0..9) selects

@@ -10,6 +10,61 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-12 (Session 177 — **THE LIBRARY'S COLOURS AS THE GAME'S (THE MONSTER'S PICTURE, NO FLOOR TILE IN
+> THE WORDS), A PODIUM THAT TALKS FOR AN NPC, A BREEDING / FARM / EGG MENU'S SLOTS KEPT ON ITS OWN SCREEN ONLY + REPACK (ROADMAP
+> P3.3q)** (the user, with project 9 + save: "Visual glitches in library room. Why is monster palette wrong? Why does
+> description have part of a tile in it?"; "The 'podium' in the library below the librarian - can it proxy the NPC exactly?
+> … (including first lines)"; "Why project could not be built? … no free walkable tile left on room GreatLog's tileset … I
+> thought a room could have 256 tiles at this point wtf?"; conferred → "1) yes 2) Yes that sounds great. 3) Yes please.
+> If grandpa or other services require tiles or anything else can we not have this drag down multi screen rooms but push
+> this into their own subroutines on that screen only, ideally?").
+> **Built S177 + r2; USER-VERIFIED 2026-11-13 on the S177 r2 test ROM ("Yep everything works").** An ENGINE change (bank $77 template; the example pin moves to `bdd3fb23…`, patched —
+> was `c8e2aede…`, patched, historical).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.9.0, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (the user's 16:19 build + save vs the original ROM's map $12, PyBoy):**
+> (1) the library's monster page: every picture cell `$07` (the original `$04` — the monster's battle palette, which both
+> builds load into BG slot 4 alike) and one cell `$08` — the "s" of "shell", tile `$5C` = the room's own (page-2) tile
+> under it in `$C300`. Cause: bank $77 `ScreenPush` re-wrote the attributes of the library's full screen on every push
+> (free-colour / page-2 room): font tiles → 7, a room-slot tile equal to `$C300` → the room's attribute.
+> (2) the original's Library counter = an `$82` examine spot running script 14 = `face_down 1` + the bytes of the
+> librarian's script 15.
+> (3) GreatLog's 256 slots: split `$50` (160 wall / 96 walkable); Grandpa's `$38-$7F` kept off all 16 screens (every
+> page-1 walkable slot); 31 of 42 walkable page-2 slots held quarters that never decide walking; 85 page-1 slots held
+> unplaced GreatTree vocabulary; the 10 torches need 41 new slots. Grandpa's menu measured: 35 slots of `$38-$7F` written
+> while screen 14 shows, all back after the close.
+> **Built:** bank $77 template — a running Library screen (`$C8EF` 8) pushes tiles only (re-pinned, `TEMPLATE_SIZE[$77]`
+> 3095); NEW `editor2/core/podium.py` (`talks_for`, lowered last) + the Spot page's *talks for*; per-screen service slots
+> (`services.screen_reservations`, Document `service_slots_on` / `_anywhere` / `service_kept_off`, per-screen conflicts and
+> moves; the stamp bake and anim_import avoid only their screen's); `page2.pick_order` (the roomy side for non-deciding
+> quarters, `last`); NEW `editor2/core/tile_budget.py` (the error's breakdown, **Repack**); the Tileset tab (kept-per-screen
+> line, split line, Repack). PROJECT_COMPILER §2.83, ROOM_DATA_FORMAT (menus per screen, the Library's attributes, the
+> counter), EDITOR_DESIGN "As built S177", help 13 / 20 / 67 / glossary, `EDITOR_REVISION` S177.
+> **Annotation (Iron Rule 6):** bank $12 `LibraryScreen`'s two state tables (5 + 11 pointers decoded as code;
+> `Jump_012_6119` → `LibraryBrowse`) re-sectioned in both trees; clean build `1ca65793…`.
+> **Measured in the game:** NEW `tools/walk_library.py --podium` on the user's project + save + the podium: **19 / 19**
+> (both pages == the original's attributes, palette 4 == the battle palette, no bank-1 letter sampled every 2 frames, the
+> room back; the podium: the same texts / flags / page, the librarian turned); `--negative` FAILs the picture (36 cells);
+> the user's own 16:19 build FAILs 37 cells. NEW `tools/walk_service_screens.py` **6 / 6** (85 cells of other screens in
+> Grandpa's slots; his menu writes 35, no visible room cell shows one, all back after it); `--negative` FAILs. `walk_stamps.py`
+> 13 / 13 (a torch on screen 7, the new placement order).
+> **Test ROM:** `DWM-S177-library-podium-test.gbc` (`1641da39…`, patched) = the user's project 9 + the podium at (3,4) of
+> screen 15 (talks for the librarian); its 10 torches build.
+> **Checks:** see the Session Index entry.
+> **S177 r2 (the user on the S177 ROM, 23:39: "1) Library: glitch on screen when opening menu (very briefly in background
+> just before menu appears) … 2) Monster grandpa (waroubou) - when menu appears, there are visual glitches when selecting
+> monsters. The rest seems to work."):** measured (PyBoy, frame by frame): (1) `LibraryOpen` calls bank $17 entry 10 (every
+> attribute 7) before its first push — up to 260 page-2 room cells a frame read from VRAM bank 0 for ~4 frames (the original:
+> a colour flash); (2) Grandpa's info box: two letters of the monster's name in slots `$72` / `$73` = the page-2 floor
+> tiles' numbers under the box → the room's attribute (bank 1, palette 3). **Built:** bank $77 entry 35 `LibraryOpenAttrs`
+> (patched bank $12 far-calls `$7723`, same size: the room cells blanked from the BG map, then entry 10) and
+> `PushRunIsMenu` (a letter equal to the room tile is a menu cell when its run is enclosed by font tiles and holds a cell
+> that differs; WRAM $D5BE-$D5C0); re-pinned, `TEMPLATE_SIZE[$77]` 3320, example pin `4d556e36…` (patched). Two wrong turns
+> measured and fixed in-session (KEY_LESSONS S177 r2: `inc h` cleared the compare's Z; `$C500` held the start menu's old
+> window). `walk_library.py --podium` 19 / 19 (`--negative-open` FAILs), `walk_service_screens.py` 7 / 7 (window-glyph check;
+> `--negative-run` FAILs). **Test ROM:** `DWM-S177r2-library-grandpa-test.gbc` (`e31fcde5…`, patched).
+> **User-verified 2026-11-13** ("Yep everything works") — the library, the podium, the build with the torches, Repack, the
+> library's opening, Grandpa's monster selection. **Next:** the "Awaiting a user test" list / the editor's finalization.
+
 > Last verified: 2026-11-12 (Session 176 — **A SCREEN'S OWN COLOURS (EXPLICIT, AND REAL WHEN YOU WALK ONTO IT), THE DRAW
 > PANEL REBUILT ROUND "ONE ROW PER QUARTER", THE TORCH'S GLOW ROUND (ROADMAP P3.3p)** (the user: "1) Why is stamp of torch
 > cut off at the top? … This should be fixed so it's properly round. 2) I am trying to colour in my bookshelf … it shows
@@ -67,85 +122,12 @@
 > **Next:** the user's test of the three parts in the editor + the test ROM; then the "Awaiting a user test" list / the
 > editor's finalization.
 
-> Last verified: 2026-11-11 (Session 175 — **SCREENS + JUMPING POINTS (ROADMAP P3.3n): COPY A SCREEN'S ART AND PASTE
-> IT OVER ANOTHER SCREEN OF THE ROOM (A BACKUP), SHIFT EVERYTHING ON A SCREEN ONE CELL (+ EVERY ARRIVAL INTO IT), AND THE
-> GREATTREE CLIFF JUMP AS AN EDITOR OBJECT — WALK ONTO IT, FALL STRAIGHT DOWN TO A CELL OF THE SCREEN BELOW** (the user: "1)
-> On multi screen rooms I need the ability to copy-paste a whole room into a different screen. That way I can keep backups
-> of the rooms I have. Also I want to be able to insert a row/shift the entire set of rooms … 2) Jumping points. I want to
-> be able to set in ui a jumping point like in GreatTree (where you step on the jumping steps) and set where it dumps you on
-> the screen below"; conferred → "dont worry about inserting columns copying is enough. Copying should ONLY work on the
-> same screen of multi-screen rooms for now. It's a way to bank a room somewhere else. Should copy sprites + tiles but
-> nothing else. If you paste you should keep underlying cutscenes, triggers, entries, doors, scripts, etc. It's just a
-> visual thing. I assume I am able to shift all the scripts left/right and up/down easily in case tiles adjust? The jump
-> sounds great" → "1) perfect. 2) Stamps is fine. 3) Yes great. Also keeps walkability etc.").
-> **Built S175, NOT yet user-tested.** Byte-neutral for a project without jumps (no engine / template change; the example
-> pin unchanged).
-> **Session environment:** RGBDS v0.6.1, PyBoy 2.x, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
-> **The audit (PyBoy, the original ROM — ROOM_DATA_FORMAT "Jumping points"):** a GreatTree jump is NOT a tile behaviour —
-> a `$90` STEP-ON trigger on the bump cell (screen 0 (6,6) from state 2, screen 4 (6,6), screen 8 (6,7); found by
-> `extract_room.py --step N` over the states — the hijacked state 0 had none on screen 0) running bank $0C
-> GreatTree_Script18-20: `$D9E8 := 1, sound $55, walk_fast, npc_walk_y player +96 / +48 px, wait_movement`. The player
-> walks 2 px a frame under the view, the script ends, THEN the screen scrolls; `$D9E8` is cleared only by the scroll's end
-> (bank $06 `ScrollEndCommit`). One byte of script 19 patched in ROM copies: a landing on the SAME screen = a soft lock;
-> TWO screens down = odd controls; the screen directly below, any row = works (in a wall = stuck in it).
-> **Built:** NEW `editor2/core/jumps.py` (the Jump object `{"kind": "jump", "x", "y", "land_y"}` in a screen's / state's
-> npcs, lowered by `Project.__init__` to exactly the game's trigger + script; errors: no screen below / off the screen;
-> warnings: a wall at the jump or the landing, an exit on the way down), NEW `editor2/core/screen_tools.py` (`screen_visual` /
-> `paste_screen_visual` — tiles, colours, palette, stamps, same room; `shift_screen_objects` — every object of the screen in
-> every state, its stamps and cutscene cells, and every arrival into it from anywhere; edge exits stay; a refusal moves
-> nothing); the Rooms tab: + More ▸ + Jump (J), J↓ / ↓J markers + fall lines, the Jump page (the screen below as a picker),
-> Whole-room arrows; the mini-map menu (Copy screen / Paste over / Shift objects ▸ / Remove), Copy screen / Paste here /
-> Objects ◀▶▲▼ under it, ⌘⇧C / ⌘⇧V. PROJECT_COMPILER §2.80, EDITOR_DESIGN §5.1 "As built S175", help 10 / 11 / glossary;
-> `EDITOR_REVISION` S175. **Annotation (Iron Rule 6):** bank $06's screen-scroll machine re-sectioned in both trees
-> (`ScreenScrollTick`, was `Jump_006_62f6`; the four direction tables `ScrollLeft` / `Right` / `Up` / `Down` → `Begin` /
-> `$66B8` (the new screen's NPCs) / `$66C7` (the room's script 0 runs at every scroll) / `Step` / `ScrollEndCommit`) —
-> clean build `1ca65793…`.
-> **Measured in the game:** NEW `tools/walk_jumps.py` on the user's project + save (GreatLog: screen 1 (3,7) → screen 5
-> row 3, screen 5 (3,7) → screen 9 row 1): **16 / 16** (only those entries changed; the script == GreatTree_Script19's
-> words; the lock; 2 px a frame; the scroll + the lock cleared; the landing tile; the player walks away); `--negative`
-> (planned, not added) **8 FAIL**.
-> **Test ROM:** `DWM-S175-jumps-test.gbc` (`0c03d1b3…`, patched) = the user's project 7 + those two jumps in GreatLog.
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2158 PASSED (+ `test_s175`; the pin `18e6f102…`, patched,
-> unchanged); test_app `--rom` PASS (+ `s175_jumps_screens`; `s173_room_aids` now expects + Jump first in + More; the GUI
-> build == the pin); test_canvas `--rom` PASS (one after another). Help picture `tab_rooms.png` regenerated.
-> **Not done (not asked):** the game's own jumps in a Make-editable copy of GreatTree stay raw step-on spots + scripts
-> (they work; not shown as Jump objects).
-> **S175 r3 — THE SCREEN PAGE'S SONG PICKER (built S175 r3, NOT yet user-tested)** (the user: "I can only select (on the
-> screen tab) random numerals for songs, no custom songs that I can see, also I cant preview it … where are the DWM2
-> songs?"). Cause: the list held only project songs (the user's project has none) + the game's songs as bare ids; the
-> library songs needed *Add* on the Music tab first; no preview. Built: NEW `editor2/app/song_pick.py` `SongPicker`
-> (grouped: your songs / DWM2 songs / MIDI library / the game's songs named by where the game plays them; a library song
-> is added to the project + assigned in one undo step; ▶ / ■ preview); the cutscene / ending song lists get the same
-> game-song names; help 10 / 61; `EDITOR_REVISION` S175r3; editor only (no ROM / compiler change). EDITOR_DESIGN
-> "S175 r3". **Checks r3:** see the Session Index entry.
-> **S175 r2 — A SCREEN'S OWN SONG (ROADMAP P3.3o; built, NOT yet user-tested)** (the user, after pushing S175: "is it
-> possible to have different pieces of music playing on different screens of a multi screen room" → "Yes make that now.
-> Song only switches if a screen's song is new"). Measured first (PyBoy, hooks on ROM0 SetBGM / InitBGM and bank $04
-> ScriptInit): the room's script 0 runs on room entry (the room's song still a PENDING request in `$C8B7`) and at every
-> scroll (bank $06 sub-state [2]); a script-only prototype played the screen's song on entry and at scrolls but a save
-> made there CONTINUEd to the room's song — CONTINUE re-derives the song without script 0 (KEY_LESSONS S175). Built: the
-> bank $71 template `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` ($10) + `wScreenIndex`
-> first (re-pinned, `TEMPLATE_SIZE[$71]` 1367; REFERENCE_MD5 `72801bf5…`, patched — only bank $71 + the checksum
-> differ from `18e6f102…`, patched, historical); NEW `editor2/core/screen_music.py` (script 0 := per screen the song
-> check — the pending / playing song equal → nothing, else the request byte — + the room's own entry script; the room's
-> base song for the other screens, $34 for an unassigned custom room; a room with music rules warned); `music.py`
-> (`MUSIC_RULE_SCREEN` rows, the model); the Screen page's **music**; help 10 / 61 / glossary, `EDITOR_REVISION`
-> S175r2. SOUND_SYSTEM §12, PROJECT_COMPILER §2.81, EDITOR_DESIGN "As built S175 r2". **Measured:** NEW
-> `tools/walk_screen_music.py` on the user's project + save (GreatLog 5 / 6 = $0C, 1 = $1E, room $34): **25 / 25**
-> (enter on 5: only $0C started; 5 → 6 → 5 no start; 5 → 1 → 5, 5 → 9 → 5 one start each; save on 5 → CONTINUE $0C);
-> `--negative` 12 FAIL; `census_music_resolve.py` (+ wScreenIndex) 3,000 / 3,000. **Test ROM:**
-> `DWM-S175r2-screen-music-test.gbc` (`896b5742…`, patched) = the user's project 7 + those three screen songs.
-> **Checks r2:** verify_integrity PASS; test_compiler `--rom` ALL 2169 PASSED (+ `test_s175_music`; the S138 TEMPLATE_SIZE
-> check now 1367); test_app `--rom` PASS (+ `s175_screen_music`; the GUI build == `72801bf5…`, patched); test_canvas `--rom`
-> PASS (one after another).
-> **Next:** the user's test of jumps / Copy screen / Paste / Shift objects / screen music in the editor + the test ROMs; then the "Awaiting
-> a user test" list / the editor's finalization.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S177** (2026-11-12): ROADMAP P3.3q — the Library's colours (bank $77 `ScreenPush`: a running type-8 screen pushes tiles only — it paints its own attributes, bank $17 entries 10 / 6 / 7; example pin `bdd3fb23…`, patched); a podium (`editor2/core/podium.py`, `talks_for`: the NPC's face op + its final script, the original Library counter's recipe); a breeding / farm / egg menu's slots kept on its own screen only (`services.screen_reservations`; measured: Grandpa's menu writes 35 slots of $38-$7F, all back after it); `pick_order` (the roomy side, `last`), NEW `editor2/core/tile_budget.py` (the error's breakdown, Repack); bank $12 `LibraryScreen`'s state tables re-sectioned. `tools/walk_library.py --podium` 19 / 19 (negative FAILs; the user's old build 37 cells), `tools/walk_service_screens.py` 6 / 6 (negative FAILs), `walk_stamps.py` 13 / 13. **S177 r2** (the user's test: the library's opening, Grandpa's monster name): bank $77 entry 35 `LibraryOpenAttrs` (bank $12 `$170a` → `$7723`) + `PushRunIsMenu` (WRAM $D5BE-$D5C0), example pin `4d556e36…` (patched); `walk_library.py` 19 / 19 (`--negative-open` FAILs), `walk_service_screens.py` 7 / 7 (`--negative-run` FAILs); test ROM `DWM-S177r2-library-grandpa-test.gbc` (`e31fcde5…`, patched). **Checks (r2):** verify_integrity PASS (overlay re-applied); test_compiler `--rom` ALL 2219 PASSED (the S117b free-colour ScreenPush ROM model now includes the PushRunIsMenu spec); test_app `--rom` PASS (the GUI build == `4d556e36…`, patched); test_canvas `--rom` PASS; clean build `1ca65793…`. **Checks:** verify_integrity PASS (the committed overlay re-applied: bank $77 + the byte-identical regenerated text of stale compiler regions in banks $04 / $4D / $56 / $7A / $7C / $7F); test_compiler `--rom` ALL 2216 PASSED (+ `test_s177`; `test_s168r2` to the per-screen rule; the pin `bdd3fb23…`, patched); test_app `--rom` PASS (+ `s177_podium_repack`; the GUI build == the pin); test_canvas `--rom` PASS (one after another). Test ROM `DWM-S177-library-podium-test.gbc` (`1641da39…`, patched). **User-verified 2026-11-13** ("Yep everything works"). Block in PROJECT_STATE.
 - **S176** (2026-11-12): ROADMAP P3.3p — a screen's own colours made explicit AND real on a scroll (measured: the scroll loaded the new screen's palette into `$C797` and never pushed it; bank $06's five call sites → bank $73 entries 23 / 24 `ScrollScreenBuild` / `ScrollScreenDone`, rows pushed at the start or — when only the screen leaving draws with them — at the end; `wScreenPalLate` $DED7; example pin `c8e2aede…`, patched); NEW `editor2/core/screen_palettes.py`, the Palettes page's strip + *Give screen N its own colours*, the mini-map strip; the Draw panel rebuilt (true-colour rows + quarter marks, hover preview, Pencil / Fill / Replace colour / Pick, the switch bar, one Apply chooser; `recolour.move_row`); Stamps → Replace picture… (`stamps.replace_picture`, `hold_row`), both torches redrawn 3×3 with a round glow; `anim_import.plan` no longer reuses a row it just assigned; bank $0B entry 3 renamed `RoomEntry3_ScrollScreenBuild`. `tools/walk_screen_palette.py` 15 / 15, negative 5 FAIL. **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2195 PASSED (+ `test_s176`, 26; the pin `c8e2aede…`, patched); test_app `--rom` PASS (+ `s176_colours_draw_stamps`; the GUI build == the pin); test_canvas `--rom` PASS (one after another). Test ROM `DWM-S176-screen-colours-test.gbc` (`435dfc4b…`, patched). Block in PROJECT_STATE.
-- **S175 r3** (2026-11-12): the Screen page's music picker — named game songs, DWM2 / MIDI library songs (picked = added to the project, one undo step), ▶ preview (`editor2/app/song_pick.py`); editor only. Block in PROJECT_STATE (S175).
-- **S175 r2** (2026-11-11): ROADMAP P3.3o a screen's own song — bank $71 `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 + screen; re-pinned, example pin `72801bf5…`, patched), `editor2/core/screen_music.py` the room's script 0 checks the song at a scroll (only a new song switches), the Screen page's music; measured: script 0 runs on entry + scroll, not on CONTINUE; `tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census 3,000 / 3,000. Block in PROJECT_STATE (S175).
-- **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in PROJECT_STATE.
+- **S175 r3** (2026-11-12): the Screen page's music picker — named game songs, DWM2 / MIDI library songs (picked = added to the project, one undo step), ▶ preview (`editor2/app/song_pick.py`); editor only. Block in SESSION_HISTORY (S175).
+- **S175 r2** (2026-11-11): ROADMAP P3.3o a screen's own song — bank $71 `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 + screen; re-pinned, example pin `72801bf5…`, patched), `editor2/core/screen_music.py` the room's script 0 checks the song at a scroll (only a new song switches), the Screen page's music; measured: script 0 runs on entry + scroll, not on CONTINUE; `tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census 3,000 / 3,000. Block in SESSION_HISTORY (S175).
+- **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in SESSION_HISTORY.
 - **S174** (2026-11-10): ROADMAP P3.3m stamps — pictures on top of a room's tiles: `custom.stamps[]` + `rooms[].stamps[]` are data (the project's tiles never change), the build bakes a copy (NEW `editor2/core/stamps.py`; `compile_project` / `measure_banks` / `capacity.measure`); the Stamp tool (T), the Stamps page (NEW `stamps_panel.py`), light on / off + colour, nearest colours warned; the canvas == the bake; `tools/walk_stamps.py` 12 / 12 on the user's save (removed = the same ROM md5), negative 6 FAIL; the S173 torch art redrawn from the game's own torch pixels (the user's two picks, as stamp PNGs). EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79, KEY_LESSONS S174. Byte-neutral without stamps. **r2 (2026-11-11):** the rows a stamp needs are written into the project's palette when placed (`stamps.claim`, recorded on the placement, named on the Palettes page, kept by Re-plan, usable by tiles). Built S174, NOT yet user-tested.
 - **S173** (2026-11-10): ROADMAP P3.3l room-building aids — the measured cause of the user's asks (one tool bar overflowing at 1,512 px: Eyedrop, Walkability, Grid and Zoom existed behind »); two bars (tools / view), + More ▸ Statue · Monument · Archive, zoom 1-12× with half steps + Fit + pinch, clean view (H held), the Still tool (`animate.cell_frames` → a frame chooser → `make_still_tile`: a new still metatile; r2: on the clicked cell — r1 changed no cell and the user's cell kept moving; the game's animation and the room's own), brush preview, where-used outline, NEW `room_view.py` (Whole room, Reference); `tools/walk_still.py` 9 / 9 on the user's save (negative 2 FAIL); HEAD's test_app Capacity block fixed. EDITOR_DESIGN §5.1 "As built S173", KEY_LESSONS S173. Byte-neutral for the ROM. Built S173, NOT yet user-tested.
 - **S172** (2026-11-08): Foods instead of meats (ROADMAP P3.19, user-directed) — `gamedata.foods`, a tick on the Items tab: items 19-23 named Toast / Apple / Biscuit / BadApple / Honey (text defaults under the project's edits), each food its own plain NPC sprite $58-$5C from `editor2/assets/foods/*.png`, the meat prop $5F = the Apple; regions `npc_food_sheets` (ROM0) / `npc_food_pals` (bank $05, new overlay copy), sheets in bank $77 (gfx-IDs $7717-$771B), `NpcDrawPlain` → `NpcStaticFrame77` (one-frame objects held on frame 0); NPC sprite tables re-sectioned both trees (`tools/resection_npc_sprite_tables.py`); animation $2C annotated as the NOTE (the audit's "flying meat" was wrong — KEY_LESSONS S172); `tools/walk_foods.py` 32 / 32; the outstanding fixes: `test_canvas.py` passes again, the Balance tab's first-show stall 3.7 s → 0.16 s (`peek_ctx`). r2: the pictures redrawn in the game's pickup style; each food its own gate pickup icon (VRAM bank 1; bank $77 entries 33 / 34 hooked into banks $16 / $01); `gamedata.food_art` drawn in the Items tab (Apply / Restore default); walk 47 / 47 (negative 9 FAIL) — r2 USER-CONFIRMED 2026-11-08 13:17. r3: each food its own bag description by strength (walk 52 / 52) — USER-CONFIRMED 2026-11-08 19:19 ("Perfect hand off zip please"). Pin `18e6f102…` (patched; round 1 `9ee0b97b…`, patched, historical).
@@ -360,6 +342,7 @@
 | Enemy AI and new skills (S161) | The bank $57 rule chains select skills BY ID (`$DB8A`); patched builds set `$DB8A` = a NEW skill's base for its chain walk (state 4 `AIViewArm57` → bank $72 `AIViewArm72`, off at the chain end / veto exit) and bank $54 `Fork54_RecordIndex` answers the base's record with the new skill's own (`wAIViewId` / `wAIViewBase` $DED5 / $DED6); then its AI preference (`AIPrefTable`, -60 … +60). An enemy uses a new skill as often as its base (measured on twins). The battle RNG also steps in wait loops: a build with more cycles drifts every later roll (A/Bs re-seed at every stage). The duplicate-group-cast conversion (bank $53 `DupCastSkillListCheck_4ed6` → `DupBase53` → bank $72 `AIBaseOrSelf72`) tests a new skill as its base too; a far call through RST_10 carries the id in E (A / BC clobbered). BATTLE_SKILL_SYSTEM §13.13 |
 | Enemy group spells held back (S162) | bank $53 `EnemyDupCastConversion_4e63`: an enemy's group spell / breath (`GroupDupSkillList_4ee4`, 77 ids) becomes Attack when another enemy acted before it in the round, `$DD0B` ≠ 2, and its EID's flag is set — `EnemyDupConvFlagTable_41df` (486 bytes, EIDs 0-485, 181 set: early wild rows + random battles 0-4, never a boss / arena row; EID 486 reads the next code byte `$FE`). Patched: `DupConvFlag53` bounds the read (EIDs 0-486 the original, a project row bank $6B `ProjectEnemyHolds` via entry 2 `EnemyHoldsOf` = `progression.enemies[].holds_group_spells`, else 0). BATTLE_SKILL_SYSTEM §13.13 (S162) |
 | A screen's own colours (S176) | `custom.rooms[].screens[k].palette` (states[n].palette › screens[k].palette › render.palette). The ORIGINAL scroll (bank $06 `ScreenScrollTick`) loads the new screen's palette into the buffer `$C797` (bank $0B entry 3 → bank $17 entry 0) and never pushes it; the original game joins no two differently coloured screens by a scroll. Patched: bank $73 entries 23 / 24 push the rows 0-3 that changed — at the scroll's start, or at its end when the screen leaving draws with the row and the screen arriving does not (`$C200` nibbles; `wScreenPalLate` $DED7). Model `editor2/core/screen_palettes.py` == the game (`tools/walk_screen_palette.py`). | ROOM_DATA_FORMAT "A screen's own colours and the scroll"; PROJECT_COMPILER §2.82 |
+| The Library's attributes + a menu's slots per screen (S177) | The Library (op `$04` type 8) paints its own attributes: bank $17 entry 10 = every cell palette 7 at the open, entries 6 / 7 = the monster's battle palette into BG slot 4 + palette 4 on the 6 × 6 picture; patched builds push its tiles only (bank $77 `ScreenPush`). A breeding / farm / egg menu writes its `BORROWED_SLOTS` only while ITS screen shows and every slot is back after the close (measured: Grandpa 35 slots of $38-$7F) — kept free per screen (`services.screen_reservations`; the entry script's menus room-wide). The original's counter = an `$82` examine spot running `face_down 1` + the librarian's own script (map $12 scripts 14 / 15) — the editor's podium (`talks_for`). | ROOM_DATA_FORMAT "The game's menus draw into the room's tile slots" + "Interact entries"; PROJECT_COMPILER §2.83 |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted

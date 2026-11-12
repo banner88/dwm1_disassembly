@@ -273,6 +273,7 @@ class TeleportPanel(QGroupBox):
 
 class SpotPanel(QGroupBox):
     fieldsEdited = Signal(dict)
+    talksForChosen = Signal(object)     # S177: (x, y) of the NPC, or None = its own script
     newTalkRequested = Signal()
     editTalkRequested = Signal()
     presenceToggled = Signal(int, bool)
@@ -300,6 +301,15 @@ class SpotPanel(QGroupBox):
         self.facing.currentIndexChanged.connect(
             lambda _i: self._emit('facing', self.facing.currentData()))
         f.addRow('answers A', self.facing)
+        # S177 (the user: "can [the podium] proxy the NPC exactly?"): the spot runs the
+        # script of an NPC of this screen — its lines, flags, menus — and the NPC turns
+        self.talks_for = QComboBox()
+        self.talks_for.setToolTip(
+            'A counter, a podium, a desk: the spot answers exactly as the NPC does (the same '
+            'first lines, flags and menus) and the NPC turns to face the player — as the '
+            "original game's library counter does.")
+        self.talks_for.currentIndexChanged.connect(self._talks_for_changed)
+        f.addRow('talks for', self.talks_for)
         self.script = QComboBox()
         self.script.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.script.setMinimumContentsLength(14)
@@ -327,10 +337,25 @@ class SpotPanel(QGroupBox):
         self.btn_del.clicked.connect(self.deleteRequested.emit)
         f.addRow('', self.btn_del)
 
-    def show_spot(self, view, script_ids, talk, presence, editable=True):
+    def show_spot(self, view, script_ids, talk, presence, editable=True, npcs=(), notes=()):
+        """npcs = [(x, y, label)] of this screen state (S177: what the spot can talk for);
+        notes = [(level, words)] about its podium (podium.spot_notes)."""
         from editor2.app.rooms.npc_panel import talk_summary
         self._building = True
         kind = view['kind']
+        tf = view.get('talks_for')
+        self.talks_for.clear()
+        self.talks_for.addItem('nobody — its own script (below)', None)
+        for x, y, label in npcs:
+            self.talks_for.addItem(label, f'{x},{y}')
+        if tf is not None:
+            k = self.talks_for.findData(f"{int(tf['x'])},{int(tf['y'])}")
+            if k < 0:
+                self.talks_for.addItem(f"the NPC at ({tf['x']},{tf['y']}) — not there now!",
+                                       f"{int(tf['x'])},{int(tf['y'])}")
+                k = self.talks_for.count() - 1
+            self.talks_for.setCurrentIndex(k)
+        self.form.setRowVisible(self.talks_for, kind in ('examine', 'spawn'))
         if kind == 'step':
             self.setTitle('Step-on trigger')
             self.what.setText('Runs its script when the player WALKS onto this cell (not '
@@ -352,8 +377,14 @@ class SpotPanel(QGroupBox):
             self.script.addItem(f'[{cur}] raw index (no id)', cur)
         k = self.script.findData(cur)
         self.script.setCurrentIndex(max(0, k))
-        self.btn_edit.setEnabled(talk is not None and editable)
+        self.btn_edit.setEnabled(talk is not None and editable and tf is None)
         self.preview.setText(talk_summary(talk, cur))
+        if tf is not None:
+            self.preview.setText(f"Answers exactly as the NPC at ({tf['x']},{tf['y']}) does — "
+                                 'its first lines, flags and menus — and the NPC turns to face '
+                                 'the player. Edit that NPC\'s talk to change what is said.')
+        self.form.setRowVisible(self.script, tf is None)
+
         if presence and len(presence) > 1:
             self.states.show_states(presence, 'present in state {n} of this screen')
             self.form.setRowVisible(self.states, True)
@@ -365,11 +396,20 @@ class SpotPanel(QGroupBox):
             note = ('Runs the room ENTRY script (index 0) — this is the old "spawn point" '
                     'marker, which never chose where the player appears. Give it its own '
                     'talk or delete it.')
+        for lvl, words in notes:
+            note = (note + '\n' if note else '') + ('Problem: ' if lvl == 'error' else '') + words
         self.note.setText(note)
         self.note.setVisible(bool(note))
-        for w in (self.facing, self.script, self.btn_new, self.btn_del, self.states):
+        for w in (self.facing, self.script, self.btn_new, self.btn_del, self.states,
+                  self.talks_for):
             w.setEnabled(editable)
+        self.btn_new.setEnabled(editable and tf is None)
         self._building = False
+
+    def _talks_for_changed(self, _i):
+        if not self._building:
+            d = self.talks_for.currentData()
+            self.talksForChosen.emit(tuple(int(v) for v in d.split(',')) if d else None)
 
     def _emit(self, field, value):
         if not self._building:

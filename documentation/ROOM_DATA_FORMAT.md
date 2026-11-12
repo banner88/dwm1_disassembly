@@ -290,6 +290,13 @@ kinds really are:
   2 up, 3 right) or `F` = any facing. A matching spot runs its script like
   an NPC talk (dialog mode, text boxes, YES/NO all work). Vanilla uses it
   for signs, books, shelves and the pots/barrels that "talk".
+- **A counter that talks for an NPC (S177, the original's map $12, the Library):** the
+  librarian (NPC (4,2), script 15) stands behind a counter cell (4,3) that is an examine spot
+  `$82` (the player faces UP) running script 14 = `face_down 1` (actor 1 = the librarian
+  turns) — and script 14 starts 4 bytes before script 15 (`$0D:$66EE` / `$66F2`): it falls
+  into the librarian's own script. Same lines, same flags, same menu. The editor's podium
+  (`talks_for`, `editor2/core/podium.py`) builds the same: the NPC's face op toward the spot +
+  a copy of the NPC's final script.
 - **Step-on trigger** (`$90`) — bank $0B `RoomEntry5_StepTriggerLookup` /
   `SearchStepTriggers`, dispatched from bank $01
   `CopyPlayerCoordsAndGetNextRoom` (name kept for tools/audit_mapid_range.py)
@@ -1168,6 +1175,55 @@ with one of those slots showed the menu's words ("EXIT INFO" over the gallery's 
 S168 report). The editor keeps the slots of `services.BORROWED_SLOTS` (breeding `$38-$7F`, farm
 `$60-$6F`, eggs `$70-$78`) free in a project sheet whose rooms have such a screen (PROJECT_COMPILER
 §2.76 "S168 r2").
+
+**S177 — per SCREEN (measured, PyBoy on the user's GreatLog: Grandpa on screen 14, the other
+15 screens drawing 85 cells with slots of $38-$7F):** opened and run (BREED / HATCH / EXIT and
+back out), Grandpa's menu wrote 35 slots of $38-$7F while the room showed (`$40-$7A`; nothing
+else but the room's own animated slots) and after the close every one of the room's 128 page-1
+slots held its tile again (`BreedClose` reloads the sheet) — before the player can scroll to
+another screen. A menu opened by an NPC / a spot of screen k can only be open while screen k
+shows, so only screen k's cells must avoid its slots; the editor keeps them per screen
+(`services.screen_reservations`; the room's ENTRY script — run at entry and at every scroll,
+S175 — keeps its menus' slots room-wide; the breeding RETURN flow `breeders.lower_entries`
+puts in front of it runs only on the way back to the breeding NPC's cell). A cell of screen k
+in one of them (`--negative` of `tools/walk_service_screens.py`: a room cell pointed at `$44`)
+shows the menu's words.
+
+**The Library's attributes (S177, PyBoy, the original ROM's map $12 vs the user's build):** the
+library is a FULL screen that paints its own attributes — bank $17 entry 10 (`$170A`) sets every
+BG attribute to palette 7 before its first push (`LibraryOpen`), and on a monster's page bank
+$17 entry 6 (`$1706`) loads the monster's battle palette into BG slot 4 and falls into entry 7,
+which sets palette 4 on the picture's 6 × 6 cells (rows 1-6, columns 1-6), before the page's
+window is pushed (`LibPageOpen`). In the original every other cell is `$07`. Patched builds
+before S177 re-wrote the attributes on every push in a free-colour / page-2 custom room
+(bank $77 `PushCellAttr`): the picture took palette 7, and a letter drawn into a room slot
+whose number equalled the room tile at that cell (`$C300`) took the room's attribute back —
+in a page-2 room VRAM bank 1, i.e. a floor tile in the description. Since S177 a running
+type-8 screen pushes tiles only (`tools/walk_library.py`).
+**The opening (S177 r2, the user: "glitch on screen when opening menu (very briefly in
+background just before menu appears)"):** `LibraryOpen` calls entry 10 BEFORE its first push,
+so for ~2-4 frames the room shows with every attribute palette 7 / VRAM bank 0 — in the
+original a colour flash; in a page-2 room its page-2 cells read the page-1 tiles of the same
+numbers (measured: up to 260 cells a frame). Patched: `ld hl, $170a` → `$7723` = bank $77
+entry 35 `LibraryOpenAttrs` — in a free-colour / page-2 custom room each visible cell's room
+tile (< $80, read from the BG map) becomes the blank `$E0` (blank in both banks) and then
+palette 7, the dialog box's font tiles stay (as the original keeps the box until the
+library's frame); then entry 10. `$C500` is NOT a copy of the screen at that moment — it
+still holds older menus' windows (a first attempt that blanked from `$C500` showed the start
+menu's party window).
+
+**A menu letter with the room tile's number (S177 r2, the user: "Monster grandpa — … visual
+glitches when selecting monsters"):** Grandpa writes the chosen monster's name into page-1
+slots ($71-$75 measured) and the info box shows them; where a letter's slot number equalled
+the room's tile number under the box (`$C300` — here the page-2 floor `$72` / `$73`), bank
+$77 `PushCellAttr` judged the cell a room cell and gave it the room's attribute (VRAM bank 1 +
+palette 3: two floor cells inside the name). Since S177 r2 such a cell asks `PushRunIsMenu`:
+its run of tiles < $80 on the row is a MENU run when font / frame tiles (>= $80 — never a room
+tile) enclose it on both sides and at least one of its cells differs from `$C300`; a gap of
+room between two windows is enclosed too but never differs. Measured with
+`tools/walk_service_screens.py` (window cells between the font's `$FE` / `$FF` edges all
+palette 7, room cells outside them their own attribute, 497 frames; `--negative-run` FAILs
+the two name cells).
 
 **NPC sprite sheets (S141):** the room's NPC sprite sheets live at `$8500 + c·$100` (one per
 distinct NPC sprite / monster in list order, cache `$D7BE`, tile base `$50 + 16c`) — sheets 3-5 at

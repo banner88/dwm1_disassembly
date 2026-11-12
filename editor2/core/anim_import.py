@@ -281,7 +281,8 @@ def apply(doc, plan_, speed=32, order='loop', name='imported', own_sheet=None):
     # 2. frame 1 as tiles: a free slot on the same side; a still piece reuses an identical tile
     sheet = bytearray(P2.pad_sheet(doc.read_sheet(tid)))
     used = doc.used_tiles(tid)
-    avoid = doc.animated_slots(tid) | doc.service_slots(tid) | doc.own_anim_slots_tileset(tid)
+    avoid = (doc.animated_slots(tid) | doc.service_slots_on(tid, room, plan_['key'])   # S177
+             | doc.own_anim_slots_tileset(tid))
     free = [s for s in range(P2.SLOTS) if s not in used and s not in avoid]
     T = doc.layout(plan_['lid'])['tiles']
     A = doc.layout(plan_['attr_lid'])['attr']

@@ -464,7 +464,10 @@
                  page-2 tiles: set at every room-sheet load by the page-2 home bank's Page2Room,
                  read by bank $73 BoxAttrActive / bank $77 PushAttrActive) / wTileAnimDstVBK $D5BD
                  (the own-animation player's destination VRAM bank) /
-                 wCustomPool $D5BE-$D5E4 (transient reserve; $D5BC before S168, $D599 before S158, $D598 in S154 r1, $D56D before S154, $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
+                 S177 r2: wPushRunRow / wPushRunEnd / wPushRunMenu $D5BE-$D5C0 (bank $77
+                 PushRunIsMenu: the row / end column / verdict of the run of tiles < $80 analysed
+                 last — a menu letter whose slot number equals the room tile under it) /
+                 wCustomPool $D5C1-$D5E4 (transient reserve; $D5BE before S177 r2, $D5BC before S168, $D599 before S158, $D598 in S154 r1, $D56D before S154, $D566 before S153, $D564 before S151, $D561 before S150, $D560 before S141, $D536 before S140, $D50B before S137, $D50A before S136, $D509 before S129, $D4F2 before S127,
                  $D2F0 before S126, $D2EF before S125, $D2E3 before S123, $D243
                  before S121) /
                  wPoolBounce $D5E5-$D664 (128 B, FX1: sleep-pool swap

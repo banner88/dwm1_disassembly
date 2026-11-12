@@ -206,7 +206,7 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
     used = doc.used_tiles(tid) if on_project else _vanilla_used(doc, room)
     anim = doc.animated_slots(tid) if on_project else _room_anim_slots(doc, room)
     if on_project:
-        anim = anim | doc.service_slots(tid)       # S168 r2: a service menu draws there
+        anim = anim | doc.service_slots_anywhere(tid)   # S168 r2 / S177: a menu draws there (any screen)
     # S168: page 1, then page 2 (a game tileset's copy has page 1 only until a tile
     # spills: the copy is written as 4096 bytes then)
     free = [i for i in range(P2.SLOTS) if i not in used and i not in anim]
@@ -237,7 +237,8 @@ def plan_new(doc, room, mt, new_px, threshold, walkable=None, own_sheet=None, sh
                 break
         if cand is None:
             pool = P2.pick_order(free, threshold, need_wall if q == 3 else not walkable, q == 3,
-                                 walls_down=(q == 3))
+                                 walls_down=(q == 3),
+                                 last=())
             if not pool:
                 side = 'wall' if need_wall else 'walkable'
                 why = (f'The tileset has no free {side if q == 3 else ""} slot for the '

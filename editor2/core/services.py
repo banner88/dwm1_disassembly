@@ -808,9 +808,77 @@ def room_script_ids(room, states):
     return out
 
 
+def _entry_script(room, e, npcs):
+    """The script id an NPC / spot entry runs (a table index resolved; S177: a podium spot
+    the script of the NPC it talks for), or None."""
+    table = room.get('scripts') or {}
+    if e.get('kind') == 'raw':
+        try:
+            s_ = int(str(e['bytes'][4]), 0)
+        except (KeyError, IndexError, ValueError):
+            return None
+    elif e.get('talks_for') is not None:
+        from . import podium as PD
+        tf = e['talks_for']
+        npc, _n = PD.npc_at(npcs, tf.get('x', -1), tf.get('y', -1))
+        return _entry_script(room, npc, npcs) if npc is not None else None
+    else:
+        s_ = e.get('script')
+    if isinstance(s_, int):
+        s_ = table.get(str(s_))
+    return s_ if isinstance(s_, str) else None
+
+
+def screen_reservations(room, screens, by_id):
+    """S177 (the user: "If grandpa or other services require tiles … can we not have this drag
+    down multi screen rooms but push this into their own subroutines on that screen only"):
+    the sheet slots a service menu draws into WHILE THE ROOM SHOWS, per screen. A menu opened
+    by an entry of screen k (an NPC, a spot) can only be open while screen k shows, and every
+    such menu gives the slots back at its close (the farm / eggs: bank $77 ServiceTilesBack;
+    breeding: BreedClose reloads the sheet — measured S177: Grandpa's menu wrote 35 slots of
+    $38-$7F on its screen, all restored after it) — so only screen k's cells must avoid them.
+    The room's entry script (index 0, run at entry AND at every scroll, S175) may open a menu
+    on any screen: its slots stay reserved room-wide.
+    screens = [(key, [state dicts])]; by_id = {script id: script dict}.
+    -> (room-wide slots, {key: slots})."""
+    def slots_of(ids):
+        out = set()
+        for t in borrowing_screens(by_id[i] for i in ids if i in by_id):
+            out |= set(BORROWED_SLOTS[t])
+        return out
+    table = room.get('scripts') or {}
+    entry = by_id.get(table.get('0')) if isinstance(table.get('0'), str) else None
+    marks = [i for i, o in enumerate((entry or {}).get('ops') or [])
+             if isinstance(o, str) and o.startswith('label:') and o.endswith('br_orig')]
+    if marks:
+        # breeders.lower_entries: the breeding RETURN flow sits in front of the entry ops — it
+        # runs only on the way back from the ceremony to the cell the player talked from
+        # (op $4E saved it; the flow faces that NPC), i.e. on the breeding NPC's own screen,
+        # which keeps the same slots for its menu: only the room's own entry ops count here
+        # (a later wrap — the screen song, S175 — prefixes the label: 'o_br_orig')
+        entry = {'ops': entry['ops'][marks[-1] + 1:]}
+    wide = set()
+    for t in borrowing_screens([entry] if entry is not None else []):
+        wide |= set(BORROWED_SLOTS[t])
+    per = {}
+    for key, states in screens:
+        ids = set()
+        for st in states:
+            npcs = st.get('npcs') or []
+            for e in npcs:
+                if isinstance(e, dict):
+                    sid = _entry_script(room, e, npcs)
+                    if sid:
+                        ids.add(sid)
+        got = slots_of(ids)
+        if got:
+            per[int(key)] = got
+    return wide, per
+
+
 def borrowed_problems(prj):
-    """S168 r2: warnings for room cells drawn with a slot a service screen of that room
-    writes while the room shows (the menu's words / icons appear there)."""
+    """S168 r2 / S177: warnings for room cells drawn with a slot a service menu writes while
+    THEIR screen shows (the menu's words / icons appear there) — per screen since S177."""
     from . import page2 as P2
     warns = []
     by_id = {s.get('id'): s for s in prj.custom.get('scripts', [])}
@@ -819,29 +887,25 @@ def borrowed_problems(prj):
         # slots where the menus open); only a project tileset can be rearranged
         if r.get('placeholder') or not (r.get('record') or {}).get('tileset'):
             continue
-        states = [st for _k, s_ in sorted(prj.room_screens(r).items())
-                  for st in prj.screen_states(s_)]
-        ids = room_script_ids(r, states)
-        scr = borrowing_screens(by_id[i] for i in ids if i in by_id)
-        if not scr:
+        screens = [(k, prj.screen_states(s_)) for k, s_ in sorted(prj.room_screens(r).items())]
+        wide, per = screen_reservations(r, screens, by_id)
+        if not wide and not per:
             continue
-        slots = set()
-        for t in scr:
-            slots |= set(BORROWED_SLOTS[t])
-        hit = set()
-        for _k, _n, lid in P2.state_tile_lids(prj, r):
+        hit = {}
+        for k, _n, lid in P2.state_tile_lids(prj, r):
+            slots = wide | per.get(int(k), set())
             lay = P2._layout(prj, lid)
             for row in (lay or {}).get('tiles') or []:
                 for v in row:
                     if v < 0x80 and v in slots:
-                        hit.add(v)
-        if hit:
-            lo, hi = min(hit), max(hit)
-            warns.append(f"room {r.get('name') or r.get('id')}: {len(hit)} tile(s) of its screens "
+                        hit.setdefault(int(k), set()).add(v)
+        for k, vs in sorted(hit.items()):
+            lo, hi = min(vs), max(vs)
+            warns.append(f"room {r.get('name') or r.get('id')} screen {k}: {len(vs)} tile(s) "
                          f"(${lo:02X}-${hi:02X}) sit in the sheet slots its breeding / farm / egg "
-                         "menu draws into while the room shows — the menu's words appear over "
+                         "menu draws into while that screen shows — the menu's words appear over "
                          "those cells (opening the project in the editor moves them to free "
-                         "slots, page 2 first; S168 r2)")
+                         "slots; S168 r2 / S177)")
     return warns
 
 

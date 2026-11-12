@@ -1054,6 +1054,7 @@ class RoomsTab(QWidget):
         tp.goRequested.connect(self._go_end)
         sp = self.spot_panel
         sp.fieldsEdited.connect(self._spot_fields)
+        sp.talksForChosen.connect(self._spot_talks_for)
         sp.newTalkRequested.connect(self._npc_new_talk)
         sp.editTalkRequested.connect(self._npc_edit_talk)
         sp.presenceToggled.connect(self._npc_presence)
@@ -2159,6 +2160,24 @@ class RoomsTab(QWidget):
             return
         if kind in ('park', 'delete_parked'):
             self._park_action(room, kind)
+            return
+        if kind == 'repack':                                  # S177 (tile_budget.repack)
+            from editor2.core import tile_budget as TB
+            tid = self.s.doc.tileset_key(room)
+            thr = val(room['record']['collision_threshold'])
+            done = []
+            cmd = C.SnapshotCommand(self.s, 'Repack the tileset',
+                                    lambda doc: done.extend(TB.repack(doc, tid, thr)))
+            self.s.undo.push(cmd)
+            if cmd.error is not None:
+                QMessageBox.warning(self, 'Repack', str(cmd.error))
+                return
+            self._show()
+            walk = sum(1 for a, _d in done if not P2.is_wall(a, thr))
+            self.status_line.setText(
+                f'Repacked {len(done)} tile(s) — {walk} walkable / {len(done) - walk} wall slot(s) '
+                'free again on the side that was running out; nothing changes on screen (undo '
+                'puts them back).')
             return
         tid = self.s.doc.tileset_key(room)
         thr = val(room['record']['collision_threshold'])
@@ -3555,8 +3574,14 @@ class RoomsTab(QWidget):
         sid = view.get('script')
         talk = doc.talk_spec(sid) if isinstance(sid, str) and sid != 'none' else None
         pres = doc.npc_presence(room, self.key, self.state_idx, index)
+        from editor2.core import podium as _PD             # S177: a spot that talks for an NPC
+        npcs_here = doc.npc_entries(room, self.key, self.state_idx)
+        notes = (_PD.spot_notes(room, self.key, self.state_idx, npcs_here, lst[index])
+                 if view.get('talks_for') is not None else [])
         self.spot_panel.show_spot(view, doc.room_script_ids(room), talk,
-                                  pres if len(pres) > 1 else None, editable=True)
+                                  pres if len(pres) > 1 else None, editable=True,
+                                  npcs=doc.podium_candidates(room, self.key, self.state_idx),
+                                  notes=notes)
         self._show_object(self.spot_panel)
 
     # ------------------------------------------ gate rooms (S100, P3.7b)
@@ -3696,6 +3721,16 @@ class RoomsTab(QWidget):
                            lambda doc, r, k, st: doc.update_spot(r, k, st, idx, **fields))
         if cmd is not None:
             self._after_spot_edit(idx)
+
+    def _spot_talks_for(self, cell):
+        """S177: the spot answers as the NPC on `cell` does (None: its own script again)."""
+        idx = self._sel_npc
+        if idx is None:
+            return
+        what = f'talks for the NPC at {cell}' if cell else 'its own script'
+        self._npc_op(f'Spot {what}',
+                     lambda doc, r, k, st: doc.set_talks_for(r, k, st, idx, cell))
+        self._after_spot_edit(idx)       # also puts the chooser back after a refusal
 
     # ------------------------------------------------------ NPCs (S97, P3.5)
     def _show_npc_panel(self, index, entry=None):
@@ -5296,7 +5331,7 @@ class RoomsTab(QWidget):
         free = None
         if 'tileset' in rec:
             tid = rec['tileset']
-            used = doc.used_tiles(tid) | doc.animated_slots(tid) | doc.service_slots(tid) | \
+            used = doc.used_tiles(tid) | doc.animated_slots(tid) | doc.service_slots_anywhere(tid) | \
                 doc.own_anim_slots_tileset(tid)
             free = sum(1 for s_ in range(P2.SLOTS) if s_ not in used)
         dlg = AnimImportDialog(plan, info, free if free is not None else 999,

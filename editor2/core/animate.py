@@ -438,7 +438,7 @@ class AnimateMixin:
         # animated leaves them) — usable targets; the caller rewrites the
         # cells that still point there
         busy = {i for i, u in enumerate(usage) if u['placed'] or u['mine']} - set(release)
-        avoid = set(avoid) | self.service_slots(tid)     # S168 r2: a service menu draws there
+        avoid = set(avoid) | self.service_slots_anywhere(tid)   # S168 r2 / S177: a menu draws there
         moved = []
         for s in sorted(slots):
             if s in keep or s not in busy:
@@ -587,7 +587,7 @@ class AnimateMixin:
         cells = self._cells_of(room, mt)
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        avoid = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        avoid = self.animated_slots(tid) | self.service_slots_anywhere(tid)   # S168 r2 / S177
         new_of = {}
         for sl in hot:
             g = bytes(sheet[sl * 16:sl * 16 + 16])
@@ -648,7 +648,7 @@ class AnimateMixin:
             raise RuntimeError('a frame is 4 subtile graphics of 16 bytes')
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        avoid = self.animated_slots(tid) | self.service_slots(tid) | moving
+        avoid = self.animated_slots(tid) | self.service_slots_anywhere(tid) | moving   # S177
         new_tiles = list(mt['tiles'])
         took = []
         placed = {}                        # (graphic, wall side) -> slot, inside this call

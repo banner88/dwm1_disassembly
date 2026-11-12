@@ -808,7 +808,7 @@ def apply_plan(doc, room_id, key, state, rows_new, nfree, rows_old, sheet,
         plan[u] = (r, idx)
     # 2. slots: one graphic per slot; a second colouring / an outside user -> a new slot
     used = doc.used_tiles(tid)
-    blocked = set(scope.anim) | doc.service_slots(tid)
+    blocked = set(scope.anim) | doc.service_slots_anywhere(tid)          # S168 r2 / S177
     free = [i for i in range(P2.SLOTS) if i not in used and i not in blocked]
     claimed = {}                       # slot -> 16 bytes it will hold
     newval = {}

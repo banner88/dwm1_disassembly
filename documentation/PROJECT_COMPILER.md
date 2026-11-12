@@ -687,6 +687,11 @@ user-confirmed hand-authored code:
   `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` + `wScreenIndex` first
   (+12 B; `TEMPLATE_SIZE[$71]` 1367, `Custom26DDTable` `$4557`). Example pin `72801bf5…`
   (patched; was `18e6f102…`, patched, historical). Current values: `templates/PINNED_SHA256`.
+* S177 r2 re-pin (§2.83): `bank_077_head.asm` entry 35 `LibraryOpenAttrs` + `PushRunIsMenu`
+  (`TEMPLATE_SIZE[$77]` 3320, `ShopPtrTable` `$4CF8`). Example pin `4d556e36…` (patched).
+* S177 re-pin (§2.83): `bank_077_head.asm` `ScreenPush` — the Library pushes tiles only (+8 B;
+  `TEMPLATE_SIZE[$77]` 3095, `ShopPtrTable` `$4C17`). Example pin `bdd3fb23…` (patched,
+  historical; was `c8e2aede…`, patched, historical). Current values: `templates/PINNED_SHA256`.
 * S176 (§2.82): no template changed — the scroll push is hand code in `patches/bank_006.asm`
   / `bank_073.asm`; only the example pin moved (`c8e2aede…`, patched; was `72801bf5…`, patched,
   historical).
@@ -6010,6 +6015,65 @@ example has no screen palette: banks $06 / $73 + the header checksum differ.
   keeps it), with forced pairs (Replace colour through a row switch).
 - Measured: `tools/walk_screen_palette.py` 15 / 15 (negative 5 FAIL), `walk_stamps.py` 13 / 13
   with a 3 × 3 torch on a screen and off its top edge; `test_s176`.
+
+## §2.83 S177 — the Library's colours; a PODIUM (`talks_for`); a menu's slots per SCREEN; Repack (ROADMAP P3.3q)
+
+- **Engine (bank $77 template `ScreenPush`, re-pinned; `TEMPLATE_SIZE[$77]` 3095, +8):** while
+  a screen effect runs (`wGameState` bit 4) and `$C8EF` = 8 (the Library), `wPushAttrOn` := 0 —
+  the push writes tiles only, as the original. The library paints its own attributes (bank $17
+  entry 10 at the open: every cell 7; entries 6 / 7 on a monster's page: the battle palette into
+  BG slot 4 + palette 4 on the picture) and reloads the room at the close (ROOM_DATA_FORMAT "The
+  Library's attributes"). Example pin `bdd3fb23…` (patched; only bank $77 + the header checksum
+  differ from `c8e2aede…`, patched, historical).
+- **Podium** — `{"kind": "examine", "x", "y", "facing", "talks_for": {"x", "y"}}` (no
+  `script`): `podium.lower(prj)` is the LAST lowering of `Project.__init__` (after the services,
+  breeders, cutscenes and screen songs rewrote every talk). Per spot: the NPC on `talks_for` in
+  the same screen state (error `podium_error` when none / it has no script; a warning when it is
+  not next to the spot), its actor number = 1 + its place among the list's NPC entries (spots
+  skipped — the emitter puts spots first, the game numbers NPC slots in list order), script
+  `podium:<room>:<screen>:<state>:<x>,<y>` = `['op', 'face_<toward the spot>', actor]` + a copy
+  of the NPC's final ops (labels are script-local); added to the room's table (an entry script
+  made when there is none); the spot becomes an ordinary examine spot of it (`_podium` kept for
+  the validators). Document: `set_talks_for` (the front facing when next to the NPC; None = the
+  NPC's script becomes the spot's own), `podium_candidates`, `follow_npc_move` (`update_npc`),
+  Shift objects moves `talks_for`; `update_spot` keeps it.
+- **A service menu's slots per screen** — `services.screen_reservations(room, [(key, states)],
+  by_id)` -> (room-wide, {key: slots}): the menus of the scripts an NPC / spot of screen k runs
+  (a podium: its NPC's) keep `BORROWED_SLOTS` on screen k only; the room's entry script's menus
+  room-wide, minus the breeding return flow in front of `…br_orig`. Document:
+  `room_service_reservations`, `service_slots(tid)` (room-wide only — status `service`),
+  `service_slots_on(tid, room, key)`, `service_slots_anywhere(tid)`, `service_kept_off(tid)`
+  (`tile_usage[i]['kept_off']`), `service_conflicts` / `vacate_service_slots` per screen. The
+  stamp bake (`stamps._apply`) and `anim_import.apply` avoid `service_slots_on` of their
+  screen; imports take kept slots last (`pick_order(last=…)`); the searches that do not know
+  where their tile goes (twins, Make animated, recolour, Draw, parking) keep every kept slot
+  (the S168 r2 rule). The bake ends with `vacate_service_slots` per tileset.
+- **`page2.pick_order(…, last=())`** — a quarter that does not decide walking takes the side
+  with MORE free slots (both pages counted) first, page 1 before page 2; `last` slots after all.
+- **NEW `editor2/core/tile_budget.py`** — `budget` (per side: placed / deciding quarters /
+  movable / My metatiles / vocabulary / animated / a menu's / free), `explain` (the words of the
+  stamp's "no free slot" error), `repack_plan` / `repack` (tiles never a bottom-right quarter,
+  not vocabulary / animated / pinned by a cutscene `tiles` step or a tile patch, moved from the
+  scarcer side to free slots of the other — page 1 first — until level; `_remap_tile`).
+- Measured: `tools/walk_library.py --podium` 19 / 19 on the user's project + save (`--negative`:
+  the picture FAILs; the user's 16:19 build: 37 cells), `tools/walk_service_screens.py` 6 / 6
+  (`--negative` FAILs), `walk_stamps.py` 13 / 13; `test_s177`.
+- **S177 r2 (the user's test of the S177 ROM: "Library: glitch on screen when opening menu …";
+  "Monster grandpa — … visual glitches when selecting monsters"):** bank $77 entry 35
+  `LibraryOpenAttrs` (patched bank $12 `LibraryOpen` far-calls `$7723` instead of `$170a`, same
+  size): in a free-colour / page-2 custom room each visible cell's room tile (< $80, read from
+  the BG map — `$C500` still holds older menus' windows) → `$E0` first, then palette 7; the
+  font tiles stay; then bank $17 entry 10. `PushRunIsMenu` (called by `PushCellAttr` when a
+  tile < $80 equals `$C300`): carry = the cell's run of tiles < $80 is enclosed by tiles >= $80
+  on both sides and holds a cell that differs from `$C300` (one analysis per run: WRAM
+  `wPushRunRow` / `wPushRunEnd` / `wPushRunMenu` $D5BE-$D5C0, reset by every ScreenPush).
+  Its compares are `sub [hl]` + `or a` — `cp [hl]` lost its Z flag to the `inc h` pair that
+  restores HL (measured: every cell "differed", the gap between Grandpa's windows took
+  palette 7). `TEMPLATE_SIZE[$77]` 3320; example pin `4d556e36…` (patched; only banks $00 /
+  $12 (2 bytes) / $77 differ from `bdd3fb23…`, patched, historical). Measured:
+  `walk_library.py --podium` 19 / 19 (`--negative-open`: 435 cell-frames of page-2 room cells
+  from bank 0), `walk_service_screens.py` 7 / 7 (the new window-glyph check; `--negative-run`
+  FAILs the name's two cells).
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

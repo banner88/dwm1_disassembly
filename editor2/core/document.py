@@ -61,6 +61,7 @@ from editor2.core.hints_doc import HintsMixin            # S158: the breeding hi
 from editor2.core.jumps import JumpsMixin                # S175: jumping points
 from editor2.core.screen_tools import ScreenToolsMixin    # S175: screen copy / shift
 from editor2.core.screen_music import ScreenMusicMixin    # S175: a screen's own song
+from editor2.core.podium import PodiumDocMixin            # S177: a spot that talks for an NPC
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -248,7 +249,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
                NewGameMixin, EndingMixin, MemorialMixin, HintsMixin,
-               JumpsMixin, ScreenToolsMixin, ScreenMusicMixin):
+               JumpsMixin, ScreenToolsMixin, ScreenMusicMixin, PodiumDocMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')
@@ -2151,48 +2152,99 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         return SV.borrowing_screens(s for s in self.custom.get('scripts', [])
                                     if s.get('id') in ids)
 
-    def service_slots(self, tid):
-        """Page-1 slots of sheet `tid` a service screen of a room drawing with it writes
-        while the room shows (S168 r2) — kept free: a room cell drawn with one would show
-        the menu's words / icons."""
+    def room_service_reservations(self, room):
+        """S177: (room-wide slots, {screen: slots}) a service menu of this room draws into
+        while that screen shows (services.screen_reservations)."""
         from editor2.core import services as SV
+        by_id = {x.get('id'): x for x in self.custom.get('scripts', []) if isinstance(x, dict)}
+        screens = [(k, self.states(room, k)) for k in self.screen_keys(room)]
+        return SV.screen_reservations(room, screens, by_id)
+
+    def service_slots(self, tid):
+        """Page-1 slots of sheet `tid` that NO tile may take (S168 r2): a service menu of a
+        room drawing with it writes them while ANY of its screens shows — since S177 only a
+        menu its ENTRY script opens (a menu opened by an NPC / a spot is kept to its own
+        screen: service_slots_on)."""
         out = set()
         for r in self.rooms_using_tileset(tid):
-            for t in self.room_service_screens(r):
-                out |= set(SV.BORROWED_SLOTS[t])
+            out |= self.room_service_reservations(r)[0]
+        return out
+
+    def service_slots_on(self, tid, room, key):
+        """S177: the slots a cell of `room`'s screen `key` must not use (room-wide + the
+        menus that open on that screen)."""
+        wide, per = self.room_service_reservations(room)
+        return wide | per.get(int(key), set())
+
+    def service_slots_anywhere(self, tid):
+        """S177: every slot some screen of a room on sheet `tid` keeps free for a menu — a
+        search that does not know where its tile goes takes these LAST."""
+        out = set()
+        for r in self.rooms_using_tileset(tid):
+            wide, per = self.room_service_reservations(r)
+            out |= wide
+            for v in per.values():
+                out |= v
+        return out
+
+    def service_kept_off(self, tid):
+        """S177: {slot: [(room id, screen)]} — where each menu-kept slot must not be drawn."""
+        out = {}
+        for r in self.rooms_using_tileset(tid):
+            wide, per = self.room_service_reservations(r)
+            for k in self.screen_keys(r):
+                for sl in wide | per.get(int(k), set()):
+                    out.setdefault(sl, []).append((r['id'], int(k)))
         return out
 
     def service_conflicts(self, tid):
-        """{slot: [(room id, screen, state)]} — placed cells in service slots."""
-        svc = self.service_slots(tid)
-        if not svc:
+        """{slot: [(room id, screen, state)]} — cells placed in a slot a menu of THEIR screen
+        draws into (S177: per screen)."""
+        off = self.service_kept_off(tid)
+        if not off:
             return {}
-        return {i: u['placed'] for i, u in enumerate(self.tile_usage(tid))
-                if i in svc and u['placed']}
+        out = {}
+        for i, u in enumerate(self.tile_usage(tid)):
+            if i not in off:
+                continue
+            bad = [w for w in u['placed'] if (w[0], int(w[1])) in off[i]]
+            if bad:
+                out[i] = bad
+        return out
 
     def vacate_service_slots(self, tid):
-        """Move every tile placed (or in My metatiles) in a service slot of project sheet
-        `tid` to a free slot on its own side of the collision threshold — page 2 first, then
-        page 1 — with its graphic; every layout and metatile on the sheet follows, so nothing
-        changes on screen (S168 r2). Animated / statue tiles there stay (reported by the
-        validator). Returns ([(old, new)], [slots that could not move])."""
-        svc = self.service_slots(tid)
-        if not svc or ':' in str(tid):
+        """Move every tile that a screen draws in a slot that screen's service menu writes
+        (S177: per screen — service_conflicts), and every tile of My metatiles in a slot kept
+        room-wide, to a free slot on its own side of the collision threshold that no menu
+        keeps (page 2 first, then page 1; else one that none of ITS screens keeps), with its
+        graphic; every layout and metatile on the sheet follows, so nothing changes on screen
+        (S168 r2). Animated / statue tiles there stay (reported by the validator).
+        Returns ([(old, new)], [slots that could not move])."""
+        if ':' in str(tid):
+            return [], []
+        conf = self.service_conflicts(tid)
+        wide = self.service_slots(tid)
+        usage = self.tile_usage(tid)
+        movable = sorted(set(i for i in conf if usage[i]['status'] in ('placed', 'mine'))
+                         | {i for i in wide if usage[i]['status'] in ('placed', 'mine')})
+        if not movable:
             return [], []
         rooms = self.rooms_using_tileset(tid)
         thr = val(rooms[0]['record']['collision_threshold']) if rooms else 0
-        usage = self.tile_usage(tid)
-        movable = [i for i in sorted(svc) if usage[i]['status'] in ('placed', 'mine')]
-        if not movable:
-            return [], []
-        busy = {i for i, u in enumerate(usage) if u['status'] != 'free'} | svc
+        off = self.service_kept_off(tid)
+        anywhere = set(off)
+        busy = {i for i, u in enumerate(usage) if u['status'] != 'free'} | wide
         free = [i for i in sorted(range(P2.SLOTS), key=lambda i: (i < 0x80, i))
                 if i not in busy]
         sheet = self.read_sheet(tid)
         moved, stuck = [], []
         for a in movable:
             side = P2.is_wall(a, thr)
-            dst = next((i for i in free if P2.is_wall(i, thr) == side), None)
+            where = {(w[0], int(w[1])) for w in usage[a]['placed']}
+            dst = next((i for i in free if P2.is_wall(i, thr) == side and i not in anywhere), None)
+            if dst is None:
+                dst = next((i for i in free if P2.is_wall(i, thr) == side
+                            and not where & set(off.get(i, ()))), None)
             if dst is None:
                 stuck.append(a)
                 continue
@@ -2427,8 +2479,10 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         statue = self.statue_slots(tid)                  # S154: memorial statues
         anim = self.animated_slots(tid) - statue
         svc = self.service_slots(tid)                    # S168 r2: a service menu draws there
+        kept = self.service_kept_off(tid)                # S177: per screen (shown, still free)
         out = [{'placed': [], 'mine': [], 'vocab': False, 'animated': i in anim,
-                'statue': i in statue, 'service': i in svc, 'changed': False}
+                'statue': i in statue, 'service': i in svc, 'changed': False,
+                'kept_off': sorted(kept.get(i, ()))}
                for i in range(P2.SLOTS)]
         seen = [set() for _ in range(P2.SLOTS)]  # S142: `w not in list` was O(n^2) at scale
         for r in self.rooms_using_tileset(tid):
@@ -2539,7 +2593,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         sheet = self.read_sheet(tid)
         thr = val(rec['collision_threshold'])
         used = self.used_tiles(tid)
-        anim = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        anim = self.animated_slots(tid) | self.service_slots_anywhere(tid)   # S168 r2 / S177: reuse
         free = [i for i in range(P2.SLOTS) if i not in used]   # S168: both pages
         src_sheet = P2.pad_sheet(src_sheet)
         out = []
@@ -2556,7 +2610,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                     cand = i
                     break
             if cand is None:
-                pool = P2.pick_order(free, thr, want_wall, strict)
+                pool = P2.pick_order(free, thr, want_wall, strict,
+                                     last=self.service_slots_anywhere(tid))   # S177
                 if not pool:
                     nw = sum(1 for i in free if P2.is_wall(i, thr))
                     spare = [i for i, u in enumerate(self.tile_usage(tid))
@@ -2620,7 +2675,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             self.room(room['id'])['animation'] = ('source' if room.get('source_mapID') is not None
                                                   and val(room['source_mapID']) == src
                                                   else f'0x{src:02X}')
-        anim_after = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        anim_after = self.animated_slots(tid) | self.service_slots_anywhere(tid)   # S168 r2 / S177: reuse
         # tiles in use in the slots we write — and, on a switch, in EVERY slot
         # the new animation moves — leave (unrelated tiles must not start moving)
         vac = set(need) | (set(src_slots) if switching else set())
@@ -2649,7 +2704,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                          and bytes(sheet[i * 16:i * 16 + 16]) == gfx
                          and (not strict or P2.is_wall(i, thr) == want_wall)), None)
             if cand is None:
-                pool = P2.pick_order(free, thr, want_wall, strict)
+                pool = P2.pick_order(free, thr, want_wall, strict,
+                                     last=self.service_slots_anywhere(tid))   # S177
                 if not pool:
                     raise NoFreeSlot(f"tileset {tid!r} has no free "
                                      f"{'wall' if want_wall else 'walkable'} slot")
@@ -2714,7 +2770,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         thr = val(rec['collision_threshold'])
         sheet = self.read_sheet(tid)
         used = self.used_tiles(tid)
-        anim = self.animated_slots(tid) | self.service_slots(tid)   # S168 r2
+        anim = self.animated_slots(tid) | self.service_slots_anywhere(tid)   # S168 r2 / S177: reuse
         free = [i for i in range(P2.SLOTS) if i not in used and i not in anim]   # S168: + page 2
 
         def existing(g, side):
@@ -2940,14 +2996,15 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
         k = P2.slot_key(t)
         gfx = bytes(sheet[k * 16:k * 16 + 16])
         anim = self.animated_slots(tid)
-        svc = self.service_slots(tid)                    # S168 r2: never reuse those
+        svc = self.service_slots_anywhere(tid)           # S168 r2 / S177: never reuse those
         for i in sorted(range(P2.SLOTS), key=lambda i: (i >= 0x80, i)):
             if i in anim or i in svc or P2.is_wall(i, thr) != want_wall:
                 continue
             if bytes(sheet[i * 16:i * 16 + 16]) == gfx:
                 return P2.value_of(i), thr
         used = self.used_tiles(tid)
-        free = [i for i in range(P2.SLOTS) if i not in anim and i not in used]
+        free = [i for i in range(P2.SLOTS) if i not in anim and i not in used
+                and i not in svc]                        # S177: kept on some screen
         on_side = P2.wall_first(free, thr) if want_wall else P2.walk_first(free, thr)
         if on_side:
             i = on_side[0]
@@ -3213,6 +3270,8 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                  'script': entry.get('script'), 'raw': False}
             if k == 'examine':
                 v['facing'] = entry.get('facing', 'any')
+                if entry.get('talks_for') is not None:          # S177: a podium (podium.py)
+                    v['talks_for'] = dict(entry['talks_for'])
             return v
         if k == 'npc':
             fac = entry.get('facing', 'down')
@@ -3332,6 +3391,9 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
             raise ValueError(f'unknown NPC fields {sorted(unknown)}')
         if 'sprite' in fields and 'monster' not in fields:
             v['monster'] = None                    # a plain sprite replaces a monster
+        if ('x' in fields or 'y' in fields):       # S177: a podium follows its NPC
+            self.follow_npc_move(room, key, state_idx, (v['x'], v['y']),
+                                 (int(fields.get('x', v['x'])), int(fields.get('y', v['y']))))
         v.update(fields)
         if old.get('comment') and not old.get('kind') == 'raw':
             v['comment'] = old['comment']
