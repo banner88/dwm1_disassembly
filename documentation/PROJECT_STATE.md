@@ -53,6 +53,14 @@
 > build == the pin); test_canvas `--rom` PASS (one after another). Help picture `tab_rooms.png` regenerated.
 > **Not done (not asked):** the game's own jumps in a Make-editable copy of GreatTree stay raw step-on spots + scripts
 > (they work; not shown as Jump objects).
+> **S175 r3 — THE SCREEN PAGE'S SONG PICKER (built S175 r3, NOT yet user-tested)** (the user: "I can only select (on the
+> screen tab) random numerals for songs, no custom songs that I can see, also I cant preview it … where are the DWM2
+> songs?"). Cause: the list held only project songs (the user's project has none) + the game's songs as bare ids; the
+> library songs needed *Add* on the Music tab first; no preview. Built: NEW `editor2/app/song_pick.py` `SongPicker`
+> (grouped: your songs / DWM2 songs / MIDI library / the game's songs named by where the game plays them; a library song
+> is added to the project + assigned in one undo step; ▶ / ■ preview); the cutscene / ending song lists get the same
+> game-song names; help 10 / 61; `EDITOR_REVISION` S175r3; editor only (no ROM / compiler change). EDITOR_DESIGN
+> "S175 r3". **Checks r3:** see the Session Index entry.
 > **S175 r2 — A SCREEN'S OWN SONG (ROADMAP P3.3o; built, NOT yet user-tested)** (the user, after pushing S175: "is it
 > possible to have different pieces of music playing on different screens of a multi screen room" → "Yes make that now.
 > Song only switches if a screen's song is new"). Measured first (PyBoy, hooks on ROM0 SetBGM / InitBGM and bank $04
@@ -144,6 +152,7 @@
 > the rows on the Palettes page, ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S175 r3** (2026-11-12): the Screen page's music picker — named game songs, DWM2 / MIDI library songs (picked = added to the project, one undo step), ▶ preview (`editor2/app/song_pick.py`); editor only. Block in PROJECT_STATE (S175).
 - **S175 r2** (2026-11-11): ROADMAP P3.3o a screen's own song — bank $71 `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 + screen; re-pinned, example pin `72801bf5…`, patched), `editor2/core/screen_music.py` the room's script 0 checks the song at a scroll (only a new song switches), the Screen page's music; measured: script 0 runs on entry + scroll, not on CONTINUE; `tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census 3,000 / 3,000. Block in PROJECT_STATE (S175).
 - **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in PROJECT_STATE.
 - **S174** (2026-11-10): ROADMAP P3.3m stamps — pictures on top of a room's tiles: `custom.stamps[]` + `rooms[].stamps[]` are data (the project's tiles never change), the build bakes a copy (NEW `editor2/core/stamps.py`; `compile_project` / `measure_banks` / `capacity.measure`); the Stamp tool (T), the Stamps page (NEW `stamps_panel.py`), light on / off + colour, nearest colours warned; the canvas == the bake; `tools/walk_stamps.py` 12 / 12 on the user's save (removed = the same ROM md5), negative 6 FAIL; the S173 torch art redrawn from the game's own torch pixels (the user's two picks, as stamp PNGs). EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79, KEY_LESSONS S174. Byte-neutral without stamps. **r2 (2026-11-11):** the rows a stamp needs are written into the project's palette when placed (`stamps.claim`, recorded on the placement, named on the Palettes page, kept by Re-plan, usable by tiles). Built S174, NOT yet user-tested.

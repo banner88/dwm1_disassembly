@@ -907,6 +907,7 @@ class RoomsTab(QWidget):
         self.inspector.portalGateRequested.connect(self._portal_to_gate)   # S117
         self.inspector.statePaletteChosen.connect(self._state_palette_chosen)
         self.inspector.screenMusicChosen.connect(self._screen_music_chosen)     # S175
+        self.inspector.s_music_pick.rom_path = lambda: self.s.settings.value('rom/path')
         self.inspector.addExitRequested.connect(self._add_exit)
         self.inspector.removeExitRequested.connect(self._remove_exit)
         self.inspector.tilesetChangeRequested.connect(self._change_tileset)
@@ -5929,11 +5930,19 @@ class RoomsTab(QWidget):
         if room is None or self.vanilla_mid is not None:
             return
         rid, key = self.room_id, self.key
+        from editor2.app.song_pick import LIB, resolve_value
+        # S175r3: a DWM2 / MIDI library song is added to the project's songs and
+        # assigned in the same undo step
+        added = isinstance(value, str) and value.startswith(LIB)
+
+        def op(doc):
+            doc.set_screen_music(doc.room(rid), key, resolve_value(doc, value))
         self.s.undo.push(C.SnapshotCommand(
-            self.s, f'Screen {key} music',
-            lambda doc: doc.set_screen_music(doc.room(rid), key, value)))
+            self.s, f'Screen {key} music' + (' (adds the song)' if added else ''), op))
+        shown = self.s.doc.screen_music(self.s.doc.room(rid), key) if value else None
         self.status_line.setText(
-            f'Screen {key}: ' + (f'its own song {value}' if value else "the room's song")
+            f'Screen {key}: ' + (f'its own song {shown}' if value else "the room's song")
+            + (' (added to your songs — the Music tab lists it)' if added else '')
             + ' — walking onto it from another screen of the room switches the music only '
             'when the song is different.')
 

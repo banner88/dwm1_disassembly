@@ -78,12 +78,12 @@ def song_choices(doc):
         if s.get('kind') != 'music':
             continue
         n = int(s.get('id_int', int(str(s['id']).replace('$', '0x'), 0)))
-        nm = None
-        try:
-            nm = doc.song_name(f'${n:02X}', None) or doc.song_name(f'0x{n:02X}', None)
+        try:                     # S175r3: your name, else where the game uses it
+            from editor2.app.song_pick import game_song_label
+            lab = game_song_label(doc, dict(s, id_int=n))
         except Exception:                                        # noqa: BLE001
-            pass
-        out.append((f'${n:02X} ' + (nm or 'game song'), f'0x{n:02X}'))
+            lab = f'${n:02X} game song'
+        out.append((lab, f'0x{n:02X}'))
     if not cat:
         for n in (0x09, 0x0C, 0x0F, 0x12, 0x15, 0x18, 0x1B, 0x1E, 0x2E, 0x31, 0x34):
             out.append((f'${n:02X} game song', f'0x{n:02X}'))

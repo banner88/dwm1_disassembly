@@ -5215,6 +5215,18 @@ evaluates the call target first). It happened twice in S119; both times restored
 `git show HEAD:`. **Rule**: read into a variable first, then write; or use `sed -i` for a
 one-line change; check the file's size after a scripted edit.
 
+### Never hold a QComboBox's QStandardItem across clear() (S175 r3)
+**Symptom**: test_app segfaulted (exit 139) in UNRELATED later tests (Skills tab, inside
+`context_help._DialogWatcher.eventFilter`), at a different place each run, once the Screen
+page's song picker greyed its group headers with `combo.model().item(k).setEnabled(False)` /
+`.setFont(...)` and the combo was refilled (`clear()`) on every screen change. Removing those
+two calls → PASS. **Fix**: header items set through item data only —
+`combo.setItemData(k, 0, Qt.UserRole - 1)` (no flags = not selectable) and
+`combo.setItemData(k, font, Qt.FontRole)`. **Rule**: in a combo that is refilled, style items
+with `setItemData`, never through a `QStandardItem` wrapper; a segfault that wanders between
+unrelated tests means memory was corrupted earlier — bisect the newest Qt code, not the crash
+site.
+
 ### Never rebuild a widget inside its own signal — macOS segfaults (S119b)
 **Symptom**: user's Mac: picking an unnamed NPC in a walk step's *Who* list → "Segmentation
 fault: 11". Every step-form edit committed synchronously; the commit's `structureChanged`

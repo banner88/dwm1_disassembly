@@ -48,6 +48,21 @@ def _lbl(text=''):
     return l
 
 
+def _room_song_preview(doc, room):
+    """S175r3: the ▶ preview of "(the room's song)" — the room's own song value, else
+    None (no preview; the room plays what its music rules / the game choose)."""
+    v = room.get('music')
+    if v in (None, ''):
+        return None
+    if isinstance(v, str) and any(s.get('id') == v for s in doc.project_songs() or []):
+        return ('song', v)
+    try:
+        n = int(v, 0) if isinstance(v, str) else int(v)
+    except (TypeError, ValueError):
+        return None
+    return ('game', n, 'bgm')
+
+
 class Inspector(QWidget):
     thresholdEdited = Signal(int)
     paletteChosen = Signal(object)         # palette id or None
@@ -257,17 +272,20 @@ class Inspector(QWidget):
                               'setting; a vanilla entry copies that room\'s palette into '
                               'your project as an editable item.')
         # S175 (ROADMAP P3.3o): this screen's own song (editor2/core/screen_music.py)
-        self.s_music = QComboBox()
-        self.s_music.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.s_music.setMinimumContentsLength(16)
-        self.s_music.currentIndexChanged.connect(self._screen_music_changed)
+        # S175r3: a SongPicker (editor2/app/song_pick.py) — your songs, the DWM2 / MIDI
+        # library (picking one adds it to your songs), the game's songs by name, ▶ preview
+        from editor2.app.song_pick import SongPicker
+        self.s_music_pick = SongPicker("(the room's song)")
+        self.s_music_pick.chosen.connect(self.screenMusicChosen.emit)
+        self.s_music = self.s_music_pick.combo
         self.s_music.setToolTip('The song on THIS screen (every state). Walking onto it from '
                                 'another screen of the room switches to it — only when it is '
                                 'a different song (the same song plays on). Entering the room '
                                 'or loading a save here plays it too. "(the room\'s song)" = '
-                                'the room\'s music.')
+                                'the room\'s music. DWM2 / MIDI library songs are added to '
+                                'your songs when picked. ▶ previews the selection.')
         f.addRow('screen', self.s_key)
-        f.addRow('music', self.s_music)
+        f.addRow('music', self.s_music_pick)
         f.addRow('states', self.s_states)
         f.addRow('NPC slots', self.s_npcs)
         f.addRow('layout', self.s_layout)
@@ -686,22 +704,9 @@ class Inspector(QWidget):
         i = self.s_pal.findData(own) if own else 0
         self.s_pal.setCurrentIndex(max(i, 0))
         # S175: the screen's own song
-        self.s_music.clear()
-        self.s_music.addItem("(the room's song)", None)
-        try:
-            from editor2.app.story_widgets import song_choices
-            for lab, v in song_choices(doc):
-                self.s_music.addItem(lab, v)
-        except Exception:                                    # noqa: BLE001
-            pass
-        cur = scr.get('music')
-        if cur is not None:
-            i = self.s_music.findData(cur)
-            if i < 0:
-                self.s_music.addItem(str(cur), cur)
-                i = self.s_music.count() - 1
-            self.s_music.setCurrentIndex(i)
-        self.s_music.setEnabled(any(r is room for r in doc.rooms))
+        self.s_music_pick.doc_getter = lambda d=doc: d
+        self.s_music_pick.fill(doc, scr.get('music'), _room_song_preview(doc, room))
+        self.s_music_pick.setEnabled(any(r is room for r in doc.rooms))
         self._building = False
         _grid, note = renderer.attr_grid(room, int(key), state_idx)
         self.s_attr.setText(note)
@@ -841,10 +846,6 @@ class Inspector(QWidget):
     def _del_exit(self):
         if self._sel_exit_idx is not None:
             self.removeExitRequested.emit(int(self._sel_exit_idx))
-
-    def _screen_music_changed(self, _i):
-        if not self._building:
-            self.screenMusicChosen.emit(self.s_music.currentData())
 
     def _state_pal_changed(self, _i):
         if not self._building:

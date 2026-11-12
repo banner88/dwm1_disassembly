@@ -1463,6 +1463,20 @@ project's songs + the game's songs (`story_widgets.song_choices`); a change =
 `screenMusicChosen` → `RoomsTab._screen_music_chosen` → `Document.set_screen_music` (one
 SnapshotCommand); disabled for the game's rooms. The compiler / engine side: PROJECT_COMPILER
 §2.81, SOUND_SYSTEM §12.
+**S175 r3 (built, NOT yet user-tested)** — user: "I can only select (on the screen tab) random
+numerals for songs, no custom songs that I can see, also I cant preview it … where are the
+DWM2 songs?" The music choice is now `editor2/app/song_pick.SongPicker` (combo + ▶/■): groups
+*Your songs* / *DWM2 songs* / *MIDI library* / *The game's songs* (non-selectable bold headers
+via item data); game songs labelled `song_pick.game_song_label` (the user's name, else the
+Music tab's `MusicTab._auto` "where the game uses it"); a library song not yet in the project
+has the value `lib:<id>` and `_screen_music_chosen` runs `song_pick.resolve_value`
+(`doc.add_library_song`, or the project song already made from it) + `set_screen_music` in
+ONE SnapshotCommand; ▶ = `music_tab.SongPlayer` + `music_preview.Renderer` (project /
+library → `Renderer.song`, game → `Renderer.vanilla`); "(the room's song)" previews the
+room's own `music` when it has one. The pick is emitted from `QTimer.singleShot(0)` (KEY_LESSONS
+S119b). `story_widgets.song_choices` (cutscene / ending song lists) uses the same game-song
+labels. test_app `s175_screen_music` + r3 (library pick = one undo step, shown back, no
+longer offered as a library entry, both preview renderers render).
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 

@@ -5410,13 +5410,40 @@ def s175_screen_music(app, w):
     rt.inspector.s_music.setCurrentIndex(0)
     app.processEvents()
     assert 'music' not in room['screens']['4']
+    # S175r3 (the user: "random numerals for songs, no custom songs … can't preview it
+    # … where are the DWM2 songs?"): named game songs, the DWM2 library, ▶ preview
+    pick = rt.inspector.s_music_pick
+    labels = [cb.itemText(k) for k in range(cb.count())]
+    assert any('DWM2 songs' in x for x in labels), labels[:8]
+    j = cb.findData('0x0C')
+    assert cb.itemText(j).strip() != '$0C game song', cb.itemText(j)
+    lid = next(k for k in sorted(doc.library_songs()) if 'dwm2' in k)
+    j = cb.findData('lib:' + lid)
+    assert j > 0, 'DWM2 song not offered'
+    n1, songs0 = s.undo.index(), len(doc.project_songs())
+    cb.setCurrentIndex(j)
+    app.processEvents()
+    sid = room['screens']['4'].get('music')
+    assert len(doc.project_songs()) == songs0 + 1, 'library song not added to the project'
+    assert any(x['id'] == sid and x['source'].get('library') == lid
+               for x in doc.project_songs()), (sid, doc.project_songs())
+    assert s.undo.index() == n1 + 1, 'add + assign is not one undo step'
+    rt.select_screen(4)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() == sid, 'the added song is not shown back'
+    k = rt.inspector.s_music.findData('lib:' + lid)
+    assert k < 0, 'the added library song is still offered as a new library song'
+    pcm = pick.renderer(doc, ('song', sid)).render(seconds=0.5)
+    pcm2 = pick.renderer(doc, ('game', 0x0C, 'bgm')).render(seconds=0.5)
+    assert len(pcm) and len(pcm2), 'preview renders nothing'
     while s.undo.index() > n0:
         s.undo.undo()
     app.processEvents()
     assert doc.dumps() == pre, 'undo did not bring the project back'
     print("OK: S175 screen music — the Screen page's music on gate_island screen 4 "
           "(screens['4'].music = '0x0C', one undo step, shown back, the room's song again); "
-          "undone exactly")
+          "S175r3: named game songs + DWM2 library offered, picking a DWM2 song adds it to "
+          "the project and assigns it in ONE undo step, ▶ preview renders; undone exactly")
 
 
 def s171_app_window(app, w):

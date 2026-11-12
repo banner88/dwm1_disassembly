@@ -97,6 +97,10 @@ that screen, or loading a save made there, plays it too. The screens without a s
 their own play the room's song. Not in gates; not while a cutscene walks the player across
 screens (the song changes at the next ordinary scroll); a room whose song changes by flag
 (Music rules) gets a warning — its other screens play its base song after a scroll.
+The list is grouped: **your songs**, the **DWM2 songs** and the **MIDI library** (picking
+one of these adds it to your songs — the Music tab lists it — and assigns it, one undo
+step), then **the game's songs**, named by where the game plays them (or by the name you
+gave them on the Music tab). **▶** beside the list previews the selected song (■ stops).
 
 **Jumping points (S175)** — the GreatTree cliff jump: **+ More ▸ + Jump (J)** on the
 selected cell. When the player WALKS onto that cell the game plays the jump sound and

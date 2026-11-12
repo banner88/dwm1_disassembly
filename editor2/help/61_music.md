@@ -68,7 +68,8 @@ step changes it at once).
 
 **One screen's own song** (S175): in the Rooms tab, the Screen page → **music**. It
 plays on that screen of a multi-screen room and switches only when the next screen's song
-is different (see *Rooms → A screen's own music*).
+is different (see *Rooms → A screen's own music*). That list also offers the DWM2 and MIDI
+library songs directly (picking one adds it to your songs) and has a ▶ preview.
 
 ## Gates
 

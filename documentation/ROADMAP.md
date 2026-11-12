@@ -1148,7 +1148,7 @@ recipes are pure authoring.
       Shift objects after moving art. Not done (not asked): recognising the game's own jumps in
       Make editable copies of GreatTree as Jump objects (they stay raw step-on spots + scripts,
       which work).
-- [x] **P3.3o — A screen's own song in a multi-screen room** — **built S175 r2, NOT yet
+- [x] **P3.3o — A screen's own song in a multi-screen room** — **built S175 r2 (+ r3: the picker's names, DWM2 / MIDI library songs, ▶ preview — built S175 r3, NOT yet user-tested), NOT yet
       user-tested** (user: "is it possible to have different pieces of music playing on
       different screens of a multi screen room" → "Yes make that now. Song only switches if a
       screen's song is new"). Measured first (PyBoy): the room's script 0 runs on room entry
