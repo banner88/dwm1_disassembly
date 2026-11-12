@@ -4189,6 +4189,8 @@ jr_006_62c6:
 ;   [0] ScrollXBegin   wScreenIndex -/+ 1 (left / right) or -/+ 4 (up / down),
 ;                      LoadMapS_66e5, bank $0B entry 3 (builds the new screen in
 ;                      the $C500 buffer), $C91F = the step counter
+;                      S176: the call is bank $73 entry 23 ScrollScreenBuild —
+;                      entry 3 + the new screen's own colour rows to the hardware
 ;   [1] $66B8          not in a gate: bank $0B entry 7 (RoomEntry7_RoomInit —
 ;                      the new screen's NPC list)
 ;   [2] $66C7          not in a gate and no script running: wScriptNPCId := 0,
@@ -4198,6 +4200,8 @@ jr_006_62c6:
 ;                      incoming row / column, count $C91F
 ;   [4] ScrollEndCommit (shared) — $C500 -> $C300, wGameState bit 2 off, the
 ;                      party trail rebuilt, the standing tile, $D9E8 := 0
+;                      S176: its bank $01 entry $0A call is bank $73 entry 24
+;                      ScrollScreenDone (+ the colour rows held back)
 ; S175 (PyBoy, the GreatTree jumps — ROOM_DATA_FORMAT "Jumping points"): the
 ; ONLY place that clears $D9E8 (player input locked by a script); a jump script
 ; that ends without a scroll leaves the player locked for good.
@@ -4224,7 +4228,7 @@ ScrollLeftBegin:                        ; $06:$6310
     dec a
     ld [wScreenIndex], a
     call LoadMapS_66e5
-    ld hl, $0b03
+    ld hl, $7317                        ; S176: bank $73 entry 23 ScrollScreenBuild (was $0b03: bank $0B entry 3 — it runs it, then shows the new screen's own colour rows)
     rst $10
     ld a, $13
     ld [$c91f], a
@@ -4432,7 +4436,7 @@ jr_006_6427:
     ldh a, [$96]
     ldh [$a8], a
     call TileAtPixel
-    ld hl, $010a
+    ld hl, $7318                        ; S176: bank $73 entry 24 ScrollScreenDone (was $010a: bank $01 entry $0A — it runs it, then the colour rows held back)
     rst $10
     xor a
     ld [$d9e8], a
@@ -4453,7 +4457,7 @@ ScrollRightBegin:                        ; $06:$6454
     inc a
     ld [wScreenIndex], a
     call LoadMapS_66e5
-    ld hl, $0b03
+    ld hl, $7317                        ; S176: bank $73 entry 23 ScrollScreenBuild (was $0b03: bank $0B entry 3 — it runs it, then shows the new screen's own colour rows)
     rst $10
     xor a
     ld [$c91f], a
@@ -4600,7 +4604,7 @@ ScrollUpBegin:                        ; $06:$6529
     sub $04
     ld [wScreenIndex], a
     call LoadMapS_66e5
-    ld hl, $0b03
+    ld hl, $7317                        ; S176: bank $73 entry 23 ScrollScreenBuild (was $0b03: bank $0B entry 3 — it runs it, then shows the new screen's own colour rows)
     rst $10
     ld a, $0f
     ld [$c91f], a
@@ -4743,7 +4747,7 @@ ScrollDownBegin:                        ; $06:$65F8
     add $04
     ld [wScreenIndex], a
     call LoadMapS_66e5
-    ld hl, $0b03
+    ld hl, $7317                        ; S176: bank $73 entry 23 ScrollScreenBuild (was $0b03: bank $0B entry 3 — it runs it, then shows the new screen's own colour rows)
     rst $10
     xor a
     ld [$c91f], a

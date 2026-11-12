@@ -88,6 +88,8 @@ SECTION "ROM Bank $073", ROMX[$4000], BANK[$73]
     dw GateLeaveFreePal             ; entry 20 — S100 r3: in-gate transition, room squeezed: colour 1 := cream (buffer + HW)
     dw FlagAddr                     ; entry 21 — S117: event-flag address + mask (ROM0 ComputeFlagAddress; + extended flags $1000-$17FF)
     dw RegionEnterE                 ; entry 22 — S140 (ARC CAP3a): enter region E (bank $71 gate insert, bank $16 boss floor)
+    dw ScrollScreenBuild            ; entry 23 — S176: a scroll's new screen (bank $0B entry 3) + its own colours (the rows the screen leaving does not draw)
+    dw ScrollScreenDone             ; entry 24 — S176: the scroll's end (bank $01 entry $0A) + the colour rows held back until the old screen left
 
 ; -----------------------------------------------------------------------------
 ; Entry 0 — map-change commit hook: displaced store + conditional drain.
@@ -2544,4 +2546,211 @@ MemorialRestore:
 .done:
     xor a
     ld [$4100], a
+    ret
+
+
+; =============================================================================
+; S176 — A SCREEN'S OWN COLOURS WHEN THE VIEW SCROLLS ONTO IT (entries 23 / 24;
+; user: "Please allow per-screen palette!").
+;
+; Measured first (PyBoy, the user's project + save, a screen of a 16-screen room
+; given its own palette — ROOM_DATA_FORMAT "A screen's own colours and the
+; scroll"): the screen-to-screen scroll (bank $06 ScreenScrollTick) builds the
+; new screen through bank $0B entry 3, which DOES load the new screen's palette
+; (bank $17 entry 0 -> the buffer $C797) — and nothing pushes the buffer to the
+; hardware. The player walked onto the screen in the OLD screen's colours, and
+; the first field menu / text box (which pushes the buffer) switched them. The
+; original game never shows it: no two of its screens with different palettes
+; are joined by a scroll.
+;
+; One hardware palette draws both screens while they slide, so a row that
+; differs is wrong on one of them for the ~25 frames of the scroll — unless
+; only one of them draws with it. Per row 0-3 whose 8 bytes changed:
+;   * the screen LEAVING draws with it and the screen ARRIVING does not
+;     -> held back: pushed by entry 24 when the scroll ends (the old screen is
+;        gone; wScreenPalLate bit r);
+;   * else -> pushed at once by entry 23 (the arriving screen is right from its
+;     first column; when BOTH draw with it the leaving screen shows the new
+;     colours while it slides out — the editor warns, Palettes page).
+; "Draws with it" = a nibble of the colour grid at $C200 (16 rows x 10 bytes,
+; 2 tiles a byte, low 3 bits = the row; ROOM_DATA_FORMAT "GBC Attribute Buffer")
+; — read for the old screen BEFORE bank $0B entry 3 overwrites it and for the
+; new one after.
+;
+; Nothing differs (every room without a screen palette, every room of the
+; original game): the buffer compare finds no row, no grid is scanned, nothing
+; is pushed — the scroll is the original's but for one extra palette-table walk.
+; Gate floors and DMG: the plain far call.
+;
+; Called same-size from bank $06: the four ScrollXBegin (`ld hl, $0b03` ->
+; `$7317`) and ScrollEndCommit (`ld hl, $010a` -> `$7318`); A / BC / DE / HL are
+; dead after both sites. The old rows are kept in wSnapBounce (32 B — live only
+; inside the save funnels; a scroll cannot overlap a save).
+; =============================================================================
+ScrollScreenBuild:
+    xor a
+    ld [wScreenPalLate], a
+    ld a, [wIsGBC]
+    or a
+    jr z, .plain
+    ld a, [wInGateworld]
+    or a
+    jr nz, .plain
+    ld hl, $c797                        ; the rows on the screen now
+    ld de, wSnapBounce
+    ld b, 32
+.keep:
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec b
+    jr nz, .keep
+    ld hl, $1700                        ; the new screen's palette -> the buffer
+    rst $10                             ; (wScreenIndex is the new screen already)
+    call ScreenPalDiff                  ; B = the rows that changed
+    ld a, b
+    or a
+    jr z, .plain
+    push bc
+    call ScreenRowsDrawn                ; C = rows the screen leaving draws
+    pop af                              ; A = changed
+    ld b, a
+    push bc                             ; B changed, C old
+    ld hl, $0b03
+    rst $10
+    call ScreenRowsDrawn                ; C = rows the screen arriving draws
+    ld a, c
+    cpl
+    pop bc
+    and c                               ; old and not new
+    and b                               ; ... and changed = held back
+    ld [wScreenPalLate], a
+    cpl
+    and b                               ; changed and not held back = now
+    jr ScreenPalPushRows
+.plain:
+    ld hl, $0b03
+    rst $10
+    ret
+
+ScrollScreenDone:
+    ld hl, $010a
+    rst $10
+    ld a, [wScreenPalLate]
+    or a
+    ret z
+    push af
+    xor a
+    ld [wScreenPalLate], a
+    pop af
+    ; fall through
+
+; ScreenPalPushRows — A = rows (bits 0-3): each row's 8 buffer bytes -> BCPD.
+ScreenPalPushRows:
+    ld c, a
+    ld b, $80                           ; BCPS: auto-increment | row * 8
+    ld hl, $c797
+.row:
+    srl c
+    jr nc, .skip
+    di
+    call WaitVRAM
+    ld a, b
+    ldh [rBCPS], a
+    ei
+    ld e, 8
+.byte:
+    di
+    call WaitVRAM
+    ld a, [hl+]
+    ldh [rBCPD], a
+    ei
+    dec e
+    jr nz, .byte
+    jr .next
+.skip:
+    ld a, l
+    add 8
+    ld l, a
+    ld a, h
+    adc 0
+    ld h, a
+.next:
+    ld a, b
+    add 8
+    ld b, a
+    cp $80 + 4 * 8
+    jr nz, .row
+    ret
+
+; ScreenPalDiff — B = bit r set when buffer row r ($C797 + 8r) differs from the
+; kept copy (wSnapBounce + 8r). Clobbers A, C, DE, HL.
+ScreenPalDiff:
+    ld hl, $c797
+    ld de, wSnapBounce
+    ld b, 0
+    ld c, $11                           ; bit r, and the end marker in the high nibble
+.row:
+    push bc
+    ld b, 8
+    ld c, 0
+.byte:
+    ld a, [de]
+    cp [hl]
+    jr z, .same
+    inc c
+.same:
+    inc hl
+    inc de
+    dec b
+    jr nz, .byte
+    ld a, c
+    pop bc
+    or a
+    jr z, .next
+    ld a, c
+    and $0f
+    or b
+    ld b, a
+.next:
+    sla c
+    jr nc, .row
+    ret
+
+; ScreenRowsDrawn — C = bit r set when a tile of the colour grid at $C200 is
+; drawn with row r (0-3; rows 4-7 are the system's). Clobbers A, B, DE, HL.
+ScreenRowsDrawn:
+    ld hl, $c200
+    ld c, 0
+    ld d, 16
+.row:
+    ld e, 10
+.cell:
+    ld a, [hl]
+    call .mark
+    ld a, [hl+]
+    swap a
+    call .mark
+    dec e
+    jr nz, .cell
+    ld a, l
+    add 6                               ; a row = 10 bytes + 6 of padding
+    ld l, a
+    dec d
+    jr nz, .row
+    ret
+.mark:
+    and $07
+    cp 4
+    ret nc
+    ld b, a
+    inc b
+    xor a
+    scf
+.shift:
+    rla
+    dec b
+    jr nz, .shift
+    or c
+    ld c, a
     ret

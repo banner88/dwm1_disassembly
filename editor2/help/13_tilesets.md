@@ -154,6 +154,9 @@ offers **start with a BLANK tileset (for imported PNG art)** too.
 Rows 0-3, four colours each, are the room's palettes; **show system 4-7**
 also shows the shared menu / monster palettes (read-only). A cell uses the
 palette slot of its metatile; **Palettes** on the canvas toolbar shows them.
+The strip above the rows says whose colours they are — **the room's** (every
+screen without its own) or **this screen's own** (S176: *Give screen N its own
+colours*; [Rooms](10_rooms.md) "A screen's own colours").
 
 - Double-click a colour to edit it. Colours marked L are fixed by the
   game: colour 3 is black, colour 1 is cream unless **own colour 1** is

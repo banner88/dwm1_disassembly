@@ -4203,7 +4203,11 @@ jr_006_62c6:
 ; frame). $C91D = the direction, $C91E = the sub-state of that direction:
 ;   [0] ScrollXBegin   wScreenIndex -/+ 1 (left / right) or -/+ 4 (up / down),
 ;                      LoadMapS_66e5, bank $0B entry 3 (builds the new screen in
-;                      the $C500 buffer), $C91F = the step counter
+;                      the $C500 buffer; S176: it also loads the new screen's
+;                      palette into the buffer $C797 — and NOTHING in the five
+;                      sub-states pushes it to the hardware, so a screen with
+;                      other colours is walked onto in the old ones; patched
+;                      builds: bank $73 entry 23), $C91F = the step counter
 ;   [1] $66B8          not in a gate: bank $0B entry 7 (RoomEntry7_RoomInit —
 ;                      the new screen's NPC list)
 ;   [2] $66C7          not in a gate and no script running: wScriptNPCId := 0,
@@ -4213,6 +4217,8 @@ jr_006_62c6:
 ;                      incoming row / column, count $C91F
 ;   [4] ScrollEndCommit (shared) — $C500 -> $C300, wGameState bit 2 off, the
 ;                      party trail rebuilt, the standing tile, $D9E8 := 0
+;                      (patched builds: its bank $01 entry $0A call goes through
+;                      bank $73 entry 24 — the colour rows held back, S176)
 ; S175 (PyBoy, the GreatTree jumps — ROOM_DATA_FORMAT "Jumping points"): the
 ; ONLY place that clears $D9E8 (player input locked by a script); a jump script
 ; that ends without a scroll leaves the player locked for good.

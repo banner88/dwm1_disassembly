@@ -1163,6 +1163,32 @@ recipes are pure authoring.
       `census_music_resolve.py` 3,000 / 3,000 with screen songs; test_compiler
       `test_s175_music`; test_app `s175_screen_music`. *User accept:* give screens their own
       songs and walk between them (same song: no restart).
+- [x] **P3.3p — A screen's own colours; the Draw panel rebuilt; the torch's round glow** —
+      **built S176, NOT yet user-tested** (user: "it shows palette rows but wont let me change the
+      row? But then I can 'recolor' and it randomly flips the colours? … make it fucking normal
+      … fully intuitive"; "Why is stamp of torch cut off at the top?"; then "I WAS UNDER THE
+      IMPRESSION PALETTE WAS FIRMLY FIXED FOR ALL ROOMS OF A MULTISTAGE ROOM! Please allow
+      per-screen palette! … Make it explicit visually"; Apply: "Let me decide"). Measured first:
+      a screen's own palette (`screens[k].palette`, in the schema since S94) was never SHOWN
+      when the screen was walked onto — the scroll loads it into the buffer and pushes nothing.
+      Built: the engine push (bank $06's five scroll call sites → bank $73 entries 23 / 24; a row
+      at the scroll's start, or at its end when only the screen leaving draws with it; example
+      pin `c8e2aede…`, patched); `editor2/core/screen_palettes.py`; the Palettes page's strip +
+      *Give screen N its own colours* / *Use the room's colours again*, "not the room's" row
+      marks, the clash warning, the mini-map strip + menu; `draw_tab.py` rebuilt (true-colour
+      rows, quarter marks with hover preview, row tags, Pencil / Fill area / Replace colour /
+      Pick, the one-click switch bar, `recolour.move_row`, one "Apply to" chooser, no scrolling);
+      Stamps → *Replace picture…* (`stamps.replace_picture`, `hold_row`), the two torches as
+      3×3 PNGs with the glow's cap. ROOM_DATA_FORMAT "A screen's own colours and the scroll",
+      PROJECT_COMPILER §2.82, EDITOR_DESIGN "As built S176", help 10 / 13 / glossary. *Accept
+      (machine):* `tools/walk_screen_palette.py` 15 / 15 on the user's project + save,
+      `--negative` 5 FAIL; `walk_stamps.py` 13 / 13 with the 3×3 torch (on a screen and off its
+      top edge); test_compiler `test_s176`; test_app `s176_colours_draw_stamps`. *User accept:*
+      give a screen its own colours, change a row, draw a tile with it, walk in and out; the
+      Draw panel on a real tile; Replace picture… with the two torches.
+      *Not done (not asked):* a screen whose STATES differ in palette is shown per state as
+      before (the strip names the state); a state change while standing on a screen is not
+      part of this push (room entry and scrolls are).
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

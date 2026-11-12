@@ -1181,7 +1181,8 @@ user-tested):**
   a palette of your own can be shared) or rows into chosen slots ("only here" copies a
   shared palette first). One SnapshotCommand. The palette combos now name the rooms using
   each palette.
-- **Draw tab** (`rooms/draw_tab.py`, `core/tile_draw.py`): load the selected cell / the
+- **Draw tab** (**rebuilt S176 — see "As built S176" below; this entry is the S132 form**)
+  (`rooms/draw_tab.py`, `core/tile_draw.py`): load the selected cell / the
   brush / a blank tile in a palette slot; a 2×2 `FramePad` (each quarter in its own
   palette), tools on the whole tile or a quarter (flip, shift, copy / paste, clear,
   undo, revert), a 3×3 tiling preview; **Redraw it everywhere it is drawn** (the slots'
@@ -1477,6 +1478,75 @@ room's own `music` when it has one. The pick is emitted from `QTimer.singleShot(
 S119b). `story_widgets.song_choices` (cutscene / ending song lists) uses the same game-song
 labels. test_app `s175_screen_music` + r3 (library pick = one undo step, shown back, no
 longer offered as a library entry, both preview renderers render).
+
+**As built S176 (ROADMAP P3.3p — a screen's own colours, the Draw panel, Replace picture;
+built, NOT yet user-tested).** The user: "it shows palette rows but wont let me change the row?
+But then I can 'recolor' and it randomly flips the colours? … make it fucking normal please
+from a UI point of view … fully intuitive and I know what colours are available and how to use
+them"; "Why is stamp of torch cut off at the top?"; conferred → "Please allow per-screen
+palette! … Make it explicit visually"; the row-change question "I honestly dont understand the
+question. It needs to be visually intuitive and clear"; Apply "Let me decide".
+- **The audit (offscreen grabs of the user's project, their shelf cell (3,1) of GreatLog
+  screen 15):** a colour of another row + a click painted nothing, said only in the status
+  line under the canvas; the other rows' swatches were dimmed; the panel was 1,057 px tall in
+  a 691-px page, the *row 0-3* buttons and *Recolour…* below the fold, behind "tools act on";
+  "row 2" on the whole tile kept colour NUMBERS — brown → red, tan → amber, the frame too
+  ("randomly flips"); *Recolour…* onto a colour the quarter's row lacks: "0 pixel(s) changed"
+  in the status line; Shift-fill stopped at the 8×8 edge.
+- **The Draw panel (`rooms/draw_tab.py`, rebuilt round the one hardware rule — a quarter
+  draws with ONE row):**
+  - `DrawPad(FramePad)`: + `preview` (px, pals drawn instead of the drawing — a mark hovered),
+    `flash` (the quarters a prompt is about), `hovered(k)`, `cur_xy`; four `QuarterTag`s round
+    it (mark, "row N", the row's four colours; click = the shape tools act on that quarter).
+  - The colour grid: 16 swatches ALWAYS in their true colours (`_refresh_rows`); right of each
+    row the marks `self.marks[(row, quarter)]` (lit = that quarter draws with the row) + *all*.
+    `_mark_clicked(row, quarters)` → `_switch` → `recolour.move_row` per quarter (one-to-one:
+    a colour the new row also has keeps it, the others take the closest left; never two
+    colours into one) — one undo step. An event filter on the marks sets / clears
+    `pad.preview` (`_preview`): the tile as it WOULD look, before the click. `('row', r)` of
+    `_tool` routes there too.
+  - Tools (`set_tool`): **Pencil** (`FramePad` paints through `_pre_put`), **Fill area**
+    (`_area`: the pixels of one RGB joined to the click across the quarters → `_paint_area`),
+    **Replace colour** (`_do_replace(src rgb, scope)`: every pixel of the clicked RGB → the
+    picked colour, the whole tile or *only the quarter I click*), **Pick** (and right-click
+    with any tool). All three go through `pad.click_hook`.
+  - **A colour the quarter's row lacks** (`_own_colour` → None): `_prompt(pending)` — the bar
+    under the pad turns brown, names the quarters and their row, shows the colour as a chip
+    and offers *Put ◤ on row N* / *Whole tile on row N* / *Leave it*; `_answer` snapshots
+    once, switches (Replace colour forces "this colour number becomes that one" through
+    `move_row(force=)`), then does what was asked (the pixel / the stored fill area / the
+    replace). Nothing is refused silently, nothing changes without a click (the S171 r7 rule
+    "a quarter changes row only when the user says so" kept).
+  - The line over the rows (`set_scope`, from `RoomsTab._draw_scope`): whose colours they are
+    (the room's / screen N's own), ★ on rows the stamps draw with (`stamps.rows_report`);
+    *Edit colours…* → the Palettes page.
+  - **Apply** = one chooser `self.target` (*Only the selected cell(s)* / *Every cell of this
+    room drawn with this tile* / *Everywhere this tile is drawn — the tile itself changes* /
+    *Nowhere yet — keep it in My metatiles*) + **Apply**; `_show_report` writes what the choice
+    will do (cells per room, pieces reused / free slots, parked) and disables Apply with the
+    reason; the choice stays across loads while it is possible. `_everywhere` / `_new` and
+    the two request signals are as before.
+  - The panel's minimum is 326 × 690: it fits the page at 1,512 × 950 with no scroll bar.
+- **A screen's own colours (`core/screen_palettes.py`, PROJECT_COMPILER §2.82):** the
+  Palettes page opens with `pal_scope` — a strip that says WHOSE colours the rows are: blue
+  **THE ROOM'S COLOURS** (n of m screens draw with them; which screens have their own) /
+  orange **SCREEN N: ITS OWN COLOURS** (which rows are not the room's) / the same for a
+  state's own palette — and the one button that switches: *Give screen N its own colours*
+  (`RoomsTab._screen_colours(key, True)` → `SP.give`: a copy, so the screen looks the same
+  until a row is edited) / *Use the room's colours on screen N again* (`SP.drop`, the stamps
+  on the screen claim again). `PalettePanel.set_notes` writes "not the room's" beside the
+  rows that differ; `pal_scroll_warn` shows `SP.report_text` (side-by-side screens that both
+  draw with a differing row). `MiniMap.set_own_palettes`: a strip of the four rows' first
+  colours in the corner of every screen with its own + the two commands in the right-click
+  menu (`ownColoursRequested`). The old "this screen / state" combo stays under *Which
+  palette* (borrowed palettes, a state's own). The game half: ROOM_DATA_FORMAT "A screen's
+  own colours and the scroll".
+- **Stamps → Replace picture…** (`stamps_panel.b_replace` → `RoomsTab._stamp_replace` →
+  `stamps.replace_picture` + `claim` per placement, one SnapshotCommand): the import window
+  with the name and speed fixed; every placement keeps its solid part's cell. The Stamp tool
+  holds a stamp by its `hold` row (`stamps.anchor`).
+- test_app `s176_colours_draw_stamps` (the three parts on the example, undone to the start);
+  `s132_rooms_ui` / `s171_colour_true` / `s171_recolour` moved to the new controls.
 
 ### 5.1b Gates tab (v2.1 — user spec S90)
 

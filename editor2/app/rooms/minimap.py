@@ -28,6 +28,7 @@ class MiniMap(QWidget):
     copyScreenRequested = Signal(int)          # S175
     pasteScreenRequested = Signal(int)         # S175
     shiftRequested = Signal(int, int, int)     # S175: key, dx, dy
+    ownColoursRequested = Signal(int, bool)    # S176: key, True = its own / False = the room's
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -35,6 +36,10 @@ class MiniMap(QWidget):
         self.current = 0
         self._hover = None
         self.can_paste = None    # S175: the copied screen's label (None = nothing copied)
+        # S176: the screens that do not draw with the room's colours — {key: [RGB of its rows
+        # 0-3, colour 0]}: a strip of four squares in the thumbnail's corner
+        self.own_pal = {}
+        self.can_own = False     # the room is the user's (the menu offers the switch)
         self.setMouseTracking(True)
         self.setFixedSize(self.sizeHint())
 
@@ -54,6 +59,16 @@ class MiniMap(QWidget):
     def set_current(self, key):
         self.current = key
         self.update()
+
+    def set_own_palettes(self, own, can_own=False):
+        """S176: {key: [4 RGB]} of the screens with colours of their own."""
+        self.own_pal = dict(own or {})
+        self.can_own = bool(can_own)
+        self.update()
+
+    def _badge_rect(self, key):
+        r = self._rect(key)
+        return QRect(r.right() - 29, r.bottom() - 10, 29, 10)
 
     def _rect(self, key):
         c, r = key % GRID_COLS, key // GRID_COLS
@@ -80,6 +95,13 @@ class MiniMap(QWidget):
                 p.setPen(QColor(255, 255, 255))
                 p.fillRect(QRect(r.left(), r.top(), 14, 12), QColor(0, 0, 0, 160))
                 p.drawText(QRect(r.left(), r.top(), 14, 12), Qt.AlignCenter, str(k))
+                if k in self.own_pal:                   # S176: its own colours
+                    b = self._badge_rect(k)
+                    p.fillRect(b, QColor(0, 0, 0, 200))
+                    for i, c in enumerate(self.own_pal[k][:4]):
+                        p.fillRect(QRect(b.left() + 1 + i * 7, b.top() + 1, 6, 8), QColor(*c[:3]))
+                    p.setPen(QPen(QColor(255, 150, 40)))
+                    p.drawRect(b.adjusted(0, 0, -1, -1))
             else:
                 pen = QPen(QColor(70, 70, 76))
                 pen.setStyle(Qt.DashLine)
@@ -93,6 +115,8 @@ class MiniMap(QWidget):
         k = self._key_at(ev.position().toPoint())
         if k != self._hover:
             self._hover = k
+            self.setToolTip(f'Screen {k} has its OWN colours (the strip in its corner) — the '
+                            'other screens draw with the room\'s' if k in self.own_pal else '')
             self.update()
 
     def leaveEvent(self, ev):
@@ -120,10 +144,19 @@ class MiniMap(QWidget):
                 for txt, d in (('◀ left', (-1, 0)), ('▶ right', (1, 0)), ('▲ up', (0, -1)),
                                ('▼ down', (0, 1))):
                     acts[sm.addAction(txt)] = d
+                own = None                                  # S176
+                if self.can_own:
+                    own = m.addAction(f'Use the room\'s colours on screen {k} again'
+                                      if k in self.own_pal else
+                                      f'Give screen {k} its own colours')
+                    own.setToolTip('A screen can draw with 4 colour rows of its own — the other '
+                                   'screens of the room keep theirs')
                 m.addSeparator()
                 rm = m.addAction(f'Remove screen {k}')
                 got = m.exec(ev.globalPosition().toPoint())
-                if got == rm:
+                if got is not None and got == own:
+                    self.ownColoursRequested.emit(k, k not in self.own_pal)
+                elif got == rm:
                     self.removeScreenRequested.emit(k)
                 elif got == cp:
                     self.copyScreenRequested.emit(k)

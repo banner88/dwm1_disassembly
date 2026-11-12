@@ -53,7 +53,7 @@ SECTION "ROM Bank $00b", ROMX[$4000], BANK[$b]
     dw RoomEntry0_TilesetLoader     ; Entry 0: load tileset + apply map change
     dw RoomEntry1_GraphicsLoader    ; Entry 1: load tileset only (no map change)
     dw RoomEntry2_ScreenScroll      ; Entry 2: screen/scroll position manager
-    dw RoomEntry3_NPCDispatch       ; Entry 3: NPC interaction handler
+    dw RoomEntry3_ScrollScreenBuild ; Entry 3: the scroll's new screen (palette buffer, tiles -> $C500, colour grid) — S176, was `RoomEntry3_NPCDispatch`
     dw RoomEntry4_TalkTargetLookup  ; Entry 4: A-press target: NPC slot or $8x examine spot (S98)
     dw RoomEntry5_StepTriggerLookup ; Entry 5: $9x step-on trigger at the player cell (S98)
     dw RoomEntry6_ExitChecker       ; Entry 6: exit detection (RUNS EVERY STEP)
@@ -436,7 +436,22 @@ jr_00b_41d8:
     ld [hl], $01
     ret
 
-RoomEntry3_NPCDispatch:
+; -----------------------------------------------------------------------------
+; ENTRY 3: RoomEntry3_ScrollScreenBuild (was `RoomEntry3_NPCDispatch` — it
+; touches no NPC; renamed S176 from the measured behaviour).
+; Called ONLY by the screen-to-screen scroll (bank $06 ScrollXBegin, sub-state
+; [0], with wScreenIndex already the NEW screen): bank $17 entry 0 (the new
+; screen's palette -> the WRAM buffer $C797), the new screen's tiles -> $C500,
+; bank $17 entry 1 (its colour grid -> $C200 / VRAM bank 1), then marks the
+; screen visited ($C950 + wScreenIndex := 1).
+; S176 (PyBoy, a screen with its own palette — ROOM_DATA_FORMAT "A screen's own
+; colours and the scroll"): the palette buffer is loaded but NOT pushed to the
+; hardware here or anywhere in the scroll machine — the original game joins no
+; two screens of different palettes by a scroll, so it never shows. Patched
+; builds call this entry through bank $73 entry 23 ScrollScreenBuild, which
+; pushes the rows that changed.
+; -----------------------------------------------------------------------------
+RoomEntry3_ScrollScreenBuild:
 labelb_4213:
     ld hl, $1700
     rst $10

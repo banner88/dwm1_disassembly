@@ -1954,17 +1954,23 @@ def s132_rooms_ui(app, w):
     dt._changed()
     dt._update_report()
     rep = dt.last_report
+    # S176: ONE "Apply to" chooser (this cell / the room / everywhere / nowhere yet) + Apply
+    assert [dt.target.itemData(i) for i in range(dt.target.count())] == \
+        ['selection', 'room', 'everywhere', None]
     if rep['everywhere']['ok']:
-        dt._everywhere()
+        dt.target.setCurrentIndex(dt.target.findData('everywhere'))
+        assert dt.apply_btn.isEnabled() and 'cell(s)' in dt.note.text(), dt.note.text()
+        dt._apply()
         app.processEvents()
         assert 'redrew' in rt.status_line.text(), rt.status_line.text()
         w.session.undo.undo()
         app.processEvents()
-    dt.place.setCurrentIndex(1)                  # the selected cell(s)
+    dt.target.setCurrentIndex(dt.target.findData('selection'))   # the selected cell(s)
     rt.canvas.selected_cell = cell
     dt._update_report()
     if dt.last_report['new']['ok']:
-        dt._new()
+        assert 'selected cell' in dt.note.text(), dt.note.text()
+        dt._apply()
         app.processEvents()
         assert 'new metatile' in rt.status_line.text(), rt.status_line.text()
         w.session.undo.undo()
@@ -4117,12 +4123,13 @@ def s171_colour_true(app, w):
     dt = rt.draw_tab
     assert len(dt.swatches) == 16
     tgt = (dt.qrow[0] + 1) % 4
-    dt._set_part(0)
-    dt._tool(('row', tgt))
-    dt._set_part('whole')
+    dt._mark_clicked(tgt, [0])                   # S176: the row's ◤ mark
     assert dt.qrow[0] == tgt and dt.rows_changed() and dt.pal_value() != dt.old_qrow[0]
     dt._update_report()
-    assert not dt.ev_btn.isEnabled(), 'everywhere refused once a row changed'
+    assert not dt.can_everywhere(), 'everywhere refused once a row changed'
+    dt.target.setCurrentIndex(dt.target.findData('everywhere'))
+    assert not dt.apply_btn.isEnabled() and 'another colour row' in dt.note.text()
+    dt.target.setCurrentIndex(0)
     dt._tool('undo')
     assert dt.qrow == dt.old_qrow
     # all of it undone exactly
@@ -4340,7 +4347,8 @@ def s171_recolour(app, w):
         app.processEvents()
     before = dt.current()
     r0 = dt.qrow[0]
-    # a colour only another row has: refused, nothing changes, no undo step
+    # a colour only another row has: nothing changes, no undo step — and (S176) the bar
+    # under the drawing says why and offers the switch
     other = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
                   tuple(dt.rows[r][i][:3]) not in {tuple(c[:3]) for c in dt.rows[r0]}), None)
     if other is not None:
@@ -4349,6 +4357,10 @@ def s171_recolour(app, w):
         click(0, 0)
         assert dt.current() == before and dt.qrow[0] == r0 and len(dt._undo) == n_u, \
             'another row\'s colour does not repaint the quarter'
+        assert dt.pending and dt.pending['quarters'] == [0] and not dt.bar_q.isHidden() and \
+            f'row {other[0]}' in dt.bar_q.text(), dt.bar_q.text()
+        dt.bar_no.click()
+        assert dt.pending is None and dt.bar_q.isHidden()
     # black of another row = this row's black: one pixel, the row stays
     blk = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
                 tuple(dt.rows[r][i][:3]) in {tuple(c[:3]) for c in dt.rows[r0]}), None)
@@ -4370,21 +4382,30 @@ def s171_recolour(app, w):
     assert s.undo.index() == n0, 'the project was not undone'
     w.a_redo.trigger()
     assert dt.current() == after, 'Cmd+Shift+Z redid it'
-    # row tool (numbers kept); Recolour = click a colour, then a swatch
-    dt._set_part(1)
+    # a quarter on another row (S176: the row's mark): one-to-one — as many colours as
+    # before, and a colour the new row also has keeps it. Replace colour = pick the new
+    # colour, click the colour to change
+    q1 = dt.qrow[1]
+    p0 = list(dt.current()[1])
+    rgb0 = [tuple(dt.rows[q1][v][:3]) for v in p0]
+    dt._mark_clicked(3, [1])
     p1 = list(dt.current()[1])
-    dt._tool(('row', 3))
-    assert dt.qrow[1] == 3 and dt.current()[1] == p1
-    src_v = p1[0]
-    tgt_v = (src_v + 1) % 4
-    dt.recolour_btn.setChecked(True)
-    click(8, 0)
-    dt._pick_swatch(3, tgt_v)
     own3 = [tuple(c[:3]) for c in dt.rows[3]]
+    assert dt.qrow[1] == 3 and len(set(p1)) == len(set(p0))
+    assert len({(a, b) for a, b in zip(p0, p1)}) == len(set(p0)), 'one-to-one'
+    if len(set(own3)) == 4 and len({tuple(c[:3]) for c in dt.rows[q1]}) == 4:
+        assert all(own3[b] == c for c, b in zip(rgb0, p1) if c in own3), 'a shared colour stays'
+    src_v = p1[0]
+    tgt_v = next(i for i in range(4) if own3[i] != own3[src_v])
+    dt.set_tool('replace')
+    dt.only_q.setChecked(True)
+    dt._pick_swatch(3, tgt_v)
+    click(8, 0)
     hits = {n for n, c in enumerate(own3) if c == own3[src_v]}
-    tv = own3.index(own3[tgt_v])
-    assert dt.current()[1] == [tv if v in hits else v for v in p1], 'Recolour'
-    assert not dt.recolour_btn.isChecked()
+    assert dt.current()[1] == [tgt_v if v in hits else v for v in p1], 'Replace colour'
+    assert dt.current()[0] == after[0] and dt.pending is None
+    dt.only_q.setChecked(False)
+    dt.set_tool('pencil')
     dt._tool('revert')
     dt._set_part('whole')
     # the palette changes: the drawing shows it at once
@@ -5444,6 +5465,299 @@ def s175_screen_music(app, w):
           "(screens['4'].music = '0x0C', one undo step, shown back, the room's song again); "
           "S175r3: named game songs + DWM2 library offered, picking a DWM2 song adds it to "
           "the project and assigns it in ONE undo step, ▶ preview renders; undone exactly")
+
+
+def s176_colours_draw_stamps(app, w):
+    """S176 (the user: "Please allow per-screen palette! … Make it explicit visually"; the Draw
+    panel "shows palette rows but wont let me change the row … make it fucking normal … if I
+    want to recolour all the pixels of a certain colour a different colour, make that
+    intuitive"; the torch's glow "cut off at the top"):
+    (a) Rooms → Palettes: the strip says WHOSE colours the rows are; *Give screen 4 its own
+    colours* = a copy (nothing looks different), a row changed there changes that screen only,
+    the row is marked "not the room's", the mini-map carries the strip, the scroll rule + the
+    warning when both screens draw with the row; the mini-map's menu takes it back;
+    (b) Stamps → Replace picture…: a 3×2 torch whose glow is cut at the top -> a 3×3 one, the
+    placement kept where its flame is (y − 1), the tool holds the stamp by its flame row (the
+    cap may hang off the top edge);
+    (c) Draw: every row in its true colours with the quarters' marks; a mark hovered =
+    preview, clicked = the quarter on that row one-to-one; a colour the quarter's row lacks ->
+    the bar's one-click switch (+ the pixel); Fill crosses the quarters; Replace colour over
+    the whole tile and through a row switch; the panel fits its page.
+    Everything undone to the start."""
+    import os
+    import tempfile
+    from PIL import Image, ImageQt as IQ
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core import screen_palettes as SP
+    from editor2.core import stamps as ST
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+
+    def go(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # ---------------- (a) a screen's own colours
+    assert SP.scroll_rule([1, 2, 3], {0, 3}, {0, 2, 3}) == ([1, 2, 3], [], [3])     # arriving
+    assert SP.scroll_rule([1, 2, 3], {0, 2, 3}, {0, 3}) == ([1, 3], [2], [3])       # leaving
+    assert SP.scroll_rule([], {0}, {0}) == ([], [], [])
+    go('gate_island')
+    rt.select_screen(4)
+    rt.rail.show_page('palettes')
+    app.processEvents()
+    room = rt.current_room()
+    base = SP.room_palette(room)
+    assert 'THE ROOM\'S COLOURS' in rt.pal_scope.text() and '2 of its 2 screens' in \
+        rt.pal_scope.text(), rt.pal_scope.text()
+    assert not rt.btn_screen_own.isHidden() and rt.btn_screen_room.isHidden()
+    assert rt.btn_screen_own.text() == 'Give screen 4 its own colours'
+    assert rt.minimap.own_pal == {} and rt.minimap.can_own
+    pic0 = IQ.fromqpixmap(cv.base.pixmap()).convert('RGB').tobytes()
+    shown0 = [list(map(tuple, r)) for r in s.renderer.room_palettes(room, 0, 0)[:4]]
+    rt.btn_screen_own.click()
+    app.processEvents()
+    room = rt.current_room()
+    pid = SP.own(doc, room, 4)
+    assert pid and pid != base and doc.effective_palette(room, 4, 0) == pid
+    assert doc.effective_palette(room, 0, 0) == base and SP.room_palette(room) == base
+    assert SP.screens_with_own(doc, room) == {4: pid}
+    assert 'SCREEN 4: ITS OWN COLOURS' in rt.pal_scope.text() and 'still the same' in \
+        rt.pal_scope.text(), rt.pal_scope.text()
+    assert rt.btn_screen_own.isHidden() and not rt.btn_screen_room.isHidden()
+    assert list(rt.minimap.own_pal) == [4] and rt.palettes.notes == {}
+    assert IQ.fromqpixmap(cv.base.pixmap()).convert('RGB').tobytes() == pic0, \
+        'its own colours start as a copy: the screen looks the same'
+    assert s.undo.index() == n0 + 1, 'one undo step'
+    words = [int(str(c), 0) for c in doc.palette(pid)['colors_rgb555'][2]]
+    new_c = 0x7C1F if words[0] != 0x7C1F else 0x03E0
+    s.undo.push(RCMD.SetPaletteColor(s, pid, 2, 0, new_c))
+    rt._show()
+    app.processEvents()
+    room = rt.current_room()
+    assert rt.palettes.notes.get(2, ('',))[0] == 'not the room\'s' and list(rt.palettes.notes) == [2]
+    assert 'Row 2 is not the room\'s' in rt.pal_scope.text(), rt.pal_scope.text()
+    assert [list(map(tuple, r)) for r in s.renderer.room_palettes(room, 0, 0)[:4]] == shown0, \
+        'the other screen keeps the room\'s colours'
+    rep = SP.scroll_report(doc, s.renderer, room)
+    assert len(rep) == 1 and (rep[0]['a'], rep[0]['b'], rep[0]['rows']) == (0, 4, [2]), rep
+    d0, d4 = SP.rows_drawn(doc, s.renderer, room, 0), SP.rows_drawn(doc, s.renderer, room, 4)
+    both = bool(d0.get(2) and d4.get(2))
+    assert rep[0]['clash'] == ([2] if both else [])
+    assert rt.pal_scroll_warn.isHidden() == (not both), rt.pal_scroll_warn.text()
+    if both:
+        assert 'screen 0 and screen 4' in rt.pal_scroll_warn.text()
+    rt.select_screen(0)
+    app.processEvents()
+    assert 'THE ROOM\'S COLOURS' in rt.pal_scope.text() and 'Screen 4 has colours of its own' \
+        in rt.pal_scope.text(), rt.pal_scope.text()
+    n_pal = len(doc.palettes)
+    rt.minimap.ownColoursRequested.emit(4, False)            # the mini-map's menu
+    app.processEvents()
+    room = rt.current_room()
+    assert SP.own(doc, room, 4) is None and len(doc.palettes) == n_pal - 1
+    assert rt.minimap.own_pal == {}
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre
+    print('OK: S176 a screen\'s own colours — the strip, Give screen 4 its own (a copy: the '
+          'same picture), a row changed there only, "not the room\'s", the mini-map strip, the '
+          f'scroll report (row 2, both draw: {both}), back by the mini-map menu; undone')
+    # ---------------- (b) Replace picture
+    go('medal_vault')
+    adir = os.path.join(doc.project_dir, 'assets')
+    had_dir = os.path.isdir(os.path.join(adir, 'stamps'))
+    AMB, RED, CRM, BLK = (240, 192, 72), (216, 32, 16), (248, 248, 208), (0, 0, 0)
+
+    def torch(cells_h, top):
+        im = Image.new('RGBA', (96, cells_h * 16), (0, 0, 0, 0))
+        for f in (0, 1):
+            for y in range(cells_h * 16):
+                for x in range(48):
+                    if (x - 24) ** 2 + (y - top - 8) ** 2 <= (11 + f) ** 2:
+                        im.putpixel((f * 48 + x, y), AMB + (128,))
+            for y in range(top + 3 + f, top + 15):
+                for x in range(21, 27):
+                    im.putpixel((f * 48 + x, y), (CRM if x in (21, 26) else RED) + (255,))
+            for y in range(top + 16, top + 26):
+                im.putpixel((f * 48 + 24, y), BLK + (255,))
+        return im
+    tmp = tempfile.mkdtemp(prefix='s176st_')
+    p32, p33 = os.path.join(tmp, 'torch_3x2.png'), os.path.join(tmp, 'torch_3x3.png')
+    torch(2, 0).save(p32)                         # the glow cut flat by the picture's top
+    torch(3, 16).save(p33)                        # the same torch one row lower, the glow whole
+    rt._import_auto = lambda dlg: dict(dlg.values(), name='Torch')
+    try:
+        sid = rt._stamp_import(p32)
+        app.processEvents()
+        st = ST.stamp_of(doc.custom, sid)
+        assert (st['w'], st['h']) == (3, 2) and 'hold' not in st and ST.anchor(st, (4, 1)) == (3, 1)
+        rt._set_tool('stamp')
+        i0 = rt._stamp_place((4, 1))
+        app.processEvents()
+        assert i0 == 0 and (rt.current_room()['stamps'][0]['x'],
+                            rt.current_room()['stamps'][0]['y']) == (3, 1)
+        old_png = st['png']
+        def flame(img, top):
+            """Where the flame's own colour is drawn in its cell."""
+            c = img.crop((16, top, 32, top + 16))
+            mid = c.getpixel((8, 9))
+            return {(x, y) for y in range(16) for x in range(16) if c.getpixel((x, y)) == mid}
+        flame0 = flame(cv.stamp_info(0)['frames'][0], 0)
+        assert 20 < len(flame0) < 120, len(flame0)
+        n1 = s.undo.index()
+        assert not rt.stamps_panel.b_replace.isHidden() and rt.stamps_panel.b_replace.isEnabled()
+        got = rt._stamp_replace(sid, p33)
+        app.processEvents()
+    finally:
+        rt._import_auto = None
+    st = ST.stamp_of(doc.custom, sid)
+    room = rt.current_room()
+    pl = room['stamps'][0]
+    assert got == 1 and s.undo.index() == n1 + 1, 'one undo step'
+    assert (st['w'], st['h'], st['frames'], st.get('hold')) == (3, 3, 2, 1), st
+    assert st['png'] != old_png and os.path.exists(os.path.join(doc.project_dir, old_png)) and \
+        os.path.exists(os.path.join(doc.project_dir, st['png'])), 'the old picture stays for undo'
+    assert (pl['x'], pl['y']) == (3, 0) and 'rows' in pl, pl
+    info = cv.stamp_info(0)
+    assert info and info['rect'] == (3, 0, 5, 2) and len(info['frames']) == 2, info
+    assert flame(info['frames'][0], 16) == flame0, 'the flame is where it was'
+    assert ST.anchor(st, (4, 1)) == (3, 0), 'the tool holds it by its flame row'
+    i1 = rt._stamp_place((8, 0))                  # the top row: the cap hangs off the screen
+    app.processEvents()
+    pl1 = rt.current_room()['stamps'][i1]
+    assert (pl1['x'], pl1['y']) == (7, -1) and cv.stamp_info(i1)['rect'] == (7, 0, 9, 1), pl1
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    rt._set_tool('select')
+    assert doc.dumps() == pre
+    import shutil
+    shutil.rmtree(tmp, ignore_errors=True)
+    if not had_dir:
+        shutil.rmtree(os.path.join(adir, 'stamps'), ignore_errors=True)
+    else:
+        for f in os.listdir(os.path.join(adir, 'stamps')):
+            if f.startswith('torch'):
+                os.remove(os.path.join(adir, 'stamps', f))
+    print('OK: S176 Stamps → Replace picture… — a 3×2 torch (glow cut at the top) -> 3×3: the '
+          'placement kept (y − 1, the flame where it was), hold row 1, the tool places one on '
+          'the top row with its cap off the screen (y −1); one undo step; undone')
+    # ---------------- (c) Draw
+    rid = None
+    for room in doc.rooms:
+        if room.get('screens') and room.get('record') and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    go(rid)
+    rt.picker_tabs.setCurrentIndex([rt.picker_tabs.tabText(i) for i in
+                                    range(rt.picker_tabs.count())].index('Draw'))
+    rt.rail.show_page('tiles')
+    app.processEvents()
+    cv.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    pad = dt.pad
+    assert dt.minimumSizeHint().width() <= 361 and dt.minimumSizeHint().height() <= 720, \
+        dt.minimumSizeHint()
+
+    def click(x, y, button=_Qt.LeftButton):
+        QTest.mouseClick(pad, button, _Qt.NoModifier,
+                         QPoint(3 + x * pad.zoom + pad.zoom // 2, 3 + y * pad.zoom + pad.zoom // 2))
+        app.processEvents()
+    assert set(dt.tool_btns) == {'pencil', 'fill', 'replace', 'pick'} and dt.tool == 'pencil'
+    assert len(dt.swatches) == 16 and len(dt.marks) == 16 and len(dt.tags) == 4
+    for k in range(4):
+        assert [r for r in range(4) if dt.marks[(r, k)].isChecked()] == [dt.qrow[k]]
+        assert dt.tags[k].row == dt.qrow[k]
+    assert 'Colours' in dt.scope.text() and ('room' in dt.scope.text() or 'own' in dt.scope.text())
+    for (r, i), b in dt.swatches.items():         # true colours, never dimmed
+        c = dt.rows[r][i]
+        assert f'#{c[0]:02x}{c[1]:02x}{c[2]:02x}' in b.styleSheet(), (r, i, b.styleSheet())
+    before = dt.current()
+    r0 = dt.qrow[0]
+    other = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                  tuple(dt.rows[r][i][:3]) not in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    if other is not None:
+        row, idx = other
+        # hovering the mark: the tile as it would look; nothing changed
+        dt._preview((row, [0]))
+        assert pad.preview is not None and dt.current() == before and dt.qrow[0] == r0
+        want0 = pad.preview[0][0]
+        dt._preview(None)
+        assert pad.preview is None
+        # the pencil with that colour: asked in the bar; the button switches AND paints
+        dt._pick_swatch(row, idx)
+        click(2, 2)
+        assert dt.current() == before and dt.pending['kind'] == 'pencil'
+        assert pad.flash == [0] and not dt.bar_all.isHidden()
+        n_u = len(dt._undo)
+        dt.bar_q.click()
+        app.processEvents()
+        now = dt.current()
+        assert dt.qrow[0] == row and dt.qrow[1:] == dt.old_qrow[1:] and len(dt._undo) == n_u + 1
+        assert now[0][2 * 8 + 2] == idx and now[1:] == before[1:]
+        assert [v for i, v in enumerate(now[0]) if i != 18] == \
+            [v for i, v in enumerate(want0) if i != 18], 'the switch == the preview'
+        assert dt.marks[(row, 0)].isChecked() and not dt.marks[(r0, 0)].isChecked()
+        assert dt.tags[0].row == row and dt.pending is None and pad.flash is None
+        dt.undo()
+        assert dt.current() == before and dt.qrow == dt.old_qrow, 'one undo: the row and the pixel'
+    # a blank tile: Fill crosses the quarters; Replace colour over the whole tile
+    rt._draw_blank(0)
+    app.processEvents()
+    assert dt.target.currentData() in ('selection', None)
+    assert not (dt.target.model().flags(dt.target.model().index(1, 0)) & _Qt.ItemIsEnabled), \
+        'a blank tile has no original to replace in the room'
+    cols0 = [tuple(c[:3]) for c in dt.rows[0]]
+    a = next(i for i in range(1, 4) if cols0[i] != cols0[0])
+    dt._pick_swatch(0, a)
+    dt.set_tool('fill')
+    click(0, 0)
+    assert all(v == a for q in dt.current() for v in q), 'Fill area crosses the four quarters'
+    b = next(i for i in range(4) if cols0[i] not in (cols0[a],))
+    dt.set_tool('pencil')
+    dt._pick_swatch(0, b)
+    click(9, 9)
+    dt.set_tool('replace')
+    dt._pick_swatch(0, b)
+    click(0, 0)                                   # every pixel of colour a -> b
+    assert all(v == b for q in dt.current() for v in q), 'Replace colour: the whole tile'
+    oth = next(((r, i) for r in range(1, 4) for i in range(4)
+                if tuple(dt.rows[r][i][:3]) not in cols0), None)
+    if oth is not None:
+        dt._pick_swatch(*oth)
+        click(0, 0)                               # a colour row 0 lacks: asked for all four
+        assert dt.pending and dt.pending['kind'] == 'replace' and \
+            dt.pending['quarters'] == [0, 1, 2, 3] and dt.bar_all.isHidden()
+        assert all(v == b for q in dt.current() for v in q)
+        dt.bar_q.click()
+        app.processEvents()
+        assert dt.qrow == [oth[0]] * 4 and all(v == oth[1] for q in dt.current() for v in q), \
+            'the switch carries "this colour becomes that one"'
+        dt.set_tool('pick')
+        dt._pick_swatch(0, 0)
+        click(3, 3)
+        assert (dt.cur_row, dt.pad.colour) == oth, 'Pick'
+    dt.set_tool('pencil')
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre
+    print('OK: S176 Draw — the rows in true colours + the quarters\' marks and tags; a mark '
+          'hovered previews, the bar switches a quarter\'s row and paints (one undo); Fill '
+          'crosses the quarters; Replace colour over the tile and through a row switch; Pick; '
+          'the panel fits its page')
 
 
 def s171_app_window(app, w):
@@ -7570,6 +7884,7 @@ def main():
     s174_stamps(app, w)
     s175_jumps_screens(app, w)
     s175_screen_music(app, w)
+    s176_colours_draw_stamps(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

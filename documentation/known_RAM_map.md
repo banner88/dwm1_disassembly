@@ -1068,6 +1068,12 @@
 ;                rule chain walks its option (0 = off); bank $72 AIViewArm72 / AIViewOff72,
 ;                read by bank $54 Fork54_RecordIndex. Transient. BATTLE_SKILL_SYSTEM §13.13. [S161]
 ;   DED6    1    wAIViewBase — its base's id (what $DB8A holds while the view is on). [S161]
+;   DED7    1    wScreenPalLate — a screen's own colours on a scroll: the palette rows 0-3
+;                (bits 0-3) pushed to the hardware only when the scroll ENDS (the screen
+;                leaving draws with them, the screen arriving does not); bank $73
+;                ScrollScreenBuild / ScrollScreenDone. Transient. ROOM_DATA_FORMAT "A screen's
+;                own colours and the scroll". [S176] (The old rows are kept in wSnapBounce
+;                $DE92-$DEB1 during ScrollScreenBuild.)
 
 ## [S87] Obedience / WLD / party personality
 

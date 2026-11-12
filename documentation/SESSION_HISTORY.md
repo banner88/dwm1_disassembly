@@ -1,5 +1,72 @@
 # SESSION HISTORY — Cold Archive (do NOT read at session start)
 
+> Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
+> PNGs (CLEAR = THE TILES SHOW, HALF-CLEAR = LIGHT, FRAMES = MOVEMENT), THE STAMP TOOL (T: PLACE / DRAG / DEL / ⌘C ⌘V /
+> RIGHT-CLICK LIGHT ON-OFF + COLOUR), THE TILES NEVER CHANGED — THE BUILD BAKES THE STAMPS INTO A COPY** (the user, after
+> the S173 torch art: "1) The two different torch PNGs to be importable into editor for a stamp. 2) Allow me to 'stamp'
+> these types of things (torches but there might be more in the future so we need this TYPE of image) on top of any
+> tiles. This should automatically use the tiles behind to deal with transparency etc. I should be able to remove this
+> stamp and put it elsewhere or copy and paste etc. When I remove it put the tiles back as before and don't create a
+> million random crappy broken tiles … Also please allow me to set the colour of the halo"; conferred → "The palette
+> budget needs to be respected and worked within … 2) Nearest should be fine but warn. 3) 16 pixel is fine 4) only that
+> screen. 5) Unlit option is fine. Proceed please.").
+> **Built S174, NOT yet user-tested.** Byte-neutral for a project without stamps (the same project.json is compiled; the
+> example pin unchanged).
+> **The torch art (end of S173, session material — PNGs, not repo content):** after the user's "LOOK AT HOW FLAMES IN
+> THE ACTUAL GAME MOVE", the Room of Beginning's torch cell read pixel by pixel (both frames as letters): a thin CREAM
+> outline round a RED flame, the hot core = the field colour, two different OUTLINES (slim single tip / leaning, wider,
+> forked) — nothing waves (KEY_LESSONS S174). The S173 round-6 halo (12 / 13 px, the dither moving) + stick kept, the
+> flame redrawn: "VERY NICE" (tall flame) and "Perfect" (the game-size flame's spade shape drawn 15 px tall); both
+> 9 / 9 with `walk_anim_import.py`. Delivered as the stamps `Wall torch - tall flame 3x2.png` /
+> `Wall torch - spade flame 3x2.png`.
+> **Built (EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79):** NEW `editor2/core/stamps.py` — the library
+> `custom.stamps[]` + placements `rooms[].stamps[]` (placing / moving / removing touch only these), `simulate` (the
+> editor's picture = every stamp in build order through `anim_import.plan(taken=, attr=)`), `bake` (per screen-state
+> group a layout + colour grid of its own, copied only when shared; rows existing / new free / nearest, warned; an
+> identical still piece reuses a tile, an identical moving piece a slot the room already animates; only a cell's
+> bottom-right tile keeps its wall side; one flip animation per placement); `compiler.compile_project`,
+> `measure_banks`, `capacity.measure` compile / measure the baked copy when there are stamps. Editor: the Stamp tool
+> (T) (the tools row's labels now without their keys — the keys in the tooltips — so the row fits at 1,512 px), the
+> Stamps rail page (NEW `editor2/app/rooms/stamps_panel.py`: Import PNG… window with
+> the size from "3x2" in the name, Rename, Remove, Speed; the selected stamp's Light, Light colour (Amber / Gold /
+> Orange / Red / Pale blue / Green / Violet / Custom…: the glow AND the stamp's own glow colour among its solid pixels),
+> Copy, Remove, its warning; *Show the stamps on the canvas*); the canvas draws `simulate`'s frames (▶ Play moves them), the ghost under the mouse (red =
+> overlap, refused), "!" when nearest colours. Help 10_rooms / 15_animated_tiles / glossary; `EDITOR_REVISION` S174.
+> **Measured in the game:** NEW `tools/walk_stamps.py` on the user's project + save, GreatLog screen 5 (the tall-flame
+> torch at (0,0), the spade torch at (3,0), the tall one gold-lit at (8,0)): **12 / 12** — placing changed nothing but
+> the stamps; the editor's picture == the baked screen, every frame; the baked rows in BG palette RAM; the tiles + rows;
+> 32 moving pieces show only + every baked frame; a step every 32 frames (median gap 32); walls kept; and REMOVED, the
+> project builds the very ROM it built before (`a57ac630…`, patched, both). `--negative` (nothing placed) 6 FAIL. Warned
+> as agreed: the spade torch 13 px nearest (2 pieces over that bark would need a 5th colour), the gold one 134 px (no
+> row left on that palette for a second light colour).
+> **Test ROM:** `DWM-S174-stamps-test.gbc` (`1e7140ad…`, patched) = the user's project + the two torches stamped at
+> GreatLog screen 5 (0,0) and (3,0); `walk_stamps.py` 12 / 12 on it (23 moving pieces; the spade torch 13 px nearest, warned; removed = `a57ac630…`, patched).
+> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin `18e6f102…`, patched, unchanged); test_app
+> `--rom` PASS (+ `s174_stamps`; the S132 rail order + Stamps; the GUI build == the pin); test_canvas PASS (one after another).
+> Help picture `tab_rooms.png` regenerated.
+> **r2 (2026-11-11, the stamps' colour rows EXPLICIT — user: "How is it that none of the torch colours are represented
+> in my 4 palettes … Make the fucking torches explicit and populate the fucking palette so that it reflects what the
+> torches do then I can use that colour combination in specific tiles currently it just fucking pretends its not
+> there."):** r1 wrote the torch rows only into the build's copy — the Palettes page kept showing the old (unused)
+> rows, and project 6's new water / grass tile (rows 1 + 3, screen 5) silently left the torches one row (row 2; 192 +
+> 232 px nearest). Now `stamps.claim` runs in the same undo step as placing / moving / re-lighting (and once, on
+> showing a room, for placements without it): the rows the stamp needs go INTO the project's palette (a borrowed
+> palette becomes the room's own; own colour 1 ticked when needed) and the placement records them (`"rows":
+> {palette: [rows]}` — rows it uses that no tile draws); recorded rows count as used for every other stamp, the
+> preview and the bake; the Palettes page names them ("Rows stamps use … row 2: Wall torch …"); Re-plan colours starts
+> with them kept; removing a stamp leaves the colours. Tiles may be painted with them (the user's aim). On the user's
+> project 6 the two torches get row 2 (red / cream / amber / black) and stay 192 + 232 px nearest — the room has no
+> second free row while the water tile uses rows 1 + 3 (said to the user, with the one-row "lit wall" idea).
+> `walk_stamps.py` now: placing changes nothing but the stamps + the palette; the rows are in the project's palette;
+> removed = the project as it was but for those rows (the r1 md5 check could not hold any more). r2 measured: `walk_stamps.py` on the user's project 6 + save
+> (the two spade torches as the user placed them, (7,0) + (3,0)) 13 / 13 — row 2 written ['0x089B', '0x6BFF', '0x271E'];
+> the editor's picture == the bake; 22 moving pieces; 32-frame steps; walls; removed = the project but for row 2 —
+> `--negative` 6 FAIL; verify_integrity PASS, test_compiler `--rom` PASS, test_canvas PASS, test_app `--rom` PASS (after
+> one test fix: the Palettes-page label checked with isHidden — the page is not the one shown). Test ROM
+> `DWM-S174r2-stamps-test.gbc` (`a898d8ba…`, patched) = project 6 as sent, its torches' rows claimed.
+> **Next:** the user's test of stamps (import the two PNGs, place / move / copy / paste / remove, the light colours,
+> the rows on the Palettes page, ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
+
 > Last verified: 2026-11-10 (Session 173 — **ROOM-BUILDING AIDS (ROADMAP P3.3l): TWO BARS OVER THE CANVAS (THE TOOLS;
 > THE VIEW), STATUE / MONUMENT / ARCHIVE IN + MORE, ZOOM 1-12× WITH HALF STEPS + FIT, CLEAN VIEW (HOLD H), THE STILL TOOL
 > (A NEW TILE FROM A CHOSEN FRAME OF A MOVING CELL — THE GAME'S ANIMATION OR YOUR OWN), THE BRUSH UNDER THE MOUSE, WHERE A

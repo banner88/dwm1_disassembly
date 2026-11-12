@@ -266,6 +266,10 @@ family recipes. [Breeding](58_breeding.md#Special%20recipes)
 **Step-on trigger** — a cell that runs something when the player steps on it.
 [Doors](11_doors.md#One-way%20teleports,%20step-on%20triggers,%20stairs)
 
+**Screen's own colours** — a screen of a multi-screen room drawing with 4 colour rows of
+its own instead of the room's (Palettes page: the strip + *Give screen N its own colours*).
+[Rooms](10_rooms.md)
+
 **Stamp** — a picture put on top of a room's tiles (a wall torch with its glow): clear
 parts show the tiles, half-clear parts light them. The tiles are never changed — the build
 draws it in, so moving or removing it leaves them as they were; the colour rows it needs are

@@ -851,6 +851,14 @@ wOneOnlySay:: db ;ded4 — 1 = the next SHOWN text is the "already has one" line
 ; $DB8A and bank $54 Fork54_RecordIndex turns a record read of that base into the new
 ; skill's own record. Armed by bank $72 entry 11 AIViewArm72 (state 4 / the party's
 ; damage estimate, bank $58 EstimateView58), off at the chain end (entry 8) or a veto
-; (entry 12). Transient, boot-zeroed (0 = off). 7 B left, growth starts $DED7.
+; (entry 12). Transient, boot-zeroed (0 = off).
 wAIViewId:: db ;ded5 — the new skill's own id (0 = no view)
 wAIViewBase:: db ;ded6 — its base's id (what $DB8A holds while the view is on)
+
+; [S176] a screen's own colours on a scroll (bank $73 entries 23 / 24,
+; ROOM_DATA_FORMAT "A screen's own colours and the scroll"): the palette rows 0-3
+; (bits 0-3) of the screen the view scrolls onto that are pushed to the hardware
+; only when the scroll ENDS — the screen leaving draws with them, the screen
+; arriving does not. Written by ScrollScreenBuild, consumed (zeroed) by
+; ScrollScreenDone. Transient, boot-zeroed. 6 B left, growth starts $DED8.
+wScreenPalLate:: db ;ded7

@@ -20,6 +20,7 @@ from editor2.core.render_project import rgb555, FORCED_IDX1, FORCED_IDX3
 SW = 30       # swatch size (S132: the Palettes page has room)
 GAP = 3
 LABEL_W = 26
+NOTE_W = 150  # S176: the notes right of the rows
 
 
 def to555(qc):
@@ -41,6 +42,7 @@ class PalettePanel(QWidget):
         self.free1 = False        # S96: palette keeps its own colour 1 (slots 0-3)
         self.show_system = False  # S96 QOL: slots 4-7 folded by default
         self._hover = None
+        self.notes = {}           # S176: {row: (text, '#rrggbb')} written right of the row
         self.setMouseTracking(True)
         self.setFixedSize(self.sizeHint())
 
@@ -48,7 +50,17 @@ class PalettePanel(QWidget):
         return 8 if self.show_system else 4
 
     def sizeHint(self):
-        return QSize(LABEL_W + 4 * (SW + GAP) + 4, self.rows() * (SW + GAP) + 4)
+        return QSize(LABEL_W + 4 * (SW + GAP) + 4 + (NOTE_W if self.notes else 0),
+                     self.rows() * (SW + GAP) + 4)
+
+    def set_notes(self, notes):
+        """S176: a short note per row ("not the room's", "stamps") — {row: (text, colour)}."""
+        notes = dict(notes or {})
+        if notes != self.notes:
+            self.notes = notes
+            self.setFixedSize(self.sizeHint())
+            self.updateGeometry()
+            self.update()
 
     def set_show_system(self, on):
         self.show_system = bool(on)
@@ -92,6 +104,11 @@ class PalettePanel(QWidget):
             if s == self.selected:
                 p.fillRect(QRect(0, y - 1, self.width(), SW + 2),
                            QColor(255, 255, 0, 40))
+            if s in self.notes:                         # S176
+                text, col = self.notes[s]
+                p.setPen(QColor(col))
+                p.drawText(QRect(LABEL_W + 4 * (SW + GAP) + 8, y, NOTE_W - 8, SW),
+                           Qt.AlignVCenter | Qt.AlignLeft | Qt.TextWordWrap, text)
             p.setPen(QColor(220, 220, 220) if s < 4 else QColor(140, 140, 140))
             p.drawText(QRect(0, y, LABEL_W - 4, SW), Qt.AlignVCenter | Qt.AlignRight,
                        f'{s}')

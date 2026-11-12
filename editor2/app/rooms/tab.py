@@ -198,6 +198,7 @@ class RoomsTab(QWidget):
         self.minimap.copyScreenRequested.connect(self._copy_screen)
         self.minimap.pasteScreenRequested.connect(self._paste_screen)
         self.minimap.shiftRequested.connect(self._shift_objects)
+        self.minimap.ownColoursRequested.connect(self._screen_colours)       # S176
         self._screen_clip = None
         lv.addWidget(self.minimap, 0, Qt.AlignHCenter)
         srow = QHBoxLayout()
@@ -808,6 +809,8 @@ class RoomsTab(QWidget):
         self.draw_tab.everywhereRequested.connect(self._draw_everywhere)
         self.draw_tab.newRequested.connect(self._draw_new)
         self.draw_tab.status.connect(self.status_line.setText)
+        self.draw_tab.editColoursRequested.connect(                      # S176
+            lambda: self.rail.show_page('palettes'))
         dscroll = QScrollArea()
         dscroll.setWidgetResizable(True)
         dscroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -825,6 +828,7 @@ class RoomsTab(QWidget):
         self.stamps_panel.importRequested.connect(self._stamp_import)
         self.stamps_panel.chosen.connect(self._stamp_chosen)
         self.stamps_panel.renameRequested.connect(self._stamp_rename)
+        self.stamps_panel.replaceRequested.connect(self._stamp_replace)        # S176
         self.stamps_panel.removeRequested.connect(self._stamp_remove_lib)
         self.stamps_panel.speedChanged.connect(self._stamp_speed)
         self.stamps_panel.litToggled.connect(lambda on: self._stamp_set_light(lit=on))
@@ -845,11 +849,40 @@ class RoomsTab(QWidget):
                           'to paint palette slots (Palettes layer)')
         _pl_head.setWordWrap(True)
         pl.addWidget(_pl_head)
+        # S176 (user: "I WAS UNDER THE IMPRESSION PALETTE WAS FIRMLY FIXED FOR ALL ROOMS OF A
+        # MULTISTAGE ROOM! Please allow per-screen palette! … Make it explicit visually"):
+        # WHOSE colours the rows below are — the whole room's, or this screen's own — said in
+        # a coloured strip, with the one button that switches
+        self.pal_scope = QLabel('')
+        self.pal_scope.setWordWrap(True)
+        self.pal_scope.setTextFormat(Qt.RichText)
+        pl.addWidget(self.pal_scope)
+        srow = QHBoxLayout()
+        self.btn_screen_own = QPushButton('Give this screen its own colours')
+        self.btn_screen_own.setToolTip(
+            'This screen gets a copy of the colours it shows now — nothing looks different '
+            'until you change a row here. The other screens of the room keep the room\'s '
+            'colours. (An 8×8 tile still draws with one of 4 rows; this gives THIS screen its '
+            'own 4.)')
+        self.btn_screen_own.clicked.connect(lambda: self._screen_colours(self.key, True))
+        self.btn_screen_room = QPushButton('Use the room\'s colours again')
+        self.btn_screen_room.setToolTip('Drop this screen\'s own colours: it draws with the '
+                                        'room\'s rows again (⌘Z brings them back)')
+        self.btn_screen_room.clicked.connect(lambda: self._screen_colours(self.key, False))
+        srow.addWidget(self.btn_screen_own)
+        srow.addWidget(self.btn_screen_room)
+        srow.addStretch(1)
+        pl.addLayout(srow)
+        self.pal_scroll_warn = QLabel('')
+        self.pal_scroll_warn.setWordWrap(True)
+        self.pal_scroll_warn.setStyleSheet('color: #ff9a50;')
+        self.pal_scroll_warn.setVisible(False)
         self.palettes = PalettePanel()
         self.palettes.colorEdited.connect(self._color_edited)
         self.palettes.hoverInfo.connect(self._hover)
         self.palettes.makeEditableRequested.connect(self._palette_make_editable)
         pl.addWidget(self.palettes, 0, Qt.AlignLeft)
+        pl.addWidget(self.pal_scroll_warn)
         prow = QHBoxLayout()
         self.pal_sys = QCheckBox('show system 4-7')
         self.pal_sys.setToolTip('Slots 4-7 are the shared system palettes (HUD, menus, '
@@ -1337,6 +1370,7 @@ class RoomsTab(QWidget):
         self._refresh_foreign()
         self.palettes.set_palettes(pals, None, None)
         self.pal_free1.setEnabled(False)
+        self._refresh_pal_scope(None)                  # S176
         self.inspector.show_vanilla(self.s.renderer, mid, self.key)
         imgs = {}
         for k in scr:
@@ -1957,6 +1991,7 @@ class RoomsTab(QWidget):
             try:        # from the document (the canvas may reload after this slot)
                 pals = self.s.renderer.room_palettes(room, self.key, self.state_idx)
                 self.draw_tab.set_rows([list(pals[r]) for r in range(4)])
+                self._draw_scope()                               # S176
             except Exception:                                    # noqa: BLE001
                 pass
         sts = self.s.doc.states(room, self.key)
@@ -2021,6 +2056,7 @@ class RoomsTab(QWidget):
         self.pal_free1.setEnabled(bool(words))
         self.pal_free1.blockSignals(False)
         self._refresh_stamp_rows()                     # S174 r2
+        self._refresh_pal_scope(room)                  # S176
         self.inspector.show_room(self.s.doc, self.s.renderer, room, self.key, self.state_idx)
         self.animate_tab.show_room(self.s.doc, room, self.s.renderer)
         self._update_brush_label()
@@ -2540,6 +2576,141 @@ class RoomsTab(QWidget):
             self.status_line.setText(f'Stamps: {e}')
         self._stamp_selected(self.canvas.stamp_sel)
 
+    # ------------------------------------------------ a screen's own colours (S176)
+    def _stamp_rows_sim(self):
+        """{(room id, placement, state): rows} from the cached stamp simulation (may be {})."""
+        c = getattr(self.s, '_stamp_sim', None)
+        return {k: v.get('rows') or [] for k, v in (c[1] if c else {}).items()}
+
+    def _refresh_pal_scope(self, room):
+        """The Palettes page's strip: whose colours the rows are; the rows that are not the
+        room's; the mini-map's strips; the scroll warning."""
+        from editor2.core import screen_palettes as SP
+        doc = self.s.doc
+        if room is None:
+            self.pal_scope.setText(
+                '<div style="background:#3a3a40; color:#ddd; padding:5px;">A game room '
+                '(read-only): <b>Make editable</b> to change its colours.</div>')
+            for b in (self.btn_screen_own, self.btn_screen_room):
+                b.setVisible(False)
+            self.pal_scroll_warn.setVisible(False)
+            self.palettes.set_notes({})
+            self.minimap.set_own_palettes({}, False)
+            return
+        key, st = self.key, self.state_idx
+        keys = doc.screen_keys(room)
+        name = doc.room_name(room)
+        eff = doc.effective_palette(room, key, st)
+        base = SP.room_palette(room)
+        own_scr = SP.own(doc, room, key)
+        sts = doc.states(room, key)
+        own_state = sts[st].get('palette') if (doc.screen(room, key).get('states')
+                                               and st < len(sts)) else None
+        owners = SP.screens_with_own(doc, room)
+        try:
+            shown = self.s.renderer.room_palettes(room, key, st)
+        except Exception:                                        # noqa: BLE001
+            shown = None
+        notes = {}
+        diff = []
+        if (own_scr or own_state) and shown is not None and eff != base:
+            # the room's rows as another screen shows them: a screen without its own
+            other = next((k for k in keys if k not in owners), None)
+            try:
+                room_shown = (self.s.renderer.room_palettes(room, other, 0)
+                              if other is not None else None)
+            except Exception:                                    # noqa: BLE001
+                room_shown = None
+            if room_shown is not None:
+                diff = SP.differing(shown, room_shown)
+                notes = {r: ('not the room\'s', '#ff9a50') for r in diff}
+        self.palettes.set_notes(notes)
+        many = len(keys) > 1
+        if own_state and eff == own_state:
+            txt = (f'<div style="background:#6a3d10; color:#ffe0b8; padding:5px;"><b>STATE {st} '
+                   f'OF SCREEN {key}: ITS OWN COLOURS</b> — only this state of this screen. '
+                   + (f"Row{'s' if len(diff) != 1 else ''} {', '.join(map(str, diff))} "
+                      f"{'are' if len(diff) != 1 else 'is'} not the room's." if diff else
+                      'Every row is still the same as the room\'s.') + '</div>')
+        elif own_scr:
+            txt = (f'<div style="background:#6a3d10; color:#ffe0b8; padding:5px;"><b>SCREEN '
+                   f'{key}: ITS OWN COLOURS</b> — a colour changed here changes this screen '
+                   'only. '
+                   + (f"Row{'s' if len(diff) != 1 else ''} {', '.join(map(str, diff))} "
+                      f"{'are' if len(diff) != 1 else 'is'} not the room's." if diff else
+                      'Every row is still the same as the room\'s — change the rows you need.')
+                   + '</div>')
+        else:
+            n_room = len([k for k in keys if k not in owners])
+            txt = ('<div style="background:#1f3f5c; color:#d4e8ff; padding:5px;"><b>THE ROOM\'S '
+                   f'COLOURS</b> — {name}: '
+                   + (f'{n_room} of its {len(keys)} screens draw with these 4 rows; a colour '
+                      'changed here changes all of them.' if many else
+                      'its one screen draws with these 4 rows.')
+                   + (f" Screen{'s' if len(owners) != 1 else ''} "
+                      f"{', '.join(str(k) for k in sorted(owners))} "
+                      f"{'have' if len(owners) != 1 else 'has'} colours of "
+                      f"{'their' if len(owners) != 1 else 'its'} own." if owners else '')
+                   + '</div>')
+        self.pal_scope.setText(txt)
+        self.btn_screen_own.setText(f'Give screen {key} its own colours')
+        self.btn_screen_own.setVisible(not own_scr and many)
+        self.btn_screen_room.setVisible(bool(own_scr))
+        self.btn_screen_room.setText(f'Use the room\'s colours on screen {key} again')
+        # the mini-map: a strip of colours in the corner of every screen with its own
+        strips = {}
+        for k in owners:
+            try:
+                p8 = self.s.renderer.room_palettes(room, k, 0)
+                strips[k] = [tuple(p8[r][0]) for r in range(4)]
+            except Exception:                                    # noqa: BLE001
+                strips[k] = [(255, 150, 40)] * 4
+        self.minimap.set_own_palettes(strips, many)
+        lines = []
+        if owners:
+            try:
+                rep = SP.scroll_report(doc, self.s.renderer, room, self._stamp_rows_sim())
+                lines = SP.report_text(doc, room, rep, key)
+            except Exception:                                    # noqa: BLE001
+                lines = []
+        self.pal_scroll_warn.setText('⚠ ' + '\n⚠ '.join(lines) if lines else '')
+        self.pal_scroll_warn.setVisible(bool(lines))
+
+    def _screen_colours(self, key, own):
+        """Give screen `key` its own colours (a copy of what it shows) / back to the room's.
+        One undo step; the stamps on the screen claim their rows again."""
+        from editor2.core import screen_palettes as SP
+        from editor2.core import stamps as ST
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None:
+            return None
+        rid = room['id']
+        shown = self.s.renderer.room_palettes(room, key, 0)
+
+        def op(d):
+            r = d.room(rid)
+            if own:
+                pid = SP.give(d, r, key, shown)
+            else:
+                pid = SP.drop(d, r, key)
+                for i, pl in enumerate(r.get('stamps') or []):
+                    if int(pl.get('screen', -1)) == int(key):
+                        ST.claim(d, REPO, rid, i)
+            return pid
+        cmd = C.SnapshotCommand(self.s, f'Screen {key}: its own colours' if own else
+                                f'Screen {key}: the room\'s colours', op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Screen colours', str(cmd.error))
+            return None
+        self._show()
+        self.rail.show_page('palettes')
+        self.status_line.setText(
+            (f'Screen {key} has its own colours now ({cmd.result}) — it looks the same until you '
+             'change a row: double-click a colour. The other screens keep the room\'s.')
+            if own else f'Screen {key} draws with the room\'s colours again.')
+        return cmd.result
+
     def _refresh_stamp_rows(self):
         """r2: under the palette — which rows stamps use (they stay theirs)."""
         from editor2.core import stamps as ST
@@ -2608,6 +2779,62 @@ class RoomsTab(QWidget):
         self.status_line.setText(f"Stamp '{vals['name']}' added — the Stamp tool (T) puts it "
                                  'down: click a cell on the canvas.')
         return cmd.result
+
+    def _stamp_replace(self, sid, path=None):
+        """S176: Stamps → Replace picture… — another PNG for a library stamp; every placement
+        keeps its place (stamps.replace_picture) and claims its colour rows again. One undo
+        step."""
+        from PySide6.QtWidgets import QFileDialog
+        from editor2.core import stamps as ST
+        from editor2.app.rooms.stamps_panel import StampImportDialog
+        st = ST.stamp_of(self.s.doc.custom, sid)
+        if st is None:
+            return None
+        if path is None:
+            path, _f = QFileDialog.getOpenFileName(
+                self, f"A new picture for '{st['name']}'", '', 'PNG pictures (*.png)')
+            if not path:
+                return None
+        try:
+            dlg = StampImportDialog(path, self)
+        except Exception as e:                                   # noqa: BLE001
+            QMessageBox.warning(self, 'Replace picture', str(e))
+            return None
+        dlg.setWindowTitle(f"A new picture for '{st['name']}'")
+        dlg.name.setText(st['name'])
+        dlg.name.setEnabled(False)
+        i = dlg.speed.findData(int(st.get('speed') or ST.SPEED_DEFAULT))
+        if i >= 0:
+            dlg.speed.setCurrentIndex(i)
+        dlg.speed.setEnabled(False)
+        if getattr(self, '_import_auto', None) is not None:      # tests
+            vals = self._import_auto(dlg)
+            if vals is None:
+                return None
+        else:
+            if dlg.exec() != QDialog.Accepted:
+                return None
+            vals = dlg.values()
+
+        def op(d):
+            moved = ST.replace_picture(d, sid, path, vals['w'], vals['h'])
+            warns = [ST.claim(d, REPO, rid, j) for rid, j in moved]
+            return len(moved), [w for w in warns if w]
+        cmd = C.SnapshotCommand(self.s, f"Stamp picture: {st['name']}", op)
+        self.s.undo.push(cmd)
+        if cmd.error is not None:
+            QMessageBox.warning(self, 'Replace picture', str(cmd.error))
+            return None
+        self._show()
+        self._refresh_stamps()
+        self.stamps_panel.choose(sid)
+        n, warns = cmd.result
+        self.status_line.setText(
+            f"Stamp '{st['name']}': the new picture, {n} placed stamp{'s' if n != 1 else ''} "
+            'kept where ' + ('they are' if n != 1 else 'it is')
+            + (f' — {len(warns)} with a colour warning ("!" on the canvas)' if warns else '')
+            + '. ⌘Z puts the old picture back.')
+        return n
 
     def _stamp_chosen(self, sid):
         self.canvas.set_stamp_brush(sid)
@@ -5805,7 +6032,29 @@ class RoomsTab(QWidget):
         self.draw_tab.load(mt, px, pals, desc, walkable=walkable, selection_ok=selection_ok,
                            rows=[list(cv.pals[r]) for r in range(len(cv.pals))],
                            qrow=list(TD.quarter_pals(mt)))
-        combo_row_enabled(self.draw_tab.place, 2, not mt.get('blank'))   # S167
+        self._draw_scope()                                               # S176
+
+    def _draw_scope(self):
+        """S176: the Draw tab's line over the rows — whose colours they are, which rows the
+        stamps use."""
+        from editor2.core import screen_palettes as SP
+        from editor2.core import stamps as ST
+        room = self.current_room()
+        if room is None or not self.draw_tab.loaded():
+            return
+        doc = self.s.doc
+        eff = doc.effective_palette(room, self.key, self.state_idx)
+        if eff != SP.room_palette(room):
+            text = f'screen {self.key}\'s own (only this screen)'
+        elif len(doc.screen_keys(room)) > 1:
+            text = f'the room\'s (every screen of {doc.room_name(room)} without its own)'
+        else:
+            text = 'the room\'s'
+        notes = {}
+        if eff:
+            for r, names in ST.rows_report(doc, eff).items():
+                notes[r] = 'also the stamps\' (' + ', '.join(names) + ')'
+        self.draw_tab.set_scope(text, notes)
 
     def _draw_load_cell(self):
         cell = self.canvas.selected_cell

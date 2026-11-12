@@ -172,29 +172,56 @@ in both rooms) — or **only some rows**: "my slot 2 ← their row 1". If other
 places use your palette, *Only here* copies it first so they keep their colours.
 One undo step. The palette combos name the rooms that use each palette.
 
-**Draw** (Tiles page → Draw tab): paint a metatile pixel by pixel. Load the
-selected cell, the brush, or a blank tile (left = paint, Shift = fill, right = pick a
-colour; Ctrl+click picks a quarter for the tools: flip, shift, copy / paste, clear, undo,
-redo, revert). **⌘Z / ⌘⇧Z** undo and redo your strokes while a drawing is loaded and the
-Draw tab is shown (one drag = one step); otherwise they undo the project as usual. The
-colours are **every row of the room**, but an 8×8 quarter is drawn in ONE row, so a
-quarter is painted with its own row's colours: when you click in a quarter, the colours its
-row does not have are dimmed (S171 r7). A colour another row shares with it (black, cream)
-paints as its own; any other is refused with a hint — painting never moves a quarter.
-Right-click picks the clicked pixel's colour in its own row. Shapes change only where you
-paint. **Recolour the part** (the quarter picked under *tools act on*, or the whole tile):
-**row 0-3** puts it in that row (every pixel keeps its colour number — the same shapes in
-that row's colours); **Recolour…** = click a colour in the drawing, then a swatch: every
-pixel of that colour in the part becomes the colour you picked. Palette edits (Palettes
-page) show in the drawing at once. To change a colour itself, edit it on the Palettes page.
-Then
-**Redraw it everywhere it is drawn** (the tiles themselves change — the line says
-how many cells in which rooms; nothing is spent) or **Save as a new metatile**
-(free tileset slots, the walkable / wall side you tick; put it on the selected
-cells, on every cell of the room drawing the original, or only into My
-metatiles). Once a quarter moved to another row, use *Save as a new metatile* (on every
-cell drawing the original): *everywhere* would leave other cells in their old row. Tiles the room animates are changed in the Animate tab; the common
-font / frame tiles ($80-$AF) only as a new metatile.
+**A screen's own colours (S176):** every screen of a room can draw with 4 colour rows of
+ITS OWN. The strip at the top of the **Palettes** page says whose colours the rows below
+are: blue **THE ROOM'S COLOURS** (every screen without its own — a colour changed here
+changes all of them) or orange **SCREEN N: ITS OWN COLOURS** (only this screen). **Give
+screen N its own colours** makes a copy of what the screen shows now — nothing looks
+different until you change a row; then the rows that differ are marked *not the room's*.
+**Use the room's colours on screen N again** drops them (⌘Z brings them back). The same two
+commands are in the mini-map's right-click menu, and a screen with its own colours carries a
+small strip of them in its mini-map corner. Typical use: keep the room's rows for most of
+the screen and change one or two rows that screen does not draw with yet (the Draw tab's
+marks and the Palettes layer show which rows a screen uses) — for books, a carpet, a
+banner. Walking from one screen to the next, the game switches the colours as the screen
+slides in. Only when BOTH screens draw with a row that differs can it not be right on both
+for the third of a second of the slide (one set of colours draws the whole view): the
+Palettes page then says so in orange, with the tiles on each side.
+
+**Draw** (Tiles page → Draw tab): paint a tile pixel by pixel. **Load cell** (the cell
+selected on the canvas), **Load brush**, or **Blank**. One rule of the Game Boy shapes the
+panel: a tile is four 8×8 quarters, and **each quarter draws with ONE of the 4 colour
+rows**.
+- **The colours:** all four rows, always in their true colours (★ = your stamps draw with
+  that row too). Click a colour to paint with it. Right of each row, four marks **◤ ◥ ◣ ◢**
+  show which quarters draw with it; **click a mark** to put that quarter on that row
+  (**all** = the whole tile). **Hover a mark** to see the tile as it would look first. A
+  quarter put on another row keeps every colour the new row also has; the others take the
+  closest colour left, one for one — two colours never become one, so shapes stay. Each
+  quarter of the drawing carries a tag with its row's colours.
+- **The tools:** **Pencil** (click or drag), **Fill area** (the area of one colour you click
+  — it crosses the quarters), **Replace colour** (pick the new colour, then click a colour
+  in the drawing: EVERY pixel of that colour becomes the new one — in the whole tile, or
+  with *only the quarter I click* in that quarter), **Pick** (click a pixel to paint with
+  its colour; right-click does that with any tool).
+- **A colour the quarter's row does not have:** nothing is painted and nothing changes
+  behind your back — the bar under the drawing says which quarter is on which row and
+  offers **Put ◤ on row N** / **Whole tile on row N**; one click switches and paints.
+- **Shape tools** (the whole tile or one quarter — click a quarter's tag, or Ctrl+click in
+  it): flip, shift, copy / paste, clear, undo, redo, revert. **⌘Z / ⌘⇧Z** undo and redo
+  your strokes while a drawing is loaded and the Draw tab is shown; otherwise they undo
+  the project as usual.
+- **Edit colours…** opens the Palettes page (change a colour, or give this screen its own
+  colours — the line over the rows says whose they are). Palette edits show in the drawing
+  at once.
+- **Apply to** — you choose, the line under it says what it will do before you press
+  **Apply**: *Only the selected cell(s)* (a new tile on them), *Every cell of this room
+  drawn with this tile* (a new tile on all of them), *Everywhere this tile is drawn — the
+  tile itself changes* (no new slot; every room using the tileset; not possible once a
+  quarter is on another row — the other cells keep their rows), or *Nowhere yet — keep it
+  in My metatiles*. A new tile takes free tileset slots (pieces already in the tileset are
+  reused) on the walkable / wall side you tick. Tiles the room animates are changed in the
+  Animate tab; the common font / frame tiles ($80-$AF) only as a new tile.
 
 **Stamps (S174):** a stamp is a picture put ON TOP of the tiles — a wall torch with its
 glow, and anything like it later. The tiles under it are **never changed**: the build draws
@@ -205,8 +232,12 @@ exactly as they were, with no leftover tiles. The **Stamps** page (right) is the
 let the tiles show, **half-clear** pixels LIGHT them — their colour, except where the tiles
 are black, so the grain shows through — and solid pixels are drawn), **Rename…**,
 **Remove…** (from the library and every screen it is on), **Speed** (32 = the game's own
-torches), **Show the stamps on the canvas** (off: the tiles under them). Choose one, then the **Stamp tool (T)**: its picture follows the mouse (the cursor
-on its middle column, top row — a wall torch's flame); **click** to put it down; **drag** a
+torches), **Replace picture…** (S176: another PNG for a stamp that is already on screens —
+every one stays where its solid part is and is drawn with the new picture, one undo step;
+a picture that grew a row of glow above the flame leaves every torch where it was),
+**Show the stamps on the canvas** (off: the tiles under them). Choose one, then the **Stamp tool (T)**: its picture follows the mouse (the cursor
+on its middle column and on its first row with solid pixels — a wall torch's flame; glow
+drawn above the flame hangs over the cell above, or off the screen on the top row); **click** to put it down; **drag** a
 stamp to move it; **Del** removes the selected one; **⌘C / ⌘V** copy it and paste it under
 the mouse — on another screen or another of your rooms too; **right-click** a stamp:
 **Light** on / off (off = without its glow: a sign, a plant) and the **Light colour** (the

@@ -10,6 +10,63 @@
 > archive — do NOT read it at session start; every fact in it already lives
 > in the owning reference doc). The Session Index below is the finding aid.
 
+> Last verified: 2026-11-12 (Session 176 — **A SCREEN'S OWN COLOURS (EXPLICIT, AND REAL WHEN YOU WALK ONTO IT), THE DRAW
+> PANEL REBUILT ROUND "ONE ROW PER QUARTER", THE TORCH'S GLOW ROUND (ROADMAP P3.3p)** (the user: "1) Why is stamp of torch
+> cut off at the top? … This should be fixed so it's properly round. 2) I am trying to colour in my bookshelf … it shows
+> palette rows but wont let me change the row? But then I can 'recolor' and it randomly flips the colours? Can you make it
+> fucking normal please from a UI point of view … fully intuitive and I know what colours are available and how to use
+> them. And if I want to recolour all the pixels of a certain colour a different colour, make that intuitive as well";
+> conferred → "Great redraw torch … HOLY SHIT THIS CHANGES EVERYTHING I WAS UNDER THE IMPRESSION PALETTE WAS FIRMLY FIXED
+> FOR ALL ROOMS OF A MULTISTAGE ROOM! Please allow per-screen palette! … Make it explicit visually. What I'd basically do
+> is keep most of the tiles but flip 1 or 2 rows just for this room for the books" / the row-change question: "I honestly
+> dont understand the question. It needs to be visually intuitive and clear" / Apply: "Let me decide").
+> **Built S176, NOT yet user-tested.** An ENGINE change (bank $06 + bank $73; the example pin moves to `c8e2aede…`,
+> patched — was `72801bf5…`, patched, historical).
+> **Session environment:** RGBDS v0.6.1, PyBoy 2.x, PySide6 6.9.1; HEAD's verify_integrity PASS at start.
+> **The audit (the user's project 8 + save, offscreen grabs + PyBoy):**
+> (1) the torch PNG ends at the flame's tip — the glow (a circle ≈ 12 px round a point 8 px below the top edge) was never
+> drawn above it: a flat 17-px cut, hidden only on a screen's top row.
+> (2) the Draw panel: a colour of another row painted nothing (the reason in the status line only), the other rows were
+> greyed, the *row 0-3* buttons and *Recolour…* sat below the fold (1,057 px in a 691-px view) behind "tools act on",
+> "row 2" kept colour NUMBERS (brown → red, tan → amber, the frame too), Fill stopped at the 8×8 edge.
+> (3) **a screen's own palette did NOT work when walked onto** (`screens[k].palette` existed behind an unlabelled combo
+> since S94): the scroll (bank $06 `ScreenScrollTick`) loads the new screen's palette into the buffer `$C797` through
+> bank $0B entry 3 and never pushes it — the player arrived in the OLD colours, the next menu switched them. The original
+> game joins no two differently coloured screens by a scroll (ROOM_DATA_FORMAT "A screen's own colours and the scroll").
+> **Built:**
+> **Engine** — bank $06: the four ScrollXBegin `ld hl, $0b03` → `$7317`, ScrollEndCommit `ld hl, $010a` → `$7318` (same
+> size); bank $73 entries 23 `ScrollScreenBuild` / 24 `ScrollScreenDone` (+ `ScreenPalPushRows`, `ScreenPalDiff`,
+> `ScreenRowsDrawn`); WRAM `wScreenPalLate` $DED7. Per row 0-3 whose colours changed: pushed at the scroll's START,
+> unless the screen leaving draws with it and the screen arriving does not — then at its END. No row changed (every room
+> without a screen palette): nothing is scanned or pushed, the scroll starts after the original's 6 frames.
+> **Annotation (Iron Rule 6):** bank $0B entry 3 renamed `RoomEntry3_ScrollScreenBuild` (was `…_NPCDispatch` — it touches
+> no NPC) + the measured palette note in both trees; bank $06's scroll header; clean build `1ca65793…`.
+> **Editor** — NEW `editor2/core/screen_palettes.py` (give / drop / the game's scroll rule / rows drawn / the clash
+> report); the Palettes page: a strip saying WHOSE colours the rows are (blue THE ROOM'S / orange SCREEN N: ITS OWN),
+> *Give screen N its own colours* (a copy — nothing looks different until a row is edited) / *Use the room's colours
+> again*, rows marked "not the room's", an orange warning when two side-by-side screens both draw with a differing row;
+> the mini-map: a colour strip on screens with their own + the two commands in its menu. `draw_tab.py` rebuilt (rows
+> always in true colours, marks ◤ ◥ ◣ ◢ per row = which quarters draw with it — click to move one, hover to preview; a
+> row tag on every quarter; Pencil / Fill area (crosses the quarters) / Replace colour / Pick; a colour the quarter's row
+> lacks → a bar with the one-click switch; `recolour.move_row` = one-to-one, shared colours stay; ONE "Apply to" chooser;
+> fits its page). Stamps: `stamps.replace_picture` + **Replace picture…** (placements keep their solid part's cell),
+> `hold_row` / `anchor` (the tool holds a stamp by its first solid row; the cap may hang off the top edge).
+> **Fixed on the way:** `anim_import.plan` took a "free" row its own step 1 had just given pieces — a stamp placed on a
+> palette that still held a lit-bark row was claimed with a worse row than the build then drew (KEY_LESSONS S176).
+> **The torch art (session material — PNGs, not repo content):** both torches as 3×3 (`Wall torch - spade flame 3x3.png`
+> / `… tall flame 3x3.png`): the torch where it was, the glow's cap in the 4-5 pixel rows above the tip.
+> **Measured in the game:** NEW `tools/walk_screen_palette.py` on the user's project + save (GreatLog screen 15 its own
+> palette, rows 1-3 changed, cells put on row 2; from screen 14 and back): **15 / 15** (the rule's now / late rows per
+> frame of the scroll; hardware == buffer == the screen's palette after it; a menu changes no colour; a warp straight in;
+> a same-colours scroll pushes nothing and starts after 6 frames); `--negative` (the five call sites put back) **5 FAIL**.
+> `walk_stamps.py` with the 3×3 torch on screen 5 and hanging off the top of screen 4: 13 / 13 each.
+> **Test ROM:** `DWM-S176-screen-colours-test.gbc` (`435dfc4b…`, patched) = the user's project 8, both torch pictures
+> replaced (the 10 placed torches kept), screen 15 with its own colours (row 2 = brown / cream / red) and the shelf right
+> of the archive on it; `walk_screen_palette.py` 15 / 15 on it.
+> **Checks:** see the Session Index entry.
+> **Next:** the user's test of the three parts in the editor + the test ROM; then the "Awaiting a user test" list / the
+> editor's finalization.
+
 > Last verified: 2026-11-11 (Session 175 — **SCREENS + JUMPING POINTS (ROADMAP P3.3n): COPY A SCREEN'S ART AND PASTE
 > IT OVER ANOTHER SCREEN OF THE ROOM (A BACKUP), SHIFT EVERYTHING ON A SCREEN ONE CELL (+ EVERY ARRIVAL INTO IT), AND THE
 > GREATTREE CLIFF JUMP AS AN EDITOR OBJECT — WALK ONTO IT, FALL STRAIGHT DOWN TO A CELL OF THE SCREEN BELOW** (the user: "1)
@@ -84,74 +141,8 @@
 > **Next:** the user's test of jumps / Copy screen / Paste / Shift objects / screen music in the editor + the test ROMs; then the "Awaiting
 > a user test" list / the editor's finalization.
 
-> Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
-> PNGs (CLEAR = THE TILES SHOW, HALF-CLEAR = LIGHT, FRAMES = MOVEMENT), THE STAMP TOOL (T: PLACE / DRAG / DEL / ⌘C ⌘V /
-> RIGHT-CLICK LIGHT ON-OFF + COLOUR), THE TILES NEVER CHANGED — THE BUILD BAKES THE STAMPS INTO A COPY** (the user, after
-> the S173 torch art: "1) The two different torch PNGs to be importable into editor for a stamp. 2) Allow me to 'stamp'
-> these types of things (torches but there might be more in the future so we need this TYPE of image) on top of any
-> tiles. This should automatically use the tiles behind to deal with transparency etc. I should be able to remove this
-> stamp and put it elsewhere or copy and paste etc. When I remove it put the tiles back as before and don't create a
-> million random crappy broken tiles … Also please allow me to set the colour of the halo"; conferred → "The palette
-> budget needs to be respected and worked within … 2) Nearest should be fine but warn. 3) 16 pixel is fine 4) only that
-> screen. 5) Unlit option is fine. Proceed please.").
-> **Built S174, NOT yet user-tested.** Byte-neutral for a project without stamps (the same project.json is compiled; the
-> example pin unchanged).
-> **The torch art (end of S173, session material — PNGs, not repo content):** after the user's "LOOK AT HOW FLAMES IN
-> THE ACTUAL GAME MOVE", the Room of Beginning's torch cell read pixel by pixel (both frames as letters): a thin CREAM
-> outline round a RED flame, the hot core = the field colour, two different OUTLINES (slim single tip / leaning, wider,
-> forked) — nothing waves (KEY_LESSONS S174). The S173 round-6 halo (12 / 13 px, the dither moving) + stick kept, the
-> flame redrawn: "VERY NICE" (tall flame) and "Perfect" (the game-size flame's spade shape drawn 15 px tall); both
-> 9 / 9 with `walk_anim_import.py`. Delivered as the stamps `Wall torch - tall flame 3x2.png` /
-> `Wall torch - spade flame 3x2.png`.
-> **Built (EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79):** NEW `editor2/core/stamps.py` — the library
-> `custom.stamps[]` + placements `rooms[].stamps[]` (placing / moving / removing touch only these), `simulate` (the
-> editor's picture = every stamp in build order through `anim_import.plan(taken=, attr=)`), `bake` (per screen-state
-> group a layout + colour grid of its own, copied only when shared; rows existing / new free / nearest, warned; an
-> identical still piece reuses a tile, an identical moving piece a slot the room already animates; only a cell's
-> bottom-right tile keeps its wall side; one flip animation per placement); `compiler.compile_project`,
-> `measure_banks`, `capacity.measure` compile / measure the baked copy when there are stamps. Editor: the Stamp tool
-> (T) (the tools row's labels now without their keys — the keys in the tooltips — so the row fits at 1,512 px), the
-> Stamps rail page (NEW `editor2/app/rooms/stamps_panel.py`: Import PNG… window with
-> the size from "3x2" in the name, Rename, Remove, Speed; the selected stamp's Light, Light colour (Amber / Gold /
-> Orange / Red / Pale blue / Green / Violet / Custom…: the glow AND the stamp's own glow colour among its solid pixels),
-> Copy, Remove, its warning; *Show the stamps on the canvas*); the canvas draws `simulate`'s frames (▶ Play moves them), the ghost under the mouse (red =
-> overlap, refused), "!" when nearest colours. Help 10_rooms / 15_animated_tiles / glossary; `EDITOR_REVISION` S174.
-> **Measured in the game:** NEW `tools/walk_stamps.py` on the user's project + save, GreatLog screen 5 (the tall-flame
-> torch at (0,0), the spade torch at (3,0), the tall one gold-lit at (8,0)): **12 / 12** — placing changed nothing but
-> the stamps; the editor's picture == the baked screen, every frame; the baked rows in BG palette RAM; the tiles + rows;
-> 32 moving pieces show only + every baked frame; a step every 32 frames (median gap 32); walls kept; and REMOVED, the
-> project builds the very ROM it built before (`a57ac630…`, patched, both). `--negative` (nothing placed) 6 FAIL. Warned
-> as agreed: the spade torch 13 px nearest (2 pieces over that bark would need a 5th colour), the gold one 134 px (no
-> row left on that palette for a second light colour).
-> **Test ROM:** `DWM-S174-stamps-test.gbc` (`1e7140ad…`, patched) = the user's project + the two torches stamped at
-> GreatLog screen 5 (0,0) and (3,0); `walk_stamps.py` 12 / 12 on it (23 moving pieces; the spade torch 13 px nearest, warned; removed = `a57ac630…`, patched).
-> **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2140 PASSED (the pin `18e6f102…`, patched, unchanged); test_app
-> `--rom` PASS (+ `s174_stamps`; the S132 rail order + Stamps; the GUI build == the pin); test_canvas PASS (one after another).
-> Help picture `tab_rooms.png` regenerated.
-> **r2 (2026-11-11, the stamps' colour rows EXPLICIT — user: "How is it that none of the torch colours are represented
-> in my 4 palettes … Make the fucking torches explicit and populate the fucking palette so that it reflects what the
-> torches do then I can use that colour combination in specific tiles currently it just fucking pretends its not
-> there."):** r1 wrote the torch rows only into the build's copy — the Palettes page kept showing the old (unused)
-> rows, and project 6's new water / grass tile (rows 1 + 3, screen 5) silently left the torches one row (row 2; 192 +
-> 232 px nearest). Now `stamps.claim` runs in the same undo step as placing / moving / re-lighting (and once, on
-> showing a room, for placements without it): the rows the stamp needs go INTO the project's palette (a borrowed
-> palette becomes the room's own; own colour 1 ticked when needed) and the placement records them (`"rows":
-> {palette: [rows]}` — rows it uses that no tile draws); recorded rows count as used for every other stamp, the
-> preview and the bake; the Palettes page names them ("Rows stamps use … row 2: Wall torch …"); Re-plan colours starts
-> with them kept; removing a stamp leaves the colours. Tiles may be painted with them (the user's aim). On the user's
-> project 6 the two torches get row 2 (red / cream / amber / black) and stay 192 + 232 px nearest — the room has no
-> second free row while the water tile uses rows 1 + 3 (said to the user, with the one-row "lit wall" idea).
-> `walk_stamps.py` now: placing changes nothing but the stamps + the palette; the rows are in the project's palette;
-> removed = the project as it was but for those rows (the r1 md5 check could not hold any more). r2 measured: `walk_stamps.py` on the user's project 6 + save
-> (the two spade torches as the user placed them, (7,0) + (3,0)) 13 / 13 — row 2 written ['0x089B', '0x6BFF', '0x271E'];
-> the editor's picture == the bake; 22 moving pieces; 32-frame steps; walls; removed = the project but for row 2 —
-> `--negative` 6 FAIL; verify_integrity PASS, test_compiler `--rom` PASS, test_canvas PASS, test_app `--rom` PASS (after
-> one test fix: the Palettes-page label checked with isHidden — the page is not the one shown). Test ROM
-> `DWM-S174r2-stamps-test.gbc` (`a898d8ba…`, patched) = project 6 as sent, its torches' rows claimed.
-> **Next:** the user's test of stamps (import the two PNGs, place / move / copy / paste / remove, the light colours,
-> the rows on the Palettes page, ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
-
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S176** (2026-11-12): ROADMAP P3.3p — a screen's own colours made explicit AND real on a scroll (measured: the scroll loaded the new screen's palette into `$C797` and never pushed it; bank $06's five call sites → bank $73 entries 23 / 24 `ScrollScreenBuild` / `ScrollScreenDone`, rows pushed at the start or — when only the screen leaving draws with them — at the end; `wScreenPalLate` $DED7; example pin `c8e2aede…`, patched); NEW `editor2/core/screen_palettes.py`, the Palettes page's strip + *Give screen N its own colours*, the mini-map strip; the Draw panel rebuilt (true-colour rows + quarter marks, hover preview, Pencil / Fill / Replace colour / Pick, the switch bar, one Apply chooser; `recolour.move_row`); Stamps → Replace picture… (`stamps.replace_picture`, `hold_row`), both torches redrawn 3×3 with a round glow; `anim_import.plan` no longer reuses a row it just assigned; bank $0B entry 3 renamed `RoomEntry3_ScrollScreenBuild`. `tools/walk_screen_palette.py` 15 / 15, negative 5 FAIL. **Checks:** verify_integrity PASS; test_compiler `--rom` ALL 2195 PASSED (+ `test_s176`, 26; the pin `c8e2aede…`, patched); test_app `--rom` PASS (+ `s176_colours_draw_stamps`; the GUI build == the pin); test_canvas `--rom` PASS (one after another). Test ROM `DWM-S176-screen-colours-test.gbc` (`435dfc4b…`, patched). Block in PROJECT_STATE.
 - **S175 r3** (2026-11-12): the Screen page's music picker — named game songs, DWM2 / MIDI library songs (picked = added to the project, one undo step), ▶ preview (`editor2/app/song_pick.py`); editor only. Block in PROJECT_STATE (S175).
 - **S175 r2** (2026-11-11): ROADMAP P3.3o a screen's own song — bank $71 `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 + screen; re-pinned, example pin `72801bf5…`, patched), `editor2/core/screen_music.py` the room's script 0 checks the song at a scroll (only a new song switches), the Screen page's music; measured: script 0 runs on entry + scroll, not on CONTINUE; `tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census 3,000 / 3,000. Block in PROJECT_STATE (S175).
 - **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in PROJECT_STATE.
@@ -368,6 +359,7 @@
 | Resistances (S159) | 27 levels 0-3 per species (info +$0F..+$29; enemies use their species' row, a monster its record +$68..+$82 made at creation); index 26 = **EARTH** in patched builds — record +$82 bits 0-1 (the memorial tag bits 3-7), packed POSITION 27 by bank $51 `SaveBtlS_4404` (original: position 0); every type t at position t + 1, AI element (record +5) = t + 1 (Earth 27, 0 = none). Fire = the Blaze line, Heat = the Firebal line. Which skill reads which type: BATTLE_SKILL_SYSTEM §15.3, `editor2/core/resistances.py` |
 | Enemy AI and new skills (S161) | The bank $57 rule chains select skills BY ID (`$DB8A`); patched builds set `$DB8A` = a NEW skill's base for its chain walk (state 4 `AIViewArm57` → bank $72 `AIViewArm72`, off at the chain end / veto exit) and bank $54 `Fork54_RecordIndex` answers the base's record with the new skill's own (`wAIViewId` / `wAIViewBase` $DED5 / $DED6); then its AI preference (`AIPrefTable`, -60 … +60). An enemy uses a new skill as often as its base (measured on twins). The battle RNG also steps in wait loops: a build with more cycles drifts every later roll (A/Bs re-seed at every stage). The duplicate-group-cast conversion (bank $53 `DupCastSkillListCheck_4ed6` → `DupBase53` → bank $72 `AIBaseOrSelf72`) tests a new skill as its base too; a far call through RST_10 carries the id in E (A / BC clobbered). BATTLE_SKILL_SYSTEM §13.13 |
 | Enemy group spells held back (S162) | bank $53 `EnemyDupCastConversion_4e63`: an enemy's group spell / breath (`GroupDupSkillList_4ee4`, 77 ids) becomes Attack when another enemy acted before it in the round, `$DD0B` ≠ 2, and its EID's flag is set — `EnemyDupConvFlagTable_41df` (486 bytes, EIDs 0-485, 181 set: early wild rows + random battles 0-4, never a boss / arena row; EID 486 reads the next code byte `$FE`). Patched: `DupConvFlag53` bounds the read (EIDs 0-486 the original, a project row bank $6B `ProjectEnemyHolds` via entry 2 `EnemyHoldsOf` = `progression.enemies[].holds_group_spells`, else 0). BATTLE_SKILL_SYSTEM §13.13 (S162) |
+| A screen's own colours (S176) | `custom.rooms[].screens[k].palette` (states[n].palette › screens[k].palette › render.palette). The ORIGINAL scroll (bank $06 `ScreenScrollTick`) loads the new screen's palette into the buffer `$C797` (bank $0B entry 3 → bank $17 entry 0) and never pushes it; the original game joins no two differently coloured screens by a scroll. Patched: bank $73 entries 23 / 24 push the rows 0-3 that changed — at the scroll's start, or at its end when the screen leaving draws with the row and the screen arriving does not (`$C200` nibbles; `wScreenPalLate` $DED7). Model `editor2/core/screen_palettes.py` == the game (`tools/walk_screen_palette.py`). | ROOM_DATA_FORMAT "A screen's own colours and the scroll"; PROJECT_COMPILER §2.82 |
 | Verifier | `python3 tools/verify_integrity.py` — run at session start AND end |
 
 **The MD5 `b90957482011c8083a068781033715b7` is WRONG.** It was a drifted
@@ -395,7 +387,7 @@ version (+1 symbol rename). Any doc still citing `b909...` is stale.
 | $70 | NEW battle animations' tile sheets (S112; one per animation, the bank $50 stream format) | compiler-generated `patches/bank_070.asm` (`anims70`) |
 | $71 | Custom-room dispatch tables (S42 keystone: `Custom26DDTable`, `RoomEncTable`; + `CustomRoomBGMTable` + resolver entry 2, S64; `CustomAnimSrcTable` + entry 3, S99 — S102: entry 3 far-calls bank $6C first; `GateInsertTable` + entry 4 `CustomGateInsert`, `CustomRoomFlagsTable` + entry 5, S100; S116: entry 6 `CustomBGMStart` + `CustomBGMChanTable`, entry 7 `BattleBGMResolve` + the battle tables, entry 2 + `CustomGateBGMTable`; S127: `CustomGateInsert` `GATE_ANY` rows + `ScaledChance` / `ScaledChanceTable` — the chance by the party's level; S129: `MusicRulePick` + `MusicRuleTable` — music by flag; S138: entry 10 `ContinueCheck` + `StalePlace` — a save in a place the build lacks goes home, entry 0 bounded; `CustomRoomBGMTable` / `CustomRoomBattleBGMTable` 256 rows; S140 (ARC CAP3a): every per-place table indexed by the place number (`PlaceNum71` + `RegionTable71` / `GlobalPlaceIds71`), the song tables = 107 vanilla rows + `CustomPlaceBGMTable` / `CustomPlaceBattleBGMTable` one row per place, `MusicRuleTable` word keys, `HubTable` / `GateInsertTable` rows carry a region, entries 11 `BossRegionEnter` / 12 `BossRegionOf` + `GateBossRegionTable`); S147 (ARC CAP5): entry 6 `CustomBGMStart` = a forwarder to bank $74 `SongStart`, `CustomBGMChanTable` gone | compiler-generated `patches/bank_071.asm` (template head + tables; S63 `--apply` route) |
 | $72 | Custom-skill system (de-aliased S2d/S2e code + tables; S111: `FarSkillFork` → `CustomBaseTable` (new skills run a stock handler), entries 5 `ElemLevel72` / 6 `CustomLearnRow72`; **S155: the S155 built-ins' handlers (`NewDispatch72` → `wCustomJump`), entries 8 `CustomAIRule72` (from bank $57 `CustomAI57`) / 9 `CustomTargetPick72` (bank $58 row `$F0`) / 10 `RepelCommit72` (bank $73), `RepelField72`, region `gd_custom_pcts`**; **S160: `FarSkillFork`'s stock path → `ReclaimBase72` / `ReclaimBaseTable` (a reclaimed id `$BC-$C1` / `$CC-$D3` runs its new skill's base)**; **S161: entries 11 `AIViewArm72` / 12 `AIViewOff72` (the AI judges a new skill as its base — bank $57 `AIViewArm57` / `AIViewOff57` / `CustomAI57`), `AIBaseOf72`, `AIPrefEnd72` + region `gd_ai_pref`; later S161 entry 13 `AIBaseOrSelf72` (E in / out — bank $53 `DupBase53`)**) | hand-authored `patches/bank_072.asm` + compiler regions `gd_tame_meter`, `gd_quake_power`, `gd_custom_base`, `gd_skill_elements`, `gd_custom_learn` (editor2/core/custom_skills.py, S111), `gd_reclaim_base` (S160), `gd_ai_pref` (S161) |
-| $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1; … S117: entry 21 `FlagAddr` (the extended flags) + `ExtFlagsCommit` / `ExtFlagsRestore` in entries 5 / 6; S129: `FlagAddr` sends `$18xx` to bank $77 entry 11 — the story checks; S140 (ARC CAP3a): entry 0 calls `RegionCommit` (link ids / `wWarpRegion` → `RegionEnter`), entry 22 `RegionEnterE`, `ExtFlagsCommit` / `ExtFlagsRestore` magic "X2" + the region; S154: `MemorialCommit` / `MemorialRestore` after them — the memorial's `wMemCount` / `wMemHead` at bank 3 $A003-$A006, magic "M1"; S158 (E15): `CF3NewGameClear` ends in `HintNewGameClear` — SRAM bank 3 $B000-$B1FF zeroed + magic "H1" at $A007) | hand-authored `patches/bank_073.asm` |
+| $73 | Cold Farm systems (CF2 drain, entry 0; CF3 party-first sort, entry 1; … S117: entry 21 `FlagAddr` (the extended flags) + `ExtFlagsCommit` / `ExtFlagsRestore` in entries 5 / 6; S129: `FlagAddr` sends `$18xx` to bank $77 entry 11 — the story checks; S140 (ARC CAP3a): entry 0 calls `RegionCommit` (link ids / `wWarpRegion` → `RegionEnter`), entry 22 `RegionEnterE`, `ExtFlagsCommit` / `ExtFlagsRestore` magic "X2" + the region; S154: `MemorialCommit` / `MemorialRestore` after them — the memorial's `wMemCount` / `wMemHead` at bank 3 $A003-$A006, magic "M1"; S158 (E15): `CF3NewGameClear` ends in `HintNewGameClear` — SRAM bank 3 $B000-$B1FF zeroed + magic "H1" at $A007; **S176: entries 23 `ScrollScreenBuild` / 24 `ScrollScreenDone` — a screen's own colour rows pushed to the hardware when the view scrolls onto it (bank $06's five scroll call sites; `wScreenPalLate`)**) | hand-authored `patches/bank_073.asm` |
 | $74 | **S147 (ARC CAP5): the SONG HEAD — pinned `templates/bank_074_head.asm` (entry 0 `SongStart`, the 95 dummy records `SongRecords` $4003 = AudioMasterTableExt row 4, `SongSilent`) + `SongDirectory` + every song's record + the streams that fit (first fit; PROJECT_COMPILER §2.55).** Before S147: Custom song bank (M3a: records $4001-$417C fixed 95-slot, streams $4180+; resolved by AudioMasterTableExt row $9E; S116: songs keep their own 1-6 channels — no trio padding) | compiler-generated `patches/bank_074.asm` (`music74` emitter → `song_codec.song_bank_asm` ← project.json `custom.music` + `extracted/*_song_library.json`; S64 — `custom_songs.json` retired) |
 | $75 | **S147: the second song bank = self-ID + streams only (the records are in bank $74's directory; no master-table row).** Before: Second custom song bank (S116, P3.13b): the songs past bank $74's 16,000 stream bytes, records indexed from the split id (AudioMasterTableExt row 5 = region `rom0_audio_master`); bank byte + zeros when nothing spills | compiler-generated `patches/bank_075.asm` (`music75`, editor2/core/music.py) |
 | $76 | Encounter lists (S114): entry 0 `EncResolve` (+ `EncPickVariant` / `EncFloorRun` / `EncVanillaNumber`) + `EncRoomTable`, `GatePlanPtrs`, the variant lists / floor runs, `ProjectEncLists` (26 B each, numbers 128-255), the vanilla rule's byte copies; far-called by the bank $01 `LoadNextDungeonFloor` fork. S115 (NG1 new gates): entry 1 `NewGateRowCopy` (far-called by bank $16 `GateRowPtr`) + `NewGateRows` (8 B per gate 32+) / `NewGateSource`; template 296 B (S115); S117 (NG2): entry 2 `GateBossWin` (far-called by bank $50's boss-win tail) + `GateClearTable`; template 358 B S122: `GateClearTable` rows 6 B (+ `WinTail`) + `RunWinTail` (a re-bossed vanilla gate's win tail; template 460 B). S140 (ARC CAP3a): `EncResolve` indexes `EncRoomTable` by the place number (`PlaceNum76`); `GateBossWin` compares the boss room's region too (bank $71 entry 12); template 530 B. S149 (ARC CAP5): list numbers 16-bit (project lists 128-4095; the first 256 here, the rest in battle banks via `ListBankTable`); template 580 B. | compiler-generated `patches/bank_076.asm` (`enc76`, editor2/core/encounters.py) |
@@ -560,9 +552,8 @@ real project starts, so these are best confirmed on the way into it:
   Palettes → *Re-plan colours…* (re-roll, keep rows); Draw with every row.
 - S171 r5: parked metatiles — a big Borrow / picture import into a full room (nothing refused;
   the *Parked* section), painting with a parked one, Tileset tab *Park unplaced* / *Delete parked*.
-- S171 r6/r7: Draw (⌘Z / ⌘⇧Z; a quarter keeps its row — black paints one pixel; row buttons,
-  *Recolour…*; palette edits show at once); Borrow *colours: into row N* + the preview;
-  right-click → *Copy in row*.
+- S171 r6/r7: Draw (⌘Z / ⌘⇧Z; palette edits show at once — the row buttons and *Recolour…* were replaced by
+  the S176 panel, below); Borrow *colours: into row N* + the preview; right-click → *Copy in row*.
 - S173: the Rooms tab's two bars at your window size, + More, zoom / Fit / pinch, Clean / hold H, the Still tool (a frame
   chosen; the new tile in My metatiles), the brush preview, where-used, Whole room, Reference.
 - S174: stamps — import, the Stamp tool (place / drag / Del / ⌘C ⌘V / right-click light), light colours, the "!"
@@ -572,6 +563,10 @@ real project starts, so these are best confirmed on the way into it:
   screen / Paste over (a backup and back), Shift objects ◀▶▲▼ (with the GreatTree door into GreatLog screen 5).
 - S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —
   USER-CONFIRMED 2026-11-08 13:17 / 19:19; this fix was not mentioned).
+- S176: a screen's own colours (the Palettes page's strip, *Give screen N its own colours*, the mini-map strip,
+  walking onto / off the screen in the game — `DWM-S176-screen-colours-test.gbc`); the rebuilt Draw panel (marks,
+  hover preview, the switch bar, Fill area, Replace colour, the Apply chooser); Stamps → *Replace picture…* with the
+  two 3×3 torches (round glow one cell down from a screen's top).
 
 ### Not yet implemented
 

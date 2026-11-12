@@ -161,7 +161,12 @@ def plan(doc, renderer, room, key, state, lid, attr_lid, rect, frames, taken=Non
             assign[p] = hit
     # 2. new rows on rows nothing draws (pieces share a row when their colours fit)
     left = [p for p in pieces if p not in assign]
-    free_rows = [r for r in range(4) if r not in drawn]
+    # S176: a row step 1 just gave pieces of THIS picture is in use by it — not free. (Found
+    # with the 3x3 torch on a palette that still held a lit-bark row no tile drew: step 2
+    # rewrote that row for two other pieces, the pieces step 1 had put on it were then drawn
+    # in the nearest colours — 74 px instead of 30 — and the build, planning again from the
+    # rewritten row, drew something else than the Palettes page showed.)
+    free_rows = [r for r in range(4) if r not in drawn and r not in set(assign.values())]
     groups = []                                         # [colour set (no black)]
     need_free1 = False
     for p in sorted(left, key=lambda q: -len(colours[q])):

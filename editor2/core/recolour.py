@@ -187,6 +187,37 @@ def quantize(q, row):
     return [best[q.cols[i]] for i in q.idx], err or 0.0
 
 
+def move_row(px64, old_row, new_row, force=None):
+    """S176 (Draw: a quarter put on another colour row): the 64 colour numbers of a quarter
+    drawn in `old_row`, renumbered for `new_row` — the colour numbers it uses go ONE-TO-ONE
+    onto the new row's numbers (two colours never become one: shapes stay), a colour the new
+    row also has keeps it, the others take the closest left (least total OKLab error, weighted
+    by pixels). `force` = {old number: new number} pairs that must hold (Replace colour: "this
+    colour becomes that one"). -> 64 colour numbers."""
+    import itertools
+    old = [snap(tuple(c[:3])) for c in old_row]
+    new = [snap(tuple(c[:3])) for c in new_row]
+    force = dict(force or {})
+    n = {}
+    for v in px64:
+        n[v & 3] = n.get(v & 3, 0) + 1
+    used = sorted(n, key=lambda v: (-n[v], v))
+    free = [v for v in used if v not in force]
+    left = [i for i in range(4) if i not in force.values()]
+    pick, err = None, None
+    for perm in itertools.permutations(left, len(free)):
+        e = sum(dist(old[v], new[perm[j]]) * n[v] for j, v in enumerate(free))
+        if err is None or e < err - 1e-9:
+            pick, err = perm, e
+    m = dict(force)
+    if pick is not None:
+        m.update({v: pick[j] for j, v in enumerate(free)})
+    else:                                # more forced pairs than numbers left: closest each
+        for v in free:
+            m[v] = min(range(4), key=lambda i: dist(old[v], new[i]))
+    return [m.get(v & 3, v & 3) for v in px64]
+
+
 def fixed_error(q, idx64, row):
     """Error of drawing `q` with fixed colour numbers (a tile that cannot be renumbered:
     the shared font tiles, an animated slot) in `row`."""

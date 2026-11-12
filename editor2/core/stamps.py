@@ -221,10 +221,24 @@ def at_cell(custom, room, key, cell):
     return None
 
 
+def hold_row(frames):
+    """The cell row a stamp is HELD by (S176): the first row with a solid pixel in any frame —
+    a wall torch's flame, whatever glow is drawn above it. 0 when nothing is solid."""
+    top = None
+    for fr in frames:
+        a = fr.getchannel('A').point(lambda v: 255 if v == 255 else 0)
+        box = a.getbbox()
+        if box is not None:
+            top = box[1] if top is None else min(top, box[1])
+    return (top or 0) // CELL
+
+
 def anchor(st, cell):
-    """Top-left cell for a stamp held by the cursor at `cell`: the cursor on its middle column,
-    top row (a wall torch: the flame under the cursor)."""
-    return int(cell[0]) - (int(st['w']) - 1) // 2, int(cell[1])
+    """Top-left cell for a stamp held by the cursor at `cell`: the cursor on its middle column
+    and on its `hold` row (S176: the first row with solid pixels — a wall torch: the flame
+    under the cursor, the top of its glow above it, off the screen on the top row)."""
+    return (int(cell[0]) - (int(st['w']) - 1) // 2,
+            int(cell[1]) - int(st.get('hold') or 0))
 
 
 # ------------------------------------------------------------------ editing (one undo step each)
@@ -250,8 +264,74 @@ def add_to_library(doc, path, name, w, h, speed=SPEED_DEFAULT):
     lib.append({'id': sid, 'name': (name or sid).strip()[:40], 'png': rel.replace(os.sep, '/'),
                 'w': int(w), 'h': int(h), 'frames': len(frames),
                 'speed': int(speed or SPEED_DEFAULT)})
+    hold = hold_row(frames)
+    if hold:
+        lib[-1]['hold'] = hold
     doc.touch()
     return sid
+
+
+def replace_picture(doc, sid, path, w, h):
+    """S176 (user: the torch's glow was cut flat — its PNG ended at the flame's tip): swap a
+    library stamp's picture for another PNG (any size / frame count) and KEEP every placement:
+    each stays where its solid part is — the cell under its hold row (the first row with solid
+    pixels) and its middle column do not move, so a picture that grew a row of glow above the
+    flame leaves every torch where it was. The new file is a new name in assets/stamps/ (the
+    old one stays for undo). Refused, nothing changed, when a placement would leave its screen
+    or overlap another stamp. -> [(room id, index)] of the placements (their colour rows must
+    be claimed again by the caller)."""
+    st = stamp_of(doc.custom, sid)
+    if st is None:
+        raise StampError(f'no stamp {sid!r} in the library')
+    frames, _info = read_png(path, int(w), int(h))
+    new_hold = hold_row(frames)
+    dx = (int(st['w']) - 1) // 2 - (int(w) - 1) // 2
+    dy = int(st.get('hold') or 0) - new_hold
+    new_st = dict(st, w=int(w), h=int(h), frames=len(frames))
+    was, now = f"{st['w']}x{st['h']}", f'{int(w)}x{int(h)}'
+    if was != now and was in str(st.get('name') or ''):       # "Wall torch 3x2" -> "… 3x3"
+        new_st['name'] = st['name'].replace(was, now)
+    new_st.pop('hold', None)
+    if new_hold:
+        new_st['hold'] = new_hold
+    moved = []
+    for r in doc.rooms:
+        if not isinstance(r, dict):
+            continue
+        for i, pl in enumerate(r.get('stamps') or []):
+            if pl.get('stamp') == sid:
+                moved.append((r, i, dict(pl, x=int(pl['x']) + dx, y=int(pl['y']) + dy)))
+    name = st.get('name') or sid
+    for r, i, pl in moved:
+        where = f"{r.get('name') or r['id']} screen {pl['screen']}"
+        if visible(pl, new_st)[0] is None:
+            raise StampError(f'with the new picture the {name} on {where} would be off the '
+                             'screen — move it first')
+        mine = footprint(pl, new_st) & {(c, rr) for c in range(CELLS_W) for rr in range(CELLS_H)}
+        for j, o in enumerate(r.get('stamps') or []):
+            if j == i or int(o.get('screen', -1)) != int(pl['screen']):
+                continue
+            ost = new_st if o.get('stamp') == sid else stamp_of(doc.custom, o.get('stamp'))
+            opl = next((m[2] for m in moved if m[0] is r and m[1] == j), o)
+            if ost and mine & footprint(opl, ost):
+                raise StampError(f'with the new picture two stamps on {where} would overlap — '
+                                 'move one of them first')
+    n = 2
+    while True:
+        rel = os.path.join('assets', 'stamps', f'{sid}_v{n}.png')
+        if not os.path.exists(os.path.join(doc.project_dir, rel)):
+            break
+        n += 1
+    os.makedirs(os.path.join(doc.project_dir, 'assets', 'stamps'), exist_ok=True)
+    shutil.copyfile(path, os.path.join(doc.project_dir, rel))
+    st.clear()
+    st.update(new_st)
+    st['png'] = rel.replace(os.sep, '/')
+    for r, i, pl in moved:
+        pl.pop('rows', None)
+        r['stamps'][i] = pl
+    doc.touch()
+    return [(r['id'], i) for r, i, _pl in moved]
 
 
 def uses(doc, sid):
@@ -496,7 +576,9 @@ def simulate(doc, renderer):
                 out[(room['id'], i, s)] = {
                     'rect': rect, 'frames': AI.preview(p, scale=1),
                     'speed': int(st.get('speed') or SPEED_DEFAULT), 'n': p['n'],
-                    'warn': warn_text(p), 'error': '', 'new_rows': sorted(p['new_rows'])}
+                    'warn': warn_text(p), 'error': '', 'new_rows': sorted(p['new_rows']),
+                    # S176: the rows its cells are baked with (screen_palettes.rows_drawn)
+                    'rows': sorted({int(v) for v in p['assign'].values()})}
     return out
 
 

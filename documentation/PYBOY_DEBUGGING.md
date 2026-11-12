@@ -1493,3 +1493,23 @@ The same snapshot gives "slots written while the room showed" — how the breedi
   ends, then the scroll (wGameState bit 2, 27 frames) and the lock clears.
 - `walk_jumps.py` releases the D-pad the frame the script starts (held Down walks on after the
   landing — and chains into the next jump, measured).
+
+## S176 techniques — the real palette RAM on every frame of a scroll (tools/walk_screen_palette.py)
+
+- **"When do the colours change?"** Read BCPD through BCPS (`m[0xFF68] = i; m[0xFF69]`, i =
+  row × 8 + colour × 2 [+ 1]) EVERY frame while a direction is held, with `wScreenIndex`
+  ($C925) and SCX / SCY ($FF43 / $FF42): the frame the index changes, the first and last frame
+  the view moves, and the rows' words at each. Compare the hardware with the buffer `$C797`
+  after the scroll — "the buffer is right, the screen is not" is how the missing push showed.
+- **A push that is a menu away:** open and close the field menu (A facing nothing, B × 6) and
+  read the hardware again; colours that change only then were waiting in the buffer.
+- **Which screens can be walked between?** Warp to each edge cell of screen A and hold the
+  direction 90 frames; `wScreenIndex` = B without a map change = a scroll. (The warp places
+  the player on walls too — every edge cell of the user's room scrolled; on the original ROM
+  the six rooms with two palettes on side-by-side screens gave no scroll at all.)
+- **A negative without a second build:** put the original call words back in a ROM copy by
+  their byte signature (`21 17 73 D7` → `21 03 0B D7`, ×4; `21 18 73 D7` → `21 0A 01 D7`) —
+  the same save and walk then FAIL exactly the colour checks.
+- **Counting a routine's runs:** `hook_register(bank, addr)` on `ScreenPalPushRows` (from
+  game.sym) — 0 runs on a same-colours scroll is the "nothing pushed" proof.
+

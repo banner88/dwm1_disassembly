@@ -515,6 +515,56 @@ GBC-only. Contains tile palette/attribute data for the background map.
 - Written to VRAM $9800 in VRAM bank 1 (GBC attribute layer)
 - Skipped entirely on DMG Game Boy
 
+## A screen's own colours and the scroll (S176, measured)
+
+A screen (and each of its states) names its own BG palette: the bank $17 walk is
+`AttrPtrTable[map] → [wScreenIndex] → [step counter] → [attr_entry, attr_bank, pal_ptr]`
+(above). Project rooms: `custom.rooms[].screens[k].palette` (states[n].palette ›
+screens[k].palette › render.palette — PROJECT_COMPILER §2.82).
+
+**What the original engine does with it (PyBoy, the user's project + save, a screen of a
+16-screen room given another palette; the real BG palette RAM read through BCPS / BCPD every
+frame):**
+- **Entering the room on that screen** (a door, a warp, CONTINUE): its palette is loaded
+  (bank $0B entry 0 → bank $17 entry 0 → the buffer `$C797`) and shown by the fade-in.
+- **Scrolling onto it** (bank $06 `ScreenScrollTick`): ScrollXBegin sets `wScreenIndex` and
+  far-calls bank $0B entry 3 (`RoomEntry3_ScrollScreenBuild`), which DOES call bank $17 entry
+  0 — the new screen's palette is in the buffer `$C797` — and entry 1 (its colour grid →
+  `$C200`). **Nothing in the five sub-states pushes the buffer to the hardware** (no caller
+  of bank $17 entry 8 in bank $06). Measured: after the scroll the hardware still held the
+  old screen's rows while the buffer held the new ones; opening and closing the field menu
+  (which pushes the buffer) then switched the colours; scrolling back kept the wrong ones the
+  other way round.
+- The original game never shows this: of its rooms with two palettes on side-by-side screens
+  (`$06` 2 / 6, `$2F` 4 / 8, `$54` `$57` `$58` `$59` 10 / 14) none could be walked across in
+  the emulator — those screens are separate areas reached by doors.
+
+**Patched builds (S176) — bank $73 entries 23 / 24**, called same-size from bank $06 (the
+four ScrollXBegin: `ld hl, $0b03` → `$7317`; ScrollEndCommit: `ld hl, $010a` → `$7318`):
+1. `ScrollScreenBuild` keeps the 32 bytes of rows 0-3 on the screen (`$C797` → `wSnapBounce`),
+   calls bank $17 entry 0 itself (the new palette → the buffer) and compares row by row.
+   **No row changed → the plain `$0b03` call, nothing else** (every room without a screen
+   palette; gate floors and DMG skip even the compare).
+2. Some row changed: it reads which rows the screen LEAVING draws with (the `$C200` nibbles,
+   16 rows × 10 bytes, low 3 bits; rows 4-7 are the system's), calls `$0b03`, reads the same
+   for the screen ARRIVING. One hardware palette draws both screens while they slide, so per
+   changed row: **the old screen draws with it and the new one does not → held back**
+   (`wScreenPalLate` bit r, pushed by `ScrollScreenDone` after bank $01 entry `$0A` when the
+   scroll is over); **else → pushed at once** (`ScreenPalPushRows`: BCPS = `$80 | 8r`, the
+   row's 8 buffer bytes, each write after `WaitVRAM`), three frames before the view moves.
+3. When BOTH screens draw with a changed row, the screen leaving shows the new colours while
+   it slides out (≈ 25 frames) — unavoidable with one palette; the editor warns
+   (`screen_palettes.scroll_report`).
+
+Timing (measured): a scroll with a changed row starts moving 8 frames after `wScreenIndex`
+changes (the two grid scans + the pushes: 2 frames more than the original's 6); a scroll
+with no changed row: 6, as the original. After every scroll the hardware == the buffer.
+Model: `editor2/core/screen_palettes.scroll_rule` (== the game, `tools/walk_screen_palette.py`
+15 / 15; `--negative`, the five call sites put back: 5 FAIL). Not covered: a palette dimmed
+by a cutscene shade while a scroll runs (the rows are pushed unshaded), and a state change
+while standing on a screen (room entry and scrolls push; a script that changes a screen's
+state reloads as before).
+
 ## Scroll Boundary System
 
 Screen transitions within a room are computed from player world position:

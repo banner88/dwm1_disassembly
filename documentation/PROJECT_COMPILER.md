@@ -687,6 +687,9 @@ user-confirmed hand-authored code:
   `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` + `wScreenIndex` first
   (+12 B; `TEMPLATE_SIZE[$71]` 1367, `Custom26DDTable` `$4557`). Example pin `72801bf5…`
   (patched; was `18e6f102…`, patched, historical). Current values: `templates/PINNED_SHA256`.
+* S176 (§2.82): no template changed — the scroll push is hand code in `patches/bank_006.asm`
+  / `bank_073.asm`; only the example pin moved (`c8e2aede…`, patched; was `72801bf5…`, patched,
+  historical).
 * S150 re-pins (§2.58, ROADMAP Phase F T-author): `bank_060_head.asm` (+ entry 14 `TextOverride`
   = the S105 nickname redirect moved from ROM0 + the forward to the text home bank;
   `TEMPLATE_SIZE[$60]` 1,825 — was 1,794 in the S149 example game.sym); NEW pinned `text_home.asm`
@@ -5962,6 +5965,51 @@ the header checksum differ.
   `RoomsTab._screen_music_chosen` → `Document.set_screen_music`, one undo step).
 - Measured: SOUND_SYSTEM §12 (`tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census
   3,000 / 3,000).
+
+## §2.82 S176 — A SCREEN'S OWN COLOURS; stamps: `hold`, Replace picture (ROADMAP P3.3p)
+
+Built S176, NOT yet user-tested. **Engine (hand patches, no template):** bank $06's five scroll
+call sites → bank $73 entries 23 `ScrollScreenBuild` / 24 `ScrollScreenDone`
+(ROOM_DATA_FORMAT "A screen's own colours and the scroll"); WRAM `wScreenPalLate` ($DED7).
+REFERENCE_MD5 `c8e2aede…` (patched; prev `72801bf5…`, S175 r2, patched, historical) — the
+example has no screen palette: banks $06 / $73 + the header checksum differ.
+
+```json
+"rooms": [{"id": "greatlog", "render": {"palette": "pal_greatlog"},
+           "screens": {"15": {"palette": "pal_greatlog_s15"}}}],
+"stamps": [{"id": "wall_torch", "png": "assets/stamps/wall_torch_v2.png", "w": 3, "h": 3,
+            "frames": 2, "speed": 32, "hold": 1}]
+```
+- **`screens[k].palette`** (in the schema since S94 — states[n].palette › screens[k].palette ›
+  render.palette, `Document.effective_palette` / `Project.palette_ref`): the compiler already
+  emitted a render row + palette per (screen, state); S176 made the GAME show it on a scroll
+  and the editor say it. `editor2/core/screen_palettes.py` (no Qt): `give(doc, room, key,
+  shown)` (a copy `pal_<room>_s<key>` of the effective palette — or of the shown game colours
+  — on the screen; the rows stamps on that screen recorded are copied to the new id),
+  `drop` (the copy deleted when nothing else names it), `own`, `screens_with_own`,
+  `differing`, `rows_drawn` (the colour grid's rows over the screen's states + the rows the
+  stamps on it are baked with — `stamps.simulate` now returns `'rows'`), `neighbours` (the
+  4 × 4 grid), `scroll_rule(changed, old_drawn, new_drawn)` → (now, late, clash) — the Python
+  twin of `ScrollScreenBuild`'s masks, `scroll_report` / `report_text` (the pairs of
+  side-by-side screens whose colours differ, and the rows BOTH draw with).
+- **`custom.stamps[].hold`** (absent = 0): the cell row the stamp is held by = its first row
+  with a SOLID pixel in any frame (`stamps.hold_row`; written by `add_to_library` /
+  `replace_picture`). `stamps.anchor(st, cell)` = (cell x − (w − 1) // 2, cell y − hold): a
+  torch drawn with glow above its flame is placed by its flame, the cap one cell up (y = −1
+  on a screen's top row: the part off the screen is dropped, as before).
+- **`stamps.replace_picture(doc, sid, path, w, h)`**: another PNG for a library stamp — a NEW
+  file `assets/stamps/<id>_v<n>.png` (the old one stays for undo), `w` / `h` / `frames` /
+  `hold` updated, every placement moved by (old middle column − new, old hold − new) so its
+  solid part keeps its cell, `rows` dropped (the caller claims again — `stamps.claim`);
+  refused, nothing changed, when a placement would leave its screen or overlap another.
+- **`anim_import.plan` (S173 / S174) fix:** `free_rows` excludes the rows step 1 already
+  gave pieces of the same picture (KEY_LESSONS S176) — claim, simulate and the bake now plan
+  the same rows on a palette that still holds a row no tile draws.
+- **`recolour.move_row(px64, old_row, new_row, force=None)`** (the Draw tab): a quarter's
+  colour numbers renumbered for another row, one-to-one by least OKLab error (a shared colour
+  keeps it), with forced pairs (Replace colour through a row switch).
+- Measured: `tools/walk_screen_palette.py` 15 / 15 (negative 5 FAIL), `walk_stamps.py` 13 / 13
+  with a 3 × 3 torch on a screen and off its top edge; `test_s176`.
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

@@ -351,6 +351,7 @@ This session's two biggest bugs (forced index 1 and animated tiles) were both in
 ### Per-screen palette/attr data is engine-supported
 **Discovery**: Bank $17 entries 0 (palette) and 1 (attr) both index by wScreenIndex then step counter. Each screen can have its own palette colors and attr map. 11 original rooms use different palettes across screens.
 **Impact**: CustomAttrCheck extended to dispatch per-screen attr entries from bank $64 (screen 0 → entry 1, screen 4 → entry 3).
+**S176 correction (measured):** true when a room is ENTERED on a screen. On a SCROLL the new screen's colour grid is shown but its palette is only loaded into the buffer `$C797` — never pushed (bank $06 `ScreenScrollTick`); the "11 original rooms" are never walked across between their differently coloured screens. Patched builds push it (bank $73 entries 23 / 24 — ROOM_DATA_FORMAT "A screen's own colours and the scroll"; KEY_LESSONS S176).
 
 ### Never run `make clean` (CANONICAL entry; violated TWICE — now structurally fixed)
 **Reminder**: Violated the documented rule (PROJECT_STATE, SESSION_PROTOCOL, README all say never). `make clean` deletes committed .2bpp source files; regenerating from PNG produces different bytes. Only delete build artifacts: `rm -f game.o game.gbc game.sym game.map`.
@@ -8121,6 +8122,57 @@ the old path kept beside it (`_find_match_scan`).
   character grid) before drawing, copy its structure (outline colour, fill, what changes), and
   show the side-by-side; and when the user says "just give me PNGs", give PNGs — no code, no
   emulator runs until asked.
+
+### A data field the editor offers must be MEASURED in the game first (S176)
+- **Symptom:** the Palettes page had offered "this screen / state" palettes since S94; a
+  session told the user "screen 15 can have its own palette" from the schema and the docs
+  ("Per-screen palette/attr data is engine-supported", S10) — and the first PyBoy walk showed
+  the player arriving on that screen in the OLD screen's colours, switched only by the next
+  menu.
+- **Root cause:** the S10 lesson was true for ENTERING a room on a screen. The scroll (bank
+  $06 `ScreenScrollTick`) builds the new screen through bank $0B entry 3, which loads the new
+  palette into the buffer `$C797` and never pushes it; the original game joins no two
+  differently coloured screens by a scroll, so nothing ever showed. The renderer drew each
+  screen with its own palette, so the editor looked right.
+- **Fix:** bank $73 entries 23 / 24 push the changed rows (start, or end when only the screen
+  leaving draws with the row); `tools/walk_screen_palette.py` reads the real palette RAM on
+  every frame of the scroll.
+- **Rule:** "the data path exists" is a claim about one code path. Before the editor offers
+  a per-screen / per-state anything, walk EVERY way the player reaches that screen (door,
+  warp, CONTINUE, scroll) in the emulator and compare the hardware with the editor's
+  picture; and say a capability to the user only after that walk.
+
+### A control the user must find below the fold is a refusal (S176)
+- **Symptom:** "it shows palette rows but wont let me change the row? But then I can 'recolor'
+  and it randomly flips the colours?" — every piece existed (S171 r4-r7): the row buttons,
+  Recolour…, the reason for a refused click.
+- **Root cause:** the answer to a refused click was a status line under the canvas; the row
+  buttons were 400 px below the swatches, past the page's edge, behind a "tools act on"
+  choice; the row move kept colour NUMBERS, which reads as random unless the columns are
+  explained; unusable colours were dimmed, so the palette looked broken. Four sessions had
+  each fixed the behaviour the user named and added a control at the bottom.
+- **Rule:** when a click cannot do what was asked, answer AT the click with the one button
+  that makes it possible (and a preview of what that changes); put a constraint's control
+  beside the thing it constrains (the quarters' marks beside the rows); measure the panel
+  against its page after every addition (`minimumSizeHint` in the test); and when a user
+  cannot follow a design question, the question describes machinery — show the two outcomes
+  instead.
+
+### A planner must not hand out a row it has just used (S176)
+- **Symptom:** `walk_stamps.py` with a lone 3×3 torch: placing it wrote row 1 = tan / cream /
+  amber into the palette and warned "74 pixels nearest"; the build drew it with row 1 = brown
+  / amber / tan and warned 30.
+- **Root cause:** `anim_import.plan` step 1 gives pieces any row that holds their colours —
+  also a row no tile draws; step 2 then took that same row as "free" for other pieces and
+  REWROTE it. The pieces of step 1 were quantized to the new row without being counted
+  (`off_px` counts step 3 only), and the build, planning again from the rewritten palette,
+  chose differently.
+- **Fix:** `free_rows` excludes the rows step 1 assigned. Claim, simulate and bake agree
+  (75 px in that scene — the honest count).
+- **Rule:** a multi-step allocator must treat what an earlier step relied on as taken; and a
+  warning count must include every pixel that is not drawn in its own colour, whichever step
+  caused it. A plan run twice on its own output must not change (the walk compares the
+  claimed palette with the baked one).
 
 ### A picture on top of the map is data, not paint (S174)
 - **Symptom (asked for):** "When I remove it put the tiles back as before and don't create a

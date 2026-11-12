@@ -118,6 +118,7 @@ class StampsPanel(QWidget):
     importRequested = Signal()
     chosen = Signal(object)              # library id or None
     renameRequested = Signal(str)
+    replaceRequested = Signal(str)       # S176: another PNG for this stamp, placements kept
     removeRequested = Signal(str)
     speedChanged = Signal(str, int)
     litToggled = Signal(bool)
@@ -160,6 +161,15 @@ class StampsPanel(QWidget):
         for b in (self.b_import, self.b_rename, self.b_remove):
             row.addWidget(b)
         v.addLayout(row)
+        # S176 (the torch's glow was cut flat — its picture ended at the flame's tip): a new
+        # picture for a stamp already on screens, without placing them all again
+        self.b_replace = QPushButton('Replace picture…')
+        self.b_replace.setToolTip('Another PNG for this stamp. Every one already on a screen '
+                                  'stays where it is (its solid part does not move), drawn with '
+                                  'the new picture.')
+        self.b_replace.clicked.connect(lambda: self.current_id() and
+                                       self.replaceRequested.emit(self.current_id()))
+        v.addWidget(self.b_replace)
         srow = QHBoxLayout()
         srow.addWidget(QLabel('Speed'))
         self.speed = speed_combo()
@@ -261,7 +271,7 @@ class StampsPanel(QWidget):
 
     def _sync_buttons(self):
         sid = self.current_id()
-        for b in (self.b_rename, self.b_remove, self.speed):
+        for b in (self.b_rename, self.b_remove, self.b_replace, self.speed):
             b.setEnabled(sid is not None)
         st = ST.stamp_of(self.doc.custom, sid) if (self.doc and sid) else None
         if st:
