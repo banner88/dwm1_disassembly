@@ -88,6 +88,16 @@ message names what is in the way. A jump from the screen above keeps its column 
 falls straight down) — its landing row follows an up / down shift. Raw script walks to
 absolute pixels are not moved (the line says how many). One Undo puts it all back.
 
+**A screen's own music (S175)** — the Screen page (on the right) → **music**: the song
+on that screen, every state ("(the room's song)" = the room's music, set on the Room page /
+the Music tab). Walking onto the screen from another screen of the room switches to its
+song — **only when it is a different song**: two screens with the same song (or a screen
+with the room's song next to the room) play on without restarting. Entering the room on
+that screen, or loading a save made there, plays it too. The screens without a song of
+their own play the room's song. Not in gates; not while a cutscene walks the player across
+screens (the song changes at the next ordinary scroll); a room whose song changes by flag
+(Music rules) gets a warning — its other screens play its base song after a scroll.
+
 **Jumping points (S175)** — the GreatTree cliff jump: **+ More ▸ + Jump (J)** on the
 selected cell. When the player WALKS onto that cell the game plays the jump sound and
 walks him straight down — through anything — to the landing cell on the **screen below**,

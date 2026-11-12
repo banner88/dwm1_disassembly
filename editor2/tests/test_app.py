@@ -5375,6 +5375,50 @@ def s175_jumps_screens(app, w):
           '0 (picture == screen 4, objects kept); Shift objects ◀; undone exactly')
 
 
+def s175_screen_music(app, w):
+    """S175 (ROADMAP P3.3o; user: "different pieces of music playing on different screens of
+    a multi screen room … Song only switches if a screen's song is new"): the Screen page's
+    music choice on gate_island screen 4 writes screens['4'].music (one undo step), shows it
+    back, '(the room's song)' removes it; undone to the start."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'gate_island':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt.select_screen(4)
+    app.processEvents()
+    cb = rt.inspector.s_music
+    assert cb.isEnabled() and cb.currentData() is None, (cb.isEnabled(), cb.currentData())
+    i = cb.findData('0x0C')
+    assert i > 0, 'game song $0C not offered'
+    cb.setCurrentIndex(i)
+    app.processEvents()
+    assert room['screens']['4'].get('music') == '0x0C', room['screens']['4']
+    assert s.undo.index() == n0 + 1, 'not one undo step'
+    rt.select_screen(0)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() is None
+    rt.select_screen(4)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() == '0x0C', 'the choice is not shown back'
+    rt.inspector.s_music.setCurrentIndex(0)
+    app.processEvents()
+    assert 'music' not in room['screens']['4']
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    print("OK: S175 screen music — the Screen page's music on gate_island screen 4 "
+          "(screens['4'].music = '0x0C', one undo step, shown back, the room's song again); "
+          "undone exactly")
+
+
 def s171_app_window(app, w):
     """S171 (the user: "when I change tabs a random empty window pops up that never loads"
     + a screenshot over the Arena tab; "when I open editor its a bit slow at first"):
@@ -7498,6 +7542,7 @@ def main():
     s173_anim_import(app, w)
     s174_stamps(app, w)
     s175_jumps_screens(app, w)
+    s175_screen_music(app, w)
     s168_page2(app, w)              # last: it leaves its undone steps on the stack
 
     if do_rom:

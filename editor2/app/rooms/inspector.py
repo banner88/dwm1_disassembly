@@ -56,6 +56,7 @@ class Inspector(QWidget):
     areaEdited = Signal(str)                   # S143: the room's area ('' = none)
     hoverInfo = Signal(str)
     statePaletteChosen = Signal(object)        # pid | None | ('vanilla', mid)
+    screenMusicChosen = Signal(object)         # S175: a song value | None (the room's song)
     addExitRequested = Signal(object)          # (cx, cy)
     removeExitRequested = Signal(int)          # exit index in the current state
     addRedirectRequested = Signal()
@@ -255,7 +256,18 @@ class Inspector(QWidget):
                               'screens[k].palette). "(room palette)" inherits the Room '
                               'setting; a vanilla entry copies that room\'s palette into '
                               'your project as an editable item.')
+        # S175 (ROADMAP P3.3o): this screen's own song (editor2/core/screen_music.py)
+        self.s_music = QComboBox()
+        self.s_music.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self.s_music.setMinimumContentsLength(16)
+        self.s_music.currentIndexChanged.connect(self._screen_music_changed)
+        self.s_music.setToolTip('The song on THIS screen (every state). Walking onto it from '
+                                'another screen of the room switches to it — only when it is '
+                                'a different song (the same song plays on). Entering the room '
+                                'or loading a save here plays it too. "(the room\'s song)" = '
+                                'the room\'s music.')
         f.addRow('screen', self.s_key)
+        f.addRow('music', self.s_music)
         f.addRow('states', self.s_states)
         f.addRow('NPC slots', self.s_npcs)
         f.addRow('layout', self.s_layout)
@@ -673,6 +685,23 @@ class Inspector(QWidget):
                else scr.get('palette'))
         i = self.s_pal.findData(own) if own else 0
         self.s_pal.setCurrentIndex(max(i, 0))
+        # S175: the screen's own song
+        self.s_music.clear()
+        self.s_music.addItem("(the room's song)", None)
+        try:
+            from editor2.app.story_widgets import song_choices
+            for lab, v in song_choices(doc):
+                self.s_music.addItem(lab, v)
+        except Exception:                                    # noqa: BLE001
+            pass
+        cur = scr.get('music')
+        if cur is not None:
+            i = self.s_music.findData(cur)
+            if i < 0:
+                self.s_music.addItem(str(cur), cur)
+                i = self.s_music.count() - 1
+            self.s_music.setCurrentIndex(i)
+        self.s_music.setEnabled(any(r is room for r in doc.rooms))
         self._building = False
         _grid, note = renderer.attr_grid(room, int(key), state_idx)
         self.s_attr.setText(note)
@@ -812,6 +841,10 @@ class Inspector(QWidget):
     def _del_exit(self):
         if self._sel_exit_idx is not None:
             self.removeExitRequested.emit(int(self._sel_exit_idx))
+
+    def _screen_music_changed(self, _i):
+        if not self._building:
+            self.screenMusicChosen.emit(self.s_music.currentData())
 
     def _state_pal_changed(self, _i):
         if not self._building:

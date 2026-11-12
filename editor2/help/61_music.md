@@ -66,6 +66,10 @@ hold — rules *song while conditions*, the first rule whose conditions all hold
 plays (none = the room's song). Read when the room loads (a *Refresh the room*
 step changes it at once).
 
+**One screen's own song** (S175): in the Rooms tab, the Screen page → **music**. It
+plays on that screen of a multi-screen room and switches only when the next screen's song
+is different (see *Rooms → A screen's own music*).
+
 ## Gates
 
 Every gate: the song of its **floors** — the maze floors, its special rooms

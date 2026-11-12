@@ -53,7 +53,27 @@
 > build == the pin); test_canvas `--rom` PASS (one after another). Help picture `tab_rooms.png` regenerated.
 > **Not done (not asked):** the game's own jumps in a Make-editable copy of GreatTree stay raw step-on spots + scripts
 > (they work; not shown as Jump objects).
-> **Next:** the user's test of jumps / Copy screen / Paste / Shift objects in the editor + the test ROM; then the "Awaiting
+> **S175 r2 — A SCREEN'S OWN SONG (ROADMAP P3.3o; built, NOT yet user-tested)** (the user, after pushing S175: "is it
+> possible to have different pieces of music playing on different screens of a multi screen room" → "Yes make that now.
+> Song only switches if a screen's song is new"). Measured first (PyBoy, hooks on ROM0 SetBGM / InitBGM and bank $04
+> ScriptInit): the room's script 0 runs on room entry (the room's song still a PENDING request in `$C8B7`) and at every
+> scroll (bank $06 sub-state [2]); a script-only prototype played the screen's song on entry and at scrolls but a save
+> made there CONTINUEd to the room's song — CONTINUE re-derives the song without script 0 (KEY_LESSONS S175). Built: the
+> bank $71 template `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` ($10) + `wScreenIndex`
+> first (re-pinned, `TEMPLATE_SIZE[$71]` 1367; REFERENCE_MD5 `72801bf5…`, patched — only bank $71 + the checksum
+> differ from `18e6f102…`, patched, historical); NEW `editor2/core/screen_music.py` (script 0 := per screen the song
+> check — the pending / playing song equal → nothing, else the request byte — + the room's own entry script; the room's
+> base song for the other screens, $34 for an unassigned custom room; a room with music rules warned); `music.py`
+> (`MUSIC_RULE_SCREEN` rows, the model); the Screen page's **music**; help 10 / 61 / glossary, `EDITOR_REVISION`
+> S175r2. SOUND_SYSTEM §12, PROJECT_COMPILER §2.81, EDITOR_DESIGN "As built S175 r2". **Measured:** NEW
+> `tools/walk_screen_music.py` on the user's project + save (GreatLog 5 / 6 = $0C, 1 = $1E, room $34): **25 / 25**
+> (enter on 5: only $0C started; 5 → 6 → 5 no start; 5 → 1 → 5, 5 → 9 → 5 one start each; save on 5 → CONTINUE $0C);
+> `--negative` 12 FAIL; `census_music_resolve.py` (+ wScreenIndex) 3,000 / 3,000. **Test ROM:**
+> `DWM-S175r2-screen-music-test.gbc` (`896b5742…`, patched) = the user's project 7 + those three screen songs.
+> **Checks r2:** verify_integrity PASS; test_compiler `--rom` ALL 2169 PASSED (+ `test_s175_music`; the S138 TEMPLATE_SIZE
+> check now 1367); test_app `--rom` PASS (+ `s175_screen_music`; the GUI build == `72801bf5…`, patched); test_canvas `--rom`
+> PASS (one after another).
+> **Next:** the user's test of jumps / Copy screen / Paste / Shift objects / screen music in the editor + the test ROMs; then the "Awaiting
 > a user test" list / the editor's finalization.
 
 > Last verified: 2026-11-10 (Session 174 — **STAMPS (ROADMAP P3.3m): PICTURES ON TOP OF A ROOM'S TILES — A LIBRARY OF
@@ -124,6 +144,7 @@
 > the rows on the Palettes page, ▶ Play here); then the "Awaiting a user test" list / the editor's finalization.
 
 ## Session Index (finding aid — verbatim blocks in SESSION_HISTORY.md; owning docs are canonical)
+- **S175 r2** (2026-11-11): ROADMAP P3.3o a screen's own song — bank $71 `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 + screen; re-pinned, example pin `72801bf5…`, patched), `editor2/core/screen_music.py` the room's script 0 checks the song at a scroll (only a new song switches), the Screen page's music; measured: script 0 runs on entry + scroll, not on CONTINUE; `tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census 3,000 / 3,000. Block in PROJECT_STATE (S175).
 - **S175** (2026-11-11): ROADMAP P3.3n screens + jumping points — copy a screen's art (tiles, colours, palette, stamps) and paste it over another screen of the same room; Shift objects ◀▶▲▼ (everything on the screen + every arrival into it; edge exits stay; refused when something would leave); the GreatTree cliff jump as an editor object (`editor2/core/jumps.py`: a `$90` step-on trigger + the game's script `$D9E8 := 1 / sound $55 / walk_fast / npc_walk_y / wait_movement`; measured: lands only on the screen directly below — same screen = soft lock); bank $06 screen-scroll machine re-sectioned (`ScreenScrollTick`, `ScrollEndCommit`); `tools/walk_jumps.py` 16 / 16, negative 8 FAIL. Block in PROJECT_STATE.
 - **S174** (2026-11-10): ROADMAP P3.3m stamps — pictures on top of a room's tiles: `custom.stamps[]` + `rooms[].stamps[]` are data (the project's tiles never change), the build bakes a copy (NEW `editor2/core/stamps.py`; `compile_project` / `measure_banks` / `capacity.measure`); the Stamp tool (T), the Stamps page (NEW `stamps_panel.py`), light on / off + colour, nearest colours warned; the canvas == the bake; `tools/walk_stamps.py` 12 / 12 on the user's save (removed = the same ROM md5), negative 6 FAIL; the S173 torch art redrawn from the game's own torch pixels (the user's two picks, as stamp PNGs). EDITOR_DESIGN §5.1 "As built S174", PROJECT_COMPILER §2.79, KEY_LESSONS S174. Byte-neutral without stamps. **r2 (2026-11-11):** the rows a stamp needs are written into the project's palette when placed (`stamps.claim`, recorded on the placement, named on the Palettes page, kept by Re-plan, usable by tiles). Built S174, NOT yet user-tested.
 - **S173** (2026-11-10): ROADMAP P3.3l room-building aids — the measured cause of the user's asks (one tool bar overflowing at 1,512 px: Eyedrop, Walkability, Grid and Zoom existed behind »); two bars (tools / view), + More ▸ Statue · Monument · Archive, zoom 1-12× with half steps + Fit + pinch, clean view (H held), the Still tool (`animate.cell_frames` → a frame chooser → `make_still_tile`: a new still metatile; r2: on the clicked cell — r1 changed no cell and the user's cell kept moving; the game's animation and the room's own), brush preview, where-used outline, NEW `room_view.py` (Whole room, Reference); `tools/walk_still.py` 9 / 9 on the user's save (negative 2 FAIL); HEAD's test_app Capacity block fixed. EDITOR_DESIGN §5.1 "As built S173", KEY_LESSONS S173. Byte-neutral for the ROM. Built S173, NOT yet user-tested.
@@ -537,6 +558,7 @@ real project starts, so these are best confirmed on the way into it:
   chosen; the new tile in My metatiles), the brush preview, where-used, Whole room, Reference.
 - S174: stamps — import, the Stamp tool (place / drag / Del / ⌘C ⌘V / right-click light), light colours, the "!"
   warnings, ▶ Play here with stamps (`DWM-S174-stamps-test.gbc`).
+- S175 r2: a screen's own song (the Screen page's music; `DWM-S175r2-screen-music-test.gbc`: GreatLog 5 / 6 / 1).
 - S175: jumps (+ More ▸ + Jump, the landing picker, ↓J drag, `DWM-S175-jumps-test.gbc`: GreatLog's two ledges), Copy
   screen / Paste over (a backup and back), Shift objects ◀▶▲▼ (with the GreatTree door into GreatLog screen 5).
 - S172: the Balance tab's first show without the 2-4 s hold (the foods themselves — r2 and r3 —

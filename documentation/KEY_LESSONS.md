@@ -8151,3 +8151,14 @@ the old path kept beside it (`_find_match_scan`).
 - **Rule:** in GUI drivers, start a `QTimer` that rejects `QApplication.activeModalWidget()` and
   prints its text, plus `faulthandler.dump_traceback_later`; a hang then becomes a line of
   output.
+
+### A song set by a script is gone after CONTINUE (S175)
+- **Symptom:** a prototype (the room's script 0 writing the song request per screen) played
+  the screen's song on entry and at every scroll — and a save made on that screen CONTINUEd
+  to the room's song.
+- **Root cause:** CONTINUE re-derives the room's song (`LoadNewBGMIdIntoA` → bank $71 entry
+  2) but does NOT run script 0 (entry and scroll do — hooked `ScriptInit`). Same reason
+  SOUND_SYSTEM §1 says script `SetBGM` is "transient in custom rooms".
+- **Rule:** anything that must hold after a save is loaded belongs in the path CONTINUE runs
+  (here the resolver: a `MusicRuleTable` row per screen); test the save → CONTINUE leg of a
+  feature, not only entering and walking.

@@ -1148,6 +1148,21 @@ recipes are pure authoring.
       Shift objects after moving art. Not done (not asked): recognising the game's own jumps in
       Make editable copies of GreatTree as Jump objects (they stay raw step-on spots + scripts,
       which work).
+- [x] **P3.3o — A screen's own song in a multi-screen room** — **built S175 r2, NOT yet
+      user-tested** (user: "is it possible to have different pieces of music playing on
+      different screens of a multi screen room" → "Yes make that now. Song only switches if a
+      screen's song is new"). Measured first (PyBoy): the room's script 0 runs on room entry
+      (the room's song still a pending request) and at every scroll (bank $06 sub-state [2]),
+      NOT on CONTINUE (a script-only version CONTINUEd to the room's song). Built: bank $71
+      `CustomRoomBGMResolve` asks the screen first (a `MusicRuleTable` row of kind $10 +
+      screen; template re-pinned, `TEMPLATE_SIZE[$71]` 1367, example pin `72801bf5…`, patched)
+      + `editor2/core/screen_music.py` (script 0's check at a scroll: the pending / playing
+      song equal → nothing, else the request byte) + the Screen page's **music**. SOUND_SYSTEM
+      §12, PROJECT_COMPILER §2.81, help 10 / 61 / glossary. *Accept (machine):*
+      `tools/walk_screen_music.py` 25 / 25 on the user's project + save, `--negative` 12 FAIL;
+      `census_music_resolve.py` 3,000 / 3,000 with screen songs; test_compiler
+      `test_s175_music`; test_app `s175_screen_music`. *User accept:* give screens their own
+      songs and walk between them (same song: no restart).
 - [x] **P3.4 — Embedded PyBoy preview panel** [G-E] — **S132: ▶ Play here built, USER-CONFIRMED 2026-10-09 ("Rooms tab is fine") — was: NOT yet
       user-tested** (user: "Really need a 'play this room' with either flags + monsters
       imported from a save OR set manually or generated according to thresholds … Then you

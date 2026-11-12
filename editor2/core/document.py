@@ -60,6 +60,7 @@ from editor2.core.memorial_doc import MemorialMixin      # S154: the memorial st
 from editor2.core.hints_doc import HintsMixin            # S158: the breeding hints
 from editor2.core.jumps import JumpsMixin                # S175: jumping points
 from editor2.core.screen_tools import ScreenToolsMixin    # S175: screen copy / shift
+from editor2.core.screen_music import ScreenMusicMixin    # S175: a screen's own song
 from editor2.core.formats import anim_source as F_anim
 
 SCREEN_W, SCREEN_H = 20, 16
@@ -247,7 +248,7 @@ class Document(DoorsMixin, TalkMixin, AnimateMixin, TileAnimMixin, GatesMixin,
                MusicMixin, ShopsMixin, MillyMixin, WorldsMixin, HubMixin, ServicesMixin,
                BreedersMixin, YourArenaMixin, StoryMixin, GameTextMixin, ItemsMixin,
                NewGameMixin, EndingMixin, MemorialMixin, HintsMixin,
-               JumpsMixin, ScreenToolsMixin):
+               JumpsMixin, ScreenToolsMixin, ScreenMusicMixin):
     def __init__(self, path):
         self.path = path if path.endswith('.json') else \
             os.path.join(path, 'project.json')

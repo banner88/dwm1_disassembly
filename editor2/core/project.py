@@ -531,6 +531,14 @@ class Project:
                 _YA.lower_entries(self)
             except (_YA.ArenaRoomError, ProjectError, _SV.ServiceError) as ex:
                 self.arena_error = str(ex)
+        # S175 (ROADMAP P3.3o): a screen's own song — its check in front of the room's
+        # script 0 (which the game re-runs at every scroll), after every other entry wrap
+        from . import screen_music as _SM
+        self.screen_music_error = None
+        try:
+            _SM.lower(self)
+        except _SM.ScreenMusicError as ex:
+            self.screen_music_error = str(ex)
         self._gate_rows = None
         self.palettes = self.custom.get('palettes', [])
         self._pal_by_id = {p['id']: p for p in self.palettes}

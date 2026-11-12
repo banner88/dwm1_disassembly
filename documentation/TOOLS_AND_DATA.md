@@ -2414,3 +2414,14 @@ p_tf_surge 7 --ecount 3 --sched 1:0x29:1,2:0x81:0,3:0x81:0,4:0x2b:0 --php 999 --
 | `editor2/app/rooms/tab.py`, `canvas.py`, `minimap.py`, `object_panels.py` (`JumpPanel`, `_LandingPicker`), `room_view.py` | + More ▸ + Jump (J), J↓ / ↓J markers + fall lines, the Jump page; the mini-map menu (Copy / Paste / Shift objects / Remove), Copy screen / Paste here / Objects ◀▶▲▼, ⌘⇧C / ⌘⇧V; Whole-room jump arrows | test_app `s175_jumps_screens` |
 | `tools/walk_jumps.py` (NEW) | jumps in the game: on a COPY of a project adds jumps with `Document.add_jump` (`--jump SCREEN X Y LAND_Y`), builds, CONTINUEs a save, walks down onto each: nothing but those entries changed, the script == the game's recipe, the input lock, 2 px a frame, the scroll to the screen below + `$D9E8` cleared, the landing tile, the player walks away; `--negative` (planned, not added) must FAIL | S175 on the user's project + save: 16 / 16; `--negative` FAIL |
 | `disassembly/bank_006.asm`, `patches/bank_006.asm` | the screen-scroll machine re-sectioned (both trees, byte-identical): `ScreenScrollTick` (was `Jump_006_62f6`) + its four `rst $00` direction tables `ScrollLeft` / `Right` / `Up` / `Down` → `Scroll*Begin`, `$66B8`, `$66C7`, `Scroll*Step`, `ScrollEndCommit` ($63D7, the only `$D9E8` clear) | clean build md5 `1ca65793…`; verify_integrity |
+
+## S175 r2 rows (a screen's own song — ROADMAP P3.3o; built S175, NOT yet user-tested)
+
+| File | What | Verified by |
+|---|---|---|
+| `editor2/core/screen_music.py` (NEW) | `screens[k].music`: `lower` (script 0 := the scroll check + the room's entry script), `prefix_ops`, `screen_songs`, `base_song`, `problems`; `ScreenMusicMixin` (`screen_music`, `set_screen_music`) | test_compiler `test_s175_music`; `tools/walk_screen_music.py` 25 / 25 |
+| `editor2/core/music.py` | `MUSIC_RULE_SCREEN` ($10): a `MusicRuleTable` row per screen song, the EQU, `model_room_bgm` with `ctx['screen']` | census 3,000 / 3,000 |
+| `editor2/core/templates/bank_071_head.asm` (+ `PINNED_SHA256`, `validators.TEMPLATE_SIZE[$71]` 1367), `patches/bank_071.asm` (applied) | `CustomRoomBGMResolve`: the screen's own song before the room's rules | REFERENCE_MD5 `72801bf5…` (patched) |
+| `editor2/app/rooms/inspector.py`, `tab.py` | the Screen page's **music** combo, `_screen_music_chosen` | test_app `s175_screen_music` |
+| `tools/walk_screen_music.py` (NEW) | a project copy + screen songs (`Document.set_screen_music`), build, CONTINUE a save; enter on a screen (only its song starts), walk legs between screens (same song: no InitBGM; a new song: one), save there → CONTINUE → its song; `--negative` | S175 on the user's project + save: 25 / 25; negative 12 FAIL |
+| `tools/census_music_resolve.py` | + `wScreenIndex` poked (a random screen per context), the rooms with screen songs drawn 12× more | 3,000 / 3,000 on the user's project with screen songs (28 screen-song contexts) |

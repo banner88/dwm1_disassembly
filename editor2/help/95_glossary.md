@@ -242,7 +242,8 @@ never shows them. [Limits](90_limits.md)
 
 ## S
 
-**Screen** — one 10 × 8-cell part of a room; a room is up to 4 × 4 screens. Copy screen /
+**Screen** — one 10 × 8-cell part of a room; a room is up to 4 × 4 screens. A screen may
+have its own music (the Screen page). Copy screen /
 Paste over another screen of the room copies its art (tiles, colours, stamps); Shift objects
 moves everything on it one cell. [Rooms](10_rooms.md)
 

@@ -493,3 +493,48 @@ preview's own layout writes the same sound registers as the built ROM's InitBGM 
 save): room songs, cutscene songs, a battle song and a song after CONTINUE start from their
 banks ($74 / $75 / $81 / $82) — 116 checks, 0 failed; negative control (SongStart's bank
 store removed): every song outside bank $74 fails (46 checks), every bank $74 song passes.
+
+## 12. A screen's own song (S175, ROADMAP P3.3o — built S175, NOT yet user-tested)
+
+User: "is it possible to have different pieces of music playing on different screens of a
+multi screen room" → "Yes make that now. Song only switches if a screen's song is new."
+
+**What the game does (PyBoy S175, original ROM + the user's project / save; ROM0 / bank
+hooks):**
+- **Entering a room** (door / warp): bank $01 `CheckScreenLock` → `LoadNewBGMIdIntoA`
+  (→ bank $71 entry 2) queues the room's song (`SetBGM`, wBGM `$C8B7`) with `wScreenIndex`
+  already the arrival screen; then the room's **script 0** runs (`ScriptInit`, ~40 frames
+  after the warp) while that request is still pending (`$C8B5` not yet updated); InitBGM
+  starts whatever `$C8B7` holds at the next VBlank — so a script-0 write replaces the
+  room's song before it ever starts (one start, measured).
+- **A scroll inside the room**: bank $06 `ScreenScrollTick` sub-state [2] (`$66C7`) runs the
+  room's script 0 again (not in a gate, not while a script runs) — measured: `ScriptInit`
+  at the scroll, after sub-state [1] (the new screen's NPCs). No song is derived at a
+  scroll.
+- **CONTINUE**: the load path re-derives the room's song (`LoadNewBGMIdIntoA`, §1 note) but
+  script 0 does NOT run — measured: a save made on a screen whose song came from script 0
+  CONTINUEd to the room's song ($34).
+- `op $41 set_bgm` copies `wCurrPlayingBGM` to `$C8B6` (restore slot) then `SetBGM`;
+  InitBGM restarts a song even when it is the one playing (InitAudioSystem first, §1).
+
+**The design (two halves):**
+1. **Resolver** (bank $71 template `CustomRoomBGMResolve`, re-pinned S175, +12 B):
+   before the room's music rules, `MusicRulePick` with kind `MUSIC_RULE_SCREEN` ($10) +
+   `wScreenIndex`, keyed by the room (`RoomKey71`); a row = `[$10 + screen, key lo, key hi,
+   0, song]` in `MusicRuleTable` (`music.py` plan). Entry and CONTINUE then play the
+   screen's song; the existing `cp wCurrPlayingBGM / call nz, SetBGM` keeps "only if new".
+2. **Scroll** (`editor2/core/screen_music.py`): the room's script 0 gets in front
+   `branch_screen` per screen → a block per song: pending request ($C8B7 != $FF) equal →
+   done; else playing ($C8B5) equal → done; else `write_ram $C8B7, song` (not op $41: the
+   restore slot of a cutscene's set_bgm / restore_bgm stays). Screens without a song: the
+   room's base song (its own / room_defaults, else $34 = an unassigned custom room outside
+   a gate — measured, the user's GreatLog). A room with music rules: warned (the base song
+   after a scroll).
+
+**Proof:** `tools/walk_screen_music.py` on the user's project + save (GreatLog: screens 5 /
+6 = $0C, screen 1 = $1E, the room $34): enter on 5 → $0C, the only start; 5 → 6 → 5 no
+start (same song); 5 → 1 $1E once, 1 → 5 $0C once; 5 → 9 $34 once, 9 → 5 $0C once; save on
+5 → CONTINUE → $0C — **25 / 25**; `--negative` (no songs set) 12 FAIL.
+`tools/census_music_resolve.py` (+ `wScreenIndex`, screen-song rooms drawn often): 3,000 /
+3,000 identical on that project (28 screen-song contexts). test_compiler `test_s175_music`,
+test_app `s175_screen_music`.

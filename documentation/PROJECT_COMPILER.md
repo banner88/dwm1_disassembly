@@ -683,6 +683,10 @@ user-confirmed hand-authored code:
   `TEMPLATE_SIZE[$76]` 580 — `RegionTable76` `$4244`); NEW pinned `battle_bank.asm` (the copier
   block of a battle bank, `{B}` = `_B<bank>`; `battles.BATTLE_TEMPLATE_SIZE` 76 = addr(`BattleRows_B80`)
   − $4000). Current values: `templates/PINNED_SHA256`.
+* S175 re-pin (§2.81, ROADMAP P3.3o, a screen's own song): `bank_071_head.asm`
+  `CustomRoomBGMResolve` asks `MusicRulePick` for kind `MUSIC_RULE_SCREEN` + `wScreenIndex` first
+  (+12 B; `TEMPLATE_SIZE[$71]` 1367, `Custom26DDTable` `$4557`). Example pin `72801bf5…`
+  (patched; was `18e6f102…`, patched, historical). Current values: `templates/PINNED_SHA256`.
 * S150 re-pins (§2.58, ROADMAP Phase F T-author): `bank_060_head.asm` (+ entry 14 `TextOverride`
   = the S105 nickname redirect moved from ROM0 + the forward to the text home bank;
   `TEMPLATE_SIZE[$60]` 1,825 — was 1,794 in the S149 example game.sym); NEW pinned `text_home.asm`
@@ -5927,6 +5931,37 @@ template change; the example pin unchanged).
   the screen would leave it or an exit would become an edge exit.
 - Measured: `tools/walk_jumps.py` (TOOLS_AND_DATA S175). Tests: test_compiler `test_s175`,
   test_app `s175_jumps_screens`.
+
+## §2.81 S175 r2 — A SCREEN'S OWN SONG (ROADMAP P3.3o)
+
+Built S175, NOT yet user-tested. **Engine:** `templates/bank_071_head.asm`
+`CustomRoomBGMResolve` re-pinned (+12 B, `TEMPLATE_SIZE[$71]` 1367): `MusicRulePick` with B =
+`MUSIC_RULE_SCREEN` + `wScreenIndex` before the room's rules. REFERENCE_MD5 `72801bf5…`
+(patched; prev `18e6f102…`, S172 r2, historical) — the example has no screen song: bank $71 +
+the header checksum differ.
+
+```json
+"rooms": [{"id": "greatlog", "music": "0x34",
+           "screens": {"5": {"music": "0x0C"}, "6": {"music": "0x0C"}, "1": {"music": "my_tune"}}}]
+```
+- `screens[k].music` = a project song id or a game song (`0xNN`, $01-$FC); absent = the room's
+  song. Screen-level (every state).
+- **Bank $71:** `music.plan` adds a `MusicRuleTable` row `[MUSIC_RULE_SCREEN + k, room key
+  (RoomKey71: vanilla id / $100 + place), 0 terms, song]` per screen song; `MUSIC_RULE_SCREEN
+  EQU $10` emitted; `model_room_bgm` takes `ctx['screen']`.
+- **Script 0** (`screen_music.lower`, `Project.__init__` after the breeding / arena entry wraps):
+  `screenmusic:<room id>` = `branch_screen k, @_sm_i` for the screens whose song is not the
+  room's base song, `goto @_sm_<base>`, per song `check_and_branch $C8B7, $FF → _c` /
+  `check_and_branch $C8B7, song → done` / `_c: check_and_branch $C8B5, song → done` /
+  `write_ram $C8B7, song`; then the room's own entry script (labels `o_*`, CB._prefix_ops) or
+  `end`. Project songs as `song:<id>` params (resolved by the emitter, §2.9).
+- **Errors** (`screen_music_error` → validators): a value that is neither a project song nor
+  a game song id, an id outside $01-$FC, music on a screen that does not exist (music.plan
+  also stops on an unknown song). **Warnings:** a room with `music_rules` and screen songs.
+- Editor: the Screen page **music** (`RoomInspector.s_music`, `screenMusicChosen` →
+  `RoomsTab._screen_music_chosen` → `Document.set_screen_music`, one undo step).
+- Measured: SOUND_SYSTEM §12 (`tools/walk_screen_music.py` 25 / 25, negative 12 FAIL; census
+  3,000 / 3,000).
 
 ## §2.73 S165 — the WINDOW WORDS (ROADMAP Phase F T-follow (a)); every stock skill a base (ROADMAP E13 note)
 

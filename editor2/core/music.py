@@ -103,6 +103,10 @@ MUSIC_KEYS = ('libraries', 'songs', 'room_defaults', 'names', 'gates', 'battle')
 BATTLE_KEYS = ('normal', 'boss', 'arena', 'starry', 'rooms', 'fights')
 GATE_MUSIC_KEYS = ('floors', 'battles', 'rules')
 MUSIC_RULE_ROOM, MUSIC_RULE_GATE = 0, 1         # S129: MusicRuleTable kinds (bank $71)
+# S175 (ROADMAP P3.3o): a SCREEN's own song = a rule of kind $10 + the screen, keyed by
+# the room (CustomRoomBGMResolve picks it first, with wScreenIndex) — room entry and a
+# save loaded on that screen; the scroll inside the room = screen_music.py (script 0)
+MUSIC_RULE_SCREEN = 0x10
 MUSIC_RULE_MAX_TERMS = 8
 # vanilla battle songs (bank $51 LoadBattle)
 VANILLA_BATTLE = 0x27
@@ -402,6 +406,20 @@ def plan(prj):
             mid = F.val(r['mapID'])
             ctx = f"room {r.get('id')} music_rules[{i}]"
             P.rules.append(_rule(prj, ru, MUSIC_RULE_ROOM, mid, val, ctx))
+
+    # ---- S175: a screen's own song (custom.rooms[].screens[k].music) ----------
+    for r in prj.rooms:
+        for k, scr in sorted((r.get('screens') or {}).items(), key=lambda t: int(t[0])):
+            if not isinstance(scr, dict) or scr.get('music') in (None, ''):
+                continue
+            mid = F.val(r['mapID'])
+            ctx = f"room {r.get('id')} screen {k} music"
+            sid = val(scr.get('music'), ctx)
+            if not sid:
+                raise MusicError(f"{ctx}: id 0 is not a song")
+            if not 0 <= int(k) <= 15:
+                raise MusicError(f"{ctx}: no screen {k} (0-15)")
+            P.rules.append((MUSIC_RULE_SCREEN + int(k), mid, [], sid, ctx))
 
     # gate rooms with no song of their own follow the gate (only matters when a
     # gate has a song: otherwise the vanilla path is byte-for-byte what it was)
@@ -721,6 +739,7 @@ def emit_bank_071_tables(prj, warnings):
               "; " + "-" * 77,
               f"MUSIC_RULE_ROOM EQU {MUSIC_RULE_ROOM}",
               f"MUSIC_RULE_GATE EQU {MUSIC_RULE_GATE}",
+              f"MUSIC_RULE_SCREEN EQU ${MUSIC_RULE_SCREEN:02X}   ; S175: + the screen (0-15)",
               "MusicRuleTable:"]
     for kind, ident, terms, sid, what in P.rules:
         key = rule_key(prj, kind, ident)
@@ -738,7 +757,7 @@ def emit_bank_071_tables(prj, warnings):
 def rule_key(prj, kind, ident):
     """S140: a MusicRuleTable row's 16-bit key (bank $71 RoomKey71): a gate =
     its number; a room = its vanilla map id, or $100 + its place number."""
-    if kind == MUSIC_RULE_GATE or ident < VANILLA_ROWS:
+    if kind == MUSIC_RULE_GATE or ident < VANILLA_ROWS:     # (S175: screen kinds = a room's)
         return ident
     return 0x100 + prj.place_number(ident)
 
@@ -808,6 +827,10 @@ def model_room_bgm(P, ctx):
     if ctx['in_gate']:
         return dive(True)
     m = ctx['map']                         # S138: no `cp $80` — 256 rows
+    if ctx.get('screen') is not None:      # S175: the screen's own song first
+        e = rule(MUSIC_RULE_SCREEN + (ctx['screen'] & 0xFF), m)
+        if e:
+            return e
     e = rule(MUSIC_RULE_ROOM, m)
     if e:
         return e

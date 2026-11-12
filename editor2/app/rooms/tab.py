@@ -906,6 +906,7 @@ class RoomsTab(QWidget):
         self.inspector.routeDoorRequested.connect(self._route_door)
         self.inspector.portalGateRequested.connect(self._portal_to_gate)   # S117
         self.inspector.statePaletteChosen.connect(self._state_palette_chosen)
+        self.inspector.screenMusicChosen.connect(self._screen_music_chosen)     # S175
         self.inspector.addExitRequested.connect(self._add_exit)
         self.inspector.removeExitRequested.connect(self._remove_exit)
         self.inspector.tilesetChangeRequested.connect(self._change_tileset)
@@ -5921,6 +5922,20 @@ class RoomsTab(QWidget):
         else:
             self.status_line.setText('Borrowed: ' + (cmd.result[1] if cmd.result else ''))
         self._show()
+
+    def _screen_music_chosen(self, value):
+        """S175 (ROADMAP P3.3o): this screen's own song — one undo step."""
+        room = self.current_room()
+        if room is None or self.vanilla_mid is not None:
+            return
+        rid, key = self.room_id, self.key
+        self.s.undo.push(C.SnapshotCommand(
+            self.s, f'Screen {key} music',
+            lambda doc: doc.set_screen_music(doc.room(rid), key, value)))
+        self.status_line.setText(
+            f'Screen {key}: ' + (f'its own song {value}' if value else "the room's song")
+            + ' — walking onto it from another screen of the room switches the music only '
+            'when the song is different.')
 
     def _state_palette_chosen(self, pid):
         room = self.current_room()

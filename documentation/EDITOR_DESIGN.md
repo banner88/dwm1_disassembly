@@ -1455,6 +1455,15 @@ visual thing" ("sprites" = the stamps; "Also keeps walkability etc."), Shift obj
   states**, **Go to the screen below**, **Remove jump** (every state). The **Whole room** window
   draws every jump as an orange arrow (`_StitchView.jumps`).
 
+**As built S175 r2 (ROADMAP P3.3o — a screen's own song; built, NOT yet user-tested).** User:
+"is it possible to have different pieces of music playing on different screens of a multi
+screen room" → "Yes make that now. Song only switches if a screen's song is new." The Screen
+page (`RoomInspector` "Screen & state" group) has **music**: "(the room's song)" + the
+project's songs + the game's songs (`story_widgets.song_choices`); a change =
+`screenMusicChosen` → `RoomsTab._screen_music_chosen` → `Document.set_screen_music` (one
+SnapshotCommand); disabled for the game's rooms. The compiler / engine side: PROJECT_COMPILER
+§2.81, SOUND_SYSTEM §12.
+
 ### 5.1b Gates tab (v2.1 — user spec S90)
 
 The gate system as an authorable object; every element decoded

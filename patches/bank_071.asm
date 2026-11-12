@@ -310,10 +310,17 @@ CustomRoomBGMResolve:
     jr nz, .diveFresh                   ; maze floors
     ld a, [wMapID]                      ; S129: the room's music rules first
     call RoomKey71                      ; S140: DE = the room's key (vanilla id / $100 + place)
+    ld a, [wScreenIndex]                ; S175: the SCREEN's own song before them — a rule
+    add MUSIC_RULE_SCREEN               ;   of kind $10 + the screen (room entry / a save
+    ld b, a                             ;   loaded there; the scroll: the room's script 0)
+    call MusicRulePick                  ; (keeps BC / DE)
+    or a
+    jr nz, .rule
     ld b, MUSIC_RULE_ROOM
     call MusicRulePick                  ; A = the song, 0 = no rule holds
     or a
     jr z, .noRule
+.rule:
     ld e, a
     ret
 .noRule:
@@ -1415,6 +1422,7 @@ BattleFightBGMTable:
 ; -----------------------------------------------------------------------------
 MUSIC_RULE_ROOM EQU 0
 MUSIC_RULE_GATE EQU 1
+MUSIC_RULE_SCREEN EQU $10   ; S175: + the screen (0-15)
 MusicRuleTable:
     db $FF
 

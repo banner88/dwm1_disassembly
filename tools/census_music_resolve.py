@@ -7,7 +7,7 @@ screen; per sample one savestate is loaded, the game state the resolver reads is
 poked, `di / ld hl,$71xx / rst $10 / jr $` is written at $DD40 and run (PC =
 $DD40), and register E is read after two frames.
   * entry 2 CustomRoomBGMResolve reads wInGateworld, wMapID, wGateID,
-    wCurrentFloor, wLastFloor, wBossMapType;
+    wCurrentFloor, wLastFloor, wBossMapType, wScreenIndex (S175: a screen's own song);
   * entry 7 BattleBGMResolve reads $C86C (link), wMapID, wArenaStarryBattle,
     $DA03/$DA04 (the first enemy's EID), wInGateworld, wGateID, $DA09 (mode).
 The samples cover every map id class (vanilla < $50, the special rooms, the
@@ -49,6 +49,9 @@ def contexts(P, rnd, n):
     rooms_custom = [m for m in range(0x61, 0xEB)]          # S138: every custom id (256 rows)
     maps = (list(range(0x00, 0x50, 7)) + [0x50, 0x51, 0x52, 0x53, 0x58, 0x5C, 0x5D, 0x5E, 0x60]
             + rooms_custom + [0xEB, 0xF0, 0xFE])
+    # S175: the rooms with a screen's own song, often (every screen 0-15 is drawn)
+    maps += [ident & 0xFF for kind, ident, *_r in P.rules
+             if kind >= M.MUSIC_RULE_SCREEN] * 12
     gates = sorted(set([g for g in range(M.GATE_TABLE_LEN) if P.gate_bgm[g] or P.gate_battle[g]]
                        + [0, 1, 2, 5, 31, 32, 33, 95, 96, 200]))
     eids = [e for e, _ in P.fights] + [0, 1, 11, 251, 519, 700]
@@ -61,7 +64,8 @@ def contexts(P, rnd, n):
                'gate': rnd.choice(gates), 'floor': floor, 'last': last,
                'boss_map': rnd.choice(boss), 'link': rnd.choice([0] * 9 + [1]),
                'starry': rnd.choice([0, 1, 2, 2]), 'eid': rnd.choice(eids),
-               'mode': rnd.choice([0, 1, 2, 3])}
+               'mode': rnd.choice([0, 1, 2, 3]),
+               'screen': rnd.choice(range(16))}          # S175: a screen's own song
 
 
 def main():
@@ -90,7 +94,8 @@ def main():
         P.fights = [(e, s ^ 1) for e, s in P.fights]
     sym = sym_table(a.sym)
     addr = {k: sym[k][1] for k in ('wInGateworld', 'wMapID', 'wGateID', 'wCurrentFloor',
-                                   'wLastFloor', 'wBossMapType', 'wArenaStarryBattle')}
+                                   'wLastFloor', 'wBossMapType', 'wArenaStarryBattle',
+                                   'wScreenIndex')}
     from pyboy import PyBoy
     p = PyBoy(a.rom, window='null', sound_emulated=False, cgb=True)
     p.set_emulation_speed(0)
@@ -115,6 +120,7 @@ def main():
             mm[addr['wLastFloor']] = ctx['last']
             mm[addr['wBossMapType']] = ctx['boss_map']
             mm[addr['wArenaStarryBattle']] = ctx['starry']
+            mm[addr['wScreenIndex']] = ctx['screen']
             mm[0xC86C] = ctx['link']
             mm[0xDA03] = ctx['eid'] & 0xFF
             mm[0xDA04] = ctx['eid'] >> 8
