@@ -1,0 +1,1884 @@
+"""canvas.py — the room canvas, v2 (EDITOR_DESIGN §5.1; S93 → S94).
+
+The unit of editing is the 16×16 CELL the player walks on (10×8 per
+screen); a cell's graphic is a METATILE = 4 subtiles (tl, tr, bl, br) +
+one palette slot. Subtile-level editing exists only inside the metatile
+editor. One screen at native 160×128, zoom 1–12× in steps (S173: 1.5× / 2.5×
+half steps, Fit), pixel-exact.
+
+Tools (V = Select is the default):
+  select  V   click a cell → Selection panel; click an NPC/spawn/exit marker
+  paint   B   place the current metatile (drag paints)
+  rect    R   drag a rectangle of the current metatile
+  fill    F   flood-fill cells that match the clicked cell's metatile
+  pick    I   (or right-click, any tool) make the clicked cell's metatile the brush
+  walk    W   walkability mode: cells red (wall) / green (walkable); click flips
+              — only the BOTTOM-RIGHT subtile decides (PyBoy-measured S94), so a
+              flip swaps that subtile for its cross-threshold twin
+  still   S   (S173) click a MOVING cell: choose one of its frames → a new tile
+              that never moves (My metatiles; no cell changes)
+Hold H = clean view (no grid / markers / outlines) while held (S173).
+Sources: a CUSTOM room (editable when its layout is a project item) or a
+VANILLA room (read-only; "Make editable" clones it).
+"""
+
+import os
+
+from PIL import ImageQt
+from PySide6.QtCore import QElapsedTimer, QPointF, QRectF, Qt, QTimer, Signal
+from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPen, QPixmap
+from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView
+
+from editor2.core import animation as ANIM
+from editor2.core import page2 as P2
+from editor2.core import gates as G
+from editor2.core import place_names as PN
+from editor2.core.document import val, metatile_pals, pal_value, metatile_key
+from editor2.core.render_project import SCREEN_H, SCREEN_W
+from editor2.app.session import REPO
+
+TILE = 8
+CELL = 16
+CELLS_W, CELLS_H = 10, 8
+# S173 (user: "Allow zooming in … 1.5x and 2x. Maybe even 3x"): the zoom steps; the
+# half steps are crisp on a Retina screen (1.5× = 3 screen pixels a game pixel)
+ZOOMS = (1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12)
+
+
+def zoom_text(z):
+    return (f'{z:g}×')
+SPRITE_DIR = os.path.join(REPO, 'extracted', 'npc_field_sprites')
+
+PAL_TINTS = [QColor(255, 80, 80, 70), QColor(80, 160, 255, 70),
+             QColor(80, 220, 120, 70), QColor(255, 200, 60, 70),
+             QColor(200, 100, 255, 70), QColor(60, 220, 220, 70),
+             QColor(255, 130, 200, 70), QColor(200, 200, 200, 70)]
+MARKER = {'npc': QColor(0, 200, 255), 'spawn': QColor(255, 170, 40),
+          'exit': QColor(255, 70, 70), 'walkon': QColor(255, 160, 40),
+          'redirect': QColor(255, 0, 255), 'entrance': QColor(120, 255, 120),
+          'special': QColor(200, 200, 200),
+          # S98 (P3.7): doors / examine spots / step-on triggers
+          'door': QColor(0, 230, 200), 'door_open': QColor(255, 150, 40),
+          'door_dead': QColor(255, 40, 40),
+          'examine': QColor(255, 210, 60),
+          'step': QColor(255, 140, 200),
+          # S100 (P3.7b): gate rooms
+          'stairs': QColor(170, 120, 255), 'gate_arrival': QColor(80, 245, 255),
+          # S123 r3: worlds — a portal into a world, where the world lands you
+          'portal': QColor(90, 200, 255), 'world_land': QColor(90, 255, 120),
+          # S125: where a hub rule brings the player home
+          'hub': QColor(255, 200, 40),
+          # S154: a memorial statue
+          'statue': QColor(200, 200, 220),
+          # S158: a breeding-hint monument; archives (below) take their family's colour
+          'monument': QColor(170, 190, 255),
+          # S175: a jumping point / where a jump from the screen above lands
+          'jump': QColor(255, 120, 40), 'jump_land': QColor(255, 120, 40)}
+# S158 (user: "Colour it in editor"): an archive's marker = its family's colour + letters
+ARCHIVE_COLOURS = [QColor(80, 160, 255), QColor(255, 90, 60), QColor(220, 160, 80),
+                   QColor(120, 220, 255), QColor(110, 220, 90), QColor(190, 220, 60),
+                   QColor(190, 90, 255), QColor(150, 170, 120), QColor(200, 200, 200),
+                   QColor(255, 210, 40), QColor(255, 140, 220)]
+ARCHIVE_TAGS = ['Sl', 'Dr', 'Be', 'Bi', 'Pl', 'Bu', 'De', 'Zo', 'Ma', 'Bo', 'Sp']
+for _i, _c in enumerate(ARCHIVE_COLOURS):
+    MARKER[f'archive{_i}'] = _c
+MARKER['archive'] = QColor(220, 220, 220)
+MARKER_TEXT = {'spawn': 'X!', 'exit': '→', 'walkon': 'T', 'special': '?',
+               'redirect': 'R', 'entrance': 'IN', 'door': 'D', 'door_open': 'D?',
+               'door_dead': 'D!',
+               'examine': 'X',
+               'step': 'T',
+               'stairs': 'S↓', 'gate_arrival': 'G',
+               'portal': 'P', 'world_land': 'W↓', 'hub': 'H', 'statue': 'M',
+               'monument': 'Mo', 'archive': 'A?', 'jump': 'J↓', 'jump_land': '↓J'}
+MARKER_TEXT.update({f'archive{_i}': 'A' + _t for _i, _t in enumerate(ARCHIVE_TAGS)})
+SEL = QColor(255, 230, 0)
+
+
+def classify_npc(entry):
+    """project.json npcs[] entry -> (kind, x, y, sprite|None, label).
+    S98: bit-7 entries are EXAMINE spots ($8x) and STEP-ON triggers ($9x)
+    (PyBoy-measured); the legacy 'spawn' kind is an $8F examine spot."""
+    k = entry.get('kind')
+    if k == 'spawn':
+        return ('spawn', int(entry['x']), int(entry['y']), None,
+                f"examine spot (legacy 'spawn' marker) → script {entry.get('script', 0)} "
+                "= the room ENTRY script")
+    if k == 'examine':
+        tf = entry.get('talks_for')
+        if tf is not None:                                  # S177: a podium (podium.py)
+            return ('examine', int(entry['x']), int(entry['y']), None,
+                    f"podium ({entry.get('facing', 'any')}) → talks for the NPC at "
+                    f"({tf.get('x')},{tf.get('y')})")
+        return ('examine', int(entry['x']), int(entry['y']), None,
+                f"examine spot ({entry.get('facing', 'any')}) → {entry.get('script')}")
+    if k == 'step':
+        return ('step', int(entry['x']), int(entry['y']), None,
+                f"step-on trigger → {entry.get('script')}")
+    if k == 'jump':                                     # S175: a jumping point
+        return ('jump', int(entry['x']), int(entry['y']), None,
+                f"jump: walking onto it, the player falls to row {entry.get('land_y')} of the "
+                f"screen below (a step-on trigger in the game)")
+    if k == 'statue':                                   # S154: a memorial statue
+        return ('statue', int(entry['x']), int(entry['y']), None,
+                f"memorial statue '{entry.get('statue')}' (examine it in the game)")
+    if k == 'monument':                                 # S158: a breeding-hint monument
+        return ('monument', int(entry['x']), int(entry['y']), None,
+                f"hint monument '{entry.get('monument')}' (teaches a breeding cross)")
+    if k == 'archive':                                  # S158: a breeding-hint archive
+        return ('archive', int(entry['x']), int(entry['y']), None,
+                f"hint archive '{entry.get('archive')}'")
+    if k == 'npc':
+        spr = val(entry.get('sprite', 0))
+        beh = entry.get('behaviour', 'stand')
+        what = f'${spr:02X}'
+        if entry.get('monster') is not None:          # S101: a monster NPC
+            sp = val(entry['monster'])
+            spr = MONSTER_KEY + sp
+            what = f'monster {monster_name(sp)}'
+        return ('npc', int(entry['x']), int(entry['y']), spr,
+                f"NPC {what} {entry.get('facing', 'down')} {beh}"
+                f"{' HIDDEN' if entry.get('hidden') else ''} → {entry.get('script', 'none')}")
+    if k == 'raw':
+        b = [val(x) for x in entry['bytes']]
+        t = b[0]
+        if t < 0x80:
+            from editor2.core import formats as F
+            beh = F.BEHAVIOUR_NAMES.get(t & 0x0F, f'type {t & 0x0F:X}')
+            return ('npc', b[2], b[3], b[1],
+                    f"NPC ${b[1]:02X} {F.FACING_NAMES[(t >> 4) & 3]} {beh}"
+                    f"{' HIDDEN' if t & 0x40 else ''} script ${b[4]:02X}")
+        if t & 0xF0 == 0x80:
+            from editor2.core import formats as F
+            fac = F.EXAMINE_FACING_NAMES.get(t & 0x0F, f'${t & 0x0F:X}')
+            return 'examine', b[2], b[3], None, f"examine spot ({fac}) → script ${b[4]:02X}"
+        if t & 0xF0 == 0x90:
+            return 'step', b[2], b[3], None, f"step-on trigger → script ${b[4]:02X}"
+        return 'special', b[2], b[3], None, f"special ${t:02X}"
+    return 'special', int(entry.get('x', 0)), int(entry.get('y', 0)), None, '?'
+
+
+def npc_type(entry):
+    """(facing 0-3, behaviour 0-15, hidden) of an NPC entry (typed or raw);
+    None for spawn/exit markers. S97 — ROOM_DATA_FORMAT "NPC behaviour types"."""
+    from editor2.core import formats as F
+    k = entry.get('kind')
+    if k == 'npc':
+        fac = entry.get('facing', 'down')
+        t = F.FACING[fac] if isinstance(fac, str) else val(fac)
+        return ((t >> 4) & 3, F.behaviour_value(entry.get('behaviour', 0)),
+                bool(entry.get('hidden')) or bool(t & 0x40))
+    if k == 'raw':
+        t = val(entry['bytes'][0])
+        if t < 0x80:
+            return (t >> 4) & 3, t & 0x0F, bool(t & 0x40)
+    return None
+
+
+class SpriteCache:
+    """NPC thumbnails from the S91 census crops. The crops carry the throne
+    room's floor (user S94: "castle red tiles where the boss should be"), so
+    the background is knocked out here: every crop shows the SAME 16x16
+    floor cell, so the per-pixel mode across all 137 crops IS the floor —
+    pixels equal to it become transparent. (Bosses are multi-entry
+    composites: one crop = one 16x16 fragment, ROOM_DATA_FORMAT S91.)"""
+    _pix = {}
+    _floor = None
+
+    @classmethod
+    def floor(cls):
+        if cls._floor is None:
+            from collections import Counter
+            from PIL import Image
+            cols = [[Counter() for _ in range(16)] for _ in range(16)]
+            try:
+                for fn in os.listdir(SPRITE_DIR):
+                    if not fn.endswith('.png'):
+                        continue
+                    im = Image.open(os.path.join(SPRITE_DIR, fn)).convert('RGB')
+                    if im.size != (16, 16):
+                        continue
+                    px = im.load()
+                    for y in range(16):
+                        for x in range(16):
+                            cols[y][x][px[x, y]] += 1
+            except OSError:
+                pass
+            cls._floor = [[(c.most_common(1)[0][0] if c else None) for c in row]
+                          for row in cols]
+        return cls._floor
+
+    @staticmethod
+    def knock_out(im, floor):
+        """Flood-fill from the crop's border over floor-coloured pixels only:
+        a sprite's own pixels that happen to share a floor colour (cream
+        faces) stay opaque because the outline encloses them."""
+        px = im.load()
+        seen = set()
+        stack = [(x, y) for x in range(16) for y in (0, 15)] + \
+                [(x, y) for y in range(16) for x in (0, 15)]
+        while stack:
+            x, y = stack.pop()
+            if (x, y) in seen or not (0 <= x < 16 and 0 <= y < 16):
+                continue
+            seen.add((x, y))
+            if px[x, y][:3] != floor[y][x]:
+                continue
+            px[x, y] = (0, 0, 0, 0)
+            stack.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+
+    _rom = None
+    _tinted = {}
+
+    @classmethod
+    def bind_rom(cls, rom):
+        """S123: the ROM bytes, for the NPC colour previews (OBJ palettes $17:$5615 and
+        each sprite's own palette $05:$4152[id])."""
+        if cls._rom is not rom:
+            cls._rom = rom
+            cls._tinted = {}
+
+    @classmethod
+    def _obj_palette(cls, p):
+        o = 0x17 * 0x4000 + 0x5615 - 0x4000 + 8 * p
+        out = []
+        for c in range(4):
+            w = cls._rom[o + 2 * c] | cls._rom[o + 2 * c + 1] << 8
+            out.append(((w & 31) * 255 // 31, ((w >> 5) & 31) * 255 // 31,
+                        ((w >> 10) & 31) * 255 // 31))
+        return out
+
+    @classmethod
+    def get_coloured(cls, sprite_id, palette):
+        """S123: the NPC drawn in OBJ palette `palette` instead of its own — each
+        opaque pixel is matched to the nearest colour 1-3 of the sprite's own palette
+        and repainted with that colour of the chosen palette (what bank $60 entry 11
+        does to the OAM pieces)."""
+        pm = cls.get(sprite_id)
+        if palette is None or pm is None or cls._rom is None or sprite_id >= MONSTER_KEY:
+            return pm
+        if cls.food(sprite_id) is not None:                    # S172: a food, recoloured
+            from editor2.core import foods as FD
+            name, pal, _n = FD.sprites(cls._doc.data)[sprite_id]
+            # S172 r2: keyed on the drawing too, so an edit (or its undo) redraws at once
+            key = ('food', sprite_id, palette, str(FD.art_rows(cls._doc.data).get(name)))
+            if key not in cls._tinted:
+                try:
+                    from PIL import Image, ImageQt
+                    cols = cls._obj_palette(int(palette))
+                    g = FD.picture(name, pal, cls._doc.data)
+                    im = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+                    for y in range(16):
+                        for x in range(16):
+                            if g[y][x]:
+                                im.putpixel((x, y), cols[g[y][x]] + (255,))
+                    cls._tinted[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+                except Exception:                              # noqa: BLE001
+                    cls._tinted[key] = pm
+            return cls._tinted[key]
+        key = (sprite_id, palette)
+        if key not in cls._tinted:
+            try:
+                from PIL import Image, ImageQt
+                own = cls._rom[0x05 * 0x4000 + 0x4152 - 0x4000 + sprite_id] & 7
+                src = cls._obj_palette(own)[1:]
+                dst = cls._obj_palette(int(palette))[1:]
+                p = os.path.join(SPRITE_DIR, f'id_{sprite_id:02X}.png')
+                im = Image.open(p).convert('RGBA')
+                if im.size == (16, 16):
+                    cls.knock_out(im, cls.floor())
+                px = im.load()
+                for y in range(im.size[1]):
+                    for x in range(im.size[0]):
+                        r, g, b, a = px[x, y]
+                        if not a:
+                            continue
+                        k = min(range(3), key=lambda i: sum((u - v) ** 2 for u, v in
+                                                            zip((r, g, b), src[i])))
+                        px[x, y] = dst[k] + (a,)
+                cls._tinted[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+            except Exception:                                  # noqa: BLE001
+                cls._tinted[key] = pm
+        return cls._tinted[key]
+
+    _doc = None
+
+    @classmethod
+    def bind_doc(cls, doc):
+        """S172: the open project — with gamedata.foods on, the food sprites ($58-$5C, the
+        meat prop $5F) are drawn from editor2/assets/foods (editor2/core/foods.py)."""
+        cls._doc = doc
+
+    @classmethod
+    def food(cls, sprite_id):
+        """S172: the food picture shown for sprite_id, or None (tick off / not a food id)."""
+        if cls._doc is None or sprite_id is None:
+            return None
+        from editor2.core import foods as FD
+        s = FD.sprites(cls._doc.data)
+        if sprite_id not in s:
+            return None
+        name, pal, _n = s[sprite_id]
+        key = ('food', sprite_id, str(FD.art_rows(cls._doc.data).get(name)))   # S172 r2
+        if key not in cls._pix:
+            try:
+                from PIL import Image, ImageQt
+                cols = FD.obj_palette(pal)
+                g = FD.picture(name, pal, cls._doc.data)
+                im = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+                for y in range(16):
+                    for x in range(16):
+                        if g[y][x]:
+                            im.putpixel((x, y), cols[g[y][x]] + (255,))
+                cls._pix[key] = QPixmap.fromImage(ImageQt.ImageQt(im))
+            except Exception:                                  # noqa: BLE001
+                cls._pix[key] = None
+        return cls._pix[key]
+
+    @classmethod
+    def get(cls, sprite_id):
+        if sprite_id is not None and sprite_id >= MONSTER_KEY:
+            return MonsterCache.get(sprite_id - MONSTER_KEY)
+        fp = cls.food(sprite_id)
+        if fp is not None:
+            return fp
+        if sprite_id not in cls._pix:
+            p = os.path.join(SPRITE_DIR, f'id_{sprite_id:02X}.png')
+            pm = None
+            if os.path.exists(p):
+                from PIL import Image, ImageQt
+                im = Image.open(p).convert('RGBA')
+                if im.size == (16, 16):
+                    cls.knock_out(im, cls.floor())
+                pm = QPixmap.fromImage(ImageQt.ImageQt(im))
+            cls._pix[sprite_id] = pm
+        return cls._pix[sprite_id]
+
+
+MONSTER_KEY = 0x1000          # canvas marker sprite key of a monster NPC = MONSTER_KEY + species
+MONSTER_DIR = os.path.join(REPO, 'extracted', 'monster_npc_sprites')
+
+
+def monster_name(species):
+    from editor2.core.conversation import species_names
+    return species_names().get(int(species), f'species {species}')
+
+
+class MonsterCache:
+    """Monster-NPC thumbnails — each species as the game draws it as a monster
+    NPC (its overworld follower, standing, facing down). S106 (P3.10): drawn
+    by editor2/core/sprite_render.py from the decoded art + layout + palette —
+    pixel-identical to the S101 PyBoy census (tools/census_monster_npc_sprites.py)
+    for 213 of 215 species; the other two (ChopClown / Grendal) the census
+    caught with the attr bytes the pre-S105 overlay had overwritten — and the
+    project's NEW species (221-239) from their own art (`bind` = the open
+    project's Document; Session binds it)."""
+    _pix = {}
+    _doc = None
+
+    @classmethod
+    def bind(cls, doc):
+        cls._doc = doc
+
+    @classmethod
+    def get(cls, species):
+        from editor2.app import sprite_qt
+        species = int(species)
+        if species >= 221:
+            if cls._doc is None:
+                return None
+            pm = sprite_qt.species_icon(cls._doc, species, 1)
+            return None if pm.isNull() else pm
+        if species not in cls._pix:
+            pm = sprite_qt.species_icon(None, species, 1)
+            if pm.isNull():
+                p = os.path.join(MONSTER_DIR, f'sp_{species:03d}.png')
+                pm = QPixmap(p) if os.path.exists(p) else None
+            cls._pix[species] = pm if pm is not None and not pm.isNull() else None
+        return cls._pix[species]
+
+    @staticmethod
+    def species(project_data=None):
+        """[(species, name)] safe as monster NPCs: the vanilla species of the
+        census that have a thumbnail, + the project's own new species
+        (custom.species; S105). The census was captured on the pre-S105
+        example build, so its id-224 row is that project's Gorbunok — ids >= 221
+        come from the PROJECT only (no thumbnail until the Monsters tab renders
+        the project's art, ROADMAP P3.10)."""
+        import json
+        try:
+            d = json.load(open(os.path.join(REPO, 'extracted', 'monster_npc_sprites.json')))
+        except (OSError, ValueError):
+            d = {}
+        blank = set(d.get('blank') or [])
+        out = [(int(k), v.get('name', '')) for k, v in sorted(d.get('species', {}).items(),
+                                                             key=lambda kv: int(kv[0]))
+               if int(k) not in blank and int(k) < 221]
+        for s in ((project_data or {}).get('custom') or {}).get('species') or []:
+            if isinstance(s, dict) and isinstance(s.get('id'), int):
+                out.append((s['id'], s.get('name', f"species {s['id']}")))
+        return sorted(out)
+
+
+def metatile_at(tiles, attr, cx, cy):
+    """The cell's metatile; 'pal' is per subtile when the four differ (S96 —
+    vanilla mixes slots inside a cell, the attr grid is per 8x8)."""
+    r, c = cy * 2, cx * 2
+    pal = None
+    if attr:
+        pal = pal_value([attr[r][c], attr[r][c + 1], attr[r + 1][c], attr[r + 1][c + 1]])
+    return {'tiles': [tiles[r][c], tiles[r][c + 1], tiles[r + 1][c], tiles[r + 1][c + 1]],
+            'pal': pal}
+
+
+class RoomCanvas(QGraphicsView):
+    hoverInfo = Signal(str)
+    brushPicked = Signal(object)              # metatile dict
+    markerSelected = Signal(object)           # dict or None
+    cellSelected = Signal(object)             # (cx, cy) or None
+    walkFlipRequested = Signal(int, int)      # cx, cy
+    zoomChanged = Signal(float)
+    editRequested = Signal()                  # painting attempted on read-only
+    toolChanged = Signal(str)
+    markerMoveRequested = Signal(object, int, int)   # S97: marker ref, new cell
+    markerActivated = Signal(object)          # S98 r2: double-click on a marker
+    cellActivated = Signal(object)            # S99 r3: double-click on a plain cell
+    cellsSelected = Signal(object)            # S102: (c0, r0, c1, r1) drag / Shift+click
+    stillRequested = Signal(object)           # S173: (cx, cy) clicked with the Still tool
+    cleanChanged = Signal(bool)               # S173: clean view on / off
+    # S174 (ROADMAP P3.3m): the Stamp tool — placements are room['stamps'] (stamps.py)
+    stampPlaceRequested = Signal(object)      # (cx, cy): put the chosen stamp here
+    stampSelected = Signal(object)            # placement index or None
+    stampMoveRequested = Signal(int, int, int)    # index, new x, new y (top-left cell)
+    stampDeleteRequested = Signal(int)
+    stampCopyRequested = Signal(int)
+    stampPasteRequested = Signal(object)      # (cx, cy) under the mouse
+    stampMenuRequested = Signal(int, object)  # index, global QPoint
+
+    TOOLS = ('select', 'paint', 'rect', 'fill', 'pick', 'walk', 'still', 'stamp')
+
+    def __init__(self, session, parent=None):
+        super().__init__(parent)
+        self.s = session
+        self.source = None           # ('custom', room_id) | ('vanilla', mid)
+        self.room = None
+        self.key = 0
+        self.state_idx = 0
+        self._zoom = 3
+        self.tool = 'select'
+        self.brush = None            # metatile dict
+        self.layers = {'grid': True, 'attr': False, 'walk': False, 'markers': True,
+                       'anim': True,      # S99: outline the animated tiles
+                       'stamps': True}    # S174: draw the stamps (off: the tiles under them)
+        self.stamp_brush = None           # S174: library stamp id the Stamp tool puts down
+        self.stamp_sel = None             # S174: the selected placement (index) on this screen
+        self._stamp_drag = None           # [index, grab offset (dx, dy), current cell]
+        self._stamp_view = {}             # index -> stamps.simulate info (this screen / state)
+        self._stamp_fkey = None
+        self._stamp_ghost = {}
+        # S99 (P3.3e): the room's tile animation — map ID whose bank-$01
+        # handler runs (vanilla: the room itself; custom: its `animation`)
+        self.anim_mid = None
+        self.anim_slots = set()
+        self.own_slots = set()            # S102: slots of the room's own tile_anims
+        self._player = None               # animation.Player while previewing
+        self._tplayer = None              # S102: tileanim.Player (own animations)
+        self._anim_timer = QTimer(self)
+        self._anim_timer.setInterval(15)
+        self._anim_timer.timeout.connect(self._anim_tick)
+        self._anim_clock = QElapsedTimer()
+        self._anim_frames = 0
+        self.tiles = None
+        self.attr = None
+        self.lid = None
+        self.attr_lid = None
+        self.attr_note = ''
+        self.gfx = None
+        self.pals = None
+        self.markers = []
+        self.selected_marker = None
+        self.selected_cell = None
+        self._stroke = None
+        self._rect_anchor = None
+        self._rect_cur = None
+        self._hover = None
+        self._panning = None
+        self._space = False
+        self.highlight = None        # S96 slot map: tile index to outline
+        self._drag = None            # S97: [marker ref, start cell, current cell]
+        self.sel_rect = None         # S102: (c0, r0, c1, r1) selected cells
+        self._sel_drag = None        # S102: anchor cell of a selection drag
+        # S173: clean view (button = sticky, H held = while held), the cells drawn
+        # with a picker metatile (hover), the brush's picture under the cursor
+        self.clean = False
+        self._clean_hold = False
+        self.used_key = None
+        self.ghost = True
+        self._ghost_pm = None
+        self._ghost_key = None
+        self._gesture = 0.0
+
+        self.scene_ = QGraphicsScene(self)
+        self.setScene(self.scene_)
+        self.base = QGraphicsPixmapItem()
+        self.base.setTransformationMode(Qt.FastTransformation)
+        self.scene_.addItem(self.base)
+        self.scene_.setSceneRect(0, 0, SCREEN_W * TILE, SCREEN_H * TILE)
+        self.setRenderHints(QPainter.RenderHints())
+        self.setBackgroundBrush(QBrush(QColor(28, 28, 32)))
+        self.setMouseTracking(True)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.set_zoom(3)
+        self.set_tool('select')
+
+        self.s.layoutChanged.connect(self._on_layout_changed)
+        self.s.paletteChanged.connect(lambda _p: self.reload())
+        self.s.structureChanged.connect(self.reload)
+
+    # ----------------------------------------------------------------- view
+    def set_zoom(self, z):
+        z = max(ZOOMS[0], min(ZOOMS[-1], float(z)))
+        z = int(z) if z == int(z) else z
+        self._zoom = z
+        self.resetTransform()
+        self.scale(z, z)
+        self.zoomChanged.emit(float(z))
+
+    def zoom(self):
+        return self._zoom
+
+    def zoom_step(self, d):
+        """S173: the next zoom step up (d > 0) or down."""
+        z = self._zoom
+        if d > 0:
+            nxt = next((s for s in ZOOMS if s > z + 1e-6), ZOOMS[-1])
+        else:
+            nxt = next((s for s in reversed(ZOOMS) if s < z - 1e-6), ZOOMS[0])
+        self.set_zoom(nxt)
+
+    def fit_zoom(self):
+        """S173: the biggest zoom step at which the whole screen fits the view."""
+        vp = self.viewport().size()
+        w, h = SCREEN_W * TILE, SCREEN_H * TILE
+        best = ZOOMS[0]
+        for s_ in ZOOMS:
+            if w * s_ <= vp.width() - 4 and h * s_ <= vp.height() - 4:
+                best = s_
+        self.set_zoom(best)
+        return best
+
+    def set_clean(self, on):
+        """S173: clean view — the art only (no grid, markers, outlines, selection)."""
+        self.clean = bool(on)
+        self.viewport().update()
+        self.cleanChanged.emit(self.is_clean())
+
+    def is_clean(self):
+        return self.clean or self._clean_hold
+
+    def set_used(self, mt):
+        """S173: outline every cell of this screen drawn with metatile `mt` (None = off).
+        Returns how many cells of the screen show it."""
+        self.used_key = metatile_key(mt) if mt else None
+        self.viewport().update()
+        return len(self.used_cells())
+
+    def used_cells(self):
+        if self.used_key is None or self.tiles is None:
+            return []
+        return [(cx, cy) for cy in range(CELLS_H) for cx in range(CELLS_W)
+                if metatile_key(self.cell_metatile(cx, cy)) == self.used_key]
+
+    def current_sheet(self):
+        """S173: the sheet as the canvas shows it now (the animation frame on screen
+        while ▶ Play runs)."""
+        sheet = bytes(self._player.sheet) if self._player is not None else self.gfx.sheet
+        if self._tplayer is not None:
+            sh = bytearray(P2.pad_sheet(sheet))
+            for s_ in self.own_slots:
+                sh[s_ * 16:s_ * 16 + 16] = self._tplayer.sheet[s_ * 16:s_ * 16 + 16]
+            sheet = bytes(sh)
+        return sheet
+
+    def cell_gfx_now(self, cx, cy):
+        """S173: the 4 subtile graphics the cell shows at this moment."""
+        sh = P2.pad_sheet(self.current_sheet())
+        return tuple(bytes(sh[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                     for t in self.cell_metatile(cx, cy)['tiles'])
+
+    def cell_moves(self, cx, cy):
+        return any(P2.slot_key(t) in self.anim_slots for t in self.cell_metatile(cx, cy)['tiles'])
+
+    def _ghost_pixmap(self):
+        """S173: the brush drawn with this room's sheet and colours (cached)."""
+        b = self.brush
+        if not b or self.gfx is None or self.pals is None:
+            return None
+        key = (metatile_key(b), id(self.gfx), id(self.pals))
+        if key != self._ghost_key:
+            from PIL import Image
+            img = Image.new('RGB', (16, 16))
+            pals = metatile_pals(b) or [0] * 4
+            try:
+                for i, t in enumerate(b['tiles']):
+                    img.paste(self.s.renderer.render_tile(self.gfx.sheet, int(t), self.pals,
+                                                          pals[i]), ((i % 2) * 8, (i // 2) * 8))
+                self._ghost_pm = QPixmap.fromImage(ImageQt.ImageQt(img))
+            except Exception:                                    # noqa: BLE001
+                self._ghost_pm = None
+            self._ghost_key = key
+        return self._ghost_pm
+
+    def set_tool(self, tool):
+        assert tool in self.TOOLS
+        self.tool = tool
+        self.setCursor({'select': Qt.ArrowCursor, 'walk': Qt.PointingHandCursor,
+                        'still': Qt.PointingHandCursor, 'stamp': Qt.ArrowCursor}
+                       .get(tool, Qt.CrossCursor))
+        self._rect_anchor = self._rect_cur = None
+        self.viewport().update()
+        self.toolChanged.emit(tool)
+
+    def set_brush(self, metatile):
+        self.brush = dict(metatile) if metatile else None
+
+    def set_highlight(self, tile):
+        self.highlight = tile
+        self.viewport().update()
+
+    def set_layer(self, name, on):
+        self.layers[name] = bool(on)
+        self.viewport().update()
+
+    # ----------------------------------------------------------------- data
+    def show_custom(self, room_id, key, state_idx=0):
+        self.source = ('custom', room_id)
+        self.key, self.state_idx = int(key), int(state_idx)
+        self.selected_marker = self.selected_cell = None
+        self.sel_rect = None
+        self.reload()
+
+    def show_vanilla(self, mid, key, state_idx=0):
+        self.source = ('vanilla', int(mid))
+        self.key, self.state_idx = int(key), int(state_idx)
+        self.selected_marker = self.selected_cell = None
+        self.sel_rect = None
+        self.reload()
+
+    def clear(self):
+        self.source = self.room = None
+        self.tiles = self.attr = None
+        self.base.setPixmap(QPixmap())
+        self.viewport().update()
+
+    def is_vanilla(self):
+        return bool(self.source) and self.source[0] == 'vanilla'
+
+    def is_editable(self):
+        return (not self.is_vanilla()) and self.lid is not None
+
+    def reload(self):
+        if not self.source:
+            return
+        r = self.s.renderer
+        if self.is_vanilla():
+            mid = self.source[1]
+            self.room = None
+            nst = len(r.vanilla_steps(mid, self.key))
+            self.state_idx = min(self.state_idx, nst - 1)
+            self.gfx = r.vanilla_gfx(mid)
+            self.pals = r.vanilla_palettes_step(mid, self.key, self.state_idx)
+            self.tiles = [list(x) for x in r.vanilla_screen_grid(mid, self.key, self.state_idx)]
+            attr = r.vanilla_attr_grid(mid, self.key, self.state_idx)
+            self.attr = [list(x) for x in attr] if attr else None
+            self.lid = self.attr_lid = None
+            self.attr_note = f'vanilla attr (step {self.state_idx})'
+            npcs, exits = r.vanilla_markers(mid, self.key, self.state_idx)
+            self._build_markers({'npcs': npcs, 'exits': exits})
+            self._mark_redirects_vanilla(mid)
+        else:
+            try:
+                room = self.s.doc.room(self.source[1])
+            except KeyError:
+                self.clear()
+                return
+            self.room = room
+            if str(self.key) not in room.get('screens', {}):
+                keys = self.s.doc.screen_keys(room)
+                if not keys:
+                    self.clear()
+                    return
+                self.key = keys[0]
+            nstates = len(self.s.doc.states(room, self.key))
+            self.state_idx = min(self.state_idx, nstates - 1)
+            st = r.screen_state(room, self.key, self.state_idx)
+            self.gfx = r.room_gfx(room)
+            self.pals = r.room_palettes(room, self.key, self.state_idx)
+            grid, lid = r.layout_grid(st['layout'])
+            self.tiles = [list(x) for x in grid]
+            self.lid = lid
+            attr, note = r.attr_grid(room, self.key, self.state_idx)
+            self.attr = [list(x) for x in attr] if attr else None
+            self.attr_note = note
+            self.attr_lid = None
+            if attr and note and not note.startswith(('WARNING', 'vanilla', 'no ')):
+                cand = note.split(' ')[0]
+                if cand in r.layout_by_id and 'attr' in r.layout_by_id[cand]:
+                    self.attr_lid = cand
+            self._build_markers(st)
+            self._mark_entrances(room)
+            self._mark_gate_arrival(room)
+            self._mark_jump_landings(room)
+        self._stamp_view = {}
+        if self.room is not None and not self.is_vanilla():
+            n = len(self.room.get('stamps') or [])
+            if self.stamp_sel is not None and (self.stamp_sel >= n or int(
+                    self.room['stamps'][self.stamp_sel].get('screen', -1)) != int(self.key)):
+                self.stamp_sel = None
+            self._update_stamps()
+        else:
+            self.stamp_sel = None
+        self._update_anim()
+        self._render()
+
+    # S94b entrance redirects: a vanilla door routed into a custom room is a
+    # magenta 'R' on the vanilla screen; the arrival cell in the custom room
+    # is a green 'IN' marker (both read live from custom.entrance_redirects).
+    def _mark_redirects_vanilla(self, mid):
+        for i, rd in enumerate(self.s.doc.redirects()):
+            if val(rd['mapID']) != mid or val(rd['screen']) != self.key:
+                continue
+            x, y = val(rd['x']), val(rd['y'])
+            self.markers = [m for m in self.markers
+                            if not (m[0] == 'exit' and m[1] == x and m[2] == y)]
+            if rd.get('door') or rd.get('twin_of'):
+                did = rd.get('door') or rd.get('twin_of')
+                try:
+                    pn = (self.s.doc.door_name(rd.get('link')) if rd.get('link')
+                          else PN.Places.of(self.s.doc).label(rd['dest']))
+                except Exception:
+                    pn = PN.Places.of(self.s.doc).label(rd['dest'])
+                self.markers.append(('door', x, y, None,
+                                     f"vanilla door ↔ '{pn}' (two-way)"
+                                     + (' — second cell of the double door'
+                                        if rd.get('twin_of') else '')
+                                     + ' — double-click to edit',
+                                     ('redirect', i, dict(rd, door=did))))
+                continue
+            self.markers.append(('redirect', x, y, None,
+                                 f"door ({x},{y}) REDIRECTED → {PN.Places.of(self.s.doc).label(rd['dest'])} "
+                                 f"screen {val(rd['screen_byte']) & 0x0F} "
+                                 f"spawn ({rd['spawn_x']},{rd['spawn_y']})",
+                                 ('redirect', i, rd)))
+
+    def _mark_jump_landings(self, room):
+        """S175: where the jumps of the screen above land on this screen ('↓J')."""
+        try:
+            lands = self.s.doc.jumps_landing_on(room, self.key)
+        except Exception:                                        # noqa: BLE001
+            return
+        for src, x, y, ly in lands:
+            self.markers.append(('jump_land', x, ly, None,
+                                 f'landing of the jump at ({x},{y}) on screen {src}',
+                                 ('jump_land', src, (x, y))))
+
+    def _mark_entrances(self, room):
+        for i, rd in self.s.doc.redirects_to(room['id']):
+            if rd.get('door') or rd.get('twin_of'):
+                continue            # S98: the door's own end marker shows it
+            if (val(rd['screen_byte']) & 0x0F) != self.key:
+                continue
+            x, y = val(rd['spawn_x']), val(rd['spawn_y'])
+            name = self.s.renderer.vanilla_name(val(rd['mapID']))
+            self.markers.append(('entrance', x, y, None,
+                                 f"ENTRANCE from {name} screen {val(rd['screen'])} "
+                                 f"door ({rd['x']},{rd['y']})",
+                                 ('redirect', i, rd)))
+
+    def _npc_names(self, st):
+        """S124 r3: {entry index: YOUR name} — a project NPC's actor name, a game
+        room's custom._editor.npc_names (npc_names.py); NPC n = 1-based, spots
+        not counted."""
+        from editor2.core import npc_names as NN
+        from editor2.core.cutscene_build import is_npc_entry
+        vn = {}
+        if self.is_vanilla():
+            custom = (self.s.doc.data.get('custom') or {}) if self.s.doc else {}
+            vn = NN.names_in(custom, self.source[1], self.key, self.state_idx)
+        out, n = {}, 0
+        for i, e in enumerate(st.get('npcs', [])):
+            try:
+                if not (isinstance(e, dict) and is_npc_entry(e)):
+                    continue
+            except Exception:                                    # noqa: BLE001
+                continue
+            n += 1
+            nm = e.get('actor') or vn.get(n)
+            if nm:
+                out[i] = str(nm)
+        return out
+
+    def _build_markers(self, st):
+        self.markers = []
+        self.npc_tags = {}
+        try:
+            names = self._npc_names(st)
+        except Exception:                                        # noqa: BLE001
+            names = {}
+        for i, e in enumerate(st.get('npcs', [])):
+            kind, x, y, spr, label = classify_npc(e)
+            if kind == 'archive':                       # S158: its family's colour
+                a = next((o for o in (self.room or {}).get('archives') or []
+                          if o.get('id') == e.get('archive')), None)
+                from editor2.core import hints as _HT
+                fi = _HT.family_index((a or {}).get('family'))
+                if fi is not None:
+                    kind = f'archive{fi}'
+                    label += f" — the {_HT.FAMILIES[fi]} family"
+            ref = ('npc', i, e)
+            if i in names:
+                label = f'“{names[i]}” — {label}'
+                self.npc_tags[id(ref)] = names[i]
+            self.markers.append((kind, x, y, spr, label, ref))
+        for i, e in enumerate(st.get('exits', [])):
+            if e.get('door'):
+                # S98 r2: a named door OBJECT; orange 'D?' until connected
+                name = e.get('name') or e['door']
+                if e.get('dest'):
+                    try:
+                        pn = (self.s.doc.door_name(e.get('link')) if e.get('link')
+                              else PN.Places.of(self.s.doc).label(e['dest']))
+                    except Exception:
+                        pn = PN.Places.of(self.s.doc).label(e.get('dest'))
+                    label = f"door '{name}' ↔ {pn} — double-click to edit"
+                else:
+                    label = f"door '{name}' — not connected yet: double-click to connect it"
+                kind = 'door' if e.get('dest') else 'door_open'
+                try:
+                    c = self.s.doc.edge_conflict(self.room, self.key, int(e['x']), int(e['y']))
+                except Exception:
+                    c = None
+                if c and c[0] != 'bottom':
+                    kind = 'door_dead'          # S98 r2: can never fire (edge scrolls)
+                    label = (f"door '{name}' — NEVER FIRES: the {c[0]} edge scrolls into "
+                             f"screen {c[1]}; drag it one cell in")
+                self.markers.append((kind, int(e['x']), int(e['y']), None, label, ('exit', i, e)))
+            elif e.get('twin_of'):                  # S128 r3: a double door's 2nd cell
+                try:
+                    nm = self.s.doc.door_name(e['twin_of'])
+                except Exception:                                # noqa: BLE001
+                    nm = e['twin_of']
+                self.markers.append(('door' if e.get('dest') else 'door_open', int(e['x']),
+                                     int(e['y']), None,
+                                     f"second cell of door '{nm}' — double-click to edit",
+                                     ('exit', i, e)))
+            elif G.is_stairs_down(e):
+                self.markers.append(('stairs', int(e['x']), int(e['y']), None,
+                                     'Stairs down — the next floor of the gate dive '
+                                     '(works while the room is served inside a gate)',
+                                     ('exit', i, e)))
+            elif G.is_gate_entrance(e):           # S115 (NG1)
+                gid = G.entrance_gate(e)
+                try:
+                    nm = self.s.doc.gate_name(gid)
+                except Exception:
+                    nm = f'gate {gid}'
+                if self.s.doc.world(gid) is not None:           # S123 r3
+                    st0 = self.s.doc.world(gid).get('start') or {}
+                    try:
+                        sn = self.s.doc.room_name(self.s.doc.room(st0.get('room')))
+                    except Exception:                       # noqa: BLE001
+                        sn = st0.get('room')
+                    self.markers.append(('portal', int(e['x']), int(e['y']), None,
+                                         f"PORTAL into the world {nm} — lands in {sn}, screen "
+                                         f"{st0.get('screen', 0)} ({st0.get('x')},{st0.get('y')})",
+                                         ('exit', i, e)))
+                else:
+                    self.markers.append(('exit', int(e['x']), int(e['y']), None,
+                                         f"gate entrance → gate {gid} ({nm}), floor 1",
+                                         ('exit', i, e)))
+            else:
+                self.markers.append(('exit', int(e['x']), int(e['y']), None,
+                                     f"one-way exit → {PN.Places.of(self.s.doc).label(e.get('dest'))} screen "
+                                     f"{val(e.get('screen_byte', 0)) & 0x0F} "
+                                     f"({e.get('spawn_x')},{e.get('spawn_y')}) — "
+                                     'double-click to connect both ends',
+                                     ('exit', i, e)))
+
+    def _mark_gate_arrival(self, room):
+        """S100: where the player appears when the room is served on a gate
+        floor (room-level `gate_arrival`, shown on its screen). S123 r3: and
+        where a world's portal lands the player (the world's start cell)."""
+        doc = self.s.doc
+        for gid in (doc.world_ids() if room else []):
+            st0 = (doc.world(gid) or {}).get('start') or {}
+            if st0.get('room') == room.get('id') and int(st0.get('screen', 0)) == int(self.key):
+                self.markers.append(('world_land', int(st0['x']), int(st0['y']), None,
+                                     f"World landing — walking into a portal of "
+                                     f"{doc.world_name(gid)} drops the player here (drag to "
+                                     "move; World tab → The way in)",
+                                     ('world_land', gid, st0)))
+        # S125: the hub — where a lost battle / the WarpWing / "home" bring the player
+        for i, ru in (doc.hub_rules_of_room(room.get('id')) if room else []):
+            if int(ru.get('screen', 0)) == int(self.key):
+                self.markers.append(('hub', int(ru['x']), int(ru['y']), None,
+                                     f"Hub (rule {i + 1}) — a lost battle, the WarpWing and "
+                                     "“home” bring the player here (World tab → Hub)",
+                                     ('hub', i, ru)))
+        arr = room.get('gate_arrival') if room else None
+        if arr and int(arr.get('screen', 0)) == int(self.key):
+            self.markers.append(('gate_arrival', int(arr['x']), int(arr['y']), None,
+                                 'Gate arrival — the player appears here when the room is '
+                                 'served on a gate floor (drag to move)',
+                                 ('gate_arrival', 0, arr)))
+
+    def select_marker(self, kind, index):
+        """Re-select the marker whose ref is (kind, index) — 'npc' or
+        'exit' (S98) — after a reload."""
+        self.selected_marker = None
+        for m in self.markers:
+            ref = m[5]
+            if ref and ref[0] == kind and ref[1] == index:
+                self.selected_marker = ref
+                self.selected_cell = (m[1], m[2])
+                break
+        self.viewport().update()
+        return self.selected_marker
+
+    def select_npc(self, index):
+        """Re-select the NPC entry `index` after a reload (marker refs are
+        rebuilt from the Document on every reload)."""
+        self.selected_marker = None
+        for m in self.markers:
+            ref = m[5]
+            if ref and ref[0] == 'npc' and ref[1] == index:
+                self.selected_marker = ref
+                self.selected_cell = (m[1], m[2])
+                break
+        self.viewport().update()
+        return self.selected_marker
+
+    # ------------------------------------------------ animation (S99)
+    def _update_anim(self):
+        if self.is_vanilla():
+            mid = self.source[1]
+            e = ANIM.map_entry(mid)
+            self.anim_mid = mid if e.get('slots') and not e.get('inert_in_vanilla') else None
+        elif self.room is not None:
+            self.anim_mid = self.s.doc.room_animation(self.room)['map']
+        else:
+            self.anim_mid = None
+        self.own_slots = (self.s.doc.own_anim_slots(self.room)
+                          if self.room is not None and not self.is_vanilla() else set())
+        self.anim_slots = ANIM.slots(self.anim_mid) | self.own_slots
+        if self._player is not None:
+            self._start_players()
+
+    def _start_players(self):
+        self._player = ANIM.Player(self.anim_mid, self.gfx.sheet)
+        self._tplayer = None
+        if self.own_slots and self.room is not None:
+            try:
+                from editor2.core import tileanim as TA
+                self._tplayer = TA.Player(self.s.doc.tile_anims(self.room), self.gfx.sheet)
+            except Exception:
+                self._tplayer = None
+
+    def anim_cells(self):
+        """(col, row) of every 8x8 tile on this screen whose slot animates."""
+        if not self.tiles or not self.anim_slots:
+            return []
+        return [(c, r) for r in range(SCREEN_H) for c in range(SCREEN_W)
+                if P2.slot_key(self.tiles[r][c]) in self.anim_slots]
+
+    def previewing(self):
+        return self._player is not None
+
+    def set_preview(self, on):
+        """Play the room's tile animation on the canvas at game speed
+        (the census schedule, one step per field frame)."""
+        if on and self.gfx is not None:
+            self._start_players()
+            self._anim_clock.start()
+            self._anim_frames = 0
+            self._anim_timer.start()
+        else:
+            self._anim_timer.stop()
+            self._player = None
+            self._tplayer = None
+            if self.tiles is not None:
+                self._render()
+
+    def _anim_tick(self):
+        if self._player is None or self.tiles is None:
+            return
+        want = int(self._anim_clock.elapsed() * ANIM.FPS / 1000.0)
+        n = max(0, min(want - self._anim_frames, 64))
+        self._anim_frames = want
+        a = n and self._player.step(n)
+        b = n and self._tplayer is not None and self._tplayer.step(n)
+        if a or b or (self._stamp_view and self._stamp_frames_key() != self._stamp_fkey):
+            self._render()
+
+    def _render(self):
+        sheet = bytes(self._player.sheet) if self._player is not None else self.gfx.sheet
+        if self._tplayer is not None:
+            # S102: the room's own animations write whole frames into their
+            # slots (disjoint from the vanilla handler's — validators)
+            sh = bytearray(sheet)
+            for s_ in self.own_slots:
+                sh[s_ * 16:s_ * 16 + 16] = self._tplayer.sheet[s_ * 16:s_ * 16 + 16]
+            sheet = bytes(sh)
+        img = self.s.renderer.compose(sheet, self.tiles, self.attr, self.pals)
+        self._paste_stamps(img)
+        self.base.setPixmap(QPixmap.fromImage(ImageQt.ImageQt(img)))
+        self.viewport().update()
+
+    # ------------------------------------------------------------- S174 stamps
+    def _stamp_frame_index(self, info):
+        n = len(info.get('frames') or [])
+        if n <= 1 or self._player is None:
+            return 0
+        return (self._anim_frames // max(1, int(info.get('speed') or 32))) % n
+
+    def _stamp_frames_key(self):
+        return tuple(self._stamp_frame_index(i) for _k, i in sorted(self._stamp_view.items()))
+
+    def _paste_stamps(self, img):
+        """The stamps as the build will draw them (stamps.simulate) over the tiles."""
+        self._stamp_fkey = self._stamp_frames_key()
+        if not self.layers.get('stamps', True):
+            return
+        for _i, info in sorted(self._stamp_view.items()):
+            fr = info.get('frames') or []
+            if not fr or not info.get('rect'):
+                continue
+            c0, r0, _c1, _r1 = info['rect']
+            img.paste(fr[self._stamp_frame_index(info)], (c0 * CELL, r0 * CELL))
+
+    def stamps_here(self):
+        """[(index, placement)] of the stamps on this screen."""
+        if self.room is None or self.is_vanilla():
+            return []
+        return [(i, pl) for i, pl in enumerate(self.room.get('stamps') or [])
+                if int(pl.get('screen', -1)) == int(self.key)]
+
+    def _update_stamps(self):
+        """Recompute this screen's stamp pictures (cached per document revision)."""
+        self._stamp_view = {}
+        here = self.stamps_here()
+        if not here:
+            return
+        from editor2.core import stamps as ST
+        doc = self.s.doc
+        k = (id(doc), getattr(doc, 'revision', 0), id(self.s.renderer))
+        c = getattr(self.s, '_stamp_sim', None)
+        if c is None or c[0] != k:
+            try:
+                sim = ST.simulate(doc, self.s.renderer)
+            except Exception:                                    # noqa: BLE001
+                sim = {}
+            self.s._stamp_sim = c = (k, sim)
+        for i, _pl in here:
+            info = c[1].get((self.room['id'], i, self.state_idx))
+            if info is not None:
+                self._stamp_view[i] = info
+
+    def stamp_info(self, idx):
+        return self._stamp_view.get(idx)
+
+    def _stamp_at(self, cell):
+        if cell is None or self.room is None:
+            return None
+        from editor2.core import stamps as ST
+        return ST.at_cell(self.s.doc.custom, self.room, self.key, cell)
+
+    def set_stamp_brush(self, sid):
+        self.stamp_brush = sid
+        self.viewport().update()
+
+    def select_stamp(self, idx):
+        self.stamp_sel = idx
+        self.viewport().update()
+        self.stampSelected.emit(idx)
+
+    def _stamp_ghost_pm(self, sid):
+        """The library stamp's frame 1 as drawn in the PNG (cached)."""
+        from editor2.core import stamps as ST
+        st = ST.stamp_of(self.s.doc.custom, sid)
+        if st is None:
+            return None, None
+        k = (sid, st.get('png'), st.get('w'), st.get('h'))
+        if k not in self._stamp_ghost:
+            try:
+                fr = ST.stamp_frames(self.s.doc.project_dir, st)[0]
+                self._stamp_ghost[k] = QPixmap.fromImage(ImageQt.ImageQt(fr.convert('RGBA')))
+            except Exception:                                    # noqa: BLE001
+                self._stamp_ghost[k] = None
+        return self._stamp_ghost[k], st
+
+    def _draw_stamps_overlay(self, painter):
+        from editor2.core import stamps as ST
+        here = self.stamps_here()
+        custom = self.s.doc.custom if self.room is not None else {}
+        show_all = self.tool == 'stamp'
+        for i, pl in here:
+            st = ST.stamp_of(custom, pl.get('stamp'))
+            if st is None:
+                continue
+            x, y = int(pl['x']), int(pl['y'])
+            if self._stamp_drag is not None and self._stamp_drag[0] == i and self._stamp_drag[2]:
+                dx, dy = self._stamp_drag[1]
+                x, y = self._stamp_drag[2][0] - dx, self._stamp_drag[2][1] - dy
+                pm, _st = self._stamp_ghost_pm(pl['stamp'])
+                if pm is not None:
+                    painter.setOpacity(0.75)
+                    painter.drawPixmap(QRectF(x * CELL, y * CELL, int(st['w']) * CELL,
+                                              int(st['h']) * CELL), pm, QRectF(pm.rect()))
+                    painter.setOpacity(1.0)
+            rr = QRectF(x * CELL, y * CELL, int(st['w']) * CELL, int(st['h']) * CELL)
+            info = self._stamp_view.get(i) or {}
+            sel = i == self.stamp_sel
+            if not (show_all or sel):
+                continue
+            col = SEL if sel else QColor(120, 220, 255)
+            for c_, w_, style in ((QColor(0, 0, 0, 190), 4 if sel else 3, Qt.SolidLine),
+                                  (col, 2 if sel else 1, Qt.SolidLine if sel else Qt.DashLine)):
+                pen = QPen(c_)
+                pen.setCosmetic(True)
+                pen.setWidth(w_)
+                pen.setStyle(style)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(rr.adjusted(0.5, 0.5, -0.5, -0.5))
+            if info.get('warn') or info.get('error'):
+                # a warning mark: the build draws some of it in the nearest colours
+                tr = QRectF(rr.right() - 7, rr.top() + 1, 6, 6)
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(QBrush(QColor(255, 60, 40) if info.get('error')
+                                        else QColor(255, 170, 0)))
+                painter.drawEllipse(tr)
+                painter.setPen(QColor(0, 0, 0))
+                painter.setFont(QFont('Helvetica', 5, QFont.Bold))
+                painter.drawText(tr, Qt.AlignCenter, '!')
+        if self.tool == 'stamp' and self._hover and self._stamp_drag is None and self.stamp_brush \
+                and self._stamp_at(self._hover) is None and not self.is_vanilla():
+            pm, st = self._stamp_ghost_pm(self.stamp_brush)
+            if pm is not None:
+                x, y = ST.anchor(st, self._hover)
+                rr = QRectF(x * CELL, y * CELL, int(st['w']) * CELL, int(st['h']) * CELL)
+                pl = {'x': x, 'y': y, 'screen': self.key}
+                bad = self.room is not None and ST.clash(custom, self.room, self.key, pl, st) is not None
+                painter.setOpacity(0.8)
+                painter.drawPixmap(rr, pm, QRectF(pm.rect()))
+                painter.setOpacity(1.0)
+                pen = QPen(QColor(255, 60, 60) if bad else QColor(255, 255, 255, 200))
+                pen.setCosmetic(True)
+                pen.setStyle(Qt.DashLine)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRect(rr.adjusted(0.5, 0.5, -0.5, -0.5))
+
+    def _on_layout_changed(self, lid):
+        if lid in (self.lid, self.attr_lid) and self._stroke is None:
+            self.reload()
+
+    def screenshot(self):
+        return self.s.renderer.compose(self.gfx.sheet, self.tiles, self.attr, self.pals)
+
+    def cell_metatile(self, cx, cy):
+        return metatile_at(self.tiles, self.attr, cx, cy)
+
+    def cell_walkable(self, cx, cy):
+        """The engine samples the bottom-right subtile (S94 measurement)."""
+        return (self.tiles[cy * 2 + 1][cx * 2 + 1] & 0xFF) >= self.gfx.threshold   # S168: the map byte
+
+    # ------------------------------------------------------------ geometry
+    def _cell_at(self, viewpos):
+        p = self.mapToScene(viewpos)
+        cx, cy = int(p.x() // CELL), int(p.y() // CELL)
+        if 0 <= cx < CELLS_W and 0 <= cy < CELLS_H and p.x() >= 0 and p.y() >= 0:
+            return cx, cy
+        return None
+
+    def _marker_at(self, cell):
+        if cell is None:
+            return None
+        for m in reversed(self.markers):
+            if m[1] == cell[0] and m[2] == cell[1]:
+                return m
+        return None
+
+    def _draw_jump_falls(self, painter):
+        """S175: a dotted line from a jump down off the screen / from the top edge down to a
+        landing — the way the player falls (straight down, through anything)."""
+        pen = QPen(MARKER['jump'])
+        pen.setCosmetic(True)
+        pen.setStyle(Qt.DotLine)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        for kind, x, y, _spr, _label, _ref in self.markers:
+            cx = x * CELL + CELL / 2
+            if kind == 'jump':
+                painter.drawLine(QPointF(cx, (y + 1) * CELL), QPointF(cx, CELLS_H * CELL))
+            elif kind == 'jump_land':
+                painter.drawLine(QPointF(cx, 0), QPointF(cx, y * CELL))
+
+    # ------------------------------------------------------------- overlays
+    def drawForeground(self, painter, rect):
+        if self.tiles is None:
+            return
+        if self.is_clean():
+            return                  # S173: the art only
+        painter.save()
+        z = self._zoom
+        walk_mode = self.tool == 'walk' or self.layers['walk']
+        if walk_mode and self.gfx is not None:
+            painter.setPen(Qt.NoPen)
+            for cy in range(CELLS_H):
+                for cx in range(CELLS_W):
+                    ok = self.cell_walkable(cx, cy)
+                    painter.fillRect(QRectF(cx * CELL, cy * CELL, CELL, CELL),
+                                     QColor(60, 220, 90, 70) if ok else QColor(255, 40, 40, 110))
+        if self.layers['attr'] and self.attr:
+            painter.setFont(QFont('Menlo', 5))
+            for cy in range(CELLS_H):
+                for cx in range(CELLS_W):
+                    p = self.attr[cy * 2][cx * 2] & 7
+                    painter.fillRect(QRectF(cx * CELL, cy * CELL, CELL, CELL), PAL_TINTS[p])
+                    if z >= 2:
+                        painter.setPen(QColor(255, 255, 255, 230))
+                        painter.drawText(QRectF(cx * CELL, cy * CELL, CELL, CELL),
+                                         Qt.AlignCenter, str(p))
+        if self.layers['grid']:
+            pen = QPen(QColor(255, 255, 255, 28))
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            for c in range(1, SCREEN_W):
+                if c % 2:
+                    painter.drawLine(c * TILE, 0, c * TILE, SCREEN_H * TILE)
+            for r in range(1, SCREEN_H):
+                if r % 2:
+                    painter.drawLine(0, r * TILE, SCREEN_W * TILE, r * TILE)
+            pen = QPen(QColor(255, 255, 255, 95))
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            for c in range(1, CELLS_W):
+                painter.drawLine(c * CELL, 0, c * CELL, SCREEN_H * TILE)
+            for r in range(1, CELLS_H):
+                painter.drawLine(0, r * CELL, SCREEN_W * TILE, r * CELL)
+        if self.layers.get('anim') and self.anim_slots:
+            # S99: outline the AREAS the room's animation changes at runtime
+            # (vanilla rooms: their own handler) — only the border between
+            # animated and still tiles, dark underlay + bright dashes, so it
+            # reads on water / lava / any art
+            cells = set(self.anim_cells())
+            segs = []
+            for c, r in cells:
+                x0, y0, x1, y1 = c * TILE, r * TILE, (c + 1) * TILE, (r + 1) * TILE
+                if (c, r - 1) not in cells:
+                    segs.append((x0, y0, x1, y0))
+                if (c, r + 1) not in cells:
+                    segs.append((x0, y1, x1, y1))
+                if (c - 1, r) not in cells:
+                    segs.append((x0, y0, x0, y1))
+                if (c + 1, r) not in cells:
+                    segs.append((x1, y0, x1, y1))
+            painter.setBrush(Qt.NoBrush)
+            under = QPen(QColor(0, 0, 0, 200))
+            under.setCosmetic(True)
+            under.setWidth(4)
+            top = QPen(QColor(80, 245, 255))
+            top.setCosmetic(True)
+            top.setWidth(2)
+            top.setStyle(Qt.DashLine)
+            for pen in (under, top):
+                painter.setPen(pen)
+                for x0, y0, x1, y1 in segs:
+                    painter.drawLine(QPointF(x0, y0), QPointF(x1, y1))
+        if self.highlight is not None:
+            pen = QPen(QColor(255, 230, 0))
+            pen.setCosmetic(True)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 230, 0, 70)))
+            for r in range(SCREEN_H):
+                for c in range(SCREEN_W):
+                    if P2.slot_key(self.tiles[r][c]) == self.highlight:
+                        painter.drawRect(QRectF(c * TILE, r * TILE, TILE, TILE))
+        if self.layers['markers']:
+            for kind, x, y, spr, label, ref in self.markers:
+                rc = QRectF(x * CELL, y * CELL, CELL, CELL)
+                col = MARKER[kind]
+                if kind == 'npc' and spr is not None:
+                    ncol = (ref[2].get('colour') if ref and len(ref) > 2
+                            and isinstance(ref[2], dict) else None)
+                    pal = ncol.get('palette') if isinstance(ncol, dict) else ncol
+                    pm = (SpriteCache.get_coloured(spr, pal) if pal is not None
+                          else SpriteCache.get(spr))           # S123: the NPC's colour
+                    if pm is not None:
+                        painter.drawPixmap(rc.toRect(), pm)
+                pen = QPen(col)
+                pen.setCosmetic(True)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush if kind == 'npc'
+                                 else QBrush(QColor(col.red(), col.green(), col.blue(), 60)))
+                painter.drawRect(rc.adjusted(0.5, 0.5, -0.5, -0.5))
+                if kind != 'npc':
+                    painter.setFont(QFont('Menlo', 6))
+                    tag = MARKER_TEXT.get(kind, '?')
+                    tw = 4 + 4 * len(tag)
+                    painter.fillRect(QRectF(rc.center().x() - tw / 2, rc.center().y() - 4, tw, 8),
+                                     QColor(0, 0, 0, 170))
+                    painter.setPen(col)
+                    painter.drawText(rc, Qt.AlignCenter, tag)
+                tag = getattr(self, 'npc_tags', {}).get(id(ref)) if kind == 'npc' else None
+                if tag:                              # S124 r3: your NPC names
+                    nm = tag[:16]
+                    painter.setFont(QFont('Helvetica', 4))
+                    tw = 3 + 2.6 * len(nm)
+                    tr = QRectF(rc.center().x() - tw / 2, rc.top() - 6, tw, 6)
+                    painter.fillRect(tr, QColor(0, 0, 0, 190))
+                    painter.setPen(QColor(255, 255, 255))
+                    painter.drawText(tr, Qt.AlignCenter, nm)
+                if kind in ('door', 'door_open', 'door_dead') and ref and isinstance(ref[2], dict) \
+                        and ref[2].get('name'):
+                    nm = str(ref[2]['name'])[:14]
+                    painter.setFont(QFont('Helvetica', 4))
+                    tw = 3 + 2.6 * len(nm)
+                    tr = QRectF(rc.center().x() - tw / 2, rc.top() - 6, tw, 6)
+                    painter.fillRect(tr, QColor(0, 0, 0, 190))
+                    painter.setPen(col)
+                    painter.drawText(tr, Qt.AlignCenter, nm)
+                if self.selected_marker is ref:
+                    pen = QPen(SEL)
+                    pen.setCosmetic(True)
+                    pen.setWidth(3)
+                    painter.setPen(pen)
+                    painter.setBrush(Qt.NoBrush)
+                    painter.drawRect(rc.adjusted(-1, -1, 1, 1))
+        if self.layers['markers']:
+            self._draw_npc_extras(painter)
+            self._draw_door_arrival(painter)
+            self._draw_jump_falls(painter)
+        if self.selected_cell and self.selected_marker is None:
+            cx, cy = self.selected_cell
+            pen = QPen(SEL)
+            pen.setCosmetic(True)
+            pen.setWidth(3)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
+        if self.sel_rect and self.sel_rect[:2] != self.sel_rect[2:]:
+            c0, r0, c1, r1 = self.sel_rect
+            rr = QRectF(c0 * CELL, r0 * CELL, (c1 - c0 + 1) * CELL, (r1 - r0 + 1) * CELL)
+            for col, w, style in ((QColor(0, 0, 0, 200), 4, Qt.SolidLine), (SEL, 2, Qt.DashLine)):
+                pen = QPen(col)
+                pen.setCosmetic(True)
+                pen.setWidth(w)
+                pen.setStyle(style)
+                painter.setPen(pen)
+                painter.setBrush(QBrush(QColor(255, 230, 0, 40)) if w == 2 else Qt.NoBrush)
+                painter.drawRect(rr)
+        if self._rect_anchor and self._rect_cur:
+            x0, y0 = self._rect_anchor
+            x1, y1 = self._rect_cur
+            rr = QRectF(min(x0, x1) * CELL, min(y0, y1) * CELL,
+                        (abs(x1 - x0) + 1) * CELL, (abs(y1 - y0) + 1) * CELL)
+            pen = QPen(SEL)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 230, 0, 50)))
+            painter.drawRect(rr)
+        if self.used_key is not None:
+            # S173: the cells drawn with the picker metatile under the mouse
+            pen = QPen(QColor(255, 60, 255))
+            pen.setCosmetic(True)
+            pen.setWidth(2)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 60, 255, 60)))
+            for cx, cy in self.used_cells():
+                painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
+        if self._hover and self.tool in ('paint', 'rect', 'fill') and self.ghost \
+                and self.is_editable() and self._rect_anchor is None and self._stroke is None:
+            pm = self._ghost_pixmap()          # S173: the brush's picture before you click
+            if pm is not None:
+                cx, cy = self._hover
+                painter.setOpacity(0.8)
+                painter.drawPixmap(QRectF(cx * CELL, cy * CELL, CELL, CELL), pm,
+                                   QRectF(0, 0, 16, 16))
+                painter.setOpacity(1.0)
+        self._draw_stamps_overlay(painter)          # S174
+        if self._hover and self.tool not in ('select', 'stamp'):
+            cx, cy = self._hover
+            pen = QPen(QColor(255, 255, 255, 200))
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRect(QRectF(cx * CELL, cy * CELL, CELL, CELL).adjusted(0.5, 0.5, -0.5, -0.5))
+        painter.restore()
+
+    def _draw_door_arrival(self, painter):
+        """S98: for the selected door, the cell where the player appears
+        when he comes through its PARTNER (green, dashed) — the half-cell
+        'step out of the doorway' arrival lands on the cell below."""
+        ref = self.selected_marker
+        if not ref or ref[0] != 'exit' or not isinstance(ref[2], dict) or \
+                not ref[2].get('door') or self.room is None:
+            return
+        try:
+            p = self.s.doc.door_partner(ref[2]['door'])
+        except Exception:
+            return
+        if p is None or not p.get('row'):
+            return
+        row = p['row']
+        sb = val(row.get('screen_byte', 0))
+        if (sb & 0x0F) != self.key:
+            return
+        ax, ay = val(row['spawn_x']), val(row['spawn_y'])
+        if sb & 0x80:
+            ay += 1
+        pen = QPen(QColor(120, 255, 120))
+        pen.setCosmetic(True)
+        pen.setStyle(Qt.DashLine)
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.setBrush(QBrush(QColor(120, 255, 120, 50)))
+        painter.drawRect(QRectF(ax * CELL + 2, ay * CELL + 2, CELL - 4, CELL - 4))
+
+    def _draw_npc_extras(self, painter):
+        """S97: facing ticks on every NPC; the selected NPC's walk path
+        (measured tile offsets per behaviour, formats.BEHAVIOUR_PATHS — the
+        walkers never test walls, so a dot on a wall is a real problem);
+        the drag ghost while moving a marker."""
+        from editor2.core import formats as F
+        for kind, x, y, spr, label, ref in self.markers:
+            if kind != 'npc':
+                continue
+            nt = npc_type(ref[2]) if ref and len(ref) > 2 and isinstance(ref[2], dict) else None
+            if not nt:
+                continue
+            fac, beh, obj = nt
+            cx, cy = x * CELL + CELL / 2, y * CELL + CELL / 2
+            dx, dy = ((0, 1), (-1, 0), (0, -1), (1, 0))[fac]
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QBrush(QColor(255, 255, 255, 220) if not obj else QColor(160, 160, 160, 200)))
+            painter.drawEllipse(QRectF(cx + dx * 6 - 1.5, cy + dy * 6 - 1.5, 3, 3))
+            if self.selected_marker is ref and beh in F.BEHAVIOUR_PATHS and not obj:
+                pts = F.npc_path(beh)
+                pen = QPen(QColor(0, 220, 255, 220))
+                pen.setCosmetic(True)
+                pen.setWidth(2)
+                painter.setPen(pen)
+                prev = None
+                for ddx, ddy in pts + [pts[0]]:
+                    px, py = (x + ddx) * CELL + CELL / 2, (y + ddy) * CELL + CELL / 2
+                    if prev:
+                        painter.drawLine(QPointF(*prev), QPointF(px, py))
+                    prev = (px, py)
+                for ddx, ddy in pts:
+                    tx, ty = x + ddx, y + ddy
+                    bad = not (0 <= tx < CELLS_W and 0 <= ty < CELLS_H) or (
+                        self.tiles is not None and self.gfx is not None
+                        and not self.cell_walkable(tx, ty))
+                    painter.setPen(Qt.NoPen)
+                    painter.setBrush(QBrush(QColor(255, 60, 60, 230) if bad
+                                            else QColor(0, 220, 255, 230)))
+                    painter.drawEllipse(QRectF(tx * CELL + CELL / 2 - 2.5,
+                                               ty * CELL + CELL / 2 - 2.5, 5, 5))
+        if self._drag and self._drag[2] and self._drag[2] != self._drag[1]:
+            gx, gy = self._drag[2]
+            pen = QPen(QColor(0, 220, 255))
+            pen.setCosmetic(True)
+            pen.setStyle(Qt.DashLine)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(0, 220, 255, 60)))
+            painter.drawRect(QRectF(gx * CELL, gy * CELL, CELL, CELL))
+
+    # ------------------------------------------------------------- painting
+    def _can_paint(self):
+        if self.is_vanilla() or self.lid is None:
+            self.editRequested.emit()
+            return False
+        if self.brush is None:
+            self.hoverInfo.emit('Pick a metatile first (click one in the picker, '
+                                'or right-click a cell to copy its metatile).')
+            return False
+        return True
+
+    def _begin_stroke(self):
+        self._stroke = {'tiles': {}, 'attr': {}, 'ot': {}, 'oa': {}}
+
+    def _stroke_cell(self, cell, mt=None):
+        if self._stroke is None or cell is None:
+            return
+        mt = mt or self.brush
+        cx, cy = cell
+        r0, c0 = cy * 2, cx * 2
+        tl, tr, bl, br = mt['tiles']
+        # S132: a mouse move inside a cell that already shows the brush changes
+        # nothing — skip the re-render (it ran on every mouse event: the lag)
+        pals = metatile_pals(mt)
+        if (self.tiles[r0][c0] == tl and self.tiles[r0][c0 + 1] == tr
+                and self.tiles[r0 + 1][c0] == bl and self.tiles[r0 + 1][c0 + 1] == br
+                and (pals is None or self.attr is None or not self.attr_lid
+                     or [self.attr[r0][c0], self.attr[r0][c0 + 1], self.attr[r0 + 1][c0],
+                         self.attr[r0 + 1][c0 + 1]] == list(pals))):
+            return
+        for (r, c), v in (((r0, c0), tl), ((r0, c0 + 1), tr),
+                          ((r0 + 1, c0), bl), ((r0 + 1, c0 + 1), br)):
+            self._stroke['ot'].setdefault((r, c), self.tiles[r][c])
+            self._stroke['tiles'][(r, c)] = v
+            self.tiles[r][c] = v
+        pals = metatile_pals(mt)
+        if pals is not None and self.attr is not None and self.attr_lid:
+            for (r, c), p in zip(((r0, c0), (r0, c0 + 1), (r0 + 1, c0), (r0 + 1, c0 + 1)),
+                                 pals):
+                self._stroke['oa'].setdefault((r, c), self.attr[r][c])
+                self._stroke['attr'][(r, c)] = p
+                self.attr[r][c] = p
+        self._render()
+
+    def _end_stroke(self, label='Paint'):
+        st, self._stroke = self._stroke, None
+        if not st:
+            return
+        tch = [(r, c, v) for (r, c), v in st['tiles'].items() if st['ot'][(r, c)] != v]
+        ach = [(r, c, v) for (r, c), v in st['attr'].items() if st['oa'][(r, c)] != v]
+        for (r, c), v in st['ot'].items():
+            self.tiles[r][c] = v
+        for (r, c), v in st['oa'].items():
+            self.attr[r][c] = v
+        if not tch and not ach:
+            self._render()
+            return
+        from editor2.app.rooms.commands import PaintCells
+        self.s.undo.beginMacro(label)
+        if tch:
+            self.s.undo.push(PaintCells(self.s, self.lid, 'tiles', tch, label))
+        if ach:
+            self.s.undo.push(PaintCells(self.s, self.attr_lid, 'attr', ach, label))
+        self.s.undo.endMacro()
+
+    def _flood(self, cell):
+        target = self.cell_metatile(*cell)
+        if target['tiles'] == self.brush['tiles'] and \
+                (self.brush.get('pal') is None
+                 or metatile_key(target) == metatile_key(self.brush)):
+            return
+        seen, stack = set(), [cell]
+        while stack:
+            cx, cy = stack.pop()
+            if (cx, cy) in seen or not (0 <= cx < CELLS_W and 0 <= cy < CELLS_H):
+                continue
+            if self.cell_metatile(cx, cy) != target:
+                continue
+            seen.add((cx, cy))
+            stack.extend([(cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)])
+        self._begin_stroke()
+        for c in seen:
+            self._stroke_cell(c)
+        self._end_stroke('Fill')
+
+    def _pick(self, cell):
+        if cell is None or self.tiles is None:
+            return
+        mt = self.cell_metatile(*cell)
+        self.brush = mt
+        self.brushPicked.emit(mt)
+
+    # --------------------------------------------------------------- events
+    def mousePressEvent(self, ev):
+        if ev.button() == Qt.MiddleButton or (ev.button() == Qt.LeftButton and self._space):
+            self._panning = ev.position().toPoint()
+            self.setCursor(Qt.ClosedHandCursor)
+            return
+        cell = self._cell_at(ev.position().toPoint())
+        if ev.button() == Qt.RightButton:
+            if self.tool == 'stamp':                    # S174: the stamp's menu
+                i = self._stamp_at(cell)
+                if i is not None:
+                    self.select_stamp(i)
+                    self.stampMenuRequested.emit(i, ev.globalPosition().toPoint())
+                return
+            self._pick(cell)
+            return
+        if ev.button() != Qt.LeftButton:
+            return
+        if self.tool == 'select':
+            m = self._marker_at(cell)
+            self.selected_marker = m[5] if m else None
+            self.selected_cell = cell
+            # S97: NPC / spawn markers of an editable custom room drag to move
+            # S98: doors, one-way exits and examine/step spots too
+            if (m and m[0] in ('npc', 'spawn', 'examine', 'step', 'door', 'door_open',
+                               'door_dead', 'exit', 'stairs', 'gate_arrival', 'portal',
+                               'world_land', 'jump', 'jump_land')
+                    and not self.is_vanilla() and m[5]
+                    and m[5][0] in ('npc', 'exit', 'gate_arrival', 'world_land', 'jump_land')):
+                self._drag = [m[5], cell, cell]
+            self.viewport().update()
+            if m:
+                self.markerSelected.emit({'kind': m[0], 'x': m[1], 'y': m[2],
+                                          'sprite': m[3], 'label': m[4], 'ref': m[5]})
+            else:
+                # S102: drag (or Shift+click) selects a rectangle of cells
+                if cell is not None:
+                    anchor = cell
+                    if ev.modifiers() & Qt.ShiftModifier and self.sel_rect:
+                        anchor = self.sel_rect[:2]
+                        self.selected_cell = anchor
+                    self._sel_drag = anchor
+                    self._set_sel(anchor, cell)
+                else:
+                    self.sel_rect = None
+                self.markerSelected.emit(None)
+                self.cellSelected.emit(self.selected_cell)
+            return
+        if self.tool == 'pick':
+            self._pick(cell)
+            return
+        if self.tool == 'walk':
+            if cell is not None:
+                self.walkFlipRequested.emit(*cell)
+            return
+        if self.tool == 'still':
+            if cell is not None:
+                self.stillRequested.emit(cell)
+            return
+        if self.tool == 'stamp':                        # S174
+            if cell is None or self.is_vanilla() or self.room is None:
+                if self.is_vanilla():
+                    self.editRequested.emit()
+                return
+            i = self._stamp_at(cell)
+            if i is not None:
+                pl = self.room['stamps'][i]
+                self.select_stamp(i)
+                self._stamp_drag = [i, (cell[0] - int(pl['x']), cell[1] - int(pl['y'])), None]
+            else:
+                self.select_stamp(None)
+                self.stampPlaceRequested.emit(cell)
+            self.setFocus()
+            return
+        if cell is None or not self._can_paint():
+            return
+        if self.tool == 'paint':
+            self._begin_stroke()
+            self._stroke_cell(cell)
+        elif self.tool == 'rect':
+            self._rect_anchor = self._rect_cur = cell
+            self.viewport().update()
+        elif self.tool == 'fill':
+            self._flood(cell)
+
+    def mouseDoubleClickEvent(self, ev):
+        """S98 r2: double-click a marker = edit it (a door: name +
+        connection)."""
+        if ev.button() != Qt.LeftButton:
+            return super().mouseDoubleClickEvent(ev)
+        self._drag = None
+        m = self._marker_at(self._cell_at(ev.position().toPoint()))
+        if m:
+            self.selected_marker = m[5]
+            self.selected_cell = (m[1], m[2])
+            self.viewport().update()
+            self.markerActivated.emit({'kind': m[0], 'x': m[1], 'y': m[2],
+                                       'sprite': m[3], 'label': m[4], 'ref': m[5]})
+            return
+        # S99 r3 (user: "Double clicking on the tile doesnt bring up any
+        # animation info"): a plain cell opens the Animate tab on it (S102)
+        cell = self._cell_at(ev.position().toPoint())
+        if cell is not None:
+            self.selected_marker = None
+            self.selected_cell = cell
+            self.viewport().update()
+            self.cellActivated.emit(cell)
+
+    def mouseMoveEvent(self, ev):
+        pos = ev.position().toPoint()
+        if self._panning is not None:
+            d = pos - self._panning
+            self._panning = pos
+            self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() - d.x())
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - d.y())
+            return
+        cell = self._cell_at(pos)
+        if cell != self._hover:
+            self._hover = cell
+            self.viewport().update()
+            self._emit_hover(cell)
+        if cell is None:
+            return
+        if self._drag is not None and cell != self._drag[2]:
+            self._drag[2] = cell
+            self.viewport().update()
+            return
+        if self._stamp_drag is not None and ev.buttons() & Qt.LeftButton:
+            if cell != self._stamp_drag[2]:
+                self._stamp_drag[2] = cell
+                self.viewport().update()
+            return
+        if self._sel_drag is not None and ev.buttons() & Qt.LeftButton:
+            self._set_sel(self._sel_drag, cell)
+            return
+        if self._stroke is not None and self.tool == 'paint':
+            self._stroke_cell(cell)
+        elif self._rect_anchor is not None:
+            self._rect_cur = cell
+            self.viewport().update()
+
+    def mouseReleaseEvent(self, ev):
+        if self._panning is not None:
+            self._panning = None
+            self.set_tool(self.tool)
+            return
+        if ev.button() != Qt.LeftButton:
+            return
+        if self._drag is not None:
+            ref, start, cur = self._drag
+            self._drag = None
+            self.viewport().update()
+            if cur and cur != start:
+                self.markerMoveRequested.emit(ref, cur[0], cur[1])
+            return
+        if self._stamp_drag is not None:                # S174: a stamp dragged
+            i, (dx, dy), cur = self._stamp_drag
+            self._stamp_drag = None
+            self.viewport().update()
+            if cur is not None:
+                pl = self.room['stamps'][i]
+                nx, ny = cur[0] - dx, cur[1] - dy
+                if (nx, ny) != (int(pl['x']), int(pl['y'])):
+                    self.stampMoveRequested.emit(i, nx, ny)
+            return
+        if self._sel_drag is not None:
+            self._sel_drag = None
+            if self.sel_rect:
+                self.cellsSelected.emit(self.sel_rect)
+            return
+        if self._stroke is not None and self.tool == 'paint':
+            self._end_stroke('Paint')
+        elif self._rect_anchor is not None:
+            x0, y0 = self._rect_anchor
+            x1, y1 = self._rect_cur or self._rect_anchor
+            self._rect_anchor = self._rect_cur = None
+            self._begin_stroke()
+            for cy in range(min(y0, y1), max(y0, y1) + 1):
+                for cx in range(min(x0, x1), max(x0, x1) + 1):
+                    self._stroke_cell((cx, cy))
+            self._end_stroke('Rectangle')
+
+    def _set_sel(self, a, b):
+        self.sel_rect = (min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
+        self.viewport().update()
+
+    def set_selection(self, rect):
+        """S102: select cells (c0, r0, c1, r1) from code (the Animate tab)."""
+        self.sel_rect = tuple(rect) if rect else None
+        self.selected_marker = None
+        self.selected_cell = tuple(rect[:2]) if rect else None
+        self.viewport().update()
+
+    def selection(self):
+        """The selected cells as (c0, r0, c1, r1), or None."""
+        if self.sel_rect:
+            return self.sel_rect
+        if self.selected_cell and self.selected_marker is None:
+            c, r = self.selected_cell
+            return (c, r, c, r)
+        return None
+
+    def leaveEvent(self, ev):
+        self._hover = None
+        self.viewport().update()
+        super().leaveEvent(ev)
+
+    def wheelEvent(self, ev):
+        if ev.modifiers() & (Qt.ControlModifier | Qt.MetaModifier):
+            if ev.angleDelta().y():
+                self.zoom_step(1 if ev.angleDelta().y() > 0 else -1)
+            ev.accept()
+            return
+        super().wheelEvent(ev)
+
+    def viewportEvent(self, ev):
+        # S173: a trackpad pinch (macOS) steps the zoom
+        from PySide6.QtCore import QEvent
+        if ev.type() == QEvent.NativeGesture:
+            try:
+                if ev.gestureType() == Qt.ZoomNativeGesture:
+                    self._gesture += ev.value()
+                    while abs(self._gesture) >= 0.12:
+                        self.zoom_step(1 if self._gesture > 0 else -1)
+                        self._gesture -= 0.12 if self._gesture > 0 else -0.12
+                    return True
+                if ev.gestureType() == Qt.EndNativeGesture:
+                    self._gesture = 0.0
+            except Exception:                                    # noqa: BLE001
+                pass
+        return super().viewportEvent(ev)
+
+    def keyPressEvent(self, ev):
+        k = ev.key()
+        if self.tool == 'stamp' and self.room is not None and not self.is_vanilla():
+            from PySide6.QtGui import QKeySequence
+            if k in (Qt.Key_Delete, Qt.Key_Backspace) and self.stamp_sel is not None:
+                self.stampDeleteRequested.emit(self.stamp_sel)
+                return
+            if ev.matches(QKeySequence.Copy) and self.stamp_sel is not None:
+                self.stampCopyRequested.emit(self.stamp_sel)
+                return
+            if ev.matches(QKeySequence.Paste):
+                self.stampPasteRequested.emit(self._hover or self.selected_cell or (4, 3))
+                return
+        if k == Qt.Key_Space:
+            self._space = True
+            self.setCursor(Qt.OpenHandCursor)
+        elif k == Qt.Key_Escape:
+            self.set_tool('select')
+        elif k in (Qt.Key_Plus, Qt.Key_Equal):
+            self.zoom_step(1)
+        elif k == Qt.Key_Minus:
+            self.zoom_step(-1)
+        elif k == Qt.Key_H and not (ev.modifiers() & (Qt.ControlModifier | Qt.MetaModifier)):
+            if not ev.isAutoRepeat() and not self._clean_hold:
+                self._clean_hold = True          # S173: clean view while H is held
+                self.viewport().update()
+                self.cleanChanged.emit(True)
+        else:
+            super().keyPressEvent(ev)
+
+    def keyReleaseEvent(self, ev):
+        if ev.key() == Qt.Key_Space:
+            self._space = False
+            self.set_tool(self.tool)
+        elif ev.key() == Qt.Key_H:
+            if not ev.isAutoRepeat() and self._clean_hold:
+                self._clean_hold = False
+                self.viewport().update()
+                self.cleanChanged.emit(self.is_clean())
+        else:
+            super().keyReleaseEvent(ev)
+
+    def focusOutEvent(self, ev):
+        if self._clean_hold:                     # S173: H released elsewhere
+            self._clean_hold = False
+            self.viewport().update()
+            self.cleanChanged.emit(self.is_clean())
+        super().focusOutEvent(ev)
+
+    def _emit_hover(self, cell):
+        if cell is None or self.tiles is None:
+            self.hoverInfo.emit('')
+            return
+        cx, cy = cell
+        mt = self.cell_metatile(cx, cy)
+        walk = 'walkable' if self.cell_walkable(cx, cy) else 'WALL'
+        here = [m[4] for m in self.markers if m[1] == cx and m[2] == cy]
+        self.hoverInfo.emit(
+            f'cell ({cx},{cy})   subtiles {mt["tiles"]}   palette {mt["pal"]}   {walk}'
+            + (f'   ▸ {"; ".join(here)}' if here else ''))

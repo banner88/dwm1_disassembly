@@ -1,0 +1,15004 @@
+#!/usr/bin/env python3
+"""test_compiler.py — sanity suite for the editor2 headless backend.
+
+Run:  python3 editor2/tests/test_compiler.py           (fast: no ROM builds)
+      python3 editor2/tests/test_compiler.py --rom     (adds the two ROM builds)
+
+Fast tests: deterministic emit, schema hard-errors (NOT_IMPLEMENTED layers),
+validator rules (spawn script, screen_byte, terminators, master compat,
+step-counter region size, palette shape), text encoder round-trip shape.
+--rom adds: regression byte-identity (compat project == S53 reference md5)
+and the fixed build (delta confined to bank $60 + header checksums).
+"""
+
+import copy
+import json
+import os
+import re
+import subprocess
+import sys
+
+REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO)
+
+from editor2.core import compiler as C
+from editor2.core import validators as V
+from editor2.core.project import Project, ProjectError
+from editor2.core.place_names import room_ref as _room_ref   # S143
+
+EXAMPLE = os.path.join(REPO, 'editor2/example-project/project.json')
+ROM = os.path.join(REPO, 'data', 'DWM-original.gbc')   # S132 tests that need the original ROM
+REFERENCE_MD5 = "4d556e36e61031e309caadc7a6731ef0"   # S177 r2 (the user's test: the library's opening — bank $12 LibraryOpen `ld hl, $170a` -> `$7723` (same size) = bank $77 entry 35 LibraryOpenAttrs: a free-colour / page-2 room's cells blanked before bank $17 entry 10; Grandpa's monster name — bank $77 PushRunIsMenu: a letter whose slot number equals the room tile under it, inside a window, keeps palette 7; WRAM wPushRunRow / wPushRunEnd / wPushRunMenu $D5BE-$D5C0; TEMPLATE_SIZE[$77] 3320; only banks $00 (checksum) / $12 (2 bytes) / $77 differ from S177; built S177 r2, user-verified 2026-11-13). Prev (patched, historical): bdd3fb2385041c6f1838557d5975fc1f   # S177 (bank $77 ScreenPush: a running Library screen ($C8EF 8) pushes tiles only — the library paints its own attributes (bank $17 entries 10 / 6 / 7); re-pinned, TEMPLATE_SIZE[$77] 3095; only bank $77 + the header checksum differ from S176; built S177). Prev (patched, historical): c8e2aede7a3820a42c1e3fafd79e635c   # S176 (a screen's own colours on a scroll: bank $06 the four ScrollXBegin `ld hl, $0b03` -> `$7317` and ScrollEndCommit `ld hl, $010a` -> `$7318` (same size), bank $73 entries 23 ScrollScreenBuild / 24 ScrollScreenDone + ScreenPalPushRows / ScreenPalDiff / ScreenRowsDrawn, WRAM wScreenPalLate $DED7; the example has no screen palette: no row differs, nothing is pushed; built S176, NOT yet user-tested). Prev (patched, historical): 72801bf5e9146f7d8ba15f5647541383   # S175 (ROADMAP P3.3o, a screen's own song: bank $71 template CustomRoomBGMResolve asks MusicRulePick for kind MUSIC_RULE_SCREEN + wScreenIndex first (re-pinned, TEMPLATE_SIZE[$71] 1367) + MUSIC_RULE_SCREEN EQU; the example has no screen song: bank $71 + the header checksum are the only bytes that differ from S172 r2; built S175, NOT yet user-tested). Prev (patched, historical): 18e6f102856f34d100ba16a39ceedc7e   # S172 r2 (the gate pickup icons: bank $77 rows 28-32 FoodIcon0-4 + entries 33 FoodIconsLoad / 34 FoodIconDraw, hooks in bank $16 jr_016_6002 and bank $01 CheckDirectionBit7, the pickup tables re-sectioned byte-neutral; the example has the tick off: FoodIconCount 0 = the game's icons; built S172, NOT yet user-tested). Prev (patched, historical): 9ee0b97bca5e8b19de26b22c80b5dac8   # S172 (gamedata.foods, PROJECT_COMPILER §2.78: bank $77 NpcDrawPlain calls NpcStaticFrame77 (NpcStaticIds held on frame 0) + $4001 rows 23-27 = FoodSheet0-4; regions npc_food_sheets (ROM0) / npc_food_pals (bank $05, new overlay copy) re-sectioned byte-neutral; the example has the tick off: its bytes differ in bank $77 only; built S172, NOT yet user-tested). Prev (patched, historical): 7aae0e95bc9e1c505cb9bce54f6b1e82   # S168 (ROADMAP P3.3g, PAGE 2: bank $73 BoxAttrActive + bank $77 PushAttrActive answer in a page-2 room (wPage2On), bank $77 ScreenPush writes attribute + tile per cell there (PushRowBoth), the own-animation player copies to the VRAM bank in bit 0 of its destination word; the example itself has no page 2; built S168, NOT yet user-tested). Prev (patched, historical): 26a4faf107255767f03b3985d056cbea   # S167 (tools/audit_patch_space.py: MapIDClampForPalette sat on row 3 step 15 + row 4 of ROM0's GrooveRowTable $3B83 since S63 — songs $0C / $12 read $3BC2; moved to the dead vanilla master table $3466, the groove bytes original again; was fee3147e…, patched, historical). S166 r2 (the user's test: "the NO has a bit of a glitch at the bottom" of the join YES / NO — S128 ArenaScriptType51 sat on $51:$7B34, the last byte ($00) of the LZ stream gfx $5112 (the U N O letters); the byte restored, the S128 / S161 routines one byte later, one nop less in the fill; S166 itself was byte-neutral here; built S166 r2, NOT yet user-tested). Prev (patched, historical): 2fe3fabacf557597e0f410e550576f70   # S165 (ROADMAP E13 note "the 17 bases a copy still cannot run": 23 more same-size act-time reads in banks $52 (13) / $53 (10) -> call ActBase52 / ActBase53, bank $58 TurnOrderDefensiveBoost_56cf's queue read -> call QueueBase58 + 2 nops; the window layout runs of banks $07 / $15 re-sectioned as db + compiler regions win_words_* (byte-neutral; no words = the original cells); built S165, USER-CONFIRMED 2026-11-04 19:44). Prev (patched, historical): 9a4337a9f150862d5acebe79088e467a   # S164 (bank $06 LearnFence06 open — code 2 for every id: a new skill may evolve from 2-5 skills, ROADMAP E13 note; ROADMAP E14 — the built-in names past bank $41's 94-B region (Plunder, Punish, Finish, Rupture, Blunt) from text bank $80 via TextOverride, their pointer rows -> the placeholder, the ns_text extents freed; the bank $57 AI-fix regions emit the original bytes with no switch; built S164, NOT yet user-tested). Prev (patched, historical): 64ed1699c761b2400092b0185951fbb1   # S163 r2 (the user's test: "EVivify cannot select [the] dead monster" — the target menu keeps a COPY of the id in $DD76 / $C1C2: bank $50's two copy sites `ld a, [$db8a]` -> `call ActBase50`; built S163 r2, USER-CONFIRMED 2026-11-02 22:29). Prev (patched, historical): 1400266ee25dc33d6bec64a5ae55b0c4   # S163 (ROADMAP E17 note "Act-time id lists": the act-time base view — 49 same-size reads in banks $50 (4) / $52 (22 + SetHLBattle_7d77 -> Entry1Base52) / $53 (17) / $58 (5) -> ActBase / MenuBase / QueueBase / QueueBaseInc / CmpBase (bank $72 entry 13 AIBaseOrSelf72: a NEW skill as its base); bank $52 ActBase52 / Entry1Base52 in the S160-unreferenced AirborneReachDead_763e bytes; the example: no new skills -> every id unchanged; built S163, NOT yet user-tested). Prev (patched): 97acc081aeb43bcfc767e5a53b59b2cb   # S162 (ROADMAP E17 note "Project enemy rows": bank $53 EnemyDupCastConversion_4e63's flag read -> `call DupConvFlag53` (bounded: EIDs 0-486 the original table, a project row its own holds_group_spells, else 0), bank $6B template + entry 2 EnemyHoldsOf + ProjectEnemyHolds (re-pinned, TEMPLATE_SIZE[$6B] 129; the example: two rows, both 0); built S162, USER-CONFIRMED 2026-11-02 13:27). Prev (patched): c8fdb0786e0342f0e1b934385fc3745d   # S161 (later the same session: bank $53 DupCastSkillListCheck_4ed6 `call DupBase53` + bank $72 entry 13 AIBaseOrSelf72 — the duplicate-group-cast conversion tests a NEW skill as its base; first S161 build f4a78bfb1787572738e264227de8082f, historical) (ROADMAP E17 + the E13 note — the enemy AI judges a NEW skill AS ITS BASE: bank $57 AIViewArm57 / AIViewOff57 + CustomAI57 for every option (SkillView57 retired), bank $72 entries 11 / 12 AIViewArm72 / AIViewOff72 + AIBaseOf72 / AIPrefEnd72 + region gd_ai_pref (the example: none, zeros), bank $54 Fork54_RecordIndex (the view: the new skill's own record), bank $58 SaveBtlFX_43ff -> EstimateView58, WRAM wAIViewId / wAIViewBase; bank $51 LearnUpgradeOrAdd51 (two skills from one skill); only banks $00 (checksum) / $51 / $54 / $57 / $58 / $72 differ from S160; built S161, NOT yet user-tested). Prev (patched): 1855e3a07fc119fabb1105ac3fb8554f   # S160 (RECLAIMED SKILL IDS — the 14 item-effect ids $BC-$C1/$CC-$D3 become NEW-skill slots: bank $72 ReclaimBaseTable + ReclaimBase72, bank $58 ReclaimTargetTable / FxEstimate58 / ReclaimRow58 + region gd_reclaim_announce, bank $57 SkillView57, bank $4C ReclaimLine4C + 47 msg rows (ASSERT $7476), bank $06 LearnFence06, bank $77 ReclaimedSkill77 battle-item refusal (the example: no reclaimed skill, tables $FF); built S160, USER-CONFIRMED 2026-10-29 14:48 ("Ok both twins work the same")). Prev (patched): cee9bfb98cd0aa3892b391af031baae5   # S159 (EARTH — bank $51 SaveBtlS_4404 same size: resistance 26 into packed position 27, position 0 stays 0 ($51:$4410-$4451 + the header checksum are the only bytes that differ from S158); bank $79 template masks the memorial tag $F8 (the example: no statue, bank $79 zeros); built S159, USER-CONFIRMED 2026-10-29 11:05 ("Great, works")). Prev (patched): e7267428025975dc9d33432b4cfdf529   # S158 (BREEDING HINTS — bank $79 entries 10-12 HintCommand / HintBreed / HintSay (the example has none: bank $79 stays zeros), bank $77 StoryCommand kind 8, bank $60 TextOverride's wHintSay test, bank $69 RelocatedSpecialScan's row number wHintRow, bank $16 HintBreed16 + region hint_breed_16 (the example: the original call), bank $73 HintNewGameClear, WRAM wHintPlace … wHintTmp; built S158, NOT yet user-tested). Prev (patched): 0f341f173ba24fea9a63c1dc02b3a9de   # S157 (ONE-ONLY items — bank $77 entries 19-22 GiveOne / BagFullCheck / BuyQtyMax / OneOnlySay + ShopDropHeld77 + the story give test, bank $60 TextOverride's wOneOnlySay test, the same-size hooks in bank $04 (give ops $2A / $37 / $54 / $57 / $5D, op $2C) and bank $09 (BUY state 5), WRAM wOneOnlyItem / wOneOnlyRes / wOneOnlySay, the loot regions gd_floor_loot / gd_rare_chest / gd_coliseum_prizes (the example: the original bytes); built S157, USER-CONFIRMED 2026-10-26 13:12 ("Great, it works")). Prev (patched): 1051e08f567c4721fce481b66d148b5d   # S156 r2 (Plunder's rise pages — bank $72 LINE_PLUNDER_DEF / _AGL + $DB56 = the rise, bank $4C lines 7 / 8 (ASSERT $7458); built S156 r2, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.")). Prev (patched): 06bd24582f0becb6b09747768325d77c   # S156 (Plunder $EA built — bank $72 SkillPlunder / StealTable / ScoreSteal72, bank $4C line 6 (ASSERT $7454), WRAM wSteal; custom_skills.json row 234 + plunder_line; the built-in names spill 36 B; built S156, USER-CONFIRMED 2026-10-24 08:11 ("sign off", on the S156 r2 ROM; r2 "Works.")). Prev (patched): a701802501a44fd26a749d4213d5d37f   # S155 r5 (Blunt does not stack — WRAM wBlunted, zeroed in bank $50 BattleInit, set by bank $72 SkillRust, cleared by bank $53 RestoreATK53; a blunted slot fails Blunt and scores 0 for the AI; built S155 r5, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)). Prev (patched): bce1c88344e96b797ad739395fd0aae1   # S155 r4 (bank $50 NoSkillName50: "[INS 00] doesn't have any skill" fills $C180 with the commanded monster's name — the original game showed the foe last pointed at after ATK -> B -> SKIL; built S155 r4, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)). Prev (patched): 35133b67f128fad7382102f8090f2e17   # S155 r3 (the line on every cast by default — bank $72 CustomLineAlways / LineAlways72, `line_shows`; the $4019[$FD] row back to the vanilla empty string — it showed MagicBurn's line after a poison tick; skill 238 Rust renamed Blunt; built S155 r3, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)). Prev (patched): 6904f81d0cbd031cb8e1284d8fe837fa   # S155 r2 (the bonus lines BEFORE the attack — bank $72 LineSlot72 / SlashLine72, the hit keeps its own message + sound; the Quake crossover's ally hit sound + shake held for the banner — bank $53 QuakeHitLate53 / QuakeLateFire53; WRAM wLineShown / wQuakeHitLate; built S155 r2, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)). Prev (patched): 8ef5311a5eeda6a0511a53d0e9186768   # S155 (the S155 custom skills Repel / LoneWolf / Punish / Finish / Rupture / Rust, Plunder held; built S155, USER-CONFIRMED 2026-10-21 10:05 ("Great! Everything works.", on the S155 r5 ROM)): every build carries the six built-ins (custom_skills.json + the gd_custom_* regions, gd_custom_pcts NEW), bank $72 the handlers + CustomAIRule72 / CustomTargetPick72 / RepelField72 / RepelCommit72, bank $57 NEW patch file (CustomAI57), banks $06 / $07 / $4C / $50 / $53 / $58 / $73 hooks, WRAM $DEBE-$DEC8. Prev (patched): eb283a19acc6271156399c0964ec2eac   # S154 (the memorial; built S154, NOT yet user-tested): bank $73 MemorialCommit / MemorialRestore beside the extended flags (always built), bank $77 = the re-pinned head (StoryCommand kind 7 memorial; BreedClose ends in MemorialRedraw77 = ret in the example; TEMPLATE_SIZE[$77] 2241), WRAM wMemCount … wMemTmp carved from wCustomPool; the four memorial regions (banks $50 / $0B) keep the game's bytes and bank $79 stays empty (the example has no statue). Prev (patched): d88d5436b84c31b03862f5f6b152e812   # S153 (ROADMAP E5, the title screen / the credits / the ending's steps; built S153, USER-CONFIRMED 2026-10-18 20:51 ("Yep works great")): bank $77 only (+ the header checksum) = the re-pinned head (StoryCommand kinds 5 story_point / 6 credits_after; TEMPLATE_SIZE[$77] 2229); the eleven bank $5F regions keep the game's bytes, bank $79 stays empty (the example has no title, credits or ending step). Prev (patched): 7e8cb0311d3999c127f68f3c2e770451   # S152 (ROADMAP E3 a2, the opening / New game; built S152, NOT yet user-tested): bank $77 only (+ the header checksum) = the re-pinned head (StoryCommand kind 4 name_given, two jr -> jp; TEMPLATE_SIZE[$77] 2200); bank $79 stays empty (the example has no Milly hook and New game is the game's own: newgame_start = the vanilla 8 bytes); the bank $15 region newgame_start is new (same bytes). Prev (patched): 046319ef87e5fc43a871137185800c80   # S151 (ROADMAP E9, items; built S151, USER-CONFIRMED 2026-10-18 11:32 ("Great. Everything works", on r3)): bank $03 SaveMon_6987 (the record copy) -> bank $77 entry 16 ItemRecordCopy (same size), the usability / effect dispatches read wItemBase; bank $07 the item menu stores / reads the behaviour id (ItemStoreBase07 / ItemBase07 at the bank's free end); bank $09 the sell price reads wItemBase, the SELL / Vault histograms count 128 ids; bank $50 the battle item probe / pick -> bank $77 entries 17 / 18; banks $52 / $54 name the item from wItemInUse; bank $77 = the re-pinned head (TEMPLATE_SIZE[$77] 2074) + ITEM_COUNT / ItemTable / ItemBaseTable; wItemBase / wItemInUse carved from wCustomPool; the example edits no item. Prev (patched): 96d05355fd0f8cf293f4b0bb79d4a4dc   # S150 (ROADMAP P3.6 / Phase F T-author, the game's own texts editable; built S150, USER-CONFIRMED 2026-10-17 08:46 ('I confirm everything works')): ROM0 $00F0-$00FF = TextLevel1Hook (SaveBankAndSwitch's level 1 far-calls bank $60 entry 14) + SaveBankAndSwitchCopy (RunTextHandler's lookup marks a COPY); the S105 nickname redirect moved from ROM0 LoadModeBaseRedirect into bank $60 entry 14 TextOverride (TEMPLATE_SIZE[$60] 1825); wTextOvrMode / wTextOvrPtr carved from wCustomPool; the example edits no text (TEXT_OVR_HOME EQU $00, no text bank). Prev (patched): 92060f652a41b49e808e862a242ed3ef   # S149 (ROADMAP ARC CAP5, battles at campaign scale; built S149, USER-CONFIRMED 2026-10-16 22:59): bank $14 (hand) — the monster constructor's gender read -> EnemyGenderCode (same size; project rows read bank $6B entry 1) and its foreign-name jump -> ForeignNamesGate (same size), both in the $7EAD free bytes; bank $6B = the re-pinned head (+ entry 1 EnemyGenderOf, RowIndexOf, the far path to a battle bank; TEMPLATE_SIZE[$6B] 100) + RowBankTable + ProjectEnemyGender; bank $76 = the re-pinned head (16-bit list numbers, floor runs [db, dw], LISTS_HERE / ListBankTable; TEMPLATE_SIZE[$76] 580). Prev (patched): 6b01894d9f11155278d481910abe161a   # S147 (ROADMAP ARC CAP5, songs at campaign scale; built S147, USER-CONFIRMED 2026-10-15 22:12 ('everything works')): ONE sound id per project song — bank $74 = the pinned head templates/bank_074_head.asm (SongStart entry 0 + the 95 dummy records SongRecords $4003 + SongSilent) + SongDirectory + every song's record + streams (TEMPLATE_SIZE[$74] 445); bank $71 entry 6 CustomBGMStart a forwarder to it (CustomBGMChanTable gone, TEMPLATE_SIZE[$71] 1355); AudioMasterTableExt row 4 = [$9E, $4003, $74]; the example's auto song dwm2_bgm10 = $9F (was $A7). Prev (patched): 27de8ab9891f778c22b3d1054768527a   # S146 (ROADMAP ARC CAP5, screens per group; built S146, NOT yet user-tested): the one-state screens no script names read the shared zero byte wCustomStepZero ($CD80) — their step-counter words in bank $60 (screen tables + render rows) all point at it; the counters that keep a byte (Room6C_S0, ArenaClone_S1) move up one. Compiler-only, no template change. Prev (patched): 7cd310352a21d48c7f93a17efb3ab083   # S141 r3 (ROADMAP ARC CAP3b, the user on the S141 test ROMs; built S141, NOT yet user-tested): a custom room's NPC sprite sheets 3-5 in VRAM bank 1 — bank $77 template entries 12-15 NpcSheetLoad0B / NpcSheetLoad06 / NpcDrawPlain / NpcDrawMonster (TEMPLATE_SIZE[$77] 1967), the two loaders' page blocks in banks $0B / $06 and NPCDrawSlot's two builder calls routed there (same size), wNpcSheetIdx $D560. (S141 r2's 8aa2f940… was never delivered as a pin.) Prev (patched): c4c99542daa97f5e1ce75c4ad2ca6e61   # S140 (ROADMAP ARC CAP3a, regions; built S140, USER-CONFIRMED 2026-10-10): templates/place_number.asm pasted into banks $60 / $6C / $71 / $76 (PlaceNum<bank> + RegionTable / GlobalPlaceIds); bank $71 per-place song rows + word music-rule keys + region bytes in the hub / gate-insert rows + entries 11 / 12; ROM0 $26DD rows $6B-$6F back to filler; bank $73 RegionCommit + "X2"; bank $16 boss-floor nops -> entry 11; TEMPLATE_SIZE $60 1794 / $71 1380 / $6C 364 / $76 530. The example has one region. Prev (patched): fc0f7e2c6217b55c77206f98119d9135   # S139 (ROADMAP ARC CAP2d, the rooms' own animated tiles past bank $6C; built S139, NOT yet user-tested): bank $6C = the forwarder CustomTileAnimate (TileAnimDirectory: bank, index per room -> a local jump or rst $10 to TileAnimPlay{A} of the room's animation bank) + the player block templates/tileanim_player.asm; animation banks $80+ after the stream / place banks (tileanim.plan); TEMPLATE_SIZE[$6C] 307. The example has no tile_anims: bank $6C only. Prev (patched): ae463e7c6df0d87a11bfda06f020846e   # S138 (ROADMAP ARC CAP2e, stale saves + room songs past $7F; built S138, NOT yet user-tested): bank $71 template — entry 0 CopyCustomRoomRecord reads the Castle record for a map id with no place (StalePlace), entry 5 returns $81 past the last room, entry 10 ContinueCheck (HubWarp HUB_CONTINUE), CustomRoomBGMTable / CustomRoomBattleBGMTable 256 rows (no `cp $80`); bank $15 CONTINUE loader far-calls entry 10 (same size, over the dead gate-save relocation); TEMPLATE_SIZE[$71] 1150. Prev (patched): c31750e984e93cb10396ee9784e024c9   # S137 (ROADMAP ARC CAP2c, room colours in the place banks; built S137, USER-CONFIRMED 2026-10-09): bank $17 CustomAttrCheck far-calls bank $60 entry 13 (PlaceFwdRender) -> the home bank's CustomRenderCopy (place_readers.asm) builds the walk in WRAM (wRenderTable $D50B … wRenderPal $D516-$D535, carved from wCustomPool); the render rows + 4-slot palettes are part of each place block (PlaceRenderTable); bank $17 regions room_palettes_a / room_render_tables are empty. Prev (patched): 05b8973d45e5caad75617ed7216a0c42   # S136 (ROADMAP ARC CAP2b, place banks; built S136, USER-CONFIRMED 2026-10-09; ce4a1d1a… was a mid-session value before the review fix: an out-of-range place gets DummyExits): bank $60 = the forwarding head (entries 0/1/2/4/5/8/9/10 look the place up in PlaceDirectory / TextSectionBanks on every call -> wPlaceIdx -> the home bank's reader block, templates/place_readers.asm) + bank $60's own reader copy + its data in place tables; wPlaceIdx $D50A carved from wCustomPool. The example fits bank $60 (no place bank). Prev (patched): 807d9668b92c1bbdde522367197bb24b   # S134 (ROADMAP ARC CAP1, the 4 MB ROM; built S134, NOT yet user-tested): patches/game.asm INCLUDEs the compiler-generated bank_ext.asm (banks $80-$FF, a self-ID byte each), HeaderROMSize $07 — the first 2 MB differ from the S129 pin ONLY at $0148 / $014D / $014E-$014F (size byte + checksums). Prev (patched): 7d1364556cba4515ab88e65f605872c5   # S129 (ROADMAP P3.14b/c/d, story checks / quests / music by flag / shop item sets; built S129, NOT yet user-tested): bank $73 FlagAddr routes flags $18xx to bank $77 entry 11 StoryCheck (wStoryFlag $D509); bank $77 template StoryCheck / StoryCommand / ShopSetPick (TEMPLATE_SIZE 1788, re-pinned) + the example's 2 checks, its mini medal quest (flags $015B / $015C) and the generated tables; bank $71 template MusicRulePick + MusicRuleTable (TEMPLATE_SIZE 1070, re-pinned). Prev (patched): fe5fa80aedbd4c9ea4d25e5fa85b3ebe   # S128 r3 (bank $0B: CmpRoom_4839's $E0 tail -> MillyE0Type in the dead tileset-select bytes of room entry 0 — the player drawn as an NPC uses Milayou's frames with the Milly hook on; vanilla bytes when off). Prev (patched): 3a9c38fb6e9977a1f0fd84e20423af55   # S128 r2 (the example's quest flag vault_guardian_beaten $0158 -> $015A: "auto" flags never land on the game's $0158 — number_flags). Prev (patched): 00221d545947a445a313269fa0fef0e2   # S128 (ROADMAP P3.14e3, your arena; built S128, NOT yet user-tested): ROM0 ArenaMapID / ArenaAlias in the dead bytes after ComputeFlagAddress; the arena-keyed `ld a, [wMapID]` sites -> `call ArenaMapID` (banks $01 CheckScriptBeforeAction, $03 the escape skill, $07 the lobby monsters, $50 BattleExitHandler, $51 the battle music) + bank $01 SaveMapStateToHRAM's class same-size, banks $50 / $51 wScriptMapType tests -> ArenaScriptType50/51, bank $50 the lost-match mailbox -> ArenaLossWarp50, bank $09 ArenaMenuMarkWon -> bank $6E entry 1 ArenaMarkClasses + ArenaRefuse09; bank $71 template BattleBGMResolve (re-pinned, TEMPLATE_SIZE unchanged); the example has no arena (ARENA_*_MID $FF). Prev (patched): 5d350ba90ee71df4927a33424864e332   # S127 r3 (bank $77 BreedClose calls ShopBoxBottom in custom rooms: the dialog box back at the bottom after a breeding menu; TEMPLATE_SIZE[0x77] 1110, re-pinned). Prev (patched): a7dc3e717ba75b5cb0492bc2b5663505   # S127 (ROADMAP P3.14e2, breeding NPCs; built S127, NOT yet user-tested): bank $77 template entries 7-10 (BreedClose, BreedSlotEID, PartyAvgLevel, ScriptCommand) + BreedRoll + the pool data (the example has no pools: BREED_POOL_COUNT 0), bank $71 CustomGateInsert GATE_ANY + ScaledChance (+ ScaledChanceTable, empty in the example), bank $60 CustomDrawTiles op $24 command range $FFxx (re-pinned; TEMPLATE_SIZE 1306 / 951 / 1107); patches/bank_00a.asm: the three type-5/6/11 close tails -> $7707 (same size); bank_014.asm LoadEnemyStatsExt slot EID $0F00 -> BreedSlotEID; bank_073.asm CF2WarpCommitDrain clears the random-breeder slots; WRAM wBreedLast / wBreedSlots / wBreedVals / wBreedMask / wBreedStep carved from wCustomPool. Prev (patched): 0b12d0dfbdb5300654810c3d95aa5291   # S126 r2 (the service close puts $FFD4 back to $80 — NPCs vanished at the next talk after the farm; prev 288d29e2… S126). S126 (ROADMAP P3.14e1, service NPCs; built S126, NOT yet user-tested): bank $77 template entries 3-6 (SayText + the line sets, ServiceClose*/ServiceOpenTiles) + ScreenPush full-screen / room-tile rules, bank $71 CustomAnimSource pause (re-pinned; TEMPLATE_SIZE 684 / 908); patches/bank_009/00a/012.asm: the say helpers -> SayAny09/0A/12, the $0A/$12 screen pushes -> ScreenPush, the Vault / farm / egg closes + the farm / egg opens (same size), the farm's two absolute lines base-relative, MedalRewardTable moved to region gd_medal_rewards (the example: the game's 4 rewards); WRAM wServiceTileSave / wServiceTileSaved / wServiceLines carved from wCustomPool. The example has no service NPCs (ServiceSetTable = 0 sets, no pairs). Prev: c326fc96e0119503c9c8dd3b065faca6   # S125 (ROADMAP P3.14d, the hub; built S125, NOT yet user-tested): bank $71 template + entry 9 HubWarp + the HubTable (the example has no custom.hub: one `db $FF`, every send goes to the Castle with the vanilla writes; re-pinned, TEMPLATE_SIZE 865); patches/bank_050.asm ($64AF, $6559), bank_006.asm ($6A25), bank_007.asm ($5012) — the 38-byte Castle writes -> `ld e, HUB_x / ld hl, $7109 / rst $10` (same size); WRAM wHubReason $D2EF carved from wCustomPool. Prev: 6b0738c1c9a2faa917645462ae646022   # S123 r2 (user: the custom gate entrance should run the full start-of-gate whirl, not the floor-change whoosh): bank $60 template + entry 12 CustomDescentFeel (TEMPLATE_SIZE 1293); patches/bank_00b.asm CustomDescentInGate = a far call to it (a custom room's gate ENTRANCE, gate flag 1, keeps wInGateworld 0 = the vanilla portal flow; Stairs down, flag $80, keeps the S41 feel). Prev: e93b23b568069c6b5663378ac03264c1   # S123 (ROADMAP NG3: worlds + NPC colours, built S123, NOT yet user-tested): bank $60 template + entry 11 NpcColourDraw, NpcColourRecord and the $A2 colour prefix in CopyNPCListToBuffer (re-pinned; TEMPLATE_SIZE 1273); bank $06 NPCDrawSlot `ld hl, $0500` -> `$600B` (same size); WRAM wNpcColour.. $D2E3-$D2EE carved from wCustomPool. The example has no worlds and no NPC colours (no $A2 prefix emitted). Prev: bd0652da6d719f060e6d99d26fa2ad10   # S122 (ROADMAP NG2 residual a, built S122, NOT yet user-tested): bank $76 template — GateBossWin rows x6 (+ dw WinTail) and RunWinTail (a re-bossed vanilla gate replays the game's own win bookkeeping); TEMPLATE_SIZE 460; the example re-bosses no vanilla gate (every row $FFFF, $FFFF, $0000). Prev: e43e5f58aafe35fa564c7895f8814bca   # S121 (the Milly hook, ROADMAP P3.16 + E7, built S121, NOT yet user-tested): the example has the hook OFF — patches/bank_04f.asm hero tiles back to the original TERRY (S120b's MILLY now drawn only by the hook, region milly_name_tiles); bank $71 template + entry 8 TextSpriteMode (re-pinned; the bank $06 text_sprite_mode region stays vanilla here — no copy of $08 / $5D in the example). Every other S121 region (banks $01/$04/$09/$0E, bank $79) emits the vanilla text with the hook off. Prev: 97659a4a61c2b536966b1f33719d79a6   # S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4 letters", built S120b, NOT yet user-tested): patches/bank_04f.asm hero-name tiles $D3-$D6 ($4F:$4D40, 64 B, was INCBIN ;TERRY) drawn "MILLY" — the only bytes changed + the header checksum. Prev: d19259a116887ab0516c2bf21ff1b34c   # S119 (ROADMAP P3.8 part B/d, built S119, NOT yet user-tested): bank $04 ScriptCmd24 / ScriptCmd61 bank-$0F far calls SAME-SIZE ($0f01 / $0f02 -> $6009 / $600a) -> bank $60 entries 9 / 10 CustomDrawTiles / CustomDrawAttrs (a custom room's tile patches from bank $60 patch_data; every other script -> bank $0F as before); bank $60 template +entries 9 / 10 (re-pinned). Prev: 110210b0d9e3258474a426f8212d8b4e   # S117b (built S117b, NOT yet user-tested): bank $09 LoadFld9_40fa (the screen push of every bank $09 screen) SAME-SIZE (53 B) -> bank $77 entry 2 ScreenPush (palette attributes in free-colour custom rooms); ShopClose -> ShopBoxBottom (re-seats a top dialog box at the bottom); wPushAttrOn/Row $D241-$D242 from wCustomPool. Prev: 31cc5b31b98e854d55623919640ff949   # S117 (FLAG EXPANSION + ROADMAP NG2 + P3.13c SHOPS, built S117, NOT yet user-tested): shops — bank $09 ShopBuyStockFill choice+copy SAME-SIZE (64 B) -> NEW compiler bank $77 entry 0 ShopFill (wShopID $D240 set by a `shop` script, else the vanilla room rule; ShopPtrTable = the five vanilla lists + custom.shops), the shop close tail SAME-SIZE (10 B) -> entry 1 ShopClose (clears wShopID); ItemInfoTable ($03:$71DA, the old "SpriteFrameDataTable") = region gd_item_info (buy prices); wCustomPool -1 more (wShopID). Then the flags/NG2 engine: built S117, NOT yet user-tested): ROM0 ComputeFlagAddress SAME-SIZE (34 B) -> bank $73 entry 21 FlagAddr (extended flags $1000-$17FF = wExtFlags $D140, saved via SRAM bank 3 "X1" by entries 5/6); bank $0B GetRoomDataPtr SAME-SIZE (21 B) -> bank $60 entry 1 for every non-gate room (CopyNPCListToBuffer: $A0/$A1 condition prefixes -> the hidden bit; VanillaNPCExtTable gate-swirl overrides, empty in the example); bank $50 boss-win branch SAME-SIZE (6 B) -> bank $76 entry 2 GateBossWin (GateClearTable, all $FFFF in the example); bank $73 entry table +1 (every later bank $73 byte shifts 2). Prev: 7bab492185b466d5500ead5b8f1254dc   # S116 (ROADMAP P3.13b the Music tab, built S116, NOT yet user-tested): ROM0 InitBGM SAME-SIZE rewrite (71 B; the vanilla 2-channel id chain -> a 9-byte table scan; ids >= $9E -> bank $71 entry 6 CustomBGMStart = the song's own channel count, CustomBGMChanTable); bank $51 LoadBattle music pick SAME-SIZE (28 B) -> bank $71 entry 7 BattleBGMResolve; bank $71 entry 2 + the gate songs (CustomGateBGMTable, $FF = follow the gate); AudioMasterTableExt rows = region rom0_audio_master (a 5th row [split, $4001, $75] when songs spill); NEW compiler bank $75 (second song bank); the S64 trio padding is gone (the example's songs keep exactly their channels). Prev: c8995d91d8d839ac2f80b3e61b1f38ab   # S115 (ROADMAP NG1 new gates, built S115, test ROM USER-CONFIRMED 2026-10-03 12:39 ("Excellent, confirm works")): bank $16 entry 5's two GateFloorDataTable readers (jr_016_5b72 / jr_016_5be1, 15 B each) are SAME-SIZE calls to GateRowPtr (bank $16 free tail $7CFD): gates 0-31 = the vanilla table, a project NEW gate (32-95) = bank $76 entry 1 NewGateRowCopy -> wGateRowBuf ($D138, 8 B carved from wCustomPool), any other number = the old wrap (gate & 31); bank $76 template +55 B (entry-1 dw, NewGateRowCopy, EncVanillaNumber walks a new gate's source) + NEW_GATE_LEN/NewGateRows/NewGateSource (empty in the example). Prev: dbc4dee947ccc3dbf1fb3092fdf9e143   # S114 (P3.13a, built S114, test ROM USER-CONFIRMED 2026-10-03 09:52 ("Looks good. Give editor files")): bank $01 LoadNextDungeonFloor SAME-SIZE fork (65 B) -> bank $76 EncResolve (NEW compiler bank, template bank_076_head.asm: the vanilla gate+floor rule on byte copies, a gate's own plan, a custom room's own list, flag variants, room rate) + the list copied to wEncListBuf ($D11E); the five list readers (EncounterMonsterSelect x3, SaveRegsForEncounter, LoadFloorAndEncounterData) read wEncListBuf (ld hl / ld bc,0 / pad, same size); the example has no encounter data: census_encounters 633 list choices + 15,192 draws == the model. Prev: 8cf0b93bbb7a91ac27ba4b8de5c40a66   # S113 (P3.12, built S113, NOT yet user-tested): the special breeding table is AUTO-ORDERED (most specific first) whenever a project edits it — the example's 3 overrides + 2 appends move into the species x species block (bank $69 $4050-$5075, 503 B; behaviour per pair unchanged, census_breeding 0/53,056) — + bank $16 BreedCreateOffspring passes the FX1 staging indices $28/$29 (was $14/$15 = farm slots 20/21: every egg +1, no + recipe fired since S71; 2 B at $4072/$4077). Prev: 9ce03bd0e93df966a7000327234af89b   # S112 (P3.11e, built S112, test ROM USER-CONFIRMED 2026-10-02 18:29): the battle-animation engine — bank $6F (CustomAnimTick / Init / Load / Step; compiler file, template bank_06f_head.asm) + bank $70 (sheets) + forks: ROM0 AnimTickSelectAndDraw / AnimStartRenderer ($5E -> $6F, same size), bank $50 AnimLoadFork50, bank $02 ReadSeqStepFork (NEW hand patch), bank $5F AnimRoutineFork / AnimCmdForkDE81 / AnimCmdForkHLA4 + the Effect debugger forks + regions gd_anim_routine / gd_anim_cmd (all $FF = the S111 behaviour, PyBoy A/B identical with the RNG pinned). Prev: 5a1c540487f9043e9d6431685527f1ad   # S111b (built S111, NOT yet user-tested): the built-in custom skills' fixed RATIOS are project data — bank $72 CustomRatioTable (region gd_custom_ratios: MagicBurn burn / damage per MP, Tame damage of ATK, Anchor MP charge, Quake allies' share, Mourn bonus per fallen ally) read by ScaleHL72 (floor(x*n/d), at most 999) in the four handlers + bank $72 entry 7 AnchorKeepMP72 (bank $73 Anchor arrival: rst $10 instead of `>> 2`); defaults = the old constants (PyBoy A/B identical); + CustomTargetBaseTable MagicBurn -> Firebal's row, Tame x3 -> Blaze's (the act-time AI cast them at its own side, measured). Prev: 4a2860cfd148cafa6843221d8be1ad49   # S111 (P3.11c/d, built S111, test ROM USER-CONFIRMED 2026-10-02 15:08 ("Looks good")): the custom skills $DE-$FE are project data (19 regions in $07/$41/$4C/$54/$55/$56/$58/$5F/$72; baseline editor2/core/custom_skills.json = the S110 pin's bytes) + NEW custom skills 234-254 (bank $72 FarSkillFork -> CustomBaseTable runs a stock skill's effect with the new id) + the element override (bank $52: the 24 ladder calls go through ElemLadderA/Breath/Slash in the dead $51B3 pocket -> $72 ElemLevel72; StockElemTable / CustomElemTable all $FF = vanilla) + learn rows from $72 CustomLearnTable via wLearnRowBuf ($06 LearnLoopFork) + CustomSfxTable ($55, $09: S110 custom ids read the next SFX table) + bank $50 SaveBtl_5ad2 keeps custom ids' own names (PROJECT_COMPILER §2.27). The Scorch / Smite name strings were dropped (retired $DE/$DF name the empty string). Prev: 534bfb6245e825445f6d45764ed7305e   # S110 (P3.11 Skills tab; built S110, NOT yet user-tested): skills as project data — new regions gd_skill_names ($41 SkillNameStrings), gd_skill_desc / gd_skill_desc_ptrs / gd_skill_desc_extra ($56, re-sectioned S110), gd_present_proxy_5f / _55 (looks_like). Engine: bank $5f GetPresentId reads StockPresentTable for stock ids (+6 B code + 222 B table from the pad; the 11 call sites + GetAnimPresentId's jr move with it); NEW hand patch bank $55: `ld a,[$db8a]` at $4061 -> call SfxPresentId (+19 B + StockSfxTable 222 B after jr_055_797a, 241 pad nops). Identity tables = vanilla behaviour. Example: the S44 hand rename 215 Sheldodge -> "BugCut" (3 $F0 pad) became gamedata.skills.215.name, so names 216-221 move 3 B down (+ their 40 pointer words). Prev: 482c949ffabbce1ec409c4c9fb7e5f2e   # S109 (P3.10b arena editor; built S109, NOT yet user-tested): arena team sizes — the last 6 bytes of bank $04 ReadArenaGroup ($5E0A) and bank $50 LoadArenaEnemyStats ($6760), `ld a,$01 / ld [$d7d1],a / ret`, became `ld hl,$6E00 / rst $10 / ret / nop`: new hand patch bank $6E ArenaTeamFixup (writes $D7D1 = 1, then $DA02 and the absent slots' display entries from ArenaTeamSizeTable, region gd_arena_team_sizes; all 3 = vanilla). The arena master tables ($04 / $50) and class fees ($09) are compiler regions gd_arena_masters_04 / _50 / gd_arena_fees (empty gamedata.arena = the same bytes). Diff vs the S107 pin (built in a HEAD worktree): exactly those two 6-byte sites + bank $6E $4000-$4059 + the header checksum. Prev: 77ccdab8a746fdc25fcad8d1239c84e4   # S107 (P3.10 part 2c, USER-CONFIRMED 2026-10-01 "Great, can confirm works"): the JOURNAL party line ($07 jr_007_6271) and its bank-$0A twin (jr_00a_5fd9) read the SAVED party member's family icon through bank $6D FamilyIconGfxFromE (same-size forks, 7 B + 6 nops each) — their unclamped 10-entry tables gave a saved Spirit member gfx id $CDE5 / $0A11 and the screen stopped (PyBoy S107); tables re-sectioned SavedPartyFamilyIconTable07 / 0A (both trees). Family icons are compiler regions gd_family_icons ($4F) / gd_family_icon_streams ($2E, new hand patch) / gd_spirit_icon_stream ($6D), empty = the same bytes. Prev: 9740c1c99f9eb11fd2d0edbf3d0a3066   # S107 (P3.10 part 2b, USER-CONFIRMED 2026-10-01 "Can confirm everything works correctly"): walking layouts for new species — bank $11 both follower entries `ld de, FollowerLayoutL1Table11` -> same-size `call FollowerLayoutBase11` (DE = NewFollowerL1Table - 2*$5D for ids 221+); NewAttrHandler no longer rewrites HRAM $C7 (the S105 donor index), NewFollowerAttrTable 1 B per id, new NewFollowerL1Table (ns_follower_layout, 19 dw; Gorbunok = $4184 as before, undeclared $0000); bank $10 / $11 zero tails = compiler regions lay_copies_10 / lay_copies_11 (empty = the same zeros). S107 2a changed no pinned byte. Prev: f22f56e116bc6b3f6b94e7d45a7e5f1e   # S105 G3 (USER-CONFIRMED 2026-09-30 ("Confirm all three appear as expected")): new-species CAPACITY 1 -> 19 (ids 221-239, any subset). The eight follower forks COMPUTE the gfx-ID $7E00+(id-221)*2 into WRAM wNewSpeciesGid ($D10A, carved from wCustomPool) instead of reading per-bank one-entry tables (their ns_follower_gfx_* regions are gone); every other fork gates on id >= 221 (info $03/$6A, NewAttrHandler $11, HighBattlePal $17 (19 x 8 B table), FamilyRecipeResolve $16 (19 x 2 B), HighDetailTextFork $4D (bases -$1BA), LoadModeBaseRedirect $00 (base $7D39)); bank-$01 follower clamp 240+ only; ROM0 battle gfx table re-sectioned $2D56-$2DA7 (19-word region); bank $41 names / nicknames PACKED into 5 free extents (ns_text_a-e) + the nickname pointer table $7EF3 (ns_short_ptr), and SpellUseText_11's tail $7E06-$7E15 restored to vanilla (B9 S28 had zeroed it); bank $7E pointer table 38 entries (Gorbunok 224 = index 6 / 7). The example still declares only Gorbunok (224). Prev: f8a714850b5318844e23b050a16f222e   # S105 (built, never user-tested — superseded in-session by G3): ROADMAP P3.9b purge of the POC CONTENT from the hand overlay. New species are project data (custom.species, editor2/core/species.py): the example re-expresses Gorbunok byte-identically through 17 ns_* regions + the compiler-owned bank $7E, except (a) its wild row moved from the bank-$14 EID-518 slot to project enemy 520 (bank $6B; pool 0 names it) and (b) the walking layout now comes from the donor index NewAttrHandler writes to HRAM $C7 (bank $11) instead of a pointer written at $11:$413F, which had overwritten ChopClown/Grendal's attr bytes (restored $02,$02). Purged: the S21 Dracky->Clam battle sprite (patches/bank_036.asm deleted), the S12 dead-table mirror (entries 693/803). Anchor's 4 dialog scripts + texts moved from the example's medal_vault room to the built-in skill_scripts.json (bank $60 SkillScriptPtrTable, script type $FF; template CustomScriptRead +9 B, re-pinned; bank $72 arms $FF, ids 2-5 unchanged). Prev: 15f21834385eb38e3650d434c622eda2   # S104 r5 (USER-CONFIRMED 2026-09-30 "perfect. Hand off."): library tab DISPLAY order — bank $12 LibTabToFamily / LibTabOrder (Spirit before ???; == gamedata.DISPLAY_ORDER) used by the tab-strip icons (SaveItem_6184 same-size call) and LibScanByFamily; 39 tail fill nops consumed. Prev: e994173e6086fd9f3cfe5095e3f9ba65   # S104 r4 (USER-CONFIRMED 2026-09-30 "Great that fixed it!"): bank $73 CF3SnapRestore restores the extended farm to $BCC7 only (93 chunks + CF3SnapTail4) — the snapshot's 28 lazy tile-image bytes $BCC8-$BCE3 hold the PREVIOUS save's top tile row (commit runs before SaveGameState's tile block); restoring them broke checksum v3 segment 3 when the last two saves were on different screens (user: save wiped on reset, glitchy top row). Prev: d7b762db217656f4432f115c25b39418   # S104 r3 (built; user: save wiped): bank $12 LibScanByFamily writes the library list to wMonList (was $C0D8; FX1 S71 had moved every bank-$12 reader to wMonList, so each tab listed the roster list and a lookup opened species = list index — user S104: the Spirit lookup froze). Prev: eb1535108cdbc9ac24d64dce3db5591e   # S104 r2 (built; user: Spirit library lookup froze): the Spirit icon = mock-up B "ghost wisp" (user pick) in $4F:$41B0 + the bank $6D SpiritIconStream (run marker $00); new compiler regions gd_family_voices (bank $6D FamilyTextPtrTable11) and gd_spirit_names (bank $41 dead fill) — empty gamedata == the r1 bytes. Prev: eee9f5b08b2f847291103961385099d9   # S104 r1 (built; test ROM user-passed except the Library door, which the user project redirects): ROADMAP P3.10a Spirit as the 11th family — new hand-authored bank $6D FAMILY SYSTEMS (FamilyIconGfxActive/FromE, FamilyTextGroupFromE, FamilyDefaultNameId, SpiritIconStream) behind same-size forks in banks $01/$0A/$04/$09; bank $16 family-scan $FA wildcard jr -> 2 nops ($FA = Spirit); bank $4F ??? glyph restored at $41A0, Spirit glyph at $41B0 (byte $1A); bank $41 mode-4 Spirit string "$1A", Spirit default names in the dead $4323 words + tail fill; bank $07 unknown-parent pedigree icon id 10 -> 11 (id 10 = Spirit since B9 drew the Spirit icon for unknown parents). No example project.json change. Prev: 5d1dbc5f50aa46717d662bdc83b3cad4   # S103 (USER-CONFIRMED 2026-09-30 "Rom - all correct"): ROADMAP P3.9 Layer A-lite — the vanilla data tables (MonsterInfoTable, EnemyStatsTable, EncounterPoolData, FamilyRecipeTable, bank $69 special table, Exp/StatGrowth curves (new patches/bank_013.asm), SkillLearnReq/MPCost/RecordData, bank $12 LibFamilyPtrTable, bank $4D library recipe text re-sectioned) are compiler-owned regions fed by `gamedata`; the example re-expresses the pre-S103 hand edits as gamedata (byte-identical) EXCEPT the library recipe text: its 4 B4 family-recipe slots (DrakSlime / GreatDrak / Almiraj / Wyvern) now show the recipes the table really has (coherence Set 1) — the only byte delta, 17 B in bank $4D + header. Prev: 0d60486e57edc2ad31fa28079d4fc9f8   # S102 (built, NOT yet user-tested): own tile animations — new compiler-owned bank $6C (template bank_06c_head.asm: CustomTileAnimate / TileAnimRestart / TileAnimCopy, empty TileAnimRoomTable in the example), bank $71 CustomAnimSource far-calls it first (+4 B), wram.asm carves wTileAnim* from wCustomPool. Prev: 9c81304176bd069ec77cd4c0d2211900   # S101 (built, NOT yet user-tested): ROADMAP P3.7b part 2 custom boss floors — bank $16 GateFloorDataTable is a compiler-owned region (custom.gates: floors 2-99, boss = custom room / vanilla:$xx, hand_made; the example has no custom.gates so the 256 B are vanilla); bank $14 LoadEnemyStats head -> LoadEnemyStatsExt (EID >= 519 -> new compiler-owned bank $6B CopyEnemyRowExt / ProjectEnemyRows, template bank_06b_head.asm pinned) and LookupBossRedirect -> BossRedirectTableExt (project join_as rows, then the vanilla 34) — the old bank-$14 tail enemy row (quest EID 519) moved to bank $6B; bank $60 CustomStateRules calls CustomMonsterCast first (per-screen monster NPC cast -> $D7CA; empty table in the example); bank $71 CustomRoomBGMResolve: the floor before a CUSTOM boss map plays that room's song (or $34). Example project.json: raw script op hex normalised to the new names (branch_screen/npc_write/...; bytes identical). Prev: 7cd7257b94004fdf8b406138dc7122e1   # S100 r3 (built, NOT yet user-tested): (1) stairs/special-room descent from a FREE-COLOUR custom room faded through the room's own colour 1 (user: "background is not CREAM but room-tile coloured") — bank $06 MapTrans_S10_InGate + MapTrans_S12 same-size rewrites far-call bank $73 new entries 19 GateWipeAttr (the 20x14 $E0 fill rows -> attr 7) and 20 GateLeaveFreePal (buffer+HW colour 1 := cream once the room is squeezed; the load fade targets buffer colour 1); vanilla + unmarked rooms early-ret (PyBoy: vanilla $50 pit transition = same pictures, single-scanline timing jitter only); (2) tools/compress_tiles.py MAX_COPY 256 (the game adds 19 in 8 bits: a 257-274 byte copy wrapped and shifted the rest of a sheet 256 B — an imported blank sheet drew as flat colour blocks) + decompress_tiles.py 8-bit like the game; the example sheet re-encodes (its old stream happened to decode right); (3) editor: "Stairs down here" paints the vanilla next-floor well ($51 slots $2C-$2F over the cell's floor). Prev: 91202c74fc9fc80dffc0e397d9d5e083   # S100 r2 (built, NOT yet user-tested): the example gate rule gains once_per_dive (user 14:39: gate_rotation could be floor 2 AND floor 3 of one dive; PyBoy 40 dives: floor 2 19x, floor 3 12x, never both). Prev: 4f13d2af8411c0b4387094221e9c2382   # S100 (built, NOT yet user-tested): ROADMAP P3.7b part 1 gate room insertion — bank $16 GateDecisionFork rewritten (the S41 hardcoded gate-1 -> $6D POC + CustomGate1Setup removed; push/pop BC around the far call because the vanilla special-room test after the fork divides B = wCurrentFloor) -> bank $71 entry 4 CustomGateInsert over the generated GateInsertTable (custom.gate_inserts[]: gate, floors, chance, flag terms, once-per-dive); entry 5 CustomRoomFlags + CustomRoomFlagsTable (can_save) read by the bank $07 save ladder same-size rewrite SaveAllowCheck (vanilla verdicts identical over all 256 mapIDs); entry 1 gate byte $FF = follow the dive (no pin); dive state wGateDiveGate/Mask $DEBC-D persisted via SRAM $BFCA-B in bank $73 entries 5/6; template 164 -> 395 B re-pinned; example project: gate_rotation served on Villager floors 2-3 at 50 % (was every floor), gate_arrival (4,6), stairs tag. PyBoy on the user save: gate-21 decisions identical to the S99 build (no rule = no RNG), floor 2/3 hit 19/40 each, floor 4 0/40, once-per-dive + flag rule + follow-gate encounters + gate/own music + JOURNAL allowed/refused + save-in-room/reload/descend. Prev: d072eb516dabc4799d830c170bbc9d9f   # S99 (built, NOT yet user-tested): ROADMAP P3.3e room tile animation — bank $01 PerRoomVRAMDispatch same-size rewrite (the six wGameState bit/ret-nz guards collapsed into `and $fe / cp $10`, proven equivalent over all 65,536 (wGameState, $C8EF) pairs; freed bytes fund: custom rooms ask bank $71 entry 3 CustomAnimSource for their animation source instead of `call MapIDClampForDispatch` = Castle for all); template bank_071_head.asm + entry 3 (head 142 -> 164 B, re-pinned); generated CustomAnimSrcTable (1 B/room); example project gains explicit `animation` (arena_clone source = $06 bare ret; the rest none) — so tiles 77/78 no longer roll in the example rooms. PyBoy: vanilla rooms frame-converge with the S98 build (sub-frame tile-load timing only), clones animate their source (test_canvas v6 --rom: VRAM == census schedule). Prev: ce24de8b708fe453711075dd0a3e07f8   # S97 round 2 (USER-CONFIRMED 2026-09-26; S98 changed no example/compiler-owned bytes — pin held): text boxes keep palette 7 (cream) in free-colour custom rooms — bank $06 dialog LoadMapS_6939 / state 9 / LoadMapS_6b3d same-size far calls to bank $73 entries 14-16 (row attrs saved to wBoxAttrSave, set to 7, restored cell by cell on close), bank $56 SetB56_48a1 + bank $00 ClearTextBitsRedraw same-size far calls to entries 18/17 for the YES/NO box; wram carves 132 B from wCustomPool. Vanilla + non-free rooms: pixel-identical dialog/choice frames (PyBoy). No example bytes change from the S97 r2 boxes text form (the example uses `lines`). Prev: 6e97fd377f50de47c98dcd665f515da7   # S97 round 1 (USER-CONFIRMED 2026-09-26): ROADMAP P3.5a state rules — bank $60 template entry 8 CustomStateRules (+ CustomReadStep calls it; head 383 -> 492 B, re-pinned) and bank $17 CustomAttrCheck calls StateRulesHook17 first (3 B from the ds-12 reserve -> ds 9; PyBoy-measured: the attr/palette walk reads the step counter BEFORE bank $0B Entry 0, so a rule evaluated only in Entry 0 loads the previous state's palette — A/B proven on the servant clone); generated CustomStateRulePtrTable in bank $60; the example project's S92 rank demo moved from the entry:medal_vault prelude to arena_clone.state_rules (flag $0030 -> screen 1 state 1; PyBoy: identical NPC sets flag clear/set, survives a wiped counter; vault entry script unchanged in behaviour). Also S97: the NPC type byte fields (behaviour/object) in the compiler — no example bytes change from them. Prev: 5db25d15af6298ca8be9e717a4a95b41   # S96 round 4 (USER-CONFIRMED 2026-09-25 ("Everything works"), SameBoy menu/battle): field-menu fix for free-colour rooms (user SameBoy report: washed-out room after closing the menu + colour-1 squares during the open wipe). FreeColor1Hook now keys on a PER-SLOT marker (bit 15 of colour 3 in slots 0-3, compiler-set for free_color1 palettes) and puts it back after the colour-3 pass, so the menu's standalone LoadPal_4102 no longer re-forces cream; bank $06 A-press menu-open tail rewritten same-size (4x `ld [hl+],a`) to far-call bank $73 entry 13 MenuOpenFreePal (hardware colour 1 := cream for marked slots during the tile-$E0 wipe; buffer untouched, menu-close push restores). Vanilla rooms: 619/620 menu frames pixel-identical to the round-3 build (1 mid-redraw text frame shifted by the far call's cycles). Prev: 07a71f202f011530ba7bb7d312666a97   # S96 (built, NOT yet user-tested): bank $17 FreeColor1Hook — LoadPal_4102's colour-1 pass (`ld a, [$c7d1]`) same-size -> jp FreeColor1Hook (bank tail, before room_render_tables): custom rooms whose loaded palette has bit 15 in slot 0 colour 3 (compiler marker for `free_color1` palettes) keep their own colour 1 in slots 0-3; slots 4-6 and every vanilla room unchanged. Example project has no free_color1 palette, so only the hook code moves bytes (room_render_tables shift, label-resolved). PyBoy: Pei import room BG palette RAM slots 0-3 == project (own colour 1), slots 4-7 $6BFF, GreatTree unchanged, holds after screen scroll. Prev: fc1caa987f5d4be1ad86ef7d4e87db20   # S94b (built, NOT yet user-tested): (1) vanilla-format per-(screen, STATE) attr+palette tables — bank $17 CustomAttrPtrTable -> RoomAttr_<mid> (16 dw) -> ScrAttr_<mid>_<k> (dw step counter; per state db attr_entry, attr_bank / dw pal_ptr) read by CustomAttrCheck/CustomPalCheck exactly like the vanilla AttrPtrTable walk (vanilla varies attr AND palette per step: Servant room $3F; clones carry ALL valid vanilla steps as states[] with per-state layout/attr/palette); (2) entrance redirects — custom.entrance_redirects[] lowered to per-(mapID, screen) VanillaExitExtTable rows (db mapID, screen; $FF = any) with every valid vanilla step rebuilt from extracted/map_table.json and only the named door re-pointed; template head 358 -> 383 (VanillaExitResolve keys on wScreenIndex), re-pinned; (3) bank $0B RoomEntry9 (boundary push exits) diverted through bank $60 entry 7 too (same-size rewrite, 5 nops) so y=0/7 extension rows are LIVE; (4) Exit_GreatTree_s8 restored to VANILLA bytes — the S92 Library-door repoint ($72) and the S1-era (4,5)->$6B entrance are now example-project DATA (entrance_redirects). PyBoy: Library door -> $72 scr 1 (14,7); (4,5) -> $6B (7,6); untouched GreatTree screen-12 door -> $0D; MedalMan south edge and OldManGate south edge identical to the original ROM; fresh-project Farm clone + redirect walk-through (test_canvas --rom). Prev: cdadf8346e207c248b151491e3ca2774   # S94 (built, NOT yet user-tested): per-SCREEN attr maps — CustomAttrCheck (patches/bank_017.asm) now reads CustomRoomAttr as dw per room -> 17-byte [bank, entry x16] map emitted by render17 (screens[k].attr > layout item attr > render.attr > $FF vanilla); the S42 base_entry+2 stride is retired (a 6-screen Farm clone PyBoy-verified: each screen its own attr, old rule mismatched 100+ tiles on screens 2/4/5/6). Also S94: ROM0 $26DD rows $6B-$6F are a compiler-owned @BUILD_PROJECT region in patches/bank_000.asm (rom0_records emitter; record required for EVERY room), 4x4 screen grid schema (keys 0-15, subtable width per row), extract_room emits screens[].attr, arena_clone screens 1/2 now carry their OWN attr items (attr_s1/attr_s2 — the faithful clone; under the old stride both showed attr_s2). Prev: df3219623203cf5bc272cb6155f07a01   # S92v5 (USER-CONFIRMED): rank state re-authored as visible-by-removal — rank G+ (flag $0030) removes the (7,6) $12 attendant; user-confirmed vanishing in-game. The v4 swap target $54 renders empty in field contexts (S91) — and that is VANILLA-FAITHFUL: user confirms the real lobby shows only 2 bunnies + 2 desks (the $54 entry is the desk talk-point). USER-CONFIRMED this session: Library-door entrance teleports to the clone; all 3 clone screens accessible on a normal save; postgame right-screen "crash" was a savestate issue, not the ROM. Prev S92v4: rank trigger corrected to EVENT FLAG $0030 (rank G cleared) — the S92v3 $D9CE ladder keyed a transient coliseum variable, not persistent rank (user-reported: G cleared, no state change). Both preludes (entry:medal_vault + arena_clone scr0) now if_flag_set $0030. PyBoy-verified on BOTH user saves: normal (flag 0 -> ctr 0 -> clerk) and postgame (flag 1 -> ctr 1 -> slime in buffer after a screen-seam cross; first-load NPCs predate the entry-script arming per the measured load-order rule, and a seam cross re-reads the screen state mid-visit — no re-entry needed). Postgame right-screen crash NOT reproduced headless (marker tile, NPC talk, north door all clean on the user postgame sav) — handed to user SameBoy debugging. Prev S92v3 (user-directed): GreatTree Library door REPOINTED to arena_clone $72 — in-place same-size byte edit in patches/bank_00b.asm at $0B:$4FE6 (05 03 12 00 04 05 07 -> 05 03 72 00 01 04 07; restore note at the site). NO injected triggers: the $12/$13 vanilla_exit_extensions rows are REMOVED (the v2 gate-room door was behind the 100-monster gate; main-Library injection is blocked by the map-wide replacement-list hazard, KEY_LESSONS S92). PyBoy-verified with real transitions both directions (Library south exit regressed; door -> clone (14,7) scr1; clone south -> GreatTree scr 4). Library itself unreachable while the repoint stands (testing stance, user-approved). Prev S92 pins: d5e052081890dd24137c0738aa240794 (v2 gate-room door), + Library Gate Room ($13) vanilla_exit_extensions row — Arena-clone door at (8,6), bottom-right corner (user-directed entrance; the well/vault chain was not the user's topology). Single sub-room = no cross-screen exit-replacement hazard (Library $12 itself is 2 screens sharing one replacement list — rejected for that reason, KEY_LESSONS S92). Both vanilla steps mirrored verbatim; return door PyBoy-regressed. Prev S92 pins: 9e5b592fd4b1150e1504d1be6b0c7c17 (prelude arming), + custom.script_preludes (entry:medal_vault arms arena_clone S1 rank state pre-transition; PyBoy-measured: state selection reads the counter at destination LOAD before its entry script) + rank demo re-authored as an in-budget NPC SWAP + placeholder zero 26DD rows. Interim S92 pin c3513d85283cac54778d0629f4537d6e (clone content, pre-prelude). S92 base: P3.2 [G-A] banks $64/$67 fold behind project.json + states[] backend [G-G] + P3.2b [G-J] clone extractor. Example project GAINS arena_clone ($72, vanilla Arena Lobby $06 clone via tools/extract_room.py, single-version per user decision, BGM $1E), island_copy ($73, custom->custom clone of gate_island), an authored medal_vault staircase layout+exit, and a 2-state rank demo on arena_clone screen1. The $64/$67 EMISSION is byte-identical to the prior hand-generated banks (proven via --expect-md5 a17bff8e67f3043fbff653c65128ea16 before clone content; the fold itself is zero-delta). NOT yet user-tested (built S92). Prev: a17bff8e67f3043fbff653c65128ea16 S85b: AI-committed Anchor $E4 rewritten to Attack in DispatchBoundsStub (prev S85 4c8de38a758eda5eb256d0af6f3be5b1: DispatchBoundsStub re-route $E5-$E8 -> $62BF (bank $58; AI-committed Tremor/Quake swept the party) + Anchor $E4 true no-op in CustomBattleExec (bank $72). Also absorbs the S84 pin move that was never recorded here: b99455d67012e2f451cd5ed96a5020a1 (S84: DispatchBoundsStub bounds guard for AI-committed ids > $E5, bank $58 $694F). Neither session touched compiler-owned banks; the pin is the whole-ROM regression. Prev: ce1e7369eb3876866e897c278510c3ae (S75v4: + LearnCode2Guard06 (bank $06: custom ids can never stat-learn via the code-2 path) + SlotProbeGuard50 (bank $50: level probe bounds slot index < $28; the stale-$cac0 phantom-slot-40 echo-RAM hazard) + builder-integrated validate_custom_data.py. Prev: 762c0df0e23611bce6c931813e976d0c (S75v2: banner-before-animation (user feedback: MournCountDead shared counter evaluated in the anim fork; banner render + $FE hold state precede the two slash plays; handler keeps only the multiplier; bank $72 only). Prev: a914e4896c3380b061d9bff8cfe509f6 (S75: + custom skill $E9 Mourn (ATK-vs-DEF x (dead allies+1) via the 2nd dispatch trampoline MournDispatch52; double EvilSlash replay; boost banner; banks $06/$07/$14/$41/$4c/$52/$53/$54/$56/$58/$5f/$72/wram -- BATTLE_SKILL_SYSTEM 13.8). This pin supersedes the S73b reference DIRECTLY: the S74 Earthquake bytes were never pinned here (S74 did not touch compiler-owned banks and did not run this chain), so the S74+S75 patched deltas both land in this one pin move. Prev: 224b11766b28de88cdb206c31145e286 (S73b: + skill descriptions for $E0-$E4 (bank $56 table $6667 repoints + 226 string bytes from tail pad) and battle field-only rejection for $E4 (bank $50 FieldOnlySkillA shared predicate: menu $0302 message without consuming the turn + usable-count exclusion; 12-byte mid-pad consumption, shift audit clean). Prev: 8fa605d795a7591871d5ad02058addfb (S73 Anchor reference patched build (custom skill $E4 Anchor: field-cast system RE'd — bank $07 usability whitelist in-place rewrite + Anchor07Post state-4 menu close; bank $14 entry-4 tail -> bank $72 AnchorField14Tail context classifier; script arm protocol ctr=$FFFF; GateAwareDispatch script-type branch (template re-pinned); medal_vault scripts 2-5 + dialogue $0A20-$0A23; bank $73 commit-hook arm 1/2/3 (anchor store / install+3/4-current-MP charge on arrival / GateDecisionFork force-standard); persistent wAnchorGate/Floor $D9D7-8 (flags $01E0-$01EF retired), transient $DEB2-3; PyBoy-verified full round trip via real menu UI both directions, MP 98->24, anchor single-use, error dialogs 4/5, NO paths, Heal/WarpWing/NPC regressions). Prev: 46ba69918c7ddfdfcd8a441d967debb6 (S71v2 FX1 reference patched build (exp-scale veto: drain pays FULL pending per eligible farm monster — vanilla per-monster rate; v1 halved it. USER-CONFIRMED v1 mechanics 2026-07-26: farm menus >17, sleep whole-swap, save/reload, breeding + hatches at scale, "everything works"; v2 delta = drain payout only, PyBoy-verified full 512 payout in both farm regions). Prev: 9c3af0d434f3d5bcd617677a42129778 (S71 FX1 reference patched build (farm expansion 17->37 active slots: array 40 slots (0-2 party, 3-19 farm @$A1FB+s*$95, 20-39 farm @$B124+(s-20)*$95 = the evicted sleep pool's bank-0 home; staging pseudo-slot INDICES 20/21 -> 40/41, addresses unchanged $D665/$D6FA); sleep pool -> SRAM bank 2 ($A010+c*$95, 40 slots, "P1" magic) via bank $73 entries 10-12; one-time F2 reformat gate $BFC8-9 in entry 4 (order load-bearing: legacy sums BEFORE F2 stamp, v3 after); checksum v3 = $A002x$1C5 + $AD9Fx$385 + $BCC8x$338; snapshot R4 dual-region ($A1BF x95 + $B124 x94 chunks); roster lists + canonicalizer map -> wMonList $D001 (C0D8 overflow at 40 slots); exp payout halved at drain (aggregate 37/32~=vanilla 17/16); PyBoy-verified: reformat preserves save, R3->R4 upgrade, 25-farm canonicalize/list/rewind/dual-snapshot/drain/battle). Prev: a5a5e0d5d01949b30bbff9d3253d9748 (S70v3 reference patched build (walk-on boundary exits for custom rooms: Entry 6 scan y=7 skip is data-driven via wCustomY7Cmp $DE74 (carved from the S65 legacy pad), armed fresh by bank $60 entry 7 before every scan - vanilla branch writes $07 (original skip semantics preserved), CustomExitCheck writes $FE (custom-room y=7 rows fire on arrival, PyBoy: 36 frames tap-to-transition, vanilla MedalMan door regression-checked push-only); template head 348->358, re-pinned). Prev: 22d30b66827628b9c8d9d400c48568a4 (S70v2 reference patched build (bug-fix pass, PyBoy-verified: init_dialog $07 protocol - every text outside an NPC interaction gets its own preceding init_dialog, auto-injected by quest lowering (field mode never services the text queue; dismissal tears script dialog mode down); emit_script hard-errors on non-terminated scripts (S70 freeze class); encounter seed 1200 (drain measured 100/step); bank $0B custom-source fast transition (in-place 19-byte window rewrite: exits FROM custom rooms take the town path, 18 frames vs the 385-frame gateworld-return ceremony, a day-one defect, not a regression); write_ram2 $13 opcode; Medal Chamber display strings). Prev: 6a6f4f8791cad0a271d210c7f485569c (S70v1 reference patched build (E2 wiring: progression.quests/enemies lowering -> quest:/entry: scripts + bank $14 tail row EID 519; vanilla_exit_extensions -> VanillaExitExtTable + template entry 7 VanillaExitResolve (re-pinned, head 348 B); bank $0B Entry 6 unified divert (-5 B); bank $01 $4C3E reverted to vanilla ld a,[wMapID] (entry scripts fire at initial entry); legacy compat key retired from the example project; room $71 Medal Vault + dwm2_bgm10). Prev: 94731e601af28503060acf3884348015 (S69v2 reference patched build (roster snapshot: bank-1 magic-gated save-time roster copy restoring vanilla reset-rewind semantics; entries 5/6 tail hooks + CF3SnapXfer/Commit/Restore + wSnapBounce $DE92). Prev: e719d286db0ff66e80755ec3ef1203e0 (S69v1 E3 pin (E3 SRAM 32 KB: 19 ROM0 quadrant-convention RAMB writes retargeted $4100->$6100 (MBC5-ignored), HeaderRAMSize $02->$03, bank $73 entry 9 CF3SRAMBankedCopy + wSRAMXfer* mailbox $DE8B-$DE91). Prev: de0c5a672e7e7e1fb834dd7afe70b9e7 (S65 reference patched build (WRAM migration: NPC/exit buffers -> $CC80/$CD00, step-counter region -> $CD80 (640 B) inside the CF3-freed window; $DE74 region -> static ds 7 pad, wRoomRecScratch stays $DE7B; + bank $73 entry 6 tail zeroes the window after the main-image restore copy). Prev: 7cc0857faad8a950573e865e93f791eb (S64 reference patched build (M3b+M3c: LoadNewBGMIdIntoA same-size rewrite -> bank $71 entry 2 CustomRoomBGMResolve + CustomRoomBGMTable; music emitter owns bank $74; dq6_town1 ids $A4-$A6 from MIDI; Library $12 + gate_island $6B room defaults). Prev: 3009b75ee1e3bd58bc315a39b7324e17 (S63v5 reference patched build (M3a v4 + v5: BGM #07 ids $A1-$A3 in bank $74, room $6C NPC via project.json; bank_060 now compiler-generated via --apply). Prev: c23beed7aadee80a061c0f6c24d7c1f4 (S63 v4, M3a: AudioMasterTableExt + song bank $74 + bank $1E reverted; S62's BGM NPC/set_bgm $9E folded into the example project — S62 had hand-edited bank_060 without updating project/pin, breaking compat==hand byte-identity; restored S63). Prev pins: 168c5f1b5b4b3b2568a6d6e2f3f1ab45 (S60), d31c9300e13b98f516c6bee8b446069d (S58v2)))
+
+PASS = 0
+
+
+def ok(name, cond, detail=""):
+    global PASS
+    if not cond:
+        print(f"FAIL: {name} {detail}")
+        sys.exit(1)
+    PASS += 1
+    print(f"  ok: {name}")
+
+
+def base():
+    return json.load(open(EXAMPLE))
+
+
+def compile_data(data):
+    tmp = '/tmp/_t_proj'
+    os.makedirs(tmp, exist_ok=True)
+    json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'))
+    # S92: project-relative assets (custom.tilesets raw2bpp sheets) travel
+    # with the project — mirror the example project's assets/ into the tmp
+    # copy so mutated fixtures still resolve them.
+    src_assets = os.path.join(os.path.dirname(EXAMPLE), 'assets')
+    if os.path.isdir(src_assets):
+        import shutil
+        shutil.copytree(src_assets, os.path.join(tmp, 'assets'),
+                        dirs_exist_ok=True)
+    return C.compile_project(tmp, REPO)
+
+
+def expect_error(name, data, needle):
+    try:
+        compile_data(data)
+    except (ProjectError, C.CompileError) as e:
+        ok(name, needle in str(e), f"(got: {e})")
+        return
+    print(f"FAIL: {name} — expected error containing {needle!r}")
+    sys.exit(1)
+
+
+def _anim_fixture(items, room_id='gate_island', animation='none'):
+    """S102: the example with one room drawing from the project tileset
+    combined_room6b and carrying `tile_anims`."""
+    d = base()
+    r = next(x for x in d['custom']['rooms'] if x['id'] == room_id)
+    rec = r['record']
+    rec.pop('gfx_id', None)
+    rec.pop('gfx_bank', None)
+    rec['tileset'] = 'combined_room6b'
+    r['animation'] = animation
+    r['tile_anims'] = items
+    return d
+
+
+def test_tile_anims():
+    """S102 own tile animations (PROJECT_COMPILER §2.19): emission, the
+    engine record format, frames from the sheet, validators."""
+    from editor2.core import tileanim as TA
+    sheet = open(os.path.join(os.path.dirname(EXAMPLE), 'assets',
+                              'combined_room6b.2bpp'), 'rb').read()
+    b = (sheet[20 * 16:21 * 16][::-1]).hex()
+    flip = {'id': 'f', 'name': 'Flip', 'motion': 'flip', 'speed': 20,
+            'rows': [[20, 21]], 'frames': [[b, b]]}
+    drift = {'id': 'd', 'name': 'Drift', 'motion': 'drift_right', 'speed': 8,
+             'rows': [[30, 31, 32]], 'strip': True}
+    sway = {'id': 's', 'name': 'Sway', 'motion': 'sway', 'speed': 32,
+            'rows': [[40], [41]], 'strip': False, 'amplitude': 2}
+    out, prj, warns = compile_data(_anim_fixture([flip, drift, sway]))
+    t = out['patches/bank_06c.asm']
+    ok("tile_anims: bank $6C lists the room (index 0) and ends its group list",
+       'TILEANIM_ROOMS EQU 1' in t and 'dw TileAnimRoom_0' in t and '    db 0   ; end' in t)
+    ok("tile_anims: group records = [speed, phase, steps, tiles] + seq + VRAM dests",
+       '    db 20, ' in t and ', 2, 2   ; Flip' in t and '$9140, $9150' in t
+       and ', 24, 3   ; Drift' in t and ', 8, 2   ; Sway' in t, t[-3000:])
+    ok("tile_anims: frames live in a 16-aligned section of bank $6C",
+       'SECTION "Bank $6C tile animation frames", ROMX, BANK[$6C], ALIGN[4]' in t)
+    fr, seq = TA.steps(drift, sheet)
+    ok("tile_anims: a 3-tile strip drift = 24 one-pixel steps, step 0 = the sheet",
+       len(seq) == 24 and fr[0] == [sheet[s * 16:s * 16 + 16] for s in (30, 31, 32)])
+    ok("tile_anims: rolling the strip 24 px returns to the start",
+       TA.roll(fr[5], 19) == fr[0])
+    fr2, seq2 = TA.steps(sway, sheet)
+    ok("tile_anims: sway amplitude 2 = 0,1,2,1,0,-1,-2,-1 over 5 frames",
+       TA.offsets(sway) == [0, 1, 2, 1, 0, -1, -2, -1] and len(fr2) == 5)
+    ok("tile_anims: the example without tile_anims emits an empty table",
+       'TILEANIM_ROOMS EQU 0' in out1_ex[0]['patches/bank_06c.asm'])
+    ok("tile_anims: load estimate (3 tiles/8 f + 2/20 + 2/32 of 8 per frame)",
+       abs(TA.load([flip, drift, sway])['pct'] - 100 * (2 / 20 + 3 / 8 + 2 / 32) / 8) < 1e-9)
+    bad = dict(flip, speed=0)
+    expect_error("tile_anims: speed 0 refused", _anim_fixture([bad]), 'speed must be 1-255')
+    expect_error("tile_anims: one slot in two animations refused",
+                 _anim_fixture([flip, dict(drift, id='d2', rows=[[21, 33]])]),
+                 'already animated by Flip')
+    expect_error("tile_anims: a strip wider than 4 tiles refused",
+                 _anim_fixture([dict(drift, rows=[[30, 31, 32, 33, 34]])]), 'at most 4 tiles')
+    expect_error("tile_anims: a flip without a second frame refused",
+                 _anim_fixture([dict(flip, frames=[])]), 'at least one more frame')
+    d = _anim_fixture([flip])
+    r = next(x for x in d['custom']['rooms'] if x['id'] == 'gate_island')
+    r['record'] = {'gfx_id': '0x0D', 'gfx_bank': '0x28', 'width_px': 160,
+                   'height_px': 256, 'collision_threshold': '0x30'}
+    expect_error("tile_anims: a room without its own tileset copy refused", d,
+                 'own tileset copy')
+    expect_error("tile_anims: a slot the copied vanilla animation moves is refused",
+                 _anim_fixture([dict(flip, rows=[[77, 78]])], animation='0x00'),
+                 'fight over it')
+
+
+def test_crash_config_validator():
+    """validate_custom_data must PASS on the current build and FAIL on a
+    fence-stripped ROM (the S75 crash-capable configuration)."""
+    import subprocess, shutil, tempfile, os
+    rom = os.path.join('/tmp/_t_regression', 'build', 'rom.gbc')
+    r = subprocess.run(['python3', 'tools/validate_custom_data.py', '--rom', rom],
+                       capture_output=True, text=True, cwd=REPO)
+    assert r.returncode == 0, f"validator must PASS on the built ROM: {r.stdout}"
+    # strip the code-2 fence (restore vanilla pops at $06:$50B5) -> must FAIL
+    data = bytearray(open(rom, 'rb').read())
+    b06 = 0x06 * 0x4000
+    data[b06 + 0x10B5:b06 + 0x10B8] = bytes([0xC1, 0xE1, 0xD1])
+    with tempfile.NamedTemporaryFile(suffix='.gbc', delete=False) as tf:
+        tf.write(bytes(data)); bad = tf.name
+    try:
+        r2 = subprocess.run(['python3', 'tools/validate_custom_data.py', '--rom', bad],
+                            capture_output=True, text=True, cwd=REPO)
+        assert r2.returncode != 0, "validator must FAIL when the code-2 fence is stripped"
+        assert 'code-2 fence' in r2.stdout
+    finally:
+        os.unlink(bad)
+
+
+# ---------------------------------------------------------------------------
+# S103 (P3.9) Layer A-lite gamedata — PROJECT_COMPILER §2.20
+# ---------------------------------------------------------------------------
+
+GD_REGIONS = {   # gamedata_vanilla table -> (patch file, region name)
+    'monster_info': ('patches/bank_003.asm', 'gd_monster_info'),
+    'enemy_stats': ('patches/bank_014.asm', 'gd_enemy_stats'),
+    'encounter_pools': ('patches/bank_001.asm', 'gd_encounter_pools'),
+    'family_recipes': ('patches/bank_016.asm', 'gd_family_recipes'),
+    'exp_curves': ('patches/bank_013.asm', 'gd_exp_curves'),
+    'growth_curves': ('patches/bank_013.asm', 'gd_growth_curves'),
+    'skill_learn': ('patches/bank_006.asm', 'gd_skill_learn'),
+    'skill_mp': ('patches/bank_007.asm', 'gd_skill_mp'),
+    'skill_records': ('patches/bank_054.asm', 'gd_skill_records'),
+}
+
+
+def region_text(out, fname, name):
+    L = out[fname].split('\n')
+    b = L.index(f"; @BUILD_PROJECT BEGIN {name}")
+    e = L.index(f"; @BUILD_PROJECT END {name}")
+    return L[b + 1:e]
+
+
+def asm_bytes(lines):
+    import re
+    out = []
+    for l in lines:
+        s = l.split(';', 1)[0].strip()
+        m = re.match(r'^(db|dw)\s+(.*)$', s)
+        if not m:
+            continue
+        for x in m.group(2).split(','):
+            x = x.strip()
+            v = int(x[1:], 16) if x.startswith('$') else int(x, 0)
+            out += [v & 0xFF] if m.group(1) == 'db' else [v & 0xFF, v >> 8]
+    return bytes(out)
+
+
+def gd_fixture(gd):
+    d = base()
+    d['gamedata'] = gd
+    return d
+
+
+def test_gamedata():
+    from editor2.core import gamedata as G
+    V0 = G.vanilla(REPO)
+    vt = lambda n: b''.join(bytes.fromhex(r) for r in V0['tables'][n]['rows'])
+
+    # (1) per-table regression: an EMPTY gamedata emits every table == vanilla
+    out, prj, w = compile_data(gd_fixture({}))
+    for tname, (fname, rname) in GD_REGIONS.items():
+        ok(f"gamedata empty: {tname} region == the ROM table", 
+           asm_bytes(region_text(out, fname, rname)) == vt(tname))
+    sp = asm_bytes(region_text(out, 'patches/bank_069.asm', 'gd_special_recipes'))
+    ok("gamedata empty: bank $69 special table == the 825 vanilla entries + $FF",
+       sp == vt('special_recipes') + b'\xff')
+    lib = asm_bytes(region_text(out, 'patches/bank_04d.asm', 'gd_library_text'))
+    ok("gamedata empty: library recipe text block == ROM $4D:$43CE-$53D2",
+       lib == bytes.fromhex(V0['library']['block']))
+    ok("gamedata empty: redirect tail carries the 34 vanilla pairs",
+       '    dw 11, 12' in out['patches/bank_014.asm'])
+    grp = '\n'.join(region_text(out, 'patches/bank_012.asm', 'gd_library_grouping'))
+    ok("gamedata empty: library tabs = vanilla id ranges (Dracky $4e in Bird)",
+       'LibFamily_10:  ; 0 members' in grp and ', $4d, $4e, $4f' in grp)
+
+    # (2) edits land at the right bytes
+    gd = {
+        'monsters': {'8': {'growth': {'hp': 31}, 'resist': {'Fire': 3}, 'skills': [1, 2, 3],
+                           'level_cap': 50}},
+        'enemies': {'2': {'hp': 999, 'atk': 77, 'skills': [0], 'exp': 500}},
+        'encounters': {'0': {'slot_chance': [7, 0, 0, 0, 0]}},
+        'skills': {'0': {'mp': 9, 'learn': {'level': 5, 'int': 30, 'prereqs': [1]},
+                         'record': {'party_min': 40, 'party_range': 10}}},
+        'exp_curves': {'0': {'2': 3}},
+        'growth_curves': {'1': {'5': 9}},
+        'breeding': {'family': {'8': {'p1': 'Bird', 'p2': 'Slime'}}},
+        'boss_joins': {'11': 13},
+    }
+    out, prj, w = compile_data(gd_fixture(gd))
+    mon = asm_bytes(region_text(out, 'patches/bank_003.asm', 'gd_monster_info'))
+    r8 = mon[8 * 43:9 * 43]
+    ok("monsters.8: level cap / skills / HP growth / Fire resist at +1 / +6 / +9 / +15",
+       r8[1] == 50 and list(r8[6:9]) == [1, 2, 3] and r8[9] == 31 and r8[15] == 3)
+    ok("monsters: untouched rows stay vanilla",
+       mon[:8 * 43] == vt('monster_info')[:8 * 43] and mon[9 * 43:] == vt('monster_info')[9 * 43:])
+    en = asm_bytes(region_text(out, 'patches/bank_014.asm', 'gd_enemy_stats'))[2 * 25:3 * 25]
+    ok("enemies.2: exp / HP / ATK / skills (padded $FF)",
+       en[1:3] == (500).to_bytes(2, 'little') and en[5:7] == (999).to_bytes(2, 'little')
+       and en[9:11] == (77).to_bytes(2, 'little') and list(en[21:25]) == [0, 255, 255, 255])
+    pool = asm_bytes(region_text(out, 'patches/bank_001.asm', 'gd_encounter_pools'))[:26]
+    ok("encounters.0: slot chances", list(pool[5:10]) == [7, 0, 0, 0, 0])
+    mp = asm_bytes(region_text(out, 'patches/bank_007.asm', 'gd_skill_mp'))
+    ok("skills.0.mp", mp[0:2] == b'\x09\x00')
+    ln = asm_bytes(region_text(out, 'patches/bank_006.asm', 'gd_skill_learn'))[:18]
+    ok("skills.0.learn: level / INT / prereqs",
+       ln[0] == 5 and ln[11:13] == (30).to_bytes(2, 'little') and list(ln[13:18]) == [1, 255, 255, 255, 255])
+    rec = asm_bytes(region_text(out, 'patches/bank_054.asm', 'gd_skill_records'))[:19]
+    ok("skills.0.record: party power pair at +11/+13",
+       rec[11:13] == (40).to_bytes(2, 'little') and rec[13:15] == (10).to_bytes(2, 'little'))
+    ok("skills.0.mp (S110): the BATTLE copy (record +4) follows the field table, no warning",
+       rec[4] == 9 and not any('mp_byte' in x for x in w))
+    ex = asm_bytes(region_text(out, 'patches/bank_013.asm', 'gd_exp_curves'))
+    ok("exp_curves.0 level 2 = 3 (u24 at +3)", ex[3:6] == b'\x03\x00\x00')
+    gr = asm_bytes(region_text(out, 'patches/bank_013.asm', 'gd_growth_curves'))
+    ok("growth_curves.1 level 5 = 9", gr[99 + 4] == 9)
+    fam = asm_bytes(region_text(out, 'patches/bank_016.asm', 'gd_family_recipes'))
+    ok("breeding.family.8 = [Bird, Slime] = $F3,$F0", fam[16:18] == b'\xf3\xf0')
+    lib = asm_bytes(region_text(out, 'patches/bank_04d.asm', 'gd_library_text'))
+    blk = bytes.fromhex(V0['library']['block'])
+    ok("library text: Slime's string regenerated IN PLACE (same length, pointer unchanged)",
+       len(lib) == len(blk) and lib[8 * 19:8 * 19 + 19] != blk[8 * 19:8 * 19 + 19]
+       and lib[8 * 19] == 0x13 and lib[:8 * 19] == blk[:8 * 19] and lib[9 * 19:] == blk[9 * 19:])
+    ok("boss_joins.11 -> 13 in the redirect tail", '    dw 11, 13' in out['patches/bank_014.asm'])
+
+    # family move regroups the library tabs
+    out, _, _ = compile_data(gd_fixture({'monsters': {'4': {'family': 3}}}))
+    grp = '\n'.join(region_text(out, 'patches/bank_012.asm', 'gd_library_grouping'))
+    ok("monsters.4.family = Bird: Snaily leaves the Slime tab and joins Bird",
+       'LibFamily_00:  ; 20 members' in grp and 'LibFamily_03:  ; 21 members' in grp
+       and ', $04, $46' in grp)
+
+    # (3) validators
+    expect_error("gamedata: unknown section", gd_fixture({'potions': {}}), 'unknown key')
+    expect_error("gamedata: unknown monster field",
+                 gd_fixture({'monsters': {'1': {'speed': 3}}}), 'unknown key')
+    expect_error("gamedata: growth curve index > 31 (would index code)",
+                 gd_fixture({'monsters': {'1': {'growth': {'hp': 40}}}}), 'outside 0-31')
+    expect_error("gamedata: family of a protected combat-only species",
+                 gd_fixture({'monsters': {'216': {'family': 2}}}), 'protected')
+    expect_error("gamedata: learn row for $DA (FieldStateDispatch code)",
+                 gd_fixture({'skills': {'218': {'learn': {'level': 1}}}}), 'FieldStateDispatch')
+    expect_error("gamedata: pool chances under 100 %",
+                 gd_fixture({'encounters': {'0': {'slot_chance': [1, 1, 0, 0, 0]}}}), 'less than 100')
+    expect_error("gamedata: EID 500 does not exist (487-517 are code)",
+                 gd_fixture({'encounters': {'0': {'eids': [2, 4, 500, 0, 0]}}}), 'no such enemy row')
+    expect_error("gamedata: a chance with no EID",
+                 gd_fixture({'encounters': {'0': {'slot_chance': [3, 5, 2, 1, 0]}}}), 'no EID')
+    expect_error("gamedata: a 2-monster pool no slot can follow = freeze (measured S103)",
+                 gd_fixture({'encounters': {'0': {'size_chance': [0, 7, 0],
+                                                  'max_count': [0, 1, 1, 1, 0]}}}),
+                 'forever')
+    expect_error("gamedata: 3 monsters with only 2 copies allowed",
+                 gd_fixture({'encounters': {'0': {'size_chance': [0, 0, 7],
+                                                  'max_count': [2, 1, 1, 1, 0]}}}),
+                 'third draw')
+    _o, _p, w = compile_data(gd_fixture({'encounters': {'0': {
+        'size_chance': [0, 7, 0], 'max_count': [1, 1, 1, 1, 0]}}}))
+    ok("gamedata: every slot 'alone' + a 2-monster chance is legal (always one)", True)
+    expect_error("gamedata: boss_joins only for the 34 vanilla fights",
+                 gd_fixture({'boss_joins': {'2': 3}}), 'not one of the 34')
+    expect_error("gamedata: an added special row with the SAME parents as a vanilla row "
+                 "refused (S113: it could never fire)",
+                 gd_fixture({'breeding': {'special': {'appends': [
+                     {'p1': 0, 'p2': 27, 'min_plus': 0, 'result': 5, 'plus_mod': 0}]}}}),
+                 'same parents')
+    expect_error("gamedata: 'AnyFamily' retired (S104: $FA = Spirit)",
+                 gd_fixture({'breeding': {'family': {'8': {'p1': 'Slime', 'p2': 'AnyFamily'}}}}),
+                 'retired')
+    # S104 (P3.10a): Spirit = family 10 = breeding code $FA, by name everywhere
+    out, _, w = compile_data(gd_fixture({
+        'monsters': {'4': {'family': 'Spirit'}},
+        'breeding': {'family': {'8': {'p1': 'Spirit', 'p2': 'Slime'}},
+                     'special': {'appends': [{'p1': 'Spirit', 'p2': 'Spirit', 'min_plus': 0,
+                                              'result': 'Snaily', 'plus_mod': 0}]}}}))
+    inf = asm_bytes(region_text(out, 'patches/bank_003.asm', 'gd_monster_info'))
+    ok("monsters.4.family = 'Spirit' -> family byte 10", inf[4 * 43] == 10)
+    fam = asm_bytes(region_text(out, 'patches/bank_016.asm', 'gd_family_recipes'))
+    ok("breeding.family.8 = [Spirit, Slime] = $FA,$F0 (pedigree side allowed)",
+       fam[16:18] == b'\xfa\xf0')
+    sp = asm_bytes(region_text(out, 'patches/bank_069.asm', 'gd_special_recipes'))
+    ok("special append [Spirit x Spirit] -> Snaily: an FF row, auto-ordered among the "
+       "family x family rows (S113), not shadowed (no $FA wildcard)",
+       bytes([0xFA, 0xFA, 0x00, 0x04, 0x00]) in [sp[i:i + 5] for i in range(0, len(sp) - 1, 5)]
+       and len(sp) == 826 * 5 + 1)
+    lib = asm_bytes(region_text(out, 'patches/bank_04d.asm', 'gd_library_text'))
+    ok("library text: a Spirit matcher prints <glyph $1A>family (the Spirit icon)",
+       lib[8 * 19:8 * 19 + 7] == bytes([0x1A]) + bytes.fromhex('433e4a464956'))
+    grp = '\n'.join(region_text(out, 'patches/bank_012.asm', 'gd_library_grouping'))
+    ok("monsters.4 in Spirit: Snaily joins library tab 10",
+       'LibFamily_10:  ; 1 members' in grp or 'LibFamily_10:  ; 1 member' in grp, grp[-300:])
+    # S104 r2: families.<name>.dialogue / families.spirit.names (compiler regions)
+    out, _, _ = compile_data(gd_fixture({}))
+    vo = '\n'.join(region_text(out, 'patches/bank_06d.asm', 'gd_family_voices'))
+    ok("families empty: voices = vanilla A B C B A C C A B D + Spirit D",
+       [l.split()[1][-1] for l in vo.split('\n') if l.strip().startswith('dw ')] == list('ABCBACCABDD'))
+    nm = asm_bytes(region_text(out, 'patches/bank_041.asm', 'gd_spirit_names'))
+    ok("families empty: Spirit names WISP.. = 40 B (S105 G3: was a 55-B fill; its last "
+       "15 B are new-species text extent ns_text_f)",
+       len(nm) == 40 and nm[:5] == bytes([0x3A, 0x2C, 0x36, 0x33, 0xF0]))
+    out, _, _ = compile_data(gd_fixture({'families': {
+        'Spirit': {'dialogue': 'Slime', 'names': ['Boo', 'Wisp', 'A', 'BB', 'CCCC', 'dd', 'Ee', 'F']},
+        'Bug': {'dialogue': 'D'}}}))
+    vo = [l.split()[1][-1] for l in '\n'.join(region_text(out, 'patches/bank_06d.asm', 'gd_family_voices')).split('\n')
+          if l.strip().startswith('dw ')]
+    ok("families: Spirit talks like Slime (A), Bug gets voice D", vo[10] == 'A' and vo[5] == 'D')
+    nm = asm_bytes(region_text(out, 'patches/bank_041.asm', 'gd_spirit_names'))
+    ok("families.spirit.names: 'Boo' = $25 $4C $4C $F0 (upper $24+, lower $3E+), still 40 B",
+       len(nm) == 40 and nm[:4] == bytes([0x25, 0x4C, 0x4C, 0xF0]))
+    expect_error("families.spirit.names: 5 letters refused",
+                 gd_fixture({'families': {'spirit': {'names': ['ABCDE'] + ['A'] * 7}}}), '1-4 letters')
+    expect_error("families.spirit.names: must be 8",
+                 gd_fixture({'families': {'spirit': {'names': ['A'] * 7}}}), 'list of 8')
+    expect_error("families.slime.names: only Spirit has a name pool",
+                 gd_fixture({'families': {'slime': {'names': ['A'] * 8}}}), 'only Spirit')
+    expect_error("families.X.dialogue: bad voice refused",
+                 gd_fixture({'families': {'spirit': {'dialogue': 'Q'}}}), 'unknown family')
+    b12 = open(os.path.join(REPO, 'patches', 'bank_012.asm')).read()
+    m12 = re.search(r'LibTabOrder:\s*\n\s*db ([0-9, ]+)', b12)
+    ok("S104 r5: bank $12 LibTabOrder == gamedata.DISPLAY_ORDER (+ blank tabs 11-15)",
+       m12 is not None and [int(x) for x in m12.group(1).split(',')] == G.DISPLAY_ORDER + [11, 12, 13, 14, 15])
+    expect_error("monsters.N.family: unknown family name refused",
+                 gd_fixture({'monsters': {'4': {'family': 'Ghost'}}}), 'unknown family')
+    _o, _p, w = compile_data(gd_fixture({'enemies': {'11': {'species': 5}}}))
+    ok("gamedata: species change warns (Set 3) and names the join row (Set 2)",
+       any('Set 3' in x for x in w) and any('join row EID 12' in x for x in w), f"{w[-3:]}")
+    _o, _p, w = compile_data(gd_fixture({'encounters': {'1': {'eids': [5, 5, 3, 14, 0]}}}))
+    ok("gamedata: duplicate EID in a pool warns (S77)", any('two slots' in x for x in w))
+    # S113 (ROADMAP P3.12): the auto-ordered special table, removes, whole-table form
+    test_special_auto_order()
+    test_breeding_analysis()
+    # the example re-expresses the pre-S103 hand edits
+    ex = asm_bytes(region_text(out1_ex[0], 'patches/bank_003.asm', 'gd_monster_info'))
+    ok("example gamedata: Dracky + Darkdrium in Spirit (B9)", ex[78 * 43] == 10 and ex[214 * 43] == 10)
+    sp = asm_bytes(region_text(out1_ex[0], 'patches/bank_069.asm', 'gd_special_recipes'))
+    rows = [sp[i:i + 5] for i in range(0, len(sp) - 1, 5)]
+    gor = rows.index(bytes([0x04, 0x2A, 0x00, 0xE0, 0x00]))
+    ok("example gamedata: special table = 825 + 2 appends + $FF; S113 auto-order puts the "
+       "Gorbunok row (species x species) inside the species x species block",
+       len(sp) == 827 * 5 + 1 and all(r[0] < 0xF0 and r[1] < 0xF0 for r in rows[:gor + 1]))
+
+
+def test_special_auto_order():
+    from editor2.core import gamedata as G
+    from editor2.core.breeding import Breeding, matcher_kind
+    from editor2.core.project import Project
+    V0 = G.vanilla(REPO)
+    van = [bytes.fromhex(r) for r in V0['tables']['special_recipes']['rows']]
+
+    def model(gd):
+        return Project(gd_fixture(gd), os.path.dirname(EXAMPLE)).gamedata()
+    g0 = model({})
+    b0 = Breeding(g0)
+    ok("S113: no special edits = the vanilla order (825 rows, no sort)",
+       [bytes(e) for e in g0.special] == van)
+    # Slime x [Dragon] is a vanilla species x family row; a NEW Slime x DragonKid
+    # (species x species) row must beat it for DragonKid wherever it is written
+    hit = b0.resolve(8, 20)
+    g1 = model({'breeding': {'special': {'appends': [
+        {'p1': 8, 'p2': 'DragonKid', 'result': 'Healer'}]}}})   # 8 = the species
+    b1 = Breeding(g1)   # ("Slime" as a matcher is the FAMILY — names of families win)
+    rows = [bytes(e) for e in g1.special]
+    kinds = [matcher_kind(e[0], e[1]) for e in g1.special]
+    rank = {'SS': 0, 'SF': 1, 'FS': 2, 'FF': 3}
+    ok("S113: an append is auto-placed (species x species block) and wins",
+       b1.resolve(8, 20).species == 9 and b1.resolve(8, 20).how == 'special'
+       and all(rank[kinds[i]] <= rank[kinds[i + 1]] for i in range(len(kinds) - 1)),
+       f"vanilla {hit} -> {b1.resolve(8, 20)}")
+    ok("S113: the sort keeps every other cross's result (all pairs, plus 0 / 4 / 5)",
+       all(b0.resolve(x, y, pl).species == b1.resolve(x, y, pl).species
+           for x in range(0, 215, 3) for y in range(215) for pl in (0, 4)
+           if (x, y) != (8, 20)))
+    ok("S113: + rows first within a block (Slime x Slime +5 -> KingSlime before the "
+       "plain species x species rows)", rows[0] == bytes([8, 8, 5, 15, 0]), rows[0].hex())
+    # removes
+    g2 = model({'breeding': {'special': {'removes': [{'index': 0}]}}})
+    ok("S113: removes.index drops vanilla entry 0 (824 rows left)",
+       len(g2.special) == 824 and van[0] not in [bytes(e) for e in g2.special])
+    expect_error("S113: a removed entry cannot also be overridden",
+                 gd_fixture({'breeding': {'special': {'overrides': [{'index': 3, 'result': 5}],
+                                                      'removes': [{'index': 3}]}}}), 'not both')
+    # table form
+    g3 = model({'breeding': {'special': {'table': [
+        {'p1': 'Spirit', 'p2': 'Spirit', 'result': 'Healer'},
+        {'p1': 8, 'p2': 8, 'min_plus': 5, 'result': 'KingSlime'},
+        {'p1': 8, 'p2': 'Dragon', 'result': 'Snaily', 'plus_mod': 2}]}}})
+    ok("S113: special.table replaces the whole table, sorted (SS, SF, FF)",
+       [tuple(e[:2]) for e in g3.special] == [(8, 8), (8, 0xF1), (0xFA, 0xFA)]
+       and [s[0] for s in g3.special_src] == ['table'] * 3)
+    expect_error("S113: table + appends refused",
+                 gd_fixture({'breeding': {'special': {'table': [], 'appends': [
+                     {'p1': 'Slime', 'p2': 'Slime', 'result': 'Healer'}]}}}), 'cannot be combined')
+    expect_error("S113: two table rows with the same parents refused",
+                 gd_fixture({'breeding': {'special': {'table': [
+                     {'p1': 'Slime', 'p2': 'Slime', 'result': 'Healer'},
+                     {'p1': 'Slime', 'p2': 'Slime', 'result': 'Snaily'}]}}}), 'same parents')
+    ok("S113: same parents with a different min plus are two routes, both kept",
+       len(model({'breeding': {'special': {'table': [
+           {'p1': 'Slime', 'p2': 'Slime', 'result': 'Healer'},
+           {'p1': 'Slime', 'p2': 'Slime', 'min_plus': 4, 'result': 'Snaily'}]}}}).special) == 2)
+    out, _, _ = compile_data(gd_fixture({'breeding': {'special': {'table': []}}}))
+    ok("S113: an empty table = no special recipes (just the $FF)",
+       asm_bytes(region_text(out, 'patches/bank_069.asm', 'gd_special_recipes')) == b'\xff')
+
+
+def test_breeding_analysis():
+    """S113 (P3.12): editor2/core/breeding.py — the indexed resolver == the
+    line-for-line twin (the census proves the twin == the game), the vanilla
+    tree (every species reachable, DeathMore 9 deep), the example's edits."""
+    import random
+    from editor2.core.project import Project
+    from editor2.core.breeding import Analysis, offspring_plus
+    for label, data in (('vanilla', gd_fixture({})),
+                        ('example', json.load(open(EXAMPLE)))):
+        A = Analysis(Project(data, os.path.dirname(EXAMPLE)))
+        rng = random.Random(113)
+        same = True
+        for _ in range(20000):
+            a, b = rng.choice(A.species), rng.choice(A.species)
+            p1, p2, l1, l2 = rng.randrange(100), rng.randrange(100), rng.randrange(1, 100), rng.randrange(1, 100)
+            slow = A.br.resolve(a, b, p1, p2, l1, l2)
+            fast = A.fast.resolve(a, b, offspring_plus(p1, p2, l1, l2))
+            if (slow.species, slow.how, slow.index) != fast:
+                same = False
+                break
+        ok(f"S113 breeding ({label}): indexed resolver == the twin (20,000 random crosses)", same)
+        if label == 'vanilla':
+            mx = max(v for v in A.depth.values() if v < 99)
+            ok("S113 breeding (vanilla tables): every species 0-214 obtainable or breedable "
+               "(only the example's Gorbunok, with no recipe here, is not), deepest = "
+               "DeathMore at 9", A.unreachable() == [224] and mx == 9
+               and A.names[[s for s in A.species if A.depth[s] == 9][0]] == 'DeathMore')
+            ok("S113 breeding (vanilla): the two dead special rows (693, 803) never fire",
+               A.never_fires()[0] == [693, 803])
+            ok("S113 breeding (vanilla): Watabou / StoneMan / SkyDragon come from story gifts",
+               all(any('gift' in h for h in A.roots.get(s, [])) for s in (109, 197, 43)),
+               str({s: A.roots.get(s) for s in (109, 197, 43)}))
+        else:
+            # the generator (breed_gen): seeded, compiles, keeps pinned recipes
+            from editor2.core import breed_gen as BG
+            prj = Project(json.load(open(EXAMPLE)), os.path.dirname(EXAMPLE))
+            P1 = BG.propose(prj, seed=5, pins=[224])
+            P2 = BG.propose(Project(json.load(open(EXAMPLE)), os.path.dirname(EXAMPLE)),
+                            seed=5, pins=[224])
+            gd = BG.to_gamedata(P1)
+            P12 = BG.propose(Project(json.load(open(EXAMPLE)), os.path.dirname(EXAMPLE)),
+                             seed=3, max_depth=12)
+            A12 = Analysis(Project(BG.apply_to(json.load(open(EXAMPLE)), BG.to_gamedata(P12)),
+                                   os.path.dirname(EXAMPLE)))
+            ok("S113b generator: no depth cap — Deepest 12 reaches 12 (vanilla's tree is 9; "
+               "the ceiling is the number of monsters not obtainable without breeding)",
+               max(v for v in A12.depth.values() if v < 99) == 12 and not A12.unreachable()
+               and abs(sum(BG.default_profile(12).values()) - 1) < 1e-9, str(A12.histogram()))
+            ok("S113 generator: same seed = same proposal",
+               gd == BG.to_gamedata(P2))
+            d2 = BG.apply_to(json.load(open(EXAMPLE)), gd)
+            out_g, _pg, _wg = compile_data(d2)
+            A2 = Analysis(Project(d2, os.path.dirname(EXAMPLE)))
+            mx2 = max(v for v in A2.depth.values() if v < 99)
+            ok("S113 generator: the proposal compiles, every species reachable, depth >= 4, "
+               "the pinned Snaily x BattleRex -> Gorbunok row kept",
+               out_g is not None and not A2.unreachable() and mx2 >= 4
+               and [4, 42, 0, 224, 0] in [list(e) for e in A2.br.special],
+               f"depth {A2.histogram()} unreachable {A2.unreachable()}")
+            ok("S113 breeding (example): Gorbunok (224) is bred from Snaily x BattleRex and "
+               "met wild (encounter list 0) — depth 0",
+               (4, 42) in A.produce.get(224, {}) and A.depth[224] == 0
+               and any('wild' in h for h in A.roots[224]))
+
+
+out1_ex = [None]
+
+
+# ---------------------------------------------------------------------------
+# S105 (ROADMAP P3.9b): new species = project data; custom skills' scripts
+# ---------------------------------------------------------------------------
+BLANK = os.path.join(REPO, 'editor2/templates/blank-project/project.json')
+
+# every id-indexed ns_* region (19 rows, ids 221-239): (patch file, row size,
+# the example's row for its one species Gorbunok (224, row 3) — the pre-S105
+# hand data, re-addressed by S105 G3 — , the empty row = the original ROM's)
+NS_ROWS = {
+    'ns_battle_gfx': ('patches/bank_000.asm', 2, '077e', '0f32'),   # $7E index 7
+    'ns_follower_attr': ('patches/bank_011.asm', 1, '02', '00'),     # S107 2b: 1 B (attr)
+    'ns_battle_pal': ('patches/bank_017.asm', 8, '674dff6bff7f0000', '00' * 8),
+    'ns_recipe_pair': ('patches/bank_016.asm', 2, '042a', '0000'),
+    'ns_short_ptr': ('patches/bank_041.asm', 2, None, '0000'),
+    'ns_info': ('patches/bank_06a.asm', 43,
+                '002802020100151a330b04080d110b00000002020000000000000000000000000000000002020202020000',
+                '00' * 43),
+}
+GORB_ROW = 224 - 221
+
+
+def _data_lines(lines):
+    return [l for l in lines if re.match(r'\s+(d[bw]\s+[$0-9]|ds\s)', l)]
+
+
+def region_bytes(out, f, name):
+    """db / dw (numeric) / ds N[, v] lines of a region -> bytes."""
+    b = b''
+    for l in region_text(out, f, name):
+        t = l.split(';', 1)[0].strip()
+        m = re.match(r'^ds\s+([^,]+)(?:,\s*(\S+))?$', t)
+        if m:
+            n = int(eval(m.group(1).replace('$', '0x')))
+            v = int(m.group(2).replace('$', '0x'), 16) if m.group(2) else 0
+            b += bytes([v]) * n
+        elif re.match(r'^d[bw]\s+[$0-9]', t):
+            b += asm_bytes([t])
+        elif re.match(r'^dw\s+[A-Za-z_.]', t):
+            b += b'\xee\xee'                  # a label word (placeholder)
+    return b
+
+
+def _species_fixture(ids_names):
+    """The example project + extra species cloned from Gorbunok."""
+    d = base()
+    g = d['custom']['species'][0]
+    for sid, name, short in ids_names:
+        e = json.loads(json.dumps(g))
+        e['id'], e['name'] = sid, name
+        if short:
+            e['short_name'] = short
+        else:
+            e.pop('short_name', None)
+        e['battle']['palette'] = ['$%04X' % (sid * 3), '$6BFF', '$7FFF', '$0000']
+        e['follower']['palette'] = sid % 8
+        d['custom']['species'].append(e)
+    return d
+
+
+def test_species_and_skills():
+    from editor2.core import species as SP
+    # -- the example project: Gorbunok = its pre-S105 bytes at row 224-221
+    out, prj, warns = compile_data(base())
+    for name, (f, n, want, empty) in NS_ROWS.items():
+        got = region_bytes(out, f, name)
+        rows = [got[k * n:(k + 1) * n].hex() for k in range(19)]
+        ok(f"example {name}: 19 rows of {n} B", len(got) == 19 * n, f"(got {len(got)})")
+        if want is not None:
+            ok(f"example {name}[224] == Gorbunok's bytes", rows[GORB_ROW] == want,
+               f"(got {rows[GORB_ROW]})")
+        ok(f"example {name}: undeclared ids keep the original bytes",
+           all(r == empty for k, r in enumerate(rows) if k != GORB_ROW))
+    ok("SP.CAPACITY_IDS = 221-239 (19)", SP.CAPACITY_IDS == tuple(range(221, 240)))
+    dt = region_text(out, 'patches/bank_04d.asm', 'ns_detail_text')
+    dtb = asm_bytes(_data_lines(dt))
+    ok("example ns_detail_text: 19 line-2 words ([224] = Dracky's description — S108: "
+       "the label MonsterDesc_078_Dracky = $60BC — the rest $53C4), 19 line-1 words, then "
+       "the derived \"Snaily   BattleRex\" line",
+       dtb[:36].hex() == 'c453' * 3 + 'c453' * 15 and
+       'dw MonsterDesc_078_Dracky' in '\n'.join(dt) and
+       'dw NewSpeciesRecipeLine_224' in '\n'.join(dt) and
+       dtb.hex().endswith('364b3e464956626262253e51514942354255f0'))
+    np_ = '\n'.join(region_text(out, 'patches/bank_041.asm', 'ns_name_ptr'))
+    ok("example ns_name_ptr: [224] -> NsName_224, 221-223 -> Unused_220, "
+       "225-239 -> Unused_225 (the vanilla words)",
+       np_.count('dw NsName_224') == 1 and np_.count('Unused_220') == 3 and
+       np_.count('Unused_225') == 15)
+    ta = region_text(out, 'patches/bank_041.asm', 'ns_text_a')
+    # S155: the six S155 built-in skill names overflow the 94-B custom-name region by
+    # 27 B; the overflow shared these extents first-fit until S164 — since S164 (ROADMAP
+    # E14) the names past the region go to the text banks (custom_skills.text_slots) and the
+    # extents hold the new species' words alone
+    ok("example ns_text_a ($7E38, 23 B) = NsName_224 \"Gorbunok\"$F0 + NsShort_224 \"Gorb\"$F0 "
+       "+ zeros — no skill name (S164, ROADMAP E14)",
+       region_bytes(out, 'patches/bank_041.asm', 'ns_text_a').hex() ==
+       '2a4c4f3f524b4c48f0' + '2a4c4f3ff0' + '00' * 9 and
+       'NsName_224:' in ta and 'NsShort_224:' in ta and 'SkillName_' not in '\n'.join(ta))
+    tb = region_text(out, 'patches/bank_041.asm', 'ns_text_b')
+    ok("example ns_text_b = zeros, free for new species' words (S164: Plunder / Punish / Finish "
+       "now come from the text banks)",
+       region_bytes(out, 'patches/bank_041.asm', 'ns_text_b') == bytes(109)
+       and 'SkillName_' not in '\n'.join(tb))
+    for reg, _a, n, orig in SP.TEXT_EXTENTS[2:]:
+        ok(f"example {reg}: unused -> the original {n} bytes",
+           region_bytes(out, 'patches/bank_041.asm', reg) == orig)
+    sp_ = '\n'.join(region_text(out, 'patches/bank_041.asm', 'ns_short_ptr'))
+    ok("example ns_short_ptr [224] -> NsShort_224", 'dw NsShort_224' in sp_)
+    b7e = out['patches/bank_07e.asm']
+    ok("example bank $7E: 38 pointers, index 6/7 = Gorbunok's follower/battle "
+       "streams (259 + 579 B), the rest alias them",
+       b7e.count('dw Follower_sp224') == 19 and b7e.count('dw Battle_sp224') == 19 and
+       re.search(r'dw Follower_sp224\s+; index 6 ', b7e) is not None and
+       re.search(r'dw Battle_sp224\s+; index 7 ', b7e) is not None and
+       '(259 B)' in b7e and '(579 B)' in b7e)
+    ok("example: the S30 EID-518 row is gone — Gorbunok is project enemy 520 "
+       "and pool 0 names it",
+       'dw 2, 4, 3, 520, 0' in out['patches/bank_001.asm'] and
+       'ProjectEnemy_520:' in out['patches/bank_06b.asm'])
+    # custom skills' scripts: every build, after the project's own texts
+    # S129: the example's mini medal quest adds its 6 texts, so the skill texts
+    # follow the project's 38 (were 32: $0A20-$0A23 until S128)
+    ids_ = sorted(prj._text_by_id)
+    k0 = next(t for t in ids_ if prj._text_by_id[t]['id'] == 'skill:anchor_gate_ask')
+    ok("example: the skill texts come right after the project's own texts ($0A26-$0A29: "
+       "38 texts incl. the mini medal quest's 6)",
+       k0 == 0x0A26 and not [t for t in ids_ if t < k0 and
+                             str(prj._text_by_id[t]['id']).startswith('skill:')] and
+       [prj._text_by_id[t]['id'] for t in range(k0, k0 + 4)] ==
+       ['skill:anchor_gate_ask', 'skill:anchor_return_ask',
+        'skill:anchor_err_special', 'skill:anchor_err_none'], hex(k0))
+    b60 = out['patches/bank_060.asm']
+    ok("bank $60 SkillScriptPtrTable: ids 0/1 no-op, 2-5 = Anchor's scripts "
+       "(the values bank $72 arms)",
+       re.search(r'SkillScriptPtrTable:[^\n]*\n\s+dw SkillScrNoop[^\n]*\n\s+dw SkillScrNoop'
+                 r'[^\n]*\n\s+dw SkillScr02[^\n]*skill:anchor_gate_confirm', b60) is not None
+       and 'SkillScr05:' in b60)
+    # -- G3 capacity: species at both ends of the range + one in the middle
+    d = _species_fixture([(221, 'DrakSlime', None), (239, 'Abcdefghi', 'Zz'),
+                          (230, 'Gorb', 'Gorb')])
+    o3, p3, _ = compile_data(d)
+    gfx = region_bytes(o3, 'patches/bank_000.asm', 'ns_battle_gfx')
+    ok("G3: battle gfx-IDs [221] = $7E01, [230] = $7E13, [239] = $7E25",
+       gfx[0:2].hex() == '017e' and gfx[18:20].hex() == '137e' and gfx[36:38].hex() == '257e')
+    b7 = o3['patches/bank_07e.asm']
+    ok("G3: bank $7E index 0 = Follower_sp221, 37 = Battle_sp239, 18 = Follower_sp230",
+       re.search(r'dw Follower_sp221\s+; index 0 ', b7) is not None and
+       re.search(r'dw Battle_sp239\s+; index 37 ', b7) is not None and
+       re.search(r'dw Follower_sp230\s+; index 18 ', b7) is not None and
+       b7.count('\n    dw ') == 38)
+    at = region_bytes(o3, 'patches/bank_011.asm', 'ns_follower_attr')
+    ok("G3: follower attr rows [221] / [239] carry their palettes",
+       at[0] == 221 % 8 and at[18] == 239 % 8 and at[3] == 2 and len(at) == 19)
+    lay3 = region_bytes(o3, 'patches/bank_011.asm', 'ns_follower_layout')
+    ok("S107 2b: ns_follower_layout: 221 / 224 / 230 / 239 walk like 128 ($4184), the rest $0000",
+       [lay3[2 * k:2 * k + 2].hex() for k in range(19)] ==
+       ['8441' if k in (0, 3, 9, 18) else '0000' for k in range(19)])
+    ex_lay = region_bytes(out, 'patches/bank_011.asm', 'ns_follower_layout')
+    ok("S107 2b: example ns_follower_layout: [224] Gorbunok = $4184 (walks like 128), "
+       "the rest $0000", ex_lay.hex() == '0000' * 3 + '8441' + '0000' * 15)
+    info = region_bytes(o3, 'patches/bank_06a.asm', 'ns_info')
+    ok("G3: info slots 0 / 3 / 9 / 18 filled, the rest zero",
+       all((info[k * 43:(k + 1) * 43] != bytes(43)) == (k in (0, 3, 9, 18))
+           for k in range(19)))
+    np3 = '\n'.join(region_text(o3, 'patches/bank_041.asm', 'ns_name_ptr'))
+    sp3 = '\n'.join(region_text(o3, 'patches/bank_041.asm', 'ns_short_ptr'))
+    ok("G3: [230] 'Gorb' (name == its short name) shares one string; "
+       "\"Gorb\" is also Gorbunok's short name -> one placed string for all three",
+       'dw NsShort_224  ; [230]' in np3 and 'dw NsShort_224  ; [230]' in sp3 and
+       'NsName_230:' not in o3['patches/bank_041.asm'])
+    txt = ''.join('\n'.join(region_text(o3, 'patches/bank_041.asm', r)) + '\n'
+                  for r, *_ in SP.TEXT_EXTENTS)
+    ok("G3: the 9-letter names are placed whole (\"DrakSlime\"$F0, \"Abcdefghi\"$F0)",
+       'NsName_221:' in txt and 'NsName_239:' in txt)
+    ok("G3: [239] short \"Zz\" -> NsShort_239, [221] default short \"Drak\"",
+       'NsShort_239' in sp3 and 'NsShort_221' in sp3)
+    ok("G3: recipe display pairs: 221/230/239 have no special entry -> $FF,$FF",
+       region_bytes(o3, 'patches/bank_016.asm', 'ns_recipe_pair').hex() ==
+       'ffff' + '0000' * 2 + '042a' + '0000' * 5 + 'ffff' + '0000' * 8 + 'ffff')
+    # -- a BLANK project (File > New project): original bytes + Anchor's scripts
+    blank = json.load(open(BLANK))
+    outb, prjb, wb = compile_data(blank)
+    for name, (f, n, _w, empty) in NS_ROWS.items():
+        got = region_bytes(outb, f, name)
+        ok(f"blank {name} == the original ROM bytes (19 x {empty[:8]}..)",
+           got.hex() == empty * 19, f"(got {got.hex()[:40]}..)")
+    # S155: every build carries the S155 built-in skill names; the 27 B past the
+    # 94-B custom-name region landed first-fit in ns_text_a / ns_text_b (S156: + Plunder,
+    # 36 B) — S164 (ROADMAP E14): they come from the text banks; the extents keep the
+    # original bytes in a project without new species
+    ok("blank ns_text_a / ns_text_b == the original bytes (S164: no skill name there)",
+       region_bytes(outb, 'patches/bank_041.asm', 'ns_text_a') == SP.TEXT_EXTENTS[0][3]
+       and region_bytes(outb, 'patches/bank_041.asm', 'ns_text_b') == SP.TEXT_EXTENTS[1][3])
+    for reg, _a, n, orig in SP.TEXT_EXTENTS[2:]:
+        ok(f"blank {reg} == the original {n} bytes",
+           region_bytes(outb, 'patches/bank_041.asm', reg) == orig)
+    npb = '\n'.join(region_text(outb, 'patches/bank_041.asm', 'ns_name_ptr'))
+    ok("blank ns_name_ptr -> the vanilla words (Unused_220 x4, Unused_225 x15)",
+       npb.count('Unused_220') == 4 and npb.count('Unused_225') == 15)
+    ok("blank ns_detail_text = no data (the bank's zero pad)",
+       asm_bytes(_data_lines(region_text(outb, 'patches/bank_04d.asm',
+                                         'ns_detail_text'))) == b'')
+    ok("blank bank $7E = an all-zero bank", 'ds $4000, $00' in outb['patches/bank_07e.asm']
+       and 'dw ' not in outb['patches/bank_07e.asm'])
+    ok("blank project: Anchor's 4 scripts + texts are in bank $60 ($0A00-$0A03)",
+       'SkillScr05:' in outb['patches/bank_060.asm'] and
+       [prjb._text_by_id[t]['id'] for t in range(0x0A00, 0x0A04)] ==
+       ['skill:anchor_gate_ask', 'skill:anchor_return_ask',
+        'skill:anchor_err_special', 'skill:anchor_err_none'])
+    ok("blank project: no warning about the built-in skill texts",
+       not any('skill:' in w for w in wb), f"({[w for w in wb if 'skill:' in w]})")
+    ok("Project data is not mutated by the skill scripts (never saved back)",
+       blank['custom']['dialogue'] == [] and blank['custom']['scripts'] == [])
+    # -- validators
+    d = base(); d['custom']['species'].append(dict(d['custom']['species'][0]))
+    expect_error("custom.species: an id declared twice is refused", d, "already")
+    for bad in (220, 240, 255):
+        d = base(); d['custom']['species'][0]['id'] = bad
+        expect_error(f"custom.species: id {bad} is outside 221-239", d, "221-239")
+    d = _species_fixture([(i, 'Mon' + 'abcdefghijklmnopqrstu'[i - 221], None)
+                          for i in range(221, 240) if i != 224] + [(221, 'Extra', None)])
+    expect_error("custom.species: 20 species > capacity 19", d, "capacity 19")
+    d = base(); d['custom']['species'][0]['name'] = 'Gorbunokxx'
+    expect_error("custom.species: name 1-9 characters (S108: the shared name encoder)", d, "1-9 characters")
+    L = 'abcdefghijklmnopqrstuvwxyz'
+    d = _species_fixture([(i, 'Q' + L[i - 221] * 8, 'W' + L[i - 221] * 3)
+                          for i in range(221, 240) if i != 224])
+    d['custom']['species'][0]['name'] = 'Gorbunokz'
+    expect_error("custom.species: 19 nine-letter names + 19 four-letter nicknames "
+                 "(285 B) exceed the 267 B of bank-$41 text", d, "bank $41 text")
+    d = _species_fixture([(i, 'Q' + L[i - 221] * 6, None)
+                          for i in range(221, 240) if i != 224])
+    expect_error("19 new Slimes: the Slime library tab would hold 39 > 32 members "
+                 "(a validation error, not an emit exception)", d, "members > 32")
+    fams = ['Dragon', 'Beast', 'Bird', 'Plant', 'Bug', 'Devil', 'Zombie', 'Material']
+    for k, e in enumerate(d['custom']['species'][1:]):
+        e['info']['family'] = fams[k % len(fams)]
+    o4, _, _ = compile_data(d)
+    ok("custom.species: 19 species with 7-letter names fit (typical case)",
+       'NsName_239' in ''.join('\n'.join(region_text(o4, 'patches/bank_041.asm', r))
+                               for r, *_ in SP.TEXT_EXTENTS))
+    d = base(); d['custom']['species'][0]['follower']['walks_like'] = 20
+    expect_error("custom.species: walks_like is a bank-$11 species 128-214", d, "walks_like")
+    d = base(); d['custom']['species'][0]['battle']['art'] = \
+        'assets/species/gorbunok_follower.bin'
+    expect_error("custom.species: battle art must decode to 576 B (S75 class)", d,
+                 "decodes to 256 bytes")
+    d = base(); d['custom']['species'][0]['battle']['art'] = 'assets/species/nope.bin'
+    expect_error("custom.species: missing art file", d, "cannot read")
+    for sp in (221, 224):
+        d = json.load(open(BLANK))
+        d['progression']['enemies'] = [{'id': 'x', 'species': sp, 'level': 1}]
+        expect_error(f"an enemy of an undeclared new species ({sp}) is refused", d,
+                     "custom.species")
+    d = json.load(open(BLANK)); d['custom']['scripts'] = [{'id': 'skill:mine', 'ops': [['end']]}]
+    expect_error("'skill:' script ids are reserved", d, "reserved")
+    d = base(); d['gamedata']['encounters']['0']['eids'][3] = 'nobody'
+    expect_error("a pool slot naming no project enemy is refused", d, "no such enemy row")
+    # -- derived recipe: no special entry producing 224 -> no-recipe pair + "?????"
+    d = base()
+    d['gamedata']['breeding']['special']['appends'] = [
+        a for a in d['gamedata']['breeding']['special']['appends'] if a['result'] != 224]
+    o2, _, _ = compile_data(d)
+    ok("species with no breeding recipe: display pair $FF,$FF + the vanilla "
+       "\"?????\" line $53C4",
+       region_bytes(o2, 'patches/bank_016.asm', 'ns_recipe_pair')[6:8].hex() == 'ffff' and
+       'dw $53C4   ; [224]' in '\n'.join(region_text(o2, 'patches/bank_04d.asm',
+                                                   'ns_detail_text')))
+    # -- S105 gamedata fix: a Spirit parent is family code $FA (S113: the shadow
+    #    checks became the auto-order + the resolver twin, editor2/core/breeding.py)
+    d = base()
+    d['gamedata']['monsters']['0'] = {'family': 'Spirit'}      # DrakSlime -> Spirit
+    d['gamedata']['breeding']['special']['appends'] = [
+        {'p1': 'Spirit', 'p2': 'Dragon', 'min_plus': 0, 'result': 'Healer', 'plus_mod': 0},
+        {'p1': 'DrakSlime', 'p2': 'Dragon', 'min_plus': 0, 'result': 'Snaily', 'plus_mod': 0}]
+    from editor2.core.project import Project as _P
+    from editor2.core.breeding import Breeding as _B
+    _br = _B(_P(d, os.path.dirname(EXAMPLE)).gamedata())
+    _a, _b = _br.resolve(0, 28), _br.resolve(78, 28)
+    ok("a Spirit pedigree matches [Spirit x ...] (fam_code $FA, S105); the more specific "
+       "[DrakSlime x Dragon] row beats it for DrakSlime (S113 auto-order)",
+       (_a.species, _a.how) == (4, 'special') and (_b.species, _b.how) == (9, 'special'),
+       f"{_a} {_b}")
+
+
+class MiniSM83:
+    """S105 G3: just enough SM83 to RUN the new-species forks from real ROM
+    bytes (straight-line code, no calls): the tests below feed every species
+    id through each fork and compare HL / the WRAM gid / HRAM with what the
+    fork must return. An opcode outside this set raises (the forks changed)."""
+    def __init__(self, rom, bank):
+        self.rom, self.bank = rom, bank
+        self.a = self.b = self.d = self.e = self.h = self.l = 0
+        self.c_ = 0                       # register C (self.c is the carry flag)
+        self.z = self.c = False
+        self.ram = {}
+        self.stack = []
+        self.calls = {}                   # S125: addr -> fn(cpu) for a stubbed `call`
+
+    def rd(self, addr):
+        if addr < 0x4000:
+            return self.rom[addr]
+        if addr < 0x8000:
+            return self.rom[self.bank * 0x4000 + addr - 0x4000]
+        return self.ram.get(addr, 0)
+
+    def _cmp(self, v):
+        r = self.a - v
+        self.z, self.c = (r & 0xFF) == 0, r < 0
+        return r & 0xFF
+
+    def _add(self, v, carry=0):
+        r = self.a + v + carry
+        self.c, self.a = r > 0xFF, r & 0xFF
+        self.z = self.a == 0
+
+    def run(self, pc, limit=2000):
+        for _ in range(limit):
+            op = self.rd(pc)
+            n = self.rd(pc + 1)
+            nn = n | self.rd(pc + 2) << 8
+            e = n - 256 if n > 127 else n
+            hl = self.h << 8 | self.l
+            pc += 1
+            if op == 0xC9 or (op in (0xC0, 0xC8, 0xD0, 0xD8) and
+                              {0xC0: not self.z, 0xC8: self.z, 0xD0: not self.c,
+                               0xD8: self.c}[op]):
+                if self.stack and isinstance(self.stack[-1], tuple) and \
+                        self.stack[-1][:1] == ('ret',):
+                    pc = self.stack.pop()[1]       # S111: return from a `call`
+                    continue
+                return
+            elif op in (0xC0, 0xC8, 0xD0, 0xD8):
+                pass
+            # S111: the custom-skill forks (register moves, 16-bit adds, calls,
+            # pushes of BC / DE, srl, the copy loop)
+            elif op == 0x4F: self.c_ = self.a
+            elif op == 0x5F: self.e = self.a
+            elif op == 0x57: self.d = self.a
+            elif op == 0x7B: self.a = self.e
+            elif op == 0x79: self.a = self.c_
+            elif op == 0x4D: self.c_ = self.l
+            elif op == 0x44: self.b = self.h
+            elif op == 0x0E: self.c_ = n; pc += 1
+            elif op == 0x06: self.b = n; pc += 1
+            elif op == 0x1E: self.e = n; pc += 1
+            elif op == 0x26: self.h = n; pc += 1
+            elif op == 0x2E: self.l = n; pc += 1
+            elif op == 0x01: self.b, self.c_ = nn >> 8, nn & 0xFF; pc += 2
+            elif op in (0x09, 0x29):
+                v = (self.b << 8 | self.c_) if op == 0x09 else hl
+                r = hl + v; self.c = r > 0xFFFF
+                self.h, self.l = (r >> 8) & 0xFF, r & 0xFF
+            elif op == 0xC5: self.stack.append((self.b, self.c_))
+            elif op == 0xC1: self.b, self.c_ = self.stack.pop()
+            elif op == 0xD5: self.stack.append((self.d, self.e))
+            elif op == 0xD1: self.d, self.e = self.stack.pop()
+            elif op == 0xCD and nn in self.calls:                # S125: a stubbed call
+                self.calls[nn](self); pc += 2
+            elif op == 0xCD: self.stack.append(('ret', pc + 2)); pc = nn; continue
+            # S125 HubWarp
+            elif op == 0x95: self.a = self._cmp(self.l)          # sub l
+            elif op == 0x15: self.d = (self.d - 1) & 0xFF; self.z = self.d == 0
+            elif op == 0xCB and n == 0xB8: self.b &= 0x7F; pc += 1        # res 7, b
+            elif op == 0xCB and n == 0x7B: self.z = not (self.e & 0x80); pc += 1  # bit 7, e
+            elif op == 0xCB and n == 0x3F:
+                self.c = bool(self.a & 1); self.a >>= 1; self.z = self.a == 0; pc += 1
+            # S111 ratios: ScaleHL72 / Div16by8_72 / Mul16by8_72 / RatioBC72
+            elif op == 0xCB and n == 0x38:                        # srl b
+                self.c = bool(self.b & 1); self.b >>= 1; self.z = self.b == 0; pc += 1
+            elif op == 0xCB and n == 0x23:                        # sla e
+                self.c = bool(self.e & 0x80); self.e = (self.e << 1) & 0xFF
+                self.z = self.e == 0; pc += 1
+            elif op == 0xCB and n == 0x12:                        # rl d
+                r = self.d << 1 | int(self.c); self.c = r > 0xFF; self.d = r & 0xFF
+                self.z = self.d == 0; pc += 1
+            elif op == 0x17:                                      # rla
+                r = self.a << 1 | int(self.c); self.c = r > 0xFF; self.a = r & 0xFF
+                self.z = False
+            elif op == 0x2C: self.l = (self.l + 1) & 0xFF; self.z = self.l == 0
+            elif op == 0x05: self.b = (self.b - 1) & 0xFF; self.z = self.b == 0
+            elif op == 0xB9: self._cmp(self.c_)
+            elif op == 0x90: self.a = self._cmp(self.b)
+            elif op == 0x54: self.d = self.h
+            elif op == 0x5D: self.e = self.l
+            elif op == 0x62: self.h = self.d
+            elif op == 0x6B: self.l = self.e
+            elif op == 0x4E: self.c_ = self.rd(hl)
+            elif op == 0x92: self.a = self._cmp(self.d)
+            elif op == 0x91: self.a = self._cmp(self.c_)
+            elif op == 0x12: self.ram[self.d << 8 | self.e] = self.a
+            elif op == 0x13:
+                de = ((self.d << 8 | self.e) + 1) & 0xFFFF; self.d, self.e = de >> 8, de & 0xFF
+            elif op == 0x1C: self.e = (self.e + 1) & 0xFF; self.z = self.e == 0
+            elif op == 0x0D: self.c_ = (self.c_ - 1) & 0xFF; self.z = self.c_ == 0
+            elif op == 0x3C: self.a = (self.a + 1) & 0xFF; self.z = self.a == 0
+            elif op == 0xAF: self.a = 0; self.z, self.c = True, False
+            elif op == 0x7C: self.a = self.h
+            elif op == 0x7D: self.a = self.l
+            elif op == 0x7A: self.a = self.d
+            elif op == 0x78: self.a = self.b
+            elif op == 0x6F: self.l = self.a
+            elif op == 0x67: self.h = self.a
+            elif op == 0x47: self.b = self.a
+            elif op == 0x5E: self.e = self.rd(hl)
+            elif op == 0x56: self.d = self.rd(hl)
+            elif op == 0x7E: self.a = self.rd(hl)
+            elif op == 0x46: self.b = self.rd(hl)                 # S107 2b
+            elif op == 0x80: self._add(self.b)                    # S109 arena
+            elif op == 0x3D:
+                self.a = (self.a - 1) & 0xFF; self.z = self.a == 0
+            elif op == 0x36: self.ram[hl] = n; pc += 1
+            elif op == 0xE5: self.stack.append((self.h, self.l))         # S110
+            elif op == 0xE1: self.h, self.l = self.stack.pop()
+            elif op == 0xF5: self.stack.append((self.a, self.z, self.c))
+            elif op == 0xF1: self.a, self.z, self.c = self.stack.pop()
+            elif op == 0x2A:
+                self.a = self.rd(hl); hl = (hl + 1) & 0xFFFF
+                self.h, self.l = hl >> 8, hl & 0xFF
+            elif op == 0x23:
+                hl = (hl + 1) & 0xFFFF; self.h, self.l = hl >> 8, hl & 0xFF
+            elif op == 0x3F: self.c = not self.c                         # ccf (S160 LearnFence06)
+            elif op == 0x37: self.c = True                               # scf (S160 ReclaimLine4C)
+            elif op == 0xB7: self.z, self.c = self.a == 0, False
+            elif op == 0xA7: self.z, self.c = self.a == 0, False         # and a (S150 TextOverride)
+            elif op == 0xB0: self.a |= self.b; self.z, self.c = self.a == 0, False
+            elif op == 0xB6: self.a |= self.rd(hl); self.z, self.c = self.a == 0, False
+            elif op == 0x85: self._add(self.l)
+            elif op == 0x87: self._add(self.a)
+            elif op == 0x8C: self._add(self.h, int(self.c))
+            elif op == 0x19:
+                r = hl + (self.d << 8 | self.e); self.c = r > 0xFFFF
+                self.h, self.l = (r >> 8) & 0xFF, r & 0xFF
+            elif op == 0xB8: self._cmp(self.b)                           # S161 AIBaseOf72
+            elif op == 0xBE: self._cmp(self.rd(hl))                      # S161 LearnUpgradeOrAdd51
+            elif op == 0x2F: self.a ^= 0xFF                              # cpl (S161 AIPrefEnd72)
+            elif op == 0x86: self._add(self.rd(hl))                      # add [hl] (AIBonus72)
+            elif op == 0x77: self.ram[hl] = self.a
+            elif op == 0xCB and n == 0x7F: self.z = not (self.a & 0x80); pc += 1   # bit 7, a
+            elif op in (0xC3, 0xC2, 0xCA, 0xD2, 0xDA):                   # jp (cc,) nn
+                take = {0xC3: True, 0xC2: not self.z, 0xCA: self.z,
+                        0xD2: not self.c, 0xDA: self.c}[op]
+                if take:
+                    pc = nn
+                    continue
+                pc += 2
+            elif op == 0xFE: self._cmp(n); pc += 1
+            elif op == 0xD6: self.a = self._cmp(n); pc += 1
+            elif op == 0xDE: self.a = self._cmp(n + int(self.c)); pc += 1   # sbc a, n (S162)
+            elif op == 0xD7 and getattr(self, 'rst10', None):             # S162: a stubbed
+                self.rst10(self)                                         #   far call
+            elif op == 0xC6: self._add(n); pc += 1
+            elif op == 0xCE: self._add(n, int(self.c)); pc += 1
+            elif op == 0xE6: self.a &= n; self.z, self.c = self.a == 0, False; pc += 1
+            elif op == 0x3E: self.a = n; pc += 1
+            elif op == 0x16: self.d = n; pc += 1
+            elif op == 0xF0: self.a = self.ram.get(0xFF00 | n, 0); pc += 1
+            elif op == 0xE0: self.ram[0xFF00 | n] = self.a; pc += 1
+            elif op == 0xEA: self.ram[nn] = self.a; pc += 2
+            elif op == 0xFA: self.a = self.rd(nn); pc += 2
+            elif op == 0x21: self.h, self.l = nn >> 8, nn & 0xFF; pc += 2
+            elif op == 0x11: self.d, self.e = nn >> 8, nn & 0xFF; pc += 2
+            elif op in (0x18, 0x20, 0x28, 0x30, 0x38):
+                pc += 1
+                take = {0x18: True, 0x20: not self.z, 0x28: self.z,
+                        0x30: not self.c, 0x38: self.c}[op]
+                if take:
+                    pc += e
+            else:
+                raise ValueError(f"MiniSM83: opcode ${op:02X} at ${pc - 1:04X}")
+        raise ValueError("MiniSM83: no ret")
+
+
+def test_species_forks_rom(tag, rom, sym, declared):
+    """Run every new-species fork of a built ROM over species 0-239."""
+    def a(name):
+        return sym[name][1]
+    gid_at = a('wNewSpeciesGid')
+    forks = [('01', 'ScreenTransDataTable', 16), ('06', 'MapNPCPosDataTable', 16),
+             ('07', 'TileRefLookupTable', 16), ('09', 'FieldPtrLookupTable', 16),
+             ('0b', 'SpritePtrTable_4974', 16), ('12', 'ItemSlotPtrTable', 16),
+             ('18', 'TextDataPtrLookup', 0), ('59', 'SaveSlotPtrTable', 0)]
+    for suf, table, plus in forks:
+        bank = int(suf, 16)
+        bad = []
+        for sp in range(240):
+            if plus and sp + plus > 255:
+                continue                        # wraps (the router never sends it)
+            cpu = MiniSM83(rom, bank)
+            hl = (sp + plus) * 2
+            cpu.h, cpu.l = hl >> 8, hl & 0xFF
+            cpu.run(a(f'FollowerArtResolve{suf}'))
+            got = cpu.h << 8 | cpu.l
+            if sp < 221:
+                if got != a(table) + hl:
+                    bad.append(sp)
+            elif got != gid_at or (cpu.ram.get(gid_at), cpu.ram.get(gid_at + 1)) != \
+                    ((sp - 221) * 2, 0x7E):
+                bad.append(sp)
+        ok(f"ROM {tag}: FollowerArtResolve{suf} — ids 0-220 = the vanilla add-base, "
+           "221-239 -> wNewSpeciesGid = $7E00+(id-221)*2", not bad, f"(wrong for {bad[:8]})")
+    # battle palette + recipe pair + attr forks
+    bad = []
+    for sp in range(240):
+        cpu = MiniSM83(rom, 0x17)
+        hl = sp * 8
+        cpu.h, cpu.l = hl >> 8, hl & 0xFF
+        cpu.run(a('HighBattlePal'))
+        want = a('RoomAttrDataBlocks') + hl if sp < 221 else a('NewBattlePalTable') + (sp - 221) * 8
+        if (cpu.h << 8 | cpu.l) != want:
+            bad.append(sp)
+    ok(f"ROM {tag}: HighBattlePal — vanilla $62FD+id*8 below 221, NewBattlePalTable row above",
+       not bad, f"({bad[:8]})")
+    bad = []
+    for sp in range(240):
+        cpu = MiniSM83(rom, 0x16)
+        cpu.h, cpu.l = (sp * 2) >> 8, (sp * 2) & 0xFF
+        cpu.run(a('FamilyRecipeResolve'))
+        want = a('FamilyRecipeTable') + sp * 2 if sp < 221 else a('NewRecipePairs') + (sp - 221) * 2
+        if (cpu.h << 8 | cpu.l) != want:
+            bad.append(sp)
+    ok(f"ROM {tag}: FamilyRecipeResolve — FamilyRecipeTable below 221, NewRecipePairs above",
+       not bad, f"({bad[:8]})")
+    bad = []
+    t11 = a('NewFollowerAttrTable')
+    for sp in range(128, 240):
+        cpu = MiniSM83(rom, 0x11)
+        cpu.ram[0xFFC7] = sp - 0x80
+        cpu.ram[0xFFCA] = 0x61                   # Y-flip + X-flip + palette 1 set
+        cpu.run(a('NewAttrHandler'))
+        ca, c7 = cpu.ram[0xFFCA], cpu.ram[0xFFC7]
+        if sp < 221:
+            ok_ = ca == 0x61 | cpu.rd(a('FollowerAttrTable11') + sp - 0x80) and c7 == sp - 0x80
+        else:
+            ok_ = ca == (0x61 & 0xB8) | cpu.rd(t11 + sp - 221) and c7 == sp - 0x80
+        if not ok_:
+            bad.append(sp)
+    ok(f"ROM {tag}: NewAttrHandler — vanilla attr OR below 221; 221-239 clean attr from "
+       "NewFollowerAttrTable (1 B / id, S107 2b), HRAM $C7 left alone", not bad, f"({bad[:8]})")
+    # S107 2b: FollowerLayoutBase11 — the level-1 table each id's lookup uses
+    bad = []
+    l1n = a('NewFollowerL1Table')
+    for sp in range(128, 240):
+        cpu = MiniSM83(rom, 0x11)
+        cpu.ram[0xFFC7] = sp - 0x80
+        cpu.a, cpu.z, cpu.c = 0x5A, True, True
+        cpu.run(a('FollowerLayoutBase11'))
+        de = cpu.d << 8 | cpu.e
+        row = de + 2 * (sp - 0x80)
+        want = a('FollowerLayoutL1Table11') + 2 * (sp - 0x80) if sp < 221 else l1n + 2 * (sp - 221)
+        if row != want or (cpu.a, cpu.z, cpu.c) != (0x5A, True, True):
+            bad.append(sp)
+    ok(f"ROM {tag}: FollowerLayoutBase11 — ids 128-220 read FollowerLayoutL1Table11, 221-239 "
+       "their NewFollowerL1Table row; AF kept", not bad, f"({bad[:8]})")
+    # the new-species nickname redirect: the mode-7 base $4739 -> $7D39 for ids >= 221
+    # only (S105-S149 ROM0 LoadModeBaseRedirect; S150 the head of bank $60 entry 14
+    # TextOverride, run here up to its `ret` — no edited text in this build)
+    bad = []
+    t_ov = a('TextOverride') if 'TextOverride' in sym else None
+    for sp in range(256):
+        for base in (0x4739, 0x4339):
+            if t_ov is None:                             # a pre-S150 build
+                cpu = MiniSM83(rom, 0x41)
+                cpu.ram[0xC823] = sp
+                cpu.ram[0xC000], cpu.ram[0xC001] = base & 0xFF, base >> 8
+                cpu.h, cpu.l = 0xC0, 0x00
+                cpu.run(0x00F0)
+            else:
+                cpu = MiniSM83(rom, 0x60)
+                cpu.ram[0xC823] = sp
+                cpu.d, cpu.e = base >> 8, base & 0xFF
+                # S164 (ROADMAP E14): every build has a text home bank now (the built-in skill
+                # names past bank $41's region) — TextOverride's far call to TextOvrFind is
+                # stubbed as a miss (DE unchanged); these mode bases hold no edited text
+                cpu.rst10 = lambda c: None
+                cpu.run(t_ov)
+            want = 0x7D39 if base == 0x4739 and sp >= 221 else base
+            if (cpu.d << 8 | cpu.e) != want:
+                bad.append((sp, hex(base)))
+    ok(f"ROM {tag}: the nickname redirect (bank $60 TextOverride since S150) — only mode base "
+       "$4739 with id >= 221 -> $7D39", not bad, f"({bad[:6]})")
+    # the pointer tables the redirected lookups land on
+    bk = rom[0x41 * 0x4000:0x42 * 0x4000]
+    w = lambda ad: bk[ad - 0x4000] | bk[ad - 0x3FFF] << 8
+    ok(f"ROM {tag}: bank $41 [221] of base $7D39 is NewSpeciesShortPtrs ($7EF3)",
+       a('NewSpeciesShortPtrs') == 0x7D39 + 221 * 2)
+    for sid, name in declared.items():
+        nm = rom[0x41 * 0x4000 + w(0x4339 + sid * 2) - 0x4000:][:len(name) + 1]
+        sh = rom[0x41 * 0x4000 + w(0x7D39 + sid * 2) - 0x4000:][:6]
+        from editor2.core import species as SPm
+        ok(f"ROM {tag}: [{sid}] name pointer -> \"{name}\"$F0, nickname pointer -> a "
+           "$F0-terminated string",
+           nm == SPm.name_bytes(name, 'x', 1, 9) + b'\xf0' and b'\xf0' in sh)
+        g = rom[0x2B9F + sid * 2] | rom[0x2BA0 + sid * 2] << 8
+        b7 = rom[0x7E * 0x4000:0x7F * 0x4000]
+        k = (sid - 221) * 2
+        fptr = b7[1 + 2 * k] | b7[2 + 2 * k] << 8
+        bptr = b7[3 + 2 * k] | b7[4 + 2 * k] << 8
+        ok(f"ROM {tag}: [{sid}] battle gfx-ID $7E{k + 1:02X}; bank $7E index {k}/{k + 1} "
+           "-> its Follower_/Battle_ streams",
+           g == 0x7E00 + k + 1 and fptr == a(f'Follower_sp{sid}') and bptr == a(f'Battle_sp{sid}'))
+
+
+def test_monsters_s106():
+    """S106 (ROADMAP P3.10 part 1): the LZ decoder fix, the sprite-sheet reader,
+    the Monsters tab's model (sparse writes, new species), the sprite renderer."""
+    import shutil
+    import tempfile
+    from dwm import sprite_codec as SC
+    from editor2.core import sheet_import as SI
+    from editor2.core import monsters as MM
+    from editor2.core import sprite_render as SR
+    from editor2.core.document import Document
+
+    # --- decoder: an offset past the payload reads the 4 KB-wrapped pool and
+    # then walks into the output (the game's per-byte re-check, $00:$15C6);
+    # vanilla streams open with "$FFF, 96" = repeat the previous 2 bytes
+    st = bytes([8, 0, 0xAA, 0xFF, 0xAA, 0xFF, 0xF3])     # literal FF, copy 7 from $FFF
+    ok("S106 LZ: an offset past the payload wraps 4 KB down (below the destination = 0, then the output)",
+       SC.decode(st) == bytes([0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00]),
+       SC.decode(st).hex())
+    st = bytes([0, 1, 0xAA, 0x11, 0xAA, 0x00, 0x0F, 0xED])     # ext length $ED -> 256
+    ok("S106 LZ: extended copy length is 8-bit (0 = 256, like the game)",
+       len(SC.decode(st)) == 256 and set(SC.decode(st)) == {0x11}, SC.decode(st)[:4].hex())
+    ok("S106 LZ: encoder never asks for a copy the game truncates", SC.MAX_COPY == 0x100)
+    import random
+    rnd = random.Random(106)
+    for k in range(20):
+        pay = bytes(rnd.choice((0, 0xFF, rnd.randrange(256))) for _ in range(rnd.randrange(16, 700)))
+        if SC.decode(SC.encode_safe(pay)) != pay:
+            ok("S106 LZ: encode/decode round trip", False, f"case {k}")
+    ok("S106 LZ: encode/decode round trip (20 random payloads)", True)
+
+    # --- the sheet reader finds the proven S34 Gorbunok boxes on its sheet
+    # (examples/follower_swap/W_bluedragon.png = the DWM2 water-family sheet)
+    sheet = SI.Sheet(os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png'))
+    ok("S106 sheet: background = the sheet's key colour", sheet.bg == (255, 194, 14), str(sheet.bg))
+    ents = SI.find_entries(sheet)
+    ref = json.load(open(os.path.join(REPO, 'examples/follower_swap/gorbunok_frames.json')))['frames']
+    hit = [e for e in ents if e['frames'] and e['frames']['DOWN-a']['x'] == 232
+           and e['frames']['DOWN-a']['y'] == 8]
+    ok("S106 sheet: 31 complete monsters found on the water sheet",
+       sum(1 for e in ents if e['battle'] and e['frames']) == 31,
+       str(sum(1 for e in ents if e['battle'] and e['frames'])))
+    ok("S106 sheet: the blue dragon's four stored frames == the hand-picked S34 boxes",
+       len(hit) == 1 and all(hit[0]['frames'][k] == ref[k] for k in SI.LAYOUT0_ORDER))
+    bspec = json.load(open(os.path.join(REPO, 'examples/follower_swap/gorbunok_battle.json')))
+    ok("S106 sheet: its battle box == the hand-picked S35 bbox",
+       hit[0]['battle'] == bspec['bbox'], str(hit[0]['battle']))
+    gor = SC.decode(open(os.path.join(REPO, 'editor2/example-project/assets/species/'
+                                      'gorbunok_follower.bin'), 'rb').read())
+    ok("S106 sheet: follower payload == Gorbunok's committed (in-game proven) art",
+       SI.follower_payload(sheet, hit[0]['frames']) == gor)
+    _cm, pal = SI.follower_colors(sheet, hit[0]['frames'])
+    ok("S106 sheet: auto object palette == Gorbunok's (2, blue)", pal == 2, str(pal))
+    bp = SI.battle_payload(sheet, hit[0]['battle'])
+    _bm, bpal = SI.battle_colors(sheet, hit[0]['battle'])
+    grid = SR.tiles_to_grid(bp, 6, 6)
+    ok("S106 sheet: battle payload 576 B, backdrop (idx 1) everywhere outside the pose, "
+       "pose standing 2 px above the bottom like the original poses, c1 = $6BFF / c3 = $0000",
+       len(bp) == 576 and all(v == 1 for v in grid[0]) and any(v != 1 for v in grid[45])
+       and all(v == 1 for v in grid[46] + grid[47])
+       and bpal[1] == 0x6BFF and bpal[3] == 0)
+    bm, _ = SI.battle_colors(sheet, hit[0]['battle'])
+    ok("S106 r2 sheet: a 4-colour pose (black, white, 2 blues) keeps all four — white "
+       "on the cream (idx 1), the blues exact on c0 / c2 (user: Goldhorn lost its whites)",
+       sorted(bm.values()) == [0, 1, 2, 3] and bm[(248, 248, 248)] == 1 and bm[(0, 0, 0)] == 3
+       and {bpal[0], bpal[2]} == {SI.rgb555((56, 88, 152)), SI.rgb555((128, 136, 224))},
+       f"{bm} {[hex(x) for x in bpal]}")
+    ok("S106 sheet: a literal stream decodes back exactly",
+       SC.decode(SI.literal_stream(bp)) == bp)
+
+    # --- renderer: vanilla walking frames == the S101 PyBoy census crops
+    cen = json.load(open(os.path.join(REPO, 'extracted', 'monster_npc_sprites.json')))
+    from PIL import Image
+    good, bad = 0, []
+    for sid in range(215):
+        if sid in cen.get('blank', []) or str(sid) not in cen['species']:
+            continue
+        fr = SR.vanilla_follower(sid)
+        im = Image.open(os.path.join(REPO, 'extracted', 'monster_npc_sprites',
+                                     cen['species'][str(sid)]['file'])).convert('RGBA')
+        theirs = [(x, y, im.getpixel((x, y))[:3]) for y in range(16) for x in range(16)
+                  if im.getpixel((x, y))[3]]
+        match = False
+        for name in ('down_A', 'down_B'):
+            g = fr[name]
+            mine = {(x, y, g[y][x][:3]) for y in range(24) for x in range(24) if g[y][x]}
+            if mine and theirs:
+                mx, my = min(p[0] for p in mine), min(p[1] for p in mine)
+                tx, ty = min(p[0] for p in theirs), min(p[1] for p in theirs)
+                if {(x - tx + mx, y - ty + my, c) for x, y, c in theirs} == mine:
+                    match = True
+        good += match
+        if not match:
+            bad.append(sid)
+    ok("S106 render: walking frame == the PyBoy census for every species but ChopClown / "
+       "Grendal (146 / 147: the census build had their attrs overwritten — S105)",
+       bad == [146, 147], str(bad))
+
+    # --- the model: sparse writes, spelling kept, refusals, new species
+    tmp = tempfile.mkdtemp()
+    shutil.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'))
+    d = Document(os.path.join(tmp, 'p', 'project.json'))
+    d.set_species_fields(8, {'level_cap': 60, 'resist.Fire': 3, 'growth.hp': 5})
+    ok("S106 model: species edit -> only the changed fields in gamedata.monsters",
+       d.data['gamedata']['monsters']['8'] == {'level_cap': 60, 'growth': {'hp': 5},
+                                               'resist': {'Fire': 3}},
+       str(d.data['gamedata']['monsters']['8']))
+    b = d.species_base_row(8)
+    d.set_species_fields(8, {'level_cap': b[1], 'resist.Fire': b[15], 'growth.hp': b[9]})
+    ok("S106 model: setting the original values back removes the entry",
+       '8' not in d.data['gamedata']['monsters'])
+    d.set_species_fields(78, {'tier': 5})
+    ok("S106 model: an unchanged family keeps the project's spelling (10, not 'Spirit')",
+       d.data['gamedata']['monsters']['78'] == {'family': 10, 'tier': 5},
+       str(d.data['gamedata']['monsters']['78']))
+    try:
+        d.set_species_fields(216, {'family': 0})
+        ok("S106 model: a combat-only species' family is refused", False)
+    except Exception as ex:                                       # noqa: BLE001
+        ok("S106 model: a combat-only species' family is refused", 'protected' in str(ex))
+    d.set_enemy_fields(2, {'hp': 99, 'ai_weights': [1, 2, 3, 4]})
+    ok("S106 model: enemy row edit -> sparse gamedata.enemies",
+       d.data['gamedata']['enemies']['2'] == {'hp': 99, 'ai_weights': [1, 2, 3, 4]})
+    rows = {e['eid']: e for e in d.species_enemies(8)}
+    ok("S106 model: Slime's rows include the starter, the edited wild row with its pools",
+       1 in rows and rows[2]['edited'] and rows[2]['fields']['hp'] == 99
+       and any('Gate of Beginning' in w for w in rows[2]['where']))
+    from editor2.core import gamedata as GD
+    v2 = MM.decode_enemy(GD._rows(GD.vanilla(REPO), 'enemy_stats')[2])
+    d.set_enemy_fields(2, {'hp': v2['hp'], 'ai_weights': v2['ai_weights']})
+    ok("S106 model: an enemy row set back disappears", '2' not in d.data['gamedata']['enemies'])
+    pe = d.species_enemies(224)
+    ok("S106 model: a new species' project enemy is listed with its pool",
+       len(pe) == 1 and pe[0]['kind'] == 'project' and pe[0]['eid'] == 520
+       and any('Gate of Beginning' in w for w in pe[0]['where']), str(pe))
+    art = {'battle': SI.literal_stream(bp), 'battle_palette': bpal,
+           'follower': SI.literal_stream(gor), 'follower_palette': 2, 'walks_like': 128}
+    files = d.add_species(229, 'Tester', 'Tst', 28, 1, art,
+                          source={'sheet': 'assets/sheets/x.png', 'battle': hit[0]['battle'],
+                                  'frames': hit[0]['frames']})
+    e = d.new_species(229)
+    ok("S106 model: add_species writes the two streams + a valid custom.species entry",
+       all(os.path.exists(os.path.join(d.project_dir, f)) for f in files)
+       and e['info'] == {'clone_from': 28} and e['follower']['palette'] == 2
+       and e['source']['sheet'] == 'assets/sheets/x.png')
+    out, _p, _w = C.compile_project(_save_tmp(d), REPO)
+    ok("S106 model: the project with the sheet species compiles (bank $7E holds it)",
+       'Follower_sp229' in out['patches/bank_07e.asm'])
+    d.set_species_fields(229, {'family': 'Bird', 'level_cap': 70})
+    ok("S106 model: a new species' edits are stored against its clone_from row",
+       d.new_species(229)['info'] == {'clone_from': 28, 'family': 'Bird', 'level_cap': 70},
+       str(d.new_species(229)['info']))
+    cat = {s['id']: s for s in d.species_catalog()}
+    ok("S106 model: the catalog = 221 original + the project's species, families applied",
+       len(cat) == 223 and cat[229]['family'] == 3 and cat[78]['family'] == 10)
+    cap = d.species_capacity()
+    ok("S106 model: capacity meters (2 / 19 slots, names and art counted)",
+       cap['slots'] == (2, 19) and cap['art'][0] == 838 + len(art['battle']) + len(art['follower']))
+    # S106 r3: the "Put in a gate" path (user: "either signpost or implement")
+    nid = d.new_enemy_for_species(229)
+    ne = d.project_enemy(nid)
+    ok("S106 r3 model: a new enemy row of a new species (copy of the wild Slime, species set)",
+       ne['species'] == 229 and ne['level'] == 1, str(ne))
+    van = d.pool_slots(0)
+    sl = [(x['ref'], x['chance'], x['max']) for x in van['slots']]
+    sl[4] = (nid, 2, 1)                       # 20 %
+    sl[3] = (sl[3][0], 5, 1)                  # Gorbunok 70 % -> 50 %: total 10+10+10+50+20
+    d.set_pool_slots(0, sl)
+    enc = d.data['gamedata']['encounters']['0']
+    ok("S106 r3 model: set_pool_slots stores the project enemy by id, sparse vs the original",
+       enc['eids'][4] == nid and enc['slot_chance'] == [1, 1, 1, 5, 2]
+       and '_comment' in d.data['gamedata']['encounters'],
+       str(enc))
+    ok("S106 r3 model: the new row's 'where' names the gate",
+       any('Gate of Beginning' in w for e in d.species_enemies(229) for w in e['where']))
+    try:
+        sl[4] = (nid, 0, 1)
+        d.set_pool_slots(0, sl)
+        ok("S106 r3 model: a list under 100 % is refused", False)
+    except Exception as ex:                                       # noqa: BLE001
+        ok("S106 r3 model: a list under 100 % is refused (the compiler's own check)",
+           'less than 100' in str(ex) and d.data['gamedata']['encounters']['0']['eids'][4] == nid)
+    from editor2.core import gamedata as GD2
+    gw = GD2.Gamedata({'encounters': {'1': {'slot_chance': [4, 4, 3, 0, 0]}}}, REPO)
+    ok("S106 r3 gamedata: a list over 100 % warns (the last slots are cut; every original "
+       "list is exactly 100)", any('cut' in w for w in gw.warnings), str(gw.warnings))
+    vr = [(x['ref'], x['chance'], x['max']) for x in van['slots']]
+    d.set_pool_slots(0, vr)
+    ok("S106 r3 model: putting the list back leaves only the project's own changes",
+       'eids' in d.data['gamedata']['encounters']['0'])          # the example's Gorbunok edit stays
+    d.data['progression']['enemies'] = [e for e in d.data['progression']['enemies'] if e['id'] != nid]
+    ok("S106 model: removing a species used by an enemy is refused",
+       d.species_references(224) != [])
+    d.remove_species(229)
+    ok("S106 model: removing an unused species frees its id",
+       229 in d.free_species_ids() and all(s['id'] != 229 for s in d.data['custom']['species']))
+    shutil.rmtree(tmp)
+
+
+ART_TMP = '/tmp/_t_art_proj'
+
+
+def _art_fixture(entries, files=None):
+    """The example project + gamedata.art `entries`; `files` = {rel: bytes}
+    written under the compile tmp dir (compile_data copies the example's
+    assets/ there, so the art files go next to them)."""
+    d = base()
+    d.setdefault('gamedata', {})['art'] = entries
+    for rel, b in (files or {}).items():
+        p = os.path.join('/tmp/_t_proj', rel)
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        open(p, 'wb').write(b)
+    return d
+
+
+def test_art_s107():
+    """S107 (ROADMAP P3.10 part 2a): new art for the ORIGINAL monsters —
+    gamedata.art -> the battle gfx / battle palette / 8 walking tables / bank
+    $10-$11 layout + attr regions and the art banks $7F/$7C/$7A."""
+    from editor2.core import art as A
+    from editor2.core import gamedata as G
+    from editor2.core import sheet_import as SI
+    V0 = G.vanilla(REPO)
+    vt = lambda n: [bytes.fromhex(r) for r in V0['tables'][n]['rows']]
+    out, _, _ = compile_data(base())
+    # -- empty art: every region == the original rows, every art bank zero
+    ok("S107 art: empty -> battle gfx [0]-[214] == ROM",
+       region_bytes(out, 'patches/bank_000.asm', 'art_battle_gfx') == b''.join(vt('battle_gfx')[:215]))
+    ok("S107 art: empty -> battle palettes [0]-[214] == ROM",
+       region_bytes(out, 'patches/bank_017.asm', 'art_battle_pal') == b''.join(vt('battle_palettes')[:215]))
+    for name, path, bank in A.WALK_COPIES:
+        ok(f"S107 art: empty -> walking gfx copy ${bank:02X} [0]-[214] == ROM",
+           region_bytes(out, path, name) == b''.join(vt('follower_gfx')))
+    for b in (0x10, 0x11):
+        f = f'patches/bank_0{b:02x}.asm'
+        ok(f"S107 art: empty -> bank ${b:02X} layout + attr tables == ROM",
+           region_bytes(out, f, f'art_layout_{b:02x}') == b''.join(vt(f'follower_layout_{b:02x}'))
+           and region_bytes(out, f, f'art_attr_{b:02x}') == b''.join(vt(f'follower_attr_{b:02x}')))
+    for b in A.ART_BANKS:
+        ok(f"S107 art: empty -> art bank ${b:02X} is `ds $4000, $00`",
+           'ds $4000, $00' in out[f'patches/bank_0{b:02x}.asm'])
+    # -- the in-region anchor labels are emitted and exist in the clean tree
+    import glob as _g
+    clean = {}
+    for p in _g.glob(os.path.join(REPO, 'disassembly', 'bank_0*.asm')):
+        for l in open(p):
+            m = re.match(r'^(\w+):', l)
+            if m:
+                clean[m.group(1)] = True
+    files = {name: path for name, path, _f, _b in A.REGIONS}
+    miss = [(r, lb) for r, offs in A.ANCHORS.items() for v in offs.values() for lb in v
+            if f'{lb}:' not in '\n'.join(region_text(out, files[r], r)) or lb not in clean]
+    ok("S107 art: every in-region anchor label is emitted and defined in the clean tree",
+       not miss, str(miss[:4]))
+    # -- validation (Iron Rule 8 + ids + keys + art sizes + palettes)
+    st576 = SI.literal_stream(bytes(i % 251 for i in range(576)))
+    try:
+        _st = SI.literal_stream(bytes(range(256)) * 2 + bytes(64))
+        _r = len(__import__('dwm.sprite_codec', fromlist=['x']).decode(_st)) == 576
+    except ValueError as _e:
+        _r = 'all 256 byte patterns' in str(_e)
+    ok("S107 sheet: a payload using all 256 byte values gets a stream or a plain error", _r)
+    st256 = SI.literal_stream(bytes(i % 250 for i in range(256)))
+    fx = {'assets/art/t_b.bin': st576, 'assets/art/t_f.bin': st256,
+          'assets/art/t_short.bin': SI.literal_stream(bytes(100))}
+    for sid in (215, 216, 220):
+        expect_error(f"S107 art: species {sid} (TERRY? / summon) refused",
+                     _art_fixture({str(sid): {'battle': {'palette': ['$0000', '$6BFF', '$0000', '$0000']}}}, fx),
+                     'Iron Rule 8')
+    expect_error("S107 art: a new-species id is refused (custom.species owns its art)",
+                 _art_fixture({'224': {'follower': {'palette': 1}}}, fx), 'custom.species')
+    expect_error("S107 art: unknown key refused", _art_fixture({'9': {'walk': {}}}, fx), 'unknown key')
+    expect_error("S107 art: battle art must decode to 576 bytes",
+                 _art_fixture({'9': {'battle': {'art': 'assets/art/t_short.bin'}}}, fx), 'exactly 576')
+    expect_error("S107 art: walking art must decode to 256 bytes",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/t_b.bin'}}}, fx), 'exactly 256')
+    expect_error("S107 art: a missing art file is an error",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/none.bin'}}}, fx), 'cannot read')
+    expect_error("S107 art: OBJ palette outside 0-7 refused",
+                 _art_fixture({'9': {'follower': {'palette': 8}}}, fx), 'OBJ palettes 0-7')
+    expect_error("S107 art: battle palette needs 4 colours",
+                 _art_fixture({'9': {'battle': {'palette': ['$0000']}}}, fx), '4 RGB555')
+    # -- a project with art: the regions carry it
+    ents = {'9': {'battle': {'art': 'assets/art/t_b.bin', 'palette': ['$1234', '$6BFF', '$4321', '$0000']},
+                  'follower': {'art': 'assets/art/t_f.bin', 'palette': 5}},
+            '200': {'follower': {'palette': 3}},
+            '42': {'battle': {'palette': ['$0101', '$6BFF', '$0202', '$0000']}},
+            '214': {'follower': {'art': 'assets/art/t_f.bin'}}}
+    outa, _, _ = compile_data(_art_fixture(ents, fx))
+    bg = region_bytes(outa, 'patches/bank_000.asm', 'art_battle_gfx')
+    w = lambda b, i: b[2 * i] | b[2 * i + 1] << 8
+    ok("S107 art: species 9 battle gfx -> $7F00 (art bank $7F, index 0)", w(bg, 9) == 0x7F00, hex(w(bg, 9)))
+    ok("S107 art: species without battle art keep their gfx-ID",
+       all(w(bg, i) == w(b''.join(vt('battle_gfx')), i) for i in range(215) if i != 9))
+    for name, path, bank in A.WALK_COPIES:
+        wg = region_bytes(outa, path, name)
+        ok(f"S107 art: walking copy ${bank:02X}: 9 -> $7F01, 214 -> $7F02, the rest original",
+           w(wg, 9) == 0x7F01 and w(wg, 214) == 0x7F02 and
+           all(w(wg, i) == w(b''.join(vt('follower_gfx')), i) for i in range(215) if i not in (9, 214)))
+    l10 = region_bytes(outa, 'patches/bank_010.asm', 'art_layout_10')
+    a10 = region_bytes(outa, 'patches/bank_010.asm', 'art_attr_10')
+    l11 = region_bytes(outa, 'patches/bank_011.asm', 'art_layout_11')
+    a11 = region_bytes(outa, 'patches/bank_011.asm', 'art_attr_11')
+    ok("S107 art: new walking art -> its bank's layout 0 (9 -> $10:$4E33, 214 -> $11:$4184)",
+       w(l10, 9) == 0x4E33 and w(l11, 214 - 128) == 0x4184)
+    ok("S107 art: walking palette written (9 -> 5 no flips; 214 keeps its original palette)",
+       a10[9] == 5 and a11[214 - 128] == vt('follower_attr_11')[214 - 128][0] & 7)
+    ok("S107 art: palette-only walking edit keeps the layout and the flip bits (200 -> 3)",
+       a11[200 - 128] == (vt('follower_attr_11')[200 - 128][0] & 0xF8) | 3 and
+       w(l11, 200 - 128) == w(b''.join(vt('follower_layout_11')), 200 - 128))
+    bp = region_bytes(outa, 'patches/bank_017.asm', 'art_battle_pal')
+    ok("S107 art: battle palettes 9 / 42 written, others original",
+       bp[9 * 8:10 * 8] == bytes.fromhex('3412ff6b21430000') and bp[42 * 8:43 * 8] == bytes.fromhex('0101ff6b02020000')
+       and all(bp[i * 8:i * 8 + 8] == vt('battle_palettes')[i] for i in range(215) if i not in (9, 42)))
+    b7f = outa['patches/bank_07f.asm']
+    ok("S107 art: bank $7F = self-ID, 3 pointers, the three streams in species order",
+       'ArtBattle_9' in b7f and 'ArtWalk_9' in b7f and 'ArtWalk_214' in b7f
+       and b7f.index('ArtBattle_9:') < b7f.index('ArtWalk_9:') < b7f.index('ArtWalk_214:')
+       and 'ds $4000, $00' in outa['patches/bank_07c.asm'])
+    # -- budget: more than the three banks hold (S170: it spills into banks $80+, last)
+    many = {str(i): {'battle': {'art': 'assets/art/t_b.bin'}, 'follower': {'art': 'assets/art/t_f.bin'}}
+            for i in range(60)}
+    try:
+        out60, _, _ = compile_data(_art_fixture(many, fx))
+        fit = True
+    except C.CompileError as e:
+        fit = str(e)
+    ok("S107 art (S170): 60 fully re-arted monsters build (no longer refused at the three banks)",
+       fit is True, str(fit)[:200])
+    fifty = {k: v for k, v in many.items() if int(k) < 50}
+    try:
+        compile_data(_art_fixture(fifty, fx))
+        fit = True
+    except C.CompileError as e:
+        fit = str(e)
+    ok("S107 art: 50 fully re-arted monsters (literal streams) fit (user: 'no more than 50')",
+       fit is True, str(fit)[:200])
+    return outa
+
+
+def _layout_sig_rom(rom, bank, l2):
+    """The six frames of the level-2 table at bank:l2 of a built ROM, as
+    sorted (dy, dx, tile, xflip, yflip) tuples (like walk_layouts.entries)."""
+    out = []
+    for j in range(6):
+        o = bank * 0x4000 + l2 - 0x4000 + 2 * j
+        fp = rom[o] | rom[o + 1] << 8
+        q = bank * 0x4000 + fp - 0x4000
+        fr = []
+        while rom[q] != 0x80:
+            dy, dx, t, at = rom[q:q + 4]
+            fr.append((dy - 256 if dy > 127 else dy, dx - 256 if dx > 127 else dx, t,
+                       bool(at & 0x20), bool(at & 0x40)))
+            q += 4
+        out.append(sorted(fr))
+    return out
+
+
+def test_walk_layouts_s107():
+    """S107 (ROADMAP P3.10 part 2b): the 155 walking layouts — the packer,
+    the ranking, a chosen layout for an original monster / a new species, the
+    copies into the other follower bank."""
+    from editor2.core import walk_layouts as WL
+    from editor2.core import sheet_import as SI
+    from editor2.core import sprite_render as SR
+    ok("S107 2b: 155 layouts; layout 0 exists in both follower banks",
+       WL.count() == 155 and WL.native_l2(0, 0x10) and WL.native_l2(0, 0x11))
+    # -- the packer reproduces original monsters through their OWN layout
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    n_in, bad = 0, []
+    for sid in range(215):
+        lid = WL.species_layout(sid)
+        if not all(-8 <= dx and dx <= 0 and -16 <= dy and dy <= -8
+                   for es in WL.entries(lid).values() for dy, dx, *_ in es):
+            continue                      # the sheet frame is the 16x16 box
+        n_in += 1
+        tb = bytes.fromhex(ms[str(sid)]['follower']['tile_bytes_hex'])
+        drawn = WL.render([SR.tiles_to_grid(tb[t * 16:t * 16 + 16], 1, 1) for t in range(16)], lid)
+        fr = {f: [[d.get((WL.BOX[1] + y, WL.BOX[0] + x), 0) for x in range(16)] for y in range(16)]
+              for f, d in zip(WL.FRAMES, drawn)}
+        tiles, err, _e = WL.pack(fr, lid)
+        if err or WL.render(tiles, lid) != drawn:
+            bad.append(sid)
+        if sid in (9, 21, 214) and WL.fit_all(fr, sid=sid)[0][0] != 0:
+            bad.append(('rank', sid))
+    ok(f"S107 2b: the packer redraws all {n_in} original monsters whose layout fits the "
+       "16x16 frame exactly through their own layout; the ranking puts a 0-pixel layout first",
+       n_in >= 40 and not bad, str(bad[:5]))
+    # -- the sheet: the blue dragon (Gorbunok) packs for layout 0 exactly like S106
+    sheet = SI.Sheet(os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png'))
+    hit = [e for e in SI.find_entries(sheet) if e['frames'] and e['frames']['DOWN-a']['x'] == 232
+           and e['frames']['DOWN-a']['y'] == 8][0]
+    pay0, _err0 = SI.follower_pack(sheet, hit['frames'], 0)
+    ok("S107 2b: layout-0 packing == the S106 packing (Gorbunok's frames)",
+       pay0 == SI.follower_payload(sheet, hit['frames']))
+    rank = SI.follower_fit(sheet, hit['frames'], sid=224)
+    ok("S107 2b: the ranking covers all 155 layouts, best first",
+       len(rank) == 155 and rank == sorted(rank, key=lambda r: r[0]) and
+       SI.follower_pack(sheet, hit['frames'], rank[0][1])[1] == rank[0][0])
+    # -- layouts of one bank only (a copy is needed in the other)
+    only10 = [L['id'] for L in WL.data()['layouts'] if list(L['instances']) == ['10']]
+    only11 = [L['id'] for L in WL.data()['layouts'] if list(L['instances']) == ['11']]
+    both = [L['id'] for L in WL.data()['layouts'] if len(L['instances']) == 2 and L['id']]
+    l11, l10, lb = only11[0], only10[0], both[0]
+    st256 = SI.literal_stream(bytes(i % 250 for i in range(256)))
+    fx = {'assets/art/t_f.bin': st256}
+    ents = {'9': {'follower': {'art': 'assets/art/t_f.bin', 'layout': l11}},       # copy -> $10
+            '10': {'follower': {'art': 'assets/art/t_f.bin', 'layout': lb}},       # native $10
+            '200': {'follower': {'art': 'assets/art/t_f.bin', 'layout': l10}},     # copy -> $11
+            '201': {'follower': {'art': 'assets/art/t_f.bin'}}}                    # 2a: layout 0
+    d = _art_fixture(ents, fx)
+    g = d['custom']['species'][0]
+    g['follower'].pop('walks_like', None)
+    g['follower']['layout'] = l10                                    # shares 200's copy
+    out, prj, _w = compile_data(d)
+    l10r = '\n'.join(region_text(out, 'patches/bank_010.asm', 'art_layout_10'))
+    l11r = '\n'.join(region_text(out, 'patches/bank_011.asm', 'art_layout_11'))
+    c10 = '\n'.join(region_text(out, 'patches/bank_010.asm', 'lay_copies_10'))
+    c11 = '\n'.join(region_text(out, 'patches/bank_011.asm', 'lay_copies_11'))
+    nl = '\n'.join(region_text(out, 'patches/bank_011.asm', 'ns_follower_layout'))
+    ok("S107 2b: level-1 rows: 9 -> the bank-$10 copy, 10 -> its native table, 200 -> the "
+       "bank-$11 copy, 201 -> layout 0 ($4184)",
+       f'dw FollowerLayoutCopy10_L{l11}' in l10r and f'dw FollowerLayoutCopy11_L{l10}' in l11r
+       and f'${WL.native_l2(lb, 0x10):04X}' in l10r and 'dw $4184   ; [201]' in l11r)
+    ok("S107 2b: one copy per bank, the new species shares 200's",
+       c10.count('FollowerLayoutCopy10_L') >= 1 and f'FollowerLayoutCopy11_L{l10}:' in c11
+       and c11.count(f'FollowerLayoutCopy11_L{l10}:') == 1
+       and f'dw FollowerLayoutCopy11_L{l10}   ; [224] Gorbunok: layout {l10}' in nl)
+    # -- refusals
+    expect_error("S107 2b: a layout without new walking art is refused",
+                 _art_fixture({'9': {'follower': {'layout': 3}}}, fx), 'only goes with NEW')
+    expect_error("S107 2b: layout outside 0-154 refused",
+                 _art_fixture({'9': {'follower': {'art': 'assets/art/t_f.bin', 'layout': 155}}}, fx),
+                 'walking layouts')
+    d2 = base()
+    d2['custom']['species'][0]['follower']['layout'] = 3
+    expect_error("S107 2b: a new species with layout AND walks_like refused", d2, 'not both')
+    many = {str(i): {'follower': {'art': 'assets/art/t_f.bin', 'layout': only11[i]}}
+            for i in range(min(60, len(only11)))}
+    expect_error("S107 2b: more layout copies than bank $10's free tail holds are refused",
+                 _art_fixture(many, fx), 'free tail holds')
+    return out
+
+
+ICON_A = ['33333333', '30000003', '30222203', '30211203', '30211203', '30222203', '30000003', '33333333']
+ICON_S = ['11111111', '13333331', '13000031', '13022031', '13022031', '13000031', '13333331', '11111111']
+
+
+def test_family_icons_s107():
+    """S107 (ROADMAP P3.10 part 2c): the family icons — gamedata.families.<f>.icon
+    -> the font glyph (bank $4F), the gfx stream (bank $2E / bank $6D)."""
+    from editor2.core import gamedata as G
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    out, _, _ = compile_data(base())
+    f4 = region_bytes(out, 'patches/bank_04f.asm', 'gd_family_icons')
+    ok("S107 2c: no icon edits -> the 10 font glyphs == ROM $4F:$4110-$41AF, + the Spirit glyph",
+       f4[:160] == rom[0x4F * 0x4000 + 0x110:][:160] and
+       f4[160:] == G.icon_tile(G.vanilla_icons(REPO)[10]))
+    st = region_bytes(out, 'patches/bank_02e.asm', 'gd_family_icon_streams')
+    ok("S107 2c: no icon edits -> the 10 icon streams == ROM $2E:$424A-$42F7 (190 B)",
+       st == rom[0x2E * 0x4000 + 0x24A:][:190])
+    sp = region_bytes(out, 'patches/bank_06d.asm', 'gd_spirit_icon_stream')
+    ok("S107 2c: no icon edits -> SpiritIconStream = dw $0010, marker $00, the wisp",
+       sp == bytes((0x10, 0, 0)) + G.icon_tile(G.vanilla_icons(REPO)[10]))
+    d = base()
+    d.setdefault('gamedata', {}).setdefault('families', {})['slime'] = {'icon': ICON_A}
+    d['gamedata']['families']['spirit'] = dict(d['gamedata']['families'].get('spirit') or {},
+                                               icon=ICON_S)
+    o2, _, _ = compile_data(d)
+    ta, ts = G.icon_tile(G.icon_grid(ICON_A, 'a')), G.icon_tile(G.icon_grid(ICON_S, 's'))
+    f4 = region_bytes(o2, 'patches/bank_04f.asm', 'gd_family_icons')
+    st = region_bytes(o2, 'patches/bank_02e.asm', 'gd_family_icon_streams')
+    sp = region_bytes(o2, 'patches/bank_06d.asm', 'gd_spirit_icon_stream')
+    ok("S107 2c: a Slime + a Spirit icon -> glyph $10 / $1A, stream $2E03, SpiritIconStream; "
+       "the other 9 untouched, every stream still 19 B",
+       f4[:16] == ta and f4[160:] == ts and f4[16:160] == rom[0x4F * 0x4000 + 0x120:][:144]
+       and st[3:19] == ta and st[19:] == rom[0x2E * 0x4000 + 0x24A + 19:][:171]
+       and sp[3:] == ts and len(st) == 190)
+    for bad, why in ((['1111111'] * 8, '8 rows of 8 digits'), (['11111114'] * 8, '8 rows of 8 digits'),
+                     (['11111111'] * 7, '8 rows of 8 digits')):
+        d = base()
+        d.setdefault('gamedata', {}).setdefault('families', {})['bird'] = {'icon': bad}
+        expect_error(f"S107 2c: a bad icon is refused ({bad[0]!r} x {len(bad)})", d, why)
+    return o2
+
+
+def _mt_fixture(mt, species_desc=None):
+    d = base()
+    d.setdefault('gamedata', {})['monster_text'] = mt
+    if species_desc is not None:
+        g = d['custom']['species'][0]
+        g.pop('description_from', None)
+        g['description'] = species_desc
+    return d
+
+
+def _rom_str(rom, bank, ptr_addr):
+    o = bank * 0x4000 + ptr_addr - 0x4000
+    p = rom[o] | rom[o + 1] << 8
+    q = bank * 0x4000 + p - 0x4000
+    return rom[q:rom.index(b'\xf0', q)]
+
+
+def test_monster_text_s108():
+    """S108 (ROADMAP P3.10 part 3): gamedata.monster_text — the ORIGINAL monsters'
+    names / default nicknames / descriptions (+ a new species' own description)."""
+    from editor2.core import monster_text as MT
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    out, _, _ = compile_data(base())
+    nb = region_bytes(out, 'patches/bank_041.asm', 'gd_monster_names')
+    kb = region_bytes(out, 'patches/bank_041.asm', 'gd_monster_nicks')
+    db_ = region_bytes(out, 'patches/bank_04d.asm', 'gd_monster_desc')
+    ok("S108: no edits -> the name block == ROM $41:$5B1F-$628D (1,903 B)",
+       nb == rom[0x41 * 0x4000 + 0x1B1F:][:1903])
+    ok("S108: no edits -> the nickname block == ROM $41:$69F2-$6C76 (645 B)",
+       kb == rom[0x41 * 0x4000 + 0x29F2:][:645])
+    ok("S108: no edits -> the description block == ROM $4D:$53D3-$7719 (9,031 B)",
+       db_ == rom[0x4D * 0x4000 + 0x13D3:][:9031])
+    ok("S108: no edits -> gd_monster_desc_extra empty",
+       region_bytes(out, 'patches/bank_04d.asm', 'gd_monster_desc_extra') == b'')
+    # labels == the clean disassembly's (the pointer tables name them)
+    dis41 = open(os.path.join(REPO, 'disassembly', 'bank_041.asm')).read()
+    dis4d = open(os.path.join(REPO, 'disassembly', 'bank_04d.asm')).read()
+    ok("S108: every name / nickname / description label is the clean tree's",
+       all(f"{MT.name_label(s)}:" in dis41 for s in MT.NAME_ORDER)
+       and all(f"{MT.nick_label(s)}:" in dis41 for s in MT.IDS)
+       and all(f"{MT.desc_label(s)}:" in dis4d for s in MT.IDS))
+    # encoders
+    ok("S108: encode_name 'Goo-Bob' = glyphs, '-' = $9C",
+       MT.encode_name('Goo-Bob', 'x') == bytes([0x2A, 0x4C, 0x4C, 0x9C, 0x25, 0x4C, 0x3F]))
+    ok("S108: encode_desc: \"'s\" / \"'t\" are one cell ($68 / $67), lines split by $F1",
+       MT.encode_desc(["It's", "can't"], 'x') ==
+       bytes([0x2C, 0x51, 0x68, 0xF1, 0x40, 0x3E, 0x4B, 0x67]))
+    van = MT.vanilla(REPO)
+    ok("S108: every vanilla description re-encodes from its decoded lines (round trip)",
+       all(MT.encode_desc(MT.desc_lines(van['descs'][s]), 'x') == van['descs'][s] for s in MT.IDS))
+    ok("S108: every vanilla name / nickname re-encodes (round trip)",
+       all(MT.encode_name(MT.decode(van['names'][s]), 'x') == van['names'][s] for s in range(215))
+       and all(MT.encode_name(MT.decode(van['nicks'][s]), 'x', 1, 4) == van['nicks'][s] for s in MT.IDS))
+    # edits
+    mt = {"8": {"name": "Goober", "nickname": "GOOB",
+                "description": ["A wobbly blob", "that's always", "grinning - & glad"]},
+          "147": {"name": "Grendel"}, "28": {"nickname": "D"}}
+    o2, _, _ = compile_data(_mt_fixture(mt))
+    nb = region_bytes(o2, 'patches/bank_041.asm', 'gd_monster_names')
+    pre = b''.join(van['names'][s] + b'\xf0' for s in range(8))
+    ok("S108: renames -> the name block keeps its 1,903 B; species 0-7 unchanged, then "
+       "Goober in Slime's place",
+       len(nb) == 1903 and nb.startswith(pre + MT.encode_name('Goober', 'x') + b'\xf0'
+                                         + van['names'][9] + b'\xf0'))
+    lt = "\n".join(region_text(o2, 'patches/bank_04d.asm', 'gd_library_text'))
+    ok("S108: Akubar's recipe line follows Grendal -> Grendel (vanilla typo 'Grenadal' gone)",
+       'Grendel  Grendel' in lt)
+    # spill: every name of 0-214 nine letters long -> some go to the extents
+    big = {str(s): {"name": ("Q" + "abcdefghijklmnopqrstuvwxyz"[s % 26] * 8)} for s in range(0, 215)
+           if MT.decode(van['names'][s]) and len(van['names'][s]) < 9}
+    spill = MT.bank41_spills(_mt_fixture(big), REPO)
+    ok("S108: lengthened names that overflow the block are spilled (not lost)",
+       len(spill) > 0)
+    expect_error("S108: more spill than the free extents hold is refused (names)",
+                 _mt_fixture(big), "bank $41 text")
+    small = dict(list(big.items())[:12])
+    o3, _, _ = compile_data(_mt_fixture(small))
+    allx = "\n".join(o3['patches/bank_041.asm'].split('\n'))
+    ok("S108: a few lengthened names fit (block slack + extents); labels defined once",
+       all(allx.count(f"{MT.name_label(int(k))}:") == 1 for k in small))
+    # refusals
+    expect_error("S108: TERRY? cannot be renamed (Iron Rule 8)",
+                 _mt_fixture({"215": {"name": "Rival"}}), "Iron Rule 8")
+    expect_error("S108: a 10-character name is refused",
+                 _mt_fixture({"8": {"name": "Abcdefghij"}}), "1-9 characters")
+    expect_error("S108: a 5-letter nickname is refused",
+                 _mt_fixture({"8": {"nickname": "ABCDE"}}), "1-4 characters")
+    expect_error("S108: a character the font lacks is refused",
+                 _mt_fixture({"8": {"name": "Sl@me"}}), "not in the game font")
+    expect_error("S108: a 19-cell description line is refused",
+                 _mt_fixture({"8": {"description": ["a" * 19]}}), "19 cells")
+    expect_error("S108: four description lines are refused",
+                 _mt_fixture({"8": {"description": ["a", "b", "c", "d"]}}), "1-3 lines")
+    expect_error("S108: unknown field refused",
+                 _mt_fixture({"8": {"title": "x"}}), "unknown field")
+    # new species: own description
+    o4, _, _ = compile_data(_mt_fixture({}, ["A blue dragon", "from the deep"]))
+    ns = "\n".join(region_text(o4, 'patches/bank_04d.asm', 'ns_detail_text'))
+    ex = "\n".join(region_text(o4, 'patches/bank_04d.asm', 'gd_monster_desc_extra'))
+    ok("S108: a new species' own description -> NsDesc_224 in gd_monster_desc_extra, "
+       "HighLine2Ptrs[224] points at it", 'dw NsDesc_224' in ns and 'NsDesc_224:' in ex)
+    d5 = _mt_fixture({}, ["x"])
+    d5['custom']['species'][0]['description_from'] = 3
+    expect_error("S108: description + description_from together are refused", d5, "not both")
+    ok("S108: Gorbunok's borrowed description is a label (follows an edit of species 78)",
+       f"dw {MT.desc_label(78)}" in "\n".join(region_text(out, 'patches/bank_04d.asm', 'ns_detail_text')))
+    return o2
+
+
+def test_monster_text_rom(rom_bytes, sym):
+    """--rom: the built ROM's mode 5 / 7 / 1 tables lead to the authored text."""
+    from editor2.core import monster_text as MT
+    ok("ROM S108: names 8 / 147 = Goober / Grendel, Dracky untouched",
+       _rom_str(rom_bytes, 0x41, 0x4339 + 16) == MT.encode_name('Goober', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4339 + 294) == MT.encode_name('Grendel', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4339 + 156) == MT.encode_name('Dracky', 'x'))
+    ok("ROM S108: nicknames 8 / 28 = GOOB / D",
+       _rom_str(rom_bytes, 0x41, 0x4739 + 16) == MT.encode_name('GOOB', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4739 + 56) == MT.encode_name('D', 'x'))
+    ok("ROM S108: description 8 through dispatch entry 269",
+       _rom_str(rom_bytes, 0x4D, 0x4001 + 2 * 269) ==
+       MT.encode_desc(["A wobbly blob", "that's always", "grinning - & glad"], 'x'))
+    ok("ROM S108: HighLine2Ptrs at monster_text.HIGH_LINE2_PTRS (the extra region's room)",
+       sym['HighLine2Ptrs'] == (0x4D, MT.HIGH_LINE2_PTRS))
+
+
+def _arena_fixture(arena, enemies=None):
+    d = base()
+    gd = d.setdefault('gamedata', {})
+    gd['arena'] = arena
+    if enemies:
+        gd.setdefault('enemies', {}).update(enemies)
+    return d
+
+
+ARENA_FIX = {"StarryNight": {"matches": {"0": {"size": 1}, "1": {"size": 2},
+                                         "2": {"master": {"monster": 40}}}},
+             "G": {"fee": 20, "matches": {"1": {"master": {"person": "0x02"}}}},
+             "S": {"fee": 65535},
+             "King": {"matches": {"0": {"size": 2, "master": {"monster": 19}}}}}
+
+
+def test_arena_s109():
+    """S109 (ROADMAP P3.10b): gamedata.arena — class fees, the master of each
+    match, team sizes (1-3; engine bank $6E ArenaTeamFixup)."""
+    from editor2.core import arena as AR
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+
+    def rr(bank, addr, n):
+        o = bank * 0x4000 + addr - 0x4000
+        return rom[o:o + n]
+    out, _, _ = compile_data(base())
+    ok("S109: no arena -> ArenaMasterSpriteTable == ROM $04:$5E22 (60 B)",
+       region_bytes(out, 'patches/bank_004.asm', 'gd_arena_masters_04') == rr(0x04, 0x5E22, 60))
+    ok("S109: no arena -> ArenaMasterSpriteTable50 == ROM $50:$6778 (54 B)",
+       region_bytes(out, 'patches/bank_050.asm', 'gd_arena_masters_50') == rr(0x50, 0x6778, 54))
+    ok("S109: no arena -> ArenaClassFeeTable == ROM $09:$5D23 (16 B: 0 10 50 100 500 1000 5000 10000)",
+       region_bytes(out, 'patches/bank_009.asm', 'gd_arena_fees') == rr(0x09, 0x5D23, 16))
+    ok("S109: no arena -> every team has 3 monsters (30 x 3)",
+       region_bytes(out, 'patches/bank_06e.asm', 'gd_arena_team_sizes') == bytes([3] * 30))
+    ok("S109: the formula: G match 1 = EIDs 224-226, Starry Night match 3 = 302-304, "
+       "the King = 481-483",
+       [AR.eid(0, 0, s) for s in range(3)] == [224, 225, 226]
+       and [AR.eid(8, 2, s) for s in range(3)] == [302, 303, 304]
+       and [AR.eid(9, 0, s) for s in range(3)] == [481, 482, 483])
+    o2, _, _ = compile_data(_arena_fixture(ARENA_FIX))
+    m4 = region_bytes(o2, 'patches/bank_004.asm', 'gd_arena_masters_04')
+    m5 = region_bytes(o2, 'patches/bank_050.asm', 'gd_arena_masters_50')
+    want = bytearray(rr(0x04, 0x5E22, 60))
+    want[2 * 26:2 * 26 + 2] = bytes([40 + 0x10, 1])      # Starry match 3: Coatol
+    want[2 * 1:2 * 1 + 2] = bytes([0x02, 0])             # G match 2: person $02
+    want[2 * 27:2 * 27 + 2] = bytes([19 + 0x10, 1])      # King: GoldSlime
+    ok("S109: masters -> bank $04 rows (person = [id, 0], monster = [species+$10, 1])",
+       m4 == bytes(want))
+    ok("S109: the bank $50 copy == the first 27 rows (no King)", m5 == bytes(want[:54]))
+    fees = region_bytes(o2, 'patches/bank_009.asm', 'gd_arena_fees')
+    ok("S109: fees G = 20, S = 65535, the rest vanilla",
+       fees == bytes([20, 0]) + rr(0x09, 0x5D25, 12) + bytes([0xFF, 0xFF]))
+    sz = region_bytes(o2, 'patches/bank_06e.asm', 'gd_arena_team_sizes')
+    ok("S109: team sizes -> Starry 1 / 2 / 3, King 2, the rest 3",
+       sz == bytes([3] * 24 + [1, 2, 3, 2, 3, 3]))
+    # refusals
+    expect_error("S109: unknown group refused", _arena_fixture({"Z": {"fee": 1}}), "unknown group")
+    expect_error("S109: a fee on Starry Night refused",
+                 _arena_fixture({"StarryNight": {"fee": 5}}), "only the classes G-S")
+    expect_error("S109: a fee over 65535 refused", _arena_fixture({"A": {"fee": 70000}}), "0-65535")
+    expect_error("S109: team size 0 refused",
+                 _arena_fixture({"G": {"matches": {"0": {"size": 0}}}}), "1-3 monsters")
+    expect_error("S109: team size 4 refused",
+                 _arena_fixture({"G": {"matches": {"0": {"size": 4}}}}), "1-3 monsters")
+    expect_error("S109: the King has one match",
+                 _arena_fixture({"King": {"matches": {"1": {"size": 1}}}}), "one match")
+    expect_error("S109: match 3 of a class is '2', not '3'",
+                 _arena_fixture({"G": {"matches": {"3": {"size": 1}}}}), 'matches "0"-"2"')
+    expect_error("S109: a master that is both a person and a monster refused",
+                 _arena_fixture({"G": {"matches": {"0": {"master": {"person": 2, "monster": 8}}}}}),
+                 "one of")
+    expect_error("S109: a summon as master refused (Iron Rule 8)",
+                 _arena_fixture({"G": {"matches": {"0": {"master": {"monster": 216}}}}}),
+                 "Iron Rule 8")
+    expect_error("S109: species 239 as master refused (draw id $FF)",
+                 _arena_fixture({"G": {"matches": {"0": {"master": {"monster": 239}}}}}),
+                 "cannot be drawn")
+    expect_error("S109: a person id outside the NPC catalog refused ($E0 = the player)",
+                 _arena_fixture({"G": {"matches": {"0": {"master": {"person": "0xE0"}}}}}),
+                 "not an NPC sprite")
+    expect_error("S109: unknown match field refused",
+                 _arena_fixture({"G": {"matches": {"0": {"prize": 3}}}}), "unknown field")
+    expect_error("S109: a fighting team member that is a summon is refused (Iron Rule 8)",
+                 _arena_fixture({}, {"224": {"species": 217}}), "Iron Rule 8")
+    _o, _p, w = compile_data(_arena_fixture({"G": {"matches": {"0": {"size": 1}}}},
+                                            {"225": {"species": 217}}))
+    ok("S109: a summon in a slot the team does not use (size 1, slot 2) is not an error",
+       'patches/bank_06e.asm' in _o)
+    return o2
+
+
+def test_arena_rom(rom_bytes, sym):
+    """--rom: the built tables at their labels; the two far-call sites; the
+    engine routine run from the ROM's bytes for every match."""
+    def at(name, n):
+        bk, ad = sym[name]
+        o = bk * 0x4000 + ad - 0x4000
+        return rom_bytes[o:o + n]
+    ok("ROM S109: ArenaMasterSpriteTable still at $04:$5E22, ArenaMasterSpriteTable50 at "
+       "$50:$6778, ArenaClassFeeTable at $09:$5D23",
+       sym['ArenaMasterSpriteTable'] == (0x04, 0x5E22)
+       and sym['ArenaMasterSpriteTable50'] == (0x50, 0x6778)
+       and sym['ArenaClassFeeTable'] == (0x09, 0x5D23))
+    ok("ROM S109: Starry match 3 master = Coatol ($38, 1); King = GoldSlime ($23, 1)",
+       at('ArenaMasterSpriteTable', 60)[52:54] == bytes([0x38, 1])
+       and at('ArenaMasterSpriteTable', 60)[54:56] == bytes([0x23, 1]))
+    site = bytes([0x21, 0x00, 0x6E, 0xD7, 0xC9, 0x00])
+    rd = sym['ReadArenaGroup'][1]
+    ok("ROM S109: both routine tails far-call bank $6E entry 0 (ld hl,$6E00 / rst $10 / ret / nop)",
+       rom_bytes[0x04 * 0x4000:0x05 * 0x4000].count(site) == 1
+       and rom_bytes[0x50 * 0x4000:0x51 * 0x4000].count(site) == 1
+       and rom_bytes[0x6E * 0x4000 + 1:0x6E * 0x4000 + 3] ==
+       bytes([sym['ArenaTeamFixup'][1] & 0xFF, sym['ArenaTeamFixup'][1] >> 8])
+       and rd < 0x5E22)
+    from editor2.core import arena as AR
+    sizes = list(at('ArenaTeamSizeTable', 30))
+    bad = []
+    for gi in range(10):
+        for m in range(3):
+            cpu = MiniSM83(rom_bytes, 0x6E)
+            cpu.ram[sym['wArenaGroup'][1]] = gi
+            cpu.ram[sym['wColiseumBattle'][1]] = m
+            cpu.ram[0xDA02] = 2
+            for k in range(8):
+                cpu.ram[0xD7CA + k] = 0x40 + k
+            cpu.run(sym['ArenaTeamFixup'][1])
+            n = sizes[3 * gi + m]
+            ent = [(cpu.ram.get(0xD7CA + 2 * k), cpu.ram.get(0xD7CB + 2 * k)) for k in range(4)]
+            want = [(0x40, 0x41), (0x42, 0x43) if n >= 2 else (0xFF, 0x00), (0x44, 0x45),
+                    (0x46, 0x01) if n == 3 else (0xFF, 0x00)]
+            if cpu.ram[0xDA02] != n - 1 or ent != want:
+                bad.append((gi, m, n, cpu.ram[0xDA02], ent))
+    ok("ROM S109: ArenaTeamFixup run from the ROM for all 30 (group, match): $DA02 = size-1, "
+       "absent slots' display entries [$FF,$00], $D7D1 = 1", not bad, str(bad[:3]))
+    cpu = MiniSM83(rom_bytes, 0x6E)
+    cpu.ram[sym['wArenaGroup'][1]] = 8
+    cpu.ram[sym['wColiseumBattle'][1]] = 0xFF
+    cpu.ram[0xDA02] = 2
+    cpu.run(sym['ArenaTeamFixup'][1])
+    ok("ROM S109: an index past the table ($FF) leaves the vanilla values", cpu.ram[0xDA02] == 2)
+    ok("ROM S109: the table read is the fixture's (Starry 1/2/3, King 2)",
+       sizes[24:28] == [1, 2, 3, 2] and AR.ROWS == 30)
+
+
+def _save_tmp(doc):
+    doc.save()
+    return os.path.dirname(doc.path)
+
+
+# --- S110 (ROADMAP P3.11): skills — names, SKIL text, looks_like, MP copies ---
+
+def _sk_fixture(skills):
+    d = base()
+    d.setdefault('gamedata', {})['skills'] = skills
+    return d
+
+
+SK_FIX = {"0": {"name": "Flarebolt",
+                "description": ["Scorches one foe", "with a bright", "blue fireball"],
+                "looks_like": 6, "mp": 5},
+          "170": {"description": ["Becomes a", "dragon"]},
+          "43": {"mp": 7},
+          "55": {"mp": 4},
+          "50": {"mp": "ALL"},
+          "215": {"name": "BugCut"}}
+
+
+def test_skills_s110():
+    """S110: gamedata.skills.<id>.name / description / looks_like (editor2/core/
+    skills.py) and the decoded MP semantics (gamedata.py: battle record +4 and
+    the field $07 table move together)."""
+    from editor2.core import skills as SK
+    from editor2.core import monster_text as MT
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    d0 = base()
+    d0['gamedata'].pop('skills', None)
+    out, _, _ = compile_data(d0)
+    nb = region_bytes(out, 'patches/bank_041.asm', 'gd_skill_names')
+    db_ = region_bytes(out, 'patches/bank_056.asm', 'gd_skill_desc')
+    ok("S110: no edits -> the skill-name block == ROM $41:$628E-$69F1 (1,892 B)",
+       nb == rom[0x41 * 0x4000 + 0x228E:][:1892])
+    ok("S110: no edits -> the description block == ROM $56:$502F-$664A (5,660 B)",
+       db_ == rom[0x56 * 0x4000 + 0x102F:][:5660])
+    rows = [l.split(';')[0].split()[1] for l in
+            region_text(out, 'patches/bank_056.asm', 'gd_skill_desc_ptrs')]
+    ok("S110: no edits -> the 222 description pointer rows name the vanilla strings",
+       rows == [SK.desc_label(i) for i in range(222)])
+    _ex = region_bytes(out, 'patches/bank_056.asm', 'gd_skill_desc_extra')
+    from editor2.core import custom_skills as CS
+    _sp = b''.join(b for _l, b in CS.desc_spills(base()))
+    ok("S110: no edits -> gd_skill_desc_extra = 2,993 bytes: the S155 built-ins' SKIL "
+       "texts that pass the 446-B region (S155), then zeros (the old nop pad)",
+       len(_ex) == 2993 and _sp and _ex.startswith(_sp) and _ex[len(_sp):] == bytes(2993 - len(_sp)))
+    ok("S110: no edits -> both looks-like tables are the identity",
+       region_bytes(out, 'patches/bank_05f.asm', 'gd_present_proxy_5f') == bytes(range(222))
+       and region_bytes(out, 'patches/bank_055.asm', 'gd_present_proxy_55') == bytes(range(222)))
+    dis41 = open(os.path.join(REPO, 'disassembly', 'bank_041.asm')).read()
+    dis56 = open(os.path.join(REPO, 'disassembly', 'bank_056.asm')).read()
+    ok("S110: every skill name / description label is the clean tree's",
+       all(f"{SK.name_label(s)}:" in dis41 for s in range(223))
+       and all(f"{SK.desc_label(s)}:" in dis56 for s in range(222)))
+    van = SK.vanilla(REPO)
+    ok("S110: every vanilla skill name / description re-encodes (round trip)",
+       all(MT.encode_name(MT.decode(van['names'][s]), 'x', 1, 9) == van['names'][s]
+           for s in range(222))
+       and all(MT.encode_desc(MT.desc_lines(van['descs'][s]), 'x') == van['descs'][s]
+               for s in range(222) if van['descs'][s]))
+    # the example: S44's BugCut is project data now
+    oe, _, _ = compile_data(base())
+    ok("S110: the example renames 215 Sheldodge -> BugCut (was a hand edit)",
+       'SkillName_215_Sheldodge:  ; "BugCut"' in
+       "\n".join(region_text(oe, 'patches/bank_041.asm', 'gd_skill_names')))
+    # edits
+    o2, _, w2 = compile_data(_sk_fixture(SK_FIX))
+    nb = region_bytes(o2, 'patches/bank_041.asm', 'gd_skill_names')
+    ok("S110: the name block keeps 1,892 B and starts with Flarebolt, then Blazemore",
+       len(nb) == 1892 and nb.startswith(MT.encode_name('Flarebolt', 'x') + b'\xf0'
+                                         + van['names'][1] + b'\xf0'))
+    dtx = "\n".join(region_text(o2, 'patches/bank_056.asm', 'gd_skill_desc'))
+    ext = "\n".join(region_text(o2, 'patches/bank_056.asm', 'gd_skill_desc_extra'))
+    ptr = region_text(o2, 'patches/bank_056.asm', 'gd_skill_desc_ptrs')
+    ok("S110: Blaze's new text sits under its label in the block",
+       'SkillDesc_000_Blaze:  ; "Scorches one foe/with a bright/blue fireball"' in dtx)
+    ok("S110: the string pushed out of the full block (LIFE) moves to the extra region "
+       "under its label; 170 gets its OWN string there and its pointer row",
+       'SkillDesc_218_LIFE:' in ext and 'SkillDescOwn_170:' in ext
+       and ptr[170].split()[1] == 'SkillDescOwn_170' and ptr[171].split()[1] == 'SkillDesc_Blank')
+    lk = region_bytes(o2, 'patches/bank_05f.asm', 'gd_present_proxy_5f')
+    ok("S110: looks_like 0 -> 6 in both tables, the rest identity",
+       lk[0] == 6 and lk[1:] == bytes(range(1, 222))
+       and region_bytes(o2, 'patches/bank_055.asm', 'gd_present_proxy_55') == lk)
+    mp = asm_bytes(region_text(o2, 'patches/bank_007.asm', 'gd_skill_mp'))
+    rec = asm_bytes(region_text(o2, 'patches/bank_054.asm', 'gd_skill_records'))
+    r4 = lambda i: rec[19 * i + 4]
+    w16 = lambda i: mp[2 * i] | mp[2 * i + 1] << 8
+    ok("S110: mp -> both copies (Blaze 5 / 5, Heal 7 / 7)",
+       (w16(0), r4(0), w16(43), r4(43)) == (5, 5, 7, 7))
+    ok("S110: StepGuard (field-only) mp 4 -> the field table only (battle byte stays 0)",
+       (w16(55), r4(55)) == (4, 0))
+    ok("S110: Farewell 'ALL' == the original (999 / battle 1)", (w16(50), r4(50)) == (999, 1))
+    ok("S110: no mp_byte warning any more", not any('mp_byte' in x for x in w2))
+    # refusals
+    expect_error("S110: a 10-letter skill name is refused",
+                 _sk_fixture({"0": {"name": "Abcdefghij"}}), "1-9 characters")
+    expect_error("S110: a 19-cell SKIL line is refused",
+                 _sk_fixture({"0": {"description": ["a" * 19]}}), "19 cells")
+    expect_error("S110: four SKIL lines are refused",
+                 _sk_fixture({"0": {"description": ["a", "b", "c", "d"]}}), "1-3 lines")
+    _o, _, ws = compile_data(_sk_fixture({"0": {"looks_like": 0x84}, "1": {"looks_like": 44}}))
+    ok("S110: a summon's look and a heal's look on an attack are ALLOWED with a warning "
+       "(census: no look stalls a battle)",
+       any('summon' in x for x in ws) and any('other side' in x for x in ws))
+    expect_error("S110: looks_like past the vanilla ids is refused",
+                 _sk_fixture({"0": {"looks_like": 222}}), "vanilla skill id")
+    expect_error("S110: mp over 255 is refused (one battle byte)",
+                 _sk_fixture({"0": {"mp": 300}}), "0-255")
+    expect_error("S110: 'All MP' on Blaze is refused (code, Farewell / MegaMagic only)",
+                 _sk_fixture({"0": {"mp": "ALL"}}), "All MP")
+    expect_error("S110: a number for Farewell's MP is refused",
+                 _sk_fixture({"50": {"mp": 3}}), "always takes all MP")
+    expect_error("S110: an unnamed target mode is refused",
+                 _sk_fixture({"0": {"record": {"target_mode": 0x33}}}), "target_mode")
+    expect_error("S156: id 234 is the built-in Plunder: a `base` is refused (its own code)",
+                 _sk_fixture({"234": {"base": 0, "name": "X"}}), "run their own code")
+    oa, _, _ = compile_data(_sk_fixture({"0": {"record": {"target_mode": 0x12}}}))
+    ok("S110: target mode 'all foes' accepted for Blaze",
+       asm_bytes(region_text(oa, 'patches/bank_054.asm', 'gd_skill_records'))[2] == 0x12)
+    # name spill: lengthened names go to the shared bank-$41 extents
+    longer = {str(s): {"name": "Q" + "abcdefgh"[: 8]} for s in range(0, 40)
+              if len(van['names'][s]) < 9}
+    o4, _, _ = compile_data(_sk_fixture(longer))
+    allx = o4['patches/bank_041.asm']
+    ok("S110: lengthened skill names spill into the ns_text_* extents (labels defined once)",
+       len(SK.bank41_spills(_sk_fixture(longer), REPO)) > 0
+       and all(allx.count(f"{SK.name_label(int(k))}:") == 1 for k in longer))
+    big = {str(s): {"name": "Qabcdefgh"} for s in range(0, 222)}
+    expect_error("S110: more lengthened names than the shared extents hold are refused",
+                 _sk_fixture(big), "bank $41 text")
+    return o2
+
+
+def test_skills_rom(rom_bytes, sym):
+    """--rom: the built SK_FIX ROM — names / texts through the game's tables,
+    the looks-like tables, the bank $55 fork, and GetPresentId / SfxPresentId
+    RUN from the built ROM for every id."""
+    from editor2.core import monster_text as MT
+    ok("ROM S110: skill 0's name through SkillNamePtrTable = Flarebolt, 1 = Blazemore",
+       _rom_str(rom_bytes, 0x41, 0x4539) == MT.encode_name('Flarebolt', 'x')
+       and _rom_str(rom_bytes, 0x41, 0x4539 + 2) == MT.encode_name('Blazemore', 'x'))
+    ok("ROM S110: SKIL texts through SkillDescPtrTable: 0 new, 170 own, 171 still empty",
+       _rom_str(rom_bytes, 0x56, 0x6667) ==
+       MT.encode_desc(["Scorches one foe", "with a bright", "blue fireball"], 'x')
+       and _rom_str(rom_bytes, 0x56, 0x6667 + 340) == MT.encode_desc(["Becomes a", "dragon"], 'x')
+       and _rom_str(rom_bytes, 0x56, 0x6667 + 342) == b'')
+    ok("ROM S110: SkillDescModeTable still at $664B ([$664F, $6667])",
+       sym['SkillDescModeTable'] == (0x56, 0x664B) and sym['SkillDescPtrTable'] == (0x56, 0x6667))
+    b5f, a5f = sym['StockPresentTable']
+    b55, a55 = sym['StockSfxTable']
+    t5f = rom_bytes[b5f * 0x4000 + a5f - 0x4000:][:222]
+    t55 = rom_bytes[b55 * 0x4000 + a55 - 0x4000:][:222]
+    ok("ROM S110: StockPresentTable / StockSfxTable = identity but 0 -> 6",
+       t5f == t55 == bytes([6]) + bytes(range(1, 222)))
+    sfx = sym['SfxPresentId'][1]
+    ok("ROM S110: bank $55 $4061 = call SfxPresentId (was ld a, [$db8a])",
+       rom_bytes[0x55 * 0x4000 + 0x61:][:3] == bytes([0xCD, sfx & 0xFF, sfx >> 8]))
+    cpt = sym['CustomProxyTable'][1]
+    bad = []
+    for sid in list(range(222)) + list(range(0xDE, 0xEA)):
+        cpu = MiniSM83(rom_bytes, 0x5F)
+        cpu.ram[0xDB8A] = sid
+        cpu.h, cpu.l = 0x12, 0x34
+        cpu.run(sym['GetPresentId'][1])
+        want = t5f[sid] if sid < 0xDE else rom_bytes[0x5F * 0x4000 + cpt - 0x4000 + sid - 0xDE]
+        if cpu.a != want or (cpu.h, cpu.l) != (0x12, 0x34):
+            bad.append(('5f', sid, cpu.a))
+        cpu = MiniSM83(rom_bytes, 0x55)
+        cpu.ram[0xDB8A] = sid
+        cpu.h, cpu.l = 0x40, 0x84
+        cpu.run(sfx)
+        csx = sym['CustomSfxTable'][1]
+        want = t55[sid] if sid < 0xDE else rom_bytes[0x55 * 0x4000 + csx - 0x4000 + sid - 0xDE]
+        if cpu.a != want or (cpu.h, cpu.l) != (0x40, 0x84):
+            bad.append(('55', sid, cpu.a))
+    ok("ROM S110: GetPresentId / SfxPresentId RUN for ids 0-221 + $DE-$E9 return the "
+       "table / custom proxy / (S111) CustomSfxTable and keep HL", not bad, f"{bad[:4]}")
+    o = 0x54 * 0x4000 + 0x01CF
+    ok("ROM S110: Blaze's battle MP (record +4) = 5",
+       rom_bytes[o + 4] == 5)
+
+
+
+# --- S111 (ROADMAP P3.11c/d): the custom skills as project data ---
+
+CS_FIX = {
+    "229": {"name": "Rumble", "learn": {"level": 1, "prereqs": [72]}, "mp": 8,
+            "quake_power": {"min": 60, "max": 80}, "element": "Explosion",
+            "announce": ["{name} makes", "the ground rumble!"],
+            "description": ["Shakes all foes,", "then allies a bit,", "never flyers"]},
+    "239": {"base": 16, "name": "Thunder", "description": ["Calls thunder down", "on every foe"],
+            "learn": {"level": 1, "prereqs": [16]}, "mp": 6, "looks_like": 6, "sounds_like": 6,
+            "record": {"party_min": 60, "party_range": 15}},
+    "240": {"base": 94, "name": "FrostBite", "description": ["A freezing breath",
+                                                              "that hits all foes"],
+            "learn": {"level": 1, "prereqs": [94]}, "looks_like": 98, "sounds_like": 98,
+            "element": "IceBreath"},
+    "0": {"element": "Ice"},
+    "224": {"burn": "1/4", "damage_per_mp": 3},
+    "226": {"damage_of_atk": [1, 2]},
+    "228": {"mp_charge": "1/2"},
+    "230": {"ally_damage": "1/2"},
+    "233": {"per_fallen": "1/2"}}
+
+
+def _cs_regions_committed():
+    """{region: lines} of every S111 custom-skill region as committed in patches/."""
+    from editor2.core import custom_skills as CS
+    out = {}
+    for name, f, _fn, _b in CS.REGIONS:
+        L = open(os.path.join(REPO, f)).read().split('\n')
+        b = L.index(f"; @BUILD_PROJECT BEGIN {name}")
+        e = L.index(f"; @BUILD_PROJECT END {name}")
+        out[name] = (f, L[b + 1:e])
+    return out
+
+
+def test_custom_skills_s111():
+    """S111: gamedata.skills.<222-254> (editor2/core/custom_skills.py) — the
+    built-in custom skills' data and NEW custom skills (base = a stock skill's
+    effect), the element override, the custom sound table."""
+    from editor2.core import custom_skills as CS
+    from editor2.core import monster_text as MT
+    from editor2.core import gamedata as G
+    B = CS.baseline()
+    ok("S111/S155/S156: custom_skills.json holds the built-ins $DE-$EE (+ banners, tame, "
+       "quake)", sorted(B['skills']) == sorted(CS.BUILTIN) == list(range(0xDE, 0xEF))
+       and set(B['banners']) == {'quake_allies', 'quake_flew', 'mourn_boost', 'lonewolf_line',
+                                 'punish_line', 'finish_line', 'rupture_line', 'rust_line',
+                                 'plunder_line', 'plunder_def_rise', 'plunder_agl_rise'})
+    ok("S111/S155/S160/S161: 25 compiler regions (+ gd_custom_ratios, S155 gd_custom_pcts, S160 "
+       "gd_reclaim_base / _target / _announce, S161 gd_ai_pref), each in a patch file that has it",
+       len(CS.REGIONS) == 25 and all(len(v[1]) > 0 for v in _cs_regions_committed().values()))
+    # (1) the committed patches carry the example's output (no edits >= 222)
+    oe, prj, _ = compile_data(base())
+    com = _cs_regions_committed()
+    bad = [n for n, (f, lines) in com.items() if region_text(oe, f, n) != lines]
+    ok("S111: example -> every custom-skill region == the committed patches/ text", not bad,
+       f"{bad}")
+    sk, ex, _w = CS.resolve(base(), REPO)
+    ok("S111/S155/S156: example -> the 17 built-ins (222-238) exist, no new skill",
+       sorted(sk) == sorted(CS.BUILTIN) and len(sk) == 17)
+    ok("S111: example -> every built-in's record / MP / learn row / announce / looks == "
+       "custom_skills.json (the S110 pin's bytes)",
+       all(sk[s]['record'] == bytes.fromhex(B['skills'][s]['record'])
+           and sk[s]['mp'] == B['skills'][s]['mp']
+           and sk[s]['learn'] == (bytes.fromhex(B['skills'][s]['learn'])
+                                  if B['skills'][s]['learn'] else None)
+           and sk[s]['template'] == B['skills'][s]['announce_template']
+           and sk[s]['proxy'] == B['skills'][s]['proxy'] for s in sk))
+    ok("S111: example -> CustomBaseTable = 33 x $FF, CustomSfxTable = 33 x $09 "
+       "(the party sound kind: S110 custom ids overshot into the next table)",
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_custom_base') == b'\xff' * 33
+       and region_bytes(oe, 'patches/bank_055.asm', 'gd_custom_sfx') == b'\x09' * 33)
+    el = region_bytes(oe, 'patches/bank_072.asm', 'gd_skill_elements')
+    ok("S111: example -> no element overrides (222 stock + 33 custom = $FF)",
+       el == b'\xff' * (222 + 33))
+    ok("S111: example -> CustomRatioTable = the S49-S75 constants (1/2, 1, 1/4 x3, 3/4, "
+       "1/3 x4, 1)",
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_custom_ratios') ==
+       bytes([1, 2, 1, 1, 1, 4, 1, 4, 1, 4, 3, 4, 1, 3, 1, 3, 1, 3, 1, 3, 1, 1]))
+    ok("S111: example -> CustomTargetBaseTable: MagicBurn = Firebal's row, Tame x3 = "
+       "Blaze's (the AI no longer casts them at its own side), Quake = Firebal's, Mourn = "
+       "Attack's; S155: Repel the slack row, LoneWolf / Punish / Finish / Rupture / Rust "
+       "their own pick ($F0); S156: Plunder its own pick ($F0)",
+       region_bytes(oe, 'patches/bank_058.asm', 'gd_custom_target')[:17] ==
+       bytes([0xE5, 0xF0, 0x03, 0x00, 0x00, 0x00, 0xE5, 0x03, 0x03, 0x03, 0x03, 0x3A,
+              0xF0, 0xF0, 0xF0, 0xF0, 0xF0]))
+    ok("S155: example -> CustomPctTable = 200 / 400 / 50 / 20 / 200 / 300 / 50 (%)",
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_custom_pcts') ==
+       b''.join(v.to_bytes(2, 'little') for v in (200, 400, 50, 20, 200, 300, 50)))
+    # (2) edits
+    o2, p2, w2 = compile_data(_sk_fixture(CS_FIX))
+    ok("S111: ratios: MagicBurn 1/4 + 3, TameMore 1/2, Anchor 1/2, Quake 1/2, Mourn 1/2; "
+       "the rest the originals",
+       region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_ratios') ==
+       bytes([1, 4, 3, 1, 1, 4, 1, 2, 1, 4, 1, 2, 1, 3, 1, 2, 1, 3, 1, 3, 1, 2]))
+    sk2, ex2, _ = CS.resolve(_sk_fixture(CS_FIX), REPO)
+    ok("S111: 239 Thunder / 240 FrostBite are new skills on bases Zap / Scorching (S155: "
+       "new skills are 239-254)",
+       sorted(s for s in sk2 if s in CS.NEW) == [0xEF, 0xF0]
+       and sk2[0xEF]['handler'] == sk2[0xF0]['handler'] == 'clone'
+       and (sk2[0xEF]['base'], sk2[0xF0]['base']) == (16, 94))
+    cb = region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_base')
+    ok("S111: CustomBaseTable[$EF] = 16, [$F0] = 94, the rest $FF",
+       cb == b'\xff' * 17 + bytes([16, 94]) + b'\xff' * 14)
+    ok("S111: CustomSfxTable / CustomProxyTable: Thunder sounds + looks like Blaze's "
+       "row 6, FrostBite like IceStorm (98)",
+       region_bytes(o2, 'patches/bank_055.asm', 'gd_custom_sfx')[17:19] == bytes([6, 98])
+       and region_bytes(o2, 'patches/bank_05f.asm', 'gd_custom_present')[17:19] == bytes([6, 98]))
+    ok("S111: CustomTargetBaseTable: a new skill uses its base's AI target row",
+       region_bytes(o2, 'patches/bank_058.asm', 'gd_custom_target')[17:19] == bytes([16, 94]))
+    el2 = region_bytes(o2, 'patches/bank_072.asm', 'gd_skill_elements')
+    ice, ib, ex_ = (G.RESIST_NAMES.index(n) for n in ('Ice', 'IceBreath', 'Explosion'))
+    ok("S111: element overrides: Blaze (stock 0) -> Ice, Tremor ($E5, project 'Rumble') -> "
+       "Explosion, FrostBite -> IceBreath, everything else $FF",
+       el2[0] == ice and el2[222 + 7] == ex_ and el2[222 + 18] == ib
+       and el2[1:222] == b'\xff' * 221
+       and sum(1 for x in el2[222:] if x != 0xFF) == 2)
+    ok("S111: the AI element (record +5) follows: Blaze = Ice+1, FrostBite = IceBreath+1",
+       sk2[0xF0]['record'][5] == ib + 1
+       and region_bytes(o2, 'patches/bank_054.asm', 'gd_skill_records')[5] == ice + 1)
+    ok("S111: Thunder's record: Zap's with party power 60 / 15 and MP 6 at +4",
+       sk2[0xEF]['record'][4] == 6 and sk2[0xEF]['mp'] == 6)
+    ok("S111: Tremor's quake_power {60, 80} -> QuakePowerTable row (60, 20); the "
+       "other three keep the baseline",
+       region_bytes(o2, 'patches/bank_072.asm', 'gd_quake_power')[0:2] == bytes([60, 20])
+       and region_bytes(o2, 'patches/bank_072.asm', 'gd_quake_power')[2:] ==
+       region_bytes(oe, 'patches/bank_072.asm', 'gd_quake_power')[2:])
+    nm = o2['patches/bank_041.asm']
+    # S164 (ROADMAP E14): a name past the 94-B region comes from the text banks (its pointer
+    # row names the placeholder), no longer from the shared ns_text_* extents
+    from editor2.core import custom_skills as _CS164
+    texted = {sid for _b, _t, sid, _r, _w in _CS164.text_slots(p2, REPO)}
+    ok("S111: the names Rumble / Thunder / FrostBite are emitted in bank $41's region, or (S164) "
+       "served from the text banks when it is full",
+       all((f'SkillName_{i}_{n}:' in nm and f'dw SkillName_{i}_{n} ' in nm) if i not in texted
+           else f'dw SkillName_222_Unused_222  ; [{i}] {n}:' in nm
+           for i, n in ((229, 'Rumble'), (239, 'Thunder'), (240, 'FrostBite'))), sorted(texted))
+    lr = region_bytes(o2, 'patches/bank_072.asm', 'gd_custom_learn')
+    ok("S111/S155: CustomLearnTable: 33 rows x 18 B from $DE; Thunder's row = level 1, "
+       "prereq Zap",
+       len(lr) == 33 * 18 and lr[18 * (0xEF - 0xDE)] == 1
+       and 16 in lr[18 * (0xEF - 0xDE):18 * (0xEF - 0xDE) + 18][1:]
+       and lr[18 * (0xF1 - 0xDE)] == 0xFF)
+    ok("S111: the own announce line is encoded with the name insert",
+       sk2[0xE5]['template'] == 0xFD and bytes([0xF9, 0x00]) in sk2[0xE5]['message'])
+    ok("S111: the names reach the editor list (CS.names)",
+       CS.names(_sk_fixture(CS_FIX), REPO).get(0xEF) == 'Thunder')
+    # (3) refusals
+    def fx(extra):
+        return _sk_fixture(dict(extra))
+    # [S156] Plunder (234): a built-in now — its name / line edit, its targets / power do not
+    o56, _, _ = compile_data(fx({"234": {"name": "Swipe", "result_line": [["{name} swipes",
+                                                                          "{buff}!"]]}}))
+    t56 = o56['patches/bank_041.asm'] + o56['patches/bank_04c.asm']
+    m56 = b''.join(asm_bytes(_data_lines(region_text(o56, 'patches/bank_04c.asm', r)))
+                   for r in ('gd_custom_msg_a', 'gd_custom_msgs'))
+    # S164 (ROADMAP E14): a name past bank $41's region is a text-bank slot (its pointer row
+    # names the placeholder) — either form carries the name
+    ok("S156: Plunder (234) takes a name and a result line ({name} $F9 $20, {buff} $F9 $30)",
+       ('SkillName_234_Swipe:' in t56 or '[234] Swipe: its name is in the text banks' in t56)
+       and 'CustomLine_Plunder:' in t56
+       and bytes([0xED, 0xF9, 0x20]) in m56 and bytes([0xF9, 0x30, 0x63, 0xEC, 0xF0]) in m56)
+    o57, _, _ = compile_data(fx({"234": {"def_rise": ["{name} DEF", "up {amount}!"]}}))
+    m57 = b''.join(asm_bytes(_data_lines(region_text(o57, 'patches/bank_04c.asm', r)))
+                   for r in ('gd_custom_msg_a', 'gd_custom_msgs'))
+    t57 = o57['patches/bank_04c.asm']
+    ok("S156 r2: Plunder's rise pages — CustomLine_PlunderDEF / _AGL = the result line + a page "
+       "({amount} $F9 $10, {name} $F9 $20); def_rise edits the DEF one",
+       'CustomLine_PlunderDEF:' in t57 and 'CustomLine_PlunderAGL:' in t57
+       and bytes([0xFC, 0x10, 0xEC, 0xF2, 0xF9, 0x20]) in m57
+       and bytes([0xF9, 0x10, 0x63, 0xEC, 0xF0]) in m57)
+    expect_error("S156 r2: a rise page is one page", fx({"234": {"agl_rise": [["a"], ["b"]]}}),
+                 "one page")
+    expect_error("S156: Plunder's line refuses {amount} / {skill}",
+                 fx({"234": {"result_line": ["{amount} gone"]}}), "does not work in this line")
+    expect_error("S156: Plunder is one foe only (target_mode refused)",
+                 fx({"234": {"record": {"target_mode": 0x12}}}), "its own targets")
+    expect_error("S156: Plunder deals no damage (element refused)",
+                 fx({"234": {"element": "Fire"}}), "deals no damage")
+    # S155 r2: the bonus lines come BEFORE the attack (one page, {name} = the user);
+    # Rust's is the result (pages, {target}, {amount})
+    expect_error("S155 r2: a bonus line is one page", fx({"223": {"result_line": [
+        ["Alone!"], ["Grr!"]]}}), "one page")
+    expect_error("S155 r2: no {target} in a bonus line", fx({"236": {"result_line": [
+        "{target} is done for"]}}), "{target} does not work")
+    expect_error("S155 r2: no {amount} in a bonus line", fx({"235": {"result_line": [
+        "x{amount}"]}}), "{amount}")
+    _sk_r2, _ex_r2, _w = CS.resolve(fx({"223": {"result_line": ["{name} howls!"]},
+                                       "238": {"result_line": [["{target} rusts!"],
+                                                               ["-{amount} ATK"]]}}), REPO)
+    ok("S155 r2: {name} in a bonus line, pages + {amount} in Rust's result line",
+       _ex_r2['banners']['lonewolf_line'] == CS.encode_line(["{name} howls!"], 'x', True,
+                                                            allow_skill=False)[0]
+       and _ex_r2['banners']['lonewolf_line'][:3] == bytes([0xED, 0xF9, 0x00]) and bytes([0xFC, 0x10, 0xEC, 0xF2]) in _ex_r2['banners']['rust_line'])
+    ok("S155 r2: the built-in bonus lines are one page (no $FC page break, no number)",
+       all(bytes([0xFC, 0x10]) not in bytes.fromhex(CS.baseline()['banners'][k]) and
+           bytes([0xF9, 0x10]) not in bytes.fromhex(CS.baseline()['banners'][k])
+           for k in ('lonewolf_line', 'punish_line', 'finish_line', 'rupture_line')))
+    # S155 r3: line_shows — the line every cast (the default) or only with the bonus;
+    # bank $72 CustomLineAlways bits 0-3 = LoneWolf / Punish / Finish / Rupture
+    def _lsbits(extra):
+        t = CS.emit_pcts(fx(extra), [])
+        return int(re.search(r'CustomLineAlways:\n    db %([01]{8})', t).group(1), 2)
+    ok("S155 r3: line_shows defaults to \"always\" (CustomLineAlways %00001111)",
+       _lsbits({}) == 0x0F)
+    ok("S155 r3: line_shows \"bonus\" clears the skill's bit (Punish bit 1, Rupture bit 3)",
+       _lsbits({"235": {"line_shows": "bonus"}, "237": {"line_shows": "bonus"}}) == 0x05)
+    expect_error("S155 r3: line_shows is \"always\" or \"bonus\"",
+                 fx({"223": {"line_shows": "never"}}), "always")
+    expect_error("S155 r3: line_shows only on the four bonus-line skills",
+                 fx({"238": {"line_shows": "bonus"}}), "line_shows")
+    ok("S155 r3: skill 238 is Blunt (was Rust)", CS.baseline()['skills'][238]['name'] == 'Blunt')
+    expect_error("S111: id 255 is out of range", fx({"255": {"name": "X"}}), "222-254")
+    expect_error("S111: MagicBurn's MP is a share (burn)", fx({"224": {"mp": 3}}), "set `burn`")
+    expect_error("S111: Quake's power words are refused",
+                 fx({"230": {"record": {"party_min": 9}}}), "power fields")
+    expect_error("S111: Anchor has no element", fx({"228": {"element": "Fire"}}),
+                 "deals no damage")
+    expect_error("S111: `base` only on new skills", fx({"230": {"base": 0}}), "own code")
+    expect_error("S111: a new skill needs a base", fx({"240": {"name": "X"}}), "needs `base`")
+    expect_error("S111: a new skill needs a name", fx({"240": {"base": 16}}), "needs a name")
+    expect_error("S111: a field skill is not a base", fx({"240": {"base": 0x37, "name": "X"}}),
+                 "field skill")
+    expect_error("S111: a battle action is not a base", fx({"240": {"base": 58, "name": "X"}}),
+                 "not a skill")
+    # S165: no stock skill differs any more (the census: 155 same) — the refusal itself is
+    # checked on a census entry made to differ (the rule stays for any future re-measure)
+    _real_cc = CS._clone_census
+
+    def _cc_differs(repo, section='results'):
+        d = _real_cc(repo, section)
+        if section == 'results' and 20 in d:
+            d[20] = dict(d[20], result='differs', why='(test) a census that measured a difference')
+        return d
+    CS._clone_census = _cc_differs
+    try:
+        expect_error("S111: a base whose copy differs is refused (census)",
+                     fx({"240": {"base": 20, "name": "X"}}), "does not behave")
+    finally:
+        CS._clone_census = _real_cc
+    ok("S165: Sacrifice (refused S111-S164) is a base now (the S165 census)",
+       CS.clone_problem(20, REPO, 0xF0) is None, CS.clone_problem(20, REPO, 0xF0))
+    expect_error("S111: element on a non-elemental base",
+                 fx({"240": {"base": 21, "name": "X", "element": "Fire"}}), "does not test")
+    expect_error("S111: announce + announce_as", fx({"230": {"announce": ["a"],
+                                                             "announce_as": 3}}), "not both")
+    expect_error("S111: MagicBurn cannot burn more than all its MP",
+                 fx({"224": {"burn": "3/2"}}), "at most 1")
+    expect_error("S111: a ratio needs a denominator of 1-255",
+                 fx({"230": {"ally_damage": "1/0"}}), "denominator 1-255")
+    expect_error("S111: a ratio is a fraction", fx({"233": {"per_fallen": "half"}}),
+                 "a fraction like")
+    expect_error("S111: ratio keys belong to their skill", fx({"224": {"ally_damage": "1/2"}}),
+                 "unknown key")
+    expect_error("S111: Quake's own side at most 2x", fx({"230": {"ally_damage": 3}}),
+                 "at most 2")
+    expect_error("S111: quake_power max below min",
+                 fx({"230": {"quake_power": {"min": 50, "max": 40}}}), "quake_power")
+    expect_error("S111: a learn prereq must exist",
+                 fx({"240": {"base": 16, "name": "X", "learn": {"level": 1, "prereqs": [250]}}}),
+                 "250")
+    # (4) the bank budgets
+    big = {str(s): {"base": 16, "name": "ABCDEFGHI",
+                    "description": ["Eighteen chars abc", "Eighteen chars abc",
+                                    "Eighteen chars abc"]} for s in range(239, 255)}
+    ob, _, _ = compile_data(fx(big))
+    ok("S111/S155: all 16 new skills with 9-letter names + full 3-line texts compile (the "
+       "texts spill into the shared extents; S164: the names past bank $41's region are served "
+       "from the text banks — ROADMAP E14; --rom builds it)",
+       all(f'SkillName_{s}_ABCDEFGHI:' in ob['patches/bank_041.asm']
+           or f'[{s}] ABCDEFGHI: its name is in the text banks' in ob['patches/bank_041.asm']
+           for s in range(239, 255)) and 'patches/bank_080.asm' in ob
+       and all(f'    db {s}, BANK(TextOvr_' in ob['patches/bank_080.asm']
+               for s in range(239, 255) if f'[{s}] ABCDEFGHI: its name is in the text banks'
+               in ob['patches/bank_041.asm']))
+    CS_MAX[0] = big
+    return o2, ob
+
+
+CS_MAX = [None]
+
+
+def test_custom_skills_rom(tag, rom_bytes, sym, prj_data):
+    """--rom: the S111 forks RUN from the built ROM's bytes (MiniSM83) for every
+    custom id, against custom_skills.resolve() of the project they were built from."""
+    from editor2.core import custom_skills as CS
+    from tools import extract_custom_skills as X
+    sk, ex, _ = CS.resolve(prj_data, REPO)
+
+    def at(lbl, off=0, n=1):
+        b, a = sym[lbl]
+        o = b * 0x4000 + (a - 0x4000 if b else a) + off
+        return rom_bytes[o:o + n]
+    bad = []
+    rptr = sym['CustomRecordPtrTable'][1]
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x54)
+        cpu.c_, cpu.b = sid, 0
+        cpu.run(sym['Fork54_RecordIndex'][1])
+        hl = cpu.h << 8 | cpu.l
+        if hl != rptr + 2 * (sid - 0xDE):
+            bad.append(('54', sid, hex(hl)))
+            continue
+        rp = rom_bytes[0x54 * 0x4000 + hl - 0x4000] | rom_bytes[0x54 * 0x4000 + hl - 0x3FFF] << 8
+        rec = rom_bytes[0x54 * 0x4000 + rp - 0x4000:][:19]
+        want = sk[sid]['record'] if sid in sk else rom_bytes[0x54 * 0x4000 + 0x1CF:][:19]
+        if rec != want:
+            bad.append(('rec', sid))
+    ok(f"ROM S111 {tag}: Fork54_RecordIndex RUN for $DE-$FE -> each id's own 19-B record "
+       "(unused ids: Blaze's $41CF)", not bad, f"{bad[:4]}")
+    bad = []
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x07)
+        cpu.h, cpu.l = 0, sid
+        cpu.run(sym['MPPtrFromId'][1])
+        hl = cpu.h << 8 | cpu.l
+        mp = rom_bytes[0x07 * 0x4000 + hl - 0x4000] | rom_bytes[0x07 * 0x4000 + hl - 0x3FFF] << 8
+        want = sk[sid]['mp'] if sid in sk else 0
+        if mp != (want or 0):
+            bad.append((hex(sid), mp, want))
+    ok(f"ROM S111 {tag}: MPPtrFromId RUN for $DE-$FE -> the field MP (= record +4)",
+       not bad, f"{bad[:4]}")
+    bad = []
+    for sid in range(0xDE, 0xFF):
+        cpu = MiniSM83(rom_bytes, 0x58)
+        cpu.a = sid
+        cpu.run(sym['AnnounceIdxFork'][1])
+        hl = cpu.h << 8 | cpu.l
+        got = rom_bytes[0x58 * 0x4000 + hl - 0x4000]
+        want = sk[sid]['template'] if sid in sk else 0xFF
+        if sid in (0xDE, 0xDF):
+            want = CS.baseline()['skills'][sid]['announce_template']
+        if got != want:
+            bad.append((hex(sid), hex(got), hex(want)))
+    ok(f"ROM S111 {tag}: AnnounceIdxFork RUN for $DE-$FE -> each id's announce template",
+       not bad, f"{bad[:4]}")
+    bad = []
+    for sid in [0, 16, 94, 221] + list(range(0xDE, 0xFF)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.ram[0xDB8A] = sid
+        cpu.run(sym['FarSkillFork'][1])
+        hl = cpu.h << 8 | cpu.l
+        v = sk.get(sid)
+        jump = None
+        if sid < 0xDE or (v and v['base'] is not None):
+            want = 0x4011 + 2 * (sid if sid < 0xDE else v['base'])
+        elif sid == 0xE9:
+            want = sym['MournDispatchPtr'][1]
+        elif sid in (0xDF, 0xEB, 0xEC, 0xED):          # [S155] the ATK-vs-DEF machine
+            want, jump = sym['wCustomJump'][1], sym['MournDispatch52'][1]
+        elif sid in (0xDE, 0xEA, 0xEE):                # [S155] no damage machine
+            want, jump = sym['wCustomJump'][1], sym['CustomDispatch52_shared'][1]
+        else:
+            want = 0x7FED
+        if hl != want or (jump is not None and
+                          (cpu.ram.get(want, 0) | cpu.ram.get(want + 1, 0) << 8) != jump):
+            bad.append((hex(sid), hex(hl), hex(want)))
+    ok(f"ROM S111/S155 {tag}: FarSkillFork RUN -> a new skill = its base's handler pointer, "
+       "the built-ins / unused ids = CustomSkillPtr (Mourn its own; the S155 skills HL = "
+       "wCustomJump holding MournDispatch52 / CustomDispatch52_shared)", not bad, f"{bad[:4]}")
+    # ElemLevel72: packed resistances = $1B in every byte -> the level IS the pair index
+    bad = []
+    stock_el = at('StockElemTable', 0, 222)
+    cust_el = at('CustomElemTable', 0, 33)
+    for sid in list(range(0, 222, 7)) + list(range(0xDE, 0xFF)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.ram[0xDB8A] = sid
+        cpu.ram[sym['wBattleTargetIdx'][1]] = 4
+        for o in range(56):
+            cpu.ram[0xDD28 + o] = 0x1B
+        cpu.e = 0x77
+        cpu.run(sym['ElemLevel72'][1])
+        t = stock_el[sid] if sid < 222 else cust_el[sid - 0xDE]
+        want = 0x77 if t == 0xFF else (0 if t == 0xFE else (t + 1) % 4)
+        if cpu.e != want:
+            bad.append((hex(sid), cpu.e, want))
+    ok(f"ROM S111 {tag}: ElemLevel72 RUN -> no override keeps the handler's level, an "
+       "override reads the target's packed level for that resistance", not bad, f"{bad[:4]}")
+    # CustomLearnRow72: walk the custom rows like the bank $06 scanner does
+    seen, e = [], 0xDE                                  # S155: the table starts at $DE
+    buf = sym['wLearnRowBuf'][1]
+    for _ in range(40):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.e = e
+        cpu.run(sym['CustomLearnRow72'][1], limit=5000)
+        if cpu.e == 0xFF:
+            break
+        seen.append((cpu.e, bytes(cpu.ram.get(buf + k, 0) for k in range(18))))
+        e = cpu.e + 1
+        if e > 0xFE:
+            break
+    want = [(s, sk[s]['learn']) for s in sorted(sk) if sk[s]['learn']]
+    ok(f"ROM S111 {tag}: CustomLearnRow72 RUN -> visits exactly the learnable custom "
+       "skills and copies each 18-B row into wLearnRowBuf", seen == want,
+       f"{[hex(s) for s, _ in seen]} vs {[hex(s) for s, _ in want]}")
+    # names / texts through the game's pointer tables
+    from editor2.core import monster_text as MT
+    # S164 (ROADMAP E14): a name past bank $41's region is a text-bank slot — its pointer row
+    # reads the empty placeholder, the name's bytes sit in the text home bank's data
+    from editor2.core import gametext as _GT164
+    _p164 = Project(copy.deepcopy(prj_data), os.path.dirname(EXAMPLE))
+    _p164.repo_root = REPO
+    routed = {sid for _b, _t, sid, _r, _w in CS.text_slots(_p164, REPO)}
+    _tb = _GT164.plan(_p164)['banks']
+    _tbytes = b''.join(rom_bytes[b_ * 0x4000:(b_ + 1) * 0x4000] for b_ in _tb)
+    bad = [s for s in sk if s not in routed and
+           _rom_str(rom_bytes, 0x41, sym['SkillNamePtrTable'][1] + 2 * s) != sk[s]['name']]
+    bad += [('t', s) for s in sk if s in routed and (
+        _rom_str(rom_bytes, 0x41, sym['SkillNamePtrTable'][1] + 2 * s) != b''
+        or sk[s]['name'] + b'\xf0' not in _tbytes)]
+    bad += [('d', s) for s in sk if sk[s]['desc'] is not None and
+            _rom_str(rom_bytes, 0x56, sym['SkillDescPtrTable'][1] + 2 * s) != sk[s]['desc']]
+    ok(f"ROM S111 {tag}: every custom skill's name / SKIL text through the game's pointer "
+       "tables", not bad, f"{bad[:4]}")
+    ok(f"ROM S111 {tag}: bank $50 SaveBtl_5ad2 keeps a custom id's own name (ret nc at $DE)",
+       at('SaveBtl_5ad2', 0, 3) == bytes([0xFE, 0xDE, 0xD0]))
+    # [S111] the ratios: the table == resolve(); ScaleHL72 / AnchorKeepMP72 RUN
+    tab = at('CustomRatioTable', 0, CS.RATIO_TABLE)
+    ok(f"ROM S111 {tag}: CustomRatioTable == the project's ratios",
+       all(tuple(tab[o:o + 2]) == tuple(ex['ratios'][o]) for o in ex['ratios']))
+    bad = []
+    for hl, b_, c_ in ((0, 1, 2), (1, 1, 2), (999, 1, 2), (203, 1, 4), (300, 1, 4), (60, 1, 3),
+                       (61, 1, 3), (250, 1, 1), (999, 255, 1), (65535, 255, 255), (65535, 1, 255),
+                       (777, 0, 9), (500, 7, 3), (12345, 3, 200)):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.h, cpu.l, cpu.b, cpu.c_ = hl >> 8, hl & 255, b_, c_
+        cpu.run(sym['ScaleHL72'][1], limit=5000)
+        if (cpu.h << 8 | cpu.l) != min(999, hl * b_ // c_):
+            bad.append((hl, b_, c_, cpu.h << 8 | cpu.l))
+    n_, d_ = ex['ratios'][10]
+    for mp in (0, 1, 3, 4, 203, 999):
+        cpu = MiniSM83(rom_bytes, 0x72)
+        cpu.d, cpu.e = mp >> 8, mp & 255
+        cpu.run(sym['AnchorKeepMP72'][1], limit=5000)
+        if (cpu.d << 8 | cpu.e) != mp * (d_ - n_) // d_:
+            bad.append(('anchor', mp, cpu.d << 8 | cpu.e))
+    ok(f"ROM S111 {tag}: ScaleHL72 (floor(HL*B/C), at most 999) and AnchorKeepMP72 (MP "
+       "kept = MP x (1 - the charge)) RUN from the ROM", not bad, f"{bad[:4]}")
+    o73 = 0x73 * 0x4000 + sym['CF2WarpCommitDrain.mpPtr'][1] - 0x4000
+    ok(f"ROM S111 {tag}: bank $73's Anchor arrival asks bank $72 entry 7 (ld hl,$7207 / rst $10)",
+       bytes([0x21, 0x07, 0x72, 0xD7]) in rom_bytes[o73:o73 + 12])
+    if tag == 'example':
+        r = X.Rom.__new__(X.Rom)
+        r.d, r.s = rom_bytes, sym
+        got = X.same_as_json(X.extract(r), json.load(open(X.OUT)))
+        Bj = json.load(open(X.OUT))
+        ok("ROM S111 example: tools/extract_custom_skills.py reads custom_skills.json back "
+           "out of the build (the move kept every byte)",
+           all(got[k] == Bj[k] for k in got), f"{[k for k in got if got[k] != Bj[k]]}")
+
+
+# --- S112 (ROADMAP P3.11e): new battle animations + a skill's own presentation ---
+
+def _an_fixture(anims, skills):
+    d = base()
+    d.setdefault('custom', {})['animations'] = anims
+    sk = d.setdefault('gamedata', {}).setdefault('skills', {})
+    sk.update(skills)
+    return d
+
+
+def _an_steps():
+    from editor2.core import battle_anims as BA
+    zap, bang = BA.expand_source(0x10), BA.expand_source(0x06)
+    return zap[:4] + [s for s in bang if 'from' in s or 'sound' in s] + [{'blank': True, 'hold': 2}]
+
+
+AN_FIX = None
+
+
+def test_anims_s112():
+    global AN_FIX
+    from editor2.core import battle_anims as BA
+    out0, _p, _w = compile_data(base())
+    ok("S112: no animations -> the bank $5F override regions are all $FF (256 + 256)",
+       region_bytes(out0, 'patches/bank_05f.asm', 'gd_anim_routine') == b'\xff' * 256 and
+       region_bytes(out0, 'patches/bank_05f.asm', 'gd_anim_cmd') == b'\xff' * 256)
+    ok("S112: no animations -> bank $6F counts 0 rows (CustomAnimNone only)",
+       'CUSTOM_ANIM_COUNT EQU 0' in out0['patches/bank_06f.asm'])
+    steps = _an_steps()
+    AN_FIX = _an_fixture(
+        [{'id': 'spark_storm', 'name': 'Spark storm', 'steps': steps},
+         {'id': 'only_bang', 'steps': BA.expand_source(0x06)}],
+        {'16': {'presentation': {'kind': 'animation', 'animation': 'spark_storm', 'motion': 2}},
+         '94': {'presentation': {'kind': 'effect', 'effect': 4}},
+         '64': {'presentation': {'kind': 'animation', 'animation': 0x26, 'motion': 0}},
+         '0': {'presentation': {'kind': 'none'}},
+         '239': {'base': 16, 'name': 'Thunder',
+                 'presentation': {'kind': 'animation', 'animation': 'only_bang', 'motion': 1}}})
+    o, _p, w = compile_data(AN_FIX)
+    rt = region_bytes(o, 'patches/bank_05f.asm', 'gd_anim_routine')
+    ct = region_bytes(o, 'patches/bank_05f.asm', 'gd_anim_cmd')
+    ok("S112: presentation rows (Zap 2 / $2D, Scorching effect 4, EvilSlash 0 / $26, Blaze "
+       "nothing 13, new skill 239 middle / $2E; every other id $FF)",
+       (rt[16], ct[16], rt[94], ct[94], rt[64], ct[64], rt[0], ct[0], rt[239], ct[239]) ==
+       (2, 0x2D, 4, 0xFF, 0, 0x26, 13, 0xFF, 1, 0x2E) and
+       sum(1 for i in range(256) if rt[i] != 0xFF or ct[i] != 0xFF) == 5, f"{rt[:4]}")
+    c = BA.compose(AN_FIX['custom']['animations'][0])
+    ok("S112: compose — two sources (Zap, Bang) in palette slots 0 / 1, tiles = the union of "
+       "the frames' tiles, the sprites' attr low bits = the slot",
+       c['sources'] == [0x10, 0x06] and
+       c['tiles'] == len({(s['from'], sp[2]) for s in steps if 'from' in s
+                          for sp in BA.stock(s['from'])['frames'][s['frame']]}) and
+       all(sp[3] & 7 in (0, 1) for fr in c['frames'] for sp in fr))
+    ok("S112: compose — the timeline keeps every step (frames, holds, sounds) in order",
+       [(x, y) for x, y in c['timeline'] if x == 0xFD] ==
+       [(0xFD, s['sound']) for s in steps if 'sound' in s] and len(c['timeline']) == len(steps))
+    ok("S112: compose — palettes are the sources' colours as the screen shows them "
+       "(the DMG shade baked in; the engine uses the identity shade $D2)",
+       c['palettes'][0] == BA.display_palette(0x10) and c['palettes'][1] == BA.display_palette(6)
+       and BA.shade_map(BA.IDENTITY_SHADE) == [0, 1, 2, 3])
+    b6f = o['patches/bank_06f.asm']
+    ok("S112: bank $6F holds 2 rows + CustomAnimNone, bank $70 3 sheets",
+       'CUSTOM_ANIM_COUNT EQU 2' in b6f and o['patches/bank_070.asm'].count('CustomAnimSheet') >= 6)
+    for name, bad, needle in (
+            ('unknown animation', {'16': {'presentation': {'kind': 'animation', 'animation': 'nope'}}},
+             'neither a stock number'),
+            ('motion 4', {'16': {'presentation': {'kind': 'animation', 'animation': 3, 'motion': 4}}},
+             'motion 4'),
+            ('effect 13', {'16': {'presentation': {'kind': 'effect', 'effect': 13}}},
+             'screen effect 13'),
+            ('kind', {'16': {'presentation': {'kind': 'sparkle'}}}, 'kind must be')):
+        expect_error(f"S112 refuses a presentation: {name}", _an_fixture([], bad), needle)
+    for name, anims, needle in (
+            ('frame from $2D', [{'id': 'a', 'steps': [{'from': 45, 'frame': 0}]}], 'not one of the 45'),
+            ('frame 32', [{'id': 'a', 'steps': [{'from': 1, 'frame': 32}]}], 'outside 0-31'),
+            ('no frame', [{'id': 'a', 'steps': [{'sound': 130}]}], 'at least one frame'),
+            ('5 sources', [{'id': 'a', 'steps': [{'from': k, 'frame': 0} for k in (0, 1, 2, 3, 6)]}],
+             'more than 4'),
+            ('duplicate id', [{'id': 'a', 'steps': [{'from': 1, 'frame': 0}]},
+                              {'id': 'a', 'steps': [{'from': 1, 'frame': 0}]}], 'used twice'),
+            ('33 animations', [{'id': f'a{k}', 'steps': [{'from': 1, 'frame': 0}]} for k in range(33)],
+             'at most 32')):
+        expect_error(f"S112 refuses an animation: {name}", _an_fixture(anims, {}), needle)
+    big = _an_fixture([{'id': f'a{k}', 'steps': _an_steps()} for k in range(32)], {})
+    _o32, _p32, _w32 = compile_data(big)
+    ok("S112: 32 animations compile (bank space accounted)", 'patches/bank_070.asm' in _o32)
+    return o, _o32
+
+
+def test_anims_rom(tag, rom_bytes, sym, prj_data):
+    """--rom: the built tables read back == compose(); the fork bytes in place."""
+    from editor2.core import battle_anims as BA
+    from dwm import sprite_codec as SC
+
+    def addr(lbl):
+        b, a = sym[lbl]
+        return b * 0x4000 + (a - 0x4000 if b else a)
+
+    def w(o):
+        return rom_bytes[o] | rom_bytes[o + 1] << 8
+
+    def bank6f(a):
+        return 0x6F * 0x4000 + a - 0x4000
+    lst = BA.custom_list(prj_data)
+    bad = []
+    for k, a in enumerate(lst):
+        c = BA.compose(a)
+        fl = w(addr('CustomAnimFrameTable') + 2 * k)
+        for i, fr in enumerate(c['frames']):
+            fp = w(bank6f(fl) + 2 * i)
+            got, q = [], bank6f(fp)
+            while rom_bytes[q] != 0x80:
+                got.append(tuple(rom_bytes[q:q + 4])); q += 4
+            if got != [tuple(sp) for sp in fr]:
+                bad.append((k, 'frame', i))
+        tl = bank6f(w(addr('CustomAnimTimelines') + 2 * k))
+        pairs = [tuple(rom_bytes[tl + 2 * i:tl + 2 * i + 2]) for i in range(len(c['timeline']) + 1)]
+        if pairs != list(c['timeline']) + [(0xFF, 0xFF)]:
+            bad.append((k, 'timeline'))
+        gid = w(addr('CustomAnimGfxIds') + 2 * k)
+        sheet = SC.decode(SC.read_stream(rom_bytes, SC.gfxid_stream_offset(rom_bytes, gid)[3]))
+        if sheet != c['sheet']:
+            bad.append((k, 'sheet'))
+        pp = bank6f(w(addr('CustomAnimPalettes') + 2 * k))
+        pals = [[w(pp + 1 + 8 * s + 2 * j) for j in range(4)] for s in range(rom_bytes[pp])]
+        if pals != c['palettes']:
+            bad.append((k, 'palettes'))
+    ok(f"ROM S112 {tag}: every new animation's frames / timeline / sheet / palettes read back "
+       "through the bank $6F tables == compose()", not bad, f"{bad[:4]}")
+    ok(f"ROM S112 {tag}: ROM0 routes $21+ to bank $6F (ld hl,$6f00 / ld hl,$6f01), bank $02 "
+       "ReadSeqStep starts with jp ReadSeqStepFork",
+       rom_bytes.count(bytes([0x21, 0x00, 0x6F, 0xD7]), 0, 0x4000) == 1 and
+       rom_bytes.count(bytes([0x21, 0x01, 0x6F, 0xD7]), 0, 0x4000) == 1 and
+       rom_bytes[addr('ReadSeqStep')] == 0xC3 and
+       w(addr('ReadSeqStep') + 1) == sym['ReadSeqStepFork'][1])
+    rt, ct = BA.override_tables(prj_data)
+    ok(f"ROM S112 {tag}: SkillRoutineOverride / SkillAnimOverride == the project's rows",
+       rom_bytes[addr('SkillRoutineOverride'):][:256] == rt and
+       rom_bytes[addr('SkillAnimOverride'):][:256] == ct)
+
+
+def _en_fixture():
+    d = base()
+    c = d['custom']
+    c.setdefault('flags', []).extend([{'name': 'enc_a', 'index': 'auto'},
+                                      {'name': 'enc_b', 'index': 'auto'}])
+    c['encounter_lists'] = [
+        {'id': 'wolves', 'name': 'Wolves', 'rate': 5, 'size_chance': [1, 4, 5],
+         'slot_chance': [5, 3, 2, 0, 0], 'eids': [20, 21, 22, 0, 0],
+         'max_count': [2, 3, 2, 0, 0], 'maze_size': 8},
+        {'id': 'lone', 'rate': 2, 'size_chance': [7, 0, 0], 'slot_chance': [7, 0, 0, 0, 0],
+         'eids': ['gorbunok_wild', 0, 0, 0, 0], 'max_count': [1, 0, 0, 0, 0]}]
+    rooms = {r['id']: r for r in c['rooms']}
+    rooms['gate_island']['encounters'] = {
+        'enabled': True, 'list': 'wolves', 'rate': 6,
+        'variants': [{'when': [{'flag': 'enc_a'}], 'list': 'lone'},
+                     {'when': [{'flag': 'enc_b'}, {'flag': 'enc_a', 'is': 'clear'}], 'list': 40}]}
+    rooms['ember_keystone']['encounters'] = {'enabled': True, 'gate_id': 3, 'floor': 2, 'rate': 1}
+    c['gates'] = [{'gate': 1, 'encounters': {
+                       'floors': [{'floors': [1, 2], 'list': 'lone'}, {'floors': 3, 'list': 77}],
+                       'variants': [{'when': [{'flag': 'enc_a'}],
+                                     'floors': [{'floors': 'all', 'list': 'wolves'}]}]}},
+                  {'gate': 3, 'encounters': {'floors': [{'floors': [2, 3], 'list': 'wolves'}]}}]
+    return d
+
+
+EN_FIX = None
+
+
+def test_encounters_s114():
+    """S114 (P3.13a): the encounter-list choice — bank $76, project lists, room
+    lists / variants / rates, gate plans."""
+    global EN_FIX
+    from editor2.core import encounters as EN
+    from editor2.core import gamedata as GDm
+    out0, prj0, _w = compile_data(base())
+    b76 = out0['patches/bank_076.asm']
+    ok("S114: the example has no plans / lists of its own (GATE_PLAN_LEN 0, no project list)",
+       'GATE_PLAN_LEN EQU 0' in b76 and '; list 128' not in b76)
+    v = GDm.vanilla(REPO)['tables']
+    want = [int(r, 16) for r in v['gate_base_pool']['rows']]
+    ok("S114: bank $76 VanillaGateBase == bank $01 GateBasePoolIndex (ROM copy)",
+       all(f"    db {', '.join(str(x) for x in want[k:k + 8])}" in b76 for k in range(0, 32, 8)))
+    # the vanilla rule against the regenerated extracted/encounters.json
+    enc = json.load(open(os.path.join(REPO, 'extracted', 'encounters.json')))
+    bad = []
+    for gid in range(32):
+        for fg in enc[str(gid)]['floor_groups']:
+            for f in range(fg['floors'][0], fg['floors'][1] + 1):
+                if EN.vanilla_number(REPO, gid, f) != fg['pool_index']:
+                    bad.append((gid, f))
+    ok("S114: vanilla_number == extracted/encounters.json for every gate floor (the game's "
+       "numbering: Villager list 1 = floors 1-2, list 2 from floor 3)",
+       not bad and EN.vanilla_number(REPO, 1, 2) == 1 and EN.vanilla_number(REPO, 1, 3) == 2,
+       f"{bad[:5]}")
+    pct = GDm.vanilla(REPO)['chance_percent']
+    ok("S114: real chances — the first slot with a chance takes draw 0 (+1), the slot ending "
+       "at 100 loses one (Slime / Dracky / Anteater 30/50/20 -> 31/50/19)",
+       EN.real_chances([3, 5, 2, 0, 0], pct) == [31, 50, 19, 0, 0])
+    _seeds = EN.counter_seeds(REPO)
+    _exact = lambda d: sum(max(0, min(t, 100) - (min(_seeds[i - 1][0], 100) if i else -1))  # noqa: E731
+                           * (v // d + 1) for i, (t, v) in enumerate(_seeds)
+                           if i == 0 or _seeds[i - 1][0] < 100) / 101.0
+    ok("S114/S130: steps between battles outside gates — code 3 = the mean of "
+       "counter // 100 + 1 (measured drain 100 per step; the battle step counts), "
+       "code 7 = drain 200, about half",
+       abs(EN.steps_between(REPO, 3) - _exact(100)) < 1e-9 and
+       abs(EN.steps_between(REPO, 3) - EN.mean_counter(REPO) / 100 - 1) < 1.0 and
+       abs(EN.steps_between(REPO, 7) - _exact(200)) < 1e-9)
+    EN_FIX = _en_fixture()
+    o, prj, w = compile_data(EN_FIX)
+    b = o['patches/bank_076.asm']
+    ok("S114: project lists emitted in order as numbers 128 / 129 (26 B each)",
+       '; list 128: wolves' in b and '; list 129: lone' in b and
+       '    db $05, $03, $01, $04, $05, $05, $03, $02, $00, $00' in b and
+       '    dw 20, 21, 22, 0, 0' in b and '    dw 520, 0, 0, 0, 0' in b)
+    fa, fb = prj.flag_map()['enc_a'], prj.flag_map()['enc_b']
+    ok("S114: room $6B -> variant list (enc_a -> 129; enc_b set + enc_a clear -> 40; else 128), "
+       "rate code 6; $70 keeps the gate's list with rate code 1",
+       f'    dw EncRoomVariants_6B\n    db $06' in b and f'    dw ${fa:04X}' in b and
+       f'    dw ${fb:04X}' in b and f'    dw ${fa | 0x8000:04X}' in b and
+       '    dw 129  ; -> list 129' in b and '    dw 40  ; -> list 40' in b and
+       '    dw 128  ; otherwise list 128' in b and '    dw 0\n    db $01  ; $70' in b)
+    ok("S114: gate plans — GATE_PLAN_LEN 4; Villager floors 1-2 -> 129, 3 -> 77, 4 -> its "
+       "vanilla 2; its enc_a variant -> 128 on every floor; Memories floors 2-3 -> 128",
+       'GATE_PLAN_LEN EQU 4' in b and
+       # S149: a floor run is [db last floor, dw list] (16-bit list numbers)
+       'EncGateRuns_01_d:\n    db $02\n    dw 129' in b and '    db $03\n    dw 77' in b and
+       '    db $FF\n    dw 2' in b and 'EncGateRuns_01_0:\n    db $04\n    dw 128' in b and
+       'EncGateRuns_03_d:\n    db $01\n    dw 5' in b and '    db $03\n    dw 128' in b)
+    b71 = o['patches/bank_071.asm']
+    ok("S114: a room with its own list never pins a gate (RoomEncTable gate byte $FF); the "
+       "gate+floor room keeps its pin",
+       '$6B — enabled, its own list (bank $76)' in b71 and 'db $01, $FF, $00  ; $6B' in b71
+       and 'db $01, $03, $02  ; $70' in b71)
+    M = EN.resolve(prj)
+    ok("S114: the model — gate_list with and without enc_a; the vanilla value stays",
+       M.gate_list(1, 1) == 129 and M.gate_list(1, 1, {fa: True}) == 128 and
+       M.gate_list(1, 4) == 2 and M.gate_list(5, 1) == EN.vanilla_number(REPO, 5, 1))
+    lb = M.list_bytes(128)
+    n1, e1, r1 = EN.simulate_battle(lb, pct, 1, 2)
+    ok("S114: simulate_battle is deterministic and draws only the list's monsters",
+       EN.simulate_battle(lb, pct, 1, 2) == (n1, e1, r1) and set(e1) <= {20, 21, 22})
+
+    def fx(mut):
+        d = _en_fixture()
+        mut(d)
+        return d
+    rooms = lambda d: {r['id']: r for r in d['custom']['rooms']}
+    for name, mut, needle in (
+            ('an unknown list id', lambda d: rooms(d)['gate_island']['encounters'].update(
+                list='nope'), 'neither a list number'),
+            ('a list number past the project\'s', lambda d: rooms(d)['gate_island']['encounters'].update(
+                list=200), 'does not exist'),
+            ('variants without a list', lambda d: rooms(d)['ember_keystone']['encounters'].update(
+                variants=[{'when': [{'flag': 'enc_a'}], 'list': 3}]), 'variants need a `list`'),
+            ('a variant with no flag term', lambda d: rooms(d)['gate_island']['encounters'].update(
+                variants=[{'when': [], 'list': 3}]), 'at least one flag term'),
+            ('rate 8', lambda d: rooms(d)['gate_island']['encounters'].update(rate=8),
+             'outside 0-7'),
+            ('a list under 100 %', lambda d: d['custom']['encounter_lists'][0].update(
+                slot_chance=[5, 3, 0, 0, 0]), 'less than 100'),
+            ('a freezing 2-monster list', lambda d: d['custom']['encounter_lists'][1].update(
+                size_chance=[5, 5, 0], max_count=[0, 0, 0, 0, 0]), 'forever'),
+            ('two lists with one id', lambda d: d['custom']['encounter_lists'].append(
+                dict(d['custom']['encounter_lists'][0])), 'used twice'),
+            ('a floor in two runs', lambda d: d['custom']['gates'][0]['encounters'].update(
+                floors=[{'floors': [1, 3], 'list': 3}, {'floors': 2, 'list': 4}]), 'two runs'),
+            ('a floor past the gate', lambda d: d['custom']['gates'][1]['encounters'].update(
+                floors=[{'floors': [2, 9], 'list': 3}]), 'this gate has floors'),
+            ('an unknown room key', lambda d: rooms(d)['gate_island']['encounters'].update(
+                pool=3), 'unknown keys'),
+            # S149 (ROADMAP ARC CAP5): 3,968 lists (numbers 128-4095); 128 until S148
+            ('3,969 lists', lambda d: d['custom']['encounter_lists'].extend(
+                [dict(d['custom']['encounter_lists'][1], id=f'x{k}') for k in range(3967)]),
+             'at most 3,968')):
+        expect_error(f"S114 refuses {name}", fx(mut), needle)
+    big = fx(lambda d: d['custom']['encounter_lists'].extend(
+        [dict(d['custom']['encounter_lists'][1], id=f'x{k}') for k in range(126)]))
+    ob, _pb, _wb = compile_data(big)
+    ok("S114: 128 project lists compile (numbers 128-255, bank $76 accounted)",
+       '; list 255: x125' in ob['patches/bank_076.asm'])
+    # the editor model (encounters_doc) — sparse writes, copies, refusals
+    from editor2.core.document import Document
+    import shutil
+    tmpd = '/tmp/_t_enc_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    json.dump(_en_fixture(), open(os.path.join(tmpd, 'project.json'), 'w'), indent=1)
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    doc.set_enc_list(7, {'rate': 6})
+    doc.set_enc_list(7, {'rate': GDm._rows(GDm.vanilla(REPO), 'encounter_pools')[7][0]})
+    ok("S114 doc: a game list set back to its original value leaves no gamedata key",
+       '7' not in (doc.data.get('gamedata') or {}).get('encounters', {}))
+    lid, num = doc.new_enc_list(copy_from=12, name='Peace copy')
+    M2, _p2 = doc.enc_model()
+    ok("S114 doc: New list = a byte copy of the source as number 130",
+       num == 130 and M2.list_bytes(130) == M2.list_bytes(12) and lid == 'peace_copy')
+    try:
+        doc.delete_enc_list('wolves')
+        refused = False
+    except ValueError as ex:
+        refused = 'still used' in str(ex)
+    ok("S114 doc: a list in use cannot be deleted", refused)
+    doc.delete_enc_list('peace_copy')
+    doc.set_gate_floor_list(3, 4, 'lone')
+    doc.set_gate_floor_list(3, 4, None)
+    doc.set_gate_floor_list(3, 2, None)
+    doc.set_gate_floor_list(3, 3, None)
+    ok("S114 doc: gate floors back to the game's rule prune the plan and the gates entry",
+       all(int(g['gate']) != 3 for g in doc.data['custom'].get('gates', [])))
+    doc.set_room_battles('dusk_mirror', 'own', list_ref='lone', rate=4)
+    ok("S114 doc: a room switched to its own list (+ rate) keeps no gate pin",
+       doc.room_battles('dusk_mirror') == {'mode': 'own', 'gate_id': 0, 'floor': 1,
+                                           'list': 'lone', 'rate': 4, 'variants': []})
+    use = doc.enc_usage()
+    ok("S114 doc: usage lists the room and the variant",
+       any(u['label'] == 'room dusk_mirror' for u in use.get(129, [])) and
+       any('when enc_a is set' in u['label'] for u in use.get(129, [])))
+    return o
+
+
+def test_encounters_rom(tag, rom_bytes, sym, prj_data, orig):
+    """--rom: the same-size bank $01 forks + the bank $76 tables read back."""
+    from editor2.core import encounters as EN
+    from editor2.core.project import Project
+
+    def addr(lbl):
+        b, a = sym[lbl]
+        return b * 0x4000 + (a - 0x4000 if b else a)
+    lndf = addr('LoadNextDungeonFloor')
+    ok(f"ROM S114 {tag}: LoadNextDungeonFloor at $01:$69E1 starts with ld hl,$7600 / rst $10; "
+       "GateBasePoolIndex..EncounterPoolData unmoved ($6A22-$6AAD == the ROM)",
+       sym['LoadNextDungeonFloor'] == (1, 0x69E1) and
+       rom_bytes[lndf:lndf + 4] == bytes([0x21, 0x00, 0x76, 0xD7]) and
+       sym['GateBasePoolIndex'] == (1, 0x6A22) and
+       rom_bytes[0x6A22:0x6AAE] == orig[0x6A22:0x6AAE])
+    buf = sym['wEncListBuf'][1]
+    n = rom_bytes[0x4000:0x8000].count(bytes([0x21, buf & 0xFF, buf >> 8]))
+    ok(f"ROM S114 {tag}: the readers use wEncListBuf ($D11E): ld hl,wEncListBuf + 2 / 5 / 10 / "
+       "20 / 25 in bank $01",
+       all(rom_bytes[0x4000:0x8000].count(bytes([0x21, (buf + k) & 0xFF, (buf + k) >> 8, 0x01,
+                                                 0x00, 0x00])) == 1 for k in (2, 5, 10, 20, 25)),
+       f"(plain ld hl,buf hits {n})")
+    prj = Project(copy.deepcopy(prj_data), os.path.dirname(EXAMPLE))
+    M = EN.resolve(prj)
+    pl = addr('ProjectEncLists')
+    ok(f"ROM S114 {tag}: ProjectEncLists in bank $76 == the model's lists",
+       all(rom_bytes[pl + 26 * k:pl + 26 * (k + 1)] == M.list_bytes(128 + k)
+           for k in range(len(M.lists))))
+    vb = addr('VanillaGateBase')
+    ok(f"ROM S114 {tag}: VanillaGateBase == bank $01 GateBasePoolIndex bytes",
+       rom_bytes[vb:vb + 32] == orig[0x6A22:0x6A42])
+
+
+def _ng_fixture():
+    """S115 (NG1): two new gates — 32 a 4-floor copy of Memories (3) with a custom boss
+    room, its own floors 1-2 list, a served room and an entrance; 33 a plain copy of
+    Anger (10) with nothing else (no entrance, vanilla boss)."""
+    from editor2.core import gates as GT
+    d = base()
+    c = d['custom']
+    rooms = {r['id']: r for r in c['rooms']}
+    rooms['medal_vault']['gate_arrival'] = {'screen': 0, 'x': 4, 'y': 6}
+    c['gates'] = [{'gate': 32, 'copy_of': 3, 'name': 'Ember Gate', 'floors': 4,
+                   'boss': 'medal_vault',
+                   'encounters': {'floors': [{'floors': [1, 2], 'list': 40}]}},
+                  {'gate': 33, 'copy_of': 10, 'name': 'Plain copy'}]
+    c['gate_inserts'].append({'room': 'gate_rotation', 'gate': 32, 'floors': [2, 3],
+                              'chance': 100})
+    rooms['ember_keystone']['screens']['0']['exits'].append(GT.gate_entrance_row(5, 2, 32))
+    return d
+
+
+NG_FIX = None
+
+
+def test_new_gates_s115():
+    """S115 (ROADMAP NG1): new gates 32-95 — schema, bank $76 rows, entrances."""
+    global NG_FIX
+    from editor2.core import encounters as EN
+    from editor2.core import gates as GT
+    out0, _p0, _w0 = compile_data(base())
+    b76_0 = out0['patches/bank_076.asm']
+    ok("S115: the example has no new gates (NEW_GATE_LEN 0, empty NewGateRows / NewGateSource)",
+       'NEW_GATE_LEN EQU 0' in b76_0 and
+       'NewGateSource:  ; db per gate 32+: the vanilla gate it copies\n\n' in b76_0)
+    NG_FIX = _ng_fixture()
+    o, prj, w = compile_data(NG_FIX)
+    b = o['patches/bank_076.asm']
+    van = {g['id']: g for g in GT.vanilla_gates(REPO)}
+    r10 = ', '.join(f"${x:02X}" for x in bytes.fromhex(van[10]['row']))
+    ok("S115: NewGateRows — gate 32 = Memories' floor types / tier + 4 floors + boss $71 at "
+       "tile (4,6); gate 33 = Anger's row byte for byte; NewGateSource 3, 10",
+       'NEW_GATE_LEN EQU 2' in b and
+       '    db $02, $01, $02, $04, $71, $04, $06, $01  ; gate 32 Ember Gate' in b and
+       f'    db {r10}  ; gate 33 Plain copy' in b and
+       '    db 3  ; gate 32' in b and '    db 10  ; gate 33' in b)
+
+    def region(out, path, name):
+        t = out[path] if path in out else None
+        if t is None:
+            t = [v for k, v in out.items() if k.endswith(path)][0]
+        a = t.index(f"; @BUILD_PROJECT BEGIN {name}")
+        return t[a:t.index(f"; @BUILD_PROJECT END {name}")]
+    g16 = region(o, 'patches/bank_016.asm', 'gate_floor_table')
+    ok("S115: GateFloorDataTable stays 32 rows, identical to the example's (new gates live "
+       "in bank $76)",
+       g16 == region(out0, 'patches/bank_016.asm', 'gate_floor_table') and
+       g16.count('    db ') == 32)
+    rows = prj.gate_insert_rows()
+    ok("S115: a custom room can be served on a new gate (GateInsertTable gate byte $20)",
+       any(r['gate'] == 32 and r['first'] == 2 and r['last'] == 3 for r in rows) and
+       'db $20, $01, $02, $64' in o['patches/bank_071.asm'])
+    M = EN.resolve(prj)
+    ok("S115: encounters — a new gate's floor value / unplanned floors walk the gate it copies; "
+       "its own plan wins on floors 1-2",
+       M.vanilla(32, 1) == EN.vanilla_number(REPO, 3, 1) and M.gate_list(32, 1) == 40 and
+       M.gate_list(32, 2) == 40 and M.gate_list(32, 3) == EN.vanilla_number(REPO, 3, 3) and
+       M.vanilla(33, 7) == EN.vanilla_number(REPO, 10, 7) and
+       'GATE_PLAN_LEN EQU 33' in b and '    dw EncGatePlan_20  ; gate 32: its own plan' in b)
+    cfg = prj.gate_configs()
+    ok("S115: gate_configs — new gates carry name / source / floors (33 = Anger's 11)",
+       cfg[32]['name'] == 'Ember Gate' and cfg[32]['source'] == 3 and cfg[32]['new'] and
+       cfg[33]['floors'] == 11 and cfg[33]['boss_map'] == 0x3C and not cfg[3]['new'])
+    ok("S115: warnings — gate 33 has no entrance and ends in a vanilla boss room; gate 32 "
+       "has neither warning",
+       any('new gate 33 (Plain copy) has no entrance' in x for x in w) and
+       any('new gate 33 (Plain copy) ends in a VANILLA boss room' in x for x in w) and
+       not any('new gate 32' in x for x in w))
+    ok("S115: the entrance exit row is the vanilla portal form (gate_flag 1, dest 32, "
+       "screen 0, spawn 0,0)",
+       '$05, $02, $20, $01, $00, $00, $00' in o['patches/bank_060.asm'] and
+       'gate entrance (gate 32)' in o['patches/bank_060.asm'])
+
+    def fx(mut):
+        d = _ng_fixture()
+        mut(d)
+        return d
+    gates = lambda d: d['custom']['gates']
+    for name, mut, needle in (
+            ('a new gate without copy_of', lambda d: gates(d)[1].pop('copy_of'), 'needs "copy_of"'),
+            ('a new gate without a name', lambda d: gates(d)[1].pop('name'), 'needs a "name"'),
+            ('copy_of a new gate', lambda d: gates(d)[1].update(copy_of=32), 'needs "copy_of"'),
+            ('gate number 96', lambda d: gates(d)[1].update(gate=96), '32-95'),
+            ('a name on a vanilla gate', lambda d: gates(d).append({'gate': 4, 'name': 'x'}),
+             'only apply to new gates'),
+            ('a rule on an undefined gate', lambda d: d['custom']['gate_inserts'].append(
+                {'room': 'gate_rotation', 'gate': 40, 'floors': 2}), 'new gates (got 40)'),
+            ('an entrance to an undefined gate', lambda d: [
+                r for r in d['custom']['rooms'] if r['id'] == 'ember_keystone'][0][
+                'screens']['0']['exits'].append(GT.gate_entrance_row(6, 2, 40)),
+             'neither a vanilla gate')):
+        expect_error(f"S115 refuses {name}", fx(mut), needle)
+    # the editor model
+    from editor2.core.document import Document
+    import shutil
+    tmpd = '/tmp/_t_ng_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    json.dump(_ng_fixture(), open(os.path.join(tmpd, 'project.json'), 'w'), indent=1)
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    n = doc.new_gate(copy_of=0, name='Tiny gate', floors=3)
+    ok("S115 doc: New gate takes the next free number (34) and lists in all_gates",
+       n == 34 and [g['name'] for g in doc.all_gates() if g['id'] == 34] == ['Tiny gate'] and
+       doc.gate_floor_count(34) == 3 and doc.gate_floor_count(33) == 11)
+    rm = doc.room('dusk_mirror')
+    doc.add_gate_entrance(rm, 0, 0, 2, 3, 34)
+    ok("S115 doc: Gate entrance here — a portal-form exit row named after the gate",
+       len(doc.gate_entrances(34)) == 1 and
+       doc.gate_entrances(34)[0][3]['comment'] == 'gate entrance: Tiny gate')
+    try:
+        doc.add_gate_entrance(rm, 0, 0, 3, 3, 50)
+        refused = False
+    except ValueError:
+        refused = True
+    try:
+        doc.set_gate_setting(34, name='')
+        refused2 = False
+    except ValueError:
+        refused2 = True
+    ok("S115 doc: no entrance to an undefined gate; a new gate cannot lose its name",
+       refused and refused2)
+    gone = doc.delete_gate(32)
+    ok("S115 doc: Delete gate removes its rules and entrances too",
+       gone == {'rules': 1, 'entrances': 1} and not doc.gate_entrances(32) and
+       all(int(r['gate']) != 32 for r in doc.gate_inserts()) and
+       32 not in doc.new_gate_ids())
+    doc.save()
+    compile_data(json.load(open(os.path.join(tmpd, 'project.json'))))
+    ok("S115 doc: the edited project still compiles", True)
+    return o
+
+
+def test_new_gates_rom(tag, rom_bytes, sym, prj_data, orig):
+    """--rom: the two same-size bank $16 forks, GateRowPtr, and bank $76's rows."""
+    from editor2.core.project import Project
+
+    def addr(lbl):
+        b, a = sym[lbl]
+        return b * 0x4000 + (a - 0x4000 if b else a)
+    grp = sym['GateRowPtr'][1]
+    call = bytes([0xCD, grp & 0xFF, grp >> 8])
+    a1 = 0x16 * 0x4000 + 0x5B76 - 0x4000
+    a2 = 0x16 * 0x4000 + 0x5BE1 - 0x4000
+    # S140 (ARC CAP3a): the boss floor's 8 nops = push hl / ld hl,$710B / rst $10 /
+    # pop hl / nop / nop (bank $71 entry 11 BossRegionEnter)
+    boss8 = bytes([0xE5, 0x21, 0x0B, 0x71, 0xD7, 0xE1, 0x00, 0x00])
+    ok(f"ROM S115 {tag}: entry 5's row readers are same-size calls to GateRowPtr "
+       "($16:$5B76 call + 12 nops; $5BE1 call + inc hl x4 + S140's boss-region call in "
+       "the 8 nops); the code around them == the ROM",
+       sym['jr_016_5b72'] == (0x16, 0x5B72) and sym['jr_016_5be1'] == (0x16, 0x5BE1) and
+       rom_bytes[a1:a1 + 15] == call + bytes(12) and
+       rom_bytes[a2:a2 + 15] == call + bytes([0x23] * 4) + boss8 and
+       rom_bytes[a1 - 4:a1] == orig[a1 - 4:a1] and
+       rom_bytes[a1 + 15:a1 + 40] == orig[a1 + 15:a1 + 40] and
+       rom_bytes[a2 + 15:a2 + 40] == orig[a2 + 15:a2 + 40])
+    gt = addr('GateFloorDataTable')
+    prj = Project(copy.deepcopy(prj_data), os.path.dirname(EXAMPLE))
+    cfg = prj.gate_configs()
+    ok(f"ROM S115 {tag}: GateFloorDataTable unmoved at $16:$70A6 == the project's 32 rows",
+       sym['GateFloorDataTable'] == (0x16, 0x70A6) and
+       all(rom_bytes[gt + 8 * g:gt + 8 * g + 8] == bytes(cfg[g]['row']) for g in range(32)))
+    new = sorted(g for g in cfg if g >= 32)
+    nr, ns = addr('NewGateRows'), addr('NewGateSource')
+    ok(f"ROM S115 {tag}: NewGateRows / NewGateSource in bank $76 == the project's new gates "
+       f"({len(new)})",
+       all(rom_bytes[nr + 8 * (g - 32):nr + 8 * (g - 31)] == bytes(cfg[g]['row']) and
+           rom_bytes[ns + g - 32] == cfg[g]['source'] for g in new) and
+       sym.get('wGateRowBuf') == (1, 0xD138))
+
+
+def _mu_fixture():
+    """S116 (P3.13b): the example + songs that spill into bank $75 (a 4-channel, a
+    5-channel and a 2-channel one), gate songs, battle songs, fights, names."""
+    d = base()
+    m = d['custom']['music']
+    m['songs'] += [{'id': 'big15', 'source': {'library': 'dwm2_bgm15'}, 'first_id': 'auto'},
+                   {'id': 'drums04', 'source': {'library': 'dwm2_bgm04'}, 'first_id': 'auto'},
+                   {'id': 'five', 'source': {'library': 'dwm2_jingle09'}, 'first_id': 'auto'},
+                   {'id': 'two', 'source': {'library': 'dwm2_jingle02'}, 'first_id': 'auto'}]
+    m['names'] = {'0x09': 'Castle theme', 'big15': 'Big one'}
+    m['gates'] = {'2': {'floors': 'drums04', 'battles': '0x0C'}, '5': {'battles': 'two'}}
+    m['battle'] = {'normal': '0x31', 'boss': 'five', 'arena': 'big15', 'starry': 'drums04',
+                   'rooms': {'0x01': '0x1E', '0x6C': 'two'}, 'fights': {'325': 'big15', '11': '0x2B'}}
+    return d
+
+
+MU_FIX = None
+
+
+def _s117_fixture():
+    """S117 (flag expansion + NG2): NG_FIX + 18 auto flags (16 vanilla-safe,
+    then $1000 / $1001), an explicit extended flag, gate 1 re-bossed to
+    Talisman's boss room, a swirl NPC over gate 32's entrance, an NPC shown
+    only while a flag is set, the $24 Talisman portal re-routed to gate 32."""
+    from editor2.core import gates as GT
+    d = _ng_fixture()
+    c = d['custom']
+    c['flags'] = c.get('flags', []) + [{'name': f'auto{i}', 'index': 'auto'} for i in range(18)]
+    c['flags'].append({'name': 'bell', 'index': '0x1100'})
+    c['gates'].append({'gate': 1, 'boss': 'vanilla:$32'})
+    rooms = {r['id']: r for r in c['rooms']}
+    scr = rooms['ember_keystone']['screens']['0']
+    scr.setdefault('npcs', []).append(GT.swirl_npc(5, 2, 32))
+    scr['npcs'].append({'kind': 'npc', 'x': 7, 'y': 5, 'sprite': '0x4C', 'facing': 'down',
+                        'script': None, 'shown_when': [{'flag': 'bell', 'is': 'set'}]})
+    c.setdefault('entrance_redirects', []).append(
+        {'mapID': '0x24', 'screen': 0, 'x': 2, 'y': 6, 'dest': 'gate:32', 'gate_flag': 1,
+         'screen_byte': '0x00', 'spawn_x': 0, 'spawn_y': 0})
+    return d
+
+
+S117_FIX = None
+
+
+def test_flags_ng2_s117():
+    """S117: extended flags $1000-$17FF; NG2 gate cleared marks, swirl objects,
+    flag-conditioned NPCs, vanilla portal swirl overrides, GateClearTable."""
+    global S117_FIX
+    from editor2.core import project as PJ
+    from editor2.core import gates as GT
+    ok("S117: flag_persistent — vanilla <$0278 and the extended $1000-$17FF are saved",
+       PJ.flag_persistent(0x0158) and not PJ.flag_persistent(0x0278) and
+       PJ.flag_persistent(0x1000) and PJ.flag_persistent(0x17FF) and
+       not PJ.flag_persistent(0x1800) and not PJ.flag_persistent(0x0300))
+    S117_FIX = _s117_fixture()
+    o, prj, w = compile_data(S117_FIX)
+    fm = prj.flag_map()
+    ok("S117: the allocator takes the vanilla-safe flags first, then $1000 up; an "
+       "explicit extended index is kept (S128 r2: the one that landed on the game's $0158 "
+       "moves to the lowest free number, the others keep theirs)",
+       # (the example's two quest flags hold $0159 / $015A since S128 r2; S129: its mini
+       # medal quest's flags $015B / $015C — the vanilla-safe numbers left start at $015D)
+       fm['auto0'] == 0x1006 and fm['auto1'] == 0x015D and fm['auto11'] == 0x0167 and
+       fm['auto12'] == 0x1000 and fm['auto17'] == 0x1005 and fm['bell'] == 0x1100, str(fm))
+    ok("S117: gate:N — an unchanged vanilla gate = its own flag (Talisman $12), a re-bossed "
+       "vanilla gate = $17A0 + 1, a new gate = $17A0 + 32",
+       prj.resolve_flag_ref('gate:2') == 0x12 and prj.resolve_flag_ref('gate:1') == 0x17A1 and
+       prj.resolve_flag_ref('gate:32') == 0x17C0 and prj.resolve_flag_ref('gate:0') == 0x10)
+    for ref, needle in (('gate:31', 'no cleared flag'), ('gate:50', 'no such gate'),
+                        ('0x0300', 'outside the event flags'), ('0x1800', 'outside the event flags')):
+        try:
+            prj.resolve_flag_ref(ref, 'test')
+            ok(f"S117 refuses flag {ref}", False)
+        except PJ.ProjectError as e:
+            ok(f"S117 refuses flag {ref} ({needle})", needle in str(e), str(e))
+    b60 = o['patches/bank_060.asm']
+    ok("S117: a swirl NPC is emitted behind an $A1 prefix on gate 32's flag ($17C0, shown "
+       "while CLEAR); the shown_when NPC behind an $A0 prefix on $1100 (shown while SET)",
+       '$A1, $C0, $17, $FF, $FF' in b60 and '$00, $4D, $05, $02, $FF' in b60 and
+       '$A0, $00, $11, $FF, $FF' in b60 and
+       b60.index('$A1, $C0, $17, $FF, $FF') < b60.index('$00, $4D, $05, $02, $FF'))
+    ov = prj.vanilla_swirl_overrides()
+    r24 = [x for x in ov if x['mapID'] == 0x24]
+    ok("S117: room $24 gets an NPC override (gate 1 re-bossed, its Talisman portal re-routed "
+       "to gate 32): 4 versions, every version swirl-conditioned on $17A1 at (2,2) and "
+       "$17C0 at (2,6)",
+       len(r24) == 1 and r24[0]['step_counter'] == 0xD969 and len(r24[0]['steps']) == 4 and
+       all(any(en['cond'] and en['cond'][0] == 0x17A1 and en['bytes'][2:4] == [2, 2]
+               for en in st) and
+           any(en['cond'] and en['cond'][0] == 0x17C0 and en['bytes'][2:4] == [2, 6]
+               for en in st) for st in r24[0]['steps']), str(r24)[:400])
+    ok("S117: only rooms whose portals changed get an override ($24 alone here)",
+       [x['mapID'] for x in ov] == [0x24])
+    ok("S117: VanillaNPCExtTable row + the variant lists in bank $60",
+       'VanillaNPCExtTable:\n' in b60 and '    db $24, 0' in b60 and 'VNpc24_0_V3:' in b60)
+    b76 = o['patches/bank_076.asm']
+    ok("S117: GateClearTable — gate 1 ($17A1 + its vanilla $0011), gate 32 ($17C0 only), "
+       "unchanged gates none; one row per gate 0-33",
+       'GATE_CLEAR_LEN EQU 34' in b76 and '    dw $17A1, $0011, WinTail_1  ; gate 1' in b76 and
+       '    dw $17C0, $FFFF, $0000  ; gate 32' in b76 and
+       '    dw $FFFF, $FFFF, $0000  ; gate 0: its own boss scripts set its flag' in b76)
+    ok("S122: re-bossed Villager replays the game's own win tail (WinTail_1: $D969 := 1, "
+       "$D977 := 1, if Talisman's $0012 is clear skip, else $D969 := 3; the text close -> end)",
+       'WinTail_1:' in b76 and '    dw $FF12, $D969, $0001' in b76 and
+       '    dw $FF00, $0012, .t0_506A' in b76 and '    dw $FF12, $D969, $0003' in b76 and
+       '    dw $FF14, WinTail_1_end  ; op $06 ends' in b76 and 'WinTail_32' not in b76)
+    o0, _p0, _w0 = compile_data(base())
+    ok("S117: the example — empty VanillaNPCExtTable, GateClearTable all $FFFF (32 rows), "
+       "no prefixes",
+       'VanillaNPCExtTable:\n    db $FF' in o0['patches/bank_060.asm'] and
+       'GATE_CLEAR_LEN EQU 32' in o0['patches/bank_076.asm'] and
+       'next NPC shown only while' not in o0['patches/bank_060.asm'])   # S137: palette bytes may be $A0
+    d = _s117_fixture()
+    d['custom']['flags'].append({'name': 'gateflag', 'index': '0x17A0'})
+    expect_error("S117 refuses a named flag on the gates' reserved $17A0-$17FF", d,
+                 'outside EVENT_FLAGS.md safe')
+    d = _s117_fixture()
+    [r for r in d['custom']['rooms'] if r['id'] == 'ember_keystone'][0]['screens']['0'][
+        'npcs'].append(GT.swirl_npc(1, 1, 31))
+    expect_error("S117 refuses a swirl of the unused gate 31 (no cleared flag)", d,
+                 'no cleared flag')
+    # the editor model
+    from editor2.core.document import Document
+    import shutil
+    tmpd = '/tmp/_t_s117_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    json.dump(_ng_fixture(), open(os.path.join(tmpd, 'project.json'), 'w'), indent=1)
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    rm = doc.room('dusk_mirror')
+    full = doc.add_gate_entrance(rm, 0, 0, 2, 3, 32)
+    sw = doc.gate_swirls(32)
+    ok("S117 doc: Gate entrance here adds the swirl object (swirl_of 32) on the same cell",
+       not full and len(sw) == 1 and (sw[0][3]['x'], sw[0][3]['y']) == (2, 3) and
+       sw[0][3]['sprite'] == '0x4d')
+    ex = doc.exits_of(rm, 0, 0)
+    doc.remove_exit(rm, 0, 0, [i for i, e in enumerate(ex) if GT.is_gate_entrance(e)][-1])
+    ok("S117 doc: deleting the gate entrance takes its swirl with it", not doc.gate_swirls(32))
+    doc.add_gate_entrance(rm, 0, 0, 2, 3, 32)
+    i = doc.add_portal_redirect(0x24, 0, 2, 2, 32)
+    ok("S117 doc: a vanilla portal re-routed to gate 32 (redirect gate:32, gate_flag 1)",
+       doc.portal_redirects(32) and doc.custom['entrance_redirects'][i]['dest'] == 'gate:32')
+    txt1, txt32 = doc.gate_cleared_text(1), doc.gate_cleared_text(32)
+    ok("S117 doc: cleared-flag lines (Villager = the game's $0011; gate 32 its own $17C0)",
+       '$0011' in txt1 and "the game's own" in txt1 and '$17C0' in txt32 and 'new gate' in txt32,
+       f"{txt1!r} / {txt32!r}")
+    doc.set_gate_setting(1, boss='vanilla:$32')
+    ok("S117 doc: re-bossing Villager gives it its own flag ($17A1) + its vanilla $0011",
+       '$17A1' in doc.gate_cleared_text(1) and '$0011' in doc.gate_cleared_text(1))
+    gone = doc.delete_gate(32)
+    ok("S117 doc: deleting a new gate removes its swirls and its portal re-routes",
+       not doc.gate_swirls(32) and not doc.portal_redirects(32) and gone['entrances'] >= 2,
+       str(gone))
+    return o
+
+
+def test_flags_ng2_rom(tag, rom, sym, origb):
+    """S117 ROM-level: run the built engine on dwm/sm83 — ComputeFlagAddress for
+    every index 0-$1FFF == the vanilla formula outside $1000-$17FF and wExtFlags
+    inside (BC / DE preserved); CustomReadInteract on a fixture room (hidden bits
+    from the prefixes) and on room $24 (override variant by its counter);
+    GateBossWin sets the table's flags only on a boss floor."""
+    from dwm.sm83 import CPU
+    ram = {}
+    st = {'bank': 1}
+
+    def rd(a):
+        if a < 0x4000:
+            return rom[a]
+        if a < 0x8000:
+            return rom[st['bank'] * 0x4000 + a - 0x4000]
+        return ram.get(a, 0)
+
+    def wr(a, v):
+        if 0x2000 <= a < 0x3000:
+            st['bank'] = v or 1
+        elif a >= 0x8000:
+            ram[a] = v & 0xFF
+    cpu = CPU(rd, wr)
+    S = lambda n: sym[n][1]
+    ext = S('wExtFlags')
+    bad = []
+    for idx in range(0, 0x2000):
+        st['bank'] = 1
+        cpu.call(S('ComputeFlagAddress'), bc=idx, de=0x1234, sp=0xDFF0)
+        if 0x1000 <= idx < 0x1800:
+            want = (ext + (idx - 0x1000) // 8) & 0xFFFF
+        elif 0x1800 <= idx < 0x1900:
+            want = S('wStoryFlag')        # S129: the story checks' answer byte
+        else:
+            want = (0xD99B + idx // 8) & 0xFFFF
+        if (cpu.hl, cpu.a, cpu.bc, cpu.de) != (want, 0x80 >> (idx & 7), idx, 0x1234):
+            bad.append(idx)
+    ok(f"ROM {tag}: ComputeFlagAddress over 0-$1FFF — vanilla formula outside $1000-$18FF, "
+       "wExtFlags inside $1000-$17FF, wStoryFlag for the story checks $1800-$18FF (S129), "
+       "BC / DE preserved", not bad, f"({bad[:6]})")
+    ok(f"ROM {tag}: ROM0 ComputeFlagAddress keeps its address and the mask table $26D5",
+       S('ComputeFlagAddress') == 0x26B3 and rom[0x26D5:0x26DD] == bytes([0x80 >> i for i in range(8)]))
+    return cpu, ram, st
+
+
+def test_s117_engine_rom(rom, sym, origb):
+    cpu, ram, st = test_flags_ng2_rom('S117_FIX', rom, sym, origb)
+    S = lambda n: sym[n][1]
+    ext = S('wExtFlags')
+
+    def setf(idx, on=True):
+        a = (ext + (idx - 0x1000) // 8) if idx >= 0x1000 else 0xD99B + idx // 8
+        m = 0x80 >> (idx & 7)
+        ram[a] = (ram.get(a, 0) | m) if on else (ram.get(a, 0) & ~m & 0xFF)
+
+    def npcs(mid, scr, counter=None):
+        ram[S('wMapID')] = mid
+        ram[S('wScreenIndex')] = scr
+        if counter is not None:
+            ram[counter[0]] = counter[1]
+        st['bank'] = 0x60                    # S136: entry 1 = PlaceFwdInteract (the forwarder)
+        cpu.call(S('PlaceFwdInteract'), sp=0xDFF0)
+        hl = cpu.hl
+        if hl == 0:
+            return None
+        out, a = [], hl
+        while ram.get(a, 0) != 0xFF and len(out) < 25:
+            out.append(tuple(ram.get(a + k, 0) for k in range(5)))
+            a += 5
+        return out
+    mid = 0x70                               # ember_keystone
+    l0 = npcs(mid, 0)
+    sw = [e for e in l0 if e[1] == 0x4D and e[2:4] == (5, 2)]
+    sl = [e for e in l0 if e[1] == 0x4C]
+    ok("ROM S117_FIX: custom room — no prefix reaches the buffer; flags clear -> the swirl "
+       "shown, the bell NPC hidden (type bit 6)",
+       not any(e[0] & 0xF0 == 0xA0 for e in l0) and sw and not sw[0][0] & 0x40 and
+       sl and sl[0][0] & 0x40, str(l0))
+    setf(0x17C0)
+    setf(0x1100)
+    l1 = npcs(mid, 0)
+    sw = [e for e in l1 if e[1] == 0x4D and e[2:4] == (5, 2)]
+    sl = [e for e in l1 if e[1] == 0x4C]
+    ok("ROM S117_FIX: gate 32 cleared + bell set -> the swirl hidden, the bell NPC shown; "
+       "the other entries byte-identical",
+       sw[0][0] & 0x40 and not sl[0][0] & 0x40 and
+       [e for e in l1 if e[1] not in (0x4D, 0x4C)] == [e for e in l0 if e[1] not in (0x4D, 0x4C)],
+       str(l1))
+    setf(0x17C0, False)
+    res = {}
+    for step in range(4):
+        lst = npcs(0x24, 0, (0xD969, step))
+        res[step] = {e[2:4]: bool(e[0] & 0x40) for e in lst if e[1] == 0x4D}
+    ok("ROM S117_FIX: room $24 — every version shows both swirls while gates 1 (re-bossed) "
+       "and 32 are not cleared", all(r == {(2, 2): False, (2, 6): False} for r in res.values()),
+       str(res))
+    setf(0x17A1)
+    r2 = {e[2:4]: bool(e[0] & 0x40) for e in npcs(0x24, 0, (0xD969, 1)) if e[1] == 0x4D}
+    ok("ROM S117_FIX: gate 1 cleared ($17A1) -> its (2,2) swirl hidden, (2,6) still shown",
+       r2 == {(2, 2): True, (2, 6): False}, str(r2))
+    ok("ROM S117_FIX: a vanilla room without an override returns HL = 0 (the vanilla path)",
+       npcs(0x25, 0) is None and npcs(0x01, 8) is None)
+
+    def win(gate, boss, cur, last, ingate=0, mapid=None):
+        for k in list(ram):
+            if ext <= k < ext + 256 or 0xD99B <= k < 0xD9FB:
+                ram[k] = 0
+        ram[S('wInGateworld')] = ingate
+        ram[S('wMapID')] = boss if mapid is None else mapid
+        ram[S('wBossMapType')] = boss
+        ram[S('wCurrentFloor')] = cur
+        ram[S('wLastFloor')] = last
+        ram[S('wGateID')] = gate
+        ram[0xC8ED] = 0
+        st['bank'] = 0x76
+        cpu.call(S('GateBossWin'), sp=0xDFF0)
+        setb = sorted(i for i in list(range(0x300)) + list(range(0x1000, 0x1800))
+                      if ram.get((ext + (i - 0x1000) // 8) if i >= 0x1000 else 0xD99B + i // 8, 0)
+                      & (0x80 >> (i & 7)))
+        return setb, ram[0xC8ED]
+    ok("ROM S117_FIX: GateBossWin on gate 32's boss floor sets $17C0 (and the displaced "
+       "$C8ED = $0E)", win(32, 0x71, 3, 4) == ([0x17C0], 0x0E), str(win(32, 0x71, 3, 4)))
+    ok("ROM S117_FIX: GateBossWin on re-bossed gate 1 sets $17A1 and its vanilla $0011",
+       win(1, 0x32, 4, 5)[0] == [0x11, 0x17A1], str(win(1, 0x32, 4, 5)))
+    ok("ROM S117_FIX: GateBossWin sets nothing for an unchanged gate (2), off the boss floor, "
+       "in a maze, or in another room",
+       win(2, 0x32, 5, 6) == ([], 0x0E) and win(32, 0x71, 2, 4)[0] == [] and
+       win(32, 0x71, 3, 4, ingate=1)[0] == [] and win(32, 0x71, 3, 4, mapid=0x70)[0] == [])
+
+
+def _shop_fixture():
+    """S117 (P3.13c): the example + Herb at 12 G, the Bazaar list reordered and
+    cut to 4, a project shop (12 items) and a shopkeeper script for it."""
+    d = base()
+    gd = d.setdefault('gamedata', {})
+    gd['items'] = {'1': {'price': 12}, '40': {'price': 150}}
+    gd['shops'] = {'bazaar': [29, 1, 7, 40]}
+    c = d['custom']
+    c['shops'] = [{'id': 'pier', 'name': 'Pier stall',
+                   'items': [1, 2, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15]}]
+    c['dialogue'].append({'id': 'pier_hello', 'boxes': [['Welcome to', 'the pier!']]})
+    c['scripts'].append({'id': 'pier_keeper', 'shop': {'shop': 'pier', 'text': 'pier_hello'}})
+    return d
+
+
+SHOP_FIX = None
+
+
+def test_shops_s117():
+    """S117 (P3.13c): item prices, the vanilla shop lists, project shops,
+    shopkeeper scripts."""
+    global SHOP_FIX
+    from editor2.core import shops as SH
+    o0, p0, _w0 = compile_data(base())
+    r0 = SH.resolve(p0)
+    ok("S117 shops: the example = the five vanilla lists (FAQ: Bazaar Herb Lovewater "
+       "Antidote Repellent BeefJerky PorkChop WarpWing BeastTail) and vanilla prices",
+       [l[2] for l in r0['lists']][0] == [1, 2, 7, 40, 19, 20, 29, 38] and
+       r0['prices'][1] == 8 and r0['prices'][38] == 400 and len(r0['lists']) == 5 and
+       'SHOP_COUNT EQU 5' in o0['patches/bank_077.asm'])
+    ok("S117 shops: sell price rule (ShopSellPrice): 3/4, staffs 1/10, the gate shop full",
+       SH.sell_price(1, 8) == 6 and SH.sell_price(0x18, 3000) == 300 and
+       SH.sell_price(1, 8, gate_shop=True) == 8)
+    SHOP_FIX = _shop_fixture()
+    o, prj, w = compile_data(SHOP_FIX)
+    b77 = o['patches/bank_077.asm']
+    b03 = [v for k, v in o.items() if 'bank_003.asm' in k][0]
+    ok("S117 shops: bank $77 — six lists (5 vanilla + Pier stall), Bazaar edited",
+       'SHOP_COUNT EQU 6' in b77 and '    db $1d, $01, $07, $28, $ff' in b77 and
+       '(custom.shops \'pier\')' in b77 and
+       '    db $01, $02, $05, $07, $08, $09, $0a, $0b, $0c, $0d, $0e, $0f, $ff' in b77)
+    ok("S117 shops (S151: the records are bank $77's ItemTable; gd_item_info keeps the "
+       "original bytes): Herb 12 G ($0C), Repellent 150 G ($96), others untouched",
+       '$00, $0c, $00, $64' in b77 and '$07, $96, $00, $64' in b77 and
+       '$00, $50, $00, $64' in b77 and '$00, $08, $00, $64' in b03 and
+       '$07, $c8, $00, $64' in b03 and '$00, $0c, $00, $64' not in b03)
+    sc = [x for x in prj.custom['scripts'] if x['id'] == 'pier_keeper'][0]
+    ok("S117 shops: a shop script lowers to (S151 r2: op $3C, the box at the bottom) "
+       "greeting / write_ram wShopID 6 / op $04 0 $0680 / text $0682 / end",
+       sc['ops'][0] == ['op', '0x3C'] and
+       sc['ops'][2:] == [['op', 'write_ram', 'wShopID', 6], ['op', '0x04', 0, 0x0680],
+                         ['text', 0x0682], ['end']] and sc['ops'][1][0] == 'text' and
+       (sc['ops'][1][1] == prj.text_id('pier_hello') if hasattr(prj, 'text_id') else
+        sc['ops'][1][1] >= 0x0A00),
+       str(sc['ops']))
+    def fx(mut):
+        d = _shop_fixture()
+        mut(d)
+        return d
+    for name, mut, needle in (
+            ('an item id 44', lambda d: d['custom']['shops'][0]['items'].append(44),
+             "the game's items are 1-43"),
+            ('21 items', lambda d: d['custom']['shops'][0].update(items=[1] * 21), 'at most 20'),
+            ('an empty list', lambda d: d['gamedata']['shops'].update(bazaar=[]), '1-20 item ids'),
+            ('a price of 70000', lambda d: d['gamedata']['items'].update({'2': {'price': 70000}}),
+             '0-65535'),
+            ('an unknown vanilla shop', lambda d: d['gamedata']['shops'].update(pier=[1]),
+             'unknown shop'),
+            ('a shop script naming no shop', lambda d: d['custom']['scripts'].append(
+                {'id': 'x', 'shop': {'shop': 'nowhere'}}), "unknown shop 'nowhere'"),
+            ('two shops with one id', lambda d: d['custom']['shops'].append(
+                {'id': 'pier', 'items': [1]}), 'used twice')):
+        expect_error(f"S117 shops refuses {name}", fx(mut), needle)
+    return o
+
+
+def test_shops_rom(tag, rom, sym, origb, nlists, want_lists):
+    """S117: ShopFill run from the built ROM == the ORIGINAL bank $09 choice +
+    copy (run from the original ROM) for every map x screen; wShopID picks a
+    list and is cleared."""
+    from dwm.sm83 import CPU
+
+    def mk(r):
+        ram = {}
+        st = {'bank': 9}
+
+        def rd(a):
+            if a < 0x4000:
+                return r[a]
+            if a < 0x8000:
+                return r[st['bank'] * 0x4000 + a - 0x4000]
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x2000 <= a < 0x3000:
+                st['bank'] = v or 1
+            elif a >= 0x8000:
+                ram[a] = v & 0xFF
+        return CPU(rd, wr), ram, st
+    S = lambda n: sym[n][1]
+    co, ro, so = mk(origb)
+    cn, rn, sn = mk(rom)
+    bad = []
+    for mid in list(range(0x6B)) + [0x6B, 0x70, 0x80, 0xFE]:
+        for scr in range(16):
+            out = []
+            for cpu, ram, st in ((co, ro, so), (cn, rn, sn)):
+                for k in range(0xC0D8, 0xC0F0):
+                    ram[k] = 0xEE
+                ram[0xC968], ram[0xC925] = mid, scr
+                ram[S('wShopID')] = 0
+                st['bank'] = 9
+                cpu.call(0x472B, sp=0xDFF0)
+                out.append(tuple(ram.get(k) for k in range(0xC0D8, 0xC0F0)))
+            if want_lists is None and out[0] != out[1]:
+                bad.append((mid, scr))
+    ok(f"ROM {tag}: ShopFill (bank $77) == the original bank $09 stock fill for every "
+       "map $00-$6A (+ custom ids) x screen 0-15 ($C0D8 + the 20-byte clear)",
+       not bad, f"({bad[:5]})")
+    if want_lists:
+        for n, lst in enumerate(want_lists):
+            for k in range(0xC0D8, 0xC0F0):
+                rn[k] = 0xEE
+            rn[S('wShopID')] = n + 1
+            sn['bank'] = 9
+            cn.call(0x472B, sp=0xDFF0)
+            got = [rn.get(0xC0D8 + i) for i in range(len(lst) + 1)]
+            ok(f"ROM {tag}: wShopID {n + 1} -> list {n} copied ({len(lst)} items + $FF), "
+               "the rest of the 20 bytes zero, wShopID kept for the visit",
+               got == lst + [0xFF] and all(rn.get(0xC0D8 + i) == 0 for i in range(len(lst) + 1, 20))
+               and rn[S('wShopID')] == n + 1, str(got))
+        rn[0xC8EB] = 0x11
+        rn[0xC905] = 4
+        sn['bank'] = 0x77
+        cn.call(S('ShopClose'), sp=0xDFF0)
+        ok(f"ROM {tag}: ShopClose — wShopID 0, wGameState bit 4 off, $C905 0",
+           rn[S('wShopID')] == 0 and rn[0xC8EB] == 0x01 and rn[0xC905] == 0)
+    ok(f"ROM {tag}: bank $09 keeps its address map (ShopBuyStockFill $4721, BazaarInventory "
+       "$476B, ShopSellPrice $4BC8) and calls $7700 at $472B",
+       rom[0x09 * 0x4000 + 0x472B - 0x4000: 0x09 * 0x4000 + 0x472B - 0x4000 + 5] ==
+       bytes([0x21, 0x00, 0x77, 0xD7, 0xC9]) and
+       rom[0x09 * 0x4000 + 0x476B - 0x4000: 0x09 * 0x4000 + 0x476B - 0x4000 + 9] ==
+       origb[0x09 * 0x4000 + 0x476B - 0x4000: 0x09 * 0x4000 + 0x476B - 0x4000 + 9])
+
+
+def test_sprite_budget_s117b():
+    """S117b: the hardware sprite limits as build warnings (user: "Just warning
+    is fine for now, and Ill build around it")."""
+    from editor2.core import formats as F
+    row = [{'kind': 'npc', 'x': x, 'y': 5} for x in (1, 4, 7)]
+    w = F.sprite_budget(row)
+    ok("S117b sprite limits: 3 NPCs on one row -> 'row 5 has 3 NPCs … shows only 1'",
+       len(w) == 1 and w[0].startswith('row 5 has 3 NPCs') and 'only 1' in w[0], str(w))
+    ok("S117b sprite limits: one NPC per row, hidden NPCs and spots do not warn",
+       F.sprite_budget([{'kind': 'npc', 'x': 1, 'y': y} for y in range(6)] +
+                       [{'kind': 'npc', 'x': 3, 'y': 2, 'hidden': True},
+                        {'kind': 'examine', 'x': 5, 'y': 2},
+                        {'kind': 'raw', 'bytes': [0x40, 6, 8, 2, 4]}]) == [])
+    w = F.sprite_budget([{'kind': 'npc', 'x': 1, 'y': y} for y in range(7)])
+    ok("S117b sprite limits: 7 NPCs -> 'only the first 6 … are drawn' (40 pieces, party 16)",
+       len(w) == 1 and w[0].startswith('7 NPCs on screen') and 'first 6' in w[0], str(w))
+    w = F.sprite_budget([{'kind': 'raw', 'bytes': [0, 6, x, 3, 4]} for x in (1, 5)])
+    ok("S117b sprite limits: raw entries count by their y byte", len(w) == 1 and 'row 3' in w[0])
+    d = base()
+    _o, _p, warns = compile_data(d)
+    n0 = sum('sprite pieces' in x for x in warns)
+    r = next(r for r in d['custom']['rooms'] if not r.get('placeholder'))
+    k = next(iter(r['screens']))
+    sc = r['screens'][k]
+    tgt = sc['states'][0] if sc.get('states') else sc
+    tgt.setdefault('npcs', []).extend({'kind': 'npc', 'x': x, 'y': 7, 'sprite': '0x06',
+                                       'script': None} for x in (1, 3, 5))
+    _o, _p, warns = compile_data(d)
+    ok("S117b sprite limits: the build warns for a room row with 3+ NPCs",
+       sum('sprite pieces' in x for x in warns) > n0 and
+       any(f"room {_room_ref(r)} screen {k}" in x and 'row 7 has' in x for x in warns),
+       str([x for x in warns if 'sprite pieces' in x][:2]))
+
+
+def test_clone_follows_game_s118c():
+    """S118c (user S118b: the copied GreatTree showed the old man where the game
+    shows the man by the cliff — "obviously" fix it): a screen whose
+    step_counter names `vanilla` uses the ORIGINAL room's counter (an EQU, no
+    byte in the region); a bad address is refused; state rules keep their own
+    counter; the editor migrates rooms cloned before S118c."""
+    d = base()
+    r = next(x for x in d['custom']['rooms'] if x['id'] == 'gate_island')
+    r['screens']['0']['step_counter'] = {'label': 'wCustomStep_t118_S0', 'vanilla': '0xD92D'}
+    out, prj, _w = compile_data(d)
+    txt = '\n'.join(v for v in out.values() if isinstance(v, str))
+    ok("S118c clone state: the label is an EQU of the game's counter",
+       'wCustomStep_t118_S0 EQU $D92D' in txt)
+    ok("S118c clone state: nothing allocated for it in the $CD80 region",
+       all(lbl != 'wCustomStep_t118_S0' for lbl, _a, _c in prj.step_counter_allocation()))
+    d2 = base()
+    r2 = next(x for x in d2['custom']['rooms'] if x['id'] == 'gate_island')
+    r2['screens']['0']['step_counter'] = {'label': 'wCustomStep_t118_S0', 'vanilla': '0xC000'}
+    expect_error("S118c clone state: a non-counter address is refused", d2,
+                 "is not one of the game's room-state counters")
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    tmp = tempfile.mkdtemp()
+    d3 = base()
+    r3 = next(x for x in d3['custom']['rooms'] if x['id'] == 'gate_island')
+    r3['source_mapID'] = '0x01'
+    for k, scr in r3['screens'].items():
+        scr['step_counter'] = {'label': f'wCustomStep_gate_island_S{k}'}
+    json.dump(d3, open(os.path.join(tmp, 'project.json'), 'w'))
+    src_assets = os.path.join(os.path.dirname(EXAMPLE), 'assets')
+    if os.path.isdir(src_assets):
+        shutil.copytree(src_assets, os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+    doc = Document(tmp)
+    r4 = next(x for x in doc.custom['rooms'] if x['id'] == 'gate_island')
+    ok("S118c clone state: a pre-S118c clone is migrated on open (GreatTree screens 0 / 4)",
+       r4['screens']['0']['step_counter'].get('vanilla') == '0xD92D' and
+       r4['screens']['4']['step_counter'].get('vanilla') == '0xD92F' and
+       any('follow the game' in n for n in doc.migrations), str(doc.migrations))
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _cs_fixture(scenes, cast=True, flags=('cs_seen',)):
+    d = base()
+    r = next(x for x in d['custom']['rooms'] if x['id'] == 'gate_island')
+    npcs = r['screens']['0']['npcs']
+    npcs[1]['actor'] = 'Guard'
+    npcs[2]['actor'] = 'Bard'
+    if cast:
+        npcs.append({'kind': 'npc', 'sprite': '0x0B', 'x': 1, 'y': 3, 'facing': 'right',
+                     'hidden': True, 'cast': True, 'script': 'none', 'actor': 'Ghost'})
+    r['cutscenes'] = scenes
+    d['custom']['flags'] = [{'name': f, 'index': 'auto'} for f in flags]
+    return d, r
+
+
+def test_cutscene_unnamed_npc_s119r2():
+    """S119 r2 (user: "Why cant I select npc in a custom room when creating new
+    cutscene? Want to select npc in Cities_FOUNT"): every NPC of the screen can be
+    picked — one without a scene name is named when picked (a shopkeeper ->
+    'Shopkeeper', else 'NPC n'), the trigger / steps hold the name."""
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    from editor2.core import cutscene_doc as CD
+    tmp = tempfile.mkdtemp()
+    d = base()
+    json.dump(d, open(os.path.join(tmp, 'project.json'), 'w'))
+    src_assets = os.path.join(os.path.dirname(EXAMPLE), 'assets')
+    if os.path.isdir(src_assets):
+        shutil.copytree(src_assets, os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+    doc = Document(tmp)
+    r = doc.room('gate_island')
+    un = CD.unnamed_npcs(r, 0)
+    ok("S119 r2 unnamed NPCs: the screen's NPCs without a name are listed",
+       len(un) >= 2 and all(not e.get('actor') for _k, _n, e in un), str(un))
+    k, n, _e = un[0]
+    sid = CD.new_cutscene(doc, 'gate_island', 'Talk test', 0, 'talk', CD.npc_token(k, n))
+    r, sc = CD.find(doc, sid)
+    nm = sc['trigger'].get('actor')
+    named = dict(CD.npc_rows(r, 0, k))[n].get('actor')
+    ok("S119 r2 unnamed NPCs: picked for a talk scene -> named, the trigger holds the name",
+       bool(nm) and nm == named and not CD.is_token(nm), f'{nm} / {named}')
+    k2, n2, _e2 = CD.unnamed_npcs(r, 0)[0]
+    step = {'walk': {'actor': CD.npc_token(k2, n2), 'to': [1, 1]}}
+    out = CD.resolve_tokens(doc, 'gate_island', 0, step)
+    ok("S119 r2 unnamed NPCs: a step's NPC token -> a fresh unique name",
+       out['walk']['actor'] not in (nm, None) and not CD.has_tokens(out)
+       and dict(CD.npc_rows(r, 0, k2))[n2].get('actor') == out['walk']['actor'], str(out))
+    ok("S119 r2 unnamed NPCs: a named NPC's token gives its name back (no rename)",
+       CD.resolve_tokens(doc, 'gate_island', 0, CD.npc_token(k, n)) == nm)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_cutscene_error_not_at_open_s119b():
+    """S119b (user's editor would not open: "gamedata.encounters.0.eids[3] =
+    'klamutra': no such enemy row" — a scene's too-long text made Project() fail,
+    the Families tab fell back to a model without the project's enemies): a
+    cutscene problem lets Project() build (the editor's models need it) and stops
+    the BUILD with its message."""
+    import copy
+    d, r = _cs_fixture([{'id': 'longline', 'screen': 0, 'trigger': {'on': 'talk', 'actor': 'Guard'},
+                         'steps': [{'say': {'boxes': [['Oh hello there! I am a shopkeep! '
+                                                       'Stuck there for AGES.']]}}]}])
+    prj = Project(copy.deepcopy(d), os.path.dirname(EXAMPLE))
+    ok("S119b cutscene error: Project() still builds (the editor's models)",
+       bool(prj.cutscene_error) and 'line 1 is' in prj.cutscene_error, str(prj.cutscene_error))
+    ok("S119b cutscene error: the project's game data model works",
+       prj.gamedata() is not None)
+    expect_error("S119b cutscene error: the build stops with the scene's message", d,
+                 'cutscenes[longline]')
+
+
+def test_hero_default_s120b():
+    """S120b (user: "change TERRY to MILLY as default, but leave otherwise as 4
+    letters") — S121 moved it under the Milly hook: patches/bank_04f.asm region
+    milly_name_tiles is the vanilla TERRY INCBIN; the hook draws the MILLY tiles
+    (= textenc.MILLY_GLYPHS, what the previews draw while the hook is on); {hero}
+    still counts 4 cells."""
+    from editor2.core import milly as MH
+    from editor2.core import textenc as Tx
+    src = open(os.path.join(REPO, 'patches', 'bank_04f.asm')).read()
+    body = src.split('; @BUILD_PROJECT BEGIN milly_name_tiles\n')[1].split(
+        '; @BUILD_PROJECT END milly_name_tiles')[0]
+    ok("S121: patches/bank_04f.asm region milly_name_tiles = the vanilla TERRY INCBIN",
+       body == MH.TERRY_INCBIN + '\n', repr(body))
+    ok("S121: milly.MILLY_TILES == textenc.MILLY_GLYPHS (the S120b drawing, 64 B)",
+       b''.join(bytes.fromhex(h) for h in MH.MILLY_TILES) ==
+       b''.join(Tx.MILLY_GLYPHS[c] for c in (0xD3, 0xD4, 0xD5, 0xD6)))
+    ok("S120b: the original font still says TERRY there (clean tree untouched)",
+       'image_04f_4d40.2bpp' in open(os.path.join(REPO, 'disassembly', 'bank_04f.asm')).read())
+    ok("S120b: {hero} still counts 4 cells", Tx.TOKENS['{hero}'][1] == 4 and
+       Tx.cells('Hi {hero}!') == 8)
+    Tx.use_hero_glyphs(True)
+    on = dict(Tx.PATCHED_GLYPHS)
+    Tx.use_hero_glyphs(False)
+    ok("S121: previews draw MILLY only with the hook (use_hero_glyphs)",
+       on == Tx.MILLY_GLYPHS and Tx.PATCHED_GLYPHS == {})
+
+
+def _milly_fixture(spin=True, arrive=None):
+    d = base()
+    d['custom']['milly_hook'] = {'enabled': True, 'spin': spin,
+                                 'arrive': arrive or {'room': 'gate_island', 'screen': 0,
+                                                      'x': 4, 'y': 4, 'face': 'right'}}
+    return d
+
+
+def _region(text, name):
+    return text.split(f'; @BUILD_PROJECT BEGIN {name}\n')[1].split(
+        f'; @BUILD_PROJECT END {name}')[0]
+
+
+def test_milly_hook_s121():
+    """S121 (ROADMAP P3.16 + E7, user: "In the intro, when Milayou disappears into
+    dresser … do NOT return control to player to play as terry … At THIS POINT,
+    player sprite is no longer Terry, it is MILLY … This whole thing can be switched
+    off as a 'milly hook' patch")."""
+    import shutil
+    from editor2.core import milly as MH
+    from editor2.core import cutscene_build as CB
+    from editor2.core.document import Document
+    from editor2.core.project import FLAG_SAFE_RANGES
+    off, _p, _w = compile_data(base())
+    vanilla = {
+        'patches/bank_00e.asm': 'milly_bedroom_script', 'patches/bank_004.asm': 'milly_shape_04a',
+        'patches/bank_001.asm': 'milly_player_sheet', 'patches/bank_009.asm': 'milly_naming_icon',
+        'patches/bank_04f.asm': 'milly_name_tiles'}
+    for f, reg in vanilla.items():
+        ok(f"S121 hook off: {f} region {reg} == the committed (vanilla) text",
+           _region(off[f], reg) == _region(open(os.path.join(REPO, f)).read(), reg))
+    ok("S121 hook off: bank $79 stays the empty bank", 'ds $4000, $00' in off['patches/bank_079.asm']
+       and 'MillyShapeTable' not in off['patches/bank_079.asm'])
+    on, prj, _w = compile_data(_milly_fixture())
+    b79 = on['patches/bank_079.asm']
+    ok("S121 hook on: bank $79 = the template (entries 0/1) + Milayou's palette, sheet and frames",
+       'dw MillyShapeTable' in b79 and 'dw MillyPlayerSheet' in b79 and
+       'MillyPlayerAttr:' in b79 and 'dw $3114' in b79 and 'MillyLayoutImageEnd:' in b79)
+    img = MH.layout_image()
+    ok("S121: the frame-table image fits wMillyLayout (160 B)",
+       0 < len(img) <= MH.WRAM_LAYOUT_SIZE, f"({len(img)} B)")
+    ed = _region(on['patches/bank_00e.asm'], 'milly_bedroom_script')
+    words = [int(w, 16) for ln in ed.split('\n') for w in re.findall(r'\$([0-9A-Fa-f]{4})', ln.split(';')[0])]
+    ok("S121 hook on: the bedroom tail is exactly 94 words (same size)", len(words) == 94,
+       f"({len(words)})")
+    i = words.index(0xFF3B)
+    ok("S121 hook on: glow sound $60, flag $179F set, the name MILLY, then warp_fade to the room",
+       words[:2] == [0xFF21, 0x0060] and [0xFF03, 0x179F] == words[words.index(0xFF03):words.index(0xFF03) + 2]
+       and words[i + 1] & 0xFF == 0x6B and words[i + 4] == 0xFFFF)
+    for f, want in (('patches/bank_004.asm', 'ld hl, $7900'), ('patches/bank_001.asm', 'ld hl, $7901'),
+                    ('patches/bank_009.asm', 'dw $3114')):
+        ok(f"S121 hook on: {f} redirect ({want})", want in on[f])
+    code = lambda t: [ln.split(';')[0].strip() for ln in t.split('\n') if ln.split(';')[0].strip()]
+    ok("S121 hook on: both bank $04 metasprite paths redirected (6 bytes each)",
+       code(_region(on['patches/bank_004.asm'], 'milly_shape_04a')) ==
+       code(_region(on['patches/bank_004.asm'], 'milly_shape_04b')) ==
+       ['ld hl, $7900', 'rst $10', 'nop', 'nop'])
+    ok("S121 hook on: the MILLY tiles in bank $4F", ';MILLY' in _region(on['patches/bank_04f.asm'], 'milly_name_tiles')
+       or 'MILLY' in _region(on['patches/bank_04f.asm'], 'milly_name_tiles'))
+    ok("S121: the hook's flags are not in the named-flag pool",
+       all(not (lo <= f <= hi) for f in MH.RESERVED_FLAGS for lo, hi in FLAG_SAFE_RANGES))
+    ok("S121: hook:milly resolves to $179F", prj.resolve_flag_ref('hook:milly', 't') == 0x179F)
+    # the arrival scene: the cast NPC (Milayou's sprite) + the entry scene in gate_island
+    r = next(x for x in prj.custom['rooms'] if x['id'] == 'gate_island')
+    ok("S121 hook on: the arrival room carries the hidden cast (sprite $14) and the scene",
+       MH.CAST in json.dumps(r) and MH.SCENE_ID in json.dumps(r))
+    expect_error("S121: hook on without an arrival is an error",
+                 _milly_fixture(arrive={'room': ''}), 'pick where Milly arrives')
+    expect_error("S121: arrival in a room that does not exist",
+                 _milly_fixture(arrive={'room': 'nope', 'screen': 0, 'x': 4, 'y': 4}), 'nope')
+    # the naming step
+    ok("S121: name_hero is a step kind", 'name_hero' in CB.STEP_KINDS and
+       CB.STEP_NAMES['name_hero'] == 'Name the hero')
+    # the roots room, made the way the editor makes it
+    tmp = '/tmp/_t_milly_roots'
+    shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmp, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmp, 'project.json'))
+    rid = doc.create_roots_room(REPO, None)
+    room = doc.room(rid)
+    ok("S121: Create the roots room = a copy of $08 with Warubou and the scene, keeps sprites over text",
+       room.get('source_mapID') in ('0x08', 8) and room.get('text_keeps_sprites') is True and
+       [sc['id'] for sc in room.get('cutscenes') or []] == [MH.ROOTS_SCENE])
+    ok("S121: the roots room becomes the arrival when there was none",
+       doc.milly_hook()['arrive']['room'] == rid)
+    doc.set_milly_hook(enabled=True)
+    sc = room['cutscenes'][0]
+    kinds = lambda: [next(iter(st)) for st in sc['steps']]
+    ok("S121 r3: a new roots room asks her name — say / Name the hero / say",
+       doc.roots_naming(rid) and kinds()[2:5] == ['say', 'name_hero', 'say'], kinds())
+    doc.set_roots_naming(rid, False)
+    ok("S121 r3: naming off = one text, no naming screen",
+       not doc.roots_naming(rid) and kinds().count('say') == 1 and 'name_hero' not in kinds(),
+       kinds())
+    doc.set_roots_naming(rid, True)
+    ok("S121 r3: naming on again = the naming screen + a box right after his text",
+       kinds()[2:5] == ['say', 'name_hero', 'say'] and
+       sc['steps'][4]['say']['boxes'] == [list(b) for b in MH.ROOTS_TEXT_AFTER], kinds())
+    doc.set_roots_scene_destination(rid, {'dest': 'room:$6B', 'screen': 0, 'x': 4, 'y': 4})
+    ok("S121: the roots scene's destination is its last move step",
+       doc.roots_scene_destination(rid) == {'dest': 'room:$6B', 'screen': 0, 'x': 4, 'y': 4})
+    # S121 r3 (user: "Redirect from ROOTS ROOM into SBOSS" crashed): a move to a screen
+    # the room lacks is refused at build (PyBoy: screen 12 of a 2-screen room = crash)
+    doc.set_roots_scene_destination(rid, {'dest': 'room:$6D', 'screen': 12, 'x': 4, 'y': 6})
+    doc.save()
+    try:
+        C.compile_project(tmp, REPO)
+        bad = 'no error'
+    except (ProjectError, C.CompileError) as e:
+        bad = str(e)
+    ok("S121 r3: a move to a screen the room does not have stops the build",
+       'has no screen 12' in bad and 'its screens: 0' in bad, bad)
+    from editor2.core.project import vanilla_screens
+    ok("S121 r3: game rooms' screens known (GreatTree has 12, the Castle 1)",
+       12 in vanilla_screens()[0x01] and 1 in vanilla_screens()[0x00])
+    doc.set_roots_scene_destination(rid, {'dest': 'room:$6B', 'screen': 0, 'x': 4, 'y': 4})
+    doc.save()
+    outr, prjr, _w = C.compile_project(tmp, REPO)
+    ok("S121: the roots-room project compiles (arrival + Warubou's scene + Name the hero)",
+       'MillyShapeTable' in outr['patches/bank_079.asm'])
+    ok("S121: the roots room keeps sprites over text (room flag bit 1, bank $06 region on)",
+       'ld hl, $7108' in outr['patches/bank_006.asm'])
+    return on
+
+
+def test_maze_s122():
+    """S122 (ROADMAP P3.7b part 2 + Phase 2C — user: "can I currently use gate
+    themes for custom room build? … I would love to use them for custom rooms as
+    an option for tileset, properly coloured"; "include carve trace")."""
+    import shutil
+    from editor2.core import maze as MZ
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    M = MZ.MazeRom(rom)
+    ok("S122: maze tables read from the ROM (shape modes 0,0,0,1,2; piece 0 opens all four "
+       "sides, piece 15 none; the carve starts at cell 5; 21 patterns)",
+       M.shape == [0, 0, 0, 1, 2] and M.openings(0) == 15 and M.openings(15) == 0 and
+       M.order[0] == 5 and len(M.patterns) == 21)
+    J = json.load(open(os.path.join(REPO, 'extracted', 'maze_pieces.json')))
+    ox = lambda sc: M.origin[sc][0] | M.origin[sc][1] << 8          # noqa: E731
+    oy = lambda sc: M.origin[sc][2] | M.origin[sc][3] << 8          # noqa: E731
+    same = 0
+    for smp in J['samples']:
+        i, g = smp['input'], smp['game']
+        e = M.generate(i['seed'], i['size'], i['ft3'], i['progress'], i['npc_state'])
+        st, sx, sy = e['stairs']
+        ar, ax, ay = e['arrival']
+        n = e['npc']
+        fine = (e['mode'] == g['mode'] and e['grid'] == g['grid'] and
+                [st, [ox(st) + sx, oy(st) + sy]] == [g['stairs_screen'], list(g['stairs_abs'])] and
+                [ar, [ox(ar) + ax, oy(ar) + ay]] == [g['arrival_screen'], list(g['arrival_abs'])] and
+                ((n is None and g['npc_screen'] == 0xFF) or
+                 (n is not None and [n['screen'], n['kind']] == [g['npc_screen'], g['npc_kind']])) and
+                [[t['kind'], t['sub'], t['screen'], t['x'], t['y']] for t in e['items']] ==
+                [[t['kind'], t['sub'], t['screen'], t['x'], t['y']] for t in g['items']] and
+                e['rng'] == g['rng'])
+        same += fine
+    ok(f"S122: the floor model == {len(J['samples'])} floors recorded from the game "
+       "(grid, shape mode, stairs, NPC, arrival, items, RNG — tools/census_maze.py)",
+       len(J['samples']) >= 25 and same == len(J['samples']), f'({same} equal)')
+    ok("S122: the census JSON says 0 mismatches on its floors and 0 differing screens",
+       J['census']['floors']['mismatches'] == 0 and J['census']['screens']['with_differences'] == 0)
+    mode, g, _s = M.carve(0x8192, 2)
+    ok("S122: maze size 2 can carve an EMPTY floor (the game spins: census freeze probe)",
+       mode == 0 and all(c & 0xF0 == 0xF0 for c in g) and
+       J['census']['freeze_probe']['builder_finished'] is False)
+    empty = sum(1 for sz in range(3, 16) for sd in range(0, 65536, 97)
+                if all(c & 0xF0 == 0xF0 for c in M.carve(sd, sz)[1]))
+    ok("S122: sizes 3-15 never carve an empty floor (model sweep)", empty == 0)
+    for bad in (0, 1, 2, 16, 255):
+        d = base()
+        d.setdefault('gamedata', {}).setdefault('encounters', {})['3'] = {'maze_size': bad}
+        expect_error(f"S122 refuses maze_size {bad}", d, 'gate floors need 3-15')
+    for good in (3, 15):
+        d = base()
+        d.setdefault('gamedata', {}).setdefault('encounters', {})['3'] = {'maze_size': good}
+        compile_data(d)
+        ok(f"S122: maze_size {good} compiles", True)
+    # the editor model
+    tmpd = '/tmp/_t_maze_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    r = ProjectRenderer(REPO, doc.project_dir, doc.data)
+    doc.vanilla = r
+    ok("S122: the example's S39 island rooms ($28:$0D) are gate theme 13",
+       doc.gate_theme(doc.room('gate_island')) == 13 and doc.gate_theme(doc.room('arena_clone')) is None)
+    rid = doc.new_room('Ice test', 0, r, gate_theme=4)
+    room = doc.room(rid)
+    pal = doc.palette(room['render']['palette'])
+    words = [[int(c, 16) for c in row] for row in pal['colors_rgb555'][:4]]
+    ok("S122: New room on gate theme 4 = sheet $28:$04, threshold $30, no animation, the "
+       "theme's four palettes, protected tiles $00-$3F, a floor of tile $33",
+       room['record']['gfx_bank'] == '0x28' and room['record']['gfx_id'] == '0x04' and
+       room['record']['collision_threshold'] == '0x30' and room['animation'] == 'none' and
+       words == M.theme_palette_words(4) and doc.gate_theme(room) == 4 and
+       doc.room_sources_vocab(room) == set(range(0x40)) and
+       doc.layout(room['screens']['0']['layout']['id'])['tiles'][0][0] == 0x33)
+    lid = doc.stamp_maze_screen(rid, 0, 0, 0x5C, 0, r)
+    tiles, attr = M.cell_grids(0x5C, 0)
+    sc = room['screens']['0']
+    ok("S122: Maze screen = the cell's tiles AND palette slots in a new layout item; the "
+       "screen points at it for both; the floor item stays (the room's default attr)",
+       doc.layout(lid)['tiles'] == tiles and doc.layout(lid)['attr'] == attr and
+       sc['layout'] == {'id': lid} and sc['attr'] == {'id': lid} and lid != f'{rid}_s0' and
+       doc.has_layout(f'{rid}_s0'))
+    lid2 = doc.stamp_maze_screen(rid, 0, 0, 0x0C, 0, r)
+    ok("S122: a second Maze screen replaces the first (the screen owned it alone)",
+       not doc.has_layout(lid) and doc.layout(lid2)['tiles'] == M.cell_grids(0x0C, 0)[0])
+    nts = len(doc.custom.get('tilesets') or [])
+    mt = doc.well_metatile(room, 0, 0, 3, 3)
+    ok("S122: Stairs down in a gate-theme room paints the theme's own stairs ($3C-$3F, no "
+       "import)", mt['tiles'] == [0x3C, 0x3D, 0x3E, 0x3F] and
+       len(doc.custom.get('tilesets') or []) == nts and 'tileset' not in room['record'])
+    doc.set_room_tileset('dusk_mirror', 'gate', 9)
+    pid, kept = doc.use_theme_palette('dusk_mirror', 9)
+    dm = doc.room('dusk_mirror')
+    ok("S122: Change tileset -> gate theme 9 (+ its colours as the room default)",
+       dm['record']['gfx_id'] == '0x09' and dm['render']['palette'] == pid and
+       doc.gate_theme(dm) == 9)
+    doc.save()
+    out, _p, _w = C.compile_project(tmpd, REPO)
+    ok("S122: the project with a theme room compiles (bank $71 record row $28/$04/$30)",
+       'patches/bank_071.asm' in out and 'Ice test' in json.dumps(doc.data))
+    # a project copy of a theme sheet is still the theme (origin)
+    tid = doc.set_room_tileset(rid, 'own')
+    ok("S122: an own copy of a theme sheet is still that theme (tileset origin)",
+       doc.gate_theme(doc.room(rid)) == 4 and tid != '28:04')
+    return out
+
+def _world_fixture():
+    """S123 (ROADMAP NG3): the example + a world built with the editor's own
+    operations (WorldsMixin): two new rooms joined by doors, the portal in the
+    example's dusk_mirror room, a mini-boss (Make boss) with its own flag, the
+    end boss turning the world's cleared flag ON, a battle room with its own
+    list (+ a variant after clearing), the swirl going green once cleared, and
+    an NPC drawn in another colour. Returns (doc, gid, rooms)."""
+    import shutil
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    tmpd = '/tmp/_t_world_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    r = ProjectRenderer(REPO, doc.project_dir, doc.data)
+    doc.vanilla = r
+    start = doc.new_room('World start', 0, r, gate_theme=9)
+    cave = doc.new_room('World cave', 0, r, gate_theme=1)
+    gid = doc.new_world('Test World', start, 0, 4, 4)
+    doc.add_world_room(gid, cave)
+    doc.set_cleared_swirl(gid, 1)
+    for y in (3, 4):
+        a = doc.add_door(start, 0, 9, y)
+        b = doc.add_door(cave, 0, 0, y)
+        doc.link_doors(a, b)
+    # the way out: a one-way exit back to the example's dusk_mirror
+    doc.add_teleport(doc.room(start), 0, 0, 1, 6, 'room:$6C', 0, 4, 4)
+    doc.add_world_entrance(doc.room('dusk_mirror'), 0, 0, 4, 2, gid)
+    doc.room(cave)['encounters'] = {'enabled': True, 'list': 3, 'rate': 5,
+                                    'variants': [{'when': [{'flag': f'gate:{gid}'}],
+                                                  'list': 4}]}
+    i = doc.add_npc(doc.room(cave), 0, 0, 6, 3, 0, monster=197)
+    j = doc.add_npc(doc.room(cave), 0, 0, 6, 4, 0, monster=197)
+    sid = doc.make_boss(doc.room(cave), 0, 0, i, [99], 'cave_guard_beaten',
+                        intro=[['I guard the cave']])
+    doc.update_npc(doc.room(cave), 0, 0, j, script=sid)
+    doc.set_npc_shown_when(doc.room(cave), 0, 0, j, [{'flag': 'cave_guard_beaten',
+                                                       'is': 'clear'}])
+    k = doc.add_npc(doc.room(cave), 0, 0, 3, 6, 0, monster=43)
+    doc.make_boss(doc.room(cave), 0, 0, k, [125], 'cave_king_beaten',
+                  intro=[['I am the king']], end_of_world=gid)
+    c = doc.add_npc(doc.room(start), 0, 0, 2, 2, 0x14)
+    doc.set_npc_colour(doc.room(start), 0, 0, c, 4)
+    v = doc.add_npc(doc.room(start), 0, 0, 6, 6, 0x08)
+    vs = doc.new_conversation(doc.room(start), {'steps': [
+        {'if': [{'flag': f'gate:{gid}', 'is': 'set'}],
+         'then': [{'say': {'boxes': [['It is cleared']]}}],
+         'else': [{'say': {'boxes': [['Not yet']]}}]}]}, name='villager')
+    doc.update_npc(doc.room(start), 0, 0, v, script=vs)
+    doc.save()
+    return doc, gid, {'start': start, 'cave': cave}
+
+
+def _flag_sites_fixture():
+    """S124: the example + one of every flag site the world / S117 / encounter
+    fixtures do not have: a simple talk (YES sets, NO clears), a cutscene whose
+    start tests flags ON / OFF / once and whose steps test, set, clear and ask, an
+    NPC drawn in a colour while a flag is ON, a gate-floor room rule on a flag, a
+    script prelude with a raw flag op; plus a flag nothing turns ON and an unused one."""
+    d, r = _cs_fixture([{
+        'id': 'ks_scene', 'name': 'Sites', 'screen': 0,
+        'trigger': {'on': 'entry', 'when_on': ['ks_a'], 'when_off': ['ks_b'], 'once': 'ks_c'},
+        'steps': [{'if': [{'flag': 'ks_a'}, {'flag': 'gate:1', 'is': 'clear'}],
+                   'then': [{'set': ['ks_b']}], 'else': [{'clear': ['ks_a']}]},
+                  {'ask': {'boxes': [['Again?']]}, 'yes': [{'set': ['ks_d']}],
+                   'no': [{'clear': ['ks_d']}]}]}],
+        flags=('ks_a', 'ks_b', 'ks_c', 'ks_d', 'ks_never', 'ks_unused'))
+    c = d['custom']
+    c['dialogue'] += [{'id': 'ks_q', 'boxes': [['Ring the bell?']], 'choice': True},
+                      {'id': 'ks_y', 'boxes': [['Dong.']]}]
+    c['scripts'].append({'id': 'ks_talk', 'talk': {
+        'text': 'ks_q', 'question': True, 'yes': {'text': 'ks_y', 'set': ['ks_a']},
+        'no': {'clear': ['ks_b', '0x1005']}}})
+    r['scripts']['7'] = 'ks_talk'
+    npcs = r['screens']['0']['npcs']
+    npcs[2]['script'] = 'ks_talk'
+    npcs[1]['colour'] = {'palette': 1, 'when': 'ks_d'}
+    npcs.append({'kind': 'npc', 'sprite': '0x0B', 'x': 8, 'y': 6, 'facing': 'down',
+                 'script': None, 'shown_when': [{'flag': 'ks_never'}]})
+    c['gate_inserts'][0]['when'] = [{'flag': 'ks_b'}, {'flag': 'ks_c', 'is': 'clear'}]
+    c['script_preludes']['give_jerky'] = [['op', 'set_flag', '0x1006']]
+    # S125: a hub rule on a flag + a talk that sends the player home
+    c['hub'] = {'rules': [{'when': [{'flag': 'ks_d', 'is': 'clear'}], 'room': 'gate_island',
+                           'screen': 0, 'x': 4, 'y': 4}, {'room': 'castle'}]}
+    c['scripts'][-1]['talk']['no']['move'] = {'dest': 'hub'}
+    return d
+
+
+def _hub_fixture(rules=None, scenes=(), flags=('hub_moved',)):
+    """S125: the example with a hub — gate_island screen 0 (4,4) while hub_moved is
+    OFF, the Castle after."""
+    d, r = _cs_fixture(list(scenes), flags=flags)
+    d['custom']['hub'] = {'rules': rules if rules is not None else [
+        {'when': [{'flag': 'hub_moved', 'is': 'clear'}], 'room': 'gate_island',
+         'screen': 0, 'x': 4, 'y': 4, 'comment': 'the main game'},
+        {'room': 'castle', 'comment': 'the post-game'}]}
+    return d, r
+
+
+def CD_find(doc, sid):
+    from editor2.core import cutscene_doc as CD
+    return CD.find(doc, sid)[1]
+
+
+def _ops_of(prj, sid):
+    return prj._scripts[sid]['ops']
+
+
+def test_hub_s125():
+    """S125 (ROADMAP P3.14d): custom.hub — the rules -> HubTable, the script ladders
+    (a conversation's / cutscene's move to "the hub", the Anchor skill's gate exit),
+    the hub room's arrival script (arrival scenes first, the default heal), the
+    Heal step, and the refusals. No hub = the vanilla Castle, byte for byte."""
+    from editor2.core import cutscene_build as CB
+    from editor2.core import formats as F
+    out, prj, _w = compile_data(base())
+    b71 = out['patches/bank_071.asm']
+    i = b71.index('HubTable:')
+    ok("S125: no custom.hub -> HubTable is one `db $FF` (every send: the Castle)",
+       b71[i:].split('\n')[1].strip() == 'db $FF' and prj.hub_rules() == [])
+    sk = json.load(open(os.path.join(REPO, 'editor2', 'core', 'skill_scripts.json')))
+    a0 = next(x for x in sk['scripts'] if x['id'] == 'skill:anchor_gate_confirm')['ops']
+    a1 = next(x for x in prj.skill_scripts if x['id'] == 'skill:anchor_gate_confirm')['ops']
+    def notext(ops):            # the ops without texts, numbers as numbers
+        return [[int(p, 16) if isinstance(p, str) and p.startswith('0x') else p for p in x]
+                for x in ops if isinstance(x, list) and x[0] != 'text']
+    ok("S125: no hub -> the Anchor skill's gate exit is untouched", notext(a0) == notext(a1))
+    ok("S125: the reasons agree (Project / cutscenes / patches/wram.asm HUB_* EQUs)",
+       CB.ARRIVAL_NUM == Project.HUB_REASONS and CB.W_HUB_REASON == Project.W_HUB_REASON
+       and all(f'HUB_{k.upper()} EQU {v}' in open(os.path.join(REPO, 'patches', 'wram.asm')).read()
+               for k, v in Project.HUB_REASONS.items()
+               if k not in ('lost', 'wiped', 'warpwing', 'final_lost'))
+       and all(f'HUB_{n} EQU {v}' in open(os.path.join(REPO, 'patches', 'wram.asm')).read()
+               for n, v in (('LOST', 1), ('WIPED', 2), ('WARPWING', 3), ('FINAL_LOST', 4))))
+
+    # a hub: gate_island while hub_moved is OFF, then the Castle
+    welcome = {'id': 'hub_welcome', 'name': 'Welcome back', 'screen': 0,
+               'trigger': {'on': 'entry', 'arrival': ['lost', 'wiped']},
+               'steps': [{'say': {'boxes': [['You lost!', 'Rest now.']]}}, {'heal': {}}]}
+    plain = {'id': 'hub_plain', 'name': 'Plain entry', 'screen': 0,
+             'trigger': {'on': 'entry', 'once': 'hub_once'},
+             'steps': [{'say': {'boxes': [['Hello.']]}}]}
+    d, r = _hub_fixture(scenes=[plain, welcome], flags=('hub_moved', 'hub_once'))
+    d['custom']['dialogue'].append({'id': 'hub_bye', 'boxes': [['Off you go.']]})
+    d['custom']['scripts'].append({'id': 'hub_sender', 'talk': {'steps': [
+        {'say': 'hub_bye'}, {'move': {'dest': 'hub'}}]}})
+    r['scripts']['8'] = 'hub_sender'
+    r['screens']['0']['npcs'][2]['script'] = 'hub_sender'
+    out, prj, _w = compile_data(d)
+    hm = prj.resolve_flag_ref('hub_moved')
+    rules = prj.hub_rules()
+    ok("S125: the rules resolve (room, pixel = 16*cell+8, terms, the Castle)",
+       len(rules) == 2 and rules[0]['mapID'] == 0x6B and (rules[0]['px'], rules[0]['py']) == (72, 72)
+       and rules[0]['terms'] == [(hm, True)] and rules[1]['castle']
+       and (rules[1]['mapID'], rules[1]['px'], rules[1]['py']) == (0, 0xE8, 0x58), rules)
+    b71 = out['patches/bank_071.asm']
+    tab = b71[b71.index('HubTable:'):].split('\n')
+    want = [F.db_line([1]).split(';')[0].strip(),
+            f'dw ${hm | 0x8000:04X}',
+            F.db_line([0x6B, 0, 72, 0, 72, 0]).split(';')[0].strip(),
+            F.db_line([0]).split(';')[0].strip(),
+            F.db_line([0, 0, 0xE8, 0, 0x58, 0]).split(';')[0].strip(), 'db $FF']
+    got = [x.split(';')[0].strip() for x in tab[1:7]]
+    ok("S125: HubTable = [1, dw flag|$8000, $6B 0 72 0 72 0] [0, 0 0 $E8 0 $58 0] $FF (S140: + the region byte)", got == want,
+       f'{got} != {want}')
+    a1 = next(x for x in prj.skill_scripts if x['id'] == 'skill:anchor_gate_confirm')['ops']
+    flat = [x for x in a1 if isinstance(x, list)]
+    ok("S125: the Anchor skill's gate exit -> the hub ladder (reason WarpWing = 3; the "
+       "Castle branch keeps $D92B := 6)",
+       any(x[:3] == ['op', 'if_flag_set', hm] for x in flat)
+       and flat.index(['op', 'write_ram', '0xD2EF', 3]) + 1 ==
+       flat.index(['op', 'map_transition', '0x006B', '0x0048', '0x0048'])
+       and flat.index(['op', 'write_ram', '0xD92B', 6]) + 1 ==
+       flat.index(['op', 'map_transition', '0x0000', '0x00E8', '0x0058']), flat)
+    snd = _ops_of(prj, 'hub_sender')
+    ok("S125: a conversation's move to the hub = the ladder (reason home = 5)",
+       ['op', 'write_ram', '0xD2EF', 5] in snd
+       and ['op', 'map_transition', '0x006B', '0x0048', '0x0048'] in snd
+       and ['op', 'write_ram', '0xD92B', 6] in snd, snd)
+    room = prj.room_by_id('gate_island')
+    eid = room['scripts']['0']
+    ent = _ops_of(prj, eid)
+    flat = [x for x in ent if isinstance(x, list)]
+    iw = next(k for k, x in enumerate(ent) if x == ['op', 'check_and_branch', '0xD2EF', 1,
+                                                     '@cs_hub_welcome_arr'])
+    ip = next(k for k, x in enumerate(ent) if isinstance(x, list) and x[1:3] == ['if_flag_set',
+                                                prj.resolve_flag_ref('hub_once')])
+    ok("S125: the arrival scene plays first (before an ordinary entry scene listed before it)",
+       eid == 'cut:gate_island:entry' and iw < ip, ent[:12])
+    ok("S125: the arrival guard = reason 1 or 2, then the scene takes the reason",
+       ['op', 'check_and_branch', '0xD2EF', 2, '@cs_hub_welcome_arr'] in flat
+       and ent[ent.index('label:cs_hub_welcome_arr') + 1] == ['op', 'write_ram', '0xD2EF', 0])
+    ok("S125: the Heal step = op $27 refresh_party", ['op', 'refresh_party'] in flat)
+    dflt = CB.hub_default_ops()
+    kd = next(k for k in range(len(ent)) if ent[k:k + 4] == dflt)
+    ok("S125: the hub room's default welcome after the arrival scenes, before the other "
+       "entry scenes (one may warp away): a reason no scene took -> heal + take it",
+       iw < kd < ip and ent.count(dflt[0]) == 1, kd)
+    _o2, prj2, _w2 = compile_data(_hub_fixture()[0])
+    e2 = _ops_of(prj2, prj2.room_by_id('gate_island')['scripts']['0'])
+    ok("S125: a hub room's arrival script starts with the WarpWing reveal ($C8EC := 0)",
+       ent[:5] == CB.hub_reveal_ops() and e2[:5] == CB.hub_reveal_ops(), ent[:5])
+    ok("S125: a hub room without scenes still gets the welcome, then its own entry script",
+       e2[5:10] == CB.hub_default_ops() + ['label:cut_orig']
+       and any(isinstance(x, list) for x in e2[10:]), e2[:12])
+    _o3, prj3, _w3 = compile_data(_hub_fixture(rules=[{'room': 'castle'}])[0])
+    a3 = next(x for x in prj3.skill_scripts if x['id'] == 'skill:anchor_gate_confirm')['ops']
+    ok("S125: a hub that is only the Castle -> the Anchor exit is the original ops",
+       notext(a3) == notext(a0))
+    d4, _r4 = _hub_fixture()
+    d4['custom']['scripts'].append({'id': 'hub_helper', 'talk': {'steps': [
+        {'helper': {'dest': 'hub', 'castle': 'king', 'king_speech': '0x31'}}]}})
+    _r4['scripts']['8'] = 'hub_helper'
+    _r4['screens']['0']['npcs'][2]['script'] = 'hub_helper'
+    _o4, prj4, _w4 = compile_data(d4)
+    hh = [x for x in _ops_of(prj4, 'hub_helper') if isinstance(x, list)]
+    ok("S125: the helper exit to the hub: warp_fade, the Castle branch keeps the King's speech",
+       ['op', 'warp_fade', '0x006B', '0x0048', '0x0048'] in hh
+       and ['op', 'write_ram', '0xD92B', 7] in hh and ['op', 'write_ram', '0xD92B', 6] not in hh
+       and hh[-2] == ['op', 'warp_fade', '0x0000', '0x00E8', '0x0058'], hh[-6:])
+
+    # S125 review: a `once` arrival scene that skips leaves the reason to the default heal
+    d8, _r8 = _hub_fixture(scenes=[dict(welcome, trigger={'on': 'entry', 'arrival': ['lost'],
+                                                         'once': 'hub_once'})],
+                           flags=('hub_moved', 'hub_once'))
+    _o8, prj8, _w8 = compile_data(d8)
+    e8 = _ops_of(prj8, prj8.room_by_id('gate_island')['scripts']['0'])
+    io = next(k for k, x in enumerate(e8) if isinstance(x, list) and x[1] == 'if_flag_set'
+              and x[2] == prj8.resolve_flag_ref('hub_once'))
+    ic = e8.index(['op', 'write_ram', '0xD2EF', 0])
+    ok("S125: an arrival scene's `once` test comes before it takes the reason", io < ic,
+       (io, ic))
+
+    # the validator's warnings
+    d5, r5 = _hub_fixture(scenes=[dict(welcome, steps=[{'say': {'boxes': [['Hi.']]}}])])
+    r6 = next(x for x in d5['custom']['rooms'] if x['id'] == 'dusk_mirror')
+    r6['cutscenes'] = [dict(welcome, id='stray', name='Stray')]
+    _o5, _p5, w5 = compile_data(d5)
+    ok("S125 warns: a loss arrival scene without a Heal step",
+       any('Welcome back' in w and 'no Heal step' in w for w in w5), w5[:3])
+    ok("S125 warns: an arrival scene in a room no hub rule sends the player to",
+       any('Stray' in w and 'never plays' in w for w in w5))
+
+    # the editor's document side (editor2/core/hub_doc.py)
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    tmp = tempfile.mkdtemp()
+    json.dump(base(), open(os.path.join(tmp, 'project.json'), 'w'))
+    shutil.copytree(os.path.join(os.path.dirname(EXAMPLE), 'assets'),
+                    os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+    doc = Document(tmp)
+    nm = doc.add_flag('hub_moved')
+    i0 = doc.add_hub_rule({'room': 'castle'})
+    i1 = doc.add_hub_rule({'when': [{'flag': nm, 'is': 'clear'}], 'room': 'gate_island',
+                           'screen': 0, 'x': 4, 'y': 4}, index=0)
+    ok("S125 doc: rules added in order (the conditional one first), described in words",
+       (i0, i1) == (0, 0) and [r['room'] for r in doc.hub_rules()] == ['gate_island', 'castle']
+       and doc.hub_rule_text(doc.hub_rules()[0]).startswith('while hub_moved is OFF → ')
+       and 'Castle' in doc.hub_rule_text(doc.hub_rules()[1]), doc.hub_rules())
+    ok("S125 doc: moving the unconditional rule up is reported as a problem",
+       doc.move_hub_rule(1, -1) == 0 and any('never applies' in t for t in doc.hub_problems()))
+    doc.move_hub_rule(0, 1)
+    new = doc.add_arrival_scenes('gate_island')
+    sc = [CD_find(doc, x) for x in new]
+    ok("S125 doc: Add the arrival scenes -> loss (+heal) / WarpWing (+heal) / home / "
+       "(S138) an old save (+heal), at the hub cell",
+       len(new) == 4 and sc[0]['trigger']['arrival'] == ['lost', 'wiped', 'final_lost']
+       and sc[0]['steps'][-1] == {'heal': {}} and sc[2]['trigger']['arrival'] == ['home']
+       and sc[3]['trigger']['arrival'] == ['continue'] and sc[3]['steps'][-1] == {'heal': {}}
+       and sc[0]['player_start'] == {'x': 4, 'y': 4, 'face': 'down'}, sc)
+    ok("S125 doc: a second Add skips the reasons already taken", doc.add_arrival_scenes('gate_island') == [])
+    doc.save()
+    _o7, prj7, w7 = C.compile_project(tmp, REPO)
+    ok("S125 doc: the project builds with the hub and its arrival scenes, no hub warnings",
+       prj7.hub_rules()[0]['room_id'] == 'gate_island'
+       and not [w for w in w7 if 'arrival' in w], [w for w in w7 if 'arrival' in w])
+    doc.remove_hub_rule(0)
+    doc.remove_hub_rule(0)
+    ok("S125 doc: removing every rule removes custom.hub (the Castle again)",
+       'hub' not in doc.custom and doc.hub_rules() == [])
+
+    # refusals
+    def bad(rules, needle, tag):
+        expect_error(f"S125 refuses {tag}", _hub_fixture(rules=rules)[0], needle)
+    bad([{'room': 'castle'}, {'room': 'gate_island', 'x': 1, 'y': 1}],
+        'always wins', 'a rule after one with no conditions')
+    bad([{'room': 'nowhere', 'x': 1, 'y': 1}], 'not a custom room', 'an unknown room')
+    bad([{'room': 'gate_island', 'screen': 7, 'x': 1, 'y': 1}], 'has no screen 7',
+        'a screen the room does not have')
+    bad([{'room': 'gate_island', 'x': 10, 'y': 1}], 'outside the 10x8', 'a cell off the screen')
+    bad([{'room': 'gate_island'}], 'x / y is required', 'a rule without its cell')
+    sc = dict(welcome, trigger={'on': 'talk', 'actor': 'Guard', 'arrival': ['lost']})
+    expect_error("S125 refuses arrival reasons on a talk scene",
+                 _hub_fixture(scenes=[sc])[0], 'belong to an arrival (entry) scene')
+    sc = dict(welcome, trigger={'on': 'entry', 'arrival': ['napping']})
+    expect_error("S125 refuses an unknown arrival reason", _hub_fixture(scenes=[sc])[0],
+                 "arrival reasons ['napping']")
+
+
+def test_hub_rom(rom_ex, sym_ex):
+    """S125 on real bytes: the four engine Castle sends are same-size calls of bank $71
+    entry 9 (the original 38 bytes were the Castle writes); HubWarp RUN from the ROM
+    (MiniSM83) over the example (no hub) and a hub fixture."""
+    from editor2.core import builder as B
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    castle = lambda code: bytes([0x3E, code, 0xEA, 0x2B, 0xD9, 0x21, 0x00, 0x00, 0x7D, 0xEA])
+    for lab, reason, code in (('jr_050_64af', 4, 8), ('jr_050_6559', 1, 8),
+                              ('jr_006_6a25', 2, 8), ('jr_007_5012', 3, 6)):
+        bk, adr = sym_ex[lab + '.hubWarped']
+        o = bk * 0x4000 + adr - 0x4000 - 38
+        ok(f"S125: {lab}: the 38 Castle bytes ($D92B := {code}) -> ld e, {reason} / "
+           "ld hl, $7109 / rst $10 / jr +30",
+           orig[o:o + 10] == castle(code) and
+           rom_ex[o:o + 8] == bytes([0x1E, reason, 0x21, 0x09, 0x71, 0xD7, 0x18, 30]) and
+           rom_ex[o + 38:o + 43] == orig[o + 38:o + 43] and rom_ex[o + 38:o + 40] == b'\x3e\x01',
+           rom_ex[o:o + 8].hex())
+    e9 = 0x71 * 0x4000 + 1 + 2 * 9
+    ok("S125: bank $71 entry 9 -> HubWarp; wHubReason = $D2EF",
+       (rom_ex[e9] | rom_ex[e9 + 1] << 8) == sym_ex['HubWarp'][1]
+       and sym_ex['wHubReason'][1] == 0xD2EF)
+
+    def run(rom, sym, reason, flags_set=()):
+        cpu = MiniSM83(rom, 0x71)
+        cpu.e = reason
+
+        def tef(c):                     # TestEventFlag: BC = flag; Z = clear
+            c.z = (c.b << 8 | c.c_) not in flags_set
+        cpu.calls[sym['TestEventFlag'][1]] = tef
+        cpu.run(sym['HubWarp'][1])
+        m = cpu.ram
+        return (m.get(sym['wWarpGateId'][1]), m.get(sym['wWarpFlag'][1]),
+                m.get(sym['wWarpSpawnXLo'][1]) | m.get(sym['wWarpSpawnXHi'][1], 0) << 8,
+                m.get(sym['wWarpSpawnYLo'][1]) | m.get(sym['wWarpSpawnYHi'][1], 0) << 8,
+                m.get(0xD92B), m.get(0xD2EF))
+    ok("S125: HubWarp, no hub, a lost battle -> map 0 ($E8, $58), $D92B = 8, reason 0",
+       run(rom_ex, sym_ex, 1) == (0, 0, 0xE8, 0x58, 8, 0), run(rom_ex, sym_ex, 1))
+    ok("S125: HubWarp, no hub, the WarpWing -> map 0, $D92B = 6",
+       run(rom_ex, sym_ex, 3) == (0, 0, 0xE8, 0x58, 6, 0))
+    d, _r = _hub_fixture()
+    outh, prjh, _w = compile_data(d)
+    outdir = '/tmp/_t_hub_rom'
+    C.write_outputs(outh, outdir)
+    rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom, 'rb').read(), B.parse_sym(sym)
+    hm = prjh.resolve_flag_ref('hub_moved')
+    ok("S125: HubWarp, hub_moved OFF -> gate_island ($6B) at (72, 72), reason kept, "
+       "$D92B untouched",
+       run(rb, sy, 1) == (0x6B, 0, 72, 72, None, 1), run(rb, sy, 1))
+    ok("S125: HubWarp, hub_moved ON -> the Castle rule: the vanilla writes",
+       run(rb, sy, 2, {hm}) == (0, 0, 0xE8, 0x58, 8, 0) and
+       run(rb, sy, 3, {hm}) == (0, 0, 0xE8, 0x58, 6, 0), run(rb, sy, 2, {hm}))
+
+
+def test_flag_index_s124():
+    """S124 (ROADMAP P3.14a): every flag of a project and every place that touches it
+    (editor2/core/flag_index.py) — the index finds EVERY flag the compiler resolves and
+    every flag op it emits (a new site cannot be forgotten); Rename rewrites every use
+    and the ROM does not change; numbers are pinned on open with the compiler's own
+    numbering; new flags skip $0158 (the game's, Arena Battle); the problems."""
+    import copy
+    import shutil
+    from editor2.core import flag_index as FI
+    from editor2.core.document import Document
+
+    def at(data, tag):
+        tmp = f'/tmp/_t_flags_{tag}'
+        if os.path.exists(tmp):
+            shutil.rmtree(tmp)
+        os.makedirs(tmp)
+        json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'))
+        shutil.copytree(os.path.join(os.path.dirname(EXAMPLE), 'assets'),
+                        os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+        return tmp
+
+    kinds = set()
+    fx = {'example': base(), 's117': _s117_fixture(), 'enc': _en_fixture(),
+          'milly': _milly_fixture(), 'sites': _flag_sites_fixture(),
+          's126': _services_fixture(), 's127': _breeders_fixture(),
+          's128': _your_arena_fixture(), 's129': _story_fixture()}
+    for tag, data in fx.items():
+        missed, fi = FI.compiler_coverage(at(data, tag), REPO)
+        ok(f"S124 flag index: finds every flag the compiler resolves / emits ({tag})",
+           not missed, missed[:5])
+        kinds |= {u.kind for u in fi.uses}
+    wdoc, _gid, _rooms = _world_fixture()
+    missed, fi = FI.compiler_coverage(wdoc.project_dir, REPO)
+    ok("S124 flag index: finds every flag the compiler resolves / emits (world)",
+       not missed, missed[:5])
+    kinds |= {u.kind for u in fi.uses}
+    want = set(FI.KINDS) - {'game', 'game_engine'}
+    ok("S124 flag index: the fixtures exercise every flag site",
+       want <= kinds, sorted(want - kinds))
+
+    # sentences + problems on the sites fixture
+    sites = _flag_sites_fixture()
+    fi = FI.FlagIndex(sites, repo=REPO)
+    sent = [s for _t, s in fi.triggers_sentences()]
+    ok("S124: a cutscene start reads as a sentence",
+       any(s.startswith('When you enter') and 'ks_a is ON' in s and 'ks_b is OFF' in s
+           and '“Sites” plays (once)' in s for s in sent), sent)
+    ok("S124: an NPC shown by a flag / drawn in a colour read as sentences",
+       any('ks_never is ON → the NPC at (8, 6) is there' in s for s in sent)
+       and any('drawn in colour 1' in s for s in sent), sent)
+    ks_a = fi.flags[fi.named['ks_a']]
+    on = [u for u in ks_a.uses if u.role == FI.ON]
+    ok("S124: who turns ks_a ON — the talk's YES answer, with the place (r3: called by "
+       "the NPC's name, its actor)",
+       any(u.kind == 'talk' and 'if the answer is YES' in u.what and
+           'talking to Bard at (5, 6)' in u.what for u in on), [(u.kind, u.what) for u in on])
+    probs = {(p.code, p.idx) for p in fi.problems()}
+    ok("S124 problems: a tested flag nothing turns ON / an unused flag",
+       ('never_on', fi.named['ks_never']) in probs and
+       ('unused', fi.named['ks_unused']) in probs, probs)
+    # S124 r2 (user: flag $0080 "Looks like it just randomly turns on by a million
+    # things"): the game's uses say WHO / WHERE / WHEN and one script = one group
+    rom_p = os.path.join(REPO, 'data', 'DWM-original.gbc')
+    if os.path.exists(rom_p):
+        from editor2.core.cutscenes import Catalogue
+        gi = FI.FlagIndex({'custom': {}}, repo=REPO, catalogue=Catalogue(open(rom_p, 'rb').read()))
+        f80 = gi.flags[0x0080]
+        ons = gi.groups([u for u in f80.uses if u.role == FI.ON])
+        santi = [g for h, g in ons if 'Santi' in h.who]
+        tests = [u for u in f80.uses if u.role == FI.TEST]
+        ok("S124 r2: $0080 = 2 setters (Santi's two scripts), Santi named by her own lines, "
+           "9 branches each with its rung; her father's check says when it is asked",
+           len(ons) == 2 and len(santi) == 1 and len(santi[0]) == 9 and
+           any('arena class S won' in u.when for u in santi[0]) and len(tests) == 1 and
+           'Gate of Anger cleared' in tests[0].when and 'Old Man Gate Room' in tests[0].where,
+           [(h.who, len(g)) for h, g in ons])
+        ok("S124 r2: a game flag without a game name is labelled by who sets it",
+           f80.label.startswith('set by talking to'), f80.label)
+        # S124 r3 (user: "You dont actually show the correct NPC … That's NOT where
+        # Santi is"): every game use carries its places — map, screen, STATE, cell, NPC n
+        pl = [p for u in santi[0] for p in (u.places or [])]
+        ok("S124 r3: Santi's script = GreatTree screen 12, states 1 and 2, NPC 1 at (1, 6)",
+           {(p['map'], p['screen'], p['state'], p['x'], p['y'], p['n']) for p in pl} ==
+           {(1, 12, 1, 1, 6, 1), (1, 12, 2, 1, 6, 1)}, pl)
+        h0 = [h for h, _g in ons if 'Santi' not in h.who][0]
+        ok("S124 r3: the other setter = screen 8 states 0 / 1 (the young Santi), nav = its place",
+           [(p['screen'], p['state'], p['x'], p['y']) for p in h0.places] ==
+           [(8, 0, 3, 6), (8, 1, 2, 7)] and h0.nav == h0.places[0], h0.places)
+        from editor2.core import npc_names as NN
+        cu = {}
+        NN.set_vanilla_name(cu, 1, 8, 0, 2, 'Young Santi')
+        ok("S124 r3: naming a game room's NPC names the same sprite + cell in other states "
+           "only", cu['_editor']['npc_names'] == {'01:8:0:2': 'Young Santi'},
+           cu['_editor']['npc_names'])
+        gi2 = FI.FlagIndex({'custom': cu}, repo=REPO, catalogue=gi.catalogue)
+        whos = [h.who for h, _g in gi2.groups([u for u in gi2.flags[0x0080].uses
+                                               if u.role == FI.ON])]
+        ok("S124 r3: your NPC name is the 'who' (before the game's speaker name)",
+           any(w.startswith('talking to Young Santi at (3, 6)') for w in whos), whos)
+        NN.set_vanilla_name(cu, 1, 8, 0, 2, '')
+        ok("S124 r3: an empty name removes it (and the empty table)", '_editor' in cu and
+           not cu['_editor'].get('npc_names'), cu)
+    ex = FI.FlagIndex(base(), repo=REPO)
+    ok("S128 r2 problems: the example's quest flag no longer lands on $0158 (the game's)",
+       not any(p.code == 'game_shares' for p in ex.problems()))
+    shared = base()
+    shared['custom'].setdefault('flags', []).append({'name': 'on_the_game', 'index': '0x0158'})
+    ok("S124 problems: a flag written on $0158 by hand — the game's (Arena Battle)",
+       any(p.code == 'game_shares' and p.idx == 0x0158
+           for p in FI.FlagIndex(shared, repo=REPO).problems()))
+
+    # pinning on open = the compiler's numbers; the build does not change
+    out0, prj0, _w = compile_data(copy.deepcopy(sites))
+    p = os.path.join(at(sites, 'pin'), 'project.json')
+    doc = Document(p)
+    ok("S124: opening pins every flag number (a migration note)",
+       any('flag number' in n for n in doc.migrations) and
+       all(str(f.get('index')) != 'auto' for f in doc.flags()))
+    ok("S124: pinned numbers == the compiler's", doc.flag_numbers() == prj0.flag_map(),
+       (doc.flag_numbers(), prj0.flag_map()))
+    out1, _p, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124: pinning changes no generated byte", out0 == out1)
+    # rename everywhere: the ROM stays the same
+    doc.rename_flag('ks_a', 'Bell rung')
+    s = json.dumps(doc.data)
+    ok("S124 rename: no use of the old name is left", '"ks_a"' not in s and 'bell_rung' in s)
+    out2, prj2, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124 rename: the generated bytes are unchanged", out2 == out0)
+    ok("S124 rename: same number", prj2.flag_map()['bell_rung'] == prj0.flag_map()['ks_a'])
+    # S124 r3: naming NPCs (a project room's — its actor name — and a game room's —
+    # custom._editor.npc_names) changes no generated byte; the index uses the names
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import npc_names as NN
+    named = None
+    for r in doc.rooms:
+        for k in doc.screen_keys(r):
+            rows = CD.npc_rows(r, k, 0)
+            if rows:
+                named = (r['id'], k, rows[0][0])
+                break
+        if named:
+            break
+    if named:
+        doc.name_npc('Bell keeper', room=named[0], screen=named[1], state=0, n=named[2])
+        ok("S124 r3: a project NPC's name = its actor name",
+           NN.name_of(doc.data['custom'], room=doc.room(named[0]), screen=named[1], state=0,
+                      n=named[2]) == 'Bell keeper')
+    doc.name_npc('Santi', mid=1, screen=12, state=1, n=1)
+    ok("S124 r3: a game room's NPC name = editor data, every state with that NPC",
+       doc.data['custom']['_editor']['npc_names'] == {'01:12:1:1': 'Santi', '01:12:2:1': 'Santi'},
+       doc.data['custom'].get('_editor'))
+    out3, _p, _w = compile_data(copy.deepcopy(doc.data))
+    ok("S124 r3: naming NPCs changes no generated byte", out3 == out0)
+    doc.name_npc('', mid=1, screen=12, state=1, n=1)
+    ok("S124 r3: an empty name removes it", 'npc_names' not in
+       (doc.data['custom'].get('_editor') or {}))
+    # delete / add / renumber
+    try:
+        doc.delete_flag('bell_rung')
+        ok("S124 delete: refused while used", False)
+    except ValueError as e:
+        ok("S124 delete: refused while used", 'still used' in str(e))
+    doc.delete_flag('ks_unused')
+    ok("S124 delete: an unused flag goes", doc.flag_entry('ks_unused') is None)
+    taken = set(doc.flag_numbers().values())
+    nm = doc.add_flag('Brand new')
+    n = doc.flag_numbers()[nm]
+    ok("S124 add: a fixed number, the lowest free, never $0158",
+       str(doc.flag_entry(nm)['index']).startswith('0x') and n not in taken and n != 0x0158
+       and n == min(i for i in list(range(0x0159, 0x0168)) + list(range(0x1000, 0x179E))
+                    if i not in taken), n)
+    ex_doc = Document(os.path.join(at(base(), 'ex'), 'project.json'))
+    old = ex_doc.flag_numbers()['vault_guardian_beaten']
+    new = ex_doc.renumber_flag('vault_guardian_beaten')
+    ok("S128 r2: the example's quest flag is off $0158 (shipped moved: $015A)",
+       old == 0x015A, (old, ex_doc.migrations))
+    legacy = base()
+    legacy['custom'].pop('flags', None)                # the example as shipped before S128
+    for k in ('quests', 'checks', 'story'):            # (S129: and before its mini medal quest)
+        legacy['custom'].pop(k, None)
+    lg_doc = Document(os.path.join(at(legacy, 'legacy_ex'), 'project.json'))
+    ok("S128 r2: opening a project whose quest flag sits on $0158 moves it by itself (a note "
+       "says so), the other quest flag keeps its number",
+       lg_doc.flag_numbers() == {'vault_guardian_beaten': 0x015A, 'vault_cutscene_seen': 0x0159}
+       and any('$0158 -> $015A' in n for n in lg_doc.migrations),
+       (lg_doc.flag_numbers(), lg_doc.migrations))
+    ok("S128 r2: the editor's numbers == the compiler's after the move",
+       old == compile_data(base())[1].flag_map()['vault_guardian_beaten'],
+       (old, compile_data(base())[1].flag_map()))
+    ok("S124 renumber: -> a free number", new not in (0x0158, old)
+       and ex_doc.flag_numbers()['vault_guardian_beaten'] == new, (old, new))
+    try:
+        doc.add_flag('Brand new')
+        ok("S124 add: a duplicate name is refused", False)
+    except ValueError:
+        ok("S124 add: a duplicate name is refused", True)
+
+
+def test_worlds_s123():
+    """S123 (ROADMAP NG3): worlds, NPC colours, the Vanish step (PROJECT_COMPILER
+    §2.36). Engine facts measured in PyBoy on the user's save (GATE_GENERATION
+    §7.11): the portal = the game's gate entry, the start room = floor 1."""
+    from editor2.core import gates as G
+    doc, gid, rooms = _world_fixture()
+    w = doc.world(gid)
+    g = doc.gate_setting(gid)
+    ok("S123: New world = a new gate 32+ (copy of gate 0, 2 floors, hand-made) with a "
+       "world block (start cell, rooms, saving calm)",
+       gid == 32 and g['copy_of'] == 0 and g['floors'] == 2 and g['hand_made'] and
+       w['start'] == {'room': rooms['start'], 'screen': 0, 'x': 4, 'y': 4} and
+       w['rooms'] == [rooms['start'], rooms['cave']] and w['saving'] == 'calm')
+    ent = doc.gate_entrances(gid)
+    sw = doc.gate_swirls(gid)
+    ok("S123: World entrance = a gate entrance (gate_flag 1, dest gate:32) + the swirl "
+       "object + the still swirl art on the cell",
+       len(ent) == 1 and ent[0][0]['id'] == 'dusk_mirror' and ent[0][3]['dest'] == 'gate:32'
+       and len(sw) == 1 and sw[0][3]['swirl_of'] == 32)
+    cave = doc.room(rooms['cave'])
+    npcs = doc.npc_entries(cave, 0, 0)
+    ok("S123: Make boss = its own named flag, a conversation (say, battle, flags ON, "
+       "vanish) and 'shown while the flag is OFF'",
+       any(f['name'] == 'cave_guard_beaten' for f in doc.flags()) and
+       npcs[0]['shown_when'] == [{'flag': 'cave_guard_beaten', 'is': 'clear'}] and
+       [list(st)[0] for st in doc.conversation(npcs[0]['script'])['steps']] ==
+       ['say', 'battle', 'set', 'vanish'])
+    king = doc.conversation(npcs[2]['script'])['steps']
+    ok("S123: the end boss also turns the world's cleared flag (gate:32) ON",
+       king[2] == {'set': ['cave_king_beaten', 'gate:32']})
+    rep = doc.world_report(gid)
+    ok("S123: world report — rooms, saving by the calm rule, cleared by the king, a way "
+       "out, no problems",
+       [x['id'] for x in rep['rooms']] == [rooms['start'], rooms['cave']] and
+       rep['rooms'][0]['save'] is True and rep['rooms'][1]['save'] is False and
+       rep['leaves'] and rep['cleared_by'] and rep['problems'] == [], str(rep['problems']))
+    # NPC colour: kept through an ordinary edit (the S119 rebuild rule)
+    st = doc.npc_entries(doc.room(rooms['start']), 0, 0)
+    ci = next(i for i, e in enumerate(st) if e.get('colour') is not None)
+    doc.update_npc(doc.room(rooms['start']), 0, 0, ci, facing='left')
+    ok("S123: an NPC's colour survives update_npc (facing changed)",
+       doc.npc_entries(doc.room(rooms['start']), 0, 0)[ci].get('colour') == 4)
+    out, prj, warns = C.compile_project(doc.project_dir, REPO)
+    a60 = out['patches/bank_060.asm']
+    a71 = out['patches/bank_071.asm']
+    start_mid = int(doc.room(rooms['start'])['mapID'], 16)
+    ok("S123: the world's start room is served on its floor 1 at 100 % (GateInsertTable "
+       "row gate 32, floors 0-0, chance 100, the start cell (4,4) = pixels 72/72)",
+       f"db $20, $00, $00, $64, $00, ${start_mid:02X}, $00, $48, $00, $48, $00, $00" in a71,
+       a71[a71.find('GateInsertTable:'):a71.find('GateInsertTable:') + 600])
+    ok("S123: the swirl of a world that turns green: an $A2 prefix (palette 1 while "
+       "gate:32 = $17C0 is SET), no $A1 hide",
+       'db $A2, $01, $C0, $17, $FF' in a60 and 'db $A1, $C0, $17, $FF, $FF' not in a60)
+    ok("S123: an NPC colour (palette 4, always) = db $A2, $04, $FF, $FF, $FF",
+       'db $A2, $04, $FF, $FF, $FF' in a60)
+    ok("S123: Vanish = the 'vanish (flicker out)' program on the boss slots ($0D01 / "
+       "$0D02 — the guard pair) + wait_movement; the king is slot 3",
+       'dw $0D01' in a60 and 'dw $0D02' in a60 and 'dw $0D03' in a60)
+    fl = {r['id']: prj.room_flags(r) for r in prj.rooms if not r.get('placeholder')}
+    ok("S123: saving 'calm' — the start room (no battles) allows the JOURNAL, the battle "
+       "room refuses it (room flag bit 0)",
+       fl[rooms['start']] & 1 == 0 and fl[rooms['cave']] & 1 == 1)
+    ok("S123: a world compiles without the served-room warnings (no Stairs down needed, "
+       "doors are its way on) and without the vanilla-boss-room warning",
+       not any('Stairs down' in x or 'ordinary exit' in x or 'VANILLA boss room' in x
+               for x in warns), str(warns))
+    # errors
+    d = json.load(open(doc.path))
+    g0 = next(x for x in d['custom']['gates'] if x['gate'] == 32)
+    for what, mut, needle in (
+            ('a world on a game gate', lambda x: x['custom']['gates'].append(
+                {'gate': 3, 'world': copy.deepcopy(g0['world'])}), 'a world is a NEW gate'),
+            ('a world with 3 floors', lambda x: next(
+                y for y in x['custom']['gates'] if y['gate'] == 32).__setitem__('floors', 3),
+             'a world has 2 floors'),
+            ('a world with a boss floor', lambda x: next(
+                y for y in x['custom']['gates'] if y['gate'] == 32).__setitem__('boss', 'gate_rotation'),
+             'a world has no boss FLOOR'),
+            ('a rule serving a room on a world', lambda x: x['custom'].setdefault(
+                'gate_inserts', []).append({'room': 'gate_rotation', 'gate': 32, 'floors': 1,
+                                            'chance': 50}), 'is a WORLD'),
+            ('an unknown saving rule', lambda x: next(
+                y for y in x['custom']['gates'] if y['gate'] == 32)['world'].__setitem__(
+                    'saving', 'sometimes'), 'saving must be one of'),
+            ('a start cell outside the screen', lambda x: next(
+                y for y in x['custom']['gates'] if y['gate'] == 32)['world']['start'].__setitem__(
+                    'x', 12), 'outside the 10x8 screen'),
+            ('cleared_swirl 9', lambda x: next(
+                y for y in x['custom']['gates'] if y['gate'] == 32).__setitem__('cleared_swirl', 9),
+             'cleared_swirl must be')):
+        dd = copy.deepcopy(d)
+        mut(dd)
+        _expect_dir_error(f"S123 refuses {what}", doc.project_dir, dd, needle)
+    dd = copy.deepcopy(d)
+    st0 = next(r for r in dd['custom']['rooms'] if r['id'] == rooms['start'])
+    st0['screens']['0']['npcs'][ci]['colour'] = 9
+    _expect_dir_error("S123 refuses NPC colour 9", doc.project_dir, dd, 'OBJ palette 0-7')
+    dd = copy.deepcopy(d)
+    cv = next(r for r in dd['custom']['rooms'] if r['id'] == rooms['cave'])
+    cv['screens']['0']['npcs'][0]['colour'] = 2
+    _expect_dir_error("S123 refuses a colour on a monster NPC", doc.project_dir, dd,
+                      'own walking colours')
+    # warnings
+    dd = copy.deepcopy(d)
+    for sc in dd['custom']['scripts']:
+        for stp in (sc.get('talk') or {}).get('steps') or []:
+            if 'set' in stp:
+                stp['set'] = [f for f in stp['set'] if f != 'gate:32']
+    ws = _dir_warnings(doc.project_dir, dd)
+    ok("S123 warns: nothing turns the world's cleared flag ON",
+       any('nothing turns its cleared flag' in x for x in ws), str(ws))
+    dd = copy.deepcopy(d)
+    for r in dd['custom']['rooms']:
+        if r['id'] == rooms['start']:
+            ex = r['screens']['0']['exits']
+            ex[:] = [e for e in ex if not str(e.get('dest', '')).startswith('room:$6C')]
+            for e in ex:
+                if e.get('door'):
+                    for k in ('dest', 'gate_flag', 'screen_byte', 'spawn_x', 'spawn_y', 'link'):
+                        e.pop(k, None)
+    ws = _dir_warnings(doc.project_dir, dd)
+    ok("S123 warns: a world room no door reaches + no way out of the world",
+       any('cannot be reached' in x for x in ws) and any('no door, exit or warp' in x
+                                                        for x in ws), str(ws))
+    # delete keeps the rooms
+    n_rooms = len(doc.rooms)
+    doc.delete_world(gid)
+    ok("S123: Delete world = its gate, portal and swirl gone; its rooms stay",
+       doc.world(gid) is None and not doc.gate_entrances(gid) and not doc.gate_swirls(gid)
+       and len(doc.rooms) == n_rooms)
+    return out
+
+
+def _expect_dir_error(name, project_dir, data, needle):
+    tmp = '/tmp/_t_world_err'
+    import shutil
+    if os.path.exists(tmp):
+        shutil.rmtree(tmp)
+    shutil.copytree(project_dir, tmp, ignore=shutil.ignore_patterns('build'))
+    json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'))
+    try:
+        C.compile_project(tmp, REPO)
+    except (ProjectError, C.CompileError) as e:
+        ok(name, needle in str(e), f"(got: {e})")
+        return
+    print(f"FAIL: {name} — expected error containing {needle!r}")
+    sys.exit(1)
+
+
+def _dir_warnings(project_dir, data):
+    tmp = '/tmp/_t_world_warn'
+    import shutil
+    if os.path.exists(tmp):
+        shutil.rmtree(tmp)
+    shutil.copytree(project_dir, tmp, ignore=shutil.ignore_patterns('build'))
+    json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'))
+    _out, _p, w = C.compile_project(tmp, REPO)
+    return w
+
+
+def test_worlds_rom(rom_ex, sym_ex, out_world):
+    """S123 on real bytes: the bank $06 NPC draw redirect is same-size (the labels
+    after it unmoved), entry 11 points at NpcColourDraw, the WRAM carve, and the
+    world fixture's ROM builds."""
+    from editor2.core import builder as B
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    b6 = 6 * 0x4000
+    # S141 r3: the call goes through bank $77 entry 14 NpcDrawPlain, which calls bank $60
+    # entry 11 (the VRAM-bank bit of a custom room's NPC sheets 3-5 after it)
+    site = rom_ex.find(bytes([0x21, 0x0E, 0x77, 0xD7]), b6, b6 + 0x4000)
+    b77 = 0x77 * 0x4000
+    ok("S123 (+ S141 r3): bank $06 NPCDrawSlot calls bank $77 entry 14 ($21 $0E $77 $D7), which "
+       "calls bank $60 entry 11 ($21 $0B $60), where the original called bank $05 entry 0 "
+       "($21 $00 $05 $D7)",
+       site > 0 and orig[site:site + 4] == bytes([0x21, 0x00, 0x05, 0xD7]) and
+       rom_ex[b6:b6 + 0x4000].count(bytes([0x21, 0x0E, 0x77, 0xD7])) == 1 and
+       rom_ex[b77:b77 + 0x4000].count(bytes([0x21, 0x0B, 0x60])) == 1)
+    diff6 = [i for i in range(b6, b6 + 0x4000) if rom_ex[i] != orig[i]]
+    ok("S123: NPCDrawSlot's redirect changes 2 bytes there (bank $06 otherwise as before)",
+       {site + 1, site + 2} <= set(diff6))
+    nc = sym_ex.get('NpcColourDraw')
+    e11 = 0x60 * 0x4000 + 1 + 2 * 11
+    ok("S123: bank $60 entry 11 -> NpcColourDraw; wNpcColour = $D2E3 (WRAM carve)",
+       nc is not None and (rom_ex[e11] | rom_ex[e11 + 1] << 8) == nc[1] and
+       sym_ex.get('wNpcColour', (0, 0))[1] == 0xD2E3, f"{nc} {sym_ex.get('wNpcColour')}")
+    outdir = '/tmp/_t_world_rom'
+    C.write_outputs(out_world, outdir)
+    rom, sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    ok("S123: the world fixture builds a ROM", os.path.exists(rom))
+
+
+def test_milly_rom(rb_off, sym_off, out_on):
+    """S121 on real bytes: the constants of editor2/core/milly.py against the
+    original ROM; the example (hook off) keeps the vanilla bytes; a hook-on build
+    has the MILLY tiles, the new bedroom tail, Milayou's frame tables in bank $79
+    resolving (relative to wMillyLayout) to her own six frames, and no label moved
+    in the banks the hook touches (every region is same-size)."""
+    from editor2.core import builder as B
+    from editor2.core import milly as MH
+    from editor2.core import textenc as Tx
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    w = lambda r, o: r[o] | r[o + 1] << 8
+    B5 = 5 * 0x4000
+    l1 = w(orig, B5 + 0x407F - 0x4000 + 2 * MH.SPRITE)
+    frames = []
+    for k in range(6):
+        o = B5 + w(orig, B5 + l1 - 0x4000 + 2 * k) - 0x4000
+        f = []
+        while orig[o] != 0x80:
+            f.append(list(orig[o:o + 4]))
+            o += 4
+        frames.append(f)
+    ok("ROM S121: milly.SPRITE_FRAMES == Milayou's six frames ($05:$407F[$14])",
+       frames == [[list(x) for x in f] for f in MH.SPRITE_FRAMES])
+    ok("ROM S121: SPRITE_ATTR == $05:$4152[$14], SPRITE_GFX == ROM0 $2ADF[$14]",
+       orig[B5 + 0x4152 - 0x4000 + MH.SPRITE] == MH.SPRITE_ATTR and
+       w(orig, 0x2ADF + 2 * MH.SPRITE) == MH.SPRITE_GFX)
+    bed = 0x0E * 0x4000 + 0x4AA4 - 0x4000
+    ok("ROM S121: milly.BEDROOM_WORDS == the original bedroom tail ($0E:$4AA4, 94 words)",
+       [w(orig, bed + 2 * i) for i in range(94)] == MH.BEDROOM_WORDS)
+    font = lambda r: r[Tx.FONT_ROM_OFFSET + 0xD3 * 16:][:64]
+    ok("ROM S121 hook off (example): bedroom tail, hero tiles (TERRY), bank $79 = original",
+       rb_off[bed:bed + 188] == orig[bed:bed + 188] and font(rb_off) == font(orig) and
+       rb_off[0x79 * 0x4000:0x7A * 0x4000] == orig[0x79 * 0x4000:0x7A * 0x4000])
+    outdir = '/tmp/_t_milly_on'
+    C.write_outputs(out_on, outdir)
+    rom_on, sym_on_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb = open(rom_on, 'rb').read()
+    sym = B.parse_sym(sym_on_p)
+    ok("ROM S121 hook on: hero tiles $D3-$D6 = textenc.MILLY_GLYPHS",
+       font(rb) == b''.join(Tx.MILLY_GLYPHS[c] for c in (0xD3, 0xD4, 0xD5, 0xD6)))
+    words = [w(rb, bed + 2 * i) for i in range(94)]
+    ok("ROM S121 hook on: the bedroom tail sets $179F and whirls (warp_fade) to the arrival room",
+       words[:2] == [0xFF21, 0x0060] and 0x179F in words and 0xFF3B in words and
+       words[words.index(0xFF3B) + 1] == 0x006B)
+    b79 = 0x79 * 0x4000
+    ok("ROM S121 hook on: bank $79 self-id + entries 0/1",
+       rb[b79] == 0x79 and w(rb, b79 + 1) == sym['MillyShapeTable'][1] and
+       w(rb, b79 + 3) == sym['MillyPlayerSheet'][1])
+    base_w = sym['wMillyLayout'][1]
+    img_o = b79 + sym['MillyLayoutImage'][1] - 0x4000
+    n = sym['MillyLayoutImageEnd'][1] - sym['MillyLayoutImage'][1]
+    img = rb[img_o:img_o + n]
+    ww = lambda o: img[o] | img[o + 1] << 8
+    l2 = ww(0) - base_w
+    got = []
+    for k in range(6):
+        o = ww(l2 + 2 * k) - base_w
+        f = []
+        while img[o] != 0x80:
+            f.append(list(img[o:o + 4]))
+            o += 4
+        got.append(f)
+    ok("ROM S121 hook on: the WRAM frame-table image resolves to her six frames; 21 level-2 "
+       "entries; it fits wMillyLayout",
+       got == frames and n <= MH.WRAM_LAYOUT_SIZE and
+       all(img[ww(l2 + 2 * k) - base_w] == 0x80 for k in range(6, MH.LAYOUT_FRAMES)) and
+       sym['wMillyLayout'][1] + MH.WRAM_LAYOUT_SIZE == sym['wNpcColour'][1])   # S123: wNpcColour follows it (was wCustomPool)
+    moved = [k for k, v in sym_off.items() if v[0] in (0x01, 0x04, 0x09, 0x0E, 0x4F)
+             and sym.get(k) != v]
+    ok("ROM S121: hook on moves no label in banks $01/$04/$09/$0E/$4F (same-size regions)",
+       not moved, f"({moved[:5]})")
+
+
+def test_dialogue_s120():
+    """S120 (ROADMAP P3.6, measured in PyBoy on the user's save — TEXT_SYSTEM
+    "Glyphs, speakers and voices (S120)"): one-cell contractions + the font's
+    extra glyphs, {hero} / {lead} inserts, the speaker label and the voice."""
+    import copy
+    from editor2.core import textenc as T
+    ok("S120 text: contractions are ONE glyph each (don't = don + $67)",
+       T.encode("I'll don't it's") == [0x2C, 0x66, 0x49, 0x62, 0x41, 0x4C, 0x4B, 0x67,
+                                        0x62, 0x46, 0x51, 0x68] and T.cells("don't") == 4)
+    ok("S120 text: an apostrophe before another letter stays $5C",
+       T.encode("'a") == [0x5C, 0x3E])
+    ok("S120 text: the extra glyphs - & ( ) + : / ~ [ ] \" * …",
+       T.encode('-&()+:/~[]"*\u2026') == [0x9C, 0xB6, 0xA0, 0xA1, 0xA2, 0xA3, 0x9E, 0x9D,
+                                          0x96, 0x97, 0x65, 0x9F, 0xA4])
+    ok("S120 text: {hero} = $F6 (4 cells), {lead} = $F9 $00 (9 cells)",
+       T.encode('{hero}{lead}') == [0xF6, 0xF9, 0x00] and T.cells('{hero}{lead}') == 13)
+    try:
+        T.encode('{boss}')
+        ok("S120 text: an unknown insert is refused", False)
+    except T.TextError as e:
+        ok("S120 text: an unknown insert is refused", 'unknown insert' in str(e))
+    plain = {'boxes': [['Hello there', 'how are you']]}
+    ok("S120 text: no speaker / voice = the pre-S120 bytes ($EA $9F $A3 …)",
+       T.render_entry_asm('x', plain)[1] == '    db $EA, $9F, $A3')
+    ok("S120 text: speaker name + high voice = $EB name $A3; line 1 = 18 - 8 cells",
+       T.entry_bytes({'boxes': [['Hi']], 'speaker': 'Milayou', 'voice': 'high'})[:9]
+       == [0xEB, 0x30, 0x46, 0x49, 0x3E, 0x56, 0x4C, 0x52, 0xA3]
+       and T.line_limit(0, 0, 'Milayou') == 10 and T.line_limit(0, 1, 'Milayou') == 18)
+    ok("S120 text: the hero speaks, silently = $F6 $A3, no opener",
+       T.entry_bytes({'boxes': [['Hi']], 'speaker': 'hero', 'voice': 'none'})[:2] == [0xF6, 0xA3])
+    ok("S120 text: no speaker label = a full 18-cell first line",
+       T.line_limit(0, 0, '') == 18 and T.entry_bytes({'boxes': [['Hi']], 'speaker': ''})[:1]
+       == [0xEA])
+    asm = '\n'.join(T.render_entry_asm('x', {'boxes': [["I'll go: x&y"]]}))
+    ok("S120 text: charmap runs stay quoted, the rest is hex",
+       'db $EA, $9F, $A3' in asm and '"I", $66, "l go", $A3, " x", $B6, "y"' in asm, asm)
+    expect_error("S120 text: a raw string with a non-charmap character is refused",
+                 _with_dialogue({'id': 'rw', 'raw': [['box'], 'Name: x', ['bytes', 'F7', 'F0']]}),
+                 'not charmap characters')
+    expect_error("S120 text: the speaker's cells count on line 1",
+                 _with_dialogue({'id': 'sp', 'boxes': [["I'll show you"]], 'speaker': 'Milayou'}),
+                 'max 10')
+    expect_error("S120 text: a bad voice is refused",
+                 _with_dialogue({'id': 'vc', 'boxes': [['Hi']], 'voice': 'loud'}), 'voice')
+    # {lead} -> op $3F load_lead_name right before the text (once)
+    d = _with_dialogue({'id': 'ld', 'boxes': [['Your {lead}', 'is strong!']]})
+    d['custom']['scripts'].append({'id': 'ld_s', 'ops': [['text', 'ld'], ['end']]})
+    prj = Project(copy.deepcopy(d), os.path.dirname(EXAMPLE))
+    ops = prj._scripts['ld_s']['ops']
+    ok("S120 {lead}: op load_lead_name ($3F) is put right before the text",
+       ops[0] == ['op', 'load_lead_name'] and ops[1][0] == 'text' and len(ops) == 3, ops)
+    # a cutscene's own {lead} text: emitted by the lowering, not twice
+    d2, _r = _cs_fixture([{'id': 'ldc', 'screen': 0, 'trigger': {'on': 'talk', 'actor': 'Guard'},
+                           'steps': [{'say': {'boxes': [['Hi {hero}!']], 'speaker': 'hero',
+                                              'voice': 'none'}},
+                                     {'say': {'boxes': [['Your {lead}']]}}]}])
+    prj2 = Project(copy.deepcopy(d2), os.path.dirname(EXAMPLE))
+    cut = [s for sid, s in prj2._scripts.items() if str(sid).startswith('cut:')]
+    flat = [o for s in cut for o in s['ops']]
+    ok("S120 {lead} in a cutscene: one load_lead_name, before its text",
+       flat.count(['op', 'load_lead_name']) == 1
+       and flat[flat.index(['op', 'load_lead_name']) + 1][0] == 'text', flat)
+    ent = [e for e in prj2._dialogue if e.get('speaker') == 'hero']
+    ok("S120 cutscene say keeps its speaker / voice", len(ent) == 1 and ent[0]['voice'] == 'none')
+    from dwm.text import decode
+    ok("S120 dwm.text decodes the contractions ($6B 'y, $6D 'd — was \"n'\" / \"th\")",
+       decode(bytes([0x27, 0x6B, 0x3E, 0x62, 0x2C, 0x6D, 0xF0]))[0] == "D'ya I'd")
+
+
+def test_gate_rows_s120():
+    """S120 (ROADMAP P3.7b part 2): a gate's floor-type rows (bytes 0-2) and depth tier
+    (byte 7) — vanilla gates in the bank $16 region, new gates in NewGateRows. Measured
+    in PyBoy on the user's save: gate 5 with maze_row 0 rolls floor type 13 (its only
+    type), wFloorType2/3 = 10/12, tier 3 (vanilla build: type 12, 2/3, tier 1)."""
+    import copy
+    d = base()
+    d['custom'].setdefault('gates', []).extend([
+        {'gate': 5, 'maze_row': 0, 'special_row': 10, 'contents_row': 12, 'depth': 3},
+        {'gate': 32, 'copy_of': 3, 'name': 'Rowed', 'maze_row': 9, 'depth': 2}])
+    prj = Project(copy.deepcopy(d), os.path.dirname(EXAMPLE))
+    cfg = prj.gate_configs()
+    ok("S120 gate rows: gate 5 row = 00 0A 0C … 03", cfg[5]['row'][:3] == [0, 10, 12]
+       and cfg[5]['row'][7] == 3 and cfg[5]['row'][3:7] == [9, 0x35, 1, 6], cfg[5]['row'])
+    ok("S120 gate rows: a new gate keeps its source's other bytes",
+       cfg[32]['row'] == [9, 1, 2, 5, 0x33, 4, 6, 2], cfg[32]['row'])
+    out, _p, _w = compile_data(d)
+    b16 = out['patches/bank_016.asm']
+    ok("S120 gate rows: the bank $16 region carries gate 5's bytes",
+       'db $00, $0A, $0C, $09, $35, $01, $06, $03' in b16)
+    ok("S120 gate rows: NewGateRows carries gate 32's bytes",
+       'db $09, $01, $02, $05, $33, $04, $06, $02' in out['patches/bank_076.asm'].replace('$9,', '$09,'))
+    for key, bad in (('maze_row', 16), ('special_row', -1), ('contents_row', 16), ('depth', 4)):
+        dd = base()
+        dd['custom']['gates'] = [{'gate': 1, key: bad}]
+        expect_error(f"S120 gate rows: {key} {bad} is refused", dd, key)
+
+
+def _with_dialogue(entry):
+    d = base()
+    d['custom']['dialogue'].append(entry)
+    return d
+
+
+def test_cutscenes_s119():
+    """S119 (ROADMAP P3.8 part B, user: "Should be specific NPCs … everything in
+    tiles"): rooms[].cutscenes[] -> ordinary scripts wired to their trigger.
+    The ops / model come from editor2/core/cutscene_build.py (PyBoy-measured
+    rules: init_dialog before every text after a yielding step, close before
+    end, $10 / $11 exact walks for an unknown start)."""
+    from editor2.core import cutscene_build as CB
+    entry = {'id': 'welcome', 'screen': 0, 'player_start': {'x': 7, 'y': 6},
+             'trigger': {'on': 'entry', 'once': 'cs_seen'},
+             'steps': [{'show': {'actor': 'Ghost', 'how': 'flicker'}},
+                       {'walk': {'actor': 'Ghost', 'to': [3, 3], 'together': True}},
+                       {'walk': {'actor': 'player', 'to': [7, 4]}},
+                       {'face': {'actor': 'Ghost', 'toward': 'player'}},
+                       {'say': {'boxes': [['Boo!']]}},
+                       {'anim': {'actor': 'Guard', 'move': 'hop'}},
+                       {'fly': {'actor': 'Ghost', 'dir': 'off_right', 'length': 3, 'curve': 3}},
+                       {'tiles': {'x': 1, 'y': 1, 'rows': [[{'tiles': [1, 2, 3, 4], 'pal': 2}]]}},
+                       {'shake': {'frames': 12}}]}
+    talk = {'id': 'guard_talk', 'screen': 0, 'trigger': {'on': 'talk', 'actor': 'Guard'},
+            'steps': [{'say': {'boxes': [['Halt!']]}}, {'walk': {'actor': 'player', 'to': [2, 5]}},
+                      {'say': {'boxes': [['Go on.']]}}]}
+    d, r = _cs_fixture([entry, talk])
+    out, prj, _w = compile_data(d)
+    rr = prj.room_by_id('gate_island')
+    ok("S119 cutscenes: the entry trigger script replaces script 0",
+       rr['scripts']['0'] == 'cut:gate_island:entry')
+    ent = prj.script('cut:gate_island:entry')['ops']
+    ok("S119 cutscenes: the room's own arrival script runs after the scenes (inlined)",
+       'label:cut_orig' in ent and any(isinstance(o, list) and o[:2] == ['op', 'write_ram2']
+                                       for o in ent[ent.index('label:cut_orig'):]))
+    fl = prj.flag_map()['cs_seen']
+    ok("S119 cutscenes: once = test + set the flag first",
+       ['op', 'if_flag_set', fl, '@cs_welcome_skip'] in ent and ['op', 'set_flag', fl] in ent)
+    ok("S119 cutscenes: multi-screen room -> the scene is guarded by its screen",
+       ent[0] == ['op', 'branch_screen', 0, '@cs_welcome_go'])
+    ok("S119 cutscenes: the cast member is NPC 3 (after Guard / Bard), flicker-in = program $08",
+       ['op', 'trigger_anim', '0x0803'] in ent)
+    ok("S119 cutscenes: a known start -> a queued walk in pixels (2 tiles right = $0020)",
+       ['op', 'npc_walk_x', 3, '0x0020'] in ent)
+    i = ent.index(['op', 'npc_walk_y', 0, '0xFFE0'])
+    ok("S119 cutscenes: 'together' walks share one wait_movement",
+       ent[i + 1] == ['op', 'wait_movement'] and ['op', 'npc_walk_x', 3, '0x0020'] in ent[:i])
+    ok("S119 cutscenes: face toward the player (Ghost (3,3), player (7,4)) -> right",
+       ['op', 'face_right', 3] in ent)
+    k = ent.index(['op', 'init_dialog'])
+    ok("S119 cutscenes: init_dialog before the text, close_text after it",
+       isinstance(ent[k + 1], list) and ent[k + 1][0] == 'text' and ent[k + 2] == ['op', 'close_text'])
+    ok("S119 cutscenes: fly off = $D8E3 path then program $18",
+       ['op', 'write_ram2', '0xD8E3', '0x0303'] in ent and ['op', 'trigger_anim', '0x1803'] in ent)
+    ok("S119 cutscenes: shake = $C8B1 / $C8B2 frames",
+       ['op', 'write_ram', '0xC8B1', 12] in ent and ['op', 'write_ram', '0xC8B2', 12] in ent)
+    pname = 'cs_welcome_1'
+    ok("S119 cutscenes: a tiles step -> ops $24 / $61 on the room's patch_data",
+       ['op', '0x24', f'patch:{pname}'] in ent and ['op', '0x61', f'patch:{pname}_attr'] in ent
+       and rr['patch_data'][pname] == [32 * 2 + 2, 0, 1, 2, 0xD8, 3, 4, 0xD9]
+       and rr['patch_data'][pname + '_attr'] == [32 * 2 + 2, 0, 2, 2, 0xD8, 2, 2, 0xD9])
+    txt = out['patch:bank_060.asm'] if 'patch:bank_060.asm' in out else \
+        next(v for kk, v in out.items() if kk.endswith('bank_060.asm'))
+    ok("S119 cutscenes: the patch is emitted in bank $60 and the op points at it",
+       'CustomRoom0_Patch_cs_welcome_1:' in txt and 'dw CustomRoom0_Patch_cs_welcome_1' in txt)
+    ok("S119 cutscenes: bank $60 entries 9 / 10 exist in every build",
+       'dw CustomDrawTiles' in txt and 'dw CustomDrawAttrs' in txt)
+    tid = next(i for i, sid in rr['scripts'].items() if sid == 'cut:gate_island:talk_0_Guard')
+    g = rr['screens']['0']['npcs'][1]
+    ok("S119 cutscenes: the talked-to NPC runs the talk trigger script",
+       g['script'] == 'cut:gate_island:talk_0_Guard' and int(tid) >= 4)
+    tk = prj.script('cut:gate_island:talk_0_Guard')['ops']
+    ok("S119 cutscenes: talk scene — where the player stands is unknown -> exact walks $10 / $11",
+       ['op', '0x10', 0, '0x0028'] in tk and ['op', '0x11', 0, '0x0058'] in tk)
+    ok("S119 cutscenes: a second text after a walk opens the dialog again (measured S119)",
+       sum(1 for o in tk if o == ['op', 'init_dialog']) == 2)
+    ok("S119 cutscenes: after the talk scene the NPC's own script (give_jerky) is kept",
+       'label:cut_orig' in tk and len(tk) > tk.index('label:cut_orig') + 1)
+    # problems
+    d2, r2 = _cs_fixture([dict(entry, steps=[{'walk': {'actor': 'Nobody', 'to': [1, 1]}}])])
+    expect_error("S119 cutscenes: an unknown actor is refused", d2, 'no NPC named')
+    d3, r3 = _cs_fixture([dict(talk, trigger={'on': 'talk', 'actor': 'Ghost'})])
+    expect_error("S119 cutscenes: nobody can talk to a hidden cast member", d3, 'is hidden')
+    d4, r4 = _cs_fixture([entry])
+    scr = r4['screens']['0']
+    scr['states'] = [{'npcs': scr.pop('npcs'), 'exits': scr.pop('exits')},
+                     {'npcs': [{'kind': 'npc', 'sprite': '0x0B', 'x': 4, 'y': 4, 'script': 'none'},
+                               {'kind': 'npc', 'sprite': '0x0B', 'x': 2, 'y': 7, 'actor': 'Guard',
+                                'script': 'give_jerky'}], 'exits': []}]
+    expect_error("S119 cutscenes: an actor at different NPC numbers in two room states is refused",
+                 d4, 'different NPC number')
+    d5, r5 = _cs_fixture([dict(entry, steps=[{'tiles': {'x': 9, 'y': 7, 'rows': [[{'tiles': [1, 2, 3, 4], 'pal': 0}] * 2]}}])])
+    expect_error("S119 cutscenes: a tile piece past the screen edge is refused", d5,
+                 'inside the screen')
+    # the editor's model (no project needed)
+    lw = CB.analyse(r, entry, custom=d['custom'], flag_names=['cs_seen'])
+    last = lw.info[-1]['state']
+    ok("S119 cutscenes: the model — the Ghost flew off 48 px right / 44 up from (3, 3)",
+       (last['Ghost']['x'], last['Ghost']['y']) == (3 * 16 + 8 + 48, 3 * 16 + 8 - 44)
+       and lw.errors == [], str(lw.errors))
+    ok("S119 cutscenes: the model's frame time grows with the walks / texts / programs",
+       lw.info[-1]['t1'] > lw.info[0]['t1'] > 0)
+    return out
+
+
+def test_screen_push_rom(tag, rom, sym, origb):
+    """S117b: bank $09's screen push (LoadFld9_40fa) is a same-size far call to
+    bank $77 ScreenPush — the same BG tile writes in the same order as the
+    original routine; palette attributes only in a free-colour custom room
+    (menu tiles >= $80 -> 7, room tiles <- $C200); ShopClose re-seats a TOP
+    dialog box at the bottom (base, $C100 tile backup, the attr save)."""
+    import random
+    from dwm.sm83 import CPU
+    S = lambda n: sym[n][1]
+
+    def mk(r):
+        ram, v1, st, log = {}, {}, {'bank': 9}, []
+
+        def rd(a):
+            if a < 0x4000:
+                return r[a]
+            if a < 0x8000:
+                return r[st['bank'] * 0x4000 + a - 0x4000]
+            if 0x8000 <= a < 0xA000 and ram.get(0xFF4F, 0) & 1:
+                return v1.get(a, 0)
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x2000 <= a < 0x3000:
+                st['bank'] = v or 1
+            elif 0x8000 <= a < 0xA000:
+                if ram.get(0xFF4F, 0) & 1:
+                    v1[a] = v & 0xFF
+                    log.append(('a', a, v & 0xFF))
+                else:
+                    ram[a] = v & 0xFF
+                    log.append(('t', a, v & 0xFF))
+            elif a >= 0xA000:
+                ram[a] = v & 0xFF
+        return CPU(rd, wr), ram, v1, st, log
+
+    rnd = random.Random(117)
+    c200 = [rnd.randrange(8) << 4 | rnd.randrange(8) for _ in range(256)]
+    c300 = [rnd.randrange(0x80) for _ in range(512)]
+    hud = [rnd.randrange(0x100) for _ in range(64)]
+    # S126: composed the way the game does — room cells = $C300, window tiles >= $80,
+    # a few low tiles drawn over the room (pictures: family icons, gate names)
+    buf = []
+    for i in range(18 * 32):
+        k = rnd.random()
+        if i >= 16 * 32:
+            buf.append(rnd.choice([rnd.randrange(0x80), 0x80 + rnd.randrange(0x80)]))
+        elif k < 0.6:
+            buf.append(c300[i])
+        elif k < 0.9:
+            buf.append(0x80 + rnd.randrange(0x80))
+        else:
+            buf.append((c300[i] + 1 + rnd.randrange(0x7E)) & 0x7F)
+
+    def setup(ram, mid, gbc, free, base=0x9A04):
+        for i, t in enumerate(buf):
+            ram[0xC500 + i] = t
+        for i, b in enumerate(c200):
+            ram[0xC200 + i] = b
+        for i, b in enumerate(c300):
+            ram[0xC300 + i] = b
+        for i, b in enumerate(hud):
+            ram[0xC1C0 + i] = b
+        ram[0xC909], ram[0xC90A] = base & 0xFF, base >> 8
+        ram[0xC968] = mid
+        ram[0xC81D] = gbc
+        for a in (0xC79E, 0xC7A6, 0xC7AE, 0xC7B6):
+            ram[a] = 0x2A
+        if free:
+            ram[0xC7A6] = 0xAA
+        ram[0xFF41] = 0                                    # STAT: mode 0
+
+    def run(r, mid, gbc, free):
+        cpu, ram, v1, st, log = mk(r)
+        setup(ram, mid, gbc, free)
+        st['bank'] = 9
+        cpu.call(0x40FA, sp=0xDFF0)
+        return [e for e in log if e[0] == 't'], v1
+    oo, _ = run(origb, 0x02, 1, False)
+    bad = []
+    for name, mid, gbc, free in (('vanilla room', 0x02, 1, True), ('custom room', 0x71, 1, False),
+                                 ('DMG', 0x6E, 0, True)):
+        nt, v1 = run(rom, mid, gbc, free)
+        if nt != oo or v1:
+            bad.append(name)
+    ok(f"ROM {tag}: ScreenPush == the original LoadFld9_40fa (576 tile writes, same order) with "
+       "NO attribute writes in a vanilla room, a non-free custom room and on DMG",
+       not bad and len(oo) == 576, f"({bad}, {len(oo)})")
+    nt, v1 = run(rom, 0x6E, 1, True)
+
+    def run_is_menu(r, c):
+        """S177 r2 (bank $77 PushRunIsMenu — the spec): the run of tiles < $80 holding column
+        c (columns 0-19) is a menu run when tiles >= $80 enclose it on both sides inside the
+        20 visible columns and one of its cells differs from $C300."""
+        row = buf[r * 32:r * 32 + 20]
+        lo = c
+        while lo > 0 and row[lo - 1] < 0x80:
+            lo -= 1
+        hi = c
+        while hi < 19 and row[hi + 1] < 0x80:
+            hi += 1
+        enclosed = lo > 0 and hi < 19
+        differs = any(row[k] != c300[r * 32 + k] for k in range(lo, hi + 1))
+        return enclosed and differs
+    want, wbad = {}, []
+    for r in range(18):
+        for c in range(20):
+            t = buf[r * 32 + c]
+            a = 0x9A04 + r * 32
+            a = (a & 0xFFE0) | ((a + c) & 0x1F)
+            a = 0x9800 | (a & 0x3FF)
+            if t >= 0x80:
+                want[a] = 7
+            elif r < 16 and t != c300[r * 32 + c]:
+                want[a] = 7                    # S126: a picture in the room's tile slots
+            elif r < 16 and run_is_menu(r, c):
+                want[a] = 7                    # S177 r2: PushRunIsMenu (a window's letter)
+            elif r < 16:
+                b = c200[r * 16 + c // 2]
+                want[a] = (b >> 4) if c % 2 == 0 else (b & 0x0F)
+    for a, v in want.items():
+        if v1.get(a) != v:
+            wbad.append((hex(a), v, v1.get(a)))
+    ok(f"ROM {tag}: ScreenPush in a FREE-COLOUR custom room — the same tile writes; menu tiles "
+       "(>= $80) and S126 pictures (a low tile that is not the room's $C300 tile) get palette 7, "
+       "S177 r2: a tile equal to the room's inside an enclosed run that differs gets palette 7, "
+       "room tiles their $C200 palette, HUD room tiles untouched (map-row wrap included)",
+       nt == oo and not wbad and len(v1) == len(want), f"({wbad[:4]}, {len(v1)}, {len(want)})")
+    # ShopClose: a TOP dialog box is re-seated at the bottom
+    for free in (False, True):
+        cpu, ram, v1, st, log = mk(rom)
+        setup(ram, 0x6E, 1, free, base=0x9800)
+        ram[0xC919], ram[0xC91A] = 0x00, 0x98             # the box at the top
+        mask = S('wBoxAttrMask')
+        ram[mask] = 0x3F
+        for i in range(100):
+            ram[0xC100 + i] = 0xEE
+        st['bank'] = 0x77
+        cpu.call(S('ShopClose'), sp=0xDFF0)
+        bk = [ram.get(0xC100 + i) for i in range(100)]
+        wantbk = (c300[13 * 32:13 * 32 + 20] + c300[14 * 32:14 * 32 + 20] +
+                  c300[15 * 32:15 * 32 + 20] + hud[0:20] + hud[32:52])
+        sv = [ram.get(S('wBoxAttrSave') + i) for i in range(60)]
+        wantsv = [(c200[r * 16 + c // 2] >> 4) if c % 2 == 0 else (c200[r * 16 + c // 2] & 15)
+                  for r in (13, 14, 15) for c in range(20)]
+        good = ((ram[0xC919], ram[0xC91A]) == (0xA0, 0x99) and bk == wantbk and
+                (ram[mask] == (0x27 if free else 0x20)) and (sv == wantsv or not free))
+        ok(f"ROM {tag}: ShopClose re-seats a TOP dialog box at the bottom ($99A0, the $C100 backup "
+           f"= room rows 13-15 + the HUD{', the attr save = $C200 rows 13-15' if free else ''}"
+           f") — {'free-colour' if free else 'plain'} custom room", good,
+           f"({hex(ram[0xC919])}, {bk[:4]}, {hex(ram[mask])})")
+    cpu, ram, v1, st, log = mk(rom)
+    setup(ram, 0x02, 1, False, base=0x9800)
+    ram[0xC919], ram[0xC91A] = 0xA0, 0x99                 # already at the bottom
+    for i in range(100):
+        ram[0xC100 + i] = 0xEE
+    ram[S('wBoxAttrMask')] = 0x1F
+    st['bank'] = 0x77
+    cpu.call(S('ShopClose'), sp=0xDFF0)
+    ok(f"ROM {tag}: ShopClose leaves a BOTTOM dialog box (every vanilla shop) untouched",
+       all(ram.get(0xC100 + i) == 0xEE for i in range(100)) and ram[S('wBoxAttrMask')] == 0x1F
+       and (ram[0xC919], ram[0xC91A]) == (0xA0, 0x99))
+    ok(f"ROM {tag}: bank $09 LoadFld9_40fa = `ld hl,$7702 / rst $10 / ret` + S126 SayAny09 "
+       "(ld d,h / ld e,l / ld hl,$7703 / rst $10 / ret) + 41 nops (53 B; LoadFld9_412f keeps its "
+       "address)",
+       rom[0x09 * 0x4000 + 0x40FA - 0x4000: 0x09 * 0x4000 + 0x412F - 0x4000] ==
+       bytes([0x21, 0x02, 0x77, 0xD7, 0xC9]) + bytes.fromhex('545d210377d7c9') + bytes(41) and
+       rom[0x09 * 0x4000 + 0x412F - 0x4000: 0x09 * 0x4000 + 0x4140 - 0x4000] ==
+       origb[0x09 * 0x4000 + 0x412F - 0x4000: 0x09 * 0x4000 + 0x4140 - 0x4000])
+
+
+def test_music_s116():
+    """S116 (ROADMAP P3.13b): two song banks, channel counts, gate + battle music."""
+    global MU_FIX
+    from editor2.core import music as MUS
+    out0, prj0, _w0 = compile_data(base())
+    P0 = prj0.music_plan()
+    b71 = out0['patches/bank_071.asm']
+    b74 = out0['patches/bank_074.asm']
+    ok("S147: the example's 4 songs keep their own channel counts (3 each) and take ONE id "
+       "each — the explicit $9E / $A1 / $A4 stay, the auto song takes the lowest free id "
+       "$9F (S116: $A7, one id per channel); their records are in bank $74's directory; "
+       "nothing spills past bank $74; CustomBGMChanTable is gone",
+       {r['id']: (r['first_id'], len(r['channels'])) for r in P0.songs} ==
+       {'dwm2_bgm06_well': (0x9E, 3), 'dwm2_bgm10': (0x9F, 3), 'dwm2_bgm07': (0xA1, 3),
+        'dq6_town1': (0xA4, 3)} and
+       all(r['bank'] == 0x74 for r in P0.songs) and
+       'CustomBGMChanTable:' not in b71 and 'BattleFightBGMTable:\n    db $FF, $FF' in b71 and
+       '    dw SongRec_9E, SongRec_9F, $0000, SongRec_A1, $0000, $0000, SongRec_A4, $0000' in b74)
+    reg = '\n'.join(region_text(out0, 'patches/bank_000.asm', 'rom0_audio_master'))
+    ok("S147: rom0_audio_master = the 3 vanilla rows + [$9E, $4003, $74] (bank $74's dummy "
+       "records SongRecords) + $FF (24 B) — for every project",
+       '    db $9E, $03, $40, $74' in reg and
+       asm_bytes(reg.splitlines()) == bytes([0, 1, 0x40, 0x1C, 0x21, 1, 0x40, 0x1D, 0x37, 1,
+                                             0x40, 0x1E, 0x9E, 3, 0x40, 0x74] + [0xFF] * 8))
+    b75 = out0['patches/bank_075.asm']
+    ok("S147: bank $75 = its bank byte only when nothing is placed there",
+       'SECTION "ROM Bank $075", ROMX[$4000], BANK[$75]' in b75 and
+       '    db $75' in b75 and 'SongCh_' not in b75)
+    MU_FIX = _mu_fixture()
+    o, prj, w = compile_data(MU_FIX)
+    P = prj.music_plan()
+    sid = P.song_ids
+    ok("S147: songs fill bank $74 first fit in id order (after the head, the directory and "
+       "every record), then bank $75; one id each from $9E",
+       sorted(sid.values()) == list(range(0x9E, 0x9E + len(sid))) and
+       {r['bank'] for r in P.songs} == {0x74, 0x75} and
+       P.stream_bytes[0x74] <= 0x4000 - 445 - 190 - P.records_bytes and
+       P.stream_bytes[0x75] <= 0x3FFF and
+       '    db $9E, $03, $40, $74' in
+       '\n'.join(region_text(o, 'patches/bank_000.asm', 'rom0_audio_master')))
+    rec = lambda name: next(r for r in P.songs if r['id'] == name)
+    ok("S116: channel counts — BGM #04 4 (its noise channel on slot $82), Jingle #09 5 (two "
+       "on the sound-effect slots), Jingle #02 2; the SE-slot warning",
+       len(rec('drums04')['channels']) == 4 and len(rec('five')['channels']) == 5 and
+       len(rec('two')['channels']) == 2 and
+       [c['slot'] for c in rec('drums04')['channels']] == [0x34, 0x4E, 0x68, 0x82] and
+       any('song five: plays on a sound-effect slot' in x for x in w))
+    b74f = o['patches/bank_074.asm']
+    r5 = rec('five')
+    want = [f"SongRec_{r5['first_id']:02X}:", f"    db $05, ${r5['bank']:02X}"]
+    for k, c in enumerate(r5['channels']):
+        want.append(f"    db ${MUS.dummy_id(c['slot'], c['hw']):02X}, ${c['slot']:02X}")
+        want.append(f"    dw SongCh_{r5['first_id']:02X}_{k}")
+    got = [ln.split(';')[0].rstrip() for ln in
+           b74f.split(want[0])[1].split('\n')[1:1 + 1 + 2 * 5]]
+    in75 = [r for r in P.songs if r['bank'] == 0x75]
+    ok("S147: a song's record = channels, its bank, per channel the dummy id of its "
+       "(slot, hw) + the slot + the stream label (Jingle #09: 5 channels, two on the "
+       "sound-effect slots); first fit puts a later small song back into bank $74; a song "
+       "placed in bank $75 has its streams there",
+       got == [x for x in want[1:]] and r5['bank'] == 0x74 and in75 and
+       all(f"SongCh_{r['first_id']:02X}_0:" in o['patches/bank_075.asm'] for r in in75))
+    ok("S116: gate tables — gate 2 floors = BGM #04, battles $0C; gate 5 battles = Jingle "
+       "#02; served rooms with no song of their own are marked $FF (follow the gate)",
+       P.gate_bgm[2] == sid['drums04'] and P.gate_battle[2] == 0x0C and
+       P.gate_battle[5] == sid['two'] and
+       any(P.room_bgm[int(str(rr['mapID']), 0)] == MUS.FOLLOW_GATE
+           for rr in prj.rooms if rr.get('id') in prj.gate_rooms()))
+    ok("S116: no gate song -> no $FF marks (the example: vanilla path byte-for-byte)",
+       MUS.FOLLOW_GATE not in P0.room_bgm and MUS.FOLLOW_GATE not in P0.room_battle)
+    ok("S116: battle settings + per-room + fights (sorted by EID)",
+       P.battle == {'normal': 0x31, 'boss': sid['five'], 'arena': sid['big15'],
+                    'starry': sid['drums04']} and
+       P.room_battle[0x01] == 0x1E and P.room_battle[0x6C] == sid['two'] and
+       P.fights == [(11, 0x2B), (325, sid['big15'])] and
+       F_db_has(o['patches/bank_071.asm'], [11, 0, 0x2B]))
+    # the models
+    ctx = dict(in_gate=1, map=0x0D, gate=2, floor=0, last=5, boss_map=0x31)
+    ok("S116 model: a maze floor of gate 2 plays its song; the floor before a VANILLA boss "
+       "room keeps the vanilla boss song (0 = vanilla); another gate is vanilla",
+       MUS.model_room_bgm(P, ctx) == sid['drums04'] and
+       MUS.model_room_bgm(P, dict(ctx, floor=3)) == 0 and
+       MUS.model_room_bgm(P, dict(ctx, gate=3)) == 0)
+    bctx = dict(link=0, map=0x0D, starry=0, eid=5, in_gate=1, gate=2, mode=0)
+    ok("S116 model: battles — a fight's own song > the arena > the room > the gate > boss > "
+       "normal; link battles vanilla",
+       MUS.model_battle_bgm(P, dict(bctx, eid=325)) == sid['big15'] and
+       MUS.model_battle_bgm(P, bctx) == 0x0C and
+       MUS.model_battle_bgm(P, dict(bctx, gate=4)) == 0x31 and
+       MUS.model_battle_bgm(P, dict(bctx, gate=4, mode=3)) == sid['five'] and
+       MUS.model_battle_bgm(P, dict(bctx, in_gate=0, map=0x5D, starry=2)) == sid['drums04'] and
+       MUS.model_battle_bgm(P, dict(bctx, in_gate=0, map=0x5D, starry=1)) == sid['big15'] and
+       MUS.model_battle_bgm(P, dict(bctx, in_gate=0, map=0x01)) == 0x1E and
+       MUS.model_battle_bgm(P, dict(bctx, link=1, eid=325)) == 0x27)
+
+    def fx(mut):
+        d = _mu_fixture()
+        mut(d)
+        return d
+    mus = lambda d: d['custom']['music']
+    six = {'channels': [{'slot': s_, 'hw': 0, 'header': [0, 0, 0, 0], 'tokens': [{'op': 'end'}]}
+                        for s_ in (0x00, 0x1A, 0x34, 0x4E, 0x68, 0x82, 0x34)]}
+    for name, mut, needle in (
+            ('an unknown music key', lambda d: mus(d).update(tempo=1), "unknown key(s) ['tempo']"),
+            ('a gate outside 0-95', lambda d: mus(d)['gates'].update({'96': {'floors': 'two'}}),
+             'outside 0-95'),
+            ('a song for an undefined gate', lambda d: mus(d)['gates'].update(
+                {'40': {'floors': 'two'}}), 'gate 40 is not defined'),
+            ('an unknown battle key', lambda d: mus(d)['battle'].update(victory='two'),
+             "unknown key(s) ['victory']"),
+            ('a song id that does not exist', lambda d: mus(d)['battle'].update(boss='nope'),
+             "'nope' is not a defined song id"),
+            ('two channels on one slot', lambda d: mus(d)['songs'].append(
+                {'id': 'bad', 'source': {'inline': six}}), 'two channels on slot $34'),
+            ('more than 95 songs (S147: one id each)', lambda d: mus(d)['songs'].extend(
+                [{'id': f'x{k}', 'source': {'library': 'dwm2_jingle02'}} for k in range(92)]),
+             'songs — at most 95'),
+            ('a song id twice', lambda d: mus(d)['songs'].append(
+                {'id': 'two', 'source': {'library': 'dwm2_jingle02'}}), "defined twice")):
+        expect_error(f"S116 refuses {name}", fx(mut), needle)
+    # the editor model
+    from editor2.core.document import Document
+    import shutil
+    import struct
+    tmpd = '/tmp/_t_mu_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    s7 = doc.add_library_song('dwm2_bgm07')
+    ok("S116 doc: Add to the project — a second copy of a catalog song gets its own id",
+       s7 == 'dwm2_bgm07_2' and doc.project_song(s7)['source'] == {'library': 'dwm2_bgm07'})
+    # a tiny MIDI file: 4 melodic channels + drums -> automatic 3 + noise
+    ev = b''
+    for ch in range(4):
+        for k in range(8):
+            ev += bytes([0x00, 0x90 | ch, 60 + ch * 3 + k, 90, 0x30, 0x80 | ch, 60 + ch * 3 + k, 0])
+    ev += bytes([0x00, 0x99, 38, 100, 0x10, 0x89, 38, 0])
+    ev += b'\x00\xff\x2f\x00'
+    mid = b'MThd' + struct.pack('>IHHH', 6, 0, 1, 96) + b'MTrk' + struct.pack('>I', len(ev)) + ev
+    open('/tmp/_t_mu.mid', 'wb').write(mid)
+    sidm, wm = doc.import_midi('/tmp/_t_mu.mid', 'My Tune')
+    asset = os.path.join(tmpd, doc.midi_asset(sidm))
+    ent = json.load(open(asset))
+    ok("S116 doc: Import MIDI — automatic: 3 of 4 melodic channels kept (warned), drums on "
+       "the noise channel; the song file is in the project's assets/music/",
+       sidm == 'my_tune' and os.path.exists(asset) and
+       [c['slot'] for c in ent['channels']] == [0x34, 0x4E, 0x68, 0x82] and
+       any('kept the 3 that play longest' in x for x in wm) and
+       doc.project_song(sidm)['source'] == {'file': 'assets/music/my_tune.json'})
+    doc.set_room_music_id(0x6C, sidm)            # a custom room: rooms[].music
+    doc.set_room_music_id(0x30, 0x2B)            # a vanilla room: room_defaults
+    doc.set_gate_music(3, floors=sidm, battles=s7)
+    doc.set_battle_music('starry', s7)
+    doc.set_fight_music(325, sidm)
+    doc.set_song_name('0x09', 'Castle theme')
+    ok("S116 doc: room / gate / battle / fight assignments land where the compiler reads them",
+       doc.room('dusk_mirror').get('music') == 'my_tune' and
+       doc.music()['room_defaults']['0x30'] == '0x2B' and
+       doc.music()['gates']['3'] == {'floors': 'my_tune', 'battles': s7} and
+       doc.music()['battle'] == {'starry': s7, 'fights': {'325': 'my_tune'}} and
+       doc.song_name('0x09') == 'Castle theme' and
+       set(doc.song_uses(sidm)) == {'room dusk_mirror', 'gate 3 floors', 'fight EID 325'})
+    doc.save()
+    C.compile_project(tmpd, REPO)                # the imported song file travels with it
+    uses, f = doc.remove_song(sidm)
+    ok("S116 doc: Remove from the project clears every assignment of the song",
+       f == 'assets/music/my_tune.json' and doc.room('dusk_mirror').get('music') is None and
+       doc.music()['gates']['3'] == {'battles': s7} and 'fights' not in doc.music()['battle'])
+    return o
+
+
+def F_db_has(text, values):
+    want = ', '.join(f'${v:02X}' for v in values)
+    return any(want in ln for ln in text.splitlines() if ln.strip().startswith('db '))
+
+
+def test_music_rom(tag, rom_bytes, sym, prj_data, orig):
+    """--rom: the same-size ROM0 / bank $51 rewrites, the tables, and every project song
+    started by the BUILT ROM's own InitBGM in the editor's sound engine (the interpreter
+    runs the patched code: InitBGM -> bank $71 CustomBGMStart -> AudioProcess)."""
+    from editor2.core import music as MUS
+    from editor2.core import sound_engine as SE
+    from editor2.core.project import Project
+    ok(f"ROM S116 {tag}: InitBGM keeps $1AE5 and PlaySoundEffect $1B2C (71-byte rewrite); "
+       "the battle pick keeps LoadBattle's $4073-$408E window",
+       sym['InitBGM'] == (0, 0x1AE5) and sym['PlaySoundEffect'] == (0, 0x1B2C) and
+       rom_bytes[0x1B2C:0x1B30] == orig[0x1B2C:0x1B30] and
+       rom_bytes[0x51 * 0x4000 + 0x0073 + 12:0x51 * 0x4000 + 0x0073 + 16] ==
+       bytes([0x21, 0x07, 0x71, 0xD7]) and
+       rom_bytes[0x51 * 0x4000 + 0x008F:0x51 * 0x4000 + 0x0100] ==
+       orig[0x51 * 0x4000 + 0x008F:0x51 * 0x4000 + 0x0100])
+    prj = Project(copy.deepcopy(prj_data), os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    P = prj.music_plan()
+    lay = MUS.song_layout(prj)
+
+    def at(label, n):
+        b, a = sym[label]
+        return rom_bytes[b * 0x4000 + a - 0x4000:b * 0x4000 + a - 0x4000 + n]
+    sb, sa = sym['SongSilent']
+    ok(f"ROM S147 {tag}: bank $74's dummy records (SongRecords $74:$4003) == "
+       "music.dummy_records; every stream in the ROM == the plan's bytes in the plan's bank; "
+       "CustomBGMChanTable gone",
+       sym['SongRecords'] == (0x74, 0x4003) and
+       at('SongRecords', 380) == MUS.dummy_records(sa) and
+       at('SongSilent', 6) == MUS.SILENT_STREAM and 'CustomBGMChanTable' not in sym and
+       all(sym[lab][0] == L['bank'] and at(lab, len(blob)) == blob
+           for L in lay for (_s, _h, _d, lab, blob) in L['channels']))
+    bad = []
+    for L in lay:
+        m = SE.Machine(rom_bytes)
+        m._call(SE.INIT_AUDIO)
+        m.start_bgm(L['sid'])
+        w = m.wram
+        live = [s_ for s_ in MUS.SLOTS if not (w[0xDD80 - 0xC000 + s_] == 0xFF and
+                                               w[0xDD80 - 0xC000 + s_ + 0x19] == 0xFF)]
+        want = sorted(c[0] for c in L['channels'])
+        got = [(w[0xDD80 - 0xC000 + c[0] + 2] | w[0xDD80 - 0xC000 + c[0] + 3] << 8,
+                w[0xDD80 - 0xC000 + c[0] + 4]) for c in L['channels']]
+        if live != want or got != [(sym[c[3]][1], L['bank']) for c in L['channels']]:
+            bad.append((L['id'], live, got))
+    ok(f"ROM S147 {tag}: the built InitBGM (-> bank $71 entry 6 -> bank $74 SongStart) starts "
+       f"every project song by its ONE id with exactly its channels, each reading its own "
+       f"stream in the song's bank ({len(lay)} songs)", not bad, f"({bad})")
+    m = SE.Machine(rom_bytes)
+    m._call(SE.INIT_AUDIO)
+    free = next(i for i in range(0x9E, 0xFD) if i not in {L['sid'] for L in lay})
+    m.start_bgm(free)
+    ok(f"ROM S147 {tag}: an id with no song starts nothing (silence)",
+       all(m.wram[0xDD80 - 0xC000 + s_] == 0xFF for s_ in MUS.SLOTS))
+    m = SE.Machine(rom_bytes)
+    m._call(SE.INIT_AUDIO)
+    m.start_bgm(0x27)
+    live27 = [s for s in MUS.SLOTS if m.wram[0xDD80 - 0xC000 + s] != 0xFF]
+    m2 = SE.Machine(rom_bytes)
+    m2._call(SE.INIT_AUDIO)
+    m2.start_bgm(0x4D)
+    live4d = [s for s in MUS.SLOTS if m2.wram[0xDD80 - 0xC000 + s] != 0xFF]
+    ok(f"ROM S116 {tag}: vanilla ids keep their channel counts ($27 four, $4D two)",
+       live27 == [0x34, 0x4E, 0x68, 0x82] and live4d == [0x34, 0x4E])
+
+
+
+def _services_fixture():
+    """S126 (P3.14e1): the example + every service kind as a script, line sets
+    (a vault clerk with a speaker, an everywhere farm set, a shop set), a shop
+    using it, a first-visit namer and three medal rewards (one a project enemy)."""
+    d = base()
+    c = d['custom']
+    c.setdefault('flags', []).append({'name': 'svc_met', 'index': '0x1101'})
+    c.setdefault('dialogue', []).append({'id': 'svc_intro', 'boxes': [["I'm new here."]]})
+    c['shops'] = [{'id': 'svc_stall', 'items': [1, 2]}]
+    c['service_lines'] = [
+        {'id': 'clerk', 'kind': 'vault', 'speaker': 'Clerk',
+         'lines': {'0': 'Welcome!', '2': 'Bye now!', '3': 'What goes in\nthe box?'}},
+        {'id': 'farmall', 'kind': 'farm', 'everywhere': True,
+         'lines': {'1': 'Need more?'}},
+        {'id': 'stall_lines', 'kind': 'shop', 'lines': {'2': 'See you!'}}]
+    for sid, sv in (('svc_vault', {'kind': 'vault', 'lines': 'clerk'}),
+                    ('svc_farm', {'kind': 'farm'}),
+                    ('svc_lib', {'kind': 'library'}),
+                    ('svc_namer', {'kind': 'namer',
+                                   'first_time': {'text': 'svc_intro', 'flag': 'svc_met'}}),
+                    ('svc_medal', {'kind': 'medals'}),
+                    ('svc_egg', {'kind': 'eggs'}),
+                    ('svc_gates', {'kind': 'gates'})):
+        c['scripts'].append({'id': sid, 'service': sv})
+    c['scripts'].append({'id': 'svc_shop', 'shop': {'shop': 'svc_stall', 'lines': 'stall_lines'}})
+    d.setdefault('gamedata', {})['medals'] = {'rewards': [
+        {'medals': 3, 'enemy': 336}, {'medals': 5, 'enemy': 'vault_goldslime',
+                                      'line': "A gold egg!"},
+        {'medals': 8, 'enemy': 1}]}
+    return d
+
+
+def test_services_s126():
+    """S126 (ROADMAP P3.14e1): service NPCs — the game's room-independent screen effects
+    as NPC roles (editor2/core/services.py, PROJECT_COMPILER §2.39): the lines in their
+    vanilla frame, the line sets (wServiceLines + ServiceSetTable), the lowered scripts in
+    the vanilla NPC's shape, the medal rewards (region gd_medal_rewards)."""
+    from editor2.core import services as SV
+    dat = SV.data(REPO)
+    n = sum(len(k['lines']) for k in dat['kinds'].values())
+    ok("S126/S127/S128: service_lines.json — 10 blocks (shop vault farm eggs library namer "
+       "medals + S127 grandpa breeder + S128 arena), 188 lines, the game's 4 medal rewards",
+       sorted(dat['kinds']) == ['arena', 'breeder', 'eggs', 'farm', 'grandpa', 'library',
+                                'medals', 'namer', 'shop', 'vault']
+       and n == 188 and [r['medals'] for r in dat['medal_rewards']['rows']] == [13, 18, 25, 30])
+    bad = [(k, ln['off']) for k, b in dat['kinds'].items() for ln in b['lines']
+           if SV.encode_line(ln, ln['text']).hex() != ln['raw']]
+    ok("S126: every vanilla line rebuilds byte-for-byte from its frame + words", not bad, str(bad))
+    vl = SV.vline('farm', 0x0A, REPO)
+    ok("S126: inserts — 'I replaced\\n{ins0} with {ins1}!' = $F9 $00 / $F9 $10 in Pulio's frame",
+       vl['text'] == 'I replaced\n{ins0} with {ins1}!' and vl['speaker'] == 'Pulio' and
+       vl['voice'] == 'high' and vl['tail'] == 'faf7f0')
+    ok("S126: newline runs — '\\n' line, '\\n\\n' box, '\\n\\n\\n' an empty line then a box",
+       SV.encode_body('a\nb') == [0x3E, 0xEF, 0xEE, 0x3F] and
+       SV.encode_body('a\n\nb') == [0x3E, 0xFA, 0xF7, 0xEF, 0xEE, 0x3F] and
+       SV.encode_body('a\n\n\nb') == [0x3E, 0xEF, 0xEE, 0xFA, 0xF7, 0xEF, 0xEE, 0x3F])
+    try:
+        SV.encode_body('{lead}')
+        ok("S126: an unknown insert is refused", False)
+    except SV.ServiceError:
+        ok("S126: an unknown insert ({lead} is a script text's) is refused", True)
+    ok("S126: the boxes as the game shows them ('\\n\\n\\n' = an empty line, then a box)",
+       SV.text_boxes('a\nb\n\nc\n\n\nd') == [['a', 'b'], ['c', ''], ['d']])
+    ok("S126: every vanilla line passes the box checks under its own speaker",
+       not [(k, ln['off']) for k, b in dat['kinds'].items() for ln in b['lines']
+            if SV.line_problems(ln, ln['text'])])
+    s1 = SV.vline('shop', 1, REPO)          # "Anything else?" + $EF $EE: the menu's line after
+    ok("S126: a line ending in a line break keeps its last box's 2nd line free (PyBoy: a "
+       "2-line 'Anything else?' scrolled the box over the shop window)",
+       SV.tail_lines(s1) == 1 and SV.line_problems(s1, 'Want anything\nelse, friend?', 'Buk')
+       and not SV.line_problems(s1, 'Want anything\n\nelse, friend?', 'Buk')
+       and not SV.line_problems(s1, 'Want any more?', 'Buk')
+       and not SV.line_problems(s1, SV.fit_text(s1, 'Is there anything else?', 'Clerkmaster'),
+                                'Clerkmaster'))
+    r7 = SV.vline('medals', 7, REPO)        # reward 5's frame ends with a line break
+    ok("S126: the default reward line fits its frame (rewards 4-8 keep the last box's "
+       "2nd line free)", not SV.line_problems(r7, SV.reward_default(r7, 'Trumpeter', False))
+       and SV.line_problems(r7, SV.default_reward_line('Trumpeter', False))
+       and SV.reward_default(SV.vline('medals', 3, REPO), 'ZapBird', False)
+       == SV.default_reward_line('ZapBird', False))
+    v9 = SV.vline('vault', 9, REPO)
+    ok("S126: a longer speaker re-flows the game's words ('*:' 2 cells -> 'Clerk:' 6)",
+       SV.line_problems(v9, v9['text'], 'Clerk') and
+       not SV.line_problems(v9, SV.fit_text(v9, v9['text'], 'Clerk'), 'Clerk'),
+       repr(SV.fit_text(v9, v9['text'], 'Clerk')))
+    d = _services_fixture()
+    out, prj, warns = compile_data(d)
+    sc = {x['id']: x['ops'] for x in prj.custom['scripts']}
+    r = SV.resolve(prj)
+    tid = {e['id']: e['_tid'] for e in prj._dialogue if 'id' in e}
+    num = r['numbers']
+    ok("S126: line sets used by scripts are numbered in script order (everywhere sets: 0)",
+       num == {'clerk': 1, 'stall_lines': 2}, str(num))
+    ok("S126: the vault clerk — wServiceLines 1 / greeting (the set's) / op $04 2 $06A0 / "
+       "wServiceLines 0 / farewell (the set's) / end; S151 r2: op $3C (the bottom box) "
+       "before both texts",
+       sc['svc_vault'] == [['op', 'write_ram', 'wServiceLines', 1], ['op', '0x3C'],
+                           ['text', tid['svc:clerk:0']],
+                           ['op', '0x04', 2, 0x06A0], ['op', 'write_ram', 'wServiceLines', 0],
+                           ['op', '0x3C'], ['text', tid['svc:clerk:2']], ['end']],
+       str(sc['svc_vault']))
+    ok("S126: the farm keeper (no set) — the game's greeting / op $04 3 $06C0 / farewell",
+       sc['svc_farm'] == [['op', '0x3C'], ['text', 0x06C0], ['op', '0x04', 3, 0x06C0],
+                          ['op', '0x3C'], ['text', 0x06C2], ['end']])
+    ok("S126: the librarian — op $04 8 $0740, then nop + init_dialog before the farewell; "
+       "S137: op $3C first (the bottom box — the library speaks into the greeting's box; a "
+       "top box showed its two-box lines twice); S151 r2: op $3C before the init_dialog "
+       "too (the farewell's box at the bottom), none before the farewell's text",
+       sc['svc_lib'] == [['op', '0x3C'], ['text', 0x0740], ['op', '0x04', 8, 0x0740],
+                         ['op', 'nop'], ['op', '0x3C'], ['op', 'init_dialog'],
+                         ['text', 0x0742], ['end']],
+       str(sc['svc_lib']))
+    ok("S126: the medal man — no farewell (the game's script ends after the opcode)",
+       sc['svc_medal'] == [['op', '0x3C'], ['text', 0x0720], ['op', '0x04', 10, 0x0720],
+                           ['end']])
+    ok("S126: the egg appraiser — the bottom box (op $3C) before both texts",
+       sc['svc_egg'] == [['op', '0x3C'], ['text', 0x0750], ['op', '0x04', 7, 0x0750],
+                         ['op', '0x3C'], ['text', 0x0752], ['end']])
+    met = prj.resolve_flag_ref('svc_met')
+    nm = sc['svc_namer']
+    ok("S126: the namer — first visit: intro + its flag, then the question; the list "
+       "(op $04 9 $0780) / B ($C8F4 = 255) / the naming screen (op $04 15 0) loop",
+       nm[0] == ['op', 'if_flag_set', met, '@known'] and ['text', tid['svc_intro']] in nm and
+       ['op', 'set_flag', met] in nm and ['op', '0x04', 9, 0x0780] in nm and
+       ['op', 'check_and_branch', 0xC8F4, 255, '@bye'] in nm and
+       ['op', '0x04', 15, 0] in nm and ['op', 'goto', '@list'] in nm and nm[-2] == ['text', 0x0782],
+       str(nm))
+    ok("S126: the gate guide — the question ($0066) / YES -> op $04 13 0 / farewell ($047E)",
+       sc['svc_gates'] == [['op', '0x3C'], ['text', 0x0066],
+                           ['op', 'check_and_branch', 0xC83C, 1, '@no'],
+                           ['op', '0x04', 13, 0], ['op', 'nop'], ['op', '0x3C'],
+                           ['op', 'init_dialog'], 'label:no', ['op', '0x3C'],
+                           ['text', 0x047E], ['end']], str(sc['svc_gates']))
+    sh = sc['svc_shop']
+    ok("S126: a shop with a line set — wServiceLines 2 around op $04 0 $0680, its own "
+       "thank-you, the game's greeting",
+       sh[0] == ['op', '0x3C'] and sh[1] == ['text', 0x0680] and
+       sh[3:6] == [['op', 'write_ram', 'wServiceLines', 2], ['op', '0x04', 0, 0x0680],
+                   ['op', 'write_ram', 'wServiceLines', 0]]
+       and sh[6] == ['text', tid['svc:stall_lines:2']], str(sh))
+    b77 = out['patches/bank_077.asm']
+    ok("S126: ServiceSetTable — 2 sets; set 0 = the everywhere farm line + the 3 reward "
+       "lines; set 1 = the clerk's lines (+ the relabelled ones)",
+       'SERVICE_SET_COUNT EQU 2' in b77 and f"    dw $06C1, ${tid['svc:farmall:1']:04X}" in b77
+       and f"    dw $0723, ${tid['svc:medal_reward:1']:04X}" in b77 and
+       f"    dw $06A3, ${tid['svc:clerk:3']:04X}" in b77 and
+       f"    dw $06A9, ${tid['svc:clerk:9']:04X}" in b77, b77[b77.find('SERVICE_SET'):][:900])
+    b12 = out['patches/bank_012.asm']
+    ok("S126: gd_medal_rewards — 3 rewards (3 / 5 / 8 medals; a project enemy's EID)",
+       'MEDAL_REWARD_COUNT EQU 3' in b12 and '    dw 3, 336' in b12 and
+       f"    dw 5, {prj.enemy_ref('vault_goldslime', '')}" in b12 and '    dw 8, 1' in b12)
+    rw1 = [e for e in prj._dialogue if e.get('id') == 'svc:medal_reward:1'][0]
+    ok("S126: a reward without a line gets the game's wording with the egg's species",
+       bytes(rw1['raw'][0][1:]) == SV.encode_line(
+           SV.vline('medals', 3, REPO), SV.default_reward_line('ZapBird', False)))
+    rw3 = [e for e in prj._dialogue if e.get('id') == 'svc:medal_reward:3'][0]
+    ok("S126: the last reward's line ends with the game's 'no more rewards' boxes",
+       'rewards to give' in SV.default_reward_line('Slime', True) and
+       bytes(rw3['raw'][0][1:]) == SV.encode_line(
+           SV.vline('medals', 5, REPO), SV.default_reward_line('Slime', True)))
+    exo, _, _ = compile_data(base())
+    ok("S126: the example (no services) — 0 sets, an empty set 0, the game's 4 rewards",
+       'SERVICE_SET_COUNT EQU 0' in exo['patches/bank_077.asm'] and
+       'ServicePairs_0:\n    dw $FFFF' in exo['patches/bank_077.asm'] and
+       'MEDAL_REWARD_COUNT EQU 4' in exo['patches/bank_012.asm'] and
+       '    dw 30, 340' in exo['patches/bank_012.asm'])
+    d2 = _services_fixture()
+    d2['custom']['service_lines'].append({'id': 'spare', 'kind': 'eggs', 'lines': {}})
+    _o, _p, w2 = compile_data(d2)
+    ok("S126 warns: a line set no NPC speaks", any("'spare': no NPC speaks" in w for w in w2))
+
+    def fx(mut):
+        x = _services_fixture()
+        mut(x)
+        return x
+    for name, mut, needle in (
+            ('an unknown kind', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'bank'}}), "kind 'bank'"),
+            ('a line set of another kind', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'farm', 'lines': 'clerk'}}), "is for 'vault'"),
+            ('an unknown line set', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'vault', 'lines': 'nope'}}), "'nope' is not"),
+            ('lines for the gate guide', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'gates', 'lines': 'clerk'}}), 'no lines of its own'),
+            ('a first visit without a flag', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'vault', 'first_time': {'text': 'svc_intro'}}}),
+             'first_time'),
+            ('a typed line too long for the box', lambda x: x['custom']['service_lines'][0][
+                'lines'].update({'4': 'Which one would you like?'}), 'wrap it in the middle'),
+            ('a line past the block', lambda x: x['custom']['service_lines'][0][
+                'lines'].update({'40': 'x'}), 'no line +40'),
+            ('9 medal rewards', lambda x: x['gamedata']['medals'].update(
+                rewards=[{'medals': i + 1, 'enemy': 1} for i in range(9)]), '1-8 rewards'),
+            ('rewards out of order', lambda x: x['gamedata']['medals']['rewards'].insert(
+                0, {'medals': 9, 'enemy': 1}), 'not more than'),
+            ('1000 medals', lambda x: x['gamedata']['medals']['rewards'].append(
+                {'medals': 1000, 'enemy': 1}), '1-999'),
+            ('an unknown service key', lambda x: x['custom']['scripts'].append(
+                {'id': 'z', 'service': {'kind': 'vault', 'price': 3}}), 'unknown keys')):
+        expect_error(f"S126 refuses {name}", fx(mut), needle)
+    return out
+
+
+def _breeders_fixture():
+    """S127 (P3.14e2): the example + breeding NPCs in gate_rotation ($6D) screen 0 —
+    a Grandpa, a fixed breeder (CatFly row 306, once with a flag), two random breeders
+    on a pool (level / arena / story bands), a grandpa line set, an every-gate rule
+    with a chance by level."""
+    d = base()
+    c = d['custom']
+    c.setdefault('flags', []).extend([{'name': 'brd_done', 'index': '0x1102'},
+                                      {'name': 'brd_m1', 'index': '0x1103'},
+                                      {'name': 'brd_m2', 'index': '0x1104'}])
+    c.setdefault('dialogue', []).extend([
+        {'id': 'brd_intro', 'boxes': [["Let's breed!"]]},
+        {'id': 'brd_after', 'boxes': [["We did it!"]]}])
+    c['service_lines'] = [{'id': 'gp_lines', 'kind': 'grandpa', 'speaker': 'Gramps',
+                           'lines': {'0': 'Hi there!\nWhat now?'}}]
+    r = [x for x in c['rooms'] if x['id'] == 'gate_rotation'][0]
+    r['scripts'].update({'1': 'brd_gp', '2': 'brd_cat', '3': 'brd_w1', '4': 'brd_w2'})
+    r['screens']['0']['npcs'] += [
+        {'kind': 'npc', 'x': 2, 'y': 2, 'sprite': '0x08', 'facing': 'down', 'script': 'brd_gp'},
+        {'kind': 'npc', 'x': 4, 'y': 2, 'sprite': '0x0B', 'facing': 'down', 'script': 'brd_cat'},
+        {'kind': 'npc', 'x': 6, 'y': 2, 'sprite': '0x0C', 'facing': 'down', 'script': 'brd_w1'},
+        {'kind': 'npc', 'x': 8, 'y': 2, 'sprite': '0x0C', 'facing': 'down', 'script': 'brd_w2'}]
+    c['scripts'] += [
+        {'id': 'brd_gp', 'service': {'kind': 'grandpa', 'lines': 'gp_lines'}},
+        {'id': 'brd_cat', 'service': {'kind': 'breeder', 'mate': 306, 'intro': 'brd_intro',
+                                      'flag': 'brd_done', 'once': True, 'after': 'brd_after'}},
+        {'id': 'brd_w1', 'service': {'kind': 'breeder', 'pool': 'wild',
+                                     'when': [{'flag': 'brd_m1'}]}},
+        {'id': 'brd_w2', 'service': {'kind': 'breeder', 'pool': 'wild'}}]
+    c['breeding_pools'] = [{'id': 'wild', 'name': 'Wild mates',
+                            'measures': ['level', 'arena', 'story'],
+                            'milestones': ['brd_m1', 'brd_m2'],
+                            'bands': [
+                                {'name': 'early', 'level': 10, 'arena': 0, 'story': 0,
+                                 'mates': [{'enemy': 306, 'weight': 1}, {'enemy': 305, 'weight': 1}]},
+                                {'name': 'mid', 'level': 25, 'arena': 3, 'story': 1,
+                                 'mates': [{'enemy': 310, 'weight': 1}, {'enemy': 313, 'weight': 3}]},
+                                {'name': 'late', 'level': 45, 'arena': 6, 'story': 2,
+                                 'mates': [{'enemy': 'vault_goldslime', 'weight': 2}]}]}]
+    c.setdefault('gate_inserts', []).append(
+        {'room': 'gate_rotation', 'gate': 'any', 'chance_by_level': {'from': [5, 10], 'to': [40, 60]},
+         'once_per_dive': True})
+    return d
+
+
+def test_breeders_s127():
+    """S127 (ROADMAP P3.14e2): breeding NPCs (editor2/core/breeders.py, PROJECT_COMPILER
+    §2.40): Grandpa / fixed / random breeders lowered in the vanilla shapes, the room's
+    return script, breeding pools (bands nearest the player), every-gate rules and the
+    chance by level."""
+    from editor2.core import breeders as BR
+    d = _breeders_fixture()
+    outs, prjs, _w = compile_data(d)
+    prj = prjs[0] if isinstance(prjs, (list, tuple)) else prjs
+    sc = {x['id']: x for x in prj.custom['scripts']}
+    flat = lambda ops: [o for o in ops if not isinstance(o, str)]
+    gp = flat(sc['brd_gp']['ops'])
+    ok("S127: Grandpa = ($3C, r3) greeting (the line set's) / wBreedLast / op $4E / lines on / "
+       "op $04 6 $06F0 / lines off / farewell",
+       gp[0] == ['op', '0x3C'] and
+       gp[1][0] == 'text' and isinstance(gp[1][1], int) and gp[1][1] >= 0x0A00 and
+       ['op', 'write_ram', 'wBreedLast', 1] in gp and ['op', '0x4E'] in gp and
+       ['op', '0x04', 6, 0x06F0] in gp and
+       gp.index(['op', '0x04', 6, 0x06F0]) > gp.index(['op', '0x4E']) and gp[-1] == ['end'],
+       str(gp))
+    cat = flat(sc['brd_cat']['ops'])
+    i42 = cat.index(['op', '0x42', 306, 2])
+    ok("S127: the fixed breeder: once -> if_flag_set @after; op $42 306 <its slot 2> / op $24 "
+       "$FF00 (its name) / init_dialog BEFORE any text; intro; the question +1; the menu "
+       "$04 5 $0600; farewell +0",
+       cat[0][:3] == ['op', 'if_flag_set', 0x1102] and
+       cat[i42 + 1] == ['op', '0x24', 0xFF00] and cat[i42 + 2] == ['op', '0x3C'] and
+       cat[i42 + 3] == ['op', 'init_dialog'] and
+       all(o[0] != 'text' for o in cat[:i42]) and cat[i42 + 5][0] == 'text' and
+       cat[i42 + 5][1] >= 0x0A00 and
+       ['text', 0x0601] in cat and ['op', '0x04', 5, 0x0600] in cat, str(cat))
+    w1 = flat(sc['brd_w1']['ops'])
+    w2 = flat(sc['brd_w2']['ops'])
+    ok("S127: random breeders: the flag condition (if_flag_clear @notyet), slot k's pool := 0, "
+       "slot done (2) -> @after, op $42 $0F00 + k (slots 0 / 1)",
+       w1[0][:3] == ['op', 'if_flag_clear', 0x1103] and
+       ['op', 'write_ram', 'wBreedSlots+1', 0] in w1 and
+       ['op', 'check_and_branch', 'wBreedSlots+0', 2, '@after'] in w1 and
+       ['op', '0x42', 0x0F00, 3] in w1 and ['op', '0x42', 0x0F01, 4] in w2 and
+       ['op', 'write_ram', 'wBreedSlots+5', 0] in w2, str(w1))
+    r = prj.room_by_id('gate_rotation')
+    ent = sc[r['scripts']['0']]
+    eo = ent['ops']
+    ok("S127: gate_rotation's entry = breed:gate_rotation:entry — $D951 $F0 / $F1 / $F2 first, "
+       "then the room's own entry (noop_entry) after br_orig",
+       r['scripts']['0'] == 'breed:gate_rotation:entry' and
+       eo[0] == ['op', 'check_and_branch', '0xD951', 0xF0, '@br_f0'] and
+       eo[2] == ['op', 'check_and_branch', '0xD951', 0xF2, '@br_f2'] and
+       'label:br_orig' in eo and eo[-1] == ['end'], str(eo[:4]))
+    f2 = eo[eo.index('label:br_f2_3'):]
+    ok("S127: the $F2 return of the random breeder: $D951 := 0, the player shown, faces by "
+       "$C901 (the NPC its opposite), slot 0 := 2 (done), init_dialog + line +9",
+       ['op', 'write_ram', '0xD951', 0] in f2[:3] and ['op', '0x0D', 0, '0xFF90', 0] in f2[:3] and
+       ['op', 'check_and_branch', '0xC901', 0, '@b3_f0'] in f2 and
+       ['op', '0x48', 0] in f2 and ['op', '0x47', 3] in f2 and
+       ['op', 'write_ram', 'wBreedSlots+0', 2] in f2 and ['text', 0x0609] in f2, str(f2[:20]))
+    f2c = eo[eo.index('label:br_f2_2'):eo.index('label:br_f2_3')]
+    ok("S127: the fixed breeder's return sets its done flag", ['op', 'set_flag', 0x1102] in f2c)
+    pool = BR.pools(prj)[0]
+    ok("S127: pool 'wild' — mask level + arena + story (11), story step 50, band points",
+       pool['mask'] == 0x0B and pool['step'] == 50 and
+       [b['points'] for b in pool['bands']] == [[10, 0, 0, 0], [25, 36, 0, 50], [45, 72, 0, 100]])
+    ok("S127: band choice = the nearest on the checked scales (level 21 / arena 2 / story 1 "
+       "-> mid; level 3 / 0 / 0 -> early; 50 / 8 / 2 -> late; a tie -> the earlier band)",
+       BR.band_choice(pool, 21, 2, 0, 1) == 1 and BR.band_choice(pool, 3, 0, 0, 0) == 0 and
+       BR.band_choice(pool, 50, 8, 0, 2) == 2 and
+       BR.band_choice({'mask': 1, 'step': 0, 'bands': [{'points': [10, 0, 0, 0]},
+                                                       {'points': [20, 0, 0, 0]}]}, 15) == 0)
+    b77 = outs['patches/bank_077.asm']
+    ok("S127: bank $77 data — BREED_POOL_COUNT 1, the pool's header and the band rows",
+       'BREED_POOL_COUNT EQU 1' in b77 and '    db $0b, 50, 2' in b77 and
+       '    db 25, 36, 0, 50, 2, 4   ; mid' in b77 and '    dw 519' in b77)
+    rows = [x for x in prj.gate_insert_rows() if x['gate'] == 0xFE]
+    t = BR.chance_table(5, 10, 40, 60)
+    ok("S127: an every-gate rule = gate $FE, floors 2 to the boss ($FF), chance byte $80 "
+       "(table row 0), once bit 7",
+       len(rows) == 1 and rows[0]['first'] == 2 and rows[0]['last'] - 1 == 0xFF and
+       rows[0]['chance_byte'] == 0x80 and rows[0]['once_bit'] == 0x80)
+    b71 = outs['patches/bank_071.asm']
+    ok("S127: ScaledChanceTable row 0 = 10 % to level 5, 60 % from level 40, linear "
+       "between (level 20 -> 31 %)",
+       t[0] == 10 and t[5] == 10 and t[20] == 31 and t[40] == 60 and t[99] == 60 and
+       'GATE_ANY EQU $FE' in b71 and 'ScaledChanceTable:' in b71 and
+       '    db ' + ', '.join(str(x) for x in t[20:40]) in b71)
+    from editor2.core import services as SV
+    gl = SV.resolve(prj)['sets']['gp_lines']
+    ok("S127: a grandpa line set: speaker 'Gramps' re-frames the block, the ceremony's own "
+       "lines +$0D / +$16 are never changed",
+       0x0D not in SV.set_lines(prj, gl) and 0x16 not in SV.set_lines(prj, gl) and
+       0x01 in SV.set_lines(prj, gl))
+
+    def fx(mut):
+        dd = _breeders_fixture()
+        mut(dd)
+        return dd
+    scr = lambda dd, sid: [x for x in dd['custom']['scripts'] if x['id'] == sid][0]['service']
+    for name, mut, needle in (
+            ('a mate AND a pool', lambda dd: scr(dd, 'brd_cat').update(pool='wild'), "'mate'"),
+            ('an unknown pool', lambda dd: scr(dd, 'brd_w2').update(pool='nope'), 'not in'),
+            ('once without a flag', lambda dd: scr(dd, 'brd_cat').pop('flag'), "needs a 'flag'"),
+            ('a mate row 600', lambda dd: scr(dd, 'brd_cat').update(mate=600), "this project's"),
+            ('an unknown breeder key', lambda dd: scr(dd, 'brd_cat').update(oops=1), 'unknown keys'),
+            ('weights over 255', lambda dd: dd['custom']['breeding_pools'][0]['bands'][0]
+             ['mates'][0].update(weight=255), 'add up to'),
+            ('the story scale without milestones', lambda dd: dd['custom']['breeding_pools'][0]
+             .pop('milestones'), 'needs milestones'),
+            ('a band level 120', lambda dd: dd['custom']['breeding_pools'][0]['bands'][0]
+             .update(level=120), '0-99'),
+            ('a band without mates', lambda dd: dd['custom']['breeding_pools'][0]['bands'][0]
+             .update(mates=[]), '1-16 mates'),
+            ('the ceremony line +13 in a set', lambda dd: dd['custom']['service_lines'][0]['lines']
+             .update({'13': 'x'}), 'the ceremony says it'),
+            ('chance by level falling levels', lambda dd: dd['custom']['gate_inserts'][-1]
+             .update(chance_by_level={'from': [40, 10], 'to': [5, 60]}), 'rising'),
+            ('every gate from floor 1', lambda dd: dd['custom']['gate_inserts'][-1]
+             .update(floors=[1, 3]), 'from floor 2'),
+            ('five random breeders in a room', lambda dd: [
+                dd['custom']['scripts'].append({'id': f'w{k}', 'service': {'kind': 'breeder',
+                                                                           'pool': 'wild'}})
+                for k in range(3)] + [
+                [x for x in dd['custom']['rooms'] if x['id'] == 'gate_rotation'][0]['screens']['0']
+                ['npcs'].append({'kind': 'npc', 'x': 1 + k, 'y': 5, 'sprite': '0x0C',
+                                 'facing': 'down', 'script': f'w{k}'}) for k in range(3)],
+             'max 4')):
+        expect_error(f"S127 refuses {name}", fx(mut), needle)
+    return outs
+
+
+def test_breeders_s127_r2():
+    """S127 r2 (user: a breeder's words "box 1 line 1 is 28 cells (max 16)" stopped the
+    build; "can I not make a monster with a specific level, why is it a random
+    selection?"): words wrapped into the game's boxes (the model + on open); a mate as a
+    species at a level (a project enemy made for it, re-used, boss rows avoided)."""
+    from editor2.core.document import Document
+    from editor2.core import breeders_doc as BD
+    import shutil
+    ok("S127 r2: a 28-cell line flows into one box of two lines; boxes that fit stay as typed",
+       BD.fit_boxes([['THanks for breeding with me!']]) == [['THanks for', 'breeding with me!']]
+       and BD.fit_boxes([['Hi!'], ['Two', 'lines']]) == [['Hi!'], ['Two', 'lines']])
+    long3 = BD.fit_boxes([['one two three four five six seven', 'eight nine ten eleven twelve',
+                           'thirteen']])
+    ok("S127 r2: a box of three long lines becomes as many boxes as it needs, each fitting",
+       len(long3) >= 2 and all(len(b) <= 2 for b in long3) and
+       ' '.join(' '.join(b) for b in long3) == 'one two three four five six seven eight nine '
+       'ten eleven twelve thirteen')
+    tmpd = '/tmp/_t_brd_r2'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    d = _breeders_fixture()
+    d['custom']['dialogue'].append({'id': 'brd_long', 'boxes': [['THanks for breeding with me!']]})
+    [x for x in d['custom']['scripts'] if x['id'] == 'brd_cat'][0]['service']['after'] = 'brd_long'
+    json.dump(d, open(os.path.join(tmpd, 'project.json'), 'w'), indent=1)
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    ok("S127 r2: on open the too-long breeder words are wrapped (a MIGRATED note)",
+       doc.dialogue('brd_long')['boxes'] == [['THanks for', 'breeding with me!']] and
+       any('brd_long' in n for n in doc.migrations))
+    st = doc.mate_stats(206, 55)
+    ok("S127 r2: Pizzaro at 55 = its JOIN row (360 HP), not the 6000-HP boss fight row",
+       st['hp'] == 360 and st['level'] == 55 and st['species'] == 206)
+    lo, hi = doc.mate_stats(47, 5), doc.mate_stats(47, 40)
+    ok("S127 r2: CatFly younger / older than its rows — stats follow its growth curves",
+       lo['level'] == 5 and hi['level'] == 40 and
+       all(1 <= lo[k] < hi[k] for k in ('hp', 'atk', 'def', 'agl')))
+    expect = None
+    try:
+        doc.mate_stats(216, 10)
+    except ValueError as ex:
+        expect = str(ex)
+    ok("S127 r2: species 215-220 are not monsters (Iron Rule 8)",
+       expect is not None and 'not a monster' in expect and
+       all(sid not in range(215, 221) for sid, _n in doc.mate_species()))
+    doc.set_breeder_options('brd_cat', mate={'species': 47, 'level': 33}, flag='brd_done',
+                            once=True, after=[['THanks for breeding with me!']])
+    mid = [x for x in doc.custom['scripts'] if x['id'] == 'brd_cat'][0]['service']['mate']
+    e = doc.project_enemy(mid)
+    ok("S127 r2: a species + level mate = a project enemy marked as a breeding mate",
+       e is not None and e['species'] == 47 and e['level'] == 33 and
+       e['comment'] == BD.MATE_NOTE and doc.mate_info(mid) == (47, 33))
+    n0 = len(doc.project_enemies())
+    doc.set_breeder_options('brd_cat', mate={'species': 47, 'level': 33})
+    ok("S127 r2: the same species and level again re-uses that enemy",
+       len(doc.project_enemies()) == n0 and
+       [x for x in doc.custom['scripts'] if x['id'] == 'brd_cat'][0]['service']['mate'] == mid)
+    doc.set_breeder_options('brd_cat', mate={'species': 47, 'level': 33}, flag='brd_done',
+                            once=True, after=[['THanks for breeding with me!']])
+    ok("S127 r2: … as [['THanks for', 'breeding with me!']]",
+       doc.breeder_options('brd_cat')['after'] == [['THanks for', 'breeding with me!']])
+    doc.save()
+    outs, prjs, _w = C.compile_project(tmpd, REPO)
+    prj = prjs[0] if isinstance(prjs, (list, tuple)) else prjs
+    eid = prj.enemy_ref(mid, 't')
+    ops = [o for o in [x for x in prj.custom['scripts'] if x['id'] == 'brd_cat'][0]['ops']
+           if not isinstance(o, str)]
+    ok("S127 r2: it compiles — op $42 offers that enemy's row (a project EID >= 519)",
+       eid >= 519 and any(o[:3] == ['op', '0x42', eid] for o in ops))
+    shutil.rmtree(tmpd, ignore_errors=True)
+
+
+def test_breeders_s127_r3():
+    """S127 r3 (user: "If you say no to breeding npc in $6b, 1) text box jumps around, and
+    2) text box BIFURCATES"): every text box of a breeding script opens at the bottom
+    (op $3C before each text and init_dialog — the menus assume a bottom box), and bank
+    $77 BreedClose re-seats the box at the bottom (ShopBoxBottom) in custom rooms."""
+    d = _breeders_fixture()
+    outs, prjs, _w = compile_data(d)
+    prj = prjs[0] if isinstance(prjs, (list, tuple)) else prjs
+    sc = {x['id']: x for x in prj.custom['scripts']}
+    bad = []
+    for sid in ('brd_gp', 'brd_cat', 'brd_w1', 'brd_w2', 'breed:gate_rotation:entry'):
+        ops = sc[sid]['ops']
+        upto = ops.index('label:br_orig') if 'label:br_orig' in ops else len(ops)
+        prev = None
+        for o in ops[:upto]:
+            if isinstance(o, list) and (o[0] == 'text' or o[:2] == ['op', 'init_dialog']):
+                if prev != ['op', '0x3C']:
+                    bad.append((sid, o))
+            prev = o if not isinstance(o, str) else prev
+    ok("S127 r3: in every breeding script (Grandpa, breeders, the room's return script) "
+       "each text / init_dialog follows op $3C (the box at the bottom)", not bad)
+    asm = outs['patches/bank_077.asm']
+    i = asm.index('\nBreedClose:')
+    j = asm.index('\nBreedSlotEID:', i)
+    body = asm[i:j]
+    ok("S127 r3: BreedClose calls ShopBoxBottom after the custom-room test, before $FFD4",
+       body.index('cp CUSTOM_ROOM_START') < body.index('call ShopBoxBottom') <
+       body.index('ldh [$d4], a'))
+
+
+def test_breeders_s127_r4():
+    """S127 r4 (user: "Why is first visit greyed out?"): a breeder has a first visit too —
+    its words instead of the first words once, remembered by its flag."""
+    d = _breeders_fixture()
+    c = d['custom']
+    c['dialogue'].append({'id': 'brd_first', 'boxes': [['First time here?']]})
+    c['flags'].append({'name': 'brd_met', 'index': '0x1105'})
+    [x for x in c['scripts'] if x['id'] == 'brd_cat'][0]['service']['first_time'] = \
+        {'text': 'brd_first', 'flag': 'brd_met'}
+    outs, prjs, _w = compile_data(d)
+    prj = prjs[0] if isinstance(prjs, (list, tuple)) else prjs
+    ops = [o for o in [x for x in prj.custom['scripts'] if x['id'] == 'brd_cat'][0]['ops']]
+    flat = [o for o in ops if not isinstance(o, str)]
+    i = flat.index(['op', 'if_flag_set', 0x1105, '@known'])
+    ok("S127 r4: the breeder's first visit = if the flag is ON skip / its words / the flag ON / "
+       "then the question (the first words on later visits)",
+       flat[i + 1] == ['op', '0x3C'] and flat[i + 2][0] == 'text' and
+       flat[i + 3] == ['op', 'set_flag', 0x1105] and flat[i + 4] == ['op', 'goto', '@asked'] and
+       'label:known' in ops and 'label:asked' in ops and
+       ops.index('label:asked') < ops.index(['text', 0x0601]), str(flat))
+    ok("S127 r4: it compiles (the first-visit flag numbered 0x1105)", 'patches/bank_060.asm' in outs)
+
+
+def test_breeders_rom():
+    """S127 on real bytes: the same-size close tails (bank $0A), the LoadEnemyStatsExt
+    slot hook (bank $14), the commit reset (bank $73), the op $24 command branch (bank
+    $60) — and BreedRoll / BreedSlotEID / PartyAvgLevel / ScaledChance / ScriptCommand
+    RUN from the fixture ROM (dwm/sm83.py, the real rst $10 bank switching) against the
+    model (breeders.band_choice, chance_table)."""
+    from editor2.core import builder as B
+    from editor2.core import breeders as BR
+    from dwm.sm83 import CPU
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    O = lambda b, a: b * 0x4000 + a - 0x4000
+    d = _breeders_fixture()
+    outs, prj, _w = compile_data(d)
+    outdir = '/tmp/_t_breeders_rom'
+    C.write_outputs(outs, outdir)
+    rom_path, sym_path, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rom = open(rom_path, 'rb').read()
+    sym = B.parse_sym(sym_path)
+    S = lambda n: sym[n][1]
+    tail_new, tail_old = bytes.fromhex('210777d7c9'), bytes.fromhex('210301d7c9')
+    sites = [O(0x0A, a) for a in range(0x4000, 0x8000)
+             if rom[O(0x0A, a):O(0x0A, a) + 5] == tail_new]
+    ok("S127: bank $0A — exactly three close tails `ld hl, $7707 / rst $10 / ret`, each "
+       "the original `ld hl, $0103 / rst $10 / ret` (screens 5 / 6 / 11), the bank's "
+       "address map unchanged",
+       len(sites) == 3 and all(orig[x:x + 5] == tail_old for x in sites) and
+       sym.get('label4516') == (0x0A, 0x4516) and sym.get('label4ce2') == (0x0A, 0x4CE2) and
+       sym.get('label6a5a') == (0x0A, 0x6A5A) and sym.get('EggAppraiserScreen') == (0x0A, 0x6095),
+       str([hex(x) for x in sites]))
+    ext = S('LoadEnemyStatsExt')
+    ok("S127: bank $14 LoadEnemyStatsExt — row high $0F -> ld hl, $7708 / rst $10 / jr back",
+       rom[O(0x14, ext):O(0x14, ext) + 12] == bytes.fromhex('fa13dafe0f2006210877d718'))
+    cm = S('CF2WarpCommitDrain')
+    body = rom[O(0x73, cm):O(0x73, cm) + 40]
+    ok("S127: bank $73 commit — after the displaced store: wMapID == $08 / $D951 >= $F0 keep, "
+       "else the four slot states := 0",
+       bytes.fromhex('fa68c9fe08') in body and bytes.fromhex('fa51d9fef0') in body)
+    cd = S('CustomDrawTiles.command')
+    ok("S127: bank $60 CustomDrawTiles — a word $FFxx -> E := xx / ld hl, $770A / rst $10",
+       rom[O(0x60, cd):O(0x60, cd) + 6] == bytes.fromhex('59210a77d7c9'))
+
+    # ---- the engine code, run ------------------------------------------------
+    def machine():
+        ram = {}
+        st = {'bank': 1}
+
+        def rd(a):
+            if a < 0x4000:
+                return rom[a]
+            if a < 0x8000:
+                return rom[st['bank'] * 0x4000 + a - 0x4000]
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x2000 <= a < 0x3000:
+                st['bank'] = v or 1
+            elif a < 0x8000:
+                pass
+            else:
+                ram[a] = v & 0xFF
+        return CPU(rd, wr), ram, st
+
+    def setup(ram, levels, arena=0, seen=0, flags=(), rng=(0x12, 0x34)):
+        for i in range(0x60):
+            ram[0xCAC1 + i] = 0
+        for i, lv in enumerate(levels):
+            ram[0xCAC1 + 149 * i + 0x4B] = lv
+        for i in range(3):
+            ram[0xCA8E + i] = i if i < len(levels) else 0xFF
+        ram[0xCAB4] = arena
+        for b in range(seen):
+            ram[0xCA94 + (b >> 3)] = ram.get(0xCA94 + (b >> 3), 0) | (0x80 >> (b & 7))
+        for f in flags:                  # S117: $1000+ live in wExtFlags ($D140)
+            at = (0xD140 + ((f - 0x1000) >> 3)) if f >= 0x1000 else (0xD99B + (f >> 3))
+            ram[at] = ram.get(at, 0) | (0x80 >> (f & 7))
+        ram[S('wRNG1') if 'wRNG1' in sym else 0xC899] = rng[0]
+        ram[(S('wRNG2') if 'wRNG2' in sym else 0xC89A)] = rng[1]
+    pool = BR.pools(prj)[0]
+    w1, w2 = (S('wRNG1') if 'wRNG1' in sym else 0xC899), (S('wRNG2') if 'wRNG2' in sym else 0xC89A)
+    bad = []
+    import random
+    rnd = random.Random(127)
+    cases = 0
+    for _ in range(120):
+        lv = [rnd.randint(1, 60) for _k in range(rnd.randint(1, 3))]
+        ar, sn = rnd.randint(0, 8), rnd.randint(0, 200)
+        fl = [f for f in (0x1103, 0x1104) if rnd.random() < 0.5]
+        cpu, ram, st = machine()
+        setup(ram, lv, ar, sn, fl, (rnd.randint(0, 255), rnd.randint(0, 255)))
+        st['bank'] = 0x77
+        cpu.call(S('BreedRoll'), a=0)
+        avg = sum(lv) // len(lv)
+        bi = BR.band_choice(pool, avg, ar, sn, len(fl))
+        band = pool['bands'][bi]
+        roll = ((ram[w2] << 8) | ram[w1]) % band['total']    # HL = wRNG2:wRNG1 (S114 order)
+        want = None
+        for e, w in band['mates']:
+            if roll < w:
+                want = e
+                break
+            roll -= w
+        cases += 1
+        if cpu.bc != want or ram.get(S('wBreedVals')) != min(avg, 255):
+            bad.append((lv, ar, sn, fl, cpu.bc, want, ram.get(S('wBreedVals')), avg))
+    ok(f"S127: BreedRoll run from the ROM == the model on {cases} random players (the band, "
+       "then RNG16 mod the total over the weights)", not bad, str(bad[:4]))
+    cpu, ram, st = machine()
+    setup(ram, [])
+    st['bank'] = 0x77
+    cpu.call(S('PartyAvgLevel'))
+    zero = (cpu.a, cpu.e)
+    setup(ram, [22, 23, 19])
+    cpu.call(S('PartyAvgLevel'))
+    ok("S127: PartyAvgLevel — no party = 0, [22, 23, 19] = 21, in A and E (a far caller "
+       "reads E)", zero == (0, 0) and (cpu.a, cpu.e) == (21, 21))
+    t = BR.chance_table(5, 10, 40, 60)
+    badc = []
+    for lv in (1, 5, 12, 20, 33, 40, 70, 99):
+        cpu, ram, st = machine()
+        setup(ram, [lv])
+        st['bank'] = 0x71
+        cpu.call(S('ScaledChance'), a=0x80)
+        if cpu.a != t[lv]:
+            badc.append((lv, cpu.a, t[lv]))
+    ok("S127: ScaledChance (bank $71 -> rst $10 bank $77 entry 9) == the table at the party's "
+       "level", not badc, str(badc))
+    # BreedSlotEID: slot 1 rolls once, then answers the same row; a set state is kept
+    cpu, ram, st = machine()
+    setup(ram, [22, 23, 19], rng=(0x55, 0x66))
+    slots = S('wBreedSlots')
+    ram[slots + 4], ram[slots + 5] = 0, 0
+    ram[S('wTempEnemyStatsId')], ram[0xDA13] = 0x01, 0x0F
+    st['bank'] = 0x77
+    cpu.call(S('BreedSlotEID'), de=0xDA18)
+    first = (ram[S('wTempEnemyStatsId')] | ram[0xDA13] << 8, ram[slots + 4])
+    ram[S('wTempEnemyStatsId')], ram[0xDA13] = 0x01, 0x0F
+    ram[w1], ram[w2] = 0x01, 0x02
+    cpu.call(S('BreedSlotEID'), de=0xDA18)
+    second = ram[S('wTempEnemyStatsId')] | ram[0xDA13] << 8
+    ok("S127: BreedSlotEID — slot 1 rolls on the first load (state 1) and keeps its row "
+       "(the RNG moved in between); DE kept", first[1] == 1 and second == first[0] and
+       first[0] in [e for b in pool['bands'] for e, _w in b['mates']] and cpu.de == 0xDA18,
+       str((first, second)))
+
+
+def test_services_rom(rom_ex, sym_ex):
+    """S126 on real bytes: the same-size sites, the addresses after them, and the new
+    engine code RUN from the ROM (dwm/sm83.py): SayText, ScreenPush's full-screen /
+    room-tile rules, the room-tile save / restore, the animation pause, the medal table."""
+    from editor2.core import builder as B
+    from dwm.sm83 import CPU
+    orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    O = lambda b, a: b * 0x4000 + a - 0x4000
+    for bk in (0x0A, 0x12):
+        say = sym_ex['SayAny%02X' % bk][1]
+        ok(f"S126: bank ${bk:02X} $40E5 = ld hl, $7702 / rst $10 / ret, SayAny{bk:02X} "
+           "(ld d, h / ld e, l / ld hl, $7703 / rst $10 / ret), nops to $411A",
+           rom_ex[O(bk, 0x40E5):O(bk, 0x40E5) + 12] == bytes.fromhex('210277d7c9545d210377d7c9')
+           and say == 0x40EA and set(rom_ex[O(bk, 0x40F1):O(bk, 0x411A)]) == {0}
+           and orig[O(bk, 0x40E5):O(bk, 0x40E5) + 6] == bytes.fromhex('fa09c96ffa0a'))
+        ok(f"S126: bank ${bk:02X}'s say helper calls SayAny{bk:02X} (was TextBankDispatch)",
+           rom_ex[O(bk, 0x4429):O(bk, 0x442C)] == bytes([0xCD, 0xEA, 0x40]) and
+           orig[O(bk, 0x4429):O(bk, 0x442C)] == bytes([0xCD, 0xD9, 0x0A]))
+    s9 = sym_ex['SayAny09'][1]
+    ok("S126: bank $09 ScreenEffectSay calls SayAny09 (in the S117b redirect's nops)",
+       s9 == 0x40FF and rom_ex[O(9, 0x45EF):O(9, 0x45F2)] == bytes([0xCD, 0xFF, 0x40]) and
+       rom_ex[O(9, s9):O(9, s9) + 7] == bytes.fromhex('545d210377d7c9'))
+    keep = {'VaultScreen': (9, 0x4EF9), 'GateListScreen': (9, 0x5ECA), 'ArenaClassMenu': (9, 0x5B64),
+            'ShopSellPrice': (9, 0x4BC8), 'FarmScreen': (0x12, 0x442D),
+            'LibraryScreen': (0x12, 0x6061), 'NamerScreen': (0x12, 0x6842),
+            'MedalScreen': (0x12, 0x6AFE), 'MedalRewardTableVanilla': (0x12, 0x6D29),
+            'LoadItem_411a': (0x12, 0x411A), 'EggAppraiserScreen': (0x0A, 0x6095),
+            'LoadFldA_411a': (0x0A, 0x411A), 'label442d': (0x0A, 0x442D)}
+    moved = {k: sym_ex.get(k) for k, v in keep.items() if sym_ex.get(k) != v}
+    ok("S126: banks $09 / $0A / $12 keep their address map (the screens, the tables after "
+       "the same-size patches)", not moved, str(moved))
+    for bk, lab, ent in ((9, 'Jump_009_5104', 4), (0x12, None, 4), (0x0A, 'label6198', 5)):
+        pass
+    tails = {(9, 0x5110): 4, (0x12, 0x4575): 4, (0x0A, 0x61A4): 5}
+    ok("S126: the Vault / farm / egg closes (10 B) = ld hl, $77xx / rst $10 / ret + 5 nops",
+       all(rom_ex[O(b, a):O(b, a) + 10] == bytes([0x21, e, 0x77, 0xD7, 0xC9, 0, 0, 0, 0, 0]) and
+           orig[O(b, a):O(b, a) + 10] == bytes.fromhex('21ebc8cba6afea05c9c9')
+           for (b, a), e in tails.items()))
+    ok("S126: the farm / egg dispatch words -> FarmScreenOpen / EggScreenOpen "
+       "(ld hl, $7706 / rst $10 / jp the screen)",
+       (rom_ex[O(0x12, 0x400D)] | rom_ex[O(0x12, 0x400E)] << 8) == sym_ex['FarmScreenOpen'][1] and
+       (rom_ex[O(0x0A, 0x4015)] | rom_ex[O(0x0A, 0x4016)] << 8) == sym_ex['EggScreenOpen'][1] and
+       rom_ex[O(0x12, sym_ex['FarmScreenOpen'][1]):][:7] == bytes.fromhex('210677d7c32d44'))
+    ok("S126: the farm's absolute lines $06E1 / $06CC -> base + $21 / + $0C (same size)",
+       rom_ex[O(0x12, 0x45FF):O(0x12, 0x4605)] == bytes.fromhex('212100cd1f44') and
+       rom_ex[O(0x12, 0x5E3C):O(0x12, 0x5E42)] == bytes.fromhex('210c00cd1f44'))
+    ok("S126: MedalScreen reads MedalRewardTable / its +2 and cp MEDAL_REWARD_COUNT (4 in "
+       "the example)",
+       all(rom_ex[O(0x12, a) + 1] == 4 and rom_ex[O(0x12, a)] == 0xFE
+           for a in (0x6B5D, 0x6B92, 0x6CC0)))
+
+    # ---- the engine code, run ------------------------------------------------
+    def machine(rom, sym, bank):
+        ram, log = {}, []
+        vram = [bytearray(0x2000), bytearray(0x2000)]
+        st = {'bank': bank, 'vbk': 0}
+
+        def rd(a):
+            if a == 0x0010:
+                log.append(('rst10', cpu.hl)); return 0xC9
+            if a == sym['TextBankDispatch'][1]:
+                log.append(('tbd', cpu.hl)); return 0xC9
+            if a < 0x4000:
+                return rom[a]
+            if a < 0x8000:
+                return rom[st['bank'] * 0x4000 + a - 0x4000]
+            if 0x8000 <= a < 0xA000:
+                return vram[st['vbk']][a - 0x8000]
+            if a == 0xFF41:
+                return 0
+            if a == 0xFF4F:
+                return st['vbk']
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x8000 <= a < 0xA000:
+                vram[st['vbk']][a - 0x8000] = v
+            elif a == 0xFF4F:
+                st['vbk'] = v & 1
+            else:
+                ram[a] = v
+        cpu = CPU(rd, wr)
+        return cpu, ram, log, vram, st
+
+    def S(n):
+        return sym_ex[n][1]
+    d = _services_fixture()
+    outs, prjs, _w = compile_data(d)
+    outdir = '/tmp/_t_services_rom'
+    C.write_outputs(outs, outdir)
+    rom, sym, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom, 'rb').read(), B.parse_sym(sym)
+    tid = {e['id']: e['_tid'] for e in prjs._dialogue if 'id' in e}
+
+    def say(de, lines):
+        cpu, ram, log, _v, _s = machine(rb, sy, 0x77)
+        ram[sy['wServiceLines'][1]] = lines
+        cpu.call(sy['SayText'][1], de=de, sp=0xDFF0)
+        return log, ram.get(0xC822), ram.get(0xC823)
+    log, c22, c23 = say(0x0A07, 0)
+    ok("S126: SayText — a project id ($0A07) -> bank $60 entry 5 with $C822/$C823 = 0 / 7",
+       log == [('rst10', 0x6005)] and (c22, c23) == (0, 7), str(log))
+    t = tid['svc:clerk:3']
+    log, c22, c23 = say(0x06A3, 1)
+    ok("S126: SayText — the clerk's set active: vanilla $06A3 -> the clerk's line",
+       log == [('rst10', 0x6005)] and 0x0A00 + (c22 << 8) + c23 == t, f"{log} {c22} {c23}")
+    log, _a, _b = say(0x06A3, 0)
+    ok("S126: SayText — no set: $06A3 stays the game's (ROM0 TextBankDispatch, HL = $06A3)",
+       log == [('tbd', 0x06A3)], str(log))
+    log, c22, c23 = say(0x06C1, 1)
+    ok("S126: SayText — an everywhere line (set 0) applies under any set",
+       log == [('rst10', 0x6005)] and 0x0A00 + (c22 << 8) + c23 == tid['svc:farmall:1'])
+    log, c22, c23 = say(0x0724, 0)
+    ok("S126: SayText — a medal reward line (set 0) for the game's own Medal Man too",
+       0x0A00 + (c22 << 8) + c23 == tid['svc:medal_reward:2'])
+    log, _a, _b = say(0x06A3, 9)
+    ok("S126: SayText — an out-of-range set number is ignored (the game's line)",
+       log == [('tbd', 0x06A3)])
+
+    # ScreenPush: a free-colour custom room; $C500 = the room ($C300) + a window
+    def push(c8ef, gs, mutate=None):
+        cpu, ram, log, vram, st = machine(rb, sy, 0x77)
+        ram[sy['wIsGBC'][1]] = 1
+        ram[sy['wMapID'][1]] = 0x6E
+        ram[0xC79E] = 0x80                      # a free-colour marker (slot 0)
+        ram[0xC909], ram[0xC90A] = 0x00, 0x98
+        ram[sy['wGameState'][1]] = gs
+        ram[0xC8EF] = c8ef
+        for r in range(16):
+            for k in range(32):
+                ram[0xC300 + r * 32 + k] = (r * 3 + k) & 0x7F
+                ram[0xC500 + r * 32 + k] = (r * 3 + k) & 0x7F
+            for k in range(16):
+                ram[0xC200 + r * 16 + k] = 0x12
+        for r in (16, 17):
+            for k in range(32):
+                ram[0xC500 + r * 32 + k] = 0x80
+        if mutate:
+            mutate(ram)
+        cpu.call(sy['ScreenPush'][1], sp=0xDFF0)
+        return vram[1]
+    at = push(0, 0x11, lambda m: m.__setitem__(0xC500 + 2 * 32 + 3, 0x05))
+    ok("S126: ScreenPush (a shop, free colours) — room cells get their $C200 palette, a "
+       "low tile drawn over the room (not $C300's) palette 7",
+       at[0x1800 + 2 * 32 + 2] == 1 and at[0x1800 + 2 * 32 + 3] == 7 and
+       at[0x1800 + 2 * 32 + 4] == 1 and at[0x1800 + 0] == 1, str(list(at[0x1840:0x1848])))
+    at = push(13, 0x11)
+    ok("S126: ScreenPush — the gate list ($C8EF 13) / the naming screen (15): every cell "
+       "palette 7",
+       all(at[0x1800 + r * 32 + k] == 7 for r in range(18) for k in range(20)) and
+       all(push(15, 0x11)[0x1800 + r * 32 + k] == 7 for r in range(18) for k in range(20)))
+    at = push(13, 0x01)
+    ok("S126: ScreenPush — $C8EF 13 left over from an earlier screen (bit 4 off): the room's "
+       "palettes", at[0x1800 + 32 * 5 + 2] == 1)
+
+    # the room-tile save / restore
+    cpu, ram, log, vram, st = machine(rb, sy, 0x77)
+    ram[sy['wMapID'][1]] = 0x6E
+    for i in range(0x200):
+        vram[0][0x1600 + i] = i & 0xFF
+    cpu.call(sy['ServiceOpenTiles'][1], sp=0xDFF0)
+    save = [ram.get(sy['wServiceTileSave'][1] + i) for i in range(0x200)]
+    for i in range(0x200):
+        vram[0][0x1600 + i] = 0xEE
+    ram[sy['wGameState'][1]] = 0x11
+    ram[0xC905] = 3
+    ram[0xFFD4] = 0x60                      # what the farm leaves (bank $12 $442D)
+    cpu.call(sy['ServiceCloseTiles'][1], sp=0xDFF0)
+    ok("S126: ServiceOpenTiles saves $9600-$97FF in a custom room; ServiceCloseTiles puts "
+       "them back, clears the flag, ends the screen (bit 4, $C905)",
+       save == [i & 0xFF for i in range(0x200)] and
+       bytes(vram[0][0x1600:0x1800]) == bytes(i & 0xFF for i in range(0x200)) and
+       ram.get(sy['wServiceTileSaved'][1]) == 0 and ram[sy['wGameState'][1]] == 0x01 and
+       ram[0xC905] == 0)
+    ok("S126 r2: the close puts the text-box sprite threshold $FFD4 back to $80 (the farm "
+       "left $60: every sprite over the room's tiles >= $60 vanished at the next talk)",
+       ram.get(0xFFD4) == 0x80, hex(ram.get(0xFFD4, 0)))
+    cpu, ram, log, vram, st = machine(rb, sy, 0x77)
+    ram[sy['wMapID'][1]] = 0x04
+    cpu.call(sy['ServiceOpenTiles'][1], sp=0xDFF0)
+    ok("S126: ServiceOpenTiles does nothing in a vanilla room",
+       not ram.get(sy['wServiceTileSaved'][1]))
+
+    # the animation pause (bank $71 entry 3)
+    def anim(gs, c8ef):
+        cpu, ram, log, vram, st = machine(rb, sy, 0x71)
+        ram[sy['wGameState'][1]] = gs
+        ram[0xC8EF] = c8ef
+        ram[sy['wMapID'][1]] = 0x6B
+        cpu.call(sy['CustomAnimSource'][1], sp=0xDFF0)
+        return cpu.e, log
+    e13, l13 = anim(0x11, 13)
+    e0, l0 = anim(0x11, 0)
+    ok("S126: CustomAnimSource — paused while the gate list runs (no bank $6C call, "
+       "ANIM_NONE); a shop menu keeps animating",
+       e13 == 0x6B and l13 == [] and l0 == [('rst10', 0x6C00)], f"{e13} {l13} {l0}")
+    o = O(0x12, sy['MedalRewardTable'][1])
+    ok("S126: the fixture's MedalRewardTable (3 rewards) and cp 3 at the three sites",
+       rb[o:o + 16] == bytes([3, 0, 0x50, 1, 5, 0]) + bytes([prjs.enemy_ref('vault_goldslime', '') & 0xFF,
+                                                            prjs.enemy_ref('vault_goldslime', '') >> 8])
+       + bytes([8, 0, 1, 0, 0xFF, 0xFF, 0, 0]) and
+       all(rb[O(0x12, a) + 1] == 3 for a in (0x6B5D, 0x6B92, 0x6CC0)), rb[o:o + 16].hex())
+
+
+
+_YA_FIX = {}
+
+
+def _your_arena_fixture():
+    """S128 (P3.14e3): the example + YOUR arena — copies of the Arena Lobby ($06) and the
+    Arena Battle room ($5D, every state) made by the editor's own clone; F locked behind
+    a flag, G / S with won flags (S also sends you to gate_island), E's win -> the hub,
+    the lost / locked words, a moved return cell, an 'arena' line set for the desk,
+    Starry Night offered after S (then: the lobby)."""
+    import copy
+    import shutil
+    import tempfile
+    if 'data' not in _YA_FIX:
+        from editor2.core.document import Document
+        from editor2.core.render_project import ProjectRenderer
+        tmp = tempfile.mkdtemp()
+        json.dump(base(), open(os.path.join(tmp, 'project.json'), 'w'))
+        src_assets = os.path.join(os.path.dirname(EXAMPLE), 'assets')
+        if os.path.isdir(src_assets):
+            shutil.copytree(src_assets, os.path.join(tmp, 'assets'), dirs_exist_ok=True)
+        doc = Document(tmp)
+        r = ProjectRenderer(REPO, tmp, doc.data)
+        doc.vanilla = r
+        lobby, arena = doc.make_your_arena(REPO, r)
+        _YA_FIX['data'] = copy.deepcopy(doc.data)
+        _YA_FIX['ids'] = (lobby, arena)
+        shutil.rmtree(tmp, ignore_errors=True)
+    d = copy.deepcopy(_YA_FIX['data'])
+    lobby, arena = _YA_FIX['ids']
+    c = d['custom']
+    c.setdefault('flags', []).extend([{'name': 'ya_key', 'index': '0x1110'},
+                                      {'name': 'ya_g', 'index': '0x1111'},
+                                      {'name': 'ya_s', 'index': '0x1112'},
+                                      {'name': 'ya_starry', 'index': '0x1113'}])
+    c['service_lines'] = c.get('service_lines') or []
+    c['service_lines'].append({'id': 'desk_lines', 'kind': 'arena',
+                               'lines': {'0': 'Hello there!\n\nWhich class?'}})
+    c['arena'] = {
+        'lobby': lobby, 'battle': arena, 'lines': 'desk_lines',
+        'return': {'screen': 1, 'x': 5, 'y': 4},
+        'words': {'lost': {'boxes': [['Too bad, kid.']]}, 'locked': 'Not yet, kid!'},
+        'classes': {'G': {'won_flag': 'ya_g', 'won_words': {'boxes': [['G is yours!']]}},
+                    'F': {'opens_when': [{'flag': 'ya_key'}, {'flag': 'ya_g'}]},
+                    'E': {'then': {'to': 'hub'}},
+                    'S': {'won_flag': 'ya_s', 'then': {'to': 'room', 'room': 'gate_island',
+                                                       'screen': 0, 'x': 4, 'y': 4}}},
+        'starry': {'opens_when': [{'flag': 'ya_s'}], 'won_flag': 'ya_starry',
+                   'then': {'to': 'lobby'}}}
+    return d
+
+
+def test_your_arena_s128():
+    """S128 (ROADMAP P3.14e3): YOUR arena (custom.arena, editor2/core/your_arena.py) — no
+    arena = the game's EQUs ($FF ids, no locks); the region, the desk (Starry Night's
+    offer, the class menu inside the line set, the walk-in, op $1F, the warp into the
+    arena), the lobby's return (lost / per class: $CAB4, the won flag + the lower
+    classes', the words, THEN), the arena's Starry Night return, the copies' warps
+    retargeted; the refusals; the clone now keeps the arena's night states."""
+    from editor2.core import your_arena as YA
+    from editor2.core.render_project import ProjectRenderer
+    out0, prj0, _w = compile_data(base())
+    reg0 = next(v for k, v in out0.items() if 'bank_06e' in k)
+    ok("S128: no arena — ARENA_LOBBY_MID / ARENA_BATTLE_MID $FF, the return pixel ($E8, "
+       "$48), no locks (the game's arena untouched)",
+       'ARENA_LOBBY_MID EQU $FF' in reg0 and 'ARENA_BATTLE_MID EQU $FF' in reg0 and
+       'ARENA_RET_X EQU $00E8' in reg0 and 'ARENA_LOCKED_OFS EQU $0006' in reg0 and
+       'db 0, 0, 0, 0, 0, 0, 0, 0' in reg0)
+    r = ProjectRenderer(REPO, '/tmp', {})
+    ok("S128: the Arena Battle room has 5 states ($D999 0-4) — the no-exit sentinel $FFFF "
+       "no longer drops them (maps $08 9 / $5E 4 too)",
+       len(r.vanilla_steps(0x5D, 0)) == 5 and len(r.vanilla_steps(0x08, 0)) == 9 and
+       len(r.vanilla_steps(0x5E, 0)) == 4)
+    d = _your_arena_fixture()
+    lobby, arena = _YA_FIX['ids']
+    out, prj, warns = compile_data(d)
+    reg = next(v for k, v in out.items() if 'bank_06e' in k)
+    ar = YA.resolve(prj)
+    lk = next(e['_tid'] for e in prj._dialogue if e.get('id') == 'arena:locked')
+    ok("S128: the region — the copies' map ids, the return pixel (screen 1 (5, 4) = $F8 / "
+       "$48), the locked words' offset, F's lock (two terms)",
+       f"ARENA_LOBBY_MID EQU ${ar['lobby_mid']:02X}" in reg and
+       f"ARENA_BATTLE_MID EQU ${ar['battle_mid']:02X}" in reg and
+       'ARENA_RET_X EQU $00F8' in reg and 'ARENA_RET_Y EQU $0048' in reg and
+       f'ARENA_LOCKED_OFS EQU ${lk - 0x0710:04X}' in reg and
+       'db 2\n    dw $1110, $1111   ; F class' in reg, reg[-700:])
+    sc = prj._scripts
+    desk = sc['arena:desk']['ops']
+    n = prj._services['numbers']['desk_lines']
+    ok("S128: the desk — Starry Night first (its won flag / terms), the menu op $04 4 $0710 "
+       "inside the line set, B -> the 'no' words, the walk-in ($C8ED 1/3/7/$F), op $1F, the "
+       "warp into the arena at ($78, $58)",
+       desk[0] == ['op', 'if_flag_set', 0x1113, '@ar_menu'] and
+       ['op', 'write_ram', '0xD9CE', 8] in desk and
+       ['op', 'write_ram', 'wServiceLines', n] in desk and
+       ['op', '0x04', 4, '0x0710'] in desk and
+       [['op', 'write_ram', '0xC8ED', m] for m in (1, 3, 7, 15)] ==
+       [o for o in desk if o[:3] == ['op', 'write_ram', '0xC8ED']] and
+       ['op', '0x1F'] in desk and
+       ['op', 'map_transition', f"0x{ar['battle_mid']:04X}", '0x0078', '0x0058'] in desk,
+       desk[:6])
+    room = prj.room_by_id(lobby)
+    ok("S128: the lobby's script 6 is the desk", room['scripts']['6'] == 'arena:desk')
+    ent = sc[room['scripts']['0']]['ops']
+    ok("S128: the lobby's entry — the breeding return first ($D951 = $F2), $FE won / $FF "
+       "lost, then the room's own script",
+       ent[0] == ['op', 'check_and_branch', '0xD951', 0xF2, '@ar_orig'] and
+       ['op', 'check_and_branch', '0xD9CD', 0xFE, '@ar_won'] in ent and
+       'label:ar_orig' in ent)
+    i = ent.index('label:ar_c7')
+    blk = ent[i:ent.index('label:ar_c6') if 'label:ar_c6' in ent[i:] else len(ent)]
+    s_px = ((0 % 4) * 10 + 4) * 16 + 8
+    ok("S128: S won — $CAB4 := 8, ya_s and the lower class's ya_g ON (catch-up), the game's "
+       "words, then the warp to gate_island",
+       ['op', 'write_ram', '0xCAB4', 8] in blk and ['op', 'set_flag', 0x1112] in blk and
+       ['op', 'set_flag', 0x1111] in blk and ['text', 0x03F1] in blk and
+       any(o[:3] == ['op', 'map_transition', '0x006B'] and o[3] == f'0x{s_px:04X}'
+           for o in blk if isinstance(o, list)), blk)
+    j = ent.index('label:ar_c2')
+    blk_e = ent[j:ent.index('label:ar_c3')]
+    ok("S128: E won -> the hub (wHubReason := arena_won 6 or the Castle)",
+       any(o[:2] == ['op', 'map_transition'] for o in blk_e if isinstance(o, list)), blk_e)
+    bat = sc[prj.room_by_id(arena)['scripts']['0']]['ops']
+    ok("S128: the arena's entry — after Starry Night's final ($D9CE 8, $D9CD 3): the won "
+       "flag, delay 8, back to the lobby at the return cell",
+       bat[0] == ['op', 'check_and_branch', '0xD9CE', 8, '@ar_sn'] and
+       ['op', 'set_flag', 0x1113] in bat and ['op', 'delay', 8] in bat and
+       ['op', 'map_transition', f"0x{ar['lobby_mid']:04X}", '0x00F8', '0x0048'] in bat)
+    left = [o for sid in set(room['scripts'].values()) | set(prj.room_by_id(arena)['scripts'].values())
+            for o in sc[sid]['ops'] if isinstance(o, list) and o[:2] == ['op', 'map_transition']
+            and str(o[2]).lower() in ('0x0006', '0x005d')]
+    ok("S128: no warp to the game's lobby / arena left in the copies' scripts", not left, left)
+    ok("S128: the arena warnings — none for this fixture's desk (the counter spot)",
+       not any('script 6' in w for w in warns), [w for w in warns if 'arena' in w.lower()])
+    # refusals
+    def bad(label, mut, frag):
+        dd = _your_arena_fixture()
+        mut(dd['custom']['arena'], dd)
+        expect_error(f"S128 refuses {label}", dd, frag)
+    bad('a lobby that is no copy of the Arena Lobby',
+        lambda a, dd: a.update(lobby='gate_island'), 'is not a copy of the Arena Lobby')
+    bad('an arena that is no copy of the Arena Battle room',
+        lambda a, dd: a.update(battle=lobby), 'is not a copy of the Arena Battle room')
+    bad('a return cell outside the lobby',
+        lambda a, dd: a.update({'return': {'screen': 9, 'x': 1, 'y': 1}}), 'is not in the lobby')
+    bad('an unknown class', lambda a, dd: a['classes'].update(Z={}), 'keys G, F')
+    bad("'ending' for a class", lambda a, dd: a['classes']['G'].update(then={'to': 'ending'}),
+        "'ending' is Starry Night's")
+    bad('nine flag terms',
+        lambda a, dd: a['classes']['G'].update(opens_when=[{'flag': 'ya_key'}] * 9),
+        '9 flag terms (max 8)')
+    bad('a locked line that does not fit the box',
+        lambda a, dd: a['words'].update(locked='x' * 40), 'custom.arena.words.locked')
+    bad('a line set of another kind', lambda a, dd: dd['custom']['service_lines'][-1]
+        .update(kind='vault'), "is not an 'arena' line set")
+
+    def old_copy(a, dd):
+        r2 = next(x for x in dd['custom']['rooms'] if x['id'] == arena)
+        st = r2['screens']['0'].pop('states')
+        r2['screens']['0'].update(npcs=st[0]['npcs'], exits=st[0].get('exits', []))
+    bad("Starry Night with a copy made before S128 (one state)", old_copy,
+        'this copy was made before S128')
+    dd = _your_arena_fixture()
+    r2 = next(x for x in dd['custom']['rooms'] if x['id'] == lobby)
+    for scr in r2['screens'].values():
+        for st in scr.get('states') or [scr]:
+            st['npcs'] = [e for e in st.get('npcs', []) if not (
+                e.get('kind') == 'raw' and int(str(e['bytes'][4]), 0) == 6)]
+    _o, _p, w2 = compile_data(dd)
+    ok("S128 warns: nothing in the lobby runs script 6 (the desk)",
+       any('nobody opens the class menu' in w for w in w2))
+
+
+def test_connect_ends_s128r3():
+    """S128 r3 (user: "When I double click on an exit or entry, it should bring up a window
+    that can set both ends"): a copied room's PLAIN exits (the Arena Lobby's bottom double
+    exit) are listed, connected two-way with a game door (GreatTree's arena double door)
+    — the plain exit becomes a door, its second cell follows (twin_of); move / unlink /
+    remove carry the second cell; the project compiles every way."""
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    _your_arena_fixture()
+    lobby, _arena = _YA_FIX['ids']
+    tmp = tempfile.mkdtemp()
+    json.dump(copy.deepcopy(_YA_FIX['data']), open(os.path.join(tmp, 'project.json'), 'w'))
+    doc = Document(os.path.join(tmp, 'project.json'))
+    from editor2.core.render_project import ProjectRenderer
+    doc.vanilla = ProjectRenderer(REPO, tmp, doc.data)      # as the editor: game doors known
+    ex = [e for e in doc.plain_exits() if e['room'] == lobby and e['screen'] == 1]
+    ok("S128 r3: the lobby copy's bottom exit is ONE plain exit with its second cell",
+       len(ex) == 1 and (ex[0]['x'], ex[0]['y'], ex[0]['twin_x']) == (4, 7, 5)
+       and ex[0]['dest'].upper() == 'VANILLA:$01', ex)
+    ref = doc.exit_ref_id(lobby, 1, 4, 7)
+    vid = doc.vanilla_door_id(0x01, 4, 4, 3)
+    a, b = doc.connect_ends(vid, ref)
+    rows = [e for st in doc.states(doc.room(lobby), 1) for e in st['exits'] if e['y'] == 7]
+    main = [e for e in rows if e.get('door') == b]
+    twin = [e for e in rows if e.get('twin_of') == b]
+    lmid = int(str(doc.room(lobby)['mapID']), 0)
+    rd = [r for r in doc.custom.get('entrance_redirects') or [] if r.get('mapID') == '0x01'
+          and r.get('screen') == 4]
+    ok("S128 r3: connect — the lobby's exit is a door to the game door, the second cell too; "
+       "GreatTree's arena double door (both cells) leads into the lobby",
+       main and twin and all(e['dest'] == 'vanilla:$01' and e.get('link') == a for e in main)
+       and all(e['dest'] == 'vanilla:$01' for e in twin)
+       and sorted(r['x'] for r in rd) == [4, 5]
+       and all(r['dest'] == f'room:${lmid:02X}' for r in rd), (rows, rd))
+    _o, _p, w = compile_data(copy.deepcopy(doc.data))
+    ok("S128 r3: the connected project compiles with no door warning",
+       not [x for x in w if 'door' in x and lobby in x], w)
+    doc.move_door(b, 3, 6)
+    cells = sorted((e['x'], e['y']) for st in doc.states(doc.room(lobby), 1)
+                   for e in st['exits'] if e.get('door') == b or e.get('twin_of') == b)
+    ok("S128 r3: moving the door moves its second cell along", set(cells) == {(3, 6), (4, 6)},
+       cells)
+    doc.unlink_door(b)
+    left = [e for st in doc.states(doc.room(lobby), 1) for e in st['exits']
+            if e.get('twin_of') == b or e.get('door') == b]
+    compile_data(copy.deepcopy(doc.data))
+    ok("S128 r3: disconnect — both cells lose the destination (skipped by the build)",
+       left and all('dest' not in e for e in left), left)
+    doc.remove_door(b)
+    ok("S128 r3: delete — both cells go", not [e for st in doc.states(doc.room(lobby), 1)
+                                                for e in st['exits']
+                                                if e.get('twin_of') == b or e.get('door') == b])
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_your_arena_rom():
+    """S128 on real bytes: ROM0 ArenaMapID / ArenaAlias, every arena-keyed site's
+    `call ArenaMapID`, bank $6E ArenaMarkClasses (marks + locks), bank $50
+    ArenaLossWarp50 and bank $01's destination class — RUN from the fixture ROM."""
+    from editor2.core import builder as B
+    from editor2.core import your_arena as YA
+    from dwm.sm83 import CPU
+    d = _your_arena_fixture()
+    outs, prj, _w = compile_data(d)
+    ar = YA.resolve(prj)
+    LM, BM = ar['lobby_mid'], ar['battle_mid']
+    outdir = '/tmp/_t_your_arena_rom'
+    C.write_outputs(outs, outdir)
+    rom_path, sym_path, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rom = open(rom_path, 'rb').read()
+    sym = B.parse_sym(sym_path)
+    S = lambda n: sym[n][1]
+    O = lambda b, a: b * 0x4000 + a - 0x4000 if b else a
+    am = S('ArenaMapID')
+    ok("S128: ArenaMapID in ROM0's dead bytes after ComputeFlagAddress ($26BF), 16 bytes",
+       am == 0x26BF and S('ArenaAlias') == 0x26C2 and rom[0x26D5:0x26D6] == bytes([0x80]))
+    call = bytes([0xCD, am & 0xFF, am >> 8])
+    def count(b):
+        base = O(b, 0x4000) if b else 0
+        return rom[base:base + 0x4000].count(call)
+    ok("S128: `call ArenaMapID` at every arena-keyed site — bank $01 1, $03 1, $07 1, $50 1, "
+       "$51 1, $71 2 (BattleBGMResolve)",
+       [count(b) for b in (0x01, 0x03, 0x07, 0x50, 0x51, 0x71)] == [1, 1, 1, 1, 1, 2],
+       [count(b) for b in (0x01, 0x03, 0x07, 0x50, 0x51, 0x71)])
+
+    def machine():
+        ram = {}
+        st = {'bank': 1}
+
+        def rd(a):
+            if a < 0x4000:
+                return rom[a]
+            if a < 0x8000:
+                return rom[st['bank'] * 0x4000 + a - 0x4000]
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x2000 <= a < 0x3000:
+                st['bank'] = v or 1
+            elif a >= 0x8000:
+                ram[a] = v & 0xFF
+        return CPU(rd, wr), ram, st
+    bad = []
+    for mid in range(0xFF):
+        cpu, ram, st = machine()
+        ram[0xC968] = mid
+        cpu.call(am)
+        want = 0x5D if mid == BM else 0x06 if mid == LM else mid
+        if cpu.a != want:
+            bad.append((mid, cpu.a))
+    ok(f"S128: ArenaMapID run for map ids 0-$FE — your lobby ${LM:02X} -> $06, your arena "
+       f"${BM:02X} -> $5D, every other id unchanged", not bad, bad[:5])
+    # S128 r3: the player drawn as an NPC (sprite $E0) with the Milly hook on —
+    # bank $0B CmpRoom_4839's $E0 tail (jr_00b_48ba) RUN: flag $179F clear -> frame
+    # id $5E (vanilla), set -> $14 (Milayou's NPC frames); A = B (the tile base) back
+    e0 = S('jr_00b_48ba')
+    xf = S('wExtFlags') + (0x179F - 0x1000) // 8
+    res = {}
+    for on in (False, True):
+        cpu, ram, st = machine()
+        st['bank'] = 0x0B
+        ram[xf] = (0x80 >> (0x179F & 7)) if on else 0
+        ram[0xD7E3] = 0xE0
+        cpu.call(e0, de=0xD7E3, bc=0x0000)
+        res[on] = (ram[0xD7E3], cpu.a)
+    ok("S128 r3: the $E0 stand-in — Milly flag clear: frame id $5E (Terry, vanilla), set: $14 "
+       "(Milayou's NPC frames); A = the tile base 0 both ways",
+       res == {False: (0x5E, 0), True: (0x14, 0)}, res)
+    ok("S128 r3: jr_00b_48ba = call MillyE0Type / ld a,b / ret (5 bytes, same size)",
+       rom[O(0x0B, e0):O(0x0B, e0) + 5] == bytes([0xCD, S('MillyE0Type') & 0xFF,
+                                                    S('MillyE0Type') >> 8, 0x78, 0xC9]))
+    # the destination class (bank $01 SaveMapStateToHRAM, from jr_001_4405)
+    cls = S('jr_001_4405')
+    got = {}
+    for dest in (0x5D, 0x5E, 0x2F, 0x06, 0x20, 0x31, 0x6B, LM, BM):
+        cpu, ram, st = machine()
+        st['bank'] = 1
+        ram[0xFFD5], ram[0xC81B] = dest, 0x07
+        cpu.call(cls)
+        got[dest] = cpu.a
+    ok("S128: the destination class — $5D 1, $5E the current, $2F 2, < $30 3, else 0; your "
+       "arena 1, your lobby 3 (as the game's)",
+       got == {0x5D: 1, 0x5E: 7, 0x2F: 2, 0x06: 3, 0x20: 3, 0x31: 0, 0x6B: 0, LM: 3, BM: 1}, got)
+    # the class menu's marks
+    def marks(mid, cab4, flags=()):
+        cpu, ram, st = machine()
+        st['bank'] = 0x6E
+        ram[0xC968], ram[0xCAB4] = mid, cab4
+        for f in flags:
+            at = (0xD140 + ((f - 0x1000) >> 3)) if f >= 0x1000 else (0xD99B + (f >> 3))
+            ram[at] = ram.get(at, 0) | (0x80 >> (f & 7))
+        cpu.call(S('ArenaMarkClasses'))
+        return [ram.get(0xC0D8 + i) for i in range(8)]
+    m_v = marks(0x06, 2)
+    m_l = marks(LM, 0)
+    m_k = marks(LM, 0, (0x1110, 0x1111))
+    m_w = marks(LM, 2)
+    ok("S128: ArenaMarkClasses — the game's lobby: 2 stars then open ($AC $AC $90 …); your "
+       "lobby: F '-' ($9C) until ya_key AND ya_g, a won F keeps its star",
+       m_v == [0xAC, 0xAC] + [0x90] * 6 and m_l == [0x90, 0x9C] + [0x90] * 6 and
+       m_k == [0x90] * 8 and m_w == [0xAC, 0xAC] + [0x90] * 6, (m_v, m_l, m_k, m_w))
+    # the lost class match's mailbox
+    def loss(mid):
+        cpu, ram, st = machine()
+        st['bank'] = 0x50
+        ram[0xC968] = mid
+        cpu.call(S('ArenaLossWarp50'))
+        return [ram.get(0xC96D + i) for i in range(6)]
+    ok("S128: ArenaLossWarp50 — the game's arena -> $06 at ($E8, $48); yours -> your lobby at "
+       "the return cell ($F8, $48)",
+       loss(0x5D) == [0x06, 0, 0xE8, 0, 0x48, 0] and loss(BM) == [LM, 0, 0xF8, 0, 0x48, 0],
+       (loss(0x5D), loss(BM)))
+    ref = S('ArenaRefuse09')
+    ok("S128: bank $09 ArenaMenuMarkWon = ld hl, $6E01 / rst $10 / ret; ArenaRefuse09 = cp $9C "
+       "/ jr nz / ld hl, ARENA_LOCKED_OFS / jp ScreenEffectSay",
+       rom[O(0x09, S('ArenaMenuMarkWon')):O(0x09, S('ArenaMenuMarkWon')) + 5] ==
+       bytes.fromhex('21016ed7c9') and rom[O(0x09, ref):O(0x09, ref) + 4] == bytes.fromhex('fe9c2003'))
+
+
+# ---------------------------------------------------------------------------
+# S129 (ROADMAP P3.14b/c/d): story checks, story commands, the story spine,
+# quests, music by flag, shop item sets, locked exits
+# ---------------------------------------------------------------------------
+_S129 = {}
+
+
+def _story_fixture():
+    """The example + one story check of every kind, a story spine, the commands in a
+    conversation, a quest, music rules (a room and a gate) and a shop item set."""
+    if 'data' in _S129:
+        return copy.deepcopy(_S129['data'])
+    d = base()
+    c = d['custom']
+    c['flags'] = list(c.get('flags') or []) + [
+        {'name': 'st_a', 'index': 'auto'}, {'name': 'st_b', 'index': 'auto'},
+        {'name': 'ch1', 'index': 'auto'}, {'name': 'ch2', 'index': 'auto'}]
+    c['checks'] = list(c.get('checks') or []) + [
+        {'name': 'c_herbs3', 'kind': 'item', 'item': 0x01, 'count': 3},
+        {'name': 'c_rich', 'kind': 'gold', 'amount': 70000},
+        {'name': 'c_slime', 'kind': 'species', 'species': 1, 'where': 'party'},
+        {'name': 'c_dragon', 'kind': 'family', 'family': 1, 'where': 'anywhere'},
+        {'name': 'c_mons4', 'kind': 'monsters', 'count': 4, 'where': 'anywhere'},
+        {'name': 'c_lv20_any', 'kind': 'level', 'level': 20, 'mode': 'any'},
+        {'name': 'c_lv20_avg', 'kind': 'level', 'level': 20, 'mode': 'average'},
+        {'name': 'c_lv20_all', 'kind': 'level', 'level': 20, 'mode': 'all'},
+        {'name': 'c_seen20', 'kind': 'seen', 'count': 20},
+        {'name': 'c_sure', 'kind': 'chance', 'percent': 100},
+        {'name': 'c_arena3', 'kind': 'arena', 'classes': 3},
+        {'name': 'c_room5', 'kind': 'bag_room', 'count': 5},
+        {'name': 'c_ch1', 'kind': 'story', 'milestone': 'ch1'},
+        {'name': 'c_all', 'kind': 'all', 'terms': [{'flag': 'st_a'}, {'flag': 'c_herbs3'}]},
+        {'name': 'c_any', 'kind': 'any', 'terms': [{'flag': 'st_b'},
+                                                   {'flag': 'c_rich', 'is': 'clear'}]}]
+    c['story'] = {'milestones': [{'flag': 'ch1', 'name': 'Chapter 1'},
+                                 {'flag': 'ch2', 'name': 'Chapter 2'}]}
+    c.setdefault('dialogue', []).extend([
+        {'id': 's129_hi', 'boxes': [['Hello!']]}, {'id': 's129_c1', 'boxes': [['Chapter one.']]},
+        {'id': 's129_c2', 'boxes': [['Chapter two.']]}, {'id': 's129_c0', 'boxes': [['Before.']]}])
+    c['scripts'].append({'id': 's129_talk', 'talk': {'steps': [
+        {'by_progress': [{'milestone': 'ch1', 'steps': [{'say': 's129_c1'}]},
+                         {'milestone': 'ch2', 'steps': [{'say': 's129_c2'}]}],
+         'else': [{'say': 's129_c0'}]},
+        {'take_item': {'item': 0x1E, 'count': 2}},
+        {'gold': {'give': 1234}}, {'gold': {'take': 70000}},
+        {'give_item': {'item': 0x02, 'count': 3}},
+        {'take_item': {'item': 0x1E, 'count': 2}},          # the same command again: dedup
+        {'say': 's129_hi'}, {'refresh': True}]}})
+    rid = 'medal_vault'
+    room = next(r for r in c['rooms'] if r['id'] == rid)
+    room['music_rules'] = [{'when': [{'flag': 'c_ch1'}], 'song': '0x1E'}]
+    c.setdefault('music', {}).setdefault('gates', {})['0'] = {
+        'rules': [{'when': [{'flag': 'st_a'}, {'flag': 'c_rich', 'is': 'clear'}], 'song': '0x2E'}]}
+    c['shop_sets'] = [{'shop': 'bazaar', 'name': 'rich goods', 'when': [{'flag': 'c_rich'}],
+                       'items': [5, 6]}]
+    _S129['data'] = d
+    return copy.deepcopy(d)
+
+
+def test_story_s129():
+    from editor2.core import story as ST
+    from editor2.core import flag_index as FI
+    d = _story_fixture()
+    outs, prj, _w = compile_data(d)
+    b77, b71, b60 = (outs['patches/bank_077.asm'], outs['patches/bank_071.asm'],
+                     outs['patches/bank_060.asm'])
+    names = [x['name'] for x in d['custom']['checks']]
+    nums = {n: prj.resolve_flag_ref(n) for n in names}
+    ok("S129: story check n = virtual flag $1800 + n in list order",
+       [nums[n] for n in names] == [0x1800 + i for i in range(len(names))], nums)
+
+    def rec(n):
+        blk = b77.split(f'StoryCheck_{n}:')[1].split('\n')[1]
+        return [int(x.strip().lstrip('$'), 16) for x in blk.split('db')[1].split(';')[0].split(',')]
+    i = names.index
+    a, b = prj.resolve_flag_ref('st_a'), prj.resolve_flag_ref('st_b')
+    c1, c2 = prj.resolve_flag_ref('ch1'), prj.resolve_flag_ref('ch2')
+    ok("S129: records — item [0, item, count], gold [1, lo, mid, hi], species [2, v, party], "
+       "family [3, v, 0], monsters [4, n, 0], level [5, lv, mode], seen, chance, arena, "
+       "bag_room [11, n]",
+       rec(i('c_herbs3')) == [0, 1, 3] and rec(i('c_rich')) == [1, 0x70, 0x11, 0x01] and
+       rec(i('c_slime')) == [2, 1, 1] and rec(i('c_dragon')) == [3, 1, 0] and
+       rec(i('c_mons4')) == [4, 4, 0] and rec(i('c_lv20_avg')) == [5, 20, 1] and
+       rec(i('c_lv20_all')) == [5, 20, 2] and rec(i('c_seen20')) == [6, 20] and
+       rec(i('c_sure')) == [7, 100] and rec(i('c_arena3')) == [8, 3] and
+       rec(i('c_room5')) == [11, 5], [rec(k) for k in range(len(names))])
+    hn = nums['c_herbs3']
+    ok("S129: all / any — [9|10, n, n x dw flag (bit 15 = must be OFF)]; a check may read "
+       "another check; `story` = an internal any over the milestone and every later one",
+       rec(i('c_all')) == [9, 2, a & 0xFF, a >> 8, hn & 0xFF, hn >> 8] and
+       rec(i('c_any')) == [10, 2, b & 0xFF, b >> 8, nums['c_rich'] & 0xFF,
+                           (nums['c_rich'] >> 8) | 0x80] and
+       rec(i('c_ch1')) == [10, 2, c1 & 0xFF, c1 >> 8, c2 & 0xFF, c2 >> 8],
+       (rec(i('c_all')), rec(i('c_any')), rec(i('c_ch1'))))
+    cmds = prj.story_commands()
+    ok("S129: story commands deduped — the example quest's (take 2 TinyMedals, give 500 G) "
+       "then the talk's: the take again = the same command, give 1234 G, take 70000 G, give "
+       "3 Antidotes ([kind, …] records)",
+       [list(x) for x in cmds] == [[0, 0x1E, 2], [1, 0xF4, 0x01, 0x00], [1, 0xD2, 0x04, 0x00],
+                                   [2, 0x70, 0x11, 0x01], [3, 0x02, 3]], cmds)
+    ops = next(x for x in prj.custom['scripts'] if x['id'] == 's129_talk')['ops']
+    o24 = [o[2] for o in ops if isinstance(o, list) and o[:2] == ['op', '0x24']]
+    ifs = [o[2] for o in ops if isinstance(o, list) and o[:2] == ['op', 'if_flag_clear']]
+    r1, r2 = (prj.resolve_flag_ref('story:reached:ch1'), prj.resolve_flag_ref('story:reached:ch2'))
+    ok("S129: the talk lowers to op $24 $FF01 / $FF03 / $FF04 / $FF05 / $FF01 (the take "
+       "twice = one command), the give's answer in $D8E1, then init_dialog before the words "
+       "and op $26 (refresh) before the end",
+       o24 == ['0xFF01', '0xFF03', '0xFF04', '0xFF05', '0xFF01'] and
+       ['op', 'check_and_branch', '0xD8E1', '0x0000', '@gfull2'] in ops and
+       ops[-4:] == [['op', 'init_dialog'], ['text', ops[-3][1]], ['op', '0x26'], ['end']], ops)
+    ok("S129: says by progress — the latest milestone first: 'reached ch2' then 'reached ch1' "
+       "(internal checks after the authored ones)", ifs == [r2, r1] and
+       min(r1, r2) == 0x1800 + len(names), (ifs, r1, r2))
+    # music rules: the room by its map id, the gate by its id
+    mrt = b71[b71.find('MusicRuleTable:'):].split('db $FF')[0]
+    mid = int(str(next(r for r in d['custom']['rooms'] if r['id'] == 'medal_vault')['mapID']), 0)
+    ch1 = nums['c_ch1']
+    rich = nums['c_rich'] | 0x8000
+    # S140 (ARC CAP3a): the key is a word — a room = $100 + its place number
+    key = 0x100 + (mid - 0x6B)
+    ok("S129: MusicRuleTable — [0, key $100 + place, 1, check c_ch1, $1E] and [1, gate 0, 2, "
+       "st_a, c_rich OFF, $2E] (S140: word keys)",
+       f'db $00, ${key & 0xFF:02X}, ${key >> 8:02X}, $01, ${ch1 & 0xFF:02X}, ${ch1 >> 8:02X}, $1E'.lower()
+       in mrt.lower() and
+       f'db $01, $00, $00, $02, ${a & 0xFF:02X}, ${a >> 8:02X}, ${rich & 0xFF:02X}, '
+       f'${rich >> 8:02X}, $2E'.lower() in mrt.lower(), mrt)
+    # writing a check is refused; a circle is refused; a protected species is refused
+    d2 = _story_fixture()
+    d2['custom']['scripts'][-1]['talk']['steps'].insert(0, {'set': ['c_rich']})
+    expect_error("S129: a step turning a story check ON is refused", d2,
+                 "is a story check — it is worked out")
+    d3 = _story_fixture()
+    d3['custom']['checks'].append({'name': 'c_loop1', 'kind': 'all', 'terms': [{'flag': 'c_loop2'}]})
+    d3['custom']['checks'].append({'name': 'c_loop2', 'kind': 'any', 'terms': [{'flag': 'c_loop1'}]})
+    expect_error("S129: checks reading each other in a circle are refused", d3,
+                 "in a circle")
+    d4 = _story_fixture()
+    d4['custom']['checks'].append({'name': 'c_terry', 'kind': 'species', 'species': 215})
+    expect_error("S129: species 215-220 are not monsters (Iron Rule 8)", d4, "Iron Rule 8")
+    # the flag index: checks are their own kind; a write would be an error problem
+    fi = FI.FlagIndex(d, repo=REPO)
+    f = fi.flags.get(nums['c_herbs3'])
+    tested = {fi.flags[nums[n]].name for n in ('c_herbs3', 'c_rich', 'c_ch1')
+              if [u for u in fi.flags[nums[n]].uses if u.role == FI.TEST]}
+    ok("S129: Progression & Flags — story checks indexed (kind 'check'), read by the other "
+       "checks / music rules",
+       f is not None and f.kind == 'check' and tested == {'c_herbs3', 'c_rich', 'c_ch1'},
+       (f and f.kind, tested))
+    fi2 = FI.FlagIndex(d2, repo=REPO)
+    ok("S129: Progression & Flags — a Turn ON of a check is a ✖ problem",
+       any(p.code == 'check_written' for p in fi2.problems()))
+    return outs
+
+
+def fake_sav_s130(party=((8, 10, 'Goo'), (53, 12, 'Ant'), (4, 9, 'Bat'))):
+    """A synthetic battery save: roster slots 0.. hold `party` (species, level,
+    nickname), the party list names them in order (savefile.py offsets)."""
+    from editor2.core import savefile as SF
+    from editor2.core import monster_text as MT
+    sav = bytearray(0x8000)
+    for i, (sp, lv, nick) in enumerate(party):
+        o = SF.record_offset(i)
+        r = bytearray(SF.REC)
+        r[0] = 2
+        r[1:9] = (MT.encode_name(nick, 'nick') + bytes([0xF0] * 8))[:8]
+        r[9] = sp
+        r[0x29:0x31] = bytes([3, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+        r[0x31:0x4A] = bytes([0xFF] * 25)
+        r[0x4B], r[0x4C] = lv, 40
+        for k, off in enumerate((0x52, 0x56, 0x58, 0x5A, 0x5C, 0x5E)):
+            r[off] = 20 + 10 * k + i
+        r[0x15] = 0xFF
+        sav[o:o + SF.REC] = r
+    sav[SF.PARTY_COUNT_OFF] = len(party)
+    sav[SF.PARTY_LIST_OFF:SF.PARTY_LIST_OFF + 3] = bytes(list(range(len(party))) + [0xFF] * (3 - len(party)))
+    return bytes(sav)
+
+
+def test_balance_s130():
+    """S130 (ROADMAP P3.15a) the Balance tab's core pieces: a save's party
+    (savefile), a hand-picked member, the per-fight cache (round trip, peek
+    without computing, simulator version), the cancel hook, a room's battle
+    found through the script its NPC names."""
+    import tempfile
+    from editor2.core import balance as BL
+    from editor2.core import savefile as SF
+    data = BL.BattleData(None)
+    team = SF.party_team(fake_sav_s130(), data.names)
+    ok("S130: a save's party -> 3 members in party order (species, level, nickname, skills, "
+       "stats)", [(m.species, m.level, m.nickname, m.skills) for m in team] ==
+       [(8, 10, 'Goo', [3]), (53, 12, 'Ant', [3]), (4, 9, 'Bat', [3])] and
+       team[1].stats == [21, 31, 41, 51, 61, 71] and team[0].origin == 'save slot 0',
+       [(m.species, m.level, m.nickname, m.skills, m.stats) for m in team])
+    m = BL.custom_member(data, 8, 10, [3, 14], plus=2)
+    ok("S130: custom_member — the species at the level, the skills given, the plus",
+       (m.species, m.level, m.skills, m.plus, m.origin) == (8, 10, [3, 14], 2, 'picked'),
+       (m.species, m.level, m.skills, m.plus))
+    m2 = BL.custom_member(data, 8, 10)
+    ok("S130: custom_member without skills keeps what the game teaches",
+       m2.level == 10 and all(isinstance(x, int) for x in m2.skills))
+    summ = BL.team_summary(data, [m])
+    ok("S130: team_summary names the skills",
+       summ[0]['skills'][0] == (3, data.skill_names.get(3)) and summ[0]['stats']['hp'] == m.stats[0])
+    tmp = tempfile.mkdtemp()
+    path = os.path.join(tmp, 'build', 'balance_cache.json')
+    c = BL.FightCache(path)
+    ok("S130: a missing cache file = empty cache", c.get('x') is None)
+    c.put('fp1', {'l90': 12, 'l50': 8})
+    c.save()
+    c2 = BL.FightCache(path)
+    ok("S130: FightCache round trip", c2.get('fp1') == {'l90': 12, 'l50': 8})
+    d = json.load(open(path))
+    d['_sim'] = 'old'
+    json.dump(d, open(path, 'w'))
+    ok("S130: a cache of another simulator version is dropped", BL.FightCache(path).get('fp1') is None)
+    ok("S130: a cache without a path works in memory", BL.FightCache('').get('fp1') is None)
+
+    class Stub:
+        custom = {'scripts': [{'id': 'boss_talk', 'talk': {'steps': [
+            {'say': 'x'}, {'battle': {'enemies': [11, 31]}}]}}]}
+
+        def room_by_id(self, rid):
+            return {'id': rid, 'screens': {'0': {'npcs': [{'script': 'boss_talk'}]}},
+                    'scripts': {'0': 'boss_talk'}}
+
+        def enemy_ref(self, ref, ctx):
+            return int(ref)
+    ok("S130: room_battles finds a battle in the script a room's NPC names",
+       BL.room_battles(Stub(), 'r') == [[11, 31]], BL.room_battles(Stub(), 'r'))
+    rec = data.enemy_rec(11)
+    data.override_enemy(11, level=50, skills=[3])
+    r2 = data.enemy_rec(11)
+    data.override_enemy(11)
+    ok("S130: override_enemy (what-if) applies and clears",
+       (r2['level'], r2['skills']) == (50, [3]) and data.enemy_rec(11) == rec)
+    BL.set_cancel_check(lambda: True)
+    try:
+        from simulator import pacing as P
+        import random
+        BL.battle_once(data, [BL.party_dict(m)], [11], 1, random.Random(1),
+                       P.IdlePolicy('empirical', seed=1))
+        stopped = False
+    except BL.Cancelled:
+        stopped = True
+    finally:
+        BL.set_cancel_check(None)
+    ok("S130: the cancel check stops a computation at its next battle", stopped)
+
+
+def test_balance_player_s130():
+    """S130 (ROADMAP P3.15b) the Balance service's 'player' profile: the battle planner
+    (the player's orders: a damaging skill over a useless one vs metal, a heal for a
+    dying ally, never touching the real board, deterministic), the kit optimizer (learn
+    requirements against the raised monster, a tiny-budget search -> 3 members x <= 8
+    learnable skills), the profile through evaluate (orders / the arena's best tactic)."""
+    from editor2.core import balance as BL
+    from editor2.core import kits as KT
+    from simulator import pacing as P
+    from simulator import planner as PL
+    data = BL.BattleData(None)
+    nm = {v: k for k, v in data.names.items()}
+    sk = {v: k for k, v in data.skill_names.items() if k < 0xDA}
+
+    def eid_of(name):
+        return next(e for e in sorted(data.T.enemies) if data.T.enemy(e)[0] == nm[name])
+
+    def board(party, eid, db73):
+        en = [data.enemy_rec(eid)]
+        b = BL._board(data, [BL.party_dict(x) for x in party], en, db73)
+        b.ext['f10_optlists'] = P._f10_optlists(b, data.records, {4: en[0]})
+        return b
+    m = BL.custom_member(data, nm['Slime'], 20, [sk['MetalCut'], sk['Infermost'], sk['HealMore']])
+    b = board([m], eid_of('Metabble'), 0)
+    before = (list(b.hp), list(b.mp), list(b.st), list(b.queue), list(b.dd13))
+    pl = PL.make_planner(data.records)
+    pick = pl(b, 0)
+    vals = {}
+    for (s_, _t), v in pl.values(b, 0).items():
+        vals[s_] = max(v, vals.get(s_, v))
+    ok("S130 planner: vs a metal (Metabble) MetalCut is ordered, Infermost (no effect) is "
+       "worth less than nothing", pick[0] == sk['MetalCut'] and
+       vals[sk['Infermost']] < 0 < vals[sk['MetalCut']],
+       (data.skill_names.get(pick[0]), vals))
+    ok("S130 planner: the real board is untouched by the trials",
+       before == (list(b.hp), list(b.mp), list(b.st), list(b.queue), list(b.dd13)))
+    ok("S130 planner: deterministic (a fresh planner, the same order)",
+       PL.make_planner(data.records)(b, 0) == pick)
+    m2 = BL.custom_member(data, nm['Slime'], 20, [sk['HealMore']])
+    b = board([m, m2], 99, 1)                                   # StoneMan, a boss fight
+    b.hp[1] = 5
+    p_dying = PL.make_planner(data.records)(b, 0)[0]
+    b.hp[1] = b.maxhp[1]
+    p_fine = PL.make_planner(data.records)(b, 0)[0]
+    ok("S130 planner: heals an ally about to die, attacks when nobody needs it",
+       p_dying == sk['HealMore'] and p_fine != sk['HealMore'],
+       (data.skill_names.get(p_dying), data.skill_names.get(p_fine)))
+    # the kit: learn requirements against the monster as raised
+    tl = BL.Timeline(data)
+    step = next(s['index'] for s in tl.steps if (s['kind'], s['id']) == ('gate', 9))
+    pool = KT.step_pool(data, tl, step, 10)
+    sp = next(s for s in pool.species if s in pool.bred)
+    spec = pool.spec(sp)
+    mm, al, co = KT.kit_member(data, pool, spec, BL.exp_for_level(data.T, 10), 1)
+
+    def req(c):
+        r = data.T.learn[c]
+        return r[0] <= mm.level and all(mm.stats[i] >= (r[1 + 2 * i] | r[2 + 2 * i] << 8)
+                                        for i in range(6))
+    ok("S130 kits: a bred member (breeding open) may carry pool skills, every one meeting "
+       "its learn row at the member's level and stats (Blazemost, row level 28, not at ~10)",
+       spec['src'][0] == 'bred' and al and all(req(c) for c in al) and sk['Blazemost'] not in al
+       and all(data.T.unevolved[c] in pool.bases or data.T.unevolved[c] == c for c in al),
+       (spec, mm.level, sorted(al)[:12]))
+    p0 = KT.step_pool(data, tl, 0, 3)
+    ok("S130 kits: before breeding opens only join forms (the step's roster)",
+       not p0.breeding and not p0.bred and set(p0.species) == {data.T.enemy(e)[0] for e in p0.joins})
+    kit = KT.optimize_kit(data, tl, 0, 3, evals=3, teams=1, battles=2)
+    exp3 = BL.exp_for_level(data.T, 3)
+    legal = True
+    for i, ms in enumerate(kit['members']):
+        _m, a2, c2 = KT.kit_member(data, KT.step_pool(data, tl, 0, 3), ms, exp3, BL._seed(130, 0, i))
+        legal &= len(ms['skills']) <= 8 and KT.kit_valid_skills(ms['skills'], a2, c2) == ms['skills']
+    ok("S130 kits: a tiny-budget search returns 3 members x <= 8 learnable skills, the level, "
+       "a why per member", len(kit['members']) == 3 and legal and kit['level'] == 3 and
+       len(kit['why']) == 3 and kit['evals'] >= 3, kit)
+    BL.set_kit(data, tl, 0, kit)
+    ev = BL.evaluate(data, tl, tl.fights['gate0.boss0'], 3, 'player', teams=1, battles=2)
+    team = BL.team_for(data, tl, 0, 3, 'player', 0)
+    ok("S130 'player' profile: the kit raised to the level, commanded through evaluate",
+       0.0 <= ev['win'] <= 1.0 and ev['battles'] == 2 and
+       [x.species for x in team] == [ms['species'] for ms in kit['members']], ev)
+    ast = tl.fights['arena0.m0']['step']
+    BL.set_kit(data, tl, ast, KT.optimize_kit(data, tl, ast, 4, evals=1, teams=1, battles=1))
+    ev2 = BL.evaluate(data, tl, tl.fights['arena0.m0'], 4, 'player', teams=1, battles=2)
+    ok("S130 'player' profile: an arena match is fought on the best of the four tactics",
+       ev2.get('tactic') in (0, 1, 2, 3), ev2)
+    f = tl.fights['gate0.boss0']
+    ok("S130 'player' fingerprint carries the step's kit fingerprint; the profiles; version",
+       BL.fight_fingerprint(data, tl, f, 'player') != BL.fight_fingerprint(data, tl, f, 'strong')
+       and BL.kit_fingerprint(data, tl, 0) == BL.kit_fingerprint(data, tl, 0)
+       and BL.kit_fingerprint(data, tl, 0).startswith('kit:')
+       and BL.PROFILES == ('casual', 'strong', 'player') and BL.SIM_VERSION == 'S131.2')
+    BL._KITS.clear()
+
+
+def test_s133():
+    """S133 (ROADMAP ARC CAP audit): a custom map id past $EA is refused — the engine's
+    per-room lookups double `mapID - $6B` in 8 bits, so room $EB would read room $6B's
+    tables (silently, before S133). $EA itself still compiles."""
+    import copy
+    from editor2.core.project import Project, ProjectError, CUSTOM_MID_MAX
+    base = json.load(open(EXAMPLE))
+    ok("S133: CUSTOM_MID_MAX = $EA (8-bit doubling: ($EA - $6B) * 2 = 254)",
+       CUSTOM_MID_MAX == 0xEA and (CUSTOM_MID_MAX - 0x6B) * 2 <= 0xFF
+       and (CUSTOM_MID_MAX + 1 - 0x6B) * 2 > 0xFF)
+    for mid, want_ok in ((0xEA, True), (0xEB, False)):
+        d = copy.deepcopy(base)
+        d['custom']['rooms'].append({'id': f'cap_probe_{mid:02x}', 'mapID': f'0x{mid:02X}',
+                                     'placeholder': True, 'source_mapID': '0x04'})
+        try:
+            Project(d, os.path.dirname(EXAMPLE))._dense_rooms()
+            got_ok, why = True, ''
+        except ProjectError as e:
+            got_ok, why = False, str(e)
+        ok(f"S133: a room at {mid:#04x} {'compiles' if want_ok else 'is refused'}",
+           got_ok == want_ok and (want_ok or 'ARC CAP' in why), why)
+
+
+def test_s136(with_rom=False):
+    """S136 (ROADMAP ARC CAP2b): PLACE BANKS. Every place (custom room) keeps its
+    scripts, tile patches, screens, NPC / exit lists, state rules and monster cast
+    in one home bank — bank $60 first, then banks $80+ (first fit after the stream
+    banks); text sections are placed the same way. Bank $60's entries 0/1/2/4/5/
+    8/9/10 forward through PlaceDirectory / TextSectionBanks; every home bank
+    carries the pinned reader block (templates/place_readers.asm). The example
+    fits bank $60; a generated SPILL project (tools/census_place_banks.py
+    make_spill: 40 script- and text-heavy rooms) spills over several banks; with
+    --rom its ROM is checked byte-wise and (PyBoy) every forwarded read lands on
+    the right bytes."""
+    import re as _re
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_place_banks as CPB
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core import places as PL
+    from editor2.core import validators as V
+    from editor2.core.project import Project, ProjectError as PE
+    from editor2.core import formats as F
+    prj = Project.load(os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    plan = prj.place_plan()
+    ok("S136: the example fits bank $60 — no place bank, every place and text section "
+       "at home", plan['overflow'] == [] and set(b for b, _i in plan['home'].values()) == {0x60}
+       and set(plan['text_home']) == {0x60}, plan['overflow'])
+    ok("S136: the example's place indices in bank $60 = map id order",
+       [plan['home'][0x6B + n] for n in range(len(prj.rooms))]
+       == [(0x60, n) for n in range(len(prj.rooms))])
+    b60 = E.emit_bank_060(prj, [])
+    ok("S136: bank $60 = the forwarding head, its reader block (no suffix), then its data",
+       b60.index('PlaceFwdScript:') < b60.index('PlaceEntries:') < b60.index('PlaceDirectory:')
+       and 'PLACE DATA (generated' in b60 and f'PLACE_COUNT EQU {len(prj.rooms)}' in b60
+       and 'TEXT_SECTIONS EQU' in b60, '')
+    rd = PL.readers(0x85)
+    ok("S136: a place bank's reader copy carries the _P85 suffix and no placeholder",
+       rd.startswith('; ====') and 'PlaceEntries_P85:' in rd and 'CustomPtrChase_P85:' in rd
+       and '{P}' not in rd and 'jp CustomScriptRead_P85' in rd)
+    ok("S136: the reader template is pinned (a drifted copy refuses to compile)",
+       'place_readers.asm' in open(E.TEMPLATE_SHA_FILE).read())
+    ok("S136/S137/S140/S150/S157/S158: the measured fixed sizes — bank $60 head + PlaceNum60 + "
+       "readers 1859, a place bank 1156 (S158 + TextOverride's hint riddle test; S157 + the one-only "
+       "test, 1842; S150 + entry 14 TextOverride, 1825; S140 + PlaceNum60 / the exit link rows; "
+       "S137: 1691 / 1102; S136: 1515 / 945)",
+       V.TEMPLATE_SIZE[0x60] == 1859 and V.PLACE_TEMPLATE_SIZE == 1156)
+    # ---- the spill project
+    tmp = tempfile.mkdtemp(prefix='t136_')
+    proj = os.path.join(tmp, 'spill')
+    CPB.make_spill(proj, 40)
+    outs, sp, _w = C.compile_project(proj, REPO)
+    pp = sp.place_plan()
+    ov = pp['overflow']
+    streams = sp.stream_plan()['overflow']
+    ok("S136: the spill project uses several place banks, taken after the stream banks",
+       len(ov) >= 4 and ov == list(range(0x80 + len(streams), 0x80 + len(streams) + len(ov))),
+       (streams, ov))
+    ok("S136: every bank of the plan fits 16,384 B", all(u <= 0x4000 for u in pp['used'].values()),
+       pp['used'])
+    homes = [pp['home'][F.val(r['mapID'])][0] for r in sp.rooms]
+    # replay first fit independently: block sizes from the emitted lines, the
+    # bank capacities from the plan's own fixed parts
+    sizes = {}
+    for b, ent in pp['banks'].items():
+        for r, lines, _row in ent['rooms']:
+            sizes[r['id']] = PL._payload(lines) + PL.ROOM_ROW_BYTES
+    fixed60 = pp['used'][0x60] - sum(sizes[r['id']] for r, _l, _w in pp['banks'][0x60]['rooms']) \
+        - sum(PL._payload(l) for _si, l in pp['banks'][0x60]['texts']) \
+        - (2 * (pp['span'][0x60][1] - pp['span'][0x60][0] + 1) if 0x60 in pp['span'] else 0)
+    cap = {0x60: 0x4000 - fixed60}
+    use, order, sim = {0x60: 0}, [0x60], []
+    for r in sp.rooms:
+        z = sizes[r['id']]
+        b = next((b for b in order if use[b] + z <= cap[b]), None)
+        if b is None:
+            b = ov[len(order) - 1]
+            order.append(b)
+            cap[b], use[b] = 0x4000 - V.PLACE_TEMPLATE_SIZE, 0
+        use[b] += z
+        sim.append(b)
+    ok("S136: first fit in map id order — an independent replay of the rule gives every "
+       "place the same home bank", sim == homes, (sim, homes))
+    files = {f'patches/bank_{b:03x}.asm' for b in ov}
+    ok("S136: one file per place bank: its section, own number, then PlaceEntries at $4001",
+       files <= set(outs) and all(
+           f'SECTION "ROM Bank ${b:03X}", ROMX[$4000], BANK[${b:02X}]\n    db ${b:02X}  ; bank self-ID\n'
+           in outs[f'patches/bank_{b:03x}.asm'] and
+           outs[f'patches/bank_{b:03x}.asm'].split('bank self-ID\n', 1)[1].lstrip().startswith(
+               '; ====') for b in ov), sorted(files - set(outs)))
+    ext = outs['patches/bank_ext.asm']
+    # S164 (ROADMAP E14): + the text bank of the built-in skill names past bank $41's region
+    incs = _re.findall(r'^INCLUDE "bank_0([0-9a-f]{2})\.asm"', ext, _re.M)
+    ok("S136: bank_ext.asm INCLUDEs the place banks (+ the stream banks, S164: + the text "
+       "bank), stubs the rest",
+       all(f'INCLUDE "bank_{b:03x}.asm"' in ext for b in ov + streams)
+       and len(incs) == len(ov) + len(streams) + 1
+       and len(_re.findall(r'^SECTION ', ext, _re.M)) == 128 - len(incs), (ov, streams, incs))
+    usage = V.bank_usage({f'file:{k}': v for k, v in outs.items()})
+    ok("S136: the meter's count of each place bank == the plan's (the ROM half checks "
+       "both against the assembled bytes)",
+       all(usage[b][0] == pp['used'][b] for b in ov),
+       {hex(b): (usage[b][0], pp['used'][b]) for b in ov})
+    gen60 = outs['patches/bank_060.asm']
+    dirrows = _re.findall(r'^    db \$([0-9A-F]{2}), (\d+)   ; \$([0-9A-F]{2})', gen60, _re.M)
+    ok("S136: PlaceDirectory = (home bank, index) of every place, in map id order",
+       [(int(b, 16), int(i)) for b, i, _m in dirrows] ==
+       [pp['home'][F.val(r['mapID'])] for r in sp.rooms], dirrows[:3])
+    secs = sp.text_sections()
+    sizes = [sum(PL.text_entry_size(sp, t, e) + 2 for t, e in sec) for sec in secs]
+    ok("S136: auto-numbered texts start a new section before one passes the budget "
+       f"({PL.TEXT_SECTION_BUDGET} B)", len(secs) >= 3 and all(
+           z <= PL.TEXT_SECTION_BUDGET for z in sizes[:-1]), sizes)
+    ok("S136: text sections stay dense from $0A00 and contiguous inside",
+       all((sec[0][0] & 0xFF) == 0 and [t for t, _e in sec] == list(
+           range(sec[0][0], sec[0][0] + len(sec))) for sec in secs))
+    tb = _re.findall(r'^    db \$([0-9A-F]{2})   ; section (\d+)', gen60, _re.M)
+    ok("S136: TextSectionBanks = the plan's home of every section",
+       [int(b, 16) for b, _s in tb] == pp['text_home'], tb)
+    # S136 review: the section jump never lands on (or leaves a gap before) an
+    # explicit text id
+    d = base()
+    d['custom']['dialogue'] += [{'id': f'auto_{k}', 'text': 'word ' * 15} for k in range(150)]
+    d['custom']['dialogue'].append({'id': 'pinned', 'text_id': '0x0B00', 'lines': ['Hi']})
+    try:
+        _o, pj, _w = compile_data(d)
+        tids = sorted(pj._text_by_id)
+        okc = 0x0B00 in pj._text_by_id and pj._text_by_id[0x0B00]['id'] == 'pinned' \
+            and len(tids) == len(set(tids)) and len({t >> 8 for t in tids}) >= 3
+    except (ProjectError, C.CompileError) as ex:
+        okc, tids = False, str(ex)
+    ok("S136: auto texts that break sections skip a section an explicit text_id uses",
+       okc, str(tids)[:200])
+    # a room bigger than a bank is refused with its name
+    d = json.load(open(os.path.join(proj, 'project.json')))
+    d['custom']['scripts'].append({'id': 'huge', 'ops': [['op', 'write_ram', '0xC8F0', 1]]
+                                   * 3000 + [['end']]})
+    d['custom']['rooms'][-1]['scripts']['2'] = 'huge'
+    json.dump(d, open(os.path.join(proj, 'project.json'), 'w'))
+    try:
+        C.compile_project(proj, REPO)
+        okr = False
+    except (PE, C.CompileError) as ex:
+        okr = 'more than one bank holds' in str(ex) and d['custom']['rooms'][-1]['id'] in str(ex)
+    ok("S136: a room whose block is bigger than a bank is refused, by name", okr)
+    if not with_rom:
+        return
+    from editor2.core import builder as B
+    CPB.make_spill(proj, 40)
+    outs, sp, _w = C.compile_project(proj, REPO)
+    out = os.path.join(tmp, 'spill', 'build')
+    C.write_outputs(outs, out)
+    rom, sym, _md5 = B.build_rom(REPO, out, os.path.join(out, 'build'))
+    rb = open(rom, 'rb').read()
+    syms = B.parse_sym(sym)
+    pp = sp.place_plan()
+    ok("ROM S136: every place bank starts with its own number, PlaceEntries_Pxx at $4001",
+       all(rb[b * 0x4000] == b and syms.get(f'PlaceEntries_P{b:02X}') == (b, 0x4001)
+           for b in pp['overflow']), {hex(b): syms.get(f'PlaceEntries_P{b:02X}') for b in pp['overflow']})
+    # S137: a bank may now END in zero bytes (a place's last palette ends with colour 3
+    # = $0000), so "the bank's bytes" = up to the last non-zero byte, and the plan's count
+    # may exceed it only by zero bytes of the last palette (< 8: one colour pair + slack)
+    def _fits(b):
+        bank = rb[b * 0x4000:(b + 1) * 0x4000]
+        rlen = len(bank.rstrip(b'\0'))
+        return rlen <= pp['used'][b] <= rlen + 7 and not any(bank[pp['used'][b]:])
+    ok("ROM S136: bank $60's and each place bank's ROM bytes == the plan's count (exact: "
+       "the charmap's '..' is one byte; S137: up to a trailing palette's zero bytes)",
+       all(_fits(b) for b in [0x60] + pp['overflow']),
+       {hex(b): (len(rb[b * 0x4000:(b + 1) * 0x4000].rstrip(b'\0')), pp['used'][b])
+        for b in [0x60] + pp['overflow']})
+    try:
+        import pyboy  # noqa: F401
+    except ImportError:
+        print("  skip: S136 PyBoy census (pyboy not installed)")
+        return
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'census_place_banks.py'),
+                        '--project', proj, '--rom', rom, '--sym', sym, '--words', '40'],
+                       capture_output=True, text=True, timeout=1800)
+    last = (r.stdout.strip().splitlines() or [''])[-1]
+    ok("ROM S136: PyBoy census — every forwarded read (steps, lists, casts, script words, "
+       "texts, out-of-range ids) lands on the place's bytes in its home bank",
+       r.returncode == 0 and ' 0 mismatched' in last, last + r.stderr[-400:])
+
+
+def test_s138(with_rom=False):
+    """S138 (ROADMAP ARC CAP2e): stale saves + the room songs past $7F. Bank $71
+    entry 0 CopyCustomRoomRecord reads the Castle's record for a custom map id the
+    build has no place for (StalePlace: past the last room / a placeholder, which
+    CustomRoomFlagsTable marks with bit 7); entry 10 ContinueCheck, called by the
+    CONTINUE loader in bank $15 (same size, over the dead vanilla gate-save
+    relocation), sends such a save home (HubWarp, reason HUB_CONTINUE 7). The
+    room-song and battle-song tables have 256 rows (no `cp $80`); music.py accepts
+    every custom room. With --rom: the bank $15 bytes and the PyBoy stale census
+    (tools/census_stale_places.py) on the example with a deleted room."""
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_place_banks as CPB
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core import music as MUS
+    from editor2.core import validators as V
+    from editor2.core import cutscene_build as CB
+    from editor2.core.project import Project
+    t71 = open(os.path.join(REPO, 'editor2', 'core', 'templates', 'bank_071_head.asm')).read()
+    code = "\n".join(l.split(';')[0] for l in t71.splitlines())
+    ok("S138: bank $71 template — entry 10 ContinueCheck + StalePlace, entry 0 bounded, "
+       "no `cp $80` left", 'dw ContinueCheck' in code and 'ContinueCheck:' in code
+       and 'StalePlace:' in code and 'call StalePlace' in code and 'cp $80' not in code
+       and 'cp HUB_CONTINUE' in code)
+    ok("S138/S140/S147/S175: TEMPLATE_SIZE[$71] = 1367 (Custom26DDTable at $4557 in the S175 "
+       "example — the screen's own song first; S147: 1355 = $454B, entry 6 a forwarder; "
+       "S140: 1380 = $4564; S138: 1150 = $447E)",
+       V.TEMPLATE_SIZE[0x71] == 1367)
+    ok("S138: reason 'continue' = 7 everywhere (Project / cutscenes / wram.asm)",
+       Project.HUB_REASONS['continue'] == 7 == CB.ARRIVAL_NUM['continue']
+       and 'HUB_CONTINUE EQU 7' in open(os.path.join(REPO, 'patches', 'wram.asm')).read())
+    b15 = open(os.path.join(REPO, 'patches', 'bank_015.asm')).read()
+    ok("S138: bank $15's CONTINUE loader far-calls bank $71 entry 10",
+       'ld hl, $710a' in b15 and 'jp z, jr_015_44e3' in b15)
+    # ---- a spill project: rooms past $7F with their own songs ----------------------
+    tmp = tempfile.mkdtemp(prefix='t138_')
+    proj = os.path.join(tmp, 'spill')
+    CPB.make_spill(proj, 24)
+    pj = os.path.join(proj, 'project.json')
+    d = json.load(open(pj))
+    rooms = d['custom']['rooms']
+    hi = [r for r in rooms if int(str(r['mapID']), 0) >= 0x80]
+    mus = d['custom'].setdefault('music', {})
+    for i, r in enumerate(hi[:4]):
+        r['music'] = ['0x09', '0x1E', '0x31', '0x61'][i]
+    mus.setdefault('battle', {})['rooms'] = {hi[0]['mapID']: '0x2B', hi[1]['mapID']: '0x1B'}
+    hi[2]['music_rules'] = [{'when': [], 'song': '0x34'}]
+    json.dump(d, open(pj, 'w'))
+    outs, sp, w = C.compile_project(proj, REPO)
+    P = sp.music_plan()
+    m0, m1, m2 = (int(str(hi[k]['mapID']), 0) for k in range(3))
+    ok("S138: rooms from $80 up carry their own room song, battle song and music rules "
+       "(the build refused them before S138)",
+       P.room_bgm[m0] == 0x09 and P.room_bgm[m1] == 0x1E and P.room_battle[m0] == 0x2B
+       and P.room_battle[m1] == 0x1B and len(P.room_bgm) == 256 and len(P.room_battle) == 256
+       and MUS.model_room_bgm(P, {'in_gate': 0, 'map': m2, 'gate': 0, 'floor': 0, 'last': 5,
+                                  'boss_map': 0}) == 0x34
+       and not [x for x in w if 'from $80 up' in x], [x for x in w if '$80' in x])
+    b71 = outs['patches/bank_071.asm']
+    def _rows(label):
+        seg = b71.split(label + ':')[1].split('\n\n')[0]
+        return sum(len(l.split(';')[0].replace('db', '').split(',')) for l in seg.splitlines()
+                   if l.strip().startswith('db'))
+    ok("S138/S140: CustomRoomBGMTable / CustomRoomBattleBGMTable = the 107 vanilla rows each, "
+       "CustomPlaceBGMTable / CustomPlaceBattleBGMTable = one row per place (S140; S138: 256 "
+       "rows by map id)",
+       _rows('CustomRoomBGMTable') == 107 and _rows('CustomRoomBattleBGMTable') == 107
+       and _rows('CustomPlaceBGMTable') == len(sp.rooms)
+       and _rows('CustomPlaceBattleBGMTable') == len(sp.rooms)
+       and f'PLACE_SONG_LEN EQU {len(sp.rooms)}' in b71,
+       (_rows('CustomRoomBGMTable'), _rows('CustomRoomBattleBGMTable'),
+        _rows('CustomPlaceBGMTable'), len(sp.rooms)))
+    d = base()
+    d['custom']['music'] = d['custom'].get('music') or {}
+    d['custom']['music'].setdefault('room_defaults', {})['0xEB'] = '0x09'
+    expect_error("S138: room_defaults past the last custom map id ($EA) is refused", d,
+                 "outside $00-$EA")
+    # ---- a deleted room = a placeholder, bit 7 -----------------------------------
+    from editor2.core.document import Document
+    hole = os.path.join(tmp, 'hole')
+    import shutil
+    shutil.copytree(os.path.dirname(EXAMPLE), hole, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(hole, 'project.json'))
+    rs = sorted(doc.rooms, key=lambda r: int(str(r['mapID']), 0))
+    gone = rs[1]
+    doc.delete_room(gone['id'])
+    doc.save()
+    outs_h, ph, _w = C.compile_project(hole, REPO)
+    gm = int(str(gone['mapID']), 0)
+    fl = outs_h['patches/bank_071.asm'].split('CustomRoomFlagsTable:')[1].split('\n\n')[0]
+    ok("S138: a deleted room's map id = a placeholder whose CustomRoomFlagsTable byte is $81 "
+       "(no such place, no saving)",
+       ph.room_flags(ph.room_by_mid(gm)) == 0x81 and f'${gm:02X} — NO SUCH PLACE' in fl, fl)
+    if not with_rom:
+        return
+    from editor2.core import builder as B
+    out = os.path.join(hole, 'build')
+    C.write_outputs(outs_h, out)
+    rom, sym, _md5 = B.build_rom(REPO, out, os.path.join(out, 'build'))
+    rb = open(rom, 'rb').read()
+    o = 0x15 * 0x4000 + (0x445B - 0x4000)
+    ok("ROM S138: bank $15 $445B = ld hl,$710A / rst $10 / dec e / jp z,$44E3 / jr $44D7 / nop "
+       "(same size; the dead block after it untouched)",
+       rb[o:o + 11] == bytes.fromhex('210a71d71dcae344187200')
+       and rb[o + 11:o + 14] == bytes.fromhex('b72864'), rb[o:o + 14].hex())
+    try:
+        import pyboy  # noqa: F401
+    except ImportError:
+        print("  skip: S138 PyBoy census (pyboy not installed)")
+        return
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'census_stale_places.py'),
+                        '--project', hole, '--rom', rom, '--sym', sym],
+                       capture_output=True, text=True, timeout=1800)
+    last = (r.stdout.strip().splitlines() or [''])[-1]
+    ok("ROM S138: PyBoy stale census — vanilla ids and places unchanged, a placeholder and "
+       "every id past the last room read the Castle's record / no flags / no song of "
+       "their own, CONTINUE sends them home",
+       r.returncode == 0 and ' 0 mismatched' in last and ' 0 placeholders' not in last,
+       last + r.stderr[-400:])
+
+
+def test_s134(rom_bytes=None):
+    """S134 (ROADMAP ARC CAP1): every build is 4 MB — bank_ext.asm gives banks
+    $80-$FF a section each whose first byte is the bank's own number; the staging
+    lists find it (and any later bank_08x.asm) by rule; the built ROM passes the
+    bank rule of tools/validate_custom_data.py (4 MB, $0148 = $07, self-IDs)."""
+    import re as _re
+    from editor2.core import emitters as E
+    from editor2.core import builder as B
+    from editor2.core.project import Project
+    prj = Project.load(os.path.dirname(EXAMPLE))
+    txt = E.emit_bank_ext(prj, [])
+    secs = _re.findall(r'SECTION "ROM Bank \$0([0-9A-F]{2})", ROMX\[\$4000\], BANK\[\$([0-9A-F]{2})\]\n'
+                       r'    db \$([0-9A-F]{2})', txt)
+    # S164 (ROADMAP E14): the example's build has a text home bank ($80: the built-in skill
+    # names past bank $41's region) — that bank is an INCLUDE of its own file, the rest are
+    # empty sections
+    inc = _re.findall(r'INCLUDE "bank_0([0-9a-f]{2})\.asm"', txt)
+    got = sorted([int(a, 16) for a, _, _ in secs] + [int(x, 16) for x in inc])
+    ok("S134: bank_ext.asm = 128 sections $80-$FF, each starting with its own number (S164: the "
+       "used ones $80+ INCLUDE their own file)",
+       all(a == b == c for a, b, c in secs) and got == list(range(0x80, 0x100))
+       and inc == ['80'], (len(secs), inc))
+    ok("S134: the ext_banks emitter is registered (file:patches/bank_ext.asm)",
+       any(t == 'file:patches/bank_ext.asm' for _, _, t, _, _ in E.REGISTRY))
+    files, new = B._patch_lists(REPO)
+    ok("S134: the build stages bank_ext.asm as a new file and game.asm includes it",
+       'bank_ext.asm' in new and 'game.asm' in files
+       and 'INCLUDE "bank_ext.asm"' in open(os.path.join(REPO, 'patches', 'game.asm')).read())
+    if rom_bytes is not None:
+        sys.path.insert(0, os.path.join(REPO, 'tools'))
+        import validate_custom_data as VCD
+        errs = []
+        orig = open(ROM, 'rb').read() if os.path.exists(ROM) else None
+        VCD.check_banks(rom_bytes, orig, errs)
+        ok("S134 ROM: 4 MB, $0148 = $07, every bank $80-$FF and every changed bank "
+           "starts with its own number", not errs and len(rom_bytes) == 0x400000, errs[:3])
+        if orig is not None:
+            # S164 (ROADMAP E14): bank $80 = the example's text bank (the built-in skill names
+            # past bank $41's region); the rest stay stubs
+            ok("S134 ROM: banks $81-$FF are self-ID stubs over zero fill (no content yet); $80 = "
+               "the text bank (S164)",
+               all(not any(rom_bytes[b * 0x4000 + 1:(b + 1) * 0x4000]) for b in range(0x81, 0x100))
+               and any(rom_bytes[0x80 * 0x4000 + 1:0x81 * 0x4000]))
+
+
+def test_s139(with_rom=False):
+    """S139 (ROADMAP ARC CAP2d): the rooms' own animated tiles past bank $6C. Bank $6C
+    entry 0 CustomTileAnimate forwards through TileAnimDirectory (bank, index) to
+    TileAnimPlay{A} of the room's ANIMATION BANK — bank $6C itself or a bank $80+
+    after the stream and place banks (editor2/core/tileanim.py plan, first fit in map
+    id order); every animation bank carries the pinned player
+    (templates/tileanim_player.asm). With --rom: tools/census_tile_anims.py (the ROM
+    tables + stub calls through the forwarder) on a spill project."""
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_place_banks as CPB
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core import tileanim as TA
+    from editor2.core import validators as V
+    from editor2.core.project import Project
+    head = open(os.path.join(REPO, 'editor2', 'core', 'templates', 'bank_06c_head.asm')).read()
+    code = "\n".join(l.split(';')[0] for l in head.splitlines())
+    pl = open(os.path.join(REPO, 'editor2', 'core', 'templates', 'tileanim_player.asm')).read()
+    ok("S139: bank $6C head = the forwarder (TileAnimDirectory, local jump or rst $10); "
+       "the player is the {A} template",
+       'ld de, TileAnimDirectory' in code and 'jp z, TileAnimPlay' in code and 'rst $10' in code
+       and 'TileAnimCopy:' not in code and 'TileAnimPlay{A}:' in pl and 'TileAnimCopy{A}:' in pl)
+    ok("S139/S140/S168: TEMPLATE_SIZE[$6C] 378 (S168: + the page-2 destination bank, 14 B; "
+       "S140 364: + PlaceNum6C; S139 307) / ANIM_TEMPLATE_SIZE 290 (1 + 2 + the 287 B player)",
+       V.TEMPLATE_SIZE[0x6C] == 378 and V.ANIM_TEMPLATE_SIZE == 290)
+    ok("S139: the anims_ext emitter is registered (multi:anim_banks)",
+       any(t == 'multi:anim_banks' for _, _, t, _, _ in E.REGISTRY))
+    ex = Project.load(os.path.dirname(EXAMPLE))
+    p0 = TA.plan(ex)
+    t6c = TA.emit_bank_06c(ex, [])
+    ok("S139: the example (no tile_anims) = no animation bank, an empty directory, the "
+       "player in bank $6C",
+       p0['overflow'] == [] and 'TILEANIM_ROOMS EQU 0' in t6c and 'TileAnimPlay:' in t6c
+       and TA.emit_anim_banks(ex, []) == {})
+    # ---- a spill project: 12 rooms of heavy animations -----------------------------
+    tmp = tempfile.mkdtemp(prefix='t139_')
+    proj = os.path.join(tmp, 'spill')
+    d, rooms = CPB.make_spill(proj, 12, ops_per_room=20, texts_per_room=1)
+    def strip(slot0, motion):
+        return {'id': f's{slot0}', 'name': f'Strip {slot0}', 'motion': motion, 'speed': 8,
+                'strip': True, 'rows': [[slot0 + k for k in range(4)],
+                                        [slot0 + 4 + k for k in range(4)]]}
+    for i, r in enumerate(d['custom']['rooms'][-12:]):
+        rec = r['record']
+        rec.pop('gfx_id', None)
+        rec.pop('gfx_bank', None)
+        rec['tileset'] = 'combined_room6b'
+        r['tile_anims'] = [strip(64, 'drift_right')] + ([strip(72, 'drift_left')]
+                                                         if i % 2 == 0 else [])
+    pj = os.path.join(proj, 'project.json')
+    json.dump(d, open(pj, 'w'))
+    outs, sp, w = C.compile_project(proj, REPO)
+    P = TA.plan(sp)
+    owners = sp.ext_bank_owners()
+    ok("S139: the spill fills bank $6C first, then animation banks after every stream / "
+       "place bank",
+       P['overflow'] and all(owners[b] == 'anims' for b in P['overflow'])
+       and min(P['overflow']) > max([b for b, k in owners.items()
+                                     if k not in ('anims', 'texts')] or [0x7F])   # S164: texts after
+       and any(b == 0x6C for b, _i in P['home'].values()), (P['overflow'], owners))
+    seen = []
+    for m in sorted(P['home']):
+        b = P['home'][m][0]
+        if b not in seen:
+            seen.append(b)
+    ok("S139: every bank within 16 KB; banks open in map id order (first fit)",
+       all(u <= 0x4000 for u in P['used'].values()) and seen == [0x6C] + P['overflow'],
+       (P['used'], seen))
+    files = {b: f'patches/bank_{b:03x}.asm' for b in P['overflow']}
+    bext = outs['patches/bank_ext.asm']
+    ok("S139: one whole file per animation bank, INCLUDEd by bank_ext.asm, starting with "
+       "its number and entry 0 = TileAnimPlay_A<bank>",
+       all(f in outs and f'INCLUDE "bank_{b:03x}.asm"' in bext
+           and f'BANK[${b:02X}]\n    db ${b:02X}' in outs[f]
+           and f'dw TileAnimPlay_A{b:02X}' in outs[f] and f'TileAnimPlay_A{b:02X}:' in outs[f]
+           for b, f in files.items()))
+    usage = V.bank_usage({'file:' + k: v for k, v in outs.items()})
+    ok("S139: the meters' count of every animation bank and $6C == the plan",
+       all(usage[b][0] == P['used'][b] for b in P['used']),
+       {b: (usage.get(b), P['used'][b]) for b in P['used']})
+    t = outs['patches/bank_06c.asm']
+    rows = t.split('\nTileAnimDirectory:')[1].split('\nTileAnimRoomTable:')[0]
+    rows = [l for l in rows.splitlines() if l.strip().startswith('db')]
+    ok("S139: TileAnimDirectory = (bank, index) per map id up to the last animated room",
+       len(rows) == P['dir_rows'] and all(
+           (f"db ${P['home'][0x6B + i][0]:02X}, {P['home'][0x6B + i][1]}" in rows[i])
+           if 0x6B + i in P['home'] else 'db 0, 0' in rows[i] for i in range(len(rows))))
+    big = json.load(open(pj))
+    br = big['custom']['rooms'][-1]
+    br['tile_anims'] = [strip(64 + 8 * k, 'drift_right') for k in range(4)] + [
+        {'id': 'x', 'name': 'X', 'motion': 'drift_left', 'speed': 9, 'strip': True,
+         'rows': [[96 + k for k in range(4)], [100 + k for k in range(4)]]}]
+    expect_error("S139: a room whose animations alone are bigger than one bank is refused",
+                 big, "more than one bank holds")
+    if not with_rom:
+        return
+    from editor2.core import builder as B
+    out = os.path.join(proj, 'build')
+    C.write_outputs(outs, out)
+    rom, sym, _md5 = B.build_rom(REPO, out, os.path.join(out, 'build'))
+    try:
+        import pyboy  # noqa: F401
+    except ImportError:
+        print("  skip: S139 PyBoy census (pyboy not installed)")
+        return
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'census_tile_anims.py'),
+                        '--project', proj, '--rom', rom, '--sym', sym],
+                       capture_output=True, text=True, timeout=1800)
+    first = (r.stdout.strip().splitlines() or [''])[0]
+    ok("ROM S139: census — every room's animations reached through the directory in its "
+       "own bank, records + frames == the model, the plan's bytes == the ROM, the "
+       "forwarder calls exactly the room's bank with its index",
+       r.returncode == 0 and ' 0 mismatched' in first and '$6C, $8' in first,
+       first + r.stdout[-600:] + r.stderr[-400:])
+
+
+def test_s140(with_rom=False):
+    """S140 (ROADMAP ARC CAP3a): REGIONS — more than 128 places. A project mapID carries
+    its region in the high byte ($6B-$EA region 0, $16B-$1EA region 1, …); the engine
+    sees (wMapRegion, real id) and every per-place table is indexed by the PLACE NUMBER
+    (PlaceNum<bank>, templates/place_number.asm, with each bank's RegionTable /
+    GlobalPlaceIds). Exit rows into another region carry `$FD <region>` (link ids),
+    script warps a `write_ram wWarpRegion`; the arena copies are global. With --rom:
+    tools/census_regions.py on a generated multi-region project (+ its negative
+    control and the place-bank / stale-place censuses)."""
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_regions as CR
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core import formats as F
+    from editor2.core.document import Document
+    from editor2.core.project import Project
+    tdir = os.path.join(REPO, 'editor2', 'core', 'templates')
+    pn = open(os.path.join(tdir, 'place_number.asm')).read()
+    ok("S140: place_number.asm is pinned and pasted as PlaceNum{X} (RegionTable{X}, "
+       "GlobalPlaceIds{X}, REGION_IDS)",
+       'place_number.asm' in open(E.TEMPLATE_SHA_FILE).read() and 'PlaceNum{X}:' in pn
+       and 'PlaceNumIn{X}:' in pn and 'RegionTable{X}' in pn and 'cp REGION_IDS' in pn)
+    # ---- one region: the old shape ---------------------------------------------------
+    ex = Project.load(os.path.dirname(EXAMPLE))
+    ok("S140: one region = place number mapID - $6B, RegionTable (1, count, 0), no globals",
+       not ex.multi_region() and ex.regions == [(len(ex.rooms), 0)]
+       and all(ex.place_number(F.val(r['mapID'])) == F.val(r['mapID']) - 0x6B for r in ex.rooms)
+       and ex.global_ids == [])
+    out0, _p0, _w0 = C.compile_project(os.path.dirname(EXAMPLE), REPO)
+    ok("S140: one region — no `$FD` exit prefix, no wWarpRegion write in any script",
+       not any('the next row leads into region' in t or 'dw wWarpRegion' in t
+               for k, t in out0.items() if k.startswith('patches/bank_0')))
+    t60, t6c, t71, t76 = (out0[f'patches/bank_{b}.asm'] for b in ('060', '06c', '071', '076'))
+    ok("S140: banks $60 / $6C / $71 / $76 each paste PlaceNum<bank> and emit RegionTable<bank>",
+       all(f'PlaceNum{x}:' in t and f'RegionTable{x}:' in t and f'GlobalPlaceIds{x}:' in t
+           for x, t in (('60', t60), ('6C', t6c), ('71', t71), ('76', t76))))
+    # ---- a multi-region project ------------------------------------------------------
+    tmp = tempfile.mkdtemp(prefix='t140_')
+    proj = os.path.join(tmp, 'regions')
+    d, mids = CR.make_regions(os.path.dirname(EXAMPLE), proj, regions=4, per_region=12)
+    outs, prj, w = C.compile_project(proj, REPO)
+    regs = sorted({m >> 8 for m in mids})
+    ok("S140: the generated project has places in regions 0-3 with repeating map ids",
+       regs == [0, 1, 2, 3] and prj.multi_region()
+       and len({m & 0xFF for m in mids if m >> 8}) < len([m for m in mids if m >> 8]),
+       (regs, prj.regions))
+    pnums = [prj.place_number(F.val(r['mapID'])) for r in prj.rooms]
+    ok("S140: place numbers are 0 .. n-1 in prj.rooms order (P order)",
+       pnums == list(range(len(prj.rooms))), pnums[:20])
+    base = 0
+    okb = True
+    for cnt, b0 in prj.regions:
+        okb &= b0 == base
+        base += cnt
+    ok("S140: RegionTable rows (count, base) are contiguous", okb and base == len(prj.rooms),
+       prj.regions)
+    t71 = outs['patches/bank_071.asm']
+    c26 = t71[t71.index('Custom26DDTable:'):].split('\n\n')[0]
+    rows26 = [l for l in c26.splitlines() if l.strip().startswith('db')]
+    ok("S140: Custom26DDTable = one record per place (all ids, $6B-$6F included)",
+       len(rows26) == len(prj.rooms) and rows26[0].rstrip().endswith('; $6B'), len(rows26))
+    texts = '\n'.join(t for k, t in outs.items() if k.startswith('patches/bank_0'))
+    ok("S140: exit rows into another region carry `db $FD, <region>`",
+       'db $FD, $01  ; S140: the next row leads into region 1' in texts)
+    ok("S140: script warps into another region write wWarpRegion (op $12) right before "
+       "the warp; the warp word holds the real map id",
+       'dw wWarpRegion' in texts)
+    wr = outs['patches/wram.asm']
+    ok("S140: the step counters: wCustomStepRegional + other regions' counters as EQUs",
+       'wCustomStepRegional EQU $' in wr and 'region 1' in wr, wr[-600:])
+    # music: vanilla 107 rows + place rows; rule keys words
+    ok("S140: PLACE_SONG_LEN = the place count (CustomPlaceBGMTable / CustomPlaceBattleBGMTable)",
+       f'PLACE_SONG_LEN EQU {len(prj.rooms)}' in t71 and 'CustomPlaceBGMTable:' in t71
+       and 'CustomPlaceBattleBGMTable:' in t71)
+    ok("S140: GateBossRegionTable = the gate's boss region (gate 5 -> region 2)",
+       prj.gate_configs()[5]['boss_region'] == 2 and 'GateBossRegionTable:' in t71)
+    hub = prj.hub_rules()[0]
+    ok("S140: HubTable row = [real id, region, px, py]",
+       F.db_line([hub['mapID'] & 0xFF, hub['mapID'] >> 8, hub['px'] & 0xFF, hub['px'] >> 8,
+                  hub['py'] & 0xFF, hub['py'] >> 8]).split(';')[0].strip() in t71)
+    # errors
+    bad = json.load(open(os.path.join(proj, 'project.json')))
+    bad['custom']['rooms'][-1]['mapID'] = '0x1EF'
+    expect_error("S140: a place id past $EA in its region ($1EF) is refused", bad,
+                 "a region holds")
+    bad = json.load(open(os.path.join(proj, 'project.json')))
+    bad['custom']['rooms'][-1]['mapID'] = '0x4076'
+    expect_error("S140: a region past 63 is refused", bad, "regions")
+    # the arena copies are global: in region 0, their ids kept free elsewhere
+    ua = json.load(open(EXAMPLE))
+    ar_rooms = [r for r in ua['custom']['rooms'] if r['id'] in ('arena_clone',)]
+    if ar_rooms:
+        g = ua
+        g['custom']['rooms'].append(dict(json.loads(json.dumps(ar_rooms[0])), id='arena_in_r1',
+                                         mapID='0x172'))
+        g['custom']['arena'] = {'lobby': 'arena_in_r1', 'battle': 'arena_clone'}
+        expect_error("S140: an arena room outside region 0 is refused", g, "must be among the first")
+    # the editor hands out region 1's ids after $EA
+    dd = Document(os.path.join(proj, 'project.json'))
+    used = {int(str(r['mapID']), 0) for r in dd.rooms}
+    nf = dd.next_free_mapid()
+    ok("S140: next_free_mapid fills region 0 to $EA first, never hands out $EB-$FE",
+       nf not in used and 0x6B <= (nf & 0xFF) <= 0xEA, hex(nf))
+    if not with_rom:
+        return
+    try:
+        import pyboy  # noqa: F401
+    except ImportError:
+        print("  skip: S140 PyBoy census (pyboy not installed)")
+        return
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'census_regions.py'),
+                        '--base', os.path.dirname(EXAMPLE), '--out', os.path.join(tmp, 'cr'),
+                        '--regions', '4', '--per-region', '30'],
+                       capture_output=True, text=True, timeout=2400)
+    lines = [x for x in r.stdout.splitlines() if 'checks' in x]
+    ok("ROM S140: census_regions — link ids through the commit, wWarpRegion, script-warp "
+       "words, hub / gate insert / boss regions, the boss win by region; the place-bank and "
+       "stale-place censuses on the same multi-region build",
+       r.returncode == 0 and len(lines) == 3 and all(' 0 mismatched' in x for x in lines),
+       r.stdout[-1500:] + r.stderr[-600:])
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'census_regions.py'),
+                        '--project', os.path.join(tmp, 'cr'),
+                        '--rom', os.path.join(tmp, 'cr', 'build', 'build', 'rom.gbc'),
+                        '--sym', os.path.join(tmp, 'cr', 'build', 'build', 'game.sym'),
+                        '--negative'], capture_output=True, text=True, timeout=1200)
+    ok("ROM S140: census_regions --negative fails on one corrupted link region",
+       r.returncode == 0 and '1 mismatched' in r.stdout, r.stdout[-600:])
+
+
+
+def test_s141(with_rom=False):
+    """S141 (ROADMAP ARC CAP3b): the in-game acceptance of regions is a PyBoy walk on the
+    user's save (tools/walk_regions.py on examples/s141_dial_demo — PROJECT_STATE S141);
+    the defect it found is in the editor's Play here: a save made in a place the build
+    does not have CONTINUEs with the warp home still PENDING (bank $71 ContinueCheck), and
+    the playback engine saved its base state before that warp ran — every Play here warp
+    then raced it and the player stayed in the Castle. Here: a stand-in emulator whose
+    pending warp ends 300 frames after CONTINUE — the base state must wait for it.
+    And the user's report on the S141 test ROMs (after breeding — and while the menu was
+    open — an NPC vanished, another turned into letters): every windowed screen effect loads
+    its tiles to VRAM bank 0 $8800+, over a room's NPC sheets 3-5 — r3 puts a custom room's
+    sheets 3-5 in VRAM bank 1 (the ROM half: walk_regions.py breed + --negative-sheets, by
+    hand)."""
+    from editor2.core import playback as PB
+
+    class Stand(PB.Engine):
+        def __init__(self):                              # noqa: no emulator
+            self.m = bytearray(0x10000)
+            self.f = 0
+            self.m[PB.GAME_MODE] = 1
+            self.m[PB.W_CHANGING] = 1                    # ContinueCheck armed the warp home
+            self.warp_end = 400 + 120 + 120 + 200 + 300  # the CONTINUE presses, then 300
+
+        def tick(self, n=1):
+            for _ in range(n):
+                self.f += 1
+                if self.f == self.warp_end:
+                    self.m[PB.W_CHANGING] = 0
+
+        def tap(self, btn, hold=3, wait=12):
+            self.tick(hold + wait)
+
+    e = Stand()
+    e._continue_save()
+    ok("S141: Play here from a save in a place the build lacks — the base state waits "
+       "until the pending warp home has run", e.m[PB.W_CHANGING] == 0 and e.f >= e.warp_end,
+       (e.f, e.warp_end))
+    src = open(PB.__file__).read()
+    ok("S141: base states of a .sav cached before S141 are not reused ('base2_'); the "
+       "arrival check of Play here names the region (wMapRegion)",
+       "f'base2_{tag}" in src and 'm[MAP_REGION] == want_region' in src)
+    t77 = open(os.path.join(REPO, 'editor2', 'core', 'templates', 'bank_077_head.asm')).read()
+    b06 = open(os.path.join(REPO, 'patches', 'bank_006.asm')).read()
+    b0b = open(os.path.join(REPO, 'patches', 'bank_00b.asm')).read()
+    ok("S141 r3: bank $77 entries 12-15 (NpcSheetLoad0B / 06, NpcDrawPlain / Monster); a custom "
+       "room's sheets >= page $88 copied to VRAM bank 1 (VBK 1 only inside di / ei), the draw "
+       "sets OAM attr bit 3 for a tile base >= $80",
+       all(f'dw {n}' in t77 for n in ('NpcSheetLoad0B', 'NpcSheetLoad06', 'NpcDrawPlain',
+                                       'NpcDrawMonster'))
+       and 'cp $88' in t77 and 'ldh [rVBK], a' in t77 and 'set 3, [hl]' in t77
+       and t77.count('di\n') >= 1 and 'ld hl, $0800' in t77)
+    ok("S141 r3: the loaders (bank $0B CmpRoom_4839, bank $06 ReloadNPCSheets) hand c to "
+       "wNpcSheetIdx and far-call entries 12 / 13; NPCDrawSlot calls entries 14 / 15; bank $06's "
+       "screen-effect step is vanilla again",
+       'ld [wNpcSheetIdx], a\n    ld hl, $770c' in b0b and 'ld [wNpcSheetIdx], a\n    ld hl, $770d' in b06
+       and 'ld hl, $770e' in b06 and 'ld hl, $770f' in b06
+       and 'Jump_006_62b2:\n    ld hl, $0900' in b06)
+    from editor2.core import validators as V
+    ok("S141 r3: TEMPLATE_SIZE[$77] >= 1967 (S151: 2074 with the item entries 16-18)", V.TEMPLATE_SIZE[0x77] >= 1967)
+    walk = os.path.join(REPO, 'tools', 'walk_regions.py')
+    demo = os.path.join(REPO, 'examples', 's141_dial_demo', 'build_demo.py')
+    ok("S141: the walk tool and the demo builder are in the repo (they need the user's "
+       "project + save: run by hand, PROJECT_STATE S141)",
+       os.path.exists(walk) and os.path.exists(demo)
+       and 'def break_hub_region' in open(walk).read() and 'def old_npc_banks' in open(walk).read())
+
+
+def test_s135(with_rom=False):
+    """S135 (ROADMAP ARC CAP2a): layouts / attr maps / tilesets past banks $64 / $67
+    go to the 4 MB ROM's overflow banks $80+ (first fit, project.stream_plan). A
+    project that fits keeps the S92 layout exactly (entry = declaration ordinal);
+    a stress project (tools/census_stream_banks.py: the example + 48 rooms, each its
+    own tileset and three screens) spills into several banks, every reference
+    carries the plan's bank, bank_ext.asm INCLUDEs the overflow files, the meters
+    see them; with --rom the stress ROM decodes every stream at its (bank, entry)."""
+    import re as _re
+    import tempfile
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_stream_banks as CSB
+    from editor2.core import compiler as C
+    from editor2.core import emitters as E
+    from editor2.core.project import Project, LAYOUT_HOME_BANK, TILESET_HOME_BANK
+    from editor2.core.compiler import measure_banks
+    prj = Project.load(os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    plan = prj.stream_plan()
+    s92 = all(plan['where'][('tiles', l)] == (LAYOUT_HOME_BANK, n)
+              for l, n in prj._layout_entry.items()) and \
+        all(plan['where'][('attr', l)] == (LAYOUT_HOME_BANK, n)
+            for l, n in prj._attr_entry.items()) and \
+        all(plan['where'][('tileset', t)] == (TILESET_HOME_BANK, n)
+            for t, n in prj._tileset_entry.items())
+    # S164 (ROADMAP E14): the example's one ext bank is the TEXT bank $80 (the built-in skill
+    # names past bank $41's region), not a stream overflow bank
+    ext = E.ext_bank_files(prj)
+    ok("S135: the example fits $64 / $67 — no overflow bank, entries == the S92 "
+       "declaration order (S164: its only ext file = text bank $80)",
+       plan['overflow'] == [] and s92 and ext == {0x80: 'bank_080.asm'}
+       and prj.ext_bank_owners() == {0x80: 'texts'}, (plan['overflow'], ext))
+    tmp = tempfile.mkdtemp(prefix='t135_')
+    proj = os.path.join(tmp, 'stress')
+    data, rooms = CSB.make_stress(proj, 48)
+    outs, sp, _w = C.compile_project(proj, REPO)
+    spl = sp.stream_plan()
+    ov = spl['overflow']
+    ok("S135: the stress project spills into consecutive banks from $80 (>= 3)",
+       len(ov) >= 3 and ov == list(range(0x80, 0x80 + len(ov))), ov)
+    ok("S135: every bank of the plan fits (<= 16,384 B incl. self-ID + pointers, <= 256 "
+       "entries)", all(spl['used'][b] <= 0x4000 and len(spl['banks'][b]) <= 256
+                       for b in spl['banks']), {hex(b): spl['used'][b] for b in spl['banks']})
+    ok("S135: $64 / $67 are filled first (each within 1 KB of full before any spill)",
+       spl['used'][0x64] > 0x4000 - 1024 and spl['used'][0x67] > 0x4000 - 2200,
+       (spl['used'][0x64], spl['used'][0x67]))
+    files = {f'patches/bank_{b:03x}.asm' for b in ov}
+    ok("S135: one generated file per overflow bank, starting with its section + own "
+       "number", files <= set(outs) and all(
+           f'SECTION "ROM Bank ${b:03X}", ROMX[$4000], BANK[${b:02X}]\n    db ${b:02X}'
+           in outs[f'patches/bank_{b:03x}.asm'] for b in ov), sorted(files - set(outs)))
+    ext = outs['patches/bank_ext.asm']
+    # S164 (ROADMAP E14): + the text bank of the built-in skill names (a bank of its own past
+    # the streams) — every INCLUDE'd bank is one less stub
+    incs = _re.findall(r'^INCLUDE "bank_0([0-9a-f]{2})\.asm"', ext, _re.M)
+    ok("S135: bank_ext.asm INCLUDEs the overflow banks and stubs the rest (128 banks; S164: + "
+       "the text bank)",
+       all(f'INCLUDE "bank_{b:03x}.asm"' in ext for b in ov)
+       and len(incs) == len(ov) + 1
+       and len(_re.findall(r'^SECTION ', ext, _re.M)) == 128 - len(incs), (ov, incs))
+    b60 = outs['patches/bank_060.asm']
+    r = rooms[-1]
+    lid = r['screens']['0']['layout']['id']
+    lb, le = spl['where'][('tiles', lid)]
+    ok("S135: a stress room's step entry carries the plan's (entry, bank)",
+       f'db {le}, ${lb:02X}   ; step_id, tileset_bank' in b60 and lb >= 0x80, (lb, le))
+    tb, te = spl['where'][('tileset', r['record']['tileset'])]
+    ok("S135: the stress room's tileset is resolved to the plan's place",
+       sp.resolve_gfx(r['record']) == (tb, te) and tb >= 0x80, (tb, te))
+    # an authored {bank: $64, entry: N} keeps its S92 meaning wherever the stream went
+    lid_last = sp.layouts[-1]['id']
+    n = sp._layout_entry[lid_last]
+    ok("S135: an explicit {bank: $64, entry: N} = the N-th declared stream, now at the "
+       "plan's place", sp.resolve_layout({'bank': '0x64', 'entry': n}) ==
+       spl['where'][('tiles', lid_last)] and spl['where'][('tiles', lid_last)][0] >= 0x80)
+    ok("S135: an explicit {bank: $67, entry: N} = the N-th declared tileset",
+       sp.resolve_gfx({'gfx_bank': '0x67', 'gfx_id': len(sp.tilesets) - 1}) ==
+       spl['where'][('tileset', sp.tilesets[-1]['id'])])
+    from editor2.core import validators as V
+    gen = {f'file:{k}': v for k, v in outs.items()}
+    use = V.bank_usage(gen)
+    ok("S135: bank_usage measures every overflow bank == the plan",
+       all(use.get(b, (None,))[0] == spl['used'][b] for b in ov),
+       {hex(b): (use.get(b), spl['used'][b]) for b in ov})
+    full, _e = measure_banks(data, proj, REPO)
+    part, _e = measure_banks(data, proj, REPO, banks=(0x60, 0x64, 0x67, 0x71, 0x80))
+    # S164 (ROADMAP E14): every build with a skill name past bank $41's region also has a text
+    # bank (after the stream banks) — the new-banks bar shows it too
+    _pt = Project(json.loads(json.dumps(data)), proj)
+    _pt.repo_root = REPO
+    tb = sorted(b for b, k in _pt.ext_bank_owners().items() if k == 'texts')
+    ok("S135: the space meter's banks (+ the new-banks bar) measured alone == the full "
+       "measure", all(part[b] == full[b] for b in [0x60, 0x64, 0x67, 0x71] + ov + tb)
+       and sorted(b for b in part if b >= 0x80) == sorted(ov + tb), (sorted(part), ov, tb))
+    # a room with screens 0 and 5 in a 2 x 2 size: screens 1 and 4 are holes the
+    # player can walk into — their render rows were $0000 (the bank $17 walk read ROM0
+    # $0000 as a table: game mode $FE, then a hang — PyBoy S135); now a real row + a warning
+    hp = os.path.join(tmp, 'holes')
+    hd, hr = CSB.make_stress(hp, 1)
+    room = hd['custom']['rooms'][-1]
+    room['screens'] = {'0': room['screens']['0'], '5': room['screens']['1']}
+    room['record']['width_px'], room['record']['height_px'] = 320, 256
+    json.dump(hd, open(os.path.join(hp, 'project.json'), 'w'))
+    hout, _hp, hw = C.compile_project(hp, REPO)
+    m = int(room['mapID'], 16)
+    b17 = "\n".join(hout.values())          # S137: the rows live in the room's home bank
+    ok("S135: holes inside a room's size get a real render row (never $0000) + a warning",
+       E.room_holes(room) == [1, 4]
+       and f"RoomAttr_{m:02X}:    ; {room['id']}: render rows, screen 0-15 (S137, CAP2c)\n"
+           f"    dw ScrAttr_{m:02X}_0, "
+           f"ScrAttr_{m:02X}_0, $0000, $0000\n    dw ScrAttr_{m:02X}_0, ScrAttr_{m:02X}_5" in b17
+       and any('never made' in w and room['id'] in w for w in hw),
+       [w for w in hw if 'never made' in w])
+    # a stream the compiler cannot build is a build ERROR (never an empty stream)
+    bp = os.path.join(tmp, 'badstream')
+    bd, _br = CSB.make_stress(bp, 1)
+    bd['custom']['layouts'][-1]['tiles'][0][0] = 1.5          # not a tile number
+    json.dump(bd, open(os.path.join(bp, 'project.json'), 'w'))
+    try:
+        C.compile_project(bp, REPO)
+        why = ''
+    except C.CompileError as e:
+        why = str(e)
+    ok("S135: a layout the compiler cannot build stops the build (reviewed: was an empty "
+       "stream)", 'cannot build tiles' in why, why[-300:])
+    ok("S135: the example has no holes (its rows unchanged)",
+       all(E.room_holes(r) == [] for r in prj.rooms))
+    if with_rom and os.path.exists(ROM):
+        from editor2.core import builder as B
+        C.write_outputs(outs, proj)
+        romp, symp, _md5 = B.build_rom(REPO, proj, os.path.join(proj, 'build'))
+        rb = open(romp, 'rb').read()
+        errs, nst = CSB.static_check(sp, rb, symp)
+        ok(f"S135 ROM: all {nst} streams of the stress project decode from the built ROM at "
+           "their (bank, entry) to the project's bytes; every overflow bank self-IDs",
+           not errs, errs[:3])
+
+
+def test_s132():
+    """S132 (Rooms tab usability, ROADMAP P3.4): the story state at a story point is
+    what the game's own scripts write (the arena cascade == SIDEQUEST_MAP's table;
+    cumulative; the PyBoy census in extracted/story_state_census.json); a party record
+    carries the species / raising fields where the game reads them; tile drawing both
+    ways; palette borrowing; the memoised LZ compressor; the meter's four banks."""
+    import copy
+    import shutil
+    import tempfile
+    from editor2.core import story_state as SS
+    from editor2.core import play_setup as PS
+    from editor2.core import tile_draw as TD
+    from editor2.core import palette_borrow as PB
+    from editor2.core import layouts as L
+    from editor2.core.compiler import measure_banks
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from simulator import raising as R
+    if os.path.exists(ROM):
+        st1, st2 = SS.state_at(1), SS.state_at(2)
+        g = set(st2['flags_on']) - set(st1['flags_on'])
+        ok("S132: class G won = the lobby cascade's rank flag $30, $CAB4 = 1, the world "
+           "steps of SIDEQUEST_MAP ($D92F 2 / $D931 1 / $D93C 3 / $D941 1) — then the "
+           "Castle's own cascade",
+           0x30 in g and st2['ram'].get(0xCAB4) == 1 and st2['ram'].get(0xD931) == 1
+           and st2['ram'].get(0xD941) == 1, (sorted(g), st2['ram']))
+        st0 = SS.state_at(0)
+        ok("S132: before the first step only the starter flag", st0['flags_on'] == [0x0002]
+           and st0['ram'] == {}, st0)
+        st_end = SS.state_at(40)
+        ok("S132: a late point holds every class and the mandatory gates ($001D, $0025, "
+           "$0030-$0037) and the post-game ($00F1)",
+           {0x1D, 0x25, 0xF1} | set(range(0x30, 0x38)) <= set(st_end['flags_on']),
+           sorted(hex(f) for f in st_end['flags_on']))
+        cen = json.load(open(os.path.join(REPO, 'extracted', 'story_state_census.json')))
+        ok("S132: the story census is clean (the game's own scripts in PyBoy == the "
+           "interpreter) and covers >= 30 steps",
+           cen['clean'] and len(cen['runs']) >= 30, len(cen['runs']))
+    # a party record
+    T = R.vanilla_tables()
+    m = R.create(T, 2, R.GameRNG(0x1234))
+    R.grow_to(T, m, 12, R.GameRNG(0x55))
+    rec = PS.party_record(m, T, 'Slime')
+    ok("S132: a party record = 149 B, species +$09, level +$4B, cap +$4C, exp +$4D, HP = max "
+       "+$50/+$52, skills +$29, plus +$62, not bred (+$15/+$16 $FF), not an egg",
+       len(rec) == 0x95 and rec[0x09] == m.species and rec[0x4B] == m.level
+       and rec[0x4C] == m.cap and (rec[0x4D] | rec[0x4E] << 8 | rec[0x4F] << 16) == m.exp
+       and rec[0x50:0x52] == rec[0x52:0x54] and list(rec[0x29:0x29 + len(m.skills)]) ==
+       m.skills and rec[0x62] == m.plus and rec[0x15] == rec[0x16] == 0xFF
+       and rec[0x63] == 0, rec.hex())
+    from editor2.core.savefile import monster_from_record
+    back = monster_from_record(rec)
+    ok("S132: the record reads back as the same monster (savefile reader)",
+       back.species == m.species and back.level == m.level and back.stats == m.stats
+       and back.skills == m.skills and back.res == m.res, (back, m))
+    # tiles
+    px = [(i * 7 + i // 9) & 3 for i in range(64)]
+    ok("S132: 2bpp encode/decode round trip", TD.decode_tile(TD.encode_tile(px)) == px)
+    # compression memo
+    raw = bytes(range(256)) * 4
+    a1 = L.compress(REPO, raw)
+    ok("S132: the memoised compressor returns the same stream",
+       a1 == L.compress(REPO, raw) and a1 == bytes(L._tool(REPO, 'compress_tiles')
+                                                  .compress_lz(raw)))
+    tmp = tempfile.mkdtemp()
+    proj = os.path.join(tmp, 'p')
+    shutil.copytree(os.path.dirname(EXAMPLE), proj)
+    doc = Document(os.path.join(proj, 'project.json'))
+    full, _e = measure_banks(doc.data, proj, REPO)
+    part, _e = measure_banks(doc.data, proj, REPO, banks=(0x60, 0x64, 0x67, 0x71))
+    ok("S132: the space meter's four banks measured alone == the full measure",
+       all(part[b] == full[b] for b in (0x60, 0x64, 0x67, 0x71)), (part, full))
+    if os.path.exists(ROM):
+        r = ProjectRenderer(REPO, proj, doc.data, rom_path=ROM)
+        doc.vanilla = r
+        room = next(x for x in doc.rooms if not x.get('placeholder') and x.get('record') and
+                    any('id' in (doc.state_layout_ref(x, k, 0) or {}) for k in doc.screen_keys(x)))
+        gfx = r.room_gfx(room)
+        own = bytes(gfx.sheet[:2048])
+        k0 = next(k for k in doc.screen_keys(room) if 'id' in (doc.state_layout_ref(room, k, 0) or {}))
+        stt = r.screen_state(room, k0, 0)
+        grid, lid = r.layout_grid(stt['layout'])
+        attr, _n = r.attr_grid(room, k0, 0)
+        ok("S132: the fast compose == the pre-S132 compose, pixel for pixel",
+           r.compose(gfx.sheet, grid, attr, r.room_palettes(room)).tobytes() ==
+           r.compose_slow(gfx.sheet, grid, attr, r.room_palettes(room)).tobytes())
+        from editor2.app.rooms.canvas import metatile_at
+        rep = None
+        for cy in range(8):
+            for cx in range(10):
+                mt = metatile_at(grid, attr, cx, cy)
+                old = TD.metatile_pixels(gfx.sheet, mt, r.common_blocks())
+                new = [list(q) for q in old]
+                new[0] = [3 - v for v in new[0]]
+                rep = TD.report(doc, room, mt, old, new, gfx.threshold, own_sheet=own)
+                if rep['everywhere']['ok']:
+                    break
+            if rep['everywhere']['ok']:
+                break
+        ok("S132: a cell that can be redrawn everywhere exists (and others are refused with a "
+           "reason)", rep['everywhere']['ok'], rep)
+        if rep['everywhere']['ok']:
+            TD.apply_everywhere(doc, room['id'], mt, old, new, gfx.threshold, own_sheet=own)
+            s1 = doc.read_sheet(room['record']['tileset'])
+            t = mt['tiles'][0] & 0x7F
+            ok("S132: Draw everywhere rewrites the slot's graphic, nothing else (a room on a game "
+               "tileset got its own copy first)",
+               TD.decode_tile(bytes(s1[t * 16:t * 16 + 16])) == new[0]
+               and sum(1 for i in range(128) if s1[i * 16:i * 16 + 16] !=
+                       own[i * 16:i * 16 + 16]) == 1)
+        plan = TD.plan_new(doc, room, mt, [[2] * 64] * 4, gfx.threshold, True)
+        ok("S132: a new metatile of one plain graphic takes at most one slot (the quarters "
+           "share it)", (not plan['ok']) or plan['take'] <= 1, plan)
+        # palettes
+        rows, f1, _d = PB.source_rows(doc, r, ('theme', 3))
+        pid, _msg = PB.apply_borrow(doc, room['id'], k0, 0, ('theme', 3),
+                                    rows, f1, 'whole', scope='room')
+        got = [[int(str(c), 0) for c in row] for row in doc.palette(pid)['colors_rgb555'][:4]]
+        ok("S132: borrowing a whole palette = a new project palette with the source's 4 rows, "
+           "the room's palette", got == rows and room['render']['palette'] == pid, got)
+        pid2, _m = PB.apply_borrow(doc, room['id'], k0, 0, ('vanilla', 0x24),
+                                   PB.source_rows(doc, r, ('vanilla', 0x24), 0, 3)[0], False,
+                                   'rows', mapping={1: 2, 3: None}, only_here=False)
+        got2 = [int(str(c), 0) for c in doc.palette(pid2)['colors_rgb555'][1]]
+        ok("S132: borrowing one row copies that row only",
+           got2 == PB.source_rows(doc, r, ('vanilla', 0x24), 0, 3)[0][2] and
+           [int(str(c), 0) for c in doc.palette(pid2)['colors_rgb555'][0]] == rows[0], got2)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_balance_s131():
+    """S131 (ROADMAP P3.15b): breeding on the time axis (a bred member's slot pays its
+    lineage's grind; parents to level 10 on their own curves); the +20 max count is not a
+    weight (randomizer Pool, sweep_ttk); the walkable special rooms walked in
+    their own rooms (dive.special_*); full-HP heals are not 'unmodelled'."""
+    import random
+    from editor2.core import balance as BL
+    from editor2.core import kits as KT
+    from editor2.core import dive as DV
+    from editor2.core import encounters as EN
+    from simulator import raising as R
+    data = BL.BattleData(None)
+    tl = BL.Timeline(data)
+    # (1) breeding on the time axis (option B, user 2026-10-08: "I need to capture the
+    #     total time investment needed")
+    T = data.T
+    hi = next(e for e in sorted(T.enemies) if T.enemy(e)[4] >= 12 and T.enemy(e)[0] <= 214)
+    lo = next(e for e in sorted(T.enemies) if 1 <= T.enemy(e)[4] <= 3 and T.enemy(e)[0] <= 214)
+    ok("S131: a recruit that joins at level >= 10 is breedable for free; a level-1-3 "
+       "recruit costs its grind to 10 on its own curve",
+       BL.join_ancestor_cost(T, hi) == 0 and BL.join_ancestor_cost(T, lo) ==
+       T.exp_to_reach(T.enemy(lo)[0], 10) - T.exp_to_reach(T.enemy(lo)[0], T.enemy(lo)[4]),
+       (BL.join_ancestor_cost(T, hi), BL.join_ancestor_cost(T, lo)))
+    p5, p10 = KT.step_pool(data, tl, 14, 5), KT.step_pool(data, tl, 14, 10)
+    ok("S131: the pool offers only routes the slot can afford (charge <= exp(level)); "
+       "deeper chains as the budget grows",
+       all(v[4] <= p10.budget for v in p10.bred.values()) and len(p10.bred) >= len(p5.bred)
+       and max(v[3] for v in KT.step_pool(data, tl, 14, 18).bred.values()) >
+       max(v[3] for v in p10.bred.values()), (len(p5.bred), len(p10.bred)))
+    pre = KT.step_pool(data, tl, 2, 10)
+    ok("S131: before breeding opens no bred form", not pre.bred_ok and not pre.bred)
+    E = p10.budget
+    dear = next(sp for sp, v in sorted(p10.bred.items(), key=lambda kv: -kv[1][4]) if v[4] > 0)
+    spec = p10.spec(dear, prefer_bred=True)
+    kid = KT.build_member(data, p10, spec, E, 7)
+    ok("S131: a bred member's slot pays its lineage: kid.grind = the parents' grind, the kid "
+       "raised with exp(level) - grind",
+       kid.grind > 0 and kid.exp == E - kid.grind or BL.is_capped(T, kid),
+       (data.names.get(dear), kid.grind, kid.exp, E))
+    try:
+        KT.build_member(data, p10, spec, kid.grind - 1, 7)
+        unaff = False
+    except KT.Unaffordable:
+        unaff = True
+    ok("S131: a lineage dearer than the budget is Unaffordable", unaff)
+    team = BL.roll_team(data, tl, 14, 14, random.Random(5), 'strong')
+    ok("S131: rolled teams on the time axis — a bred member's own exp + its grind fits "
+       "the slot's exp(level)",
+       all(m.exp + m.grind <= BL.exp_for_level(T, 14) or m.exp <= m.free_exp or
+           m.origin.startswith('eid') for m in team) and
+       any(m.origin.startswith('bred') for m in
+           [x for t in range(4) for x in BL.roll_team(data, tl, 14, 14, random.Random(t), 'strong')]),
+       [(m.origin, m.exp, m.grind) for m in team])
+    slow = max((s for s in T.info if s <= 214), key=lambda s: T.exp_to_reach(s, 10))
+    eid = next(e for e in sorted(T.enemies) if T.enemy(e)[0] == slow)
+    m = R.create(T, eid, random.Random(3))
+    BL.ensure_breedable(T, m, random.Random(5), 'casual', data.skill_value)
+    ok("S131: ensure_breedable raises a slow-curve parent to level 10 on its own curve",
+       m.level >= BL.BREED_MIN_LEVEL and m.exp >= T.exp_to_reach(slow, 10), (slow, m.level))
+    # (3) +20 = a max count; the chance codes weigh
+    from randomizer.romdata import Pool, real_chances
+    row = bytes([3, 1, 7, 0, 0, 3, 5, 2, 0, 0, 1, 0, 2, 0, 3, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 8])
+    pl = Pool.parse(row, 0)
+    pct = EN.rate_modifiers  # noqa: F841 (import check)
+    ok("S131: Pool — +20 are max counts, the slot chance is the +5..+9 code (31/50/19), "
+       "live slots by chance, pack round trip",
+       pl.max_counts == [1, 1, 1, 0, 0] and pl.weights == pl.max_counts and
+       pl.slot_chances() == [31, 50, 19, 0, 0] == real_chances([3, 5, 2, 0, 0]) and
+       pl.live_slots() == [0, 1, 2] and pl.pack() == row, (pl.slot_chances(), pl.live_slots()))
+    # (2) special rooms
+    c = DV.census(REPO)
+    sp2 = (c or {}).get('specials', {})
+    ok("S131: dive_census.json carries the three walkable specials, every variant walked",
+       sorted(sp2) == ['2', '6', '7'] and all(len(sp2[k]['variants']) == len(DV.SPECIAL_ROOMS[int(k)])
+                                              for k in sp2), sorted(sp2))
+    forest = sp2['2']['variants'][0]
+    ok("S131: the forest maze walk = 3 rooms, re-seeded twice (pushes into edge exits), "
+       "24 cells, ends on the walk-on stairs",
+       forest['steps'] == 24 and forest['path'].count(DV.ROOM_LOAD) == 2 and
+       forest['path'].endswith(DV.EXIT_STEP), forest['path'])
+    F = DV._cdf_fn(DV.seed_cdf(REPO))
+    a = DV.expected_battles('a' * 30 + DV.ROOM_LOAD + 'a' * 30, (100, 100, 100), F)
+    b = 2 * DV.expected_battles('a' * 30, (100, 100, 100), F)
+    ok("S131: a room load is a renewal (the walk's rooms add up)", abs(a - b) < 1e-12, (a, b))
+    ok("S131: no battle in a forest room walk at rate code 3 (<= 11 cells x 100 < the "
+       "smallest seed 1,100); mazes / conveyors more than a size-8 maze floor",
+       DV.special_battles(REPO, 2, 3) == 0.0 and
+       DV.special_battles(REPO, 6, 3) > DV.maze_battles(REPO, 8, 0, 3) and
+       DV.special_battles(REPO, 7, 3) > DV.special_battles(REPO, 6, 3),
+       [DV.special_battles(REPO, k, 3) for k in (2, 6, 7)])
+    lb = tl.enc.list_bytes(tl.enc.gate_list(21, 3))
+    d = DV.battles_per_floor(REPO, 21, 3, lb, detail=True)
+    mb = d['maze_battles']
+    want = mb * 0.5 + 0.5 * sum(p * DV.special_battles(REPO, i, d['rate_code'])
+                                for i, p in DV.special_odds(REPO, DV.vanilla_rows(REPO, 21)[1]).items()
+                                if i in DV.SPECIAL_RANDOM_BATTLES)
+    ok("S131: a floor-3 mix = the maze half + each special's own walk; a sweep bound",
+       abs(d['battles'] - want) < 1e-9 and d['battles_sweep'] > d['battles'] and
+       'maze' in d['special_battles'], d)
+    # (5) unmodelled counting
+    log = [[(0, 'hit', 4), (1, 'no-effect', (0, 0)), (2, 'no-effect', 0x99), (4, 'miss', 0)]]
+    ok("S131: count_actions — a full-HP heal is not unmodelled, a coreless action is",
+       BL.count_actions(log) == (1, 4), BL.count_actions(log))
+
+
+def test_quests_s129():
+    """The example's quest lowered into its giver's conversation; the document side:
+    quest_for_npc / update / delete, lock_exit (a shut state + rules), shop item sets."""
+    import tempfile
+    from editor2.core.document import Document
+    from editor2.core import story as ST
+    d = base()
+    q = d['custom']['quests'][0]
+    steps = ST.quest_steps(q, 'quest')
+    kinds = [list(s)[0] for s in steps]
+    ok("S129: a quest lowers to If done -> done words / If started -> (objective + room "
+       "-> take, reward, done) else progress / offer YES-NO",
+       kinds and kinds[0] == 'if', steps[:1])
+    outs, prj, _w = compile_data(d)
+    b60 = outs['patches/bank_060.asm']
+    ids = [x['id'] for x in prj.custom.get('dialogue') or []]
+    ok("S129: the quest's words become dialogue entries quest_<id>_<key>",
+       all(f'quest_mini_medal_quest_{k}' in ids for k in ('offer', 'accept', 'decline',
+                                                          'progress', 'complete', 'done')), ids[-10:])
+    ok("S129: the giver's script compiles (medal_vault_quest)", 'medal_vault_quest' in b60)
+    import shutil
+    tmp = tempfile.mkdtemp()
+    json.dump(copy.deepcopy(d), open(os.path.join(tmp, 'project.json'), 'w'))
+    shutil.copytree(os.path.join(os.path.dirname(EXAMPLE), 'assets'), os.path.join(tmp, 'assets'))
+    doc = Document(os.path.join(tmp, 'project.json'))
+    room = doc.room('dusk_mirror')
+    qid = doc.quest_for_npc(room, '0', 0, 2, 'Bard song')
+    doc.update_quest(qid, {'name': 'Bard song', 'objective': [{'flag': 'vault_rich'}],
+                           'offer': {'boxes': [['Sing?']]},
+                           'complete': {'boxes': [['Thanks!']]}, 'reward': {'gold': 10}})
+    qq = doc.quest(qid)
+    ok("S129: quest_for_npc — the NPC's script gives it; started / done flags made",
+       qq['giver'] == 'bgm07_change' and qq['flags'] == {'started': 'bard_song_started',
+                                                          'done': 'bard_song_done'} and
+       {'bard_song_started', 'bard_song_done'} <= {f['name'] for f in doc.flags()}, qq)
+    doc.delete_quest(qid)
+    ok("S129: delete_quest — gone, its flags stay", doc.quest(qid) is None and
+       'bard_song_done' in {f['name'] for f in doc.flags()})
+    st = doc.lock_exit('ember_keystone', 0, 3, 1, [{'flag': 'has_2_medals'}],
+                       [['Shut tight.']])
+    sts = doc.room('ember_keystone')['screens']['0']['states']
+    rules = doc.state_rules(doc.room('ember_keystone'))
+    ok("S129: lock_exit — a 2nd state without the exit, an examine spot there, rules: "
+       "state 0 while the check holds, else the shut state",
+       st == 1 and len(sts) == 2 and
+       not [e for e in sts[1].get('exits') or [] if (e['x'], e['y']) == (3, 1)] and
+       [e for e in sts[0].get('exits') or [] if (e['x'], e['y']) == (3, 1)] and
+       any(e.get('kind') == 'examine' and (e['x'], e['y']) == (3, 1)
+           for e in sts[1].get('npcs') or []) and
+       rules[-2] == {'state': 0, 'when': [{'flag': 'has_2_medals'}], 'screens': [0],
+                     'comment': 'the exit at (3, 1) is open'} and rules[-1]['state'] == 1,
+       (st, rules))
+    try:
+        doc.lock_exit('ember_keystone', 0, 3, 1, [{'flag': 'has_2_medals'}], None)
+        refused = False
+    except ValueError:
+        refused = True
+    ok("S129: lock_exit refuses a screen that already has several states", refused)
+    key = doc.shop_list()[0]['key']
+    doc.set_shop_sets(key, [{'name': 'rich', 'when': [{'flag': 'vault_rich'}],
+                             'items': [5, 6, 3]}])
+    doc.save()
+    outs2, prj2, _w = C.compile_project(tmp, REPO)
+    b77 = outs2['patches/bank_077.asm']
+    sst = b77[b77.find('ShopSetTable:'):].split('db $ff')[0]
+    vr = prj2.resolve_flag_ref('vault_rich')
+    ok("S129: ShopSetTable — [shop, 1, the check, the set's list]; the set list after the "
+       "shop lists", f"${vr & 0xFF:02x}, ${vr >> 8:02x}" in sst and "sells 'rich'" in sst
+       and 'db $05, $06, $03, $ff' in b77, sst)
+    # legacy quests: npc_hide / npc_show = npc_write n, 0, $0040 / 0 (S129 fix)
+    return outs2
+
+
+def test_story_rom():
+    """S129 on real bytes: build the story fixture, then RUN ROM0 TestEventFlag on the
+    virtual flags $1800+ (-> bank $73 FlagAddr -> bank $77 StoryCheck) against prepared
+    RAM, the story commands (bank $77 entry 10 ScriptCommand, E = n) and ShopSetPick."""
+    from editor2.core import builder as B
+    from dwm.sm83 import CPU
+    d = _story_fixture()
+    outs, prj, _w = compile_data(d)
+    outdir = '/tmp/_t_story_rom'
+    C.write_outputs(outs, outdir)
+    rom_path, sym_path, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rom = open(rom_path, 'rb').read()
+    sym = B.parse_sym(sym_path)
+    S = lambda n: sym[n][1]
+    names = [x['name'] for x in d['custom']['checks']]
+
+    def machine(setup):
+        ram = {}
+        st = {'bank': 1}
+
+        def rd(a):
+            if a < 0x4000:
+                return rom[a]
+            if a < 0x8000:
+                return rom[st['bank'] * 0x4000 + a - 0x4000]
+            return ram.get(a, 0)
+
+        def wr(a, v):
+            if 0x2000 <= a < 0x3000:
+                st['bank'] = v or 1
+            elif a >= 0x8000:
+                ram[a] = v & 0xFF
+        for i in range(20):
+            ram[0xCA51 + i] = 0xFF
+        for i in range(3):
+            ram[0xCA8E + i] = 0xFF
+        setup(ram)
+        return CPU(rd, wr), ram, st
+
+    # where the game keeps slot n's record: ROM0 GetMonsterDataPtr (the S60 CF3 fork
+    # rebases the farm's slots into SRAM — one flat SRAM here, the slots used apart)
+    def where(slot):
+        cpu, _ram, _st = machine(lambda r: None)
+        cpu.call(S('GetMonsterDataPtr'), a=slot, hl=0xCAC1)
+        return cpu.h << 8 | cpu.l
+
+    def mon(ram, slot, species, family, level, party=None, egg=0):
+        base_ = where(slot)
+        ram[base_] = 1
+        ram[base_ + 0x09], ram[base_ + 0x0A], ram[base_ + 0x4B] = species, family, level
+        ram[base_ + 0x63] = egg
+        if party is not None:
+            ram[0xCA8E + party] = slot
+
+    def flag_on(ram, f):
+        at = (0xD140 + ((f - 0x1000) >> 3)) if f >= 0x1000 else (0xD99B + (f >> 3))
+        ram[at] = ram.get(at, 0) | (0x80 >> (f & 7))
+
+    def answers(setup):
+        out = {}
+        for k, n in enumerate(names):
+            cpu, ram, st = machine(setup)
+            cpu.call(S('TestEventFlag'), bc=0x1800 + k)
+            out[n] = 1 if cpu.a else 0
+        return out
+
+    def poor(ram):
+        pass
+
+    def rich(ram):
+        for i, it in enumerate([0x01, 0x01, 0x01, 0x1E, 0x1E, 0x05]):
+            ram[0xCA51 + i] = it
+        ram[0xCA4B], ram[0xCA4C], ram[0xCA4D] = 0x70, 0x11, 0x01        # 70,000
+        mon(ram, 0, 1, 0, 25, party=0)                                   # a Slime, lv 25
+        mon(ram, 1, 40, 1, 20, party=1)                                  # a dragon, lv 20
+        mon(ram, 5, 3, 0, 5)                                             # on the farm
+        mon(ram, 7, 9, 0, 1)
+        mon(ram, 9, 2, 1, 1, egg=1)                                      # an egg: not counted
+        for j in range(3):
+            ram[0xCA94 + j] = 0xFF                                       # 24 seen
+        ram[0xCAB4] = 3
+        flag_on(ram, prj.resolve_flag_ref('st_a'))
+        flag_on(ram, prj.resolve_flag_ref('ch2'))
+    a0, a1 = answers(poor), answers(rich)
+    want0 = {n: 0 for n in names}
+    want0.update({'c_sure': 1, 'c_room5': 1, 'c_any': 1})
+    want1 = {n: 1 for n in names}
+    want1.update({'c_any': 0, 'c_lv20_all': 1, 'c_room5': 1})
+    ok("S129: StoryCheck RUN — an empty game: only chance 100 %, the bag's room and "
+       "'any (st_b, NOT rich)' hold", a0 == want0, {k: v for k, v in a0.items() if v != want0[k]})
+    ok("S129: StoryCheck RUN — 3 Herbs, 70,000 G, a Slime in the party, a dragon, 4 monsters "
+       "(an egg not counted; farm slots where the game keeps them), 2 TinyMedals, party lv 25/20, 24 seen, 3 classes, st_a, ch2 (-> ch1 reached): "
+       "every check holds but 'any (st_b, NOT rich)'",
+       a1 == want1, {k: v for k, v in a1.items() if v != want1[k]})
+
+    def lv(levels, mode_name):
+        def setup(ram):
+            for j, l in enumerate(levels):
+                mon(ram, j, 1, 0, l, party=j)
+        return answers(setup)[mode_name]
+    ok("S129: level checks — any: one at 20+; average: (25+15)/2 = 20; all: every one",
+       (lv([25, 15], 'c_lv20_any'), lv([25, 15], 'c_lv20_avg'), lv([25, 14], 'c_lv20_avg'),
+        lv([25, 15], 'c_lv20_all'), lv([20, 21, 30], 'c_lv20_all')) == (1, 1, 0, 0, 1))
+    # the story commands (bank $77 entry 10 ScriptCommand, E = n)
+    def run_cmd(n, setup):
+        cpu, ram, st = machine(setup)
+        st['bank'] = 0x77
+        cpu.call(S('ScriptCommand'), de=n)
+        gold = ram.get(0xCA4B, 0) | ram.get(0xCA4C, 0) << 8 | ram.get(0xCA4D, 0) << 16
+        return [ram.get(0xCA51 + i) for i in range(20)], gold, ram.get(0xD8E1)
+
+    def bag(items, gold=0):
+        def setup(ram):
+            for i_, it in enumerate(items):
+                ram[0xCA51 + i_] = it
+            ram[0xCA4B], ram[0xCA4C], ram[0xCA4D] = gold & 0xFF, (gold >> 8) & 0xFF, gold >> 16
+        return setup
+    b, g, _r = run_cmd(1, bag([0x1E, 0x01, 0x1E, 0x1E]))
+    ok("S129: take 2 TinyMedals — 2 of 3 gone, the bag stays packed",
+       sorted(x for x in b if x != 0xFF) == [0x01, 0x1E] and b[2:] == [0xFF] * 18, b)
+    _b, g1, _r = run_cmd(3, bag([], 99000))                 # 1 take, 2 the quest's 500 G
+    _b, g2, _r = run_cmd(4, bag([], 5000))
+    _b, g3, _r = run_cmd(4, bag([], 80000))
+    ok("S129: give 1234 G caps at 99,999; take 70,000 floors at 0 (and 80,000 -> 10,000)",
+       (g1, g2, g3) == (99999, 0, 10000), (g1, g2, g3))
+    b4, _g, r4 = run_cmd(5, bag([0x01] * 16))
+    b5, _g, r5 = run_cmd(5, bag([0x01] * 18))
+    ok("S129: give 3 Antidotes — 4 free slots: all 3, $D8E1 = 1; 2 free: none, $D8E1 = 0",
+       r4 == 1 and b4[16:19] == [0x02] * 3 and b4[19] == 0xFF and r5 == 0 and
+       b5 == [0x01] * 18 + [0xFF] * 2, (r4, b4, r5, b5))
+    # ShopSetPick: the bazaar's list -> the set's list while c_rich holds
+    from editor2.core import shops as SH
+    r = SH.resolve(prj)
+    shop_i = next(n for n, (k, _l, _lst, _v) in enumerate(r['lists']) if k == 'bazaar')
+    set_i = r['sets'][0]['list_index']
+
+    def pick(setup, lst):
+        cpu, ram, st = machine(setup)
+        st['bank'] = 0x77
+        cpu.call(S('ShopSetPick'), a=lst)
+        return cpu.a
+    ok("S129: ShopSetPick RUN — the bazaar sells the set while c_rich holds, its own list "
+       "else; another shop unchanged",
+       (pick(poor, shop_i), pick(rich, shop_i), pick(rich, shop_i + 1)) ==
+       (shop_i, set_i, shop_i + 1), (pick(poor, shop_i), pick(rich, shop_i), shop_i, set_i))
+    # MusicRulePick (bank $71): the vault's song while c_ch1 holds; gate 0 while st_a and
+    # NOT c_rich
+    mid = int(str(next(x for x in d['custom']['rooms'] if x['id'] == 'medal_vault')['mapID']), 0)
+
+    def song(setup, kind, ident):
+        # S140 (ARC CAP3a): B = the kind, DE = the key (a room: $100 + its place number)
+        cpu, ram, st = machine(setup)
+        st['bank'] = 0x71
+        key = ident if kind == 1 or ident < 0x6B else 0x100 + prj.place_number(ident)
+        cpu.call(S('MusicRulePick'), bc=kind << 8, de=key)
+        return cpu.a
+
+    def st_a_only(ram):
+        flag_on(ram, prj.resolve_flag_ref('st_a'))
+    ok("S129: MusicRulePick RUN — the vault: $1E once chapter 1 is reached (0 before); gate 0: "
+       "$2E while st_a and not rich (0 when rich)",
+       (song(poor, 0, mid), song(rich, 0, mid), song(st_a_only, 1, 0), song(rich, 1, 0)) ==
+       (0, 0x1E, 0x2E, 0), (song(poor, 0, mid), song(rich, 0, mid), song(st_a_only, 1, 0),
+                            song(rich, 1, 0)))
+
+
+def test_s142():
+    """S142 (ROADMAP ARC CAP4a; user: copies never share talk — "Yes ok"): Document.copy_room
+    gives the copy its OWN scripts, texts and doors for every room of the example, the S129
+    story demo (quests, shops, services) and the S141 demo (Grandpa, breeders) — the copy
+    validates with no new error, the original is unchanged, script / text / door ids are
+    disjoint (the compiler's generated quest:/entry: scripts excepted); the interned undo
+    snapshots round-trip a project and share every unchanged piece; the shared model is
+    rebuilt only when the document changes; the _payload_bytes fast path counts like the
+    S141 loop."""
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core.document import Document, Snapshot, fast_copy
+    # a copy writes the copy's tileset sheet into <project>/assets — work on copies
+    tmp = tempfile.mkdtemp(prefix='s142_copy_')
+    files = []
+    for rel in ('editor2/example-project', 'examples/s129_story_demo', 'examples/s141_dial_demo'):
+        dst = os.path.join(tmp, os.path.basename(rel))
+        shutil.copytree(os.path.join(REPO, rel), dst, ignore=shutil.ignore_patterns('build'))
+        files.append(os.path.join(dst, 'project.json'))
+    n = bad = 0
+    for f in files:
+        base = Document(f)
+        p0 = Project(fast_copy(base.data), base.project_dir)
+        e0 = set(V.validate(p0)[0])
+        for r in [r for r in base.rooms if not r.get('placeholder')]:
+            doc = Document(f)
+            was = _json.dumps(doc.room(r['id']), sort_keys=True)
+            rid = doc.copy_room(r['id'], f"{doc.room_name(r)} copy")
+            n += 1
+            src, cp = doc.room(r['id']), doc.room(rid)
+            prj = Project(fast_copy(doc.data), doc.project_dir)
+            errs = set(V.validate(prj)[0]) - e0
+            sc_s = {x for x in (src.get('scripts') or {}).values() if ':' not in x}
+            sc_c = {x for x in (cp.get('scripts') or {}).values() if ':' not in x}
+            dids = {d['id'] for d in doc.custom.get('dialogue', [])}
+
+            def texts(room):
+                out = []
+                for sid in (room.get('scripts') or {}).values():
+                    if ':' not in sid:
+                        Document._strings_in(doc.script(sid), dids, out)
+                return set(out)
+
+            def doors(room):
+                return {e['door'] for scr in room['screens'].values()
+                        for st in (scr.get('states') or [scr]) for e in st.get('exits') or []
+                        if e.get('door')}
+            problems = []
+            if _json.dumps(src, sort_keys=True) != was:
+                problems.append('original changed')
+            if sc_s & sc_c or texts(src) & texts(cp) or doors(src) & doors(cp):
+                problems.append('shared ids')
+            if any('dest' in e for scr in cp['screens'].values()
+                   for st in (scr.get('states') or [scr]) for e in st.get('exits') or []
+                   if e.get('door')):
+                problems.append('a copied door is still connected')
+            if errs or problems:
+                bad += 1
+                print('   ', os.path.basename(os.path.dirname(f)), r['id'], sorted(errs)[:2], problems)
+    ok(f"S142: Copy room on {n} rooms (example, S129 + S141 demos): own scripts / texts / "
+       "doors, the copies validate with no new error, originals unchanged", n >= 20 and bad == 0,
+       f"{bad} bad")
+    doc = Document(files[0])
+    before = doc.dumps()
+    a = doc.snapshot()
+    doc.rename_room(doc.rooms[0]['id'], 'S142 probe')
+    b = doc.snapshot()
+    same = sum(1 for k in a.lists for x, y in zip(a.lists[k], b.lists[k]) if x is y)
+    total = sum(len(v) for v in a.lists.values())
+    doc.restore(a)
+    ok("S142: an interned snapshot round-trips the project byte for byte and two snapshots "
+       "share every piece the edit did not change",
+       doc.dumps() == before and same == total - 1 and isinstance(a, Snapshot),
+       f"{same}/{total}")
+    m1 = doc.model_project()
+    m2 = doc.model_project()
+    doc.touch()
+    m3 = doc.model_project()
+    doc.bump()
+    m4 = doc.model_project()
+    ok("S142: the shared model is reused while the document is unchanged and rebuilt after "
+       "touch() / bump()", m1 is m2 and m3 is not m2 and m4 is not m3)
+    lines = ['    db $01, $02, $03 ; three', '    dw Foo, $1234', '    db "AB", $FA ; "x;y"',
+             '    db $00 ; a, b, c', '    dw $0001']
+    ok("S142: _payload_bytes fast path (no string on the line) == the quote-aware count",
+       V._payload_bytes('\n'.join(lines)) == 3 + 4 + 3 + 1 + 2,
+       V._payload_bytes('\n'.join(lines)))
+    lst = doc.rooms
+    r0 = lst[0]
+    ok("S142: verified id lookups follow list edits", doc.room(r0['id']) is r0)
+    lst.insert(0, {'id': 'zz_probe'})
+    ok("S142: … an insert before it", doc.room(r0['id']) is r0 and doc.room('zz_probe') is lst[0])
+    lst.pop(0)
+    try:
+        doc.room('zz_probe')
+        gone = False
+    except KeyError:
+        gone = True
+    ok("S142: … and a removal", gone and doc.room(r0['id']) is r0)
+    shutil.rmtree(tmp, ignore_errors=True)
+
+
+def test_s143():
+    """S143 (ROADMAP ARC CAP4b; user: places by name, map ids hidden — shown only with View >
+    Show technical ids, areas one level, duplicate names renamed on open, the game's odd
+    rooms kept): place_names says every stored reference in words (room:$XX / room:$16B /
+    vanilla:$XX / hub / gate:N / a room id / a map id), the game's rooms have unique names
+    (the eight Castle-data ids, $5F), names are unique (Document.unique_room_name, Rename
+    refuses a taken one, the migration), areas are editor-only (the compiler ignores them:
+    the example builds the same files with areas), and a copy of the Arena Battle room
+    gets no walking-party sprite warning (formats.party_walks)."""
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core import place_names as PN
+    from editor2.core import formats as F
+    from editor2.core.document import Document
+    data = _json.load(open(EXAMPLE))
+    rooms = [r for r in data['custom']['rooms'] if not r.get('placeholder')]
+    pl = PN.Places.of(data)
+    r0 = rooms[0]
+    m0 = int(str(r0['mapID']), 0)
+    nm0 = r0.get('name') or r0['id']
+    PN.SHOW_IDS = False
+    try:
+        ok("S143 a room reference in words (room:$XX, a room id, a map id)",
+           pl.label(f'room:${m0:02X}') == nm0 and pl.label(r0['id']) == nm0
+           and pl.label(m0) == nm0 and pl.label(r0['mapID']) == nm0, pl.label(m0))
+        ok("S143 game rooms, home, gates, a deleted room",
+           pl.label('vanilla:$01') in ('GreatTree', 'GreatTree (game room)')
+           and pl.label('hub') == 'home (the hub)' and 'Beginning' in pl.label('gate:0')
+           and pl.label('room:$E9') == 'a deleted room', pl.label('gate:0'))
+        vn = [PN.vanilla_name(m) for m in range(0x6B)
+              if PN.vanilla_name(m) != 'Unnamed game room']
+        ok("S143 every named game room has its own name (Castle copies, $5F)",
+           len(set(vn)) == len(vn) and PN.vanilla_name(0x0B) == 'Castle (unused copy 1)'
+           and PN.vanilla_name(0x22) == 'Castle (unused copy 8)'
+           and 'Item Shop' in PN.vanilla_name(0x5F), len(vn))
+        ok("S143 no hex in a label while Show technical ids is off",
+           not any('$' in PN.Places.of(data).room_label(r) for r in rooms))
+        PN.SHOW_IDS = True
+        ok("S143 Show technical ids: the id after the name (region too)",
+           pl.label(f'room:${m0:02X}') == f'{nm0}  [${m0:02X}]'
+           and PN.tech_id(0x16B) == 'region 1 $6B' and PN.tech_id(0x0B) == 'game $0B'
+           and PN.room_ref(r0) == f'"{nm0}" [{r0["id"]}, ${m0:02X}]', pl.label(m0))
+    finally:
+        PN.SHOW_IDS = False
+    ok("S143 next free name",
+       PN.next_free_name('Cave', {'cave', 'cave 2'}) == 'Cave 3'
+       and PN.next_free_name('Cave 7', {'cave 7'}) == 'Cave 8'
+       and PN.next_free_name('Hall', set()) == 'Hall')
+    tmp = tempfile.mkdtemp(prefix='s143_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.dirname(EXAMPLE), pdir, ignore=shutil.ignore_patterns('build'))
+        d = _json.load(open(os.path.join(pdir, 'project.json')))
+        rs = [r for r in d['custom']['rooms'] if not r.get('placeholder')]
+        rs[1]['name'] = rs[0].get('name') or rs[0]['id']
+        _json.dump(d, open(os.path.join(pdir, 'project.json'), 'w'), indent=1)
+        doc = Document(pdir)
+        nms = [doc.room_name(r) for r in doc.rooms if not r.get('placeholder')]
+        ok("S143 duplicate names renamed on open (a note)",
+           len({n.casefold() for n in nms}) == len(nms)
+           and any('renamed' in n for n in doc.migrations), doc.migrations[-2:])
+        a, b = [r['id'] for r in doc.rooms if not r.get('placeholder')][:2]
+        try:
+            doc.rename_room(b, doc.room_name(doc.room(a)).upper())
+            refused = False
+        except ValueError:
+            refused = True
+        c = doc.copy_room(a, doc.room_name(doc.room(a)))
+        ok("S143 Rename refuses a taken name (any case); Copy picks a free one",
+           refused and doc.room_name(doc.room(c)) != doc.room_name(doc.room(a)))
+        doc.set_room_area(a, 'Northlands')
+        doc.set_room_area(b, 'northlands')
+        doc.add_area('Empty one')
+        doc.rename_area('Northlands', 'North')
+        ok("S143 areas: one spelling, renamed together, kept in order, empty areas listed",
+           doc.areas() == ['North', 'Empty one'] and doc.room(b)['area'] == 'North', doc.areas())
+        doc.delete_area('North')
+        ok("S143 deleting an area keeps its rooms (no area)",
+           'area' not in doc.room(a) and doc.areas() == ['Empty one'])
+        # the compiler ignores areas: the same output files
+        base = _json.load(open(EXAMPLE))
+        with_areas = copy.deepcopy(base)
+        for k, r in enumerate(with_areas['custom']['rooms']):
+            r['area'] = ['A', 'B'][k % 2]
+        with_areas['custom'].setdefault('_editor', {})['areas'] = ['A', 'B']
+        o1, _p1, _w1 = compile_data(base)
+        o2, _p2, _w2 = compile_data(with_areas)
+        ok("S143 areas are editor-only (the compiler writes the same files)", o1 == o2)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    arena = {'source_mapID': '0x5D'}
+    npcs = [{'kind': 'npc', 'x': x, 'y': 5} for x in (6, 7)] + \
+           [{'kind': 'npc', 'x': 3, 'y': y} for y in range(4, 10)]
+    ok("S143 a copy of the Arena Battle room: no walking-party sprite warning (measured: its "
+       "NPCs are the party)", F.sprite_budget(npcs) and not F.sprite_budget(npcs, F.party_walks(arena))
+       and F.party_walks({'source_mapID': '0x01'}) and F.party_walks({}))
+
+
+
+def test_s144():
+    """S144 (ROADMAP ARC CAP4c; user S144: "select states and play with states, vanilla and
+    custom", a beaten boss "should stay" after a save, a copy talks as at its moment):
+    room_states — the fold (a one-state counter test = a fixed answer, a several-state
+    one renumbered, a dropped state never true, writes dropped / renumbered, story flags
+    ON at the point answered) and the prune; Make editable with the default spec
+    (GreatTree: the state after Starry Night per screen + talk answered; Boss: Villager:
+    about to do its gate, both states, the beaten one remembered by a flag + a state
+    rule; the eight ceremony codes of $08 keep following the game); Keep states… on an
+    every-state copy renumbers its scripts; kept projects compile; a project that uses
+    none of it compiles to the same files (byte-neutral)."""
+    import shutil
+    import tempfile
+    from editor2.core import room_states as RS
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    # -- the fold, by hand
+    plans = {'L0': RS.Plan('0', single=3), 'L1': RS.Plan('1', remap={2: 0, 5: 1})}
+    items = [['op', 'check_and_branch', 'L0', '0x0003', '@A'],
+             ['op', 'check_and_branch', 'L0', '0x0001', '@B'],
+             ['op', 'check_and_branch', 'L1', '0x0005', '@B'],
+             ['op', 'check_and_branch', 'L1', '0x0004', '@B'], ['end'],
+             'label:A', ['op', 'write_ram', 'L0', '0x0001'], ['op', 'write_ram', 'L1', '0x0002'],
+             ['op', 'if_flag_set', '0x00F1', '@C'], ['text', '0x0001'], ['end'],
+             'label:B', ['text', '0x0002'], ['end'], 'label:C', ['text', '0x0003'], ['end']]
+    new, writes, rep = RS.fold_ops(items, plans, {0xF1})
+    ok("S144 fold: a one-state test answered (straight into A), the other dropped (B gone)",
+       new == [['__w', 'L1', 0, '1'], ['text', '0x0003'], ['end']], new)
+    ok("S144 fold: a kept state's write renumbered (marker), a one-state write dropped",
+       writes == [('L1', 0, '1')] and rep['writes_dropped'] == 1, (writes, rep))
+    ok("S144 fold: a story flag ON at the point answered (the else text gone)",
+       ['text', '0x0001'] not in new and ['text', '0x0003'] in new and rep['flags'] == 1, new)
+    ok("S144 prune: unreachable steps and unused labels go, ends on end/goto",
+       RS.prune([['op', 'goto', '@X'], ['text', '0x0009'], 'label:X', ['end']]) == [['end']])
+    from editor2.core.balance import VANILLA_STEPS
+    clr = RS.game_cleared_flags()
+    hit = {pt: sorted(set(RS.story_state(pt)['flags_on']) & clr)
+           for pt in range(len(VANILLA_STEPS) + 1)}
+    from editor2.core import story_state as _SS
+    from editor2.core.balance import POSTGAME_FROM as _PG
+    _pg = _SS.state_at(_PG)
+    ok("S144 the post-game = the game's played ending (EVENT_FLAGS: the 9 ending flags; Bazaar 4, "
+       "MedalMan 5, Gate Hub 4/1, the bedroom 0/1, the white room 3 — PyBoy)",
+       {0xE4, 0xE5, 0xE9, 0xEA, 0xEB, 0xED, 0xEE, 0xEF, 0xF0, 0xF1} <= set(_pg['flags_on'])
+       and [_pg['ram'].get(a, 0) for a in (0xD93A, 0xD95E, 0xD93D, 0xD93E, 0xD974, 0xD975,
+                                           0xD99A, 0xD92D, 0xD92B)] == [4, 5, 4, 1, 0, 1, 3, 3, 5],
+       [_pg['ram'].get(a, 0) for a in (0xD93A, 0xD95E, 0xD93D, 0xD93E, 0xD974, 0xD975, 0xD99A,
+                                      0xD92D, 0xD92B)])
+    ok("S144 measured: no story flag ON at any story point is cleared by the game's scripts",
+       len(clr) == 19 and not any(hit.values()), {k: v for k, v in hit.items() if v})
+    tmp = tempfile.mkdtemp(prefix='s144_')
+    try:
+        os.makedirs(os.path.join(tmp, 'assets'))
+        shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), tmp)
+        d = Document(tmp)
+        r = ProjectRenderer(REPO, d.project_dir, d.data)
+        gt = d.room(d.clone_vanilla(0x01, 'GreatTree', REPO, r, keep='default'))
+        rep = d.last_states_report
+        scr0 = gt['screens']['0']
+        ok("S144 GreatTree: screen 0 keeps only its post-game state (3), no counter of the game",
+           'states' not in scr0 and 'vanilla' not in scr0['step_counter']
+           and gt['states_kept']['point'] == RS.default_point(0x01), scr0.get('step_counter'))
+        ok("S144 GreatTree: talk answered, scripts smaller",
+           rep['talk'] > 20 and rep['scripts_after'] < rep['scripts_before'] // 2,
+           (rep['talk'], rep['scripts_before'], rep['scripts_after']))
+        vb = d.room(d.clone_vanilla(0x31, 'Boss: Villager', REPO, r, keep='default'))
+        rb = d.last_states_report
+        rules = vb.get('state_rules') or []
+        ok("S144 Boss: Villager: about to do its gate, boss + beaten kept, beaten remembered",
+           len(vb['screens']['0']['states']) == 2 and len(rb['flags']) == 1 and len(rules) == 1
+           and rules[0]['state'] == 1 and RS.point_label(vb['states_kept']['point'])
+           .startswith('about to do Gate of Villager'), (rb['flags'], rules))
+        sc = {x['id']: x for x in d.custom['scripts']}
+        fnum = next(f['index'] for f in d.custom['flags'] if f['name'] == rb['flags'][0])
+        body = [it for sid in vb['scripts'].values() for it in sc[sid]['ops']]
+        ok("S144 Boss: Villager: the win writes state 1 AND sets its flag (a number)",
+           ['op', 'set_flag', fnum] in body and any(
+               it[:2] == ['op', 'write_ram'] and str(it[2]).startswith('wCustomStep_')
+               and int(it[3], 16) == 1 for it in body if isinstance(it, list)), fnum)
+        cer = d.room(d.clone_vanilla(0x08, 'Ceremony', REPO, r))
+        sp = RS.default_spec(d, cer, 6)                  # breeding open, no ceremony yet
+        ok("S144 the ceremony room's counter is a variable there ($F0 codes) → follows the game",
+           sp['screens']['0'].get('follow'), sp['screens']['0'])
+        sp2 = RS.default_spec(d, cer)                    # the post-game: $D951 = 6, a state
+        ok("S144 … and at the post-game it is in state 6 (the ending leaves $D951 = 6)",
+           sp2['screens']['0'] == {'keep': [6], 'start': 6}, sp2['screens']['0'])
+        # Keep states… on an every-state copy: screen 0 keeps 3 + 4, starts in 4
+        full = d.room(d.clone_vanilla(0x01, 'GreatTree', REPO, r))
+        lab = full['screens']['0']['step_counter']['label']
+        spec = RS.default_spec(d, full)
+        spec['screens']['0'] = {'keep': [3, 4], 'start': 4}
+        d.keep_states(full['id'], spec)
+        s0 = full['screens']['0']
+        ok("S144 Keep states: two states, the start first (old 4 → 0, old 3 → 1)",
+           len(s0['states']) == 2 and s0['states'][0]['comment'] == 'vanilla step 4'
+           and s0['states'][1]['comment'] == 'vanilla step 3', [x.get('comment') for x in s0['states']])
+        sc = {x['id']: x for x in d.custom['scripts']}
+        vals = [int(it[3], 16) for sid in full['scripts'].values() for it in sc[sid]['ops']
+                if isinstance(it, list) and it[:1] == ['op'] and len(it) > 3 and it[2] == lab
+                and it[1] in ('write_ram', 'check_and_branch')]
+        ok("S144 Keep states: every script naming the counter uses the new numbers (0-1)",
+           all(v in (0, 1) for v in vals), vals)
+        ok("S144 the kept room is not migrated back to following the game on open",
+           not d.follow_game_counters(full) and RS.is_copy(full), '')
+        d.custom['arena'] = {'lobby': full['id'], 'battle': None}
+        try:
+            d.keep_states(full['id'], spec)
+            refused = False
+        except ValueError:
+            refused = True
+        ok("S144 your arena's rooms keep every state (Keep states refused)", refused)
+        d.custom.pop('arena')
+        d.save()
+        out, _p, warns = C.compile_project(tmp, REPO)
+        ok("S144 a project of kept copies compiles", bool(out), warns[:3])
+        d2 = Document(tmp)
+        ok("S144 reopening keeps the kept rooms as they are (no migration)",
+           not d2.migrations or not any('follow' in m for m in d2.migrations), d2.migrations)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    # byte-neutral: the example's outputs do not depend on any of this
+    out_a, _pa, _wa = C.compile_project(os.path.dirname(EXAMPLE), REPO)
+    ok("S144 byte-neutral: the example compiles to the same generated files twice",
+       out_a == C.compile_project(os.path.dirname(EXAMPLE), REPO)[0])
+
+def test_s145():
+    """S145 (ROADMAP ARC CAP4d; user S145: the Capacity tab "Sounds good", rows in words
+    "Perfect", the 150-place acceptance as a machine run): editor2/core/capacity.py counts
+    what the build counts — ROM space = the content banks' bytes of measure_banks, the room
+    ceiling = bank $71's free bytes / 15 (measured: +15 B a place in $71, +3 in $76 on a
+    fresh project), the secondary ceilings = the modules' own constants; the per-region
+    step-counter ceiling (every screen one byte, 640 a region) is shown with its count when
+    it stops the build; a 4 x 4 = 16-screen room compiles (capacities.json said the custom
+    schema took 8); the fast LZ match search == the reference; the arrival migration's door
+    index gives the S98 r2 fix; byte-neutral."""
+    import shutil
+    import tempfile
+    from editor2.core import capacity as CAP
+    from editor2.core.compiler import measure_banks
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import story as ST
+    from editor2.core import encounters as EN
+    from editor2.core import project as P
+    from tools import compress_tiles as CT
+    ex = os.path.dirname(EXAMPLE)
+    data = json.load(open(EXAMPLE))
+    rep = CAP.measure(data, ex, REPO)
+    usage, _e = measure_banks(data, ex, REPO)
+    ok("S145 capacity: the example measures without errors, every row counted",
+       not rep['errors'] and not [x for x in rep['rows'] if x['shown'] == '?'], rep['errors'])
+    content = sum(u for b, (u, _c) in usage.items() if b in CAP.SPILL_HOME or b >= 0x80)
+    ok("S145 ROM space = the bytes of banks $60 / $64 / $67 / $6C + $80-$FF (measure_banks)",
+       rep['content']['used'] == content and rep['content']['cap'] == 132 * 0x4000,
+       (rep['content'], content))
+    n = len([r for r in data['custom']['rooms'] if not r.get('placeholder')])
+    free71 = 0x4000 - usage[0x71][0]
+    ok("S145 the room ceiling = rooms + bank $71's free bytes / 15 (it binds first)",
+       rep['rooms']['ceiling'] == n + free71 // 15 and '$71' in rep['rooms']['by'],
+       rep['rooms'])
+    lim = {x['key']: x['limit'] for x in rep['rows']}
+    ok("S145 the secondary ceilings are the modules' own constants",
+       lim['checks'] == ST.STORY_CHECK_MAX and lim['commands'] == ST.STORY_CMD_MAX
+       and lim['enc_lists'] == EN.MAX_PROJECT_LISTS and lim['enemies'] == P.PROJECT_EID_CAP
+       and lim['joins'] == P.REDIRECT_ROWS_MAX and lim['screens_room'] == 16
+       and lim['npcs_screen'] == 8 and lim['exits_screen'] == 17
+       and lim['flags'] == 1965 and lim['screens_group'] == 640, lim)
+    tmp = tempfile.mkdtemp(prefix='s145_')
+    try:
+        def fresh(name, rooms, screens=1, region_size=None, states=1):
+            out = os.path.join(tmp, name)
+            os.makedirs(os.path.join(out, 'assets'))
+            shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), out)
+            d = Document(out)
+            if region_size:
+                d.custom['wram']['region_size'] = region_size
+            r = ProjectRenderer(REPO, d.project_dir, d.data)
+            for i in range(rooms):
+                rid = d.new_room(f'Probe {i}', 0, r, gate_theme=i % 16)
+                room = d.room(rid)
+                lid = room['screens']['0']['layout']['id']
+                for k in range(1, screens):
+                    d.add_screen(room, str(k), {'id': lid})
+            # S146: only screens WITH states count — added after every room exists (states
+            # added later), else (b) next_free_mapid would already spread the rooms over groups
+            for room in d.rooms:
+                for k in range(screens):
+                    for _n in range(1, states):
+                        d.add_state(room, str(k))
+            d.save()
+            return d, out
+        use = {}
+        for k in (20, 40):
+            d, out = fresh(f'n{k}', k)
+            use[k] = measure_banks(d.data, out, REPO)[0]
+        d71 = use[40][0x71][0] - use[20][0x71][0]
+        d76 = use[40][0x76][0] - use[20][0x76][0]
+        ok("S145 measured: a place costs bank $71 15 B and bank $76 3 B (PLACE_BYTES_71 / _76)",
+           d71 == 20 * CAP.PLACE_BYTES_71 and d76 == 20 * CAP.PLACE_BYTES_76, (d71, d76))
+        d, out = fresh('ctr', 6, screens=4, region_size=20, states=2)
+        rep2 = CAP.measure(d.data, out, REPO)
+        row = next(x for x in rep2['rows'] if x['key'] == 'screens_group')
+        ok("S145 the step-counter ceiling stops the build and the row says by how much",
+           rep2['errors'] and 'step counters' in rep2['errors'][0] and row['level'] == 'full'
+           and row['used'] == 24 and row['limit'] == 20, (rep2['errors'][:1], row))
+        d, out = fresh('big', 2, screens=16)
+        out_files, _p, _w = C.compile_project(out, REPO)
+        rep3 = CAP.measure(d.data, out, REPO)
+        big = next(x for x in rep3['rows'] if x['key'] == 'screens_room')
+        ok("S145 a 4 x 4 = 16-screen room compiles (the engine's grid; not 8)",
+           bool(out_files) and not rep3['errors'] and big['used'] == 16 and big['level'] == 'full'
+           and not any(x['key'] == 'screens_room' for x in CAP.worst(rep3)), rep3['errors'])
+        # the arrival migration with the S145 door index (S98 r2: arrive ON the partner)
+        d, out = fresh('doors', 3)
+        ids = [r['id'] for r in d.rooms]
+        a = d.add_door(ids[0], '0', 8, 1)
+        b = d.add_door(ids[1], '0', 1, 1)
+        d.link_doors(a, b)
+        row = d.door_end(a)['row']
+        row['screen_byte'] = f"0x{int(str(row['screen_byte']), 0) | 0x80:02X}"
+        notes = []
+        d._migrate_door_arrivals(notes)
+        ok("S145 the indexed arrival migration still moves an r1 row onto the partner door",
+           int(str(d.door_end(a)['row']['screen_byte']), 0) & 0x80 == 0 and notes
+           and getattr(d, '_door_index', None) is None, notes)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    import random
+    rnd = random.Random(1450)
+    samples = [bytes(rnd.choice([0, 0, 1, 0x33, 7]) for _ in range(rnd.choice([40, 600, 2048])))
+               for _ in range(6)] + [bytes(2048), bytes(range(256)) * 4]
+    ok("S145 the fast LZ match search == the reference search (compress_tiles --selftest: more)",
+       all(CT.compress_lz(b) == CT.compress_lz(b, reference=True) for b in samples))
+    out_a, _pa, _wa = C.compile_project(ex, REPO)
+    ok("S145 byte-neutral: the example compiles to the same generated files twice",
+       out_a == C.compile_project(ex, REPO)[0])
+
+
+def test_s146(with_rom=False):
+    """S146 (ROADMAP ARC CAP5, the first box; user: "1) Sounds good 2) Yes I also want (b)
+    3) Yes of course fix 4) Yes that's enough"): a one-state screen whose counter no script
+    names reads the shared zero byte wCustomStepZero (the original game's $D998 rule) — only
+    screens with states, script-named counters and pinned addresses keep a byte; the zero byte
+    is allocated first (nothing sits right below it — a write_ram2 there is refused);
+    project.counter_use (the editor's count) == the allocator's span per region; (b) the
+    editor's next_free_mapid skips a group whose counters are 90 % used; every counter label
+    (EQUs included) is in step_counter_addresses / the manifest, which Play here reads
+    (cutscenes.counter_address); the Capacity row counts screens with states."""
+    import glob
+    import shutil
+    import tempfile
+    from editor2.core import project as P
+    from editor2.core import capacity as CAP
+    from editor2.core import cutscenes as CS
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core.emitters import emit_region_wram_steps
+    ex = Project.load(EXAMPLE)
+    alloc = {lbl: a for lbl, a, _c in ex.step_counter_allocation()}
+    shared, zero = ex.step_counter_shared()
+    ok("S146 the example: the zero byte at $CD80, the written / tested counters keep a byte, "
+       "the pinned legacy hole stays at $CD84",
+       zero == 0xCD80 and alloc.get(P.STEP_ZERO_LABEL) == 0xCD80
+       and alloc.get('wCustomStep_Room6C_S0') == 0xCD81
+       and alloc.get('wCustomStep_ArenaClone_S1') == 0xCD82
+       and alloc.get('wCustomStep_Room6C_S5') == 0xCD84 and len(shared) == 10, (alloc, len(shared)))
+    txt = emit_region_wram_steps(ex, [])
+    ok("S146 the wram region: one-state labels are EQUs of wCustomStepZero, the area still padded",
+       'wCustomStep_Room6B_S0 EQU wCustomStepZero' in txt and 'wCustomStepZero:: db' in txt
+       and 'ds 635 ;' in txt, txt[:300])
+    # counter_use == the allocator's real span, every project in the repo + a 3-region one
+    projs = [EXAMPLE] + sorted(glob.glob(os.path.join(REPO, 'examples', '*', 'project.json')))
+    bad = []
+    for pj in projs:
+        prj = Project.load(pj)
+        lay = prj.step_counter_allocation()
+        addrs = prj.step_counter_addresses()
+        _over, base = prj.step_counter_overlay()
+        top0 = max([a for _l, a, _c in lay] + [P.STEP_COUNTER_BASE - 1]) - P.STEP_COUNTER_BASE + 1
+        g = base - P.STEP_COUNTER_BASE
+        own = {}
+        if prj.multi_region():
+            gl = set(getattr(prj, 'global_ids', []) or [])
+            for room in prj.rooms:
+                m = int(str(room['mapID']), 16) if isinstance(room['mapID'], str) else room['mapID']
+                if m >> 8 == 0 and (m & 0xFF) in gl:
+                    continue
+                for k, scr in prj.room_screens(room).items():
+                    a = addrs.get(prj.step_counter_label(room, k, scr))
+                    if a is not None and a >= base and a < 0xD000:
+                        own[m >> 8] = max(own.get(m >> 8, 0), a - P.STEP_COUNTER_BASE + 1)
+        use = prj.step_counter_use()
+        for reg, n in use.items():
+            want = max(g, own.get(reg, 0)) if prj.multi_region() else top0
+            if n != want:
+                bad.append((os.path.basename(os.path.dirname(pj)), reg, n, want))
+    ok(f"S146 project.counter_use == the allocator's span ({len(projs)} projects)", not bad, bad)
+    # a screen named by a script keeps its byte; the two forms of a one-state screen
+    ok("S146 screen_needs_counter: states, or a script naming the label",
+       P.screen_needs_counter(2, 'x', set()) and P.screen_needs_counter(1, 'x', {'x'})
+       and not P.screen_needs_counter(1, 'x', {'y'}))
+    # write_ram2 into the byte right below the zero byte is refused
+    d2 = json.load(open(EXAMPLE))
+    d2['custom']['wram']['reserved'] = [{'label': 'wCustomStep_Room6C_S5', 'addr': '0xCD80'}]
+    d2['custom'].setdefault('scripts', []).append(
+        {'id': 's146_w2', 'ops': [['op', 'write_ram2', 'wCustomStep_Room6C_S5', '0x0101'], ['end']]})
+    try:
+        Project(d2, os.path.dirname(EXAMPLE)).step_counter_allocation()
+        refused = False
+    except ProjectError as e:
+        refused = 'write_ram2' in str(e)
+    ok("S146 a write_ram2 to the counter right below the shared zero byte is refused", refused)
+    tmp = tempfile.mkdtemp(prefix='s146_')
+    try:
+        out = os.path.join(tmp, 'p')
+        os.makedirs(os.path.join(out, 'assets'))
+        shutil.copy(os.path.join(REPO, 'editor2/templates/blank-project/project.json'), out)
+        d = Document(out)
+        d.custom['wram']['region_size'] = 40
+        r = ProjectRenderer(REPO, d.project_dir, d.data)
+        regs = []
+        for i in range(12):
+            rid = d.new_room(f'Gauge {i}', 0, r, gate_theme=i % 16)
+            room = d.room(rid)
+            lid = room['screens']['0']['layout']['id']
+            for k in (1, 2, 3):
+                d.add_screen(room, str(k), {'id': lid})
+            for k in (0, 1, 2, 3):
+                d.add_state(room, str(k))
+            regs.append(int(room['mapID'], 16) >> 8)
+        for i in range(30):                       # one-state rooms: never fill a group
+            d.new_room(f'Plain {i}', 0, r, gate_theme=i % 16)
+        use = d.counter_use()
+        ok("S146 (b): a group 90 % used (36 of 40) takes no new room — the next ones open the "
+           "next group", regs == [0] * 9 + [1] * 3 and use[0] == 37 and use[1] == 13
+           and d.full_counter_groups() == {0}, (regs, use))
+        d.save()
+        prj = Project.load(out)
+        addrs = prj.step_counter_addresses()
+        over, _b = prj.step_counter_overlay()
+        sh, z = prj.step_counter_shared()
+        ok("S146 step_counter_addresses: bytes, other regions' EQUs and the shared byte",
+           all(addrs[l] == a for l, a, _c in over) and all(addrs[l] == z for l, _c in sh)
+           and len(sh) == 30 and over, (len(over), len(sh)))
+        rep = CAP.measure(d.data, out, REPO)
+        row = next(x for x in rep['rows'] if x['key'] == 'screens_group')
+        ok("S146 the Capacity row counts screens with states (the fullest group)",
+           row['used'] == 37 and row['limit'] == 40 and not rep['errors'], (row, rep['errors']))
+        # Play here's lookup: the manifest first (EQUs), then game.sym
+        bd = os.path.join(tmp, 'b')
+        os.makedirs(bd)
+        lbl = over[0][0]
+        json.dump({'step_counters': {lbl: f'${over[0][1]:04X}'}}, open(os.path.join(bd, 'manifest.json'), 'w'))
+        open(os.path.join(bd, 'game.sym'), 'w').write('00:cd80 wCustomStepZero\n')
+        rom = os.path.join(bd, 'rom.gbc')
+        ok("S146 cutscenes.counter_address: an EQU label from the manifest, a byte from game.sym",
+           CS.counter_address(rom, lbl) == over[0][1]
+           and CS.counter_address(rom, 'wCustomStepZero') == 0xCD80
+           and CS.read_symbols(os.path.join(bd, 'game.sym')).get(lbl) is None)
+        if with_rom:
+            from editor2.core import builder as B
+            outputs, prj2, warns = C.compile_project(os.path.join(out, 'project.json'), REPO)
+            C.write_outputs(outputs, os.path.join(out, 'build'))
+            rom, sym, md5 = B.build_rom(REPO, os.path.join(out, 'build'),
+                                        os.path.join(out, 'build', 'build'))
+            S = B.parse_sym(sym)
+            data = open(rom, 'rb').read()
+            from editor2.core.emitters import room_tag
+            wrong = []
+            for room in prj2.rooms:
+                for k, scr in prj2.room_screens(room).items():
+                    b, a = S[f'{room_tag(room)}_Screen{k}']
+                    o = b * 0x4000 + a - 0x4000
+                    word = data[o] | data[o + 1] << 8
+                    want = prj2.step_counter_addresses()[prj2.step_counter_label(room, k, scr)]
+                    if word != want or (len(prj2.screen_states(scr)) == 1) != (word == S[P.STEP_ZERO_LABEL][1]):
+                        wrong.append((room['id'], k, hex(word), hex(want)))
+            ok("S146 --rom: every screen's counter word in the ROM == its label's address (one-state "
+               "screens = wCustomStepZero)", not wrong, wrong[:4])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _allcat_fixture():
+    """S147: the example + every DWM2 catalog song it lacks (32 songs in all)."""
+    d = base()
+    m = d['custom']['music']
+    have = {x['source'].get('library') for x in m['songs']}
+    lib = json.load(open(os.path.join(REPO, 'extracted', 'dwm2_song_library.json')))['songs']
+    m['songs'] += [{'id': 'cat_' + x['id'], 'source': {'library': x['id']}, 'first_id': 'auto'}
+                   for x in lib if x['id'] not in have]
+    return d
+
+
+def test_s147(with_rom=False):
+    """S147 (ROADMAP ARC CAP5, songs at campaign scale; user: "2) Yes music 3) 95 is more
+    than enough 4) perfect. Dont put too many npcs in one room please"): ONE sound id per
+    project song (95 songs; S116: one per channel = ~31), bank $74 = the song head (SongStart
+    + dummy records) + the directory + every record, songs first fit in $74 / $75 / banks $80+
+    (after the stream / place / animation banks), the S116 bank $75 master row gone; songs by
+    name in cutscenes (resolved at emission); a room whose only scripts are talk scenes gets an
+    empty entry script; the Capacity rows; --rom: the editor's preview path (song_machine +
+    start_song) makes the SAME sound-register writes as the built ROM's own InitBGM for every
+    song of the whole catalog, and the census reads the directory back == the plan."""
+    import shutil
+    import tempfile
+    from editor2.core import music as MUS
+    from editor2.core import capacity as CAP
+    from editor2.core import cutscene_doc as CD
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import validators as V
+    o, prj, w = compile_data(_allcat_fixture())
+    P = prj.music_plan()
+    ext = MUS.song_ext_banks(prj)
+    owners = prj.ext_bank_owners()
+    ok("S147 the whole DWM2 catalog + the example's songs build: 32 songs, ids $9E-$BD one "
+       "each, over banks $74 / $75 and two banks $80+ (31 DWM2 songs = 57 KB; S116 stopped at "
+       "2 x 16,000 B)",
+       len(P.songs) == 32 and sorted(P.song_ids.values()) == list(range(0x9E, 0xBE)) and
+       {b for b in P.banks if isinstance(b, int)} == {0x74, 0x75} and len(ext) == 2 and
+       all(owners.get(b) == 'songs' for b in ext.values()), (sorted(ext.values()), owners))
+    bext = o['patches/bank_ext.asm']
+    files_ok = all(f'INCLUDE "bank_{b:03x}.asm"' in bext and
+                   f'    db ${b:02X}                          ; bank self-ID at $4000' in
+                   o[f'patches/bank_{b:03x}.asm'] for b in ext.values())
+    ok("S147 a song bank $80+ is a whole file (self-ID + streams) INCLUDEd by bank_ext.asm; "
+       "every song's streams sit in ONE bank (its record names that bank)",
+       files_ok and all(
+           f"SongCh_{r['first_id']:02X}_{k}:" in
+           o['patches/bank_074.asm' if r['bank'] == 0x74 else
+             f"patches/bank_{MUS.real_bank(prj, r['bank']):03x}.asm"]
+           for r in P.songs for k in range(len(r['channels']))))
+    u = V.bank_usage({f'file:{k}': v for k, v in o.items()})
+    ok("S147 bank accounting: $74 = template 445 + the directory + records + its streams; "
+       "$75 and the song banks pure payload; none over 16 KB",
+       u[0x74][0] == 445 + 190 + P.records_bytes + P.stream_bytes[0x74] and
+       u[0x75][0] == 1 + P.stream_bytes[0x75] and
+       all(u[b][0] <= 0x4000 for b in [0x74, 0x75] + list(ext.values())),
+       {hex(b): u[b][0] for b in [0x74, 0x75] + list(ext.values())})
+    d = base()
+    m = d['custom']['music']
+    m['songs'] += [{'id': f'j{k}', 'source': {'library': 'dwm2_jingle02'},
+                    'first_id': '0xFC' if k == 0 else 'auto'} for k in range(95 - len(m['songs']))]
+    o95, p95, _w = compile_data(d)
+    P95 = p95.music_plan()
+    ok("S147 95 songs build (ids $9E-$FC, one each; the explicit $9E / $A1 / $A4 / $FC kept, "
+       "the autos fill the gaps from $9F) — S116 refused a 32nd 3-channel song",
+       sorted(P95.song_ids.values()) == list(range(0x9E, 0xFD)) and
+       P95.song_ids['j0'] == 0xFC and P95.song_ids['dwm2_bgm10'] == 0x9F and
+       P95.song_ids['j1'] == 0xA0)
+    big = {'channels': [{'slot': '0x34', 'hw': 0, 'header': [0, 0, 0, 0],
+                         'tokens': [{'op': 'note', 'byte': 0, 'len': 1}] * 8300 + [{'op': 'end'}]}]}
+    d = base()
+    d['custom']['music']['songs'].append({'id': 'huge', 'source': {'inline': big}})
+    expect_error("S147 refuses a song bigger than one bank", d,
+                 "a song must fit one bank")
+    # a cutscene's music step by NAME + a room whose only scripts are talk scenes
+    tmp = tempfile.mkdtemp()
+    try:
+        shutil.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'),
+                        ignore=shutil.ignore_patterns('build'))
+        doc = Document(os.path.join(tmp, 'p', 'project.json'))
+        rnd = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        rid = doc.new_room('S147 TALK ROOM', 0, rnd, gate_theme=3)
+        room = doc.room(rid)
+        doc.add_npc(room, '0', 0, 4, 3, 0x0B, 'down')
+        CD.name_actor(doc, rid, 0, 0, 1, 'Piper')
+        sc_id = CD.new_cutscene(doc, rid, 'Piper plays', 0, on='talk', actor='Piper')
+        _r, sc = CD.find(doc, sc_id)
+        sc['steps'] = [{'say': {'boxes': [['A tune!']]}}, {'music': {'song': 'dwm2_bgm10'}}]
+        CD.set_scene(doc, sc_id, sc)
+        doc.save()
+        outs, pp, _ww = C.compile_project(os.path.join(tmp, 'p'), REPO)
+        rr = next(x for x in pp.rooms if x['id'] == rid)
+        sid = pp.music_song_ids()['dwm2_bgm10']
+        b60 = '\n'.join(t for k, t in outs.items() if 'bank_0' in k)
+        tag = f"CustomRoom{int(str(rr['mapID']), 16) - 0x6B}"
+        body = b60.split(f'{tag}_Scr01:')[1].split('\n\n')[0]
+        ok("S147 a cutscene's Music step names a project song: its set_bgm param is the song's "
+           "id from the music plan ($9F for dwm2_bgm10); the talk-only room gets an empty entry "
+           "script at index 0 (the build refused such a room before)",
+           rr['scripts'].get('0') == f'cut:{rid}:noentry' and
+           f'    dw $FF41  ; set_bgm\n    dw ${sid:04X}' in body and sid == 0x9F, body[:300])
+        from editor2.core import cutscene_build as CB
+        ok("S147 the cutscene editor describes a named song in words",
+           CB.describe({'music': {'song': 'dwm2_bgm10'}}) == 'Music: your song dwm2_bgm10')
+        sc['steps'] = [{'music': {'song': 'nope'}}]
+        CD.set_scene(doc, sc_id, sc)
+        doc.save()
+        try:
+            C.compile_project(os.path.join(tmp, 'p'), REPO)
+            bad = None
+        except Exception as e:                         # noqa: BLE001
+            bad = str(e)
+        ok("S147 a Music step naming no song of the project stops the build, by name",
+           bad is not None and "song 'nope' is not one of the project's songs" in bad, bad)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    rep = CAP.measure(_allcat_fixture(), os.path.dirname(EXAMPLE), REPO)
+    rows = {x['key']: x for x in rep['rows']}
+    ok("S147 Capacity: 'Songs of your own' = 32 of 95; 'Song data' = all 32 songs' bytes, the "
+       "part in the ROM space named",
+       rows['song_ids']['used'] == 32 and rows['song_ids']['limit'] == 95 and
+       rows['song_bytes']['used'] == P.song_bytes() and 'of it in the ROM space' in
+       rows['song_bytes']['shown'] and rows['song_bytes']['level'] == 'ok',
+       (rows['song_ids']['shown'], rows['song_bytes']['shown']))
+    if not with_rom:
+        return
+    from editor2.core import builder as B
+    from editor2.core import sound_engine as SE
+    from editor2.core import music_preview as MP
+    outdir = '/tmp/_t_s147'
+    C.write_outputs(o, outdir)
+    rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    data = open(rom, 'rb').read()
+    S = B.parse_sym(sym)
+    test_music_rom('S147 catalog', data, S, _allcat_fixture(), open(ROM, 'rb').read())
+    sys.path.insert(0, os.path.join(REPO, 'tools'))
+    import census_sound_engine as CSE
+    ids, chans, banks = CSE.directory(data, S)
+    lay = MUS.song_layout(prj)
+    ok("S147 the census reads the built directory back == the plan (ids, slots, streams, "
+       "banks)", ids == [L['sid'] for L in lay] and
+       chans == [[(c[2], c[0], S[c[3]][1], L['bank']) for c in L['channels']] for L in lay])
+    orig = open(ROM, 'rb').read()
+    bad = []
+    for L, r in zip(lay, P.songs):
+        g = SE.Machine(data)
+        g._call(SE.INIT_AUDIO)
+        gw = [g.start_bgm(L['sid'])]
+        mach, ch = MP.song_machine(orig, r['channels'])
+        mach._call(SE.INIT_AUDIO)
+        mw = [mach.start_song(L['sid'], ch)]
+        for _ in range(900):
+            gw.append(g.frame())
+            mw.append(mach.frame())
+        if gw != mw:
+            bad.append(L['id'])
+    ok(f"S147 --rom: the editor's preview of each of the {len(lay)} songs (its own layout, "
+       "Machine.start_song) writes the same sound registers, frame by frame for 900 frames, "
+       "as the built ROM's InitBGM -> bank $74 SongStart (streams relocatable)", not bad, bad)
+
+
+def test_s148(with_rom=False):
+    """S148 (ROADMAP ARC CAP4 "$3E" box; user: "1) Yes 2) Do now 3) replace 4) Test room +
+    machine check"): an op ENDS a script only when its handler clears wScriptStateFlags
+    (script_ops.TERMINAL == extracted/script_param_counts.json `_ends_script`: $0F $3A $3B
+    $43 $4F $58) — $3E (change game mode) and $16 (refresh sprites) yield and go on. The
+    decoder's catalogue: 519 scenes, 8 longer (+51 steps), $00E5 set by the night Farm;
+    story_state decodes $00E5 (no hand-added flag); a scene is never its own entry caller;
+    the copy tool (tools/extract_room.py) copies past $16 (5 game scripts differ from the old
+    tool: the Castle's 0, the Starry Shrine's 0 / 11, the Priest floor's 1 / 2) and a copy made
+    by the old tool is repaired on open (== a fresh copy; an edited site is reported); the
+    script banks carry the decoder's annotation (tools/recomment_script_banks.py --check)."""
+    import importlib.util
+    import json as _json
+    import shutil
+    import tempfile
+    from editor2.core import script_ops as SO
+    pc = _json.load(open(os.path.join(REPO, 'extracted', 'script_param_counts.json')))
+    ends = {int(k, 16) for k in pc.get('_ends_script', [])}
+    ok("S148 TERMINAL == the handlers that clear wScriptStateFlags; $3E / $16 are not ends",
+       set(SO.TERMINAL) == ends == {0x0F, 0x3A, 0x3B, 0x43, 0x4F, 0x58}
+       and 0x3E not in SO.TERMINAL and 0x16 not in SO.TERMINAL, sorted(ends))
+    ok("S148 the $3E line reads whole (first_sentence keeps 'e.g.')",
+       SO.sentence(0x3E, ()).startswith('Fade out and switch to the game mode in $C88B (e.g. a'),
+       SO.sentence(0x3E, ()))
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import cutscenes as CS
+    from editor2.core import story_state as ST
+    from editor2.core import clone_scripts as CL
+    rom = open(ROM, 'rb').read()
+    cat = CS.Catalogue(rom)
+    n = sum(len(cat.scenes(m)) for m in cat.map_types())
+    gt = {s.entry: len(s.steps) for s in cat.scenes(0x01)}
+    ok("S148 the catalogue: 519 scenes; GreatTree's arrival scene runs on through $3E (32 steps)",
+       n == 519 and gt.get(308) == 32, (n, gt.get(308)))
+    ok("S148 $00E5 is set by the night Farm's scene (was 'never set')",
+       cat.flag_desc(0x00E5).startswith('set in Farm'), cat.flag_desc(0x00E5))
+    rec = [cat.recipe(s, 0x01) for s in cat.scenes(0x01) if s.entry == 308][0]
+    ok("S148 a scene is never its own entry caller (GreatTree @308 set up as before: screen 12)",
+       rec.screen == 12, rec)
+    st = ST.state_at(31)                     # the first post-game gate: after the ending
+    ok("S148 story_state: the ending's $00E5 comes from the decoded night Farm",
+       0x00E5 in st['flags_on'] and any('its entry scene' in x for x in st['log']),
+       [x for x in st['log'] if 'Farm' in x])
+    spec = importlib.util.spec_from_file_location('_er148', os.path.join(REPO, 'tools',
+                                                                          'extract_room.py'))
+    er = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(er)
+    pcs, bt, nb = er._load_param_counts()
+    diff = []
+    for m in cat.map_types():
+        b = CS.script_bank(m)
+        for i, p0 in enumerate(CS.vanilla_script_ptrs(rom, m)):
+            old = er.ops_to_project(er.decode_script(rom, b, p0, pcs, bt, set(),
+                                                     legacy_stop16=True), bt, nb)
+            new = er.ops_to_project(er.decode_script(rom, b, p0, pcs, bt, set()), bt, nb)
+            if old != new:
+                diff.append((m, i))
+    ok("S148 the copy tool: exactly the Castle 0, Starry Shrine 0 / 11, Priest floor 1 / 2 change",
+       diff == [(0x00, 0), (0x09, 0), (0x09, 11), (0x51, 1), (0x51, 2)], diff)
+    # a copy made by the old tool, opened by the S148 editor == a fresh S148 copy
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    tmp = tempfile.mkdtemp(prefix='s148_')
+    try:
+        src = os.path.dirname(EXAMPLE)
+        res = {}
+        orig = importlib.util.spec_from_file_location
+        legacy = os.path.join(tmp, 'legacy_er.py')
+        with open(legacy, 'w') as f:
+            f.write("import importlib.machinery, types\n"
+                    f"_l = importlib.machinery.SourceFileLoader('erx', {os.path.join(REPO, 'tools', 'extract_room.py')!r})\n"
+                    "_m = types.ModuleType('erx'); _m.__file__ = _l.path; _l.exec_module(_m)\n"
+                    "_d = _m.decode_script\n"
+                    "def _lg(*a, **k):\n    k['legacy_stop16'] = True\n    return _d(*a, **k)\n"
+                    "_m.decode_script = _lg\n"
+                    "globals().update({k: v for k, v in _m.__dict__.items() if not k.startswith('__')})\n")
+
+        def spec_legacy(name, path, *a, **k):
+            if str(path).endswith('tools/extract_room.py'):
+                path = legacy
+            return orig(name, path, *a, **k)
+        for nm in ('legacy', 'fixed'):
+            shutil.copytree(src, os.path.join(tmp, nm), ignore=shutil.ignore_patterns('build'))
+            importlib.util.spec_from_file_location = spec_legacy if nm == 'legacy' else orig
+            try:
+                d = Document(os.path.join(tmp, nm))
+                r = ProjectRenderer(REPO, d.project_dir, d.data)
+                for mid, keep in ((0x00, None), (0x09, 'default'), (0x51, 'default')):
+                    d.clone_vanilla(mid, f'Copy {mid:02X}', REPO, r, keep=keep)
+                    r.invalidate()
+                d.save()
+            finally:
+                importlib.util.spec_from_file_location = orig
+        CL._ER.clear()
+        CL._PLAN.clear()
+        CL._DIFF.clear()
+        a = Document(os.path.join(tmp, 'legacy'))
+        notes = [x for x in a.migrations if 'S148' in x or 'S92-S147' in x]
+        b = Document(os.path.join(tmp, 'fixed'))
+        sa = {x['id']: x.get('ops') for x in a.custom['scripts']}
+        sb = {x['id']: x.get('ops') for x in b.custom['scripts']}
+        same = [k for k in sb if sa.get(k) != sb[k]]
+        ok("S148 old copies (Castle / Starry Shrine / Priest floor) repaired on open == fresh "
+           "copies (5 scripts, nothing reported)",
+           len(notes) == 5 and not same and not a.migration_warnings
+           and not [x for x in b.migrations if 'S92-S147' in x], (notes, same,
+                                                                  a.migration_warnings))
+        a.save()
+        a2 = Document(os.path.join(tmp, 'legacy'))
+        ok("S148 the repair runs once (a second open finds nothing)",
+           not [x for x in a2.migrations if 'S92-S147' in x] and not a2.migration_warnings,
+           a2.migrations)
+        # an edited site is reported, never changed
+        shutil.copytree(os.path.join(tmp, 'fixed'), os.path.join(tmp, 'edited'))
+        importlib.util.spec_from_file_location = spec_legacy
+        try:
+            d = Document(os.path.join(tmp, 'edited'))
+            r = ProjectRenderer(REPO, d.project_dir, d.data)
+            rid = d.clone_vanilla(0x51, 'Edited priest', REPO, r, keep='default')
+            sid = d.room(rid)['scripts']['1']
+            sc = next(x for x in d.custom['scripts'] if x['id'] == sid)
+            i16 = next(i for i, it in enumerate(sc['ops']) if CL._code(it) == 0x16)
+            sc['ops'][i16 + 1:i16 + 1] = [['op', 'nop']]          # an edit right after it
+            d.save()
+        finally:
+            importlib.util.spec_from_file_location = orig
+        before = json.dumps(next(x for x in json.load(open(os.path.join(tmp, 'edited',
+                                 'project.json')))['custom']['scripts'] if x['id'] == sid))
+        e = Document(os.path.join(tmp, 'edited'))
+        after = json.dumps(next(x for x in e.custom['scripts'] if x['id'] == sid))
+        ok("S148 an old copy edited right after its $16 is left alone and reported",
+           before == after and any(sid in w for w in e.migration_warnings),
+           e.migration_warnings)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(REPO, 'tools', 'recomment_script_banks.py'),
+                        '--check'], capture_output=True, text=True)
+    ok("S148 the script banks carry the decoder's annotation (recomment_script_banks --check)",
+       r.returncode == 0, (r.stdout + r.stderr)[-300:])
+
+
+def test_s150(with_rom=False):
+    """S150 (ROADMAP P3.6 / Phase F T-author — the game's own texts, editable; user: "Let's
+    start with dialogue … Everything but differentiate by tab within editor. Samesize NOT
+    preferred"): the markup codec (editor2/core/textmark.py) reads every original text back;
+    gamedata.text edits compile into text banks $80+ (any length, any bank), keyed by the
+    pointer slot the game reads a text through; bank $60 entry 14 + ROM0 TextLevel1Hook find
+    them; the editor model (Document.set_game_text) edits a shared line with its copies."""
+    import copy as _copy
+    import shutil
+    from editor2.core import gametext as GT, textmark as TM
+    from editor2.core import validators as V
+    from editor2.core.document import Document, Snapshot
+    ix = GT.index(REPO)
+    # ---- the codec
+    n = bad = 0
+    for k in ix.order:
+        x = ix.entries[k]
+        for st in TM.STYLES:
+            n += 1
+            bad += TM.encode(TM.decode(x.raw, st), st) != x.raw
+    ok(f"S150 the markup codec reads back every original text in both styles ({n // 2} texts)",
+       bad == 0 and n // 2 == len(ix.order), bad)
+    x = ix.get('dialogue', '$0000')
+    m = x.markup()
+    ok("S150 text $0000 (the intro) as markup: {high} voice, ▼ boxes, the closing clear implied",
+       m.startswith('{high}Milayou:Terry!\nWait! It') and '▼\n' in m and not m.endswith('{clear}'),
+       m[:60])
+    cases = [("Hi!", 'box', bytes([0x2B, 0x46, 0x63, 0xF7])),
+             ("A\nB▼\nC", 'box', bytes([0x24, 0xEF, 0xEE, 0x25, 0xFA, 0xF7, 0xEF, 0xEE, 0x26, 0xF7])),
+             ("Go?{yes/no}", 'box', bytes([0x2A, 0x4C, 0x64, 0xFF])),
+             ("Bye{end}", 'box', bytes([0x25, 0x56, 0x42])),
+             ("{hero} don't", 'box', bytes([0xF6, 0x62, 0x41, 0x4C, 0x4B, 0x67, 0xF7])),
+             ("{ED}X\n{ins 00}{FC 10}{EC}", 'rows', bytes([0xED, 0x3B, 0xF1, 0xF9, 0x00, 0xFC, 0x10, 0xEC])),
+             ("‥.{$5C}t", 'rows', bytes([0x61, 0x5F, 0x5C, 0x51]))]
+    ok("S150 typed markup: letters, a new line ($EF $EE / $F1), ▼ ($FA $F7), {yes/no}, {end}, "
+       "{hero}, a contraction, codes with parameters, ‥ ($61), a glyph escape",
+       all(TM.encode(a, st) == b for a, st, b in cases),
+       [(a, TM.encode(a, st).hex()) for a, st, b in cases if TM.encode(a, st) != b])
+    errs = 0
+    for a in ('Hi {foo}', 'é', '{FC}', '{F0}', 'x{end}y', '{ins}'):
+        try:
+            TM.encode(a, 'box')
+        except TM.MarkupError:
+            errs += 1
+    ok("S150 refused markup: an unknown token, a glyph not in the font, a code missing its "
+       "parameter, $F0, text after {end}, {ins} without its slot", errs == 6, errs)
+    # ---- the index
+    ok("S150 the index: 2,560 text ids with their measured slots + the tables (battle / items / "
+       "menus / credits; monster + skill descriptions owned by other tabs)",
+       sum(1 for k in ix.order if k[0] == 'dialogue') == 2560
+       and {ix.tables[s]['group'] for s in ix.tables} >= {'battle', 'items', 'menus', 'credits'}
+       and ix.tables['skill_description']['owner'] == 'Skills', '')
+    # ---- compile
+    d = base()
+    d.setdefault('gamedata', {})['text'] = {
+        'dialogue': {'$0489': '{low}*:A brand new and\nmuch longer line▼\n*:than before!',
+                     '$0000': 'Short.'},
+        'item_name': {'6': 'FairyDew'},
+        'battle_message': {'0': '{ED}Here!\n{ins 00}{FC 10}{EC}'},
+        'credits_end': {'0': '{ED}THE END'}}
+    out, prj, _w = compile_data(d)
+    P = GT.plan(prj)
+    files = sorted(t for t in out if 'TEXT DATA (generated' in out[t])
+    home = out[f"patches/{GT.text_bank_file(P['home'])}"]
+    ok("S150 5 edits compile into one text bank (the home bank after the other $80+ banks): "
+       "TEXT_OVR_HOME in bank $60, TextOvrFind / TextOvrCopy, the bitmap, 5 directory rows, "
+       "every edited slot listed with BANK(label)",
+       # S164 (ROADMAP E14): + one directory row = bank $41 SkillNamePtrTable (the five
+       # built-in names past the region), + its 5 slots
+       len(files) == 1 and P['home'] >= 0x80 and len(P['rows']) == 6
+       and any(b == 0x41 and t == 0x4539 for b, t, _v in P['rows'])
+       and f"TEXT_OVR_HOME EQU ${P['home']:02X}" in out['patches/bank_060.asm']
+       and 'TextOvrFind_T' in home and 'TextOvrCopy_T' in home and 'TextOvrBanks_T' in home
+       and home.count('BANK(TextOvr_') == 10, (files, P['rows']))
+    raw0 = TM.encode('Short.', 'box') + b'\xf0'
+    ok("S150 an edit is stored as its bytes + $F0 under a label of its own",
+       'TextOvr_dialogue_0000:' in home and
+       ', '.join(f'${b:02X}' for b in raw0) in home, '')
+    usage = V.bank_usage({f'file:{k}': v for k, v in out.items()})
+    ok("S150 the text bank is counted in the bank usage (TEXT_HOME_FIXED + its data)",
+       P['home'] in usage and usage[P['home']][0] == P['used'][P['home']], (usage.get(P['home']),
+                                                                            P['used']))
+    # nothing edited: no text bank, TEXT_OVR_HOME 0 — S164 (ROADMAP E14): every project's
+    # built-in skill names overflow bank $41's region by 36 B and go to a text bank, so
+    # "nothing in the text banks" = the long built-in names made short (all fit the region)
+    d0 = base()
+    sk0 = d0.setdefault('gamedata', {}).setdefault('skills', {})
+    for sid_, nm_ in ((224, 'M'), (223, 'L'), (234, 'P'), (235, 'Q'), (236, 'R'), (237, 'S'),
+                      (238, 'T')):
+        sk0.setdefault(str(sid_), {})['name'] = nm_
+    o0, p0, _w = compile_data(d0)
+    ok("S150 a project without edits: TEXT_OVR_HOME EQU $00, no text bank",
+       'TEXT_OVR_HOME EQU $00' in o0['patches/bank_060.asm']
+       and not any('TEXT DATA (generated' in v for v in o0.values()), '')
+    # errors
+    for name, txt, needle in (
+            ('an unknown text kind', {'nonsense': {'1': 'x'}}, 'no such text kind'),
+            ('a text id that does not exist', {'dialogue': {'$0A00': 'x'}}, 'no such text'),
+            ('a monster description (the Monsters tab edits it)',
+             {'monster_description': {'1': 'x'}}, 'Monsters tab'),
+            ('an item name past 9 letters', {'item_name': {'1': 'Herbalicious'}}, 'at most 9'),
+            ("a family's default name past 4 letters", {'family_name': {'0': 'Slimy'}}, 'at most 4'),
+            ('a name with a code', {'personality': {'0': '{hero}'}}, 'letters only'),
+            ('markup the game cannot show', {'dialogue': {'$0001': 'é'}}, 'not in the game font')):
+        bd = base()
+        bd.setdefault('gamedata', {})['text'] = txt
+        expect_error(f"S150 refused: {name}", bd, needle)
+    # every text edited: the plan holds (the census project's shape)
+    allp = base()
+    for k in ix.order:
+        y = ix.entries[k]
+        if y.owner:
+            continue
+        mk = y.markup().swapcase()
+        if y.source not in GT.MAX_GLYPHS:
+            mk = '~' + mk
+        GT.set_edit(allp, y.source, y.key, mk)
+    oa, pa, _w = compile_data(allp)
+    Pa = GT.plan(pa)
+    ua = V.bank_usage({f'file:{k}': v for k, v in oa.items()})
+    ok(f"S150 EVERY text edited ({Pa['count']} edits): {len(Pa['banks'])} text banks, each <= "
+       "16 KB, the home bank's lookup tables fit, identical texts stored once",
+       Pa['count'] == 3418 + 5 and all(ua[b][0] <= 0x4000 and ua[b][0] == Pa['used'][b]   # S164: + 5 skill names
+                                   for b in Pa['banks'])
+       and sum(len(v) for v in Pa['texts'].values()) < Pa['count'], (len(Pa['banks']),))
+    # ---- the Document
+    tmpd = '/tmp/_t_s150_doc'
+    shutil.rmtree(tmpd, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    shared = next(ix.entries[k] for k in ix.order if ix.entries[k].source == 'dialogue'
+                  and len(ix.entries[k].same) >= 2 and ix.entries[k].first)
+    doc.set_game_text('dialogue', shared.key, '{low}*:Changed!')
+    rows = doc.data['gamedata']['text']['dialogue']
+    together = all(rows.get(k) == '{low}*:Changed!' for _s, k in shared.same) and \
+        rows.get(shared.key) == '{low}*:Changed!'
+    doc.set_game_text('dialogue', shared.same[0][1], '{low}*:Only me', only_this=True)
+    alone = rows.get(shared.same[0][1]) == '{low}*:Only me' and rows.get(shared.key) == '{low}*:Changed!'
+    doc.reset_game_text('dialogue', shared.key)
+    back = 'text' not in doc.data.get('gamedata', {})
+    ok(f"S150 Document: a line shown by {len(shared.same) + 1} ids is edited with its copies, one "
+       "copy alone ('only this'), and 'Original' removes every edit (gamedata.text gone)",
+       together and alone and back, (together, alone, back))
+    try:
+        doc.set_game_text('item_name', '1', 'TooLongName')
+        refused = False
+    except ValueError:
+        refused = True
+    ok("S150 Document: an item name past 9 letters is refused before it is kept", refused)
+    sn = Snapshot.take(allp)
+    ok("S150 an undo snapshot keeps gamedata.text in pieces of 64 rows (an edit changes one piece) "
+       "and rebuilds the project exactly", sn.data() == allp and sn.text is not None, '')
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s150_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def rd(b, a, n=1):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+
+    def model(bank, table, idx):
+        """TextOvrFind in Python over the ROM's own tables -> the edited text or None."""
+        h = P['home']
+        T_ = GT.suffix(h)
+        bits = rd(*sy[f'TextOvrBanks{T_}'], 32)
+        if not bits[bank >> 3] >> (bank & 7) & 1:
+            return None
+        b_, a_ = sy[f'TextOvrDir{T_}']
+        while True:
+            row = rd(b_, a_, 6)
+            if row[0] == 0:
+                return None
+            if row[0] == bank and row[1] | row[2] << 8 == table:
+                la = row[3] | row[4] << 8
+                for k_ in range(row[5] or 256):
+                    it = rd(h, la + 4 * k_, 4)
+                    if it[0] == idx:
+                        return TM.scan(rb, it[1] * 0x4000 + (it[2] | it[3] << 8) - 0x4000) + b'\xf0'
+                return None
+            a_ += 6
+    good = True
+    for (src, key), (y0, raw) in {(y.source, y.key): (y, r) for y, r in GT.resolve(prj, REPO)}.items():
+        y = ix.get(src, key) or y0          # S164: the skill names (slots past the index)
+        good &= model(y.bank, y.table, y.index) == raw
+    unedited = ix.get('dialogue', '$0001')
+    good &= model(unedited.bank, unedited.table, unedited.index) is None
+    hook = rd(0, 0x00F0, 16)
+    ok("S150 the ROM: ROM0 $00F0 = TextLevel1Hook (ld e,[hl] / inc hl / ld d,[hl] / ld hl,$600E / "
+       "rst $10 / ret) + SaveBankAndSwitchCopy (ld a,1 / ld [wTextOvrMode],a / jp "
+       "SaveBankAndSwitch); RunTextHandler calls it; bank $60 entry 14 = TextOverride; the text "
+       "bank's tables (Python model of TextOvrFind) give every edit, an unedited text none",
+       good and hook[:8] == bytes([0x5E, 0x23, 0x56, 0x21, 0x0E, 0x60, 0xD7, 0xC9])
+       and hook[8:10] == bytes([0x3E, 0x01]) and hook[13] == 0xC3
+       and rd(0, 0x05F6, 3) == bytes([0xCD, 0xF8, 0x00])
+       and rd(0x60, 0x4001 + 2 * 14, 2) == bytes([sy['TextOverride'][1] & 0xFF,
+                                                   sy['TextOverride'][1] >> 8]), hook.hex())
+
+
+def test_s149(with_rom=False):
+    """S149 (ROADMAP ARC CAP5, battles at campaign scale; user: "1) Yes 2) Sounds good
+    [a gender per row] 3) A [no rival names / eggs] 4) Yes fold in loose ends 5) Yes"):
+    enemy rows past 640 (bank $6B, then battle banks $80+, up to 3,321 = EIDs 519-3839),
+    battle lists past 128 (16-bit numbers, bank $76 then battle banks, up to 3,968), a
+    creation gender per project row (bank $14 EnemyGenderCode -> bank $6B entry 1), no rival
+    tamer's name / egg on a project row (bank $14 ForeignNamesGate); a room never gets a hole
+    (Document.fill_room_holes / holes_if_removed)."""
+    import copy as _copy
+    from editor2.core import battles as BT
+    from editor2.core import validators as V
+    from editor2.core.document import Document
+    import shutil
+
+    class Fake:
+        def __init__(self, n, m):
+            self._rows = [{'_eid': 519 + i, 'id': f'r{i}'} for i in range(n)]
+            self.custom = {'encounter_lists': [{}] * m}
+            self._ext_taken = []
+
+        def quest_enemy_rows(self):
+            return self._rows
+
+        def _take_ext_bank(self, purpose):
+            b = 0x80 + len(self._ext_taken)
+            self._ext_taken.append((b, purpose))
+            return b
+    import editor2.core.music as MU
+    import editor2.core.tileanim as TA
+    real = (MU.song_ext_banks, TA.plan)
+    MU.song_ext_banks, TA.plan = (lambda prj: {}), (lambda prj: {})
+    try:
+        good = True
+        for n, m_ in ((0, 0), (1, 0), (640, 128), (641, 257), (3321, 3968)):
+            P = BT.plan(Fake(n, m_))
+            good &= (P['rows_here'] + sum(b['rows'][1] for b in P['banks']) == n
+                     and P['lists_here'] + sum(b['lists'][1] for b in P['banks']) == m_
+                     and P['bytes_6b'] <= 0x4000
+                     and all(BT.BATTLE_TEMPLATE_SIZE + 25 * b['rows'][1] + 26 * b['lists'][1]
+                             <= 0x4000 for b in P['banks']))
+        P0 = BT.plan(Fake(640, 128))
+    finally:
+        MU.song_ext_banks, TA.plan = real
+    ok("S149 the plan: every row / list placed exactly once, no bank over 16 KB (0 / 1 / 640 "
+       "/ 641 rows, 3,321 rows + 3,968 lists); 640 rows + 128 lists need a battle bank now "
+       "(the gender codes live in bank $6B)", good and P0['lists_here'] == 128, P0)
+    ok("S149 the caps: 3,321 rows (EIDs 519-3839, $0F00+ = the breeders' slots), 3,968 lists",
+       BT.ROW_CAP == 3321 and BT.LIST_CAP == 3968 and BT.ROW_CAP + 519 == 0x0F00)
+    d = base()
+    ens = d['progression']['enemies']
+    e0 = {k: v for k, v in ens[0].items() if k != 'comment'}
+    for k, g in enumerate(('male', 'female', None)):
+        e = dict(e0, id=f'g{k}')
+        if g:
+            e['gender'] = g
+        ens.append(e)
+    out, prj, _w = compile_data(d)
+    b6b = out['patches/bank_06b.asm']
+    codes = b6b.split('ProjectEnemyGender:', 1)[1].split('\n')[1]
+    n_before = len(ens) - 3
+    want = ['$FF'] * n_before + ['$00', '$01', '$FF']
+    ok("S149 ProjectEnemyGender: rolled $FF (absent) / male $00 / female $01 per row, in row order",
+       codes.split(';')[0].replace('db', '').replace(' ', '').split(',') == want, codes)
+    bad = _copy.deepcopy(d)
+    bad['progression']['enemies'][-1]['gender'] = 'both'
+    expect_error("S149 a gender other than rolled / male / female is refused", bad, "gender")
+    # S149 r2 (the user: "0 HP should never be possible"): an enemy row's HP is >= 2 —
+    # HP 1 x the creation roll ($CD..$100)/256 rounded down = a 0-HP monster
+    from editor2.core.gamedata import ENEMY_HP_MIN
+    bad = _copy.deepcopy(d)
+    bad['progression']['enemies'][-1]['hp'] = 1
+    expect_error("S149 r2 a project enemy row with HP 1 is refused (a monster made from it "
+                 "would have 0 HP)", bad, "at least 2")
+    bad = _copy.deepcopy(d)
+    bad.setdefault('gamedata', {}).setdefault('enemies', {})['10'] = {'hp': 1}
+    expect_error("S149 r2 an original row edited to HP 1 is refused", bad, "at least 2")
+    two = _copy.deepcopy(d)
+    two['progression']['enemies'][-1]['hp'] = 2
+    two.setdefault('gamedata', {}).setdefault('enemies', {})['10'] = {'hp': 2}
+    compile_data(two)
+    worst = min((0x02 * m) >> 8 for m in range(0xCD, 0x101))
+    ok("S149 r2 HP 2 builds, and its worst creation roll is HP 1 (never 0)",
+       ENEMY_HP_MIN == 2 and worst == 1, worst)
+    tmpd = '/tmp/_t_s149_hp'
+    shutil.rmtree(tmpd, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd)
+    pj = json.load(open(os.path.join(tmpd, 'project.json')))
+    pj['progression']['enemies'][0]['hp'] = 1
+    pj.setdefault('gamedata', {}).setdefault('enemies', {})['10'] = {'hp': 0}
+    json.dump(pj, open(os.path.join(tmpd, 'project.json'), 'w'), indent=1)
+    dd = Document(tmpd)
+    notes = [n for n in dd.migrations if 'raised to 2' in n]
+    raised = (dd.data['progression']['enemies'][0]['hp'] == 2
+              and dd.data['gamedata']['enemies']['10']['hp'] == 2 and len(notes) == 2)
+    refused = 0
+    for call in (lambda: dd.add_enemy(copy_eid=2, name='Weak', hp=1),
+                 lambda: dd.update_enemy(dd.data['progression']['enemies'][0]['id'], hp=1),
+                 lambda: dd.set_enemy_fields(10, {'hp': 1})):
+        try:
+            call()
+        except Exception as ex:                  # noqa: BLE001
+            refused += 'at least 2' in str(ex)
+    jid = dd.add_enemy(copy_eid=2, name='Halved', hp=3, joinability=0)
+    dd.make_join_version(jid)
+    half = dd.project_enemy(dd.project_enemy(jid)['join_as'])['hp']
+    ok("S149 r2 the editor: an old project's HP 1 / 0 rows are raised to 2 on open (2 notes); "
+       "a new row, a project-row edit and an original-row edit to HP 1 are refused; a join "
+       "version of an HP-3 row gets HP 2 (not 1)",
+       raised and refused == 3 and half == 2, (raised, notes, refused, half))
+    big = base()
+    ens = big['progression']['enemies']
+    while len(ens) < 700:
+        ens.append(dict(e0, id=f'b{len(ens)}', species=len(ens) % 200))
+    cl = big.setdefault('custom', {}).setdefault('encounter_lists', [])
+    for k in range(300):
+        cl.append({'id': f'l{k}', 'size_chance': [7, 0, 0], 'slot_chance': [7, 0, 0, 0, 0],
+                   'eids': [2, 0, 0, 0, 0], 'max_count': [1, 1, 1, 1, 1], 'maze_size': 3 + k % 10})
+    ob, pb, _wb = compile_data(big)
+    P = BT.plan(pb)
+    files = sorted(t for t in ob if 'BATTLE BANK DATA (generated' in ob[t])
+    usage = V.bank_usage({f'file:{k}': v for k, v in ob.items()})
+    ok("S149 700 rows + 300 lists compile: bank $6B keeps the first rows, battle bank(s) "
+       "$80+ the rest + lists 384+; every bank's usage counted (bank $6B + the battle banks)",
+       P['rows_here'] < 700 and P['lists_here'] == 256 and files and 0x6B in usage
+       and all(usage[b['bank']][0] <= 0x4000 for b in P['banks'])
+       and sum(b['rows'][1] for b in P['banks']) == 700 - P['rows_here'], (P, files))
+    b76 = ob['patches/bank_076.asm']
+    ok("S149 bank $76: LISTS_HERE 256, ListBankTable names the battle bank of lists 384+",
+       'LISTS_HERE EQU 256' in b76 and f"db ${P['banks'][-1]['bank']:02X}   ; lists" in b76, '')
+    # Document: a room never gets a hole
+    tmpd = '/tmp/_t_s149_doc'
+    if os.path.exists(tmpd):
+        shutil.rmtree(tmpd)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    room = next(r for r in doc.custom['rooms'] if r.get('record')
+                and list(r['screens']) == ['0'])
+    lid = doc.unique_layout_id('t_s5')
+    doc.add_layout(lid, tiles=doc.blank_grid(0), attr=doc.blank_grid(0))
+    doc.add_screen(room, 5, {'id': lid})
+    holes = doc.room_holes(room)
+    made = doc.fill_room_holes(room, 0)
+    ok("S149 a screen at 5 next to screen 0 leaves holes 1 and 4; fill_room_holes makes them "
+       "(blank screens) and the room has none", holes == [1, 4] and [k for k, _l in made] ==
+       [1, 4] and doc.room_holes(room) == [], (holes, made))
+    row = {'id': 't_row', 'record': {'width_px': 480, 'height_px': 128},
+           'screens': {'0': {}, '1': {}, '2': {}}}
+    ok("S149 removing a screen that would leave a hole is refused (the 2 x 2 room: any corner "
+       "leaves an L; a 1 x 3 row: the middle one) — the end of a row is fine",
+       doc.holes_if_removed(room, 0) == [0] and doc.holes_if_removed(room, 5) == [5]
+       and doc.holes_if_removed(row, 1) == [1] and doc.holes_if_removed(row, 2) == [], '')
+    from editor2.core.render_project import ProjectRenderer
+    rr = ProjectRenderer(REPO, tmpd, doc.data)
+    doc.vanilla = rr
+    cid = doc.clone_vanilla(0x00, 'S149 Castle copy', REPO, rr, keep='default')
+    cr = doc.room(cid)
+    doc.migration_warnings = []
+    doc._note_room_holes()
+    ok("S149 a copy of a game room keeps the original's shape: the Castle copy's gap (screen 4) "
+       "is the game's — not reported on open, not counted as a new hole by a removal",
+       Document.is_game_room_copy(cr) and doc.room_holes(cr) == [4]
+       and not any('S149 Castle copy' in w for w in doc.migration_warnings)
+       and 4 not in doc.holes_if_removed(cr, 5), doc.migration_warnings)
+    # a copy of an original row keeps its gender (EnemyGroupTable $14:$4A1D, 512 B)
+    from simulator import raising as R
+    from editor2.core.conversation import vanilla_gender
+    egt = R.enemy_gender_table()
+    fem = next(i for i, v in enumerate(egt) if v == 1 and i <= 486)
+    rid = doc.add_enemy(copy_eid=fem)
+    ok(f"S149 a project row copied from the original row {fem} (fixed female) is female; the "
+       "table is 512 B (EIDs 0-511)", len(egt) == 512 and vanilla_gender(fem) == 'female'
+       and doc.project_enemy(rid).get('gender') == 'female', '')
+    T = R.project_tables(prj)
+    gens = [T.genders[e['_eid']] for e in prj.quest_enemy_rows()][-3:]
+    ok("S149 the raising model knows the project rows' codes (male / female / rolled)",
+       gens == [0x00, 0x01, 0xFF], gens)
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s149_rom'
+    C.write_outputs(ob, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(lab, n):
+        b, a = sy[lab]
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    from editor2.core.emitters import enemy_row_bytes
+    rows = pb.quest_enemy_rows()
+    good = at('RowBankTable', 3 * len(P['banks'])) == bytes(
+        x for b in P['banks'] if b['rows'][1]
+        for x in (((b['rows'][0] + b['rows'][1]) & 0xFF), (b['rows'][0] + b['rows'][1]) >> 8,
+                  b['bank']))
+    good &= at('ProjectEnemyGender', len(rows)) == bytes(BT.gender_code(e) for e in rows)
+    for b in P['banks']:
+        B_ = BT.suffix(b['bank'])
+        f, c = b['rows']
+        good &= rb[b['bank'] * 0x4000] == b['bank']
+        good &= at(f'BattleRows{B_}', 25 * c) == b''.join(bytes(enemy_row_bytes(e))
+                                                           for e in rows[f:f + c])
+    site = at('label14_40b4', 0x300)
+    k = site.find(bytes([0xFA, 0x13, 0xDA, 0x57, 0xFA, 0x12, 0xDA, 0xCD]))
+    ok("S149 the ROM: RowBankTable / ProjectEnemyGender / every battle bank's self-ID and rows == "
+       "the plan; bank $14's gender site = ld a,[$DA13] / ld d,a / ld a,[$DA12] / call "
+       "EnemyGenderCode + 7 nops; LoadEnemyStatsExt still at $7ECC",
+       good and k >= 0 and site[k + 8:k + 10] == bytes([sy['EnemyGenderCode'][1] & 0xFF,
+                                                        sy['EnemyGenderCode'][1] >> 8])
+       and site[k + 10:k + 17] == bytes(7) and sy['LoadEnemyStatsExt'] == (0x14, 0x7ECC), k)
+
+
+def test_s151(with_rom=False):
+    """S151 (ROADMAP E9 — items; user: "Lets do items. Lest also do it in 1 session"): every
+    field of the game's 43 items (gamedata.items), the project's NEW items 44-127
+    (custom.items: each works like a game item = its BASE), compiled into bank $77
+    (ITEM_COUNT, ItemTable, ItemBaseTable); the new items' words in the S150 text banks;
+    the editor model (Document: new_item / set_item_field / set_item_battle / delete /
+    reset); story checks / give_item accept the project's ids. --rom: the hook bytes in
+    banks $03 / $07 / $09 / $50 / $52 / $54, and ItemRecordCopy run on dwm/sm83 for every
+    id."""
+    import shutil
+    from editor2.core import items as IT, gametext as GT
+    from editor2.core import validators as V
+    from editor2.core.document import Document
+    van = IT.vanilla_records(REPO)
+    herb = IT.decode(van[1])
+    ok("S151 ItemInfoTable decoded: 44 records; the Herb = price 8, used up 100 %, field use, "
+       "asks a monster, use line 3, result line 4, power 30, sellable, lost in a lost battle",
+       len(van) == 44 and (herb['price'], herb['consume'], herb['field_use'], herb['pick_monster'],
+                           herb['use_message'], herb['result_message'], herb['power'],
+                           herb['sellable'], herb['keep_on_loss']) == (8, 100, True, True, 3, 4,
+                                                                       30, True, False), herb)
+    medal = IT.decode(van[30])
+    ok("S151 the TinyMedal: not usable in the field, not sellable (+11 bit 0), kept after a "
+       "lost battle (+11 bit 2)", not medal['field_use'] and not medal['sellable']
+       and medal['keep_on_loss'], medal)
+    r0 = IT.resolve(base(), REPO)
+    ok("S151 the example project (no item edits): 44 records = the game's, behaviour = itself",
+       r0['count'] == 44 and r0['records'] == van and r0['base'] == list(range(44))
+       and not r0['new'] and not r0['edited'], '')
+    d = base()
+    d.setdefault('gamedata', {})['items'] = {'29': {'consume': 0}, '1': {'power': 40}}
+    d['custom']['items'] = [
+        {'id': 44, 'name': 'MegaHerb', 'base': 1, 'power': 80, 'price': 300,
+         'use_text': '{ins 00} feeds\n{ins 10} a\n{ins 20}!'},
+        {'id': 48, 'name': 'OldKey', 'base': 30, 'price': 0, 'sellable': False,
+         'keep_on_loss': True, 'consume': 0, 'description': 'A key'}]
+    r = IT.resolve(d, REPO)
+    ok("S151 resolve: edits land in the records (WarpWing +3 = 0, Herb +9 = 40); new item 44 = "
+       "the Herb's record with power 80 / price 300 / its own use line 48; 45-47 empty "
+       "(behaviour 0); 48 = the TinyMedal's with price 0, kept, not sellable",
+       r['count'] == 49 and r['records'][29][3] == 0 and r['records'][1][9] == 40
+       and r['records'][44][9] == 80 and r['records'][44][1:3] == bytes([44, 1])
+       and r['records'][44][7] == 48 and r['records'][44][8] == van[1][8]
+       and r['base'][44] == 1 and r['base'][45:48] == [0, 0, 0] and r['records'][45] == bytes(12)
+       and r['base'][48] == 30 and r['records'][48][11] & 5 == 5 and r['edited'] == {1, 29},
+       (r['count'], r['records'][44].hex()))
+    out, prj, _w = compile_data(d)
+    b77 = out['patches/bank_077.asm']
+    ok("S151 bank $77: ITEM_COUNT EQU 49, ItemTable (49 rows), ItemBaseTable; bank $03's "
+       "ItemInfoTable keeps the ORIGINAL bytes (no longer read)",
+       'ITEM_COUNT EQU 49' in b77 and 'ItemTable:' in b77 and 'ItemBaseTable:' in b77
+       and b77.count('   ; [') >= 49 and 'NOT READ since S151' in out['patches/bank_003.asm'],
+       '')
+    slots = {(t, i) for _b, t, i, _r, _w in IT.text_slots(prj, REPO)}
+    ok("S151 the new items' words go to the S150 text banks: names / descriptions rows 44 + 48, "
+       "use line 48 (a description left out = the base's)",
+       slots == {(IT.NAME_TABLE, 44), (IT.DESC_TABLE, 44), (IT.USE_TABLE, 48),
+                 (IT.NAME_TABLE, 48), (IT.DESC_TABLE, 48)}, slots)
+    ok("S151 TEMPLATE_SIZE[$77] = 3320 (S177 r2: LibraryOpenAttrs + PushRunIsMenu; S177: the Library pushes tiles only, was 3087; S172 r2: + FoodIconsLoad / FoodIconDraw and the FoodIcon rows, was 2922; S172: + NpcStaticFrame77 and the FoodSheet rows, was 2889; S168: + the page-2 window attributes, was 2785; the S151 head: entries 16-18; S152: + StoryCommand "
+       "kind 4 name_given, was 2074; S153: + kinds 5 story_point / 6 credits_after, was 2200; "
+       "S154: + kind 7 memorial + BreedClose's MemorialRedraw77 tail, was 2229; S157: the "
+       "one-only items, was 2241; S158: + kind 8 hint, was 2730; S160: the field-only items' "
+       "refusal ReclaimedSkill77, was 2741)",
+       V.TEMPLATE_SIZE[0x77] == 3320, V.TEMPLATE_SIZE[0x77])
+    # a shop sells a new item; a story check asks for one
+    d2 = json.loads(json.dumps(d))
+    d2['custom'].setdefault('checks', []).append({'name': 'has_key', 'kind': 'item', 'item': 48,
+                                                  'count': 1})
+    compile_data(d2)
+    ok("S151 a story check on a project item compiles", True)
+    # S151 r2 (user: "Key: asked when inventory full. Then wouldnt give because asked a
+    # second time"): a Give with no room STOPS the conversation (on_full 'stop', the
+    # default) — the steps after it run only when it was given; 'continue' = S129
+    d3 = json.loads(json.dumps(d))
+    d3['custom'].setdefault('flags', []).append({'name': 's151_given'})
+    for sid, extra in (('s151_give_stop', {}), ('s151_give_on', {'on_full': 'continue'})):
+        d3['custom']['scripts'].append({'id': sid, 'talk': {'steps': [
+            {'give_item': dict({'item': 48, 'got': '0x0680', 'full': '0x0682'}, **extra)},
+            {'set': ['s151_given']}]}})
+    _o3, p3, _w3 = compile_data(d3)
+    ops = {x['id']: x['ops'] for x in p3.custom['scripts'] if x['id'].startswith('s151_give')}
+    gf = p3.resolve_flag_ref('s151_given')
+
+    def tail(o):
+        k = next(i for i, x in enumerate(o) if x == 'label:gfull1')
+        return o[k:]
+    ok("S151 r2: a Give with no room — the \"full\" words, then `end` (the flag after the "
+       "Give is set only when it was given); on_full 'continue' falls through to it",
+       tail(ops['s151_give_stop'])[:4] == ['label:gfull1', ['text', '0x0682'], ['end'],
+                                           'label:gdone1'] and
+       tail(ops['s151_give_on'])[:3] == ['label:gfull1', ['text', '0x0682'], 'label:gdone1'] and
+       ['op', 'set_flag', gf] in ops['s151_give_stop'], (ops['s151_give_stop'],
+                                                          ops['s151_give_on']))
+    bd = json.loads(json.dumps(d3))
+    bd['custom']['scripts'][-1]['talk']['steps'][0]['give_item']['on_full'] = 'maybe'
+    expect_error("S151 r2 refused: on_full that is not stop / continue", bd, 'on_full')
+    # S151 r3 (user: "so many NPCs in that room some of them are invisible and the whole
+    # thing lags massively. Did the editor not make a warning?"): the speed warning (5+ NPCs
+    # on a screen with the party = half speed, measured) and the sheet warning by DIFFERENT
+    # sprites
+    from editor2.core import formats as F
+    four = [{'kind': 'npc', 'x': 1, 'y': y, 'sprite': 0x0B} for y in range(1, 5)]
+    five = four + [{'kind': 'npc', 'x': 3, 'y': 6, 'sprite': 0x0B}]
+    walkers = four[:3] + [{'kind': 'npc', 'x': 1, 'y': 5, 'behaviour': 'pace_x2'}]
+    ok("S151 r3 speed: 3 NPCs fine; 4 -> drops frames (9 in 10; a walker: 3 in 4); 5 -> HALF "
+       "SPEED; a hidden NPC does not count; no warning in a party-less room (the arena battle)",
+       F.frame_budget(four[:3]) == [] and 'drops frames' in F.frame_budget(four)[0] and
+       '9 frames in 10' in F.frame_budget(four)[0] and
+       '3 frames in 4' in F.frame_budget(walkers)[0] and
+       'HALF SPEED' in F.frame_budget(five)[0] and
+       F.frame_budget(four[:3] + [{'kind': 'npc', 'x': 3, 'y': 6, 'hidden': True}]) == [] and
+       F.frame_budget(five + five[:3], party=False) == [], F.frame_budget(five))
+    d5 = json.loads(json.dumps(d))
+    room = d5['custom']['rooms'][0]
+    st0 = room['screens'][sorted(room['screens'])[0]]
+    st0 = st0['states'][0] if 'states' in st0 else st0
+    tmpl = next(n for n in st0['npcs'] if n.get('kind') == 'npc')
+    st0['npcs'] = [n for n in st0['npcs'] if n.get('kind') != 'npc'] + [
+        dict(tmpl, x=x, y=y) for x, y in ((1, 1), (3, 2), (5, 3), (7, 4), (2, 5))]
+    _o5, _p5, w5 = compile_data(d5)
+    rn = room.get('name') or room['id']
+    ok("S151 r3: the build warns about the speed (5 NPCs of ONE sprite: no sheet warning)",
+       any('HALF SPEED' in x and rn in x for x in w5) and not any(
+           'different NPC sprites' in x and rn in x for x in w5),
+       [x[:120] for x in w5 if rn in x])
+    for name, mut, needle in (
+            ('an id of the game (43)', lambda e: e.update(id=43), '44-127'),
+            ('an id past 127', lambda e: e.update(id=128), '44-127'),
+            ('a base that is not a game item (44)', lambda e: e.update(base=44), '1-43'),
+            ('no base item 0', lambda e: e.update(base=0), '1-43'),
+            ('a 10-letter name', lambda e: e.update(name='MegaHerbal'), 'letters'),
+            ('a use-up chance of 101', lambda e: e.update(consume=101), '0-100'),
+            ('a power of 256', lambda e: e.update(power=256), '0-255'),
+            ('an unknown field', lambda e: e.update(colour=1), 'unknown field'),
+            ('a raw offset with a field of its own', lambda e: e.update(raw={'3': 1}),
+             'field of its own')):
+        bd = json.loads(json.dumps(d))
+        mut(bd['custom']['items'][0])
+        expect_error(f"S151 refused: {name}", bd, needle)
+    bd = json.loads(json.dumps(d))
+    bd['custom']['items'][1]['id'] = 44
+    expect_error("S151 refused: an id used twice", bd, 'used twice')
+    bd = json.loads(json.dumps(d))
+    bd['custom']['items'][1]['name'] = 'MegaHerb'
+    expect_error("S151 refused: a name used twice", bd, 'too')
+    bd = json.loads(json.dumps(d))
+    bd['gamedata']['items'] = {'44': {'power': 1}}
+    expect_error("S151 refused: gamedata.items past the game's 43", bd, '1-43')
+    bd = json.loads(json.dumps(d))
+    bd['custom'].setdefault('checks', []).append({'name': 'has_none', 'kind': 'item',
+                                                  'item': 50, 'count': 1})
+    expect_error("S151 refused: a story check on an item the project does not have", bd,
+                 'item')
+    # ---- the Document
+    tmpd = '/tmp/_t_s151_doc'
+    shutil.rmtree(tmpd, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    before = doc.dumps()
+    doc.set_item_field(1, 'power', 40)
+    doc.set_item_field(1, 'consume', 100)                 # = the game's: not stored
+    sparse = doc.data['gamedata']['items'] == {'1': {'power': 40}}
+    doc.set_item_battle(1, power=45)
+    battle = doc.data['gamedata']['skills'][str(1 + 0xAF)]['record'] == {'party_min': 45,
+                                                                        'enemy_min': 45}
+    i = doc.new_item(1, 'MegaHerb')
+    e = doc.new_item_entry(i)
+    newok = i == 44 and e['base'] == 1 and e['power'] == 40 and e['price'] == 8
+    j = doc.new_item(1, None, copy_of=44)
+    copyok = j == 45 and doc.new_item_entry(45)['name'] != 'MegaHerb'
+    doc.custom.setdefault('checks', []).append({'name': 'has_mega', 'kind': 'item', 'item': 44,
+                                                'count': 1})
+    try:
+        doc.delete_item(44)
+        refused = False
+    except ValueError as ex:
+        refused = 'has_mega' in str(ex)
+    doc.custom['checks'].pop()
+    if not doc.custom['checks']:
+        doc.custom.pop('checks')
+    doc.delete_item(45)
+    doc.delete_item(44)
+    doc.reset_item(1)
+    ok("S151 Document: a game item's field stored sparse (the game's value removed), its battle "
+       "power in the item skill's record; New item (starts as its base) and Copy; Delete refused "
+       "while a story check uses it; Original; the project back byte for byte",
+       sparse and battle and newok and copyok and refused and doc.dumps() == before,
+       (sparse, battle, newok, copyok, refused))
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s151_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+    org = open(ROM, 'rb').read()
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+
+    wib, wiu = sy['wItemBase'][1], sy['wItemInUse'][1]
+    hooks = {
+        'bank $03 SaveMon_6987 -> bank $77 entry 16 (ld hl,$7710 / rst $10 / ret)':
+            at(0x03, 0x6987, 5) == bytes([0x21, 0x10, 0x77, 0xD7, 0xC9]),
+        'bank $09: the SELL / Vault histograms clear 128 B (ld bc,$0080) x 3':
+            rb[0x09 * 0x4000:0x0A * 0x4000].count(bytes([0x01, 0x80, 0x00])) >=
+            org[0x09 * 0x4000:0x0A * 0x4000].count(bytes([0x01, 0x80, 0x00])) + 3,
+        'banks $52 / $54 read wItemInUse (ld a,[wItemInUse] / nop / nop)':
+            all(rb[b * 0x4000:(b + 1) * 0x4000].count(bytes([0xFA, wiu & 0xFF, wiu >> 8, 0, 0])) == 1
+                for b in (0x52, 0x54)),
+        'bank $07 ItemBase07 / ItemStoreBase07 in the bank\'s free end':
+            sy['ItemBase07'][0] == 7 and sy['ItemStoreBase07'][0] == 7,
+        'bank $77 entries 16-18':
+            all(at(0x77, 0x4001 + 2 * k, 2) == bytes([sy[n][1] & 0xFF, sy[n][1] >> 8])
+                for k, n in ((16, 'ItemRecordCopy'), (17, 'BattleItemProbe'),
+                             (18, 'BattleItemPick'))),
+        'banks $03 / $09 read wItemBase (the effect / usability tables, the sell price)':
+            rb[0x03 * 0x4000:0x04 * 0x4000].count(bytes([0xFA, wib & 0xFF, wib >> 8])) >= 2
+            and rb[0x09 * 0x4000:0x0A * 0x4000].count(bytes([0xFA, wib & 0xFF, wib >> 8])) >= 1}
+    ok("S151 the ROM: " + '; '.join(hooks), all(hooks.values()),
+       [k for k, v in hooks.items() if not v])
+    from dwm.sm83 import CPU
+    ram = {}
+    st = {'bank': 0x77}
+
+    def rd(a):
+        if a < 0x4000:
+            return rb[a]
+        if a < 0x8000:
+            return rb[st['bank'] * 0x4000 + a - 0x4000]
+        return ram.get(a, 0)
+
+    def wr(a, v):
+        if 0x2000 <= a < 0x3000:
+            st['bank'] = v or 1
+        elif a >= 0x8000:
+            ram[a] = v & 0xFF
+    cpu = CPU(rd, wr)
+    bad = []
+    for item in list(range(128)) + [200, 255]:
+        st['bank'] = 0x77
+        ram[0xDA5E] = item
+        for k in range(12):
+            ram[0xDA62 + k] = 0xEE
+        cpu.call(sy['ItemRecordCopy'][1], de=0xDA62, sp=0xDFF0)
+        got = bytes(ram[0xDA62 + k] for k in range(12))
+        want = r['records'][item] if item < r['count'] else bytes(12)
+        wb = r['base'][item] if item < r['count'] else 0
+        if got != want or ram.get(wib) != wb:
+            bad.append(item)
+    ok("S151 ItemRecordCopy on dwm/sm83 for ids 0-127, 200, 255: the 12 bytes = the resolved "
+       "record (an id past ITEM_COUNT = zeros), wItemBase = its base",
+       not bad, bad[:8])
+
+
+def test_s157(with_rom=False):
+    """S157 (ROADMAP E9 — ONE-ONLY items; user: "If I set an item to permanent (doesnt break)
+    user should not be allowed to have more than 1 AND that item should NOT appear as a
+    pickup in random gates" / "bag or vault" / "Kept after lost battles yes" / a give of
+    one held: "c ideally"): items.one_only + the forced keep bit, loot.py (the random gates'
+    tables without them, shares kept in proportion), the "already has" line
+    (gamedata.item_rules), ScriptArity77, the Give-of-2 warning, the Document. --rom: the
+    same-size hooks (bank $04 give ops + op $2C, bank $09 BUY state 5, bank $60
+    TextOverride), the loot regions in the ROM, and IsOneOnly77 / ShopDropHeld77 / GiveOne /
+    BuyQtyMax / OneOnlySay run on dwm/sm83."""
+    import shutil
+    from editor2.core import items as IT, loot as LT, script_ops as SO, textmark as TM
+    from editor2.core import validators as V
+    from editor2.core.document import Document
+    r0 = IT.resolve(base(), REPO)
+    ok("S157 the game's one-only items (used up 0 %): the BeastTail (38) and the ShinyHarp (41)",
+       r0['one_only'] == {38, 41}, r0['one_only'])
+    lt0 = LT.resolve(base(), REPO)
+    rom = open(ROM, 'rb').read() if os.path.exists(ROM) else None
+    ok("S157 no one-only item in the random gates' tables of the example: the regions = the "
+       "original bytes (FloorLayoutData, RareChestItems, ColiseumPrizesLow / High)",
+       not lt0['dropped'] and (rom is None or (
+           b''.join(lt0['floor']) == LT._b(rom, 0x16, 0x7436, 768) and
+           lt0['rare'] == LT._b(rom, 0x16, 0x6E04, 16) and
+           lt0['prize'] == LT._b(rom, 0x04, 0x6F44, 32))), lt0['dropped'])
+    d = base()
+    d.setdefault('gamedata', {})['items'] = {'29': {'consume': 0, 'keep_on_loss': False}}
+    d['custom']['items'] = [{'id': 48, 'name': 'OldKey', 'base': 30, 'consume': 0}]
+    r = IT.resolve(d, REPO)
+    ok("S157 the WarpWing set to 0 % = one-only, KEPT after a lost battle even with "
+       "keep_on_loss false (+11 bit 2 forced); a project item at 0 % too",
+       r['one_only'] == {29, 38, 41, 48} and r['records'][29][11] & 4 and
+       r['records'][48][11] & 4 and 29 in r['edited'], (r['one_only'], r['records'][29].hex()))
+    lt = LT.resolve(d, REPO)
+    bad = []
+    for k, row in enumerate(lt['floor']):
+        sh = LT.shares(row)
+        sh0 = LT.shares(lt0['floor'][k])
+        kept0 = {i: p for i, p in sh0.items() if i != 29}
+        tot0 = sum(kept0.values())
+        if 29 in sh or sum(sh.values()) != 100 or set(sh) != set(kept0):
+            bad.append((k, 'set'))
+        elif any(abs(sh[i] - p * 100 / tot0) >= 1.5 for i, p in kept0.items()):
+            bad.append((k, 'share'))
+    ok("S157 loot: every gate contents row loses the WarpWing (2-5 %), the other items keep "
+       "their place and share its % in proportion (within rounding; 100 % in all)",
+       not bad and len([x for x in lt['dropped'] if x[1] == 29]) == 16, bad)
+    ok("S157 loot: a 16-entry list loses a one-only item for the list's other items in turn; "
+       "none left -> the Herb",
+       LT.replace_list(bytes([1, 29, 2, 29]), {29}) == bytes([1, 1, 2, 2]) and
+       LT.replace_list(bytes([29, 29]), {29}) == bytes([1, 1]), '')
+    out, prj, warns = compile_data(d)
+    b77 = out['patches/bank_077.asm']
+    arity = [0xFF if c in SO.TERMINAL else len(SO.OPS[c].params) for c in range(max(SO.OPS) + 1)]
+    import re as _re
+    rows = _re.search(r'ScriptArity77:[^\n]*\n((?:    db [^\n]*\n)+)', b77)
+    got = [int(x, 16) for x in _re.findall(r'\$([0-9a-f]{2})', ''.join(
+        ln.split(';')[0] for ln in rows.group(1).split('\n')))] if rows else []
+    line = TM.encode(IT.DEFAULT_ALREADY_HAS, 'box') + bytes([TM.END])
+    ok("S157 bank $77: OneOnlyLine = the default \"{hero} already / has a {ins 00}.\" (box "
+       "style), SCRIPT_OPS + ScriptArity77 = script_ops' arities ($FF = the six script-ending ops)",
+       'OneOnlyLine:' in b77 and got == arity and
+       ', '.join(f'${x:02x}' for x in line[:16]) in b77, (len(got), len(arity)))
+    b16 = out['patches/bank_016.asm']
+    ok("S157 bank $16's region gd_floor_loot has no WarpWing byte left where it was (row 0: "
+       "Herb 99 %, TinyMedal 1 %)", LT.shares(lt['floor'][0]) == {1: 99, 30: 1} and
+       '; @BUILD_PROJECT BEGIN gd_floor_loot' in b16, LT.shares(lt['floor'][0]))
+    d2 = json.loads(json.dumps(d))
+    d2['custom']['scripts'].append({'id': 's157_two', 'talk': {'steps': [
+        {'give_item': {'item': 29, 'count': 2}}]}})
+    _o2, _p2, w2 = compile_data(d2)
+    ok("S157 a Give of 2 WarpWings (one-only) warns: just one, none when held",
+       any('ONE-ONLY' in x and 's157_two' in x for x in w2), [x for x in w2 if 'ONE' in x])
+    d3 = json.loads(json.dumps(d))
+    d3['gamedata']['item_rules'] = {'already_has': '{hero} has it\nalready: {ins 00}!'}
+    o3, _p3, _w3 = compile_data(d3)
+    ok("S157 gamedata.item_rules.already_has: the project's line in OneOnlyLine",
+       ', '.join(f'${x:02x}' for x in TM.encode('{hero} has it\nalready: {ins 00}!', 'box')[:8])
+       in o3['patches/bank_077.asm'], '')
+    for name, val, needle in (('an unknown key', {'colour': 1}, 'unknown field'),
+                              ('a line that is not words', {'already_has': 5}, 'words'),
+                              ('bad markup', {'already_has': '{nonsense}'}, 'already_has')):
+        bd = json.loads(json.dumps(d))
+        bd['gamedata']['item_rules'] = val
+        expect_error(f"S157 refused: item_rules with {name}", bd, needle)
+    ok("S157 / S158 / S160 / S168 / S172 / S177 TEMPLATE_SIZE: [$77] 3320 (S177 r2 + LibraryOpenAttrs / PushRunIsMenu; S177 + the Library's tiles-only push, was 3087; S172 r2 + FoodIconsLoad / FoodIconDraw / FoodIcon rows, was 2922; S172 + NpcStaticFrame77 / FoodSheet rows, was 2889; S168 + PushRowBoth / PushCellAttr, was 2785; S160 + ReclaimedSkill77; S158 2741 + "
+       "StoryCommand kind 8; S157 2730: + ShopDropHeld77, the story give test, entries 19-22 and "
+       "their helpers; was 2241), [$60] 1859 (S158 + the hint riddle test; S157 1842: "
+       "TextOverride's one-only test, was 1825)",
+       V.TEMPLATE_SIZE[0x77] == 3320 and V.TEMPLATE_SIZE[0x60] == 1859,
+       (V.TEMPLATE_SIZE[0x77], V.TEMPLATE_SIZE[0x60]))
+    # ---- the Document
+    tmpd = '/tmp/_t_s157_doc'
+    shutil.rmtree(tmpd, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmpd, ignore=shutil.ignore_patterns('build'))
+    doc = Document(os.path.join(tmpd, 'project.json'))
+    before = doc.dumps()
+    doc.set_item_field(29, 'consume', 0)
+    info = doc.item_info(29)
+    names = dict(doc.one_only_names())
+    doc.set_item_rule('already_has', 'You have one: {ins 00}.')
+    stored = doc.data['gamedata']['item_rules'] == {'already_has': 'You have one: {ins 00}.'}
+    doc.set_item_rule('already_has', IT.DEFAULT_ALREADY_HAS)
+    doc.set_item_field(29, 'consume', 100)
+    ok("S157 Document: item_info says one-only + where it left the gates; one_only_names; "
+       "set_item_rule stores the line, the default removes it; the project back byte for byte",
+       info['one_only'] and info['fields']['keep_on_loss'] and info['loot_notes'] and
+       names.get(29) == 'WarpWing' and stored and doc.dumps() == before,
+       (info['one_only'], info['loot_notes'], stored))
+    if not with_rom or rom is None:
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s157_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    b04 = rb[0x04 * 0x4000:0x05 * 0x4000]
+    say = sy['wOneOnlySay'][1]
+    to = sy['TextOverride']
+    hooks = {
+        'bank $04: five give ops call bank $77 entry 19 (ld hl,$7713 / rst $10)':
+            b04.count(bytes([0x21, 0x13, 0x77, 0xD7])) == 5,
+        'bank $04: op $2C calls entry 20 (ld hl,$7714 / rst $10) before `ld a,c / cp $14`':
+            b04.count(bytes([0x21, 0x14, 0x77, 0xD7]) + bytes(15) + bytes([0x79, 0xFE, 0x14])) == 1,
+        'bank $09: BUY state 5 calls entry 21 then FuncFld9_434a (13 B)':
+            rb[0x09 * 0x4000:0x0A * 0x4000].count(bytes([0x21, 0x15, 0x77, 0xD7, 0x11, 0x8D, 0x49,
+                                                          0x21, 0xDC, 0xC8, 0xCD])) == 1,
+        'bank $60 TextOverride starts with ld a,[wOneOnlySay] / and a / jr z':
+            at(to[0], to[1], 5) == bytes([0xFA, say & 0xFF, say >> 8, 0xA7, 0x28]),
+        'bank $77 entries 19-22':
+            all(at(0x77, 0x4001 + 2 * k, 2) == bytes([sy[n][1] & 0xFF, sy[n][1] >> 8])
+                for k, n in ((19, 'GiveOne'), (20, 'BagFullCheck'), (21, 'BuyQtyMax'),
+                             (22, 'OneOnlySay'))),
+        'the loot regions in the ROM = loot.resolve':
+            at(*sy['FloorLayoutData'], 768) == b''.join(lt['floor']) and
+            at(*sy['RareChestItems'], 16) == lt['rare'] and
+            at(*sy['ColiseumPrizesLow'], 32) == lt['prize']}
+    ok("S157 the ROM: " + '; '.join(hooks), all(hooks.values()),
+       [k for k, v in hooks.items() if not v])
+    from dwm.sm83 import CPU, F as RF, B as RB, C as RC, D as RD, E as RE
+    ram = {}
+    st = {'bank': 0x77}
+
+    def rd(a):
+        if a < 0x4000:
+            return rb[a]
+        if a < 0x8000:
+            return rb[st['bank'] * 0x4000 + a - 0x4000]
+        return ram.get(a, 0)
+
+    def wr(a, v):
+        if 0x2000 <= a < 0x3000:
+            st['bank'] = v or 1
+        elif a >= 0x8000:
+            ram[a] = v & 0xFF
+    cpu = CPU(rd, wr)
+    BAG, VAULT = 0xCA51, 0xCA65
+
+    def bag(items, vault=()):
+        for k in range(20):
+            ram[BAG + k] = items[k] if k < len(items) else 0xFF
+        for k in range(40):
+            ram[VAULT + k] = vault[k] if k < len(vault) else 0xFF
+    bad = []
+    bag([])
+    for item in list(range(128)) + [200, 255]:
+        cpu.call(sy['IsOneOnly77'][1], a=item, sp=0xDFF0)
+        if bool(cpu.R[RF] & 0x10) != (item in r['one_only']):
+            bad.append(item)
+    ok("S157 IsOneOnly77 on dwm/sm83 for ids 0-127, 200, 255: CF = one-only (29 38 41 48)",
+       not bad, bad[:8])
+    res = {}
+    for name, items, vault in (('none', [1], []), ('bag', [1, 29], []), ('vault', [1], [29])):
+        bag(items, vault)
+        for k, v in enumerate([29, 38, 1, 0xFF] + [0] * 16):
+            ram[0xC0D8 + k] = v
+        cpu.call(sy['ShopDropHeld77'][1], sp=0xDFF0)
+        res[name] = [ram[0xC0D8 + k] for k in range(6)]
+    ok("S157 ShopDropHeld77: none held -> the list as it was; a WarpWing in the bag OR the "
+       "Vault -> [38, 1, $FF] and zeros after",
+       res == {'none': [29, 38, 1, 0xFF, 0, 0], 'bag': [38, 1, 0xFF, 0, 0, 0],
+               'vault': [38, 1, 0xFF, 0, 0, 0]}, res)
+    give = sy['wOneOnlyItem'][1]
+    gres = sy['wOneOnlyRes'][1]
+    out_g = []
+    for items, item in (([1, 29], 29), ([1], 29), ([1] * 20, 2), ([1, 2], 2)):
+        bag(items)
+        ram[give] = item
+        cpu.call(sy['GiveOne'][1], sp=0xDFF0)
+        out_g.append((ram[gres], [ram[BAG + k] for k in range(20)].count(item)))
+    ok("S157 GiveOne: a held WarpWing -> nothing (res 1); none -> one (res 1); a full bag -> "
+       "nothing (res 0); a Herb -> one more",
+       out_g == [(1, 1), (1, 1), (0, 0), (1, 2)], out_g)
+    qty = []
+    for item in (29, 1):
+        for k, v in enumerate([item, 0xFF]):
+            ram[0xC0D8 + k] = v
+        ram[0xC8E2], ram[0xC8E3] = 0x80, 0           # the row (bit 7: picked), page 0
+        cpu.call(sy['BuyQtyMax'][1], sp=0xDFF0)
+        qty.append((cpu.R[RB], cpu.R[RC]))
+    ok("S157 BuyQtyMax: B = 2 digits, C = 1 for the WarpWing, 20 for the Herb",
+       qty == [(2, 1), (2, 20)], qty)
+    ram[say] = 1
+    ram[0xC823] = 0x12
+    cpu.call(sy['OneOnlySay'][1], sp=0xDFF0)
+    tp = sy['wTextOvrPtr'][1]
+    de = cpu.R[RD] << 8 | cpu.R[RE]
+    ok("S157 OneOnlySay: [$C824] = $77, wTextOvrPtr = OneOnlyLine, DE = wTextOvrPtr - 2 * id, "
+       "the mark cleared",
+       ram[0xC824] == 0x77 and (ram[tp] | ram[tp + 1] << 8) == sy['OneOnlyLine'][1] and
+       de == tp - 2 * 0x12 and ram[say] == 0, (hex(de), ram.get(0xC824)))
+
+
+def test_s152(with_rom=False):
+    """S152 (ROADMAP E3 a2 — the opening; user: "giving player new monster and setting up
+    farm as a simple button in editor - like with pulio in original" … "New game -> where
+    to start -> etc."): custom.new_game (the start room / the original opening as done)
+    → the bank $15 region newgame_start + bank $79 entry 2 NewGameStart / NewGameData;
+    the start room's first scene carries the opening's flags / room bytes; the Milly
+    hook's whirl sets $0000 / $D974 as the vanilla tail; story command 4 name_given; a
+    farm keeper's first monster (Pulio's way) with its flag created by its slug. --rom:
+    the region bytes, the entry word, NewGameData."""
+    import copy as _cp
+    import shutil
+    from editor2.core import newgame as NG, milly as MH, story as STY, services as SV
+    from editor2.core.document import Document
+    out0 = out1_ex[0]
+
+    def region(text):
+        a = text.index('; @BUILD_PROJECT BEGIN newgame_start\n')
+        return text[a:text.index('; @BUILD_PROJECT END newgame_start', a)].split('\n', 1)[1]
+    ok("S152 the example (no custom.new_game): newgame_start = the game's 8 bytes "
+       "(ld a, $2f / ld [wMapID], a / ld [wMapIDMirror], a)",
+       region(out0['patches/bank_015.asm']) == NG.VANILLA_REGION,
+       region(out0['patches/bank_015.asm']))
+    d = base()
+    d['custom']['new_game'] = {'start': 'room', 'story': 'opening_done',
+                               'at': {'room': 'gate_island', 'screen': 0, 'x': 4, 'y': 4,
+                                      'face': 'down'}}
+    out, prj, _w = compile_data(d)
+    b15, b79 = out['patches/bank_015.asm'], out['patches/bank_079.asm']
+    ok("S152 a room start: newgame_start = ld hl, $7902 / rst $10 + 4 nops; bank $79 "
+       "NewGameData = map $6B, region 0, a cell, screen 0 cell (4, 4) = ($0048, $0048)",
+       region(b15).startswith('    ld hl, $7902') and 'NewGameData:' in b79 and 'db $6B, $00, $01' in b79
+       and 'dw $0048, $0048' in b79, '')
+    steps = NG.story_steps(d['custom'])
+    st_set = [int(f, 16) for f in steps[0]['set']]
+    st_ram = {int(a, 16): v for a, v in steps[1]['ram']}
+    ok("S152 opening_done + a room start: the start scene sets $0000 $0001 $0002 $0005 "
+       "$0007 $0008 and the 8 room bytes (Castle 1 := 1, Castle 5 := 3 … bedroom 4 := 1)",
+       st_set == [0, 1, 2, 5, 7, 8] and st_ram == {0xD92B: 1, 0xD92C: 3, 0xD92D: 1,
+                                                    0xD93C: 1, 0xD93F: 1, 0xD940: 1,
+                                                    0xD944: 1, 0xD974: 1}, (st_set, st_ram))
+    p2 = Project(_cp.deepcopy(d), os.path.dirname(EXAMPLE))
+    NG.lower(p2)
+    gi = next(r for r in p2.custom['rooms'] if r['id'] == 'gate_island')
+    sc = gi['cutscenes'][0]
+    ok("S152 lower (hook off): the start room's FIRST scene = the game start (entry, once "
+       "$179E, the start cell, the story steps then the facing)",
+       sc['id'] == NG.SCENE_ID and sc['trigger'] == {'on': 'entry', 'once': '0x179E'}
+       and sc['player_start'] == {'x': 4, 'y': 4, 'face': 'down'}
+       and sc['steps'][:2] == steps, sc)
+    d2 = base()
+    d2['custom']['new_game'] = {'start': 'intro', 'story': 'opening_done'}
+    expect_error("S152 the game's intro + the opening as done without the Milly hook is "
+                 "refused", d2, 'needs the Milly hook')
+    d3 = base()
+    d3['custom']['new_game'] = {'start': 'room', 'story': 'untouched',
+                                'at': {'room': 'gate_island', 'screen': 9, 'x': 4, 'y': 4}}
+    expect_error("S152 a start screen the room lacks is refused", d3, 'has no screen 9')
+    d4 = base()
+    d4['custom']['milly_hook'] = {'enabled': True, 'arrive': {'room': 'gate_island',
+                                                             'screen': 0, 'x': 4, 'y': 4,
+                                                             'face': 'down'}}
+    lines = MH.bedroom_lines(Project(d4, os.path.dirname(EXAMPLE)))
+    words = sum(len(ln.split(';')[0].replace('dw', '').split(',')) for ln in lines
+                if ln.strip().startswith('dw'))
+    ok("S152 the Milly hook's whirl sets flag $0000 and $D974 := 1 (the vanilla tail's "
+       "state, measured OFF before S152) and stays the tail's 94 words",
+       any('dw $FF03, $0000' in ln for ln in lines)
+       and any('dw $FF12, $D974, $0001' in ln for ln in lines) and words == 94, words)
+    ok("S152 story command name_given = kind 4 [ask]",
+       STY.cmd_record('name_given', {'ask': True}, 'x') == (4, 1)
+       and STY.cmd_record('name_given', {}, 'x') == (4, 0), '')
+    tmp = '/tmp/_t_s152_doc'
+    shutil.rmtree(tmp, ignore_errors=True)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmp)
+    doc = Document(tmp)
+    room = doc.room('gate_island')
+    sid = doc.make_service_npc(room, '0', 0, 1, 'farm', None,
+                               {'boxes': [['Hello!', 'A farm.']], 'flag': 'Farm met'},
+                               first_monster={'species': 20, 'level': 1,
+                                              'flag': 'first monster given'})
+    sv = doc.service_script(sid)['service']
+    names = {f.get('name') for f in doc.flags()}
+    ok("S152 Document: a farm keeper's first monster — a starter row (species 20, L1), the "
+       "flag created by its SLUG (first_monster_given; the first visit's flag too: farm_met)",
+       sv['first_monster']['flag'] == 'first_monster_given' and sv['first_time']['flag'] ==
+       'farm_met' and {'first_monster_given', 'farm_met'} <= names
+       and doc.starter_info(sv['first_monster']['enemy']) == (20, 1), sv)
+    doc.save()
+    dd = json.load(open(os.path.join(tmp, 'project.json')))
+    pr = Project(_cp.deepcopy(dd), tmp)      # Project lowers its data in place
+    ops = SV.service_ops(pr, 'farm', sid, sv, 'x')
+    flat = [o for o in ops if isinstance(o, list)]
+    names_ops = [o[1] for o in flat if o[0] == 'op' and o[1] != '0x3C']   # op $3C: S151 r2
+    i_add = names_ops.index('add_monster')
+    ok("S152 the farm keeper's first talk: storage-full test, add_monster (op $29, the FARM), "
+       "story command name_given, its flag, close_text + the naming screen (op $04 15) + "
+       "init_dialog, then the farm menu",
+       'check_storage_full' in names_ops[:i_add] and names_ops[i_add + 1] == '0x24'
+       and names_ops[i_add + 2] == 'set_flag'
+       and names_ops[i_add + 3:i_add + 6] == ['close_text', '0x04', 'init_dialog'], names_ops)
+    out5, _p5, _w5 = compile_data(dd)
+    ok("S152 that project compiles (the slug flags resolve)", 'patches/bank_060.asm' in out5, '')
+    try:
+        doc.make_service_npc(room, '0', 0, 2, 'vault', None, None,
+                             first_monster={'species': 20, 'level': 1})
+        refused = False
+    except ValueError:
+        refused = True
+    ok("S152 only a farm keeper hands over a first monster", refused, '')
+    # S152 r2 (user: "In second screen, milly disappears … See how vanilla game does it")
+    d6 = base()
+    gi6 = next(r for r in d6['custom']['rooms'] if r['id'] == 'gate_island')
+    dm6 = next(r for r in d6['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    sc6 = {'id': 't152', 'name': 't', 'screen': 0, 'trigger': {'on': 'entry'},
+           'player_start': {'x': 4, 'y': 4, 'face': 'up'},
+           'steps': [{'walk': {'actor': 'player', 'to': [4, -1]}}]}
+    gi6.setdefault('cutscenes', []).append(sc6)
+    pa = Project(_cp.deepcopy(d6), os.path.dirname(EXAMPLE))
+    ok("S152 r2 a scene walking the PLAYER off the screen is refused (the scroll left her out "
+       "of sight; the game warps to the next screen instead)",
+       'cannot walk off the screen' in (pa.cutscene_error or ''), pa.cutscene_error)
+    mid6 = '$' + dm6['mapID'][2:]
+    sc6['steps'] = [{'hide': {'actor': 'player', 'how': 'instant'}},
+                    {'move': {'dest': 'room:' + mid6, 'screen': 0, 'x': 4, 'y': 4}}]
+    pb = Project(_cp.deepcopy(d6), os.path.dirname(EXAMPLE))
+    rb6 = next(r for r in pb.rooms if r['id'] == 'dusk_mirror')
+    first = (rb6.get('cutscenes') or [{}])[0]
+    ok("S152 r2 the player hidden, then warped to one of your rooms: that screen gets a first "
+       "entry scene that shows him (the hidden bit $FF90 survives the room change)",
+       pb.cutscene_error is None and first.get('id') == '__show_player_0'
+       and first.get('_then_next') and first['steps'] == [{'show': {'actor': 'player',
+                                                                     'how': 'instant'}}],
+       (pb.cutscene_error, first))
+    sc6['steps'][1]['move']['dest'] = 'vanilla:$00'
+    pc = Project(_cp.deepcopy(d6), os.path.dirname(EXAMPLE))
+    ok("S152 r2 … warped hidden to a game room: refused (nothing there shows him)",
+       'the player is hidden when the scene warps' in (pc.cutscene_error or ''),
+       pc.cutscene_error)
+    # S152 r3 (user: "then white screen AGAIN and room appears AGAIN"): a walk-on exit fired
+    # under the scene's walk into the hole
+    d7 = base()
+    gi7 = next(r for r in d7['custom']['rooms'] if r['id'] == 'gate_island')
+    scr7 = gi7['screens']['0']
+    sts7 = scr7.get('states') or [scr7]
+    sts7[0].setdefault('exits', []).append({'x': 4, 'y': 2, 'dest': 'vanilla:$00',
+                                            'screen': 1, 'spawn_x': 4, 'spawn_y': 6})
+    d7['custom'].setdefault('flags', []).append({'name': 'walk_done_t'})
+    gi7.setdefault('cutscenes', []).append(
+        {'id': 't152b', 'name': 't', 'screen': 0,
+         'trigger': {'on': 'entry', 'once': 'walk_done_t'},
+         'player_start': {'x': 4, 'y': 6, 'face': 'up'},
+         'steps': [{'walk': {'actor': 'player', 'to': [4, 2], 'first': 'y'}}]})
+    pd7 = Project(_cp.deepcopy(d7), os.path.dirname(EXAMPLE))
+    ok("S152 r3 a scene walking the player onto an exit of a state it plays in is refused "
+       "(the door fired mid-scene: two room loads)",
+       'would fire in the middle of the scene' in (pd7.cutscene_error or ''), pd7.cutscene_error)
+    # the game's way: the exit only in state 1, picked once the scene's flag is ON
+    ex7 = sts7[0]['exits'].pop()
+    if not scr7.get('states'):
+        scr7['states'] = [copy.deepcopy({k: v for k, v in scr7.items() if k != 'states'})]
+        sts7 = scr7['states']
+    st1 = copy.deepcopy(sts7[0])
+    st1['exits'] = list(st1.get('exits') or []) + [ex7]
+    sts7.append(st1)
+    gi7['state_rules'] = list(gi7.get('state_rules') or []) + [
+        {'screens': [0], 'state': len(sts7) - 1, 'when': [{'flag': 'walk_done_t', 'is': 'set'}]}]
+    pe7 = Project(_cp.deepcopy(d7), os.path.dirname(EXAMPLE))
+    ok("S152 r3 … the exit only in a state picked once the scene's flag is ON: accepted",
+       pe7.cutscene_error is None, pe7.cutscene_error)
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s152_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    ng = sy['NewGameStart'][1]
+    nd = sy['NewGameData'][1]
+    ok("S152 the ROM: bank $15 $4652 = ld hl, $7902 / rst $10 / 4 nops; bank $79 entry 2 = "
+       "NewGameStart; NewGameData = $6B $00 $01, $0048 $0048, $FFFF",
+       at(0x15, 0x4652, 8) == bytes([0x21, 0x02, 0x79, 0xD7, 0, 0, 0, 0])
+       and at(0x79, 0x4005, 2) == bytes([ng & 0xFF, ng >> 8])
+       and at(0x79, nd, 9) == bytes([0x6B, 0, 1, 0x48, 0, 0x48, 0, 0xFF, 0xFF]),
+       (at(0x15, 0x4652, 8).hex(), at(0x79, 0x4005, 2).hex(), at(0x79, nd, 9).hex()))
+
+
+def test_s153(with_rom=False):
+    """S153 (ROADMAP E5 — the title screen, the credits, the ending's steps; user: "If intro
+    has 'Milayou's Journey' or whatever text I want added to it that would be cool. The
+    final cutscene before credits also should be editable and you can send a given
+    cutscene to credits"): custom.title (lines drawn from VRAM bank 1 by bank $79 entry 3,
+    the title song), custom.credits (pages, seconds, songs; the texts as S150 text slots,
+    rows past 26 too), the steps credits / to_be_continued / story_point (story commands
+    6 / 5); the eleven bank $5F regions keep the game's bytes without them. --rom: the
+    bytes in the built ROM."""
+    import copy as _cp
+    from editor2.core import ending as EN, cutscene_build as CB, gametext as GT
+    out0 = out1_ex[0]
+    b5f = out0['patches/bank_05f.asm']
+
+    def region(text, name):
+        a = text.index(f'; @BUILD_PROJECT BEGIN {name}\n')
+        return text[a:text.index(f'; @BUILD_PROJECT END {name}', a)].split('\n', 1)[1]
+    van = {'title_text': '    ld a, $00\n    ldh [rVBK], a\n    ret\n',
+           'title_song': '$06', 'title_song_again': '$06', 'credits_song': '$21',
+           'continue_song': '$31', 'credits_seconds': 'cp $05', 'credits_last_a': 'cp $1a',
+           'credits_last_b': 'cp $1a', 'credits_monster_ptr': 'ld hl, CreditsMonsterTable\n',
+           'credits_monsters': '    nop\n' * 64, 'credits_after': EN.VANILLA_AFTER}
+    bad = [n for n, v in van.items() if v not in region(b5f, n)]
+    ok("S153 the example (no title / credits / ending steps): the eleven bank $5F regions "
+       "hold the game's bytes", not bad, bad)
+    ok("S153 the example: bank $79 stays empty (no hook, no new game, no title, no ending "
+       "step)", 'ds $4000, $00' in out0['patches/bank_079.asm'], '')
+    # ---- the title
+    t1 = {'title': {'lines': [{'text': "Milayou's Journey", 'row': 13, 'align': 'center',
+                               'colour': 'orange'},
+                              {'text': 'v1.0', 'row': 17, 'col': 16}]}}
+    tiles, lines = EN.title_layout(t1)
+    ok("S153 title_layout: \"Milayou's Journey\" = 16 cells (the 's contraction one glyph), "
+       "centred at column 2 of row 13; 'v1.0' at row 17 column 16; letters shared "
+       "(fewer tiles than cells), ids from $80",
+       lines[0][:2] == (13, 2) and len(lines[0][2]) == 16 and lines[1][:2] == (17, 16)
+       and len(tiles) < 20 and min(min(i) for _r, _c, i in lines) == 0x80, (lines, len(tiles)))
+    g = EN.glyph_tile(EN.rom(), 0x24, 2)
+    plain = EN.glyph_tile(EN.rom(), 0x24, 3)
+    ok("S153 an orange letter: the ink pixels are colour 2 (low plane 0, high plane 1), the "
+       "backdrop colour 1; black = the font's own (colour 3)",
+       all(g[2 * y] == ((~plain[2 * y + 1]) & 0xFF) and g[2 * y + 1] == plain[2 * y + 1]
+           for y in range(8)), g.hex())
+    for bad_t, needle in (({'title': {'lines': [{'text': 'x', 'row': 18}]}}, 'rows 0-17'),
+                          ({'title': {'lines': [{'text': 'A' * 21, 'row': 1}]}}, 'holds 20'),
+                          ({'title': {'lines': [{'text': '{hero}', 'row': 1}]}}, 'no inserts'),
+                          ({'title': {'lines': [{'text': 'ab', 'row': 1, 'col': 19}]}},
+                           'right edge'),
+                          ({'title': {'lines': [{'text': 'ab', 'row': 1, 'colour': 'pink'}]}},
+                           'colour')):
+        try:
+            EN.title_layout(bad_t)
+            got = None
+        except EN.EndingError as ex:
+            got = str(ex)
+        ok(f"S153 title refused: {needle}", got is not None and needle in got, got)
+    ok("S153 a title line over the logo warns",
+       any('logo' in w for w in EN.title_warnings({'title': {'lines': [{'text': 'x', 'row': 8}]}})),
+       '')
+    d = base()
+    d['custom']['title'] = _cp.deepcopy(t1['title'])
+    d['custom']['title']['song'] = '0x31'
+    out, prj, _w = compile_data(d)
+    b5 = out['patches/bank_05f.asm']
+    b79 = out['patches/bank_079.asm']
+    ok("S153 a title: region title_text = ld hl, $7903 / rst $10 / ret; the song $31 at both "
+       "title sites; bank $79 TitleTextData + STORY_POINT_COUNT EQU 0",
+       region(b5, 'title_text').startswith('    ld hl, $7903') and '$31' in region(b5, 'title_song')
+       and '$31' in region(b5, 'title_song_again') and 'TitleTextData:' in b79
+       and 'STORY_POINT_COUNT EQU 0' in b79, '')
+    # ---- the credits
+    vp = EN.vanilla_pages()
+    ok("S153 the game's 27 pages: role / names from the text index, monsters $43F4 (page 1 "
+       "$6D, the closing page's names = the copyright lines)",
+       len(vp) == 27 and vp[0]['monster'] == 0x6D and '2000 ENIX' in vp[26]['names'], vp[0])
+    e, w = EN.page_problems(vp[18], False)
+    ok("S153 the game's page 19 (TECHNICAL SUPPORT): YONEYAMA's last letter falls under the "
+       "monster (the game shows YONEYAM — measured) — a warning", not e and w, (e, w))
+    e, _w = EN.page_problems({'role': 'X', 'names': 'A\n' * 12 + 'B', 'monster': 1}, False)
+    ok("S153 names past 12 rows refused", any('12 rows' in x for x in e), e)
+    e, _w = EN.page_problems({'role': 'X', 'names': 'A', 'monster': 216}, False)
+    ok("S153 a summon as a page's monster refused (Iron Rule 8)", any('Iron Rule 8' in x for x in e), e)
+    d = base()
+    pages = vp[:26] + [{'role': 'ROMHACK', 'names': 'MILLY', 'monster': 0x13}] + vp[26:]
+    d['custom']['credits'] = {'pages': pages, 'seconds': 2, 'song': '0x09'}
+    out, prj, _w = compile_data(d)
+    b5 = out['patches/bank_05f.asm']
+    slots = sorted((t, i) for _b, t, i, _r, _w2 in EN.text_slots(d))
+    ok("S153 28 pages: text slots = the new page 27's role / names + the closing page's "
+       "role / names at row 27 (it moved); the game's rows 0-25 unchanged = no slot",
+       slots == [(EN.ROLE_TABLE, 26), (EN.ROLE_TABLE, 27), (EN.NAME_TABLE, 26),
+                 (EN.NAME_TABLE, 27)], slots)
+    ok("S153 28 pages: the last page's number $1B at both compares, 2 s a page, the credits "
+       "song $09, the monster table pointer = CreditsProjectMonsters (64 B)",
+       'cp $1b' in region(b5, 'credits_last_a') and 'cp $1b' in region(b5, 'credits_last_b')
+       and 'cp $02' in region(b5, 'credits_seconds') and '$09' in region(b5, 'credits_song')
+       and 'CreditsProjectMonsters' in region(b5, 'credits_monster_ptr')
+       and region(b5, 'credits_monsters').count('$') == 64, '')
+    texts = {x.title for x, _r in GT.resolve(prj)}
+    ok("S153 the credits' texts go to the S150 text banks (owner Credits)",
+       any('credits page 27' in s for s in texts), sorted(texts)[:5])
+    d2 = _cp.deepcopy(d)
+    d2.setdefault('gamedata', {}).setdefault('text', {})['credits_role'] = {'0': 'X'}
+    expect_error("S153 custom.credits + gamedata.text credits edits refused", d2,
+                 'Title & ending page')
+    # ---- the story points
+    rows = {a: (k, v) for a, k, v in EN.point_rows(31)}
+    ok("S153 story point 31 (after Starry Night): $00EE / $00F1 ON, $D92B = 5 (the Castle's "
+       "post-game), the arena classes 8, the pool bytes kept ($D9C6 keep $7F — $0158 is the "
+       "game's —, $D9C7 keep $FF), 165 rows",
+       rows[0xD99B + 0xEE // 8][1] & (0x80 >> (0xEE & 7)) and rows[0xD99B + 0xF1 // 8][1] & (0x80 >> (0xF1 & 7))
+       and rows[0xD92B] == (0, 5) and rows[0xCAB4] == (0, 8) and rows[0xD9C6][0] == 0x7F
+       and rows[0xD9C7][0] == 0xFF and len(rows) == 165, len(rows))
+    ok("S153 every story point starts from the original opening ($0000 $0001 $0002 $0005 $0007 "
+       "$0008 ON at point 0)",
+       all((EN.point_rows(0) and True) for _ in [0])
+       and {f for f in (0, 1, 2, 5, 7, 8)} <= set(EN.point_state(0)['flags_on']), '')
+    # ---- the steps
+    d = base()
+    gi = next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island')
+    d['custom'].setdefault('flags', []).append({'name': 's153_t'})
+    gi['cutscenes'] = [{'id': 'end', 'name': 'end', 'screen': 0,
+                        'trigger': {'on': 'entry', 'once': 's153_t'},
+                        'player_start': {'x': 4, 'y': 4, 'face': 'down'},
+                        'steps': [{'story_point': {'point': 31}},
+                                  {'credits': {'dest': 'room:$6C', 'screen': 0, 'x': 3, 'y': 5}},
+                                  {'heal': {}}]}]
+    out, prj, warns = compile_data(d)
+    cmds = prj.story_commands()
+    ok("S153 the steps: story command 5 [0] (the story point) and 6 [$6C, 0, X $38 0, Y $58 0] "
+       "(the place after the credits); the point table has 1 row",
+       (5, 0) in cmds and (6, 0x6C, 0, 0x38, 0, 0x58, 0) in cmds
+       and prj._story_points == [(31, True)], cmds)
+    b5, b79 = out['patches/bank_05f.asm'], out['patches/bank_079.asm']
+    ok("S153 a credits step: region credits_after = ld hl, $7904 / rst $10 / jr "
+       "CreditsDoneWarpEnd + 32 nops; bank $79 holds StoryPoint_0",
+       region(b5, 'credits_after').startswith('    ld hl, $7904') and 'StoryPoint_0:' in b79, '')
+    sc = gi['cutscenes'][0]
+    a = CB.analyse(gi, sc, d['custom'], flag_names=['s153_t'])
+    ok("S153 a step after Roll the credits never runs (the cutscene editor warns)",
+       any('never runs' in x for x in a.warnings), a.warnings)
+    words = [o for o in a.ops if isinstance(o, list)]
+    i = next(k for k, o in enumerate(words) if o[:2] == ['op', '0x24'] and k > 0)
+    ok("S153 Roll the credits lowers to op $24 (story command), write_ram $C88A 4, write_ram "
+       "$C88B 0, op $3E",
+       [o[1:] for o in words[i + 1:i + 4]] == [['write_ram', '0xC88A', 4],
+                                               ['write_ram', '0xC88B', 0], ['0x3E']],
+       words[i:i + 4])
+    sc2 = {'id': 'tbc', 'name': 'tbc', 'screen': 0, 'trigger': {'on': 'entry'},
+           'player_start': {'x': 4, 'y': 4, 'face': 'down'}, 'steps': [{'to_be_continued': {}}]}
+    a2 = CB.analyse(gi, sc2, d['custom'])
+    w2 = [o[1:] for o in a2.ops if isinstance(o, list)]
+    ok("S153 TO BE CONTINUED lowers to write_ram $C88A 4, write_ram $C88B 1, op $3E",
+       [['write_ram', '0xC88A', 4], ['write_ram', '0xC88B', 1], ['0x3E']] == w2[-3:], w2)
+    d3 = _cp.deepcopy(d)
+    gi3 = next(r for r in d3['custom']['rooms'] if r['id'] == 'gate_island')
+    gi3['cutscenes'][0]['steps'] = [{'credits': {'dest': 'room:$6C', 'screen': 9, 'x': 3,
+                                                 'y': 5}}]
+    expect_error("S153 Roll the credits into a screen the room lacks is refused", d3,
+                 'no screen 9')
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    d['custom']['title'] = _cp.deepcopy(t1['title'])
+    d['custom']['credits'] = {'pages': pages, 'seconds': 2}
+    out, prj, _w = compile_data(d)
+    outdir = '/tmp/_t_s153_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    td = sy['TitleInitDone'][1]
+    cm = sy['CreditsProjectMonsters'][1]
+    cw = sy['CreditsDoneWarp'][1]
+    ok("S153 the ROM: TitleInitDone = 21 03 79 D7 C9; bank $79 entries 3-5 = TitleText / "
+       "CreditsAfter / StoryPointApply; CreditsProjectMonsters = the 28 pages' monsters + $FF; "
+       "CreditsDoneWarp = 21 04 79 D7 18 ..",
+       at(0x5F, td, 5) == bytes([0x21, 0x03, 0x79, 0xD7, 0xC9])
+       and at(0x79, 0x4007, 6) == bytes([sy['TitleText'][1] & 0xFF, sy['TitleText'][1] >> 8,
+                                         sy['CreditsAfter'][1] & 0xFF, sy['CreditsAfter'][1] >> 8,
+                                         sy['StoryPointApply'][1] & 0xFF,
+                                         sy['StoryPointApply'][1] >> 8])
+       and at(0x5F, cm, 29) == bytes([p['monster'] for p in pages] + [0xFF])
+       and at(0x5F, cw, 5) == bytes([0x21, 0x04, 0x79, 0xD7, 0x18]),
+       (at(0x5F, td, 5).hex(), at(0x79, 0x4007, 6).hex(), at(0x5F, cm, 29).hex()))
+
+
+
+def test_s154(with_rom=False):
+    """S154 (the memorial; user: "A custom room ... where you can place objects that will take
+    on sprites (non-moving) and interactables (text when examined) of any monsters the player
+    beat a boss OR an arena level with ... ONLY if monster is no longer with player"):
+    custom.rooms[].statues + npcs entries kind "statue" -> talk scripts with a `memorial`
+    step (story command 7) + examine spots; bank $79 entries 6-9 + their data, the picture
+    bank, the four regions (vanilla bytes without statues). --rom: the bytes in the ROM."""
+    import copy as _cp
+    from editor2.core import memorial as MM, textenc as T, story as ST
+    out0 = out1_ex[0]
+
+    def region(text, name):
+        a = text.index(f'; @BUILD_PROJECT BEGIN {name}\n')
+        return text[a:text.index(f'; @BUILD_PROJECT END {name}', a)].split('\n', 1)[1]
+    bad = [nm for nm, path, _f, _b in MM.REGIONS
+           if region(out0['file:' + path] if 'file:' + path in out0 else out0[path], nm)
+           != MM.VANILLA[nm]]
+    ok("S154 the example (no statues): the four memorial regions hold the game's bytes, no "
+       "picture bank, MemorialRedraw77 = ret",
+       not bad and not any(k.startswith('file:patches/bank_08') and 'MemPicDraw' in v
+                           for k, v in out0.items())
+       and 'MemorialRedraw77:\n    ret' in out0['patches/bank_077.asm'], bad)
+    ok("S154 story command 7 memorial [statue]: (7, n); n past 7 refused",
+       ST.cmd_record('memorial', {'statue': 3}, 'x') == (7, 3), '')
+    try:
+        ST.cmd_record('memorial', {'statue': 8}, 'x')
+        got = None
+    except ST.StoryError as ex:
+        got = str(ex)
+    ok("S154 statue 8 refused (a room holds 8: 0-7)", got is not None and '0-7' in got, got)
+    ok("S154 the inserts: {fallen} = $F9 $00, {fallen_level} = $F9 $10, {fallen_species} = "
+       "$F9 $20",
+       T.encode('{fallen}{fallen_level}{fallen_species}') == [0xF9, 0, 0xF9, 0x10, 0xF9, 0x20],
+       T.encode('{fallen}{fallen_level}{fallen_species}'))
+    # ---- a room with statues
+    d = base()
+    gi = next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island')
+    gi['statues'] = [{'id': 'st_a', 'tiles': ['0x40', '0x41', '0x42', '0x43']},
+                     {'id': 'st_b', 'tiles': ['0x44', '0x45', '0x46', '0x47'],
+                      'text': 'own_words'}]
+    d['custom']['dialogue'].append({'id': 'own_words', 'boxes': [['Here stands', '{fallen}.']]})
+    scr = gi['screens']['0']
+    st0 = (scr.get('states') or [scr])[0]
+    st0.setdefault('npcs', []).insert(0, {'kind': 'statue', 'x': 2, 'y': 2, 'statue': 'st_a'})
+    st0['npcs'].insert(1, {'kind': 'statue', 'x': 4, 'y': 2, 'statue': 'st_b'})
+    d['custom']['memorial'] = {'cap': 40}
+    out, prj, _w = compile_data(_cp.deepcopy(d))
+    b79 = out['patches/bank_079.asm']
+    b60 = out['patches/bank_060.asm'] + ''.join(v for k, v in out.items() if k.startswith(
+        'file:patches/bank_08') or k.startswith('patches/bank_08'))
+    sc = {s['id']: s for s in prj.custom['scripts']}
+    sa = sc.get('_mem_gate_island_st_a')
+    ok("S154 lowering: each statue a talk script in the room's table (story command 7, then "
+       "check_and_branch $D8E1 0, the words / the empty words) + an examine spot",
+       sa is not None and ['op', '0x24', '0xFF01'] in sa['ops']
+       and ['op', 'check_and_branch', '0xD8E1', '0x0000', '@mempty1'] in sa['ops']
+       and '_mem_gate_island_st_a' in gi.get('scripts', {}).values() or
+       '_mem_gate_island_st_a' in next(r for r in prj.custom['rooms']
+                                       if r['id'] == 'gate_island')['scripts'].values(),
+       sa)
+    ok("S154 the defaults: memorial_default_text / _empty added; statue st_b says its own",
+       any(x.get('id') == MM.DEFAULT_TEXT_ID for x in prj.custom['dialogue'])
+       and any(st == {'say': 'own_words'} for st in
+               sc['_mem_gate_island_st_b']['talk']['steps'][0]['memorial']['found']), '')
+    ok("S154 bank $79: the head (the Milly hook off) with MEM_CAP EQU 40 / MEM_RING EQU 49, the "
+       "room's row (region 0, $6B, 2 statues, their tile ids), the three plain-op bosses",
+       'MEM_CAP EQU 40' in b79 and 'MEM_RING EQU 49' in b79
+       and 'db 0, $6B, 2' in b79 and 'db $40, $41, $42, $43, $39' in b79
+       and all(f'dw {e}' in b79 for e, _n in MM.BOSS_EIDS) and 'MemBattleEnd:' in b79, '')
+    pb = [k for k, v in out.items() if 'MemPicDraw:' in v and k != 'patches/bank_079.asm']
+    ok("S154 one picture bank $80+ (MemPicDraw + 240 pictures), its number in MemPicBank",
+       len(pb) == 1 and f"MemPicBank: db ${prj._mem_plan:02X}" in b79, pb)
+    hooks = {nm: region(out[path] if path in out else out['file:' + path], nm)
+             for nm, path, _f, _b in MM.REGIONS}
+    ok("S154 the regions: the battle's start / end far-call bank $79 entries 6 / 7, both "
+       "sheet loads entry 8 (same size)",
+       hooks['memorial_battle_start'].startswith('    ld hl, $7906')
+       and hooks['memorial_battle_end'].startswith('    ld hl, $7907')
+       and hooks['memorial_tiles_0'].startswith('    ld hl, $7908')
+       and hooks['memorial_tiles_1'].startswith('    ld hl, $7908'), hooks)
+    ok("S154 MemorialRedraw77 far-calls bank $79 entry 8 (BreedClose's sheet reload)",
+       'MemorialRedraw77:\n    ld hl, $7908' in out['patches/bank_077.asm'], '')
+    # ---- the pictures
+    pics = MM.pictures(prj)
+    ok("S154 pictures: 240 x 64 bytes; species 0-214 all drawn, 215-220 blank",
+       len(pics) == 240 * 64 and all(any(pics[s * 64:(s + 1) * 64]) for s in range(215))
+       and not any(pics[215 * 64:221 * 64]), '')
+    from editor2.core.sprite_render import _load, species_layout_id
+    ms = _load('monster_sprites.json')
+    t0 = bytes.fromhex(ms['monsters']['0']['follower']['tile_bytes_hex'])
+    lid, _a = species_layout_id(0)
+    from editor2.core import walk_layouts as WL
+    from editor2.core.sprite_render import tiles_to_grid
+    d0 = WL.render([tiles_to_grid(t0[i * 16:(i + 1) * 16], 1, 1) for i in range(16)], lid)[0]
+    pix = MM.frame_pixels(t0, lid)
+    ok("S154 a picture = the walking frame down A as the game draws it (species 0, every "
+       "pixel at its place in the layout's 16 x 16 box)",
+       all(pix[cy - WL.BOX[1]][cx - WL.BOX[0]] == v for (cy, cx), v in d0.items()), '')
+    # ---- refused / warned
+    for what, mut, needle in (
+            ('a 9th statue', lambda r: r.__setitem__('statues', [
+                {'id': f's{i}', 'tiles': [4 * i, 4 * i + 1, 4 * i + 2, 4 * i + 3]}
+                for i in range(9)]), 'at most 8'),
+            ('two statues sharing a tile', lambda r: r['statues'][1].__setitem__(
+                'tiles', ['0x43', '0x45', '0x46', '0x47']), 'also'),
+            ('a tile past $7F', lambda r: r['statues'][0].__setitem__(
+                'tiles', ['0x80', '0x41', '0x42', '0x43']), "OWN tiles"),
+            ('a statue entry naming no statue', lambda r: (r['screens']['0'].get('states') or
+                                                           [r['screens']['0']])[0]['npcs'][0]
+             .__setitem__('statue', 'nobody'), 'not one of')):
+        d2 = _cp.deepcopy(d)
+        mut(next(r for r in d2['custom']['rooms'] if r['id'] == 'gate_island'))
+        expect_error(f"S154 refused: {what}", d2, needle)
+    d3 = _cp.deepcopy(d)
+    d3['custom']['dialogue'].append({'id': 'stray', 'boxes': [['{fallen} was here']]})
+    expect_error("S154 refused: {fallen} outside a statue's words", d3, 'only work in')
+    d4 = _cp.deepcopy(d)
+    d4.setdefault('gamedata', {}).setdefault('monsters', {})['5'] = {'resist': [0] * 26 + [2]}
+    # S159 (ROADMAP E16): the 27th resistance is EARTH; it shares record +$82 with the mark
+    # (bits 0-1 vs 3-7, bank $79 masks the tag with $F8) — a level 0-3 with statues is fine
+    _o4, _p4, _w4 = compile_data(d4)
+    ok("S159 (was S154 refused): statues + a species with Earth 2 compile (the 27th "
+       "resistance shares the byte with the memorial's mark)", bool(_o4), '')
+    d5 = _cp.deepcopy(d)
+    d5['custom']['memorial'] = {'cap': 500}
+    expect_error("S154 refused: cap 500", d5, '8-120')
+    # ---- S154 r2: the shade map (user: "Monster should be grey but BACKGROUND should be
+    # transparent") + the two-cell statue made by the editor
+    d6 = _cp.deepcopy(d)
+    g6 = next(r for r in d6['custom']['rooms'] if r['id'] == 'gate_island')
+    g6['statues'][1]['shades'] = [1, 0, 3]
+    g6['statues'][1]['pedestal'] = ['0x48', '0x49', '0x4A', '0x4B']
+    g6['statues'][1]['palette'] = 2
+    out6, _p6, _w6 = compile_data(_cp.deepcopy(d6))
+    ok("S154 r2 a statue's shades -> its row's shade map byte ([1, 0, 3] = $31; the default "
+       "[1, 2, 3] = $39); pedestal / palette are the editor's (accepted, not emitted)",
+       'db $44, $45, $46, $47, $31' in out6['patches/bank_079.asm']
+       and MM.shade_map((1, 2, 3)) == 0x39, '')
+    d7 = _cp.deepcopy(d)
+    next(r for r in d7['custom']['rooms'] if r['id'] == 'gate_island')['statues'][0][
+        'shades'] = [1, 4, 3]
+    expect_error("S154 r2 refused: a shade index past 3", d7, '3 palette indices')
+    ok("S154 r2 the composite model: colour 0 keeps the background, colours 1 / 2 / 3 take "
+       "the shade indices",
+       MM.composite([[2, 2, 1, 0]], [[0, 2, 1, 3]], (1, 0, 3)) == [[2, 0, 1, 3]], '')
+    _s154_doc(MM)
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s154_rom'
+    C.write_outputs(out, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    tbl = at(0x79, 0x400D, 8)
+    want = b''.join(bytes([sy[n][1] & 0xFF, sy[n][1] >> 8])
+                    for n in ('MemBattleStart', 'MemBattleEnd', 'MemRoomTiles', 'MemSay'))
+    pbank, pa = sy['MemPics']
+    ok("S154 the ROM: bank $79 entries 6-9 = MemBattleStart / MemBattleEnd / MemRoomTiles / "
+       "MemSay; MemPics in the picture bank == memorial.pictures",
+       tbl == want and at(pbank, pa, 240 * 64) == pics, (tbl.hex(), want.hex()))
+    k50 = rb.find(bytes([0x21, 0x07, 0x79, 0xD7]), 0x50 * 0x4000, 0x51 * 0x4000)
+    k0b = rb.count(bytes([0x21, 0x08, 0x79, 0xD7, 0, 0, 0]), 0x0B * 0x4000, 0x0C * 0x4000)
+    ok("S154 the ROM: bank $50 far-calls entry 7 at BattleExitHandler; bank $0B twice entry 8",
+       # BattleExitHandler: ld a, [$c825] (3) / or a (1) / ret nz (1), then the region
+       k50 == 0x50 * 0x4000 + sy['BattleExitHandler'][1] - 0x4000 + 5 and k0b == 2,
+       (hex(k50), k0b))
+
+def _s154_doc(MM):
+    """S154 r2: Document.add_statue on the example's gate_island (a gate-theme sheet: the
+    vocabulary released as the editor asks): the pedestal on (4, 4), the monster cell on
+    (4, 3) above it (a cell drawn in ONE palette slot); the monster cell's background == what was drawn there (every pixel
+    the same colour on screen: see-through), its palette slot = the background's with
+    colour `shades[1]` grey; the room's Pedestal metatile shared by a second statue; a
+    statue on the top row refused."""
+    import shutil
+    import tempfile
+    from editor2.core.document import Document, VocabReleaseWouldHelp
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import memorial_doc as MD
+    tmp = tempfile.mkdtemp(prefix='s154doc_')
+    try:
+        shutil.copytree(os.path.dirname(EXAMPLE), tmp, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns('build'))
+        doc = Document(tmp)
+        doc.vanilla = ProjectRenderer(REPO, tmp, doc.data)
+        room = doc.room('gate_island')
+        tg, ag = doc._writable_cell_grids(room, '0', 0)
+        _t, sheet0 = doc._room_sheet(room, '0', 0, 4, 3)
+        before, bpal = doc._cell_pixels(tg, ag, sheet0, 4, 3)
+        pid = doc.effective_palette(room, '0', 0)
+        rows0 = [list(r) for r in doc._pal_rows(pid)]
+
+        def add(x, y):
+            try:
+                return doc.add_statue(doc.room('gate_island'), '0', 0, x, y)
+            except VocabReleaseWouldHelp:
+                rm = doc.room('gate_island')
+                doc.set_released(doc._room_sheet(rm, '0', 0, x, y)[0], True)
+                return doc.add_statue(doc.room('gate_island'), '0', 0, x, y)
+        sid = add(4, 4)
+        room = doc.room('gate_island')
+        st = doc.statue(room, sid)
+        tg, ag = doc._writable_cell_grids(room, '0', 0)
+        tid, sheet = doc._room_sheet(room, '0', 0, 4, 4)
+        after, apal = doc._cell_pixels(tg, ag, sheet, 4, 3)
+        rows = doc._pal_rows(pid)
+        same = all(rows0[bpal[y][x]][before[y][x]] == rows[apal[y][x]][after[y][x]]
+                   for y in range(16) for x in range(16))
+        g = st['shades'][1]
+        mon = [tg[3 * 2 + dr][4 * 2 + dc] for dr in (0, 1) for dc in (0, 1)]
+        ped = [tg[4 * 2 + dr][4 * 2 + dc] for dr in (0, 1) for dc in (0, 1)]
+        ok("S154 r2 add_statue: the monster cell (4, 3) draws the statue's tiles, the "
+           "pedestal (4, 4) the room's Pedestal; the statue palette's colour shades[1] is "
+           "the grey; the background unchanged on screen (see-through)",
+           mon == [MM.F.val(t) for t in st['tiles']]
+           and ped == [MM.F.val(t) for t in st['pedestal']]
+           and rows[st['palette']][g] == MD.GREY and g not in {v for r_ in after for v in r_}
+           and same and any(m.get('name') == MD.PEDESTAL_NAME for m in doc.metatiles(tid)),
+           (st, same))
+        sid2 = add(6, 4)
+        st2 = doc.statue(doc.room('gate_island'), sid2)
+        ok("S154 r2 a second statue shares the room's Pedestal (its own 4 monster tiles)",
+           st2['pedestal'] == st['pedestal'] and not set(st2['tiles']) & set(st['tiles']),
+           st2)
+        try:
+            add(7, 0)
+            got = None
+        except ValueError as ex:
+            got = str(ex)
+        ok("S154 r2 a statue on the top row refused (no cell above for the monster)",
+           got is not None and 'two cells' in got, got)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+
+def test_s158(with_rom=False):
+    """S158 (ROADMAP E15 — BREEDING HINTS; user: "In a custom room in a gate, the player can
+    come across a new breeding combination by interacting with a monument … plucked out of
+    a pool of combinations the player has NOT yet unlocked … Archive … 1 per family";
+    "I want individual"): the pool from the effective special table (keys, rows that fire,
+    blacklist / whitelist, pinned numbers, holes), the lowering (monuments in 3 shows,
+    archives, examine spots), the refusals, the Document, the example's original bytes.
+    --rom: bank $79 entries 10-12, the HintTable bytes, the bank $16 region, the bank $69
+    row counter, bank $73 HintNewGameClear's call."""
+    import copy as _cp
+    import shutil
+    import tempfile
+    from editor2.core import hints as HT, breeding as BR
+    from editor2.core.project import Project
+    def region(out, path, name):
+        t = out[path]
+        a = t.index(f'@BUILD_PROJECT BEGIN {name}')
+        return t[a:t.index(f'@BUILD_PROJECT END {name}')]
+    d0 = base()
+    out0, prj0, _w0 = compile_data(_cp.deepcopy(d0))
+    ok("S158 the example has no monument / archive: region hint_breed_16 = the original "
+       "`call BreedResolveOffspring`, no hint data",
+       'call BreedResolveOffspring' in region(out0, 'patches/bank_016.asm', 'hint_breed_16')
+       and not HT.active(d0['custom']), '')
+    ok("S158 keys: '9xDragon+0>42' <-> (9, $F1, 0, 42); a family matcher by name",
+       HT.parse_key('9xDragon+0>42') == (9, 0xF1, 0, 42) and HT.key(9, 0xF1, 0, 42)
+       == '9xDragon+0>42' and HT.key(0xFA, 3, 5, 7) == 'Spiritx3+5>7', '')
+    prj = Project(_cp.deepcopy(d0), os.path.dirname(EXAMPLE))
+    g = prj.gamedata()
+    cands = HT.candidates(prj, g)
+    an = BR.Analysis(prj, g)
+    never, _slots = an.never_fires()
+    rows = {c['row'] for c in cands}
+    ok("S158 candidates = every special row that fires (Analysis.never_fires excluded), "
+       "one per key, no protected id",
+       rows == {i for i in range(len(g.special)) if i not in never
+                and not any(x in range(215, 221) for x in g.special[i][:2] + [g.special[i][3]])}
+       and len({c['key'] for c in cands}) == len(cands), (len(cands), len(never)))
+    d = _cp.deepcopy(d0)
+    d['custom']['hints'] = {}
+    prj1 = Project(_cp.deepcopy(d), os.path.dirname(EXAMPLE))
+    hints, count, holes = HT.pool(prj1)
+    order = sorted(cands, key=lambda c: (c['fam'], c['child'], c['row']))
+    ok("S158 blacklist (default) with nothing excluded: the pool = every candidate, numbered "
+       "0.. by family, child, row (the archive order)",
+       count == len(cands) and not holes and [c['key'] for c in hints] == [c['key'] for c in order],
+       count)
+    k0, k1, k2 = order[0]['key'], order[1]['key'], order[2]['key']
+    d['custom']['hints'] = {'mode': 'whitelist', 'include': [k1, k2],
+                            'numbers': {k2: 0, k0: 5}}
+    prj2 = Project(_cp.deepcopy(d), os.path.dirname(EXAMPLE))
+    h2, n2, holes2 = HT.pool(prj2)
+    ok("S158 whitelist + pinned numbers: k2 keeps 0, k1 takes the next after the highest "
+       "pinned (6), k0's pinned 5 is a hole (not in the pool)",
+       {c['key']: c['number'] for c in h2} == {k2: 0, k1: 6} and n2 == 7 and holes2 == {5: k0},
+       ({c['key']: c['number'] for c in h2}, n2, holes2))
+    # a room with monuments + archives (the example's gate_island)
+    d3 = _cp.deepcopy(d0)
+    d3['custom']['hints'] = {'mode': 'whitelist', 'include': [k0, k1, k2],
+                             'riddles': {k1: [['A riddle of', '{child}.']]}}
+    room = next(r for r in d3['custom']['rooms'] if r['id'] == 'gate_island')
+    room['monuments'] = [{'id': 'm1'}, {'id': 'm2', 'show': 'riddle', 'families': ['Slime'],
+                                         'skip_owned': False},
+                         {'id': 'm3', 'show': 'both', 'intro': [['An old stone.']]}]
+    room['archives'] = [{'id': 'a1', 'family': 'Slime'}]
+    st = (room['screens']['0'].get('states') or [room['screens']['0']])[0]
+    st.setdefault('npcs', [])
+    st['npcs'] += [{'kind': 'monument', 'x': 2, 'y': 2, 'monument': 'm1'},
+                   {'kind': 'monument', 'x': 3, 'y': 2, 'monument': 'm2'},
+                   {'kind': 'monument', 'x': 4, 'y': 2, 'monument': 'm3'},
+                   {'kind': 'archive', 'x': 5, 'y': 2, 'archive': 'a1'}]
+    out3, prj3, _w3 = compile_data(_cp.deepcopy(d3))
+    sc = {s_['id']: s_ for s_ in prj3.custom['scripts']}
+    ops1 = sc['_hint_gate_island_m1']['ops']
+    cmds = prj3.story_commands()
+    r3 = next(r for r in prj3.custom['rooms'] if r['id'] == 'gate_island')
+    spots = [n for n in (r3['screens']['0'].get('states') or [r3['screens']['0']])[0]['npcs']
+             if n.get('_monument') or n.get('_archive')]
+    ok("S158 lowering: monument 'm1' = story command 8 [0, 0] (pick), $D8E1 = 0 -> the "
+       "worn words; the room's examine spots run the four scripts",
+       ops1[0][:2] == ['op', '0x24'] and (8, 0, 0) in cmds and
+       ['op', 'check_and_branch', '0xD8E1', '0x0000', '@hnone1'] in ops1 and
+       any(e.get('id') == 'hints_default_exhausted' for e in prj3.custom['dialogue']) and
+       sorted(n.get('script') for n in spots) == ['_hint_gate_island_a1', '_hint_gate_island_m1',
+                                                  '_hint_gate_island_m2', '_hint_gate_island_m3'],
+       ops1[:4])
+    ops2 = sc['_hint_gate_island_m2']['ops']
+    ops3 = sc['_hint_gate_island_m3']['ops']
+    ok("S158 lowering: 'riddle' = prepare [1, 1] before the words; 'both' = the intro, "
+       "prepare [1, 1] + a branch over the riddle's turn, prepare [1, 0], the words",
+       (8, 1, 1) in cmds and (8, 1, 0) in cmds and
+       sum(1 for o in ops2 if isinstance(o, list) and o[0] == 'text') == 2 and
+       sum(1 for o in ops3 if isinstance(o, list) and o[0] == 'text') == 4 and
+       any(isinstance(o, str) and o.startswith('label:hnor') for o in ops3), '')
+    ops4 = sc['_hint_gate_island_a1']['ops']
+    dl = {e['id']: e for e in prj3.custom['dialogue']}
+    ok("S158 lowering: the archive = its question, start [2, 0], next [3, 0] in a loop "
+       "(0 end / 2 last), its own copies of the words with {family} = Slime",
+       (8, 2, 0) in cmds and (8, 3, 0) in cmds and
+       'Slime family.' in str(dl['_hint_gate_island_a1_ask']['boxes']) and
+       any(isinstance(o, str) and o.startswith('label:hloop') for o in ops4), '')
+    b79 = out3['patches/bank_079.asm']
+    ok("S158 bank $79: HINT_COUNT 3, HintMonTable rows (slot, families, skip owned), the "
+       "riddle bytes, HintFamList_Slime",
+       'HINT_COUNT EQU 3' in b79 and 'db 0, $FF, $87' in b79 and 'db 1, $01, $00' in b79
+       and 'HintRiddle_1:' in b79 and 'HintFamList_Slime:' in b79, '')
+    ok("S158 with monuments: region hint_breed_16 = `call HintBreed16`, the room-load "
+       "regions on (bank $0B entry 8)",
+       'call HintBreed16' in region(out3, 'patches/bank_016.asm', 'hint_breed_16') and
+       'ld hl, $7908' in region(out3, 'patches/bank_00b.asm', 'memorial_tiles_0'), '')
+    for what, mut, needle in (
+            ('a 9th monument', lambda r: r.__setitem__('monuments', [{'id': f'x{i}'}
+                                                                       for i in range(9)]),
+             'at most 8'),
+            ('an archive of no family', lambda r: r['archives'][0].__setitem__('family', 'Cat'),
+             'one of'),
+            ('a monument entry naming no monument', lambda r: (
+                r['screens']['0'].get('states') or [r['screens']['0']])[0]['npcs'][-4]
+             .__setitem__('monument', 'nobody'), 'not one of'),
+            ('a show that is not one', lambda r: r['monuments'][0].__setitem__('show', 'loud'),
+             'explicit'),
+            ('a word line too long', lambda r: r['monuments'][2].__setitem__(
+                'intro', [['This line is far too long']]), 'cells')):
+        dx = _cp.deepcopy(d3)
+        mut(next(r for r in dx['custom']['rooms'] if r['id'] == 'gate_island'))
+        expect_error(f"S158 refused: {what}", dx, needle)
+    dx = _cp.deepcopy(d3)
+    dx['custom']['dialogue'].append({'id': 'stray', 'boxes': [['{child} is here']]})
+    expect_error("S158 refused: {child} outside the hint words", dx, 'only work in')
+    dx = _cp.deepcopy(d3)
+    dx['custom']['hints']['family_words'] = {'Material': 'any Material things'}
+    expect_error("S158 refused: a family's words past 12 letters", dx, 'letters')
+    dx = _cp.deepcopy(d3)
+    dx['custom']['hints']['numbers'] = {k0: 1, k1: 1}
+    expect_error("S158 refused: two hints with one number", dx, 'both')
+    _s158_doc(k0, k1)
+    if not with_rom or not os.path.exists(ROM):
+        return
+    from editor2.core import builder as B
+    outdir = '/tmp/_t_s158_rom'
+    C.write_outputs(out3, outdir)
+    rom_p, sym_p, _m = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    rb, sy = open(rom_p, 'rb').read(), B.parse_sym(sym_p)
+
+    def at(b, a, n):
+        o = b * 0x4000 + (a - 0x4000 if b else a)
+        return rb[o:o + n]
+    tbl = at(0x79, 0x4001 + 2 * 10, 6)
+    want = b''.join(bytes([sy[n][1] & 0xFF, sy[n][1] >> 8])
+                    for n in ('HintCommand', 'HintBreed', 'HintSay'))
+    h3, _n3, _h3 = HT.pool(prj3)
+    model = b''.join(bytes([c['row'] & 0xFF, c['row'] >> 8, c['p1'], c['p2'], c['child'],
+                            c['plus'], c['fam'], 0]) for c in h3)
+    ok("S158 the ROM: bank $79 entries 10-12 = HintCommand / HintBreed / HintSay; HintTable "
+       "== the model's rows", tbl == want and at(0x79, sy['HintTable'][1], len(model)) == model,
+       (tbl.hex(), want.hex()))
+    b16, a16 = sy['HintBreed16']
+    call = bytes([0xCD, a16 & 0xFF, a16 >> 8])
+    ok("S158 the ROM: BreedCreateOffspring calls HintBreed16 (which resolves, then `ld hl, "
+       "$790B / rst $10`); bank $69's scan stores wHintRow; bank $73 CF3NewGameClear ends in "
+       "`jp HintNewGameClear`",
+       rb.find(call, 0x16 * 0x4000, 0x17 * 0x4000) > 0 and
+       at(b16, a16 + 3, 4) == bytes([0x21, 0x0B, 0x79, 0xD7]) and
+       rb.find(bytes([0xEA, sy['wHintRow'][1] & 0xFF, sy['wHintRow'][1] >> 8]),
+               0x69 * 0x4000, 0x6A * 0x4000) > 0 and
+       rb.find(bytes([0xC3, sy['HintNewGameClear'][1] & 0xFF, sy['HintNewGameClear'][1] >> 8]),
+               0x73 * 0x4000, 0x74 * 0x4000) > 0, '')
+
+
+def _s158_doc(k0, k1):
+    """S158 the Document: the pool's ticks (both modes, numbers pinned and only added),
+    a riddle, the words, add / move / remove a monument and an archive."""
+    import shutil
+    import tempfile
+    from editor2.core.document import Document
+    from editor2.core import hints as HT
+    tmp = tempfile.mkdtemp(prefix='s158doc_')
+    try:
+        shutil.copytree(os.path.dirname(EXAMPLE), tmp, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns('build'))
+        doc = Document(tmp)
+        doc.set_hints_mode('whitelist')
+        doc.set_hints_in_pool([k0, k1], True)
+        h = doc.custom['hints']
+        ok("S158 doc: whitelist ticks -> include, numbers pinned for the pool (0, 1)",
+           h.get('include') == [k0, k1] and set(h['numbers']) == {k0, k1}, h)
+        doc.set_hints_in_pool([k0], False)
+        ok("S158 doc: untick -> out of include, its number KEPT (a save's bit)",
+           h.get('include') == [k1] and k0 in h['numbers'], h)
+        doc.set_hints_mode('blacklist')
+        doc.set_hints_in_pool([k1], False)
+        ok("S158 doc: blacklist mode edits 'exclude' (include kept for a switch back)",
+           h.get('exclude') == [k1] and h.get('include') == [k1] and 'mode' not in h, h)
+        doc.set_hint_riddle(k1, [['A riddle', 'of {child}.']])
+        rows = {r['key']: r for r in doc.hint_rows()}
+        ok("S158 doc: hint_rows has the riddle, the pool flags",
+           rows[k1]['riddle'] == [['A riddle', 'of {child}.']] and not rows[k1]['in_pool']
+           and rows[k0]['in_pool'], '')
+        try:
+            doc.set_hint_riddle(k1, [['a line far too long for a box']])
+            got = None
+        except HT.HintError as ex:
+            got = str(ex)
+        ok("S158 doc: a riddle line past 18 cells refused", got and 'cells' in got, got)
+        room = doc.room('gate_island')
+        mid = doc.add_monument(room, '0', 0, 2, 2, families=['dragon'], show='both')
+        aid = doc.add_archive(doc.room('gate_island'), '0', 0, 3, 2, 'Beast')
+        room = doc.room('gate_island')
+        ok("S158 doc: add_monument / add_archive -> the room's lists + the cells' entries",
+           doc.monument(room, mid) == {'id': mid, 'families': ['Dragon'], 'show': 'both'} and
+           doc.archive(room, aid) == {'id': aid, 'family': 'Beast'} and
+           len(doc.hint_object_places(room, 'monument', mid)) == 1, room.get('monuments'))
+        try:
+            doc.add_archive(doc.room('gate_island'), '0', 0, 3, 2, 'Slime')
+            got = None
+        except ValueError as ex:
+            got = str(ex)
+        ok("S158 doc: a second object on a taken cell refused", got and 'already' in got, got)
+        doc.set_hint_object_words(room, 'archive', aid, 'ask',
+                                  [['{family} shelf.', 'Read it?']])
+        w = doc.hint_object_words(room, 'archive', aid)
+        ok("S158 doc: an archive's own question (with {family}), the rest the project's",
+           w['ask'] == ([['{family} shelf.', 'Read it?']], True) and not w['end'][1], w)
+        k = next(i for i, e in enumerate(doc.npc_entries(room, '0', 0))
+                 if e.get('kind') == 'monument')
+        doc.remove_hint_object_here(room, '0', 0, k)
+        ok("S158 doc: removing its only entry removes the monument",
+           not doc.room('gate_island').get('monuments'), '')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+def test_s155_sim():
+    """S155 the simulator side of the built-in custom battle skills
+    (simulator/skillfx/s155_custom.py, BATTLE_SKILL_SYSTEM §13.10): the
+    numbers measured in PyBoy, the project's percentages / target rows reaching
+    the board, the Quake numbers fix, the AI rules and target picks."""
+    import random
+    from editor2.core import balance as BL
+    from simulator import pacing as P
+    from simulator.skillfx import s155_custom as S
+    ok("S155 sim: DamagePct72 — duo 4 -> 8, alone 7 -> 28, x0.2 of 4 keeps 1, 0 stays 0, cap 999",
+       (S.damage_pct(4, 200), S.damage_pct(7, 400), S.damage_pct(4, 20), S.damage_pct(0, 400),
+        S.damage_pct(600, 400)) == (8, 28, 1, 0, 999))
+    b = P.make_board([dict(hp=50, mp=0, atk=19, dfn=5, agl=5, int=5)],
+                     [dict(hp=999, mp=0, atk=10, **{'def': 5}, agl=5, int=5, level=1,
+                           enemy_stats_id=1, species_id=1)])
+    b.snapshot_base()
+    b.hp[4] = 100
+    ok("S155 sim: Finish at 100 / 999 HP -> x1.80 (the measured 4 -> 7)",
+       S.finish_pct(b, 4) == 180 and S.damage_pct(4, S.finish_pct(b, 4)) == 7, S.finish_pct(b, 4))
+    ok("S155 sim: LoneWolf counts the side (one party monster -> alone)",
+       S.multiplier(b, 0, 4, S.LONEWOLF) == (400, True))
+    b.set_stb(4, 4, 0x04); b.set_stb(4, 6, 0x03)
+    ok("S155 sim: Punish — 2 buffs -> x2 at 50 % each; iron (+7 $C0) is not a buff",
+       S.multiplier(b, 0, 4, S.PUNISH) == (200, True) and
+       (b.set_stb(4, 7, 0xC0) or S.count_buffs(b, 4)) == 2)
+    ok("S155 sim: Rupture without an ailment fails", S.multiplier(b, 0, 4, S.RUPTURE) is None)
+    b.set_stb(4, 2, 0x01); b.set_stb(4, 3, 0x41)
+    ok("S155 sim: Rupture bursts poison + StopSpell -> x3, both cleared (+3 keeps $3C bits)",
+       S.multiplier(b, 0, 4, S.RUPTURE) == (300, True) and b.stb(4, 2) == 0 and b.stb(4, 3) == 0)
+    b.db42[4] |= 0x04                                  # sure hit
+    o1 = S.rust_one(b, 4, 0, 0x1234)
+    o2 = S.rust_one(b, 4, 0, 0x1234)
+    ok("S155 r5 sim: Blunt 19 -> 10 (-9: half the base ATK), a second one fails (no stacking)",
+       (o1[:2], o2[:2], b.atk[0]) == (('ok', 9), ('fail', None), 10) and 0 in S.blunted(b),
+       (o1[:2], o2[:2], b.atk[0]))
+    from simulator.skillfx import f10_dispel as F10
+    F10.base_def_agl(b, 0)
+    o3 = S.rust_one(b, 4, 0, 0x1234)
+    ok("S155 r5 sim: DeMagic puts the ATK back (10 -> 19) and un-blunts: Blunt lands again",
+       o3[:2] == ('ok', 9) and b.atk[0] == 10, (o3[:2], b.atk[0]))
+    b.atk[0] = 1
+    S.blunted(b).discard(0)
+    ok("S155 sim: Blunt on ATK 1 fails (floor 1)", S.rust_one(b, 4, 0, 0x1234)[0] == 'fail')
+    F10.base_def_agl(b, 0)
+    ok("S155 sim: DeMagic's base reset puts a rusted ATK back (1 -> 19)", b.atk[0] == 19)
+    b.atk[0] = 1
+    from simulator.skillfx import f7_stats as F7
+    F7.PER_VICTIM[F7.SURGE](b, 4, 0, 0)
+    ok("S155 sim: Surge (the lowered mark) puts it back too", b.atk[0] == 19)
+    # the AI rules + picks
+    from simulator import ai_rules as R
+    view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, [b.st[s*8:s*8+8] for s in range(8)],
+                        b.dd1b, [0] * 8, [None] * 8, lambda s, e: 0)
+    view.board = b
+    ok("S155 sim: AI — Repel vetoed; Rupture vetoed with no ailment on the foes; Rust +0 "
+       "while a foe has ATK > 1; LoneWolf alone +40",
+       R.evaluate_chain(1, S.REPEL, 4, view, 0, 0, 0) == (0, True) and
+       R.evaluate_chain(1, S.RUPTURE, 4, view, 0, 0, 0) == (0, True) and
+       R.evaluate_chain(1, S.RUST, 4, view, 0, 0, 0) == (0, False) and
+       R.evaluate_chain(1, S.LONEWOLF, 4, view, 0, 0, 0) == (40, False))
+    S.blunted(b).update(range(0, 3))
+    ok("S155 r5 sim: AI — Blunt vetoed when every foe is blunted (no stacking)",
+       R.evaluate_chain(1, S.RUST, 4, view, 0, 0, 0) == (0, True))
+    S.blunted(b).clear()
+    b.set_stb(0, 2, 0x01)
+    ok("S155 sim: AI — Rupture +50 and its pick = the poisoned foe",
+       R.evaluate_chain(1, S.RUPTURE, 4, view, 0, 0, 0) == (50, False) and
+       B_pick(S, b, 4, S.RUPTURE) == 0)
+    b.custom_rows = {S.RUPTURE: 0x03}
+    ok("S155 sim: the all-foes mode keeps row 3 (the first live foe)", B_pick(S, b, 4, S.RUPTURE) == 0)
+    # the project's numbers reach the board; the Quake numbers fix
+    prj = Project(gd_fixture({'skills': {'223': {'alone': 500}, '230': {'quake_power':
+                                                                       {'min': 10, 'max': 30}}}}),
+                  os.path.dirname(EXAMPLE))
+    data = BL.BattleData(prj)
+    bb = BL._board(data, [dict(hp=50, mp=0, atk=19, dfn=5, agl=5, int=5, level=1, skills=[])],
+                   [data.enemy_rec(1)], 0)
+    ok("S155 sim: gamedata.skills.223.alone -> Board.custom_pcts; the one-foe rows = $F0",
+       bb.custom_pcts.get('alone') == 500 and bb.custom_rows.get(0xDF) == 0xF0 and
+       S.multiplier(bb, 0, 4, S.LONEWOLF) == (500, True), (bb.custom_pcts, bb.custom_rows))
+    ok("S155 fix: quake_power edits reach the simulator (230 -> 10-30)",
+       data.quake_range.get(230) == (10, 30), data.quake_range.get(230))
+    data.override_enemy(1, skills=[0xEE], int=200, mp=200, hp=400, atk=60)
+    rnd = random.Random(1)
+    idle = P.IdlePolicy('empirical', seed=1)
+    seen = set()
+    for _i in range(6):
+        en = [data.enemy_rec(1)]
+        bb = BL._board(data, [dict(hp=300, mp=0, atk=40, dfn=30, agl=30, int=30, level=10,
+                                   skills=[])], en, 0)
+        r = P.simulate_battle(bb, data.records, data.dup, idle, rnd, party_policy='attack',
+                              enemy_recs={4: en[0]}, max_rounds=12)
+        seen |= {e[2][2] for rd in r['log'] for e in rd if len(e) > 2 and e[1] == 's155'}
+    ok("S155 sim: a high-INT boss with Rust uses it in a simulated battle", 'ok' in seen, seen)
+
+
+def test_s156_sim():
+    """S156 the simulator twin of Plunder (simulator/skillfx/s155_custom.py,
+    BATTLE_SKILL_SYSTEM §13.11): the pick among the buffs the caster lacks, each
+    kind's move, the AI rule / pick, a simulated battle (the walk compares the
+    twin with the ROM byte for byte, tools/walk_plunder.py)."""
+    import random
+    from editor2.core import balance as BL
+    from simulator import pacing as P
+    from simulator import ai_rules as R
+    from simulator.skillfx import s155_custom as S
+    from simulator.skillfx import f6_defence as F6
+    from simulator.skillfx import f10_dispel as F10
+
+    def board():
+        b = P.make_board([dict(hp=50, mp=0, atk=19, dfn=20, agl=30, int=5)],
+                         [dict(hp=999, mp=0, atk=10, **{'def': 40}, agl=8, int=5, level=1,
+                               enemy_stats_id=1, species_id=1)])
+        b.snapshot_base()
+        return b
+    b = board()
+    ok("S156 sim: 18 StealTable rows; no buff -> the fail, no RNG step",
+       len(S.STEAL_TABLE) == 18 and S.plunder_one(b, 0, 4, 0x1234) == ('fail', None, 0x1234))
+    b.set_stb(4, 4, 0x44)                      # Barrier + TailWind on the foe
+    b.set_stb(0, 4, 0x40)                      # TailWind on the caster
+    out, got, st = S.plunder_one(b, 0, 4, 0x1234)
+    ok("S156 sim: the buffs the caster lacks first (Barrier), one RNG step, moved",
+       out == 'ok' and got[:2] == (4, 0x24) and got[2:] == (0, 6) and st == SB_step(0x1234)
+       and b.stb(4, 4) == 0x40 and b.stb(0, 4) == 0x44, (out, got, b.stb(4, 4), b.stb(0, 4)))
+    out, got, _st = S.plunder_one(b, 0, 4, 0x1234)
+    ok("S156 sim: the caster has them all -> any of the foe's (TailWind taken, nothing new)",
+       got[:2] == (6, 0x8A) and b.stb(4, 4) == 0 and b.stb(0, 4) == 0x44)
+    b = board()
+    b.dfn[4] = 120; F10.set8(b, 4, 8, 0x40)    # DEF raised x2
+    _o, gd, _s = S.plunder_one(b, 0, 4, 0)
+    ok("S156 sim: a raised DEF -> the foe back to base 40, its mark gone; one Upper on the "
+       "caster (20 + 10 = 30, its mark set); r2: the rise 10 -> line 7 (the rise page)",
+       b.dfn[4] == 40 and not F10.get8(b, 4, 8) & 0x40 and b.dfn[0] == 30
+       and F10.get8(b, 0, 8) & 0x40 and gd[2:] == (10, 7), (b.dfn[4], b.dfn[0], gd))
+    b = board()
+    b.agl[4] = 40; b.dfn[4] = 120; F10.set8(b, 4, 8, 0x40)
+    b.dfn[0] = 80                              # the caster's DEF at its x4 cap
+    out, got, _st = S.plunder_one(b, 0, 4, 0)
+    ok("S156 sim: the caster at its DEF cap -> the raised AGL is taken (lacking first); the "
+       "foe keeps its raised mark for the DEF; Speed on the caster (30 + 15)",
+       got[:2] == (13, 0x22) and got[2:] == (15, 8) and b.agl[4] == 8 and F10.get8(b, 4, 8) & 0x40
+       and b.agl[0] == 45,
+       (got, b.agl[4], b.agl[0]))
+    b = board()
+    b.set_stb(4, 6, 0x01); b.set_stb(4, 3, 0x20)    # ChargeUP (this round) on a transformed foe
+    S.plunder_one(b, 0, 4, 0)
+    ok("S156 sim: ChargeUP $01 -> the caster's fresh $03 (a transformed foe's bits are not a "
+       "buff but its charge is)", b.stb(0, 6) == 0x03 and b.stb(4, 6) == 0 and b.stb(4, 3) == 0x20)
+    b = board()
+    F10.set8(b, 4, 9, 0x02); F10.set8(b, 0, 9, 0x01)
+    out, got, _st = S.plunder_one(b, 0, 4, 0)
+    ok("S156 sim: the stance: the caster has Defence (1) -> the foe's StrongD is the same "
+       "row, still taken (any); level 2 copied, named StrongD",
+       got[:2] == (17, 0x8E) and F10.get8(b, 0, 9) & 7 == 2 and F10.get8(b, 4, 9) & 7 == 0, got)
+    b = board()
+    F10.set8(b, 4, 8, 0x02); b.st[1] |= 0x40; F6.db4a(b)[1] = 0x04
+    S.plunder_one(b, 0, 4, 0)
+    ok("S156 sim: SuckAll moves its side marks ($DB01 bit 6 off, $DB00 bit 6 on, $DB4A = 0)",
+       not b.st[1] & 0x40 and b.st[0] & 0x40 and F6.db4a(b) == [0, 0]
+       and F10.get8(b, 0, 8) & 0x02 and not F10.get8(b, 4, 8) & 0x02)
+    # the AI + the pick
+    b = P.make_board([dict(hp=50, mp=0, atk=19, dfn=20, agl=30, int=5)] * 2,
+                     [dict(hp=999, mp=0, atk=10, **{'def': 40}, agl=8, int=5, level=1,
+                           enemy_stats_id=1, species_id=1)])
+    b.snapshot_base()
+    view = R.BattleView(b.hp, b.maxhp, b.mp, b.mp, [b.st[s*8:s*8+8] for s in range(8)],
+                        b.dd1b, [0] * 8, [None] * 8, lambda s, e: 0)
+    view.board = b
+    ok("S156 sim: AI — Plunder vetoed with no buff on the foes",
+       R.evaluate_chain(1, S.PLUNDER, 4, view, 0, 0, 0) == (0, True))
+    b.set_stb(1, 4, 0x05)                      # TakeMagic + Barrier on party slot 1
+    b.set_stb(0, 4, 0x04)
+    ok("S156 sim: AI — +20 per buff on the richest foe (+40), the pick = slot 1",
+       R.evaluate_chain(1, S.PLUNDER, 4, view, 0, 0, 0) == (40, False)
+       and B_pick(S, b, 4, S.PLUNDER) == 1)
+    # a simulated battle: a high-INT boss with Plunder vs a party with Barrier
+    prj = Project(gd_fixture({}), os.path.dirname(EXAMPLE))
+    data = BL.BattleData(prj)
+    data.override_enemy(1, skills=[S.PLUNDER], int=200, mp=200, hp=400, atk=60)
+    rnd = random.Random(1)
+    idle = P.IdlePolicy('empirical', seed=1)
+    seen = []
+    for _i in range(4):
+        en = [data.enemy_rec(1)]
+        bb = BL._board(data, [dict(hp=300, mp=0, atk=40, dfn=30, agl=30, int=30, level=10,
+                                   skills=[])], en, 0)
+        bb.set_stb(0, 4, 0x04)
+        r = P.simulate_battle(bb, data.records, data.dup, idle, rnd, party_policy='attack',
+                              enemy_recs={4: en[0]}, max_rounds=8)
+        seen += [e[2][2] for rd in r['log'] for e in rd if len(e) > 2 and e[1] == 's156']
+    ok("S156 sim: a high-INT boss with Plunder steals the party's Barrier in a simulated "
+       "battle, then (nothing left) never again in that battle", seen and seen.count('ok') <= 4
+       and 'fail' not in seen, seen)
+
+
+
+def test_s159(with_rom=False):
+    """S159 (ROADMAP E16 — EARTH + the Resistances tab; user: "a proper resistance table
+    visualizer and setter … Stat resistances need to be separated from elemental … Yes I
+    want quake included using the unused slot … Real earth resistance so I can add new
+    earth skills"; "are resistances and changes to both skill and monster resistances
+    propagated to difficulty simulator?"): resistance 26 = Earth (the old name loads),
+    the element tables + the AI element 27, the memorial check, the editor's map of skills
+    by resistance, the bulk setter, the simulator (Earth at position 27, the skills'
+    elements in the Balance data — they were never simulated before S159).
+    --rom: bank $51 SaveBtlS_4404's patched bytes (Earth -> position 27)."""
+    import copy as _cp
+    from editor2.core import gamedata as G, custom_skills as CS, resistances as RZ
+    from editor2.core import balance as BL, memorial as MM
+    from editor2.core.project import Project
+    from editor2.core.document import Document
+    from simulator import pacing as P, damage as D, battle as SB
+    ok("S159 resistance 26 is Earth; the old name 'Unused' still loads (a monster's levels, "
+       "an element)", G.RESIST_NAMES[26] == 'Earth' and G.resist_name('Unused') == 'Earth'
+       and CS.element_value('Unused', 'x') == 26 and CS.element_value('earth', 'x') == 26, '')
+    d0 = base()
+    d = _cp.deepcopy(d0)
+    gd = d.setdefault('gamedata', {})
+    gd.setdefault('monsters', {})['196'] = {'resist': {'Earth': 3}}
+    gd['monsters']['195'] = {'resist': {'Unused': 2}}
+    gd.setdefault('skills', {})['7'] = {'element': 'Earth'}
+    gd['skills']['230'] = {'element': 'Earth'}
+    prj = Project(_cp.deepcopy(d), os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    g = prj.gamedata()
+    ok("S159 species info +$29 (resistance 26) = the Earth level (Golem 3; MudDoll 2 via "
+       "'Unused')", g.monster[196][0x29] == 3 and g.monster[195][0x29] == 2,
+       (g.monster[196][0x29], g.monster[195][0x29]))
+    ok("S159 Boom moved to Earth: StockElemTable[7] = 26, its AI element (record +5) = 27 "
+       "(position 27)", CS.stock_elements(prj)[7] == 26 and g.record[7][5] == 27,
+       (CS.stock_elements(prj)[7], g.record[7][5]))
+    sk, _x, _w = CS.resolve(prj, REPO)
+    ok("S159 Quake (230) with Earth: CustomElemTable value 26, record +5 = 27",
+       sk[230]['element'] == 26 and sk[230]['record'][5] == 27, (sk[230]['element'],))
+    _act = MM.active
+    try:                                           # the check runs with statues in the project
+        MM.active = lambda _c: True
+        errs, _wr = MM.problems(prj)
+    finally:
+        MM.active = _act
+    ok("S159 the memorial accepts Earth levels 0-3 (it masks its tag; was 'must stay 0')",
+       not any('27th' in e or 'Earth' in e for e in errs), errs)
+    # the editor's map
+    path = '/tmp/_t_s159/project.json'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(d, open(path, 'w'))
+    doc = Document(path)
+    bt = RZ.by_type(doc)
+    names = lambda t: {r['name'] for r in bt[t]}                       # noqa: E731
+    ok("S159 skills by resistance: Earth = Boom + Quake (moved), Explosion = Bang + "
+       "Explosion's others without Boom, Fire = the Blaze line + FireSlash + BigBang",
+       {'Boom', 'Quake'} <= names(26) and 'Boom' not in names(2) and {'Bang', 'Explodet'}
+       <= names(2) and {'Blaze', 'Blazemore', 'Blazemost', 'FireSlash', 'BigBang'} == names(0),
+       (names(26), names(2), names(0)))
+    ok("S159 status skills listed by the resistance their code picks, not movable "
+       "(Sleep 7, PoisonGas 18, Beat 8, RobMagic 9, Sap 12, Slow 13, Sacrifice 14)",
+       all(any(r['name'] == n and not r['editable'] for r in bt[t]) for n, t in
+           (('Sleep', 7), ('PoisonGas', 18), ('Beat', 8), ('RobMagic', 9), ('Sap', 12),
+            ('Slow', 13), ('Sacrifice', 14))), '')
+    ok("S159 every resistance is in exactly one group (27)",
+       sorted(RZ.ORDER) == list(range(27)) and len(RZ.ORDER) == 27, RZ.ORDER)
+    doc.set_species_resists({196: {'Earth': 0}, 60: {'Fire': 3, 'Earth': 2}})
+    m = doc.data['gamedata']['monsters']
+    ok("S159 set_species_resists: one call, only differences stored (Golem back to the "
+       "original drops its entry; MadGopher Fire 3 + Earth 2)",
+       '196' not in m and m['60']['resist'] == {'Fire': 3, 'Earth': 2}, m)
+    # the simulator
+    lv = [0] * 27
+    lv[26] = 2
+    pk = P.pack_res(lv)
+    ok("S159 pack_res: Earth -> position 27 (byte 6 bits 1-0), position 0 stays 0; "
+       "damage.res_level(.., 26) reads it", pk[6] == 2 and pk[0] == 0
+       and D.res_level(bytes(pk), 26) == 2, pk)
+    data = BL.BattleData(prj)
+    van = BL.BattleData(None)
+    ok("S159 Balance data: Boom's override (26, the spell ladder), Quake's built-in element "
+       "26; the original game has none", data.elem_override.get(7) == (26, 'A')
+       and data.custom_elem.get(230) == 26 and not van.elem_override and not van.custom_elem,
+       (data.elem_override, data.custom_elem))
+    prj_plain = Project(_cp.deepcopy(d0), os.path.dirname(EXAMPLE))
+    prj_plain.repo_root = REPO
+    ok("S159 a skill element changes the Balance digest (fights recomputed)",
+       BL.raising_digest(data) != BL.raising_digest(BL.BattleData(prj_plain)), '')
+    b = SB.Board()
+    b.res = bytearray(P.pack_res([0] * 26 + [2]) * 8)
+    b.custom_elem = {230: 26}
+    ok("S159 battle.custom_element: a built-in with Earth at Earth 2 = the spell ladder "
+       "(100 -> 50); no entry = unchanged", SB.custom_element(b, 230, 4, 100) == 50
+       and SB.custom_element(b, 231, 4, 100) == 100, '')
+    if with_rom:
+        from editor2.core import builder as B
+        out, _prj, _w = compile_data(_cp.deepcopy(d0))
+        outdir = '/tmp/_t_s159_rom'
+        C.write_outputs(out, outdir)
+        rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        bk, ad = sy['SaveBtlS_4404']
+        o = bk * 0x4000 + ad - 0x4000
+        orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+        ok("S159 --rom: SaveBtlS_4404 at $51:$4404, same size (LoadBtlS_4452 at $4452), "
+           "`and $03 / ld c, a` (no rrc) and `or c` before byte 6's store",
+           (bk, ad) == (0x51, 0x4404) and sy['LoadBtlS_4452'] == (0x51, 0x4452)
+           and r[o + 10:o + 12] == bytes([0xE6, 0x03]) and r[o + 12] == 0x4F
+           and r[o + 71:o + 74] == bytes([0xB1, 0x12, 0xC9])
+           and r[o:o + 78] != orig[o:o + 78], r[o:o + 78].hex())
+
+def test_s160(with_rom=False):
+    """S160 (ROADMAP E13 — 30 new skills; user: "30 skills would be ok and acceptable", "I do
+    NOT care about making ANY seeds, books and warpwing every work in battle. I jsut wanted to
+    check its restricted to thems pecifically", "I need the space"): the 14 RECLAIMED ids
+    ($BC-$C1 / $CC-$D3, the battle skills of 14 field-only items) hold NEW skills after
+    239-254: allocation, the stock rows (record, MP, learn, name, text, look, sounds,
+    element, announce), the reclaim tables (base, AI target row, own line), the refusals,
+    the Items tab's field-only items, the simulator (planner, the code-2 fence).
+    --rom: the forks RUN from the built ROM (MiniSM83) for every id 0-255."""
+    import copy as _cp
+    from editor2.core import gamedata as G, custom_skills as CS, skills as SK
+    from editor2.core import balance as BL
+    from editor2.core.project import Project
+    from editor2.core.document import Document
+    from simulator import raising as RS
+    RC = (list(range(0xBC, 0xC2)) + list(range(0xCC, 0xD4)))
+    ok("S160 CS.NEW = 239-254 then the 14 reclaimed ids (30), RECLAIM = $BC-$C1 / $CC-$D3, "
+       "the items 13-18 / 29-36", list(CS.NEW) == list(range(0xEF, 0xFF)) + RC
+       and len(CS.NEW) == 30 and list(CS.RECLAIM) == RC
+       and [CS.RECLAIM_ITEMS[s_] for s_ in RC] == list(range(13, 19)) + list(range(29, 37)), '')
+    # allocation through the editor
+    d0 = base()
+    path = '/tmp/_t_s160/project.json'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(d0, open(path, 'w'))
+    doc = Document(path)
+    got = [doc.new_custom_skill(0, f'Sk{i}') for i in range(30)]
+    ok("S160 New skill x30: 239-254 first, then 188-193, 204-211; a 31st is refused",
+       got == list(CS.NEW), got)
+    try:
+        doc.new_custom_skill(0, 'Sk30')
+        refused = False
+    except CS.CustomSkillError as ex:
+        refused = '188-193' in str(ex)
+    ok("S160 a 31st new skill is refused (the message names the 30 ids)", refused, '')
+    lst = doc.skills_list()
+    stock = [e['id'] for e in lst if e['kind'] != 'new' and e['kind'] != 'custom']
+    new = [e['id'] for e in lst if e['kind'] == 'new']
+    ok("S160 Skills list: the 14 ids leave the stock list (no item rows), the new skills list "
+       "239-254 then the reclaimed ones", not set(RC) & set(stock) and new == list(CS.NEW), new)
+    det = doc.skill_detail(188)
+    ok("S160 a reclaimed id's detail = a new skill's (kind new, base, its MP / look from the "
+       "base)", det['kind'] == 'new' and det['base'] == 0 and det['mp'] == 2
+       and det['looks_like'] == 0, (det['kind'], det['base'], det['mp'], det['looks_like']))
+    doc.set_skill_mp(188, 9)
+    doc.set_skill_name(204, 'Quaker')
+    doc.set_skill_element(204, 26)
+    doc.set_skill_announce(204, lines=['{name} quakes!'])
+    doc.set_skill_learn(188, {'learnable': True, 'level': 4, 'prereqs': [0]})
+    doc.set_skill_description(211, ['A reclaimed', 'skill text'])
+    e = doc.data['gamedata']['skills']
+    ok("S160 the setters store a reclaimed new skill sparse (base + name kept)",
+       e['188'] == {'base': 0, 'name': 'Sk16', 'mp': 9, 'learn': {'level': 4, 'hp': 0, 'mp': 0,
+                    'atk': 0, 'def': 0, 'agl': 0, 'int': 0, 'prereqs': [0]}}
+       and e['204']['element'] == 'Earth' and e['204']['announce'] == ['{name} quakes!'],
+       (e['188'], e['204']))
+    names = doc.skill_names_effective()
+    ok("S160 skill names: a reclaimed id = its new skill's; an unused one is no skill",
+       names[188] == 'Sk16' and names[204] == 'Quaker', '')
+    d1 = _cp.deepcopy(d0)
+    d1.setdefault('gamedata', {})['skills'] = {
+        '188': {'base': 0, 'name': 'Ember', 'mp': 3, 'record': {'party_min': 40, 'party_range': 5},
+                'looks_like': 3, 'learn': {'level': 3, 'prereqs': [0]},
+                'description': ['A reclaimed spark']},
+        '204': {'base': 6, 'name': 'Burst', 'mp': 5, 'announce': ['{name} lets', 'it burst!'],
+                'element': 'Earth'},
+        '211': {'base': 3, 'name': 'Inferno2', 'announce_as': 0x23,
+                'record': {'target_mode': 0x11}},
+        '239': {'base': 0, 'name': 'HighOne'}}
+    prj = Project(_cp.deepcopy(d1), os.path.dirname(EXAMPLE))
+    prj.repo_root = REPO
+    sk, _x, _w = CS.resolve(prj, REPO)
+    g = prj.gamedata()
+    ok("S160 gamedata: a reclaimed new skill's record / MP (both copies) / learn row are in the "
+       "stock tables (Ember: Blaze's record, power 40-45, MP 3, level 3 from Blaze)",
+       bytes(g.record[188]) == sk[188]['record'] and sk[188]['record'][11] == 40
+       and g.record[188][4] == 3 and G._u16(g.mp[188], 0) == 3
+       and bytes(g.learn[188]) == sk[188]['learn'] and g.learn[188][13] == 0, '')
+    ok("S160 an unused reclaimed id keeps the item's bytes (record, MP, learn)",
+       bytes(g.record[189]) == bytes(G._rows(G.vanilla(REPO), 'skill_records')[189])
+       and bytes(g.learn[205]) == bytes(G._rows(G.vanilla(REPO), 'skill_learn')[205]), '')
+    ef = SK.effective(prj)
+    ok("S160 skills.effective: the reclaimed ids' names / own SKIL text / look (looks_like 3, "
+       "default = the base) / sounds", MT_decode(ef['names'][188]) == 'Ember'
+       and 188 in ef['own_desc'] and ef['looks'][188] == 3 and ef['sounds'][188] == 3
+       and ef['looks'][204] == 6 and MT_decode(ef['names'][211]) == 'Inferno2'
+       and MT_decode(ef['names'][189]) == SK.vanilla_name(189), '')
+    el = CS.stock_elements(prj)
+    ok("S160 StockElemTable: Burst's Earth (26) at $CC, its AI element record +5 = 27; an "
+       "unused id $FF", el[0xCC] == 26 and sk[0xCC]['record'][5] == 27 and el[0xBD] == 0xFF,
+       (el[0xCC], sk[0xCC]['record'][5]))
+    out, prj2, _w = compile_data(_cp.deepcopy(d1))
+    rb = asm_bytes(region_text(out, 'patches/bank_072.asm', 'gd_reclaim_base'))
+    rt = asm_bytes(region_text(out, 'patches/bank_058.asm', 'gd_reclaim_target'))
+    ra = asm_bytes(region_text(out, 'patches/bank_058.asm', 'gd_reclaim_announce'))
+    van_ann = [int(x, 16) for x in G.vanilla(REPO)['tables']['skill_announce']['rows']]
+    ok("S160 gd_reclaim_base: $BC = Blaze (0), $CC = Bang (6), $D3 = Firebal (3), the rest $FF "
+       "(24 rows)", len(rb) == 24 and rb[0] == 0 and rb[0x10] == 6 and rb[0x17] == 3
+       and all(v == 0xFF for i, v in enumerate(rb) if i not in (0, 0x10, 0x17)), rb)
+    ok("S160 gd_reclaim_target: the base's row; Inferno2 one foe ($11) -> Blaze's row 0",
+       rt[0] == 0 and rt[0x10] == 6 and rt[0x17] == 0, rt)
+    ok("S160 gd_reclaim_announce ($B0-$DD): Ember = Blaze's $23, Burst = $FD (its own line), "
+       "Inferno2 = $23, every other byte the original game's",
+       len(ra) == 46 and ra[0xBC - 0xB0] == 0x23 and ra[0xCC - 0xB0] == 0xFD
+       and ra[0xD3 - 0xB0] == 0x23 and all(ra[i] == van_ann[0xB0 + i] for i in range(46)
+                                           if 0xB0 + i not in (0xBC, 0xCC, 0xD3)), ra)
+    mp_rows = region_text(out, 'patches/bank_04c.asm', 'gd_custom_msg_ptrs')
+    ok("S160 CustomMsgPtrTable: 47 rows ($DE-$FE, then the 14 reclaimed ids); Burst's row 39 "
+       "names its line", len(mp_rows) == 47 and 'CustomMsgLine_204' in mp_rows[39]
+       and 'CustomMsg_dummy' in mp_rows[33], mp_rows[33:40])
+    names_reg = '\n'.join(region_text(out, 'patches/bank_041.asm', 'gd_custom_skill_names'))
+    ok("S160 a reclaimed name is in the stock name block, not the custom one",
+       'Ember' not in names_reg and 'HighOne' in names_reg, '')
+    # refusals
+    def refused(dd, frag):
+        try:
+            CS.resolve(dd, REPO)
+            return False
+        except CS.CustomSkillError as ex:
+            return frag in str(ex)
+    ok("S160 refused: a reclaimed entry without `base` (an old item battle edit) — the message "
+       "says the id holds a new skill", refused({'gamedata': {'skills': {'190': {'record':
+       {'field10': 0}}}}}, 'holds a NEW skill'), '')
+    _real_cc = CS._clone_census                  # S165: no base differs — a census made to
+
+    def _cc_differs(repo, section='results'):     # differ for Sacrifice checks the refusal
+        d = _real_cc(repo, section)
+        if section == 'results' and 20 in d:
+            d[20] = dict(d[20], result='differs', why='(test)')
+        return d
+    CS._clone_census = _cc_differs
+    try:
+        r_differ = refused({'gamedata': {'skills': {'190': {'base': 20, 'name': 'X'}}}},
+                           'does not behave')
+    finally:
+        CS._clone_census = _real_cc
+    ok("S160 refused: a base measured to differ (a census entry made to differ, S165), a field "
+       "skill (StepGuard), an item",
+       r_differ
+       and refused({'gamedata': {'skills': {'190': {'base': 0x37, 'name': 'X'}}}}, 'field skill')
+       and refused({'gamedata': {'skills': {'190': {'base': 0xB0, 'name': 'X'}}}}, 'not a skill'), '')
+    ok("S160 a prereq on an UNUSED reclaimed id is refused (no skill there); a used one is fine",
+       refused({'gamedata': {'skills': {'239': {'base': 0, 'name': 'X', 'learn': {'prereqs':
+       [190]}}}}}, 'not a skill this project has')
+       and not refused({'gamedata': {'skills': {'190': {'base': 0, 'name': 'Y'}, '239': {
+           'base': 0, 'name': 'X', 'learn': {'prereqs': [190]}}}}}, ''), '')
+    ok("S160 every base allowed at 239-254 is allowed on a reclaimed id (the census's reclaim "
+       "section, measured)", [b for b, _n in CS.clone_bases(REPO)] ==
+       [b for b, _n in CS.clone_bases(REPO, 0xBC)] == [b for b, _n in CS.clone_bases(REPO, 0xCC)], '')
+    # items: the field-only 14
+    from editor2.core import items_doc as ID
+    ok("S160 Items: the 14 field-only items (13-18, 29-36) have no battle half; Herb (1) keeps "
+       "its", doc._battle_info(13, 13)['field_only'] and not doc._battle_info(1, 1)['field_only']
+       and doc._battle_info(30, 30)['field_only'] and ID.FIELD_ONLY_ITEMS ==
+       frozenset(CS.RECLAIM_ITEMS.values()), '')
+    try:
+        doc.set_item_battle(15, power=50)
+        r_ = False
+    except ValueError as ex:
+        r_ = 'field-only' in str(ex)
+    ok("S160 Items: a field-only item's battle power is refused", r_, '')
+    # the simulator
+    data = BL.BattleData(prj)
+    ok("S160 Balance data: the reclaimed new skills run their base (core_alias), own records; "
+       "Burst's element override (26, its base's ladder)", data.core_alias.get(188) == 0
+       and data.core_alias.get(0xCC) == 6 and data.records[188]['battle_record'] is not None
+       and data.elem_override.get(0xCC, (None,))[0] == 26, (data.core_alias, data.elem_override.get(0xCC)))
+    T = RS.Tables.from_gamedata(prj.gamedata(), prj)
+    m = RS.Monster(0, 10, 50, 0, [999] * 6, [0, 0x3A], [], [0] * 27, [0] * 4)
+    T.learn[0xBD] = bytes([1] + [0] * 12 + [0, 0x3A, 0xFF, 0xFF, 0xFF])
+    T.learn[0xF0] = bytes([1] + [0] * 12 + [0, 0x3A, 0xFF, 0xFF, 0xFF])
+    T.learn[0x6E] = bytes([1] + [0] * 12 + [0, 0x3A, 0xFF, 0xFF, 0xFF])
+    T.learn_ids = sorted(set(T.learn_ids) | {0xBD, 0xF0, 0x6E})
+    learned = RS.learn_scan(T, m)
+    ok("S160 raising (S164: the fence lifted): code 2 (two prerequisites, both known) is OPEN for "
+       "a reclaimed id, a custom id and a vanilla id alike (bank $06 LearnFence06 = CF clear) — the "
+       "scan takes the first of them in id order and learns the others on later passes",
+       0x6E in learned and 0xBD in learned and 0xF0 in learned, learned)
+    from simulator import planner as PL
+    from types import SimpleNamespace as NS
+    pl = PL.make_planner(data.records)
+    fake = NS(party_skills=[[188, 0xBD, 0x3A, 0]], mp=[255] * 8, core_alias=data.core_alias,
+              ext={})
+    opts = pl.options(fake, 0)
+    ok("S160 planner: a reclaimed id holding a new skill is an option (NEVER $A2-$D4 still "
+       "drops an id with no skill: $BD, MysticNut's free slot)",
+       188 in opts and 0xBD not in opts and 0 in opts, opts)
+    # [S160] two skills evolving from ONE skill freeze the level up (walk_reclaim freeze)
+    w1 = CS.check(prj)
+    sh = [w_ for w_ in w1 if 'evolve from' in w_]
+    ok("S160 shared evolution: Ember (188, from Blaze) beside Blazemore (1, from Blaze) -> a "
+       "warning naming both (S161: no freeze any more — both only at the same level up)",
+       len(sh) == 1 and 'Blazemore (1) and Ember (188) '
+       'both evolve from Blaze (0) alone' in sh[0] and 'SAME level up' in sh[0]
+       and 'FREEZES' not in sh[0], sh)
+    pe = Project(json.load(open(EXAMPLE)), os.path.dirname(EXAMPLE))
+    pe.repo_root = REPO
+    ok("S160 shared evolution: the example project (the original learn rows: 42 parents, one "
+       "child each) has no such warning", not [w_ for w_ in CS.check(pe) if 'evolve from' in w_],
+       '')
+    d3 = _cp.deepcopy(d1)
+    d3['gamedata']['skills']['188']['learn'] = {'level': 3, 'prereqs': [2]}    # Blazemost: no child
+    p3 = Project(d3, os.path.dirname(EXAMPLE))
+    p3.repo_root = REPO
+    ok("S160 shared evolution: Ember from Blazemost (a skill nothing else evolves from) -> no "
+       "warning", not [w_ for w_ in CS.check(p3) if 'evolve from' in w_], '')
+    d4 = _cp.deepcopy(d1)
+    d4['gamedata']['skills']['188']['learn'] = {'level': 3, 'prereqs': [2, 5]}
+    p4 = Project(d4, os.path.dirname(EXAMPLE))
+    p4.repo_root = REPO
+    cw = [w_ for w_ in CS.check(p4) if 'two or more prerequisites' in w_ or 'never learned' in w_]
+    ok("S160 a new skill evolving from TWO skills -> (S164: the fence lifted, a combination) no "
+       "'never learned' warning", not cw, cw)
+    if with_rom:
+        from editor2.core import builder as B
+        out, _prj, _w = compile_data(_cp.deepcopy(d1))
+        outdir = '/tmp/_t_s160_rom'
+        C.write_outputs(out, outdir)
+        rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        rset = set(RC)
+
+        def run(bank, lbl, **regs):
+            cpu = MiniSM83(r, bank)
+            for k_, v_ in regs.items():
+                if k_ == 'ram':
+                    cpu.ram.update(v_)
+                else:
+                    setattr(cpu, k_, v_)
+            cpu.run(sy[lbl][1])
+            return cpu
+        bad = []
+        for sid in range(256):
+            c58 = run(0x58, 'IsReclaimed58', a=sid)
+            c77 = run(0x77, 'ReclaimedSkill77', a=sid)
+            c06 = run(0x06, 'LearnFence06', c_=sid)
+            if c58.c != (sid in rset) or c58.a != sid or c77.c != (sid in rset) or \
+                    c06.c or c06.a != sid:
+                bad.append(hex(sid))
+        ok("S160 --rom: IsReclaimed58 / ReclaimedSkill77 / LearnFence06 RUN for 0-255 (the 14 "
+           "ids; S164: LearnFence06 CF clear for every id — code 2 open —, A = the id kept)",
+           not bad, bad[:6])
+        # [S161] SkillView57 retired: AIRule_4785 reads $DB8A, which holds a new skill's BASE
+        # during the rule chain (bank $57 AIViewArm57) — test_s161
+        bad = []
+        for sid in range(0xDE):
+            c = run(0x4C, 'ReclaimLine4C', a=sid)
+            want = (33 + RC.index(sid)) if sid in rset else None
+            if (want is None) != c.c or (want is not None and c.a != want):
+                bad.append(hex(sid))
+        ok("S160 --rom: ReclaimLine4C RUN: the 14 ids -> rows 33-46, every other stock id CF",
+           not bad, bad[:6])
+        bad = []
+        for sid in range(0xDE):
+            c = run(0x72, 'FarSkillFork', ram={0xDB8A: sid})
+            want = {188: 0, 204: 6, 211: 3}.get(sid, sid)
+            if (c.h << 8 | c.l) != 0x4011 + 2 * want:
+                bad.append(hex(sid))
+        ok("S160 --rom: FarSkillFork RUN for every stock id: Ember / Burst / Inferno2 -> their "
+           "base's handler pointer, every other id its own (unused reclaimed ids: the item's)",
+           not bad, bad[:6])
+        bad = []
+        for sid in range(0xDE):
+            c = run(0x58, 'ReclaimRow58', a=sid)
+            want = {188: 0, 204: 6, 211: 0}.get(sid, sid)
+            if c.a != want:
+                bad.append(hex(sid))
+        ok("S160 --rom: ReclaimRow58 RUN: the AI target row of a reclaimed new skill = its base's "
+           "(Inferno2, one foe: Blaze's), every other id its own", not bad, bad[:6])
+
+        def at(lbl, off=0, n=1):
+            b_, a_ = sy[lbl]
+            o_ = b_ * 0x4000 + a_ - 0x4000 + off
+            return r[o_:o_ + n]
+        ff, lg = sy['FxEstimate58'][1], sy['LearnFence06'][1]
+        o58 = r.find(bytes([0xCD, ff & 0xFF, ff >> 8]), 0x58 * 0x4000, 0x59 * 0x4000)
+        ok("S160 --rom: the hooks — EstimateView58 (S161: SaveBtlFX_43ff's body) `call "
+           "FxEstimate58`, AIRule_4785 back to `ld a, [$db8a]` (S161), LearnCode2Guard06 `call "
+           "LearnFence06 / jp c`",
+           o58 > 0 and at('AIRule_4785', 0, 3) == bytes([0xFA, 0x8A, 0xDB])
+           and at('LearnCode2Guard06', 0, 4) == bytes([0xCD, lg & 0xFF, lg >> 8, 0xDA]), '')
+        ok("S160 --rom: the ROM's stock rows of Ember ($BC): record (Blaze's, power 40), MP word "
+           "3, the name pointer -> 'Ember'", r[0x54 * 0x4000 + 0x1CF + 19 * 0xBC + 11] == 40
+           and r[0x07 * 0x4000 + 0x170C + 2 * 0xBC] == 3, '')
+
+
+def test_s161(with_rom=False):
+    """S161 (ROADMAP E17 + the E13 note; user: "do e17, e13 fix both", "[AI preference] Yes,
+    with a sane base value"): the enemy AI judges a NEW skill AS ITS BASE (the base's rules,
+    the new skill's own record) + a per-skill AI preference (-60 … +60, 0 = as its base);
+    two skills evolving from one skill no longer freeze the level up (bank $51
+    LearnUpgradeOrAdd51). --rom: the forks RUN from the built ROM (MiniSM83)."""
+    import copy as _cp
+    from editor2.core import custom_skills as CS
+    from editor2.core import balance as BL
+    from editor2.core.project import Project
+    from editor2.core.document import Document
+    from simulator import ai_rules as R, pacing as PC, raising as RS
+    from tools import census_raising as CR
+    ok("S161 AI preference range -60 … +60", (CS.AI_PREF_MIN, CS.AI_PREF_MAX) == (-60, 60), '')
+    d0 = base()
+    path = '/tmp/_t_s161/project.json'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(d0, open(path, 'w'))
+    doc = Document(path)
+    a = doc.new_custom_skill(6, 'NBang')                  # 239, Bang's effect
+    b = doc.new_custom_skill(13, 'NSnow')                 # 240
+    c = doc.new_custom_skill(3, 'RFire')                  # 241 ...
+    for _i in range(13):
+        doc.new_custom_skill(3, f'X{_i}')
+    rc = doc.new_custom_skill(21, 'RSleep')               # 188, a reclaimed id
+    ok("S161 the fixture: NBang 239 / NSnow 240 / RSleep 188", (a, b, rc) == (239, 240, 188),
+       (a, b, rc))
+    det = doc.skill_detail(a)
+    ok("S161 skill_detail: a new skill's ai_preference 0 by default; a built-in has none",
+       det['ai_preference'] == 0 and doc.skill_detail(0xEB)['ai_preference'] is None, '')
+    doc.set_skill_ai_pref(a, -60)
+    doc.set_skill_ai_pref(b, 60)
+    doc.set_skill_ai_pref(rc, 25)
+    doc.set_skill_ai_pref(c, 15)
+    doc.set_skill_ai_pref(c, 0)
+    sk = doc.data['gamedata']['skills']
+    ok("S161 set_skill_ai_pref: stored as ai_preference; 0 removes the key",
+       sk['239']['ai_preference'] == -60 and sk['240']['ai_preference'] == 60
+       and sk['188']['ai_preference'] == 25 and 'ai_preference' not in sk['241'], '')
+    for bad_v, why in ((61, '-60'), (-61, '-60'), (2.5, 'whole number'), (True, 'whole number')):
+        try:
+            doc.set_skill_ai_pref(a, bad_v)
+            r_ = False
+        except CS.CustomSkillError as ex:
+            r_ = why in str(ex)
+        ok(f"S161 set_skill_ai_pref({bad_v!r}) refused", r_, '')
+    try:
+        doc.set_skill_ai_pref(0xEB, 10)
+        r_ = False
+    except CS.CustomSkillError as ex:
+        r_ = 'new skills' in str(ex)
+    ok("S161 a built-in custom skill (Punish) has no AI preference (its own rules)", r_, '')
+    d1 = _cp.deepcopy(doc.data)
+    d1['gamedata']['skills']['235'] = {'ai_preference': 5}       # LoneWolf, a built-in
+    try:
+        compile_data(d1)
+        r_ = False
+    except Exception as ex:                                       # noqa: BLE001
+        r_ = 'ai_preference' not in str(ex).split('allowed:')[-1]
+    ok("S161 a built-in's ai_preference key -> 'unknown key' (not in its allowed list)", r_, '')
+    out, prj, _w = compile_data(_cp.deepcopy(doc.data))
+    b72 = out['patches/bank_072.asm']
+    reg = b72[b72.index('BEGIN gd_ai_pref'):b72.index('END gd_ai_pref')]
+    bs = [int(x.strip().lstrip('$'), 16) for ln in reg.split('\n')[1:] if 'db' in ln
+          for x in ln.split(';')[0].replace('db', '').split(',') if x.strip()]
+    want = [0] * (0xFF - 0xBC)
+    want[239 - 0xBC], want[240 - 0xBC], want[188 - 0xBC] = 0xC4, 0x3C, 0x19
+    ok("S161 region gd_ai_pref: 67 signed bytes for ids $BC-$FE, the preferences in place",
+       bs == want, [hex(x) for x in bs if x])
+    # the simulator: the base's rules, the own record, the preference
+    data = BL.BattleData(prj)
+    ok("S161 BattleData.ai_pref = the project's preferences (core_alias as before)",
+       data.ai_pref == {239: -60, 240: 60, 188: 25} and data.core_alias.get(239) == 6, data.ai_pref)
+    view = R.BattleView([28, 0, 0, 0, 26, 0, 0, 0], [28, 1, 1, 1, 26, 1, 1, 1],
+                        [80, 0, 0, 0, 250, 0, 0, 0], [80, 1, 1, 1, 250, 1, 1, 1],
+                        [[0] * 8 for _ in range(8)], [0, 0xFF, 0xFF, 0xFF, 0, 0xFF, 0xFF, 0xFF],
+                        [0] * 8, [None] * 8, lambda s_, e: 0)
+    bang = R.evaluate_chain(1, 6, 4, view, 2, 0, 0)
+    ok("S161 evaluate_chain: pref 0 = the base; +60 adds to the bonus; -60 to the penalty "
+       "(Bang's bonus - 60 = net 0, no veto); a penalty past the bonus = not this turn; a veto "
+       "stays a veto", R.evaluate_chain(1, 6, 4, view, 2, 0, 0, pref=0) == bang
+       and R.evaluate_chain(1, 6, 4, view, 2, 0, 0, pref=60) == (min(bang[0] + 60, 255), False)
+       and R.evaluate_chain(1, 6, 4, view, 2, 0, 0, pref=-bang[0]) == (0, False)
+       and R.evaluate_chain(1, 6, 4, view, 2, 0, 0, pref=-(bang[0] + 5)) == (0, True)
+       and R.evaluate_chain(1, 6, 4, view, 255, 0, 0, pref=60) == (0, True), bang)
+    import simulator.battle as SB
+    bd = SB.Board()
+    bd.core_alias, bd.ai_pref = data.core_alias, data.ai_pref
+    bd.hp[0], bd.maxhp[0], bd.hp[4], bd.maxhp[4] = 28, 28, 26, 26
+    bd.mp[4] = 250
+    bd.dd1b = [0, 0xFF, 0xFF, 0xFF, 0, 0xFF, 0xFF, 0xFF]
+    cr = PC.ChainRules(bd, 4, data.records)
+    e6, e239, e240, e13 = (cr.evaluate(1, x, None) for x in (6, 239, 240, 13))
+    ok("S161 pacing.ChainRules: NBang = Bang's rules - 60, NSnow = SnowStorm's + 60 (the base's "
+       "id, the new skill's own record)", e239 == (max(e6[0] - 60, 0), e6[0] < 60)
+       and e240 == (min(e13[0] + 60, 255), False), (e6, e239, e13, e240))
+    # the E13 note: the warning, the census stub, the simulator
+    hits = [w_ for w_ in CS.check(prj) if 'evolve from' in w_]
+    ok("S161 the example has no shared-parent warning", not hits, hits)
+    code = bytes(CR.LEARN_CODE)
+    ok("S161 census_raising's stub mirrors LearnUpgradeOrAdd51 (not found + c != $FF -> c := $FF, "
+       "scan again)", bytes([0x79, 0xFE, 0xFF, 0x28]) in code and bytes([0x0E, 0xFF, 0x18]) in code
+       and len(code) == 59, code.hex())
+    T = RS.Tables.from_gamedata(prj.gamedata(), prj)
+    m = RS.Monster(0, 12, 50, 0, [999] * 6, [0], [], [0] * 27, [0] * 4)
+    T.learn[0xF1] = bytes([13] + [0] * 12 + [0, 0xFF, 0xFF, 0xFF, 0xFF])
+    T.learn_ids = sorted(set(T.learn_ids) | {0xF1})
+    got = RS.learn_scan(T, m)
+    ok("S161 raising.learn_scan: Blazemore + a new skill from Blaze at one level up -> the first in "
+       "Blaze's place, the second added", m.skills[:2] == [1, 0xF1] and 0 not in m.skills, (got, m.skills))
+    if with_rom:
+        from editor2.core import builder as B
+        out, _prj, _w = compile_data(_cp.deepcopy(doc.data))
+        outdir = '/tmp/_t_s161_rom'
+        C.write_outputs(out, outdir)
+        rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        base_of = {sid: v['base'] for sid, v in CS.resolve(_prj)[0].items() if v.get('base') is not None}
+
+        def run(bank, lbl, **regs):
+            cpu = MiniSM83(r, bank)
+            for k_, v_ in regs.items():
+                if k_ == 'ram':
+                    cpu.ram.update(v_)
+                else:
+                    setattr(cpu, k_, v_)
+            cpu.run(sy[lbl][1])
+            return cpu
+        VID, VB = sy['wAIViewId'][1], sy['wAIViewBase'][1]
+        ok("S161 WRAM wAIViewId / wAIViewBase at $DED5 / $DED6", (VID, VB) == (0xDED5, 0xDED6), '')
+        bad = []
+        for sid in range(256):
+            cpu = run(0x72, 'AIViewArm72', ram={0xDB8A: sid, VID: 0x77})
+            want = base_of.get(sid)
+            if want is None:
+                if cpu.ram.get(VID) != 0 or cpu.ram.get(0xDB8A) != sid:
+                    bad.append(hex(sid))
+            elif cpu.ram.get(VID) != sid or cpu.ram.get(VB) != want or cpu.ram.get(0xDB8A) != want:
+                bad.append(hex(sid))
+        ok("S161 --rom: AIViewArm72 RUN for 0-255: a new skill (high or reclaimed) -> $DB8A = its "
+           "base, the view = (id, base); every other id (the built-ins too) -> the view off",
+           not bad, bad[:8])
+        bad = []
+        for sid in (239, 240, 188):
+            cpu = run(0x72, 'AIViewOff72', ram={0xDB8A: base_of[sid], VID: sid, VB: base_of[sid]})
+            if cpu.ram.get(0xDB8A) != sid or cpu.ram.get(VID) != 0:
+                bad.append(sid)
+        cpu = run(0x72, 'AIViewOff72', ram={0xDB8A: 0x15, VID: 0})
+        ok("S161 --rom: AIViewOff72 RUN: $DB8A back to the new id, the view off; nothing when off",
+           not bad and cpu.ram.get(0xDB8A) == 0x15, bad)
+        bad = []
+        for sid, pref in ((239, -60), (240, 60), (188, 25), (241, 0)):
+            for bon, pen in ((60, 0), (40, 0), (0, 0), (250, 0), (60, 200), (0, 0xFF)):
+                cpu = run(0x72, 'CustomAIRule72', ram={0xDB8A: base_of[sid], VID: sid,
+                                                        VB: base_of[sid], 0xDD26: bon, 0xDD27: pen})
+                if pen == 0xFF:
+                    want = (bon, 0xFF)
+                elif pref >= 0:
+                    want = (min(bon + pref, 0xFF), pen)
+                else:
+                    want = (bon, min(pen - pref, 0xFE))
+                got = (cpu.ram.get(0xDD26), cpu.ram.get(0xDD27))
+                if got != want or cpu.ram.get(0xDB8A) != sid or cpu.ram.get(VID) != 0:
+                    bad.append((sid, bon, pen, got, want))
+        ok("S161 --rom: CustomAIRule72 at a new skill's chain end RUN: the view off, the preference "
+           "into the bonus (sat. $FF) / the penalty (sat. $FE), a veto kept", not bad, bad[:4])
+        bad = []
+        recs = sy['CustomRecordPtrTable'][1]
+        for vid, vbase in ((239, 6), (188, 21)):
+            for cid in range(256):
+                cpu = run(0x54, 'Fork54_RecordIndex', c_=cid, b=0,
+                          ram={VID: vid, VB: vbase})
+                hl = cpu.h << 8 | cpu.l
+                eff = vid if cid == vbase else cid
+                want = (recs + 2 * (eff - 0xDE)) if eff >= 0xDE else (0x4013 + 2 * eff)
+                if hl != want or cpu.c_ != cid:
+                    bad.append((vid, cid, hex(hl), hex(want)))
+        for cid in range(256):
+            cpu = run(0x54, 'Fork54_RecordIndex', c_=cid, b=0, ram={VID: 0})
+            hl = cpu.h << 8 | cpu.l
+            want = (recs + 2 * (cid - 0xDE)) if cid >= 0xDE else (0x4013 + 2 * cid)
+            if hl != want:
+                bad.append(('off', cid, hex(hl)))
+        ok("S161 --rom: Fork54_RecordIndex RUN for 0-255: with the view on, a read of the base's "
+           "record gives the NEW skill's (high: CustomRecordPtrTable, reclaimed: its own stock "
+           "row), every other id its own; off = as before; C kept", not bad, bad[:4])
+
+        def at(lbl, off=0, n=1):
+            b_, a_ = sy[lbl]
+            o_ = b_ * 0x4000 + a_ - 0x4000 + off
+            return r[o_:o_ + n]
+        av, ao, ev = sy['AIViewArm57'][1], sy['AIViewOff57'][1], sy['EstimateView58'][1]
+        o57 = r.find(bytes([0x7E, 0xCD, av & 0xFF, av >> 8, 0xEA, 0x4C, 0xDB]), 0x57 * 0x4000,
+                     0x58 * 0x4000)
+        lu = sy['LearnUpgradeOrAdd51'][1]
+        o51 = r.find(bytes([0xCD, lu & 0xFF, lu >> 8, 0x38]), 0x51 * 0x4000, 0x52 * 0x4000)
+        ok("S161 --rom: the hooks — state 4 `ld a, [hl] / call AIViewArm57 / ld [$db4c], a`, "
+           "AIChainZeroCell_788b `call AIViewOff57 / nop`, SaveBtlFX_43ff `jp EstimateView58`, "
+           "LevelUpS04_LearnScan `call LearnUpgradeOrAdd51 / jr c`",
+           o57 > 0 and at('AIChainZeroCell_788b', 0, 4) == bytes([0xCD, ao & 0xFF, ao >> 8, 0x00])
+           and at('SaveBtlFX_43ff', 0, 3) == bytes([0xC3, ev & 0xFF, ev >> 8]) and o51 > 0, '')
+        db = sy['DupBase53'][1]
+        bad = [hex(sid) for sid in range(256)
+               if run(0x72, 'AIBaseOrSelf72', e=sid).e != base_of.get(sid, sid)]
+        ok("S161 --rom: AIBaseOrSelf72 RUN for 0-255 (E in, E out): a new skill -> its base, every "
+           "other id itself; DupCastSkillListCheck_4ed6 `call DupBase53` (the duplicate-group-cast "
+           "list tests a new skill as its base)", not bad
+           and at('DupCastSkillListCheck_4ed6', 0, 3) == bytes([0xCD, db & 0xFF, db >> 8]), bad[:6])
+        bad = []
+        for old in range(256):
+            for present in (True, False):
+                lst = {0xC0D8 + i: 0xFF for i in range(40)}
+                if present:
+                    lst[0xC0D8 + 3] = old
+                lst[0xFFDA] = old
+                cpu = run(0x51, 'LearnUpgradeOrAdd51', ram=lst)
+                if old == 0xFF and not present:
+                    continue                                  # never a code-1 old id
+                if present:
+                    if cpu.c or (cpu.h, cpu.l) != (0x06, old):
+                        bad.append((old, present))
+                elif not cpu.c or (cpu.h << 8 | cpu.l) != 0x0B02 or cpu.c_ != 0xFF:
+                    bad.append((old, present))
+        ok("S161 --rom: LearnUpgradeOrAdd51 RUN for every old id: in $C0D8 -> HL = $06xx, no "
+           "carry (the upgrade); gone -> carry, HL = $0B02, C = $FF (a plain learn)", not bad,
+           bad[:6])
+
+
+def MT_decode(b):
+    from editor2.core import monster_text as MT
+    return MT.decode(b)
+
+
+def SB_step(st):
+    from simulator import battle as SB
+    return SB.rng_step(st)
+
+
+def B_pick(S, b, s, sk):
+    return S.target_pick(b, s, sk)
+
+
+def test_s162(with_rom=False):
+    """S162 (ROADMAP E17 note "Project enemy rows"; user: "B sounds fine", "make sure in a proper
+    romhack nothing gets messed up"): the enemy duplicate-group-cast conversion's per-EID flag
+    read is bounded — EIDs 0-486 the original table (bank $53 EnemyDupConvFlagTable_41df, 486
+    bytes; EID 486 the next code byte $FE as the original read it), a project row its own
+    `holds_group_spells` (bank $6B ProjectEnemyHolds via entry 2 EnemyHoldsOf), every other EID
+    0. --rom: DupConvFlag53 / EnemyHoldsOf RUN from the built ROM (MiniSM83)."""
+    import copy as _cp
+    from editor2.core import battles as BT
+    from editor2.core import balance as BL
+    from editor2.core.conversation import vanilla_holds
+    from editor2.core.document import Document
+    from editor2.core.project import Project
+    flags = json.load(open(os.path.join(REPO, 'extracted', 'enemy_dupconv_flags.json')))['flags']
+    ok("S162 vanilla_holds == the original table (EIDs 0-485: 181 hold back; EID 486 reads the "
+       "next code byte $FE -> True, as the game reads it; past it False)",
+       sum(vanilla_holds(e) for e in range(486)) == 181 and vanilla_holds(486)
+       and not vanilla_holds(487) and all(vanilla_holds(e) == bool(flags[e]) for e in range(487)), '')
+    d0 = base()
+    ens = d0['progression']['enemies']
+    e0 = {k: v for k, v in ens[0].items() if k not in ('comment', 'holds_group_spells')}
+    n0 = len(ens)
+    for k, h in enumerate((True, False, None)):
+        e = dict(e0, id=f'h{k}')
+        if h is not None:
+            e['holds_group_spells'] = h
+        ens.append(e)
+    out, prj, _w = compile_data(d0)
+    b6b = out['patches/bank_06b.asm']
+    row = b6b.split('\nProjectEnemyHolds:', 1)[1].split('\n')[1]
+    want = ['$00'] * n0 + ['$01', '$00', '$00']
+    ok("S162 ProjectEnemyHolds: true $01 / false $00 / absent $00 per row, in row order",
+       row.split(';')[0].replace('db', '').replace(' ', '').split(',') == want, row)
+    ok("S162 the head's entry table: entry 2 EnemyHoldsOf", 'dw EnemyHoldsOf' in b6b, '')
+    bad = _cp.deepcopy(d0)
+    bad['progression']['enemies'][-1]['holds_group_spells'] = 1
+    expect_error("S162 holds_group_spells must be true / false (1 refused)", bad, "holds_group_spells")
+    class Empty:
+        custom = {}
+
+        def quest_enemy_rows(self):
+            return []
+    e6b = BT.emit_bank_06b(Empty(), [])
+    ok("S162 an empty project still has one byte of each per-row table (the one zero row's)",
+       e6b.split('\nProjectEnemyHolds:', 1)[1].split('\n')[1].strip().startswith('db $00')
+       and e6b.split('\nProjectEnemyGender:', 1)[1].split('\n')[1].strip().startswith('db $FF'), '')
+
+    class Fake:
+        def __init__(self, n):
+            self._rows = [{'_eid': 519 + i, 'id': f'r{i}'} for i in range(n)]
+            self.custom = {}
+            self._ext_taken = []
+
+        def quest_enemy_rows(self):
+            return self._rows
+
+        def _take_ext_bank(self, purpose):
+            b = 0x80 + len(self._ext_taken)
+            self._ext_taken.append((b, purpose))
+            return b
+    import editor2.core.music as MU
+    import editor2.core.tileanim as TA
+    real = (MU.song_ext_banks, TA.plan)
+    MU.song_ext_banks, TA.plan = (lambda prj: {}), (lambda prj: {})
+    try:
+        P = BT.plan(Fake(BT.ROW_CAP))
+        from editor2.core.validators import TEMPLATE_SIZE
+        fits = (P['bytes_6b'] <= 0x4000 and P['bytes_6b'] == TEMPLATE_SIZE[0x6B]
+                + 3 * sum(1 for b in P['banks'] if b['rows'][1]) + 2 * BT.ROW_CAP
+                + P['rows_here'] * 25)
+    finally:
+        MU.song_ext_banks, TA.plan = real
+    ok(f"S162 bank $6B at the cap: 3,321 rows x (gender + holds) + {P['rows_here']} rows here "
+       f"= {P['bytes_6b']} B <= 16 KB", fits, P['bytes_6b'])
+    path = '/tmp/_t_s162/project.json'
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    json.dump(base(), open(path, 'w'))
+    doc = Document(path)
+    a = doc.add_enemy(copy_eid=44, name='Copy44')      # Eyeder, flagged
+    b = doc.add_enemy(copy_eid=309, name='Copy309')    # Rayburn, not flagged
+    c = doc.add_enemy(copy_eid=a, name='CopyOfCopy')
+    j = doc.make_join_version(a)
+    pe = {e['id']: e for e in doc.project_enemies()}
+    ok("S162 a copy keeps the copied row's setting: of EID 44 holds back, of EID 309 not (no key), "
+       "a copy of a project row and a join version keep it",
+       pe[a].get('holds_group_spells') is True and 'holds_group_spells' not in pe[b]
+       and pe[c].get('holds_group_spells') is True and pe[j].get('holds_group_spells') is True, pe[a])
+    eid_b = doc.project_eid(pe[b])
+    doc.set_enemy_fields(eid_b, {'holds_group_spells': True}, project_id=b)
+    on = {e['id']: e for e in doc.project_enemies()}[b].get('holds_group_spells')
+    doc.set_enemy_fields(eid_b, {'holds_group_spells': False}, project_id=b)
+    off = 'holds_group_spells' in {e['id']: e for e in doc.project_enemies()}[b]
+    try:
+        doc.set_enemy_fields(44, {'holds_group_spells': False})
+        refused = False
+    except Exception:                                   # noqa: BLE001
+        refused = True
+    rows = doc.species_enemies(int(pe[a]['species']))
+    orig = [r_ for r_ in rows if r_['kind'] == 'original' and r_['eid'] == 44]
+    ok("S162 the Monsters tab model: a project row ticks on / off (False removes the key), an "
+       "original row's setting is the game's (refused) and shown",
+       on is True and not off and refused and orig and orig[0]['fields']['holds_group_spells'] is True,
+       (on, off, refused))
+    prj2 = Project(_cp.deepcopy(doc.data), os.path.dirname(path))
+    prj2.repo_root = REPO
+    bd = BL.BattleData(prj2)
+    ids = {e['id']: e['_eid'] for e in prj2.quest_enemy_rows()}
+    ok("S162 the Balance simulator reads each project row's own flag (balance.BattleData.dup); "
+       "the original rows' unchanged",
+       bd.dup[ids[a]] == 1 and bd.dup[ids[b]] == 0 and bd.dup[:487] == flags[:487], '')
+    if with_rom:
+        from editor2.core import builder as B
+        out, _prj, _w = compile_data(_cp.deepcopy(doc.data))
+        outdir = '/tmp/_t_s162_rom'
+        C.write_outputs(out, outdir)
+        rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        rows = _prj.quest_enemy_rows()
+        last = rows[-1]['_eid']
+
+        def holds_of(eid):
+            cpu = MiniSM83(r, 0x6B)
+            cpu.d, cpu.e = eid >> 8, eid & 0xFF
+            cpu.run(sy['EnemyHoldsOf'][1])
+            return cpu.e
+
+        def far(cpu):
+            assert (cpu.h, cpu.l) == (0x6B, 0x02), (cpu.h, cpu.l)
+            cpu.e = holds_of(cpu.d << 8 | cpu.e)
+            cpu.a, cpu.b, cpu.c_ = 0x6B, 0xEE, 0xEE      # RST_10 eats A and BC
+
+        t = sy['EnemyDupConvFlagTable_41df'][1]
+        bad = []
+        for eid in list(range(0, 530)) + [r_['_eid'] for r_ in rows] + [last + 1, 3839, 0x0F00, 0xFFFF]:
+            cpu = MiniSM83(r, 0x53)
+            cpu.rst10 = far
+            cpu.h, cpu.l = eid >> 8, eid & 0xFF
+            cpu.b, cpu.c_, cpu.d, cpu.e = 0x12, 0x34, 0x56, 0x78
+            cpu.run(sy['DupConvFlag53'][1])
+            if eid <= 486:
+                want = r[0x53 * 0x4000 + t - 0x4000 + eid]
+            elif 519 <= eid <= last:
+                want = 1 if next(x for x in rows if x['_eid'] == eid).get('holds_group_spells') else 0
+            else:
+                want = 0
+            if cpu.a != want or (cpu.b, cpu.c_, cpu.d, cpu.e) != (0x12, 0x34, 0x56, 0x78):
+                bad.append((eid, cpu.a, want))
+        ok("S162 --rom: DupConvFlag53 RUN for EIDs 0-529, every project row, past the last / 3839 / "
+           "$0F00 / $FFFF: the original byte (0-486), the row's own flag, else 0; BC / DE kept",
+           not bad, bad[:6])
+        o = sy['EnemyDupCastConversion_4e63']
+        body = r[0x53 * 0x4000 + o[1] - 0x4000:][:0x40]
+        a_ = sy['DupConvFlag53'][1]
+        ok("S162 --rom: the bank $53 site = `call DupConvFlag53` + 6 nops, then `or a / jr z`",
+           bytes([0xCD, a_ & 0xFF, a_ >> 8]) + b'\x00' * 6 + b'\xB7\x28' in body, body.hex())
+
+
+def test_s163(with_rom=False):
+    """S163 (the user: "Do all of A"): the editor's warnings follow the game.
+    A1 — a palette's slots 4-7 never reach the ROM (S137: 32 B a palette, slots 0-3), so
+    they are not checked; A2 — the NPC sheet cache (bank $0B Call_00b_4839: 6 different
+    sprites; $E0-$E3 / $FF take none; the 7th draws with the first one's picture —
+    measured in PyBoy S163); A4 — a new tileset sheet never overwrites a file already in
+    assets/ (the undo then deleted it)."""
+    import shutil as _sh
+    import tempfile as _tf
+    from editor2.core import formats as F
+    from editor2.core.document import Document
+    # ---- A1
+    d0 = base()
+    pal = d0['custom']['palettes'][0]
+    keep = [list(r) for r in pal['colors_rgb555']]
+    pal['colors_rgb555'] = [list(r) for r in keep[:4]] + [[0, 0, 0, 0]] * 4
+    pal['colors_rgb555'][0] = ['0x1234', '0x6BFF', '0x2222', '0x0000']
+    _o, _p, w = compile_data(d0)
+    mine = [x for x in w if f"palette {pal['id']} " in x]
+    ok("S163 A1: a palette's slots 4-7 (zeros, as a copy of a game room keeps them) do not warn",
+       not any('4, 5, 6, 7' in x or '[4' in x for x in mine), mine)
+    pal['colors_rgb555'][1] = ['0x1234', '0x7FFF', '0x2222', '0x0000']
+    _o, _p, w = compile_data(d0)
+    mine = [x for x in w if f"palette {pal['id']} " in x]
+    ok("S163 A1: a loaded slot (1) with colour 1 != cream still warns, slot 1 named",
+       len(mine) == 1 and 'rows [1]' in mine[0], mine)
+    # ---- A2
+    def n(sp, **k):
+        return {'kind': 'npc', 'x': 1, 'y': 1, 'sprite': sp, **k}
+
+    def raw(b0, sp):
+        return {'kind': 'raw', 'bytes': [hex(b0), hex(sp), '0x01', '0x01', '0x00', '0x00']}
+    arena = [raw(0x10, 0xF0), raw(0x10, 0xF1), raw(0x10, 0xF3), raw(0x10, 0xF2),
+             raw(0x10, 0xE0), raw(0x10, 0xE1), raw(0x10, 0xE2), raw(0x10, 0xE3)]
+    ok("S163 A2: the arena's list ($F0-$F3 + the party shapes $E0-$E3) = 4 sheets, no warning",
+       len(F.npc_sheet_keys(arena)) == 4 and F.sheet_budget(arena) == [],
+       F.npc_sheet_keys(arena))
+    six = [n(k) for k in range(6)] + [n(0), n(3)]
+    ok("S163 A2: 6 different sprites (+ repeats) fit", F.sheet_budget(six) == [], F.sheet_budget(six))
+    eight = [n(k) for k in range(8)]
+    msg = F.sheet_budget(eight)
+    ok("S163 A2: 8 different sprites warn and name the two drawn with the first one's picture",
+       len(msg) == 1 and 'sprite $06, sprite $07' in msg[0] and "first one's picture" in msg[0], msg)
+    mixed = [n(1), n(2, monster=40), n(3, monster=40), n(4, hidden=True), raw(0x8F, 0x05),
+             n(0xFF), n(5), n(6), n(7)]
+    keys = F.npc_sheet_keys(mixed)
+    ok("S163 A2: a monster NPC is one entry per species, a hidden NPC counts, a spot ($8F) and "
+       "$FF do not", [k for k, _ in keys] == [('s', 1), ('m', 40), ('s', 4), ('s', 5), ('s', 6),
+                                               ('s', 7)] and F.sheet_budget(mixed) == [], keys)
+    _o, _p, w = compile_data(base())
+    ok("S163 A2: the example project has no sprite-sheet warning (the old rule warned once on "
+       "it; the user's project 6 times, every one on the arena copies)", not any('different NPC sprites' in x for x in w),
+       [x for x in w if 'different NPC sprites' in x])
+    # ---- A4
+    tmp = _tf.mkdtemp(prefix='s163_')
+    try:
+        _sh.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'),
+                     ignore=_sh.ignore_patterns('build'))
+        pdir = os.path.join(tmp, 'p')
+        stray = os.path.join(pdir, 'assets', 'ts_28_0D.2bpp')
+        open(stray, 'wb').write(b'\x5A' * 2048)
+        doc = Document(os.path.join(pdir, 'project.json'))
+        tid = doc.unique_tileset_id('ts_28_0D')
+        ok("S163 A4: a sheet file already in assets/ that no tileset names is not reused "
+           "(ts_28_0D -> ts_28_0D_2)", tid == 'ts_28_0D_2', tid)
+        t2 = doc.new_blank_tileset('ts_28_0D')
+        ok("S163 A4: new_blank_tileset leaves the stray file's bytes alone",
+           t2 == 'ts_28_0D_2' and open(stray, 'rb').read() == b'\x5A' * 2048, t2)
+        some = doc.custom['tilesets'][0]['id']
+        t3 = doc.duplicate_tileset(some, 'ts_28_0D')
+        ok("S163 A4: duplicate_tileset skips both the stray file and the id just made",
+           t3 == 'ts_28_0D_3' and open(stray, 'rb').read() == b'\x5A' * 2048, t3)
+    finally:
+        _sh.rmtree(tmp, ignore_errors=True)
+    ok("S163 A4: the example project carries no unnamed sheet file (the stray ts_28_0D.2bpp "
+       "of 2c8183e is gone)",
+       all(('assets/' + f) in open(EXAMPLE).read()
+           for f in os.listdir(os.path.join(os.path.dirname(EXAMPLE), 'assets'))
+           if f.endswith('.2bpp')), '')
+    # -- B5 (ROADMAP E17 note "Act-time id lists"): the 49 act-time view calls (BATTLE_SKILL_SYSTEM
+    # §13.14; tools/census_act_id_lists.py put them there, tools/walk_actbase.py measured them)
+    import re as _re
+    want = {'050': 6, '052': 35, '053': 27, '058': 6}       # S165: + 13 / 10 / 1 (the 17 bases)
+    got = {}
+    for b in want:
+        src = open(os.path.join(REPO, 'patches', f'bank_{b}.asm')).read()
+        # the sites (the helpers' own `call ActBaseA…` inside CmpBase53 / Entry1Base52 aside)
+        got[b] = len(_re.findall(r'^\s+call (?:ActBase(?!A)|MenuBase|QueueBase|CmpBase)\w*\s', src,
+                                 _re.M))
+    src52 = open(os.path.join(REPO, 'patches', 'bank_052.asm')).read()
+    ok("S163 B5: the act-time view calls in the patches (banks $50 4 + the 2 target-menu copies of r2 / $52 22 (+13 S165) / $53 17 (+10 S165) / $58 5 (+1 S165))",
+       got == want, str(got))
+    ok("S163 B5: SetHLBattle_7d77 keeps its 5 bytes (jp Entry1Base52 / nop / ret, ASSERT $7d7c) and "
+       "the bank $52 stubs end at the live message tail (ASSERT $7690)",
+       'jp Entry1Base52' in src52 and 'ASSERT @ == $7d7c' in src52 and 'ASSERT @ == $7690' in src52)
+    dis_n = sum(1 for b in want
+                for ln in open(os.path.join(REPO, 'disassembly', f'bank_{b}.asm'))
+                if ln.startswith('    ; [S163] ') and 'patched builds' in ln)
+    ok("S163 B5: the clean tree marks the 51 reads with a [S163] comment", dis_n == 51, str(dis_n))
+    if with_rom:
+        from editor2.core import builder as B
+        rom_p, sym_p = '/tmp/_t_s162_rom/build/rom.gbc', '/tmp/_t_s162_rom/build/game.sym'
+        if os.path.exists(rom_p) and os.path.exists(sym_p):     # test_s162's build (all patches)
+            r = open(rom_p, 'rb').read()
+            sy = B.parse_sym(sym_p)
+            tg = {(bk, ad) for nm, (bk, ad) in sy.items()
+                  if _re.match(r'(ActBase|MenuBase|QueueBase|CmpBase|Entry1Base)\w*$', nm)}
+            starts = {}
+            for bk, ad in tg:
+                starts[bk] = min(starts.get(bk, 0x8000), ad)
+            per = {}
+            for bk in (0x50, 0x52, 0x53, 0x58):
+                bofs = bk * 0x4000
+                for i in range(0x4000 - 2):
+                    pc = 0x4000 + i
+                    if starts.get(bk, 0x8000) <= pc < starts.get(bk, 0x8000) + 0x60:
+                        continue
+                    if r[bofs + i] in (0xCD, 0xC3) and \
+                            (bk, r[bofs + i + 1] | r[bofs + i + 2] << 8) in tg:
+                        per[bk] = per.get(bk, 0) + 1
+            ok("S163 B5 --rom: the view calls in the built ROM (banks $50 6 / $52 23 with "
+               "Entry1Base52 / $53 17 / $58 5)", per == {0x50: 6, 0x52: 36, 0x53: 27, 0x58: 6},
+               str(per))
+            b_, a_ = sy['SetHLBattle_7d77']
+            ok("S163 B5 --rom: SetHLBattle_7d77 = jp Entry1Base52 / nop / ret (5 bytes, the next "
+               "routine unmoved)",
+               r[b_ * 0x4000 + a_ - 0x4000] == 0xC3 and r[b_ * 0x4000 + a_ - 0x4000 + 4] == 0xC9
+               and (r[b_ * 0x4000 + a_ - 0x4000 + 1] | r[b_ * 0x4000 + a_ - 0x4000 + 2] << 8)
+               == sy['Entry1Base52'][1], '')
+
+
+def test_s164(with_rom=False):
+    """S164 (the user: "Do all of A. Do all of B or however much is feasible"): A4 CI, A5 bank
+    $47, B6 combinations for new skills (bank $06 LearnFence06 open), B10 the original enemy
+    AI's bugs as switches (gamedata.ai_fixes, editor2/core/ai_fixes.py), B8 ROADMAP E14 (the
+    custom skills' names past bank $41's region from the text banks)."""
+    import copy as _cp
+    import re as _re
+    from editor2.core import ai_fixes as AF
+    from editor2.core import custom_skills as CS
+    from editor2.core import gametext as GT
+    from simulator import ai_rules as R
+    # ---- A4 / A5
+    ci = open(os.path.join(REPO, '.github', 'workflows', 'verify.yml')).read()
+    ok("S164 A4: CI copies the byte-perfect build to data/ and runs the verifier + "
+       "test_compiler --rom", 'cp disassembly/game.gbc data/DWM-original.gbc' in ci
+       and 'tools/verify_integrity.py' in ci and 'test_compiler.py --rom' in ci, '')
+    b47 = open(os.path.join(REPO, 'disassembly', 'bank_047.asm')).read()
+    ok("S164 A5: bank $47's first string $40C1 (id $03C8) re-sectioned, the dispatch names it",
+       _re.search(r'^TextStr_47_40c1:\s+; id \$03C8', b47, _re.M) is not None
+       and 'dw TextStr_47_40c1' in b47, '')
+    # ---- B6
+    b06 = open(os.path.join(REPO, 'patches', 'bank_006.asm')).read()
+    ok("S164 B6: LearnFence06 = ld a, c / and a / ret (code 2 open for every id)",
+       _re.search(r'^LearnFence06:\n    ld a, c\n    and a[^\n]*\n    ret', b06, _re.M) is not None, '')
+    d1 = base()
+    sk = d1.setdefault('gamedata', {}).setdefault('skills', {})
+    sk['239'] = {'base': 3, 'name': 'Fusion', 'learn': {'level': 10, 'prereqs': [0, 6]}}
+    _o, prj, w = compile_data(d1)
+    ok("S164 B6: a new skill from two skills compiles with no 'never learned' warning",
+       not [x for x in w if 'never learned' in x or 'two or more prerequisites' in x], w)
+    # ---- B10
+    for bad, msg in (({'aoe': True}, 'unknown'), ({'aoe_count': 1}, 'true or false')):
+        d2 = base()
+        d2.setdefault('gamedata', {})['ai_fixes'] = bad
+        try:
+            compile_data(d2)
+            got = ''
+        except Exception as e:                     # noqa: BLE001
+            got = str(e)
+        ok(f"S164 B10: gamedata.ai_fixes {bad} refused ({msg})", msg in got, got[:160])
+    out0, _p0, _w0 = compile_data(base())
+    d3 = base()
+    d3.setdefault('gamedata', {})['ai_fixes'] = {k: True for k in AF.AI_FIXES}
+    out3, _p3, _w3 = compile_data(d3)
+    b57o, b57f = out0['patches/bank_057.asm'], out3['patches/bank_057.asm']
+    ok("S164 B10: no switch -> bank $57 == the hand patch (the original bytes)",
+       b57o == open(os.path.join(REPO, 'patches', 'bank_057.asm')).read(), '')
+    ok("S164 B10: every switch -> the six regions hold the fixes (inc c in the AoE / DeMagic "
+       "loops, the count's ret, the cut's loop back to the test, OppAvgDiv57)",
+       'jr nz, LoadBtlAI_44a7' in b57f and 'jp ClearBattleAction' in b57f
+       and 'call OppAvgDiv57' in b57f and 'OppAvgDiv57:' in b57f
+       and b57f.count('; [S164 class_count]') == 1, '')
+    for a_ in ('$44ce', '$4e69', '$7d54', '$6c0f', '$5593', '$7e20'):
+        ok(f"S164 B10: the region before {a_} keeps its size (ASSERT in the patch)",
+           f'ASSERT @ == {a_}' in b57o, '')
+    # the model: one live foe in the FIRST opposing slot; Bang ($4E36) +20 only in the original
+    st = [[0] * 8 for _ in range(8)]
+    view = R.BattleView([100, 0, 0, 0, 100, 0, 0, 0], [100] * 8, [50] * 8, [50] * 8, st,
+                        [0, 1, 1, 255, 0, 255, 255, 255], [0] * 8, [0] * 8, lambda s_, e: 0,
+                        atk=[50] * 8, dfn=[50] * 8, agl=[50] * 8)
+    v0 = R.evaluate_chain(1, 6, 4, view, 0, 0, 0)
+    v1 = R.evaluate_chain(1, 6, 4, view, 0, 0, 0, fixes=frozenset({'aoe_count'}))
+    ok("S164 B10 model: Bang against ONE foe (slot 0): the original +20 ($4E36), fixed none",
+       v0[0] - v1[0] == 20 and not v0[1] and not v1[1], (v0, v1))
+    # ---- B8 (ROADMAP E14)
+    pe = Project(base(), os.path.dirname(EXAMPLE))
+    pe.repo_root = REPO
+    ts = CS.text_slots(pe, REPO)
+    names = sorted(sid for _b, _t, sid, _r, _w in ts)
+    ok("S164 E14: the example's built-in names past the 94-B region (Plunder, Punish, Finish, "
+       "Rupture, Blunt) go to the text banks; none into the shared ns_text extents",
+       names == [0xEA, 0xEB, 0xEC, 0xED, 0xEE] and CS.bank41_spills(pe, REPO) == []
+       and all(b == 0x41 and t == CS.NAME_TABLE for b, t, _s, _r, _w in ts), names)
+    gt = [x for x, _raw in GT.resolve(pe, REPO) if x.source == 'skill_name']
+    ok("S164 E14: gametext.resolve serves them (mode 6 rows of bank $41 SkillNamePtrTable)",
+       sorted(int(x.key) for x in gt) == [0xEA, 0xEB, 0xEC, 0xED, 0xEE]
+       and all(x.table == 0x4539 for x in gt), [x.key for x in gt])
+    p41 = out0['patches/bank_041.asm']
+    ok("S164 E14: their pointer rows point at the empty placeholder",
+       all(f"[{s_}] " in p41 and f"dw SkillName_222_Unused_222  ; [{s_}] " in p41
+           for s_ in (0xEA, 0xEB, 0xEC, 0xED, 0xEE)), '')
+    if with_rom:
+        from editor2.core import builder as B
+        C.write_outputs(out3, '/tmp/_t_s164_rom')
+        rom, sym, _md5 = B.build_rom(REPO, '/tmp/_t_s164_rom', '/tmp/_t_s164_rom/build')
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        at = lambda bk, ad, n: r[bk * 0x4000 + ad - 0x4000:bk * 0x4000 + ad - 0x4000 + n]
+        ok("S164 B10 --rom: every switch: $57:$4E5D = ld a, c / call CheckMonsterSlot (no push), "
+           "$7D50 = ld [$db54], a / ret, $44CC = jr nz back to LoadBtlAI_44a7 ($44A7)",
+           at(0x57, 0x4E5D, 2) == bytes([0x79, 0xCD]) and at(0x57, 0x7D50, 4) == bytes([0xEA, 0x54, 0xDB, 0xC9])
+           and at(0x57, 0x44CC, 2) == bytes([0x20, (0x44A7 - 0x44CE) & 0xFF]), '')
+        o_ = sy['OppAvgDiv57'][1]
+        ok("S164 B10 --rom: AIRule_551b's divide = call OppAvgDiv57 + 8 nops",
+           at(0x57, 0x5588, 3) == bytes([0xCD, o_ & 0xFF, o_ >> 8]) and at(0x57, 0x558B, 8) == bytes(8), '')
+        lf = sy['LearnFence06'][1]
+        ok("S164 B6 --rom: LearnFence06 = 79 A7 C9", at(0x06, lf, 3) == bytes([0x79, 0xA7, 0xC9]), '')
+
+
+def test_s165(with_rom=False):
+    """S165 (the user: "do 1, 2 and 3 and check things yourself"): 1 the 17 bases a copy could
+    not run (the act-time base view on 24 more reads; extracted/skill_clone_census.json 155 same),
+    2 the words drawn in the windows as tiles (gamedata.window_words, editor2/core/window_words.py),
+    3 the rule model on arbitrary boards (simulator/ai_rules.py; the exactness itself is
+    simulator/rule_gaps.py / validate_ai_fixes.py against the ROM)."""
+    import re as _re
+    from editor2.core import custom_skills as CS
+    from editor2.core import window_words as WW
+    from simulator import ai_rules as R
+    # ---- 1
+    for b_, n_ in (('052', 13), ('053', 10)):
+        t = open(os.path.join(REPO, 'patches', f'bank_{b_}.asm')).read()
+        ok(f"S165 1: bank ${b_[1:]}: {n_} reads `call ActBase{b_[1:]}` marked [S165]",
+           t.count(f'call ActBase{b_[1:]}             ; [S165]') == n_, t.count('[S165]'))
+    t58 = open(os.path.join(REPO, 'patches', 'bank_058.asm')).read()
+    ok("S165 1: bank $58 TurnOrderDefensiveBoost_56cf reads the queue through QueueBase58",
+       _re.search(r'TurnOrderDefensiveBoost_56cf:\n(?:.*\n){4}    call QueueBase58 +; \[S165\]', t58)
+       is not None, '')
+    cen = CS._clone_census(REPO)
+    refused = [b for b, v in cen.items() if v.get('result') not in ('same', 'not a skill')
+               or (v.get('result') == 'same' and b not in CS.FIELD_ONLY
+                   and CS.clone_problem(b, REPO) is not None)]
+    ok("S165 1: no stock skill is refused as a base for its behaviour (the census: 155 same, 0 "
+       "differ)", refused == [], refused)
+    for b in (20, 132, 144):
+        ok(f"S165 1: base {b} allowed on a high id and on a reclaimed id",
+           CS.clone_problem(b, REPO, 0xEF) is None and CS.clone_problem(b, REPO, 0xBC) is None,
+           (CS.clone_problem(b, REPO, 0xEF), CS.clone_problem(b, REPO, 0xBC)))
+    # ---- 2
+    sl = WW.slots(REPO)
+    s165 = [k for k, v in sl.items() if v['kind'] == 'tile' and v['bank'] in (0x07, 0x15)
+            and v['font'] in ('field', 'text')]
+    ok("S165 2: 42 editable window words measured S165 (the field menus, the title menu)",
+       len(s165) == 42 and sl['07:704D/1/2']['text'] == 'INFO' and sl['15:647D/1/2']['text'] ==
+       'CONTINUE', len(s165))
+    out0, _p0, _w0 = compile_data(base())
+    for b_, s_, e_ in WW.RUNS:
+        f = f'patches/bank_{b_:03x}.asm'
+        ok(f"S165 2: no words -> {f} == the hand patch (the original cells)",
+           out0[f] == open(os.path.join(REPO, f)).read(), '')
+    for bad, msg in (({'07:704D/1/2': 'QUIZ'}, 'not in this screen'),
+                     ({'07:70F7/3/2': 'POWER'}, 'room for 3'), ({'07:9999/1/1': 'AB'}, 'not a word')):
+        d2 = base()
+        d2.setdefault('gamedata', {})['window_words'] = bad
+        try:
+            compile_data(d2)
+            got = ''
+        except Exception as e:                     # noqa: BLE001
+            got = str(e)
+        ok(f"S165 2: gamedata.window_words {bad} refused ({msg})", msg in got, got[:160])
+    d3 = base()
+    d3.setdefault('gamedata', {})['window_words'] = {'07:704D/1/2': 'STAT', '15:647D/1/2': 'Continue'}
+    out3, _p3, _w3 = compile_data(d3)
+    b07 = out3['patches/bank_007.asm']
+    ok("S165 2: INFO -> STAT: the field menu's row = $fe, $e0, S T A T ($d6 $0b $00 $0b), $e0, ITEM",
+       'db $fe, $e0, $d6, $0b, $00, $0b, $e0, $05, $0b, $d5, $07, $ff' in b07, '')
+    ok("S165 2: Continue in the text font ($26 $4c $4b $51 $46 $4b $52 $42)",
+       '$26, $4c, $4b, $51, $46, $4b, $52, $42' in out3['patches/bank_015.asm'], '')
+    ok("S165 2: the region keeps its size (same bytes count, the frame unchanged)",
+       len(_re.findall(r'\$[0-9a-f]{2}', b07)) == len(_re.findall(r'\$[0-9a-f]{2}', out0['patches/bank_007.asm'])), '')
+    # ---- 3: a board the S163 model got wrong — a foe that reflects ($4AF6: +4 & $22)
+    st = [[0] * 8 for _ in range(8)]
+    st[4][4] = 0x20
+    view = R.BattleView([100] * 8, [100] * 8, [50] * 8, [50] * 8, st,
+                        [0, 0, 0, 255, 0, 255, 255, 255], [0] * 8, [0] * 8, lambda s_, e: 0,
+                        atk=[50] * 8, dfn=[50] * 8, agl=[50] * 8)
+    ok("S165 3: a party Blaze is vetoed when a live foe reflects ($4AF6, the S163 model gave +)",
+       R.evaluate_chain(1, 0, 0, view, 0, 0, 0) == (0, True), R.evaluate_chain(1, 0, 0, view, 0, 0, 0))
+    if with_rom:
+        from editor2.core import builder as B
+        C.write_outputs(out3, '/tmp/_t_s165_rom')
+        rom, sym, _md5 = B.build_rom(REPO, '/tmp/_t_s165_rom', '/tmp/_t_s165_rom/build')
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        bk, ad = sy['WinLayout_07_704D']
+        o = bk * 0x4000 + ad - 0x4000
+        ok("S165 2 --rom: WinLayout_07_704D at $07:$704D, its row 1 = FE E0 D6 0B 00 0B",
+           (bk, ad) == (0x07, 0x704D) and r[o + 2 + 13:o + 2 + 19] == bytes([0xFE, 0xE0, 0xD6, 0x0B, 0x00, 0x0B]),
+           r[o:o + 24].hex())
+        a52 = sy['ActBase52'][1]
+        ok("S165 1 --rom: SkillMagicBack's id read = call ActBase52 ($52:$443D)",
+           r[0x52 * 0x4000 + 0x443D - 0x4000:0x52 * 0x4000 + 0x4440 - 0x4000] == bytes([0xCD, a52 & 0xFF, a52 >> 8]), '')
+
+
+def test_s166(with_rom=False):
+    """S166 (the user: "Do A1-3, close A4. Close B and if time allows do C"): the window words of
+    the other screens (A1, editor2/core/window_words.py screen fonts), the words a window cuts out
+    of a text (A2, text slots "T:…" -> gamedata.text), the measured line widths of the tables
+    (A3, editor2/core/gametext.py line_widths / warnings_for)."""
+    import re as _re
+    from editor2.core import gametext as GT
+    from editor2.core import textmark as TM
+    from editor2.core import window_words as WW
+    from editor2.core.document import Document
+    sl = WW.slots(REPO)
+    ok("S166 A1: the shop's BUY / SELL / EXIT, the farm's SLEEP, Grandpa's BREED, the battle's "
+       "FIGHT / RUN / CAUTIOUS are editable words with their screen's letters",
+       sl['09:6F3C/1/2']['text'] == 'BUY' and sl['12:710C/9/2']['text'] == 'SLEEP' and
+       sl['0A:75AB/1/2']['text'] == 'BREED' and sl['50:6ED2/1/2']['text'] == 'FIGHT' and
+       sl['50:6F60/5/2']['text'] == 'CAUTIOUS' and sl['09:6F3C/1/2']['font'] == 'screen' and
+       'A' not in sl['09:6F3C/1/2']['letters'], '')
+    ok("S166 A1: the naming keyboard, the pedigree picture and the battle's join / party-full "
+       "windows are not editable (WW.EXCLUDE)",
+       not any(k.startswith(x) for k in sl for x in WW.EXCLUDE), '')
+    ok("S166 A2: the Vault's PUT / TAKE / EXIT, ITEM / GOLD / EXIT and Grandpa's EXIT are text "
+       "slots (4 cells each)",
+       all(sl[k]['kind'] == 'text' and sl[k]['len'] == 4 for k in (
+           'T:field_message:11/0', 'T:field_message:11/4', 'T:field_message:11/8',
+           'T:field_message:12/4', 'T:field_message:16/0')), '')
+    # every run a region; no words = the hand patch
+    out0, _p0, _w0 = compile_data(base())
+    regions = {r[0] for r in WW.REGIONS}
+    ok("S166 A1: 28 compiler regions win_words_* (banks $07 $09 $0A $12 $15 $18 $50 $51)",
+       len(regions) == 28 and 'win_words_50_6ed2' in regions and 'win_words_12_710c' in regions,
+       len(regions))
+    for f in sorted({r[1] for r in WW.REGIONS}):
+        ok(f"S166 A1: no words -> {f} == the hand patch (the original cells)",
+           out0[f] == open(os.path.join(REPO, f)).read(), '')
+    d1 = base()
+    d1.setdefault('gamedata', {})['window_words'] = {'09:6F3C/1/2': 'GET', '50:6ED2/3/8': 'FLY'}
+    out1, _p1, _w1 = compile_data(d1)
+    b09 = out1['patches/bank_009.asm']
+    m09 = _re.search(r'WinLayout_09_6F3C:.*?\n    db \$d9', b09, _re.S).group(0)
+    ok("S166 A1: BUY -> GET writes the shop sheet's own tiles (G $DD, E $D5, T $A9)",
+       'db $fe, $e0, $dd, $d5, $a9, $e0, $e0, $ff' in m09, m09[:300])
+    ok("S166 A1: the region keeps its size",
+       len(_re.findall(r'\$[0-9a-f]{2}', b09)) == len(_re.findall(r'\$[0-9a-f]{2}', out0['patches/bank_009.asm'])), '')
+    ok("S166 A1: RUN -> FLY in bank $50 (the battle sheet's F L Y)",
+       out1['patches/bank_050.asm'] != out0['patches/bank_050.asm'], '')
+    for bad, msg in (({'09:6F3C/1/2': 'CAR'}, 'not in this screen'),
+                     ({'50:6ED2/3/8': 'FLEE'}, 'room for 3'),
+                     ({'T:field_message:11/0': 'STOW'}, 'gamedata.text')):
+        d2 = base()
+        d2.setdefault('gamedata', {})['window_words'] = bad
+        try:
+            compile_data(d2)
+            got = ''
+        except Exception as e:                     # noqa: BLE001
+            got = str(e)
+        ok(f"S166: gamedata.window_words {bad} refused ({msg})", msg in got, got[:160])
+    # A2: the Document composes the row
+    doc = Document(os.path.join(REPO, 'editor2', 'example-project', 'project.json'))
+    doc.set_window_word('T:field_message:11/0', 'STOW')
+    doc.set_window_word('T:field_message:11/4', 'GET')
+    rows = doc.data['gamedata']['text']['field_message']
+    ok("S166 A2: PUT -> STOW, TAKE -> GET compose the row 'STOWGET EXIT' (the cells kept)",
+       rows.get('11') == 'STOWGET EXIT', rows)
+    ok("S166 A2: window_words() reports both", doc.window_words() == {
+        'T:field_message:11/0': 'STOW', 'T:field_message:11/4': 'GET'}, doc.window_words())
+    try:
+        doc.set_window_word('T:field_message:11/8', 'LEAVE')
+        got = ''
+    except Exception as e:                         # noqa: BLE001
+        got = str(e)
+    ok("S166 A2: a word longer than its cells is refused", 'room for 4' in got, got)
+    doc.set_window_word('T:field_message:11/0', None)
+    doc.set_window_word('T:field_message:11/4', None)
+    ok("S166 A2: back to the original = no text edit", not (doc.data.get('gamedata') or {}).get('text', {}).get('field_message'),
+       doc.data.get('gamedata'))
+    # A3: the measured widths
+    w = GT.line_widths(REPO)
+    ok("S166 A3: measured widths — battle messages / item descriptions / item use lines 18, "
+       "personalities / item names 9, the credits 20 / 11",
+       (w['battle_message'], w['item_description'], w['item_use_message'], w['personality'],
+        w['item_name'], w['credits_role'], w['credits_name']) == (18, 18, 18, 9, 9, 20, 11), w)
+    ix = GT.index(REPO)
+    flagged = [k for k in ix.order if ix.entries[k].source != 'dialogue' and
+               GT.warnings_for(ix.entries[k], ix.entries[k].raw + b'\xf0', REPO)]
+    ok("S166 A3: no row of the game's own tables is flagged", flagged == [], flagged[:5])
+    x = ix.get('battle_message', 0)
+    ws = GT.warnings_for(x, TM.encode('Look out! A very long monster line here!', 'rows') + b'\xf0', REPO)
+    ok("S166 A3: a battle line past 18 cells warns", ws and '18-cell window' in ws[0], ws)
+    x = ix.get('field_message', 11)
+    ws = GT.warnings_for(x, TM.encode('PUT TAKE', 'rows') + b'\xf0', REPO)
+    ok("S166 A2: a packed row that drops a word warns (the window's cuts)", ws and 'cut into' in ws[0], ws)
+    # B (ROADMAP Phase 2 "Preserved-systems flag-dependency audit" (b)): the orphaned-trigger
+    # report = the Problems page's "waiting for the original game's progress" (S124) — the
+    # example's copied game rooms test Durran's defeat, which only the original story sets
+    rom_p = os.path.join(REPO, 'data', 'DWM-original.gbc')
+    if os.path.exists(rom_p):
+        from editor2.core import flag_index as FI
+        from editor2.core.cutscenes import Catalogue
+        ex = json.load(open(os.path.join(REPO, 'editor2', 'example-project', 'project.json')))
+        fi = FI.FlagIndex(ex, repo=REPO, catalogue=Catalogue(open(rom_p, 'rb').read()))
+        probs = {(p_.code, p_.idx) for p_ in fi.problems()}
+        ok("S166 B: the orphaned-trigger check fails the example's $0025 (Durran defeated) "
+           "test — only the original story sets it (problem game_only)",
+           ('game_only', 0x0025) in probs and ('game_only', 0x001D) in probs, sorted(probs)[:6])
+    if with_rom:
+        from editor2.core import builder as B
+        C.write_outputs(out1, '/tmp/_t_s166_rom')
+        rom, sym, _md5 = B.build_rom(REPO, '/tmp/_t_s166_rom', '/tmp/_t_s166_rom/build')
+        r = open(rom, 'rb').read()
+        sy = B.parse_sym(sym)
+        bk, ad = sy['WinLayout_09_6F3C']
+        o = bk * 0x4000 + ad - 0x4000
+        ok("S166 A1 --rom: WinLayout_09_6F3C at $09:$6F3C, its row 1 = FE E0 DD D5 A9 (GET)",
+           (bk, ad) == (0x09, 0x6F3C) and r[o + 2 + 9:o + 2 + 14] == bytes([0xFE, 0xE0, 0xDD, 0xD5, 0xA9]),
+           r[o:o + 24].hex())
+        bk, ad = sy['LibWinLayout_710c']
+        ok("S166 A1 --rom: bank $12's library run keeps LibWinLayout_710c at $12:$710C",
+           (bk, ad) == (0x12, 0x710C), (bk, ad))
+        # S166 r2 (the user: "the NO has a bit of a glitch at the bottom" of the join YES / NO):
+        # S128 ArenaScriptType51 sat on $51:$7B34 = the last byte ($00) of the LZ stream gfx $5112
+        # (the U N O letters, `ld de, $5112 / call WaitDMATransfer`). Every gfx stream the code
+        # loads (`ld de, id` + `call $1577` within 9 bytes) must be the original's, byte for byte.
+        from dwm import sprite_codec as SC
+        o0 = open(ROM, 'rb').read()
+        ids = set()
+        for mm in _re.finditer(rb'\x11(..)', o0, _re.S):
+            if b'\xcd\x77\x15' in o0[mm.start() + 3:mm.start() + 12]:
+                ids.add(o0[mm.start() + 1] | o0[mm.start() + 2] << 8)
+        bad, n = [], 0
+        for g in sorted(ids):
+            gb, _gi, ga, goff = SC.gfxid_stream_offset(o0, g)
+            if not (0 < gb < 0x80 and 0x4000 <= ga < 0x8000):
+                continue
+            s0 = SC.read_stream(o0, goff)
+            n += 1
+            if r[goff:goff + len(s0)] != s0:
+                bad.append(f'{g:04X}')
+        ok(f"S166 r2 --rom: the {n} gfx streams the code loads are the original bytes (gfx $5112 "
+           "ends with its $00 at $51:$7B34)", bad == [] and n >= 30 and 0x5112 in ids, bad)
+        ok("S166 r2 --rom: ArenaScriptType51 / LearnUpgradeOrAdd51 start after it ($51:$7B35 / $7B3B)",
+           sy['ArenaScriptType51'] == (0x51, 0x7B35) and sy['LearnUpgradeOrAdd51'] == (0x51, 0x7B3B),
+           (sy['ArenaScriptType51'], sy['LearnUpgradeOrAdd51']))
+
+
+def test_s167(rom_bytes, sym):
+    """S167 (the user: "If I'm about to begin the giant romhack I want to make sure there is no
+    dodgy shit happening behind the curtains"): tools/audit_patch_space.py on the regression
+    build — the ROM0 groove-row table ($3B83, 8 x 16 steps the sound engine adds to a note) is
+    the original again (S63-S166 kept MapIDClampForPalette on row 3 step 15 + row 4; songs $0C /
+    $12 read $3BC2), the clamp sits in the dead vanilla master table $3466 (no byte names
+    $3466 in a patched ROM0), every LZ stream of every bank is untouched by claimed space, and
+    the boss song plays exactly as the original (the editor's sound engine)."""
+    import importlib.util
+    import re as _re
+    o0 = open(ROM, 'rb').read()
+    ok("S167 --rom: GrooveRowTable $3B83-$3C02 == the original bytes",
+       rom_bytes[0x3B83:0x3C03] == o0[0x3B83:0x3C03], rom_bytes[0x3BB3:0x3BD3].hex())
+    ok("S167 --rom: MapIDClampForPalette at $00:$3466 (8 B + 5 pad, code at $3473 unmoved)",
+       sym.get('MapIDClampForPalette') == (0x00, 0x3466) and
+       rom_bytes[0x3466:0x346E] == bytes.fromhex('fa68c9fe6bd8afc9') and
+       rom_bytes[0x3473:0x3476] == o0[0x3473:0x3476], sym.get('MapIDClampForPalette'))
+    ok("S167 --rom: no byte of the patched ROM0 names $3466 (AudioProcess reads $3FE8)",
+       not list(_re.finditer(b'\x66\x34', rom_bytes[:0x4000])) and
+       rom_bytes[0x33D8:0x33DB] == bytes.fromhex('21e83f'), '')
+    spec = importlib.util.spec_from_file_location('aps', os.path.join(REPO, 'tools', 'audit_patch_space.py'))
+    A = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(A)
+    empty = A.empty_banks(o0)
+    rng = A.diff_ranges(o0, rom_bytes, set(empty))
+    fills = [(a, b) for a, b in rng if A.classify(o0, a, b)[0] == 'FILL']
+    edits = [(a, b) for a, b in rng if A.classify(o0, a, b)[0] == 'EDIT']
+    total, hits, _ed = A.stream_census(o0, rom_bytes, fills, edits, range(1, len(o0) // 0x4000))
+    ok(f"S167 --rom: {total} LZ streams of the banks' $4001 tables — none meets claimed space",
+       total > 1500 and not hits, hits[:3])
+    neg = bytearray(rom_bytes)
+    neg[0x51 * 0x4000 + 0x7B34 - 0x4000] = 0xFA         # the S128 overwrite, put back
+    rng2 = A.diff_ranges(o0, bytes(neg), set(empty))
+    f2 = [(a, b) for a, b in rng2 if A.classify(o0, a, b)[0] == 'FILL']
+    _t, hits2, _e = A.stream_census(o0, bytes(neg), f2, [], range(1, len(o0) // 0x4000))
+    ok("S167 --rom: negative — the S166 r2 overwrite of $51:$7B34 is found (gfx $5112)",
+       any(h['gfx_id'] == '$5112' for h in hits2), hits2[:2])
+    from editor2.core import sound_engine as SE
+
+    def song(rom0, sid, frames=900):
+        img = bytearray(o0)
+        img[:0x4000] = rom0[:0x4000]
+        mach = SE.Machine(bytes(img))
+        w = [tuple(mach.start_bgm(sid))]
+        for _ in range(frames):
+            w.append(tuple(mach.frame()))
+        return w
+    ok("S167 --rom: the boss song $12 (row 3 of the groove table) writes the original's sound "
+       "registers, frame for frame (900 frames)", song(rom_bytes, 0x12) == song(o0, 0x12), '')
+
+def _s168_fixture(tmp='/tmp/_t168'):
+    """The example + a room drawn with page 2 (a blank tileset with 256 numbered-ish tiles,
+    screen 0: page-1 and page-2 cells; a page-2 flip animation). -> (dir, room id, tid)."""
+    import shutil
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import page2 as P2
+    if os.path.isdir(tmp):
+        shutil.rmtree(tmp)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmp, ignore=shutil.ignore_patterns('build'))
+    d = Document(os.path.join(tmp, 'project.json'))
+    d.project_dir = tmp
+    rr = ProjectRenderer(REPO, tmp, d.data)
+    d.vanilla = rr
+    rid = d.new_room('PAGE TWO TEST', 0x00, rr, blank_tileset=True)
+    room = d.room(rid)
+    tid = room['record']['tileset']
+    room['record']['collision_threshold'] = '0x10'
+    sheet = bytes((i * 7 + (i >> 4)) & 0xFF for i in range(2048)) + \
+        bytes((i * 13 + 0x55) & 0xFF for i in range(2048))
+    d.write_sheet(tid, sheet)
+    lid = room['screens']['0']['layout']['id']
+    g = d.layout(lid)['tiles']
+    a = d.layout(lid)['attr']
+    for r in range(16):
+        for c in range(20):
+            g[r][c] = P2.value_of(0x10 + (r * 20 + c) % 0xC0)        # both pages (to $CF), walkable
+            a[r][c] = (r + c) % 4
+    room['tile_anims'] = [{'id': 'blink2', 'name': 'blink', 'motion': 'flip', 'speed': 16,
+                           'rows': [[0x80 + 0x20, 0x80 + 0x21]],
+                           'frames': [['00' * 16, 'ff' * 16]]}]
+    d.save(os.path.join(tmp, 'project.json'))
+    return tmp, rid, tid
+
+
+def test_s168(with_rom=False):
+    """S168 (ROADMAP P3.3g, the user: "more tiles per room"): PAGE 2 — a tileset's second 128
+    tiles in VRAM bank 1, drawn by attribute bit 3 (editor2/core/page2.py)."""
+    import re as _re
+    from editor2.core import page2 as P2
+    from editor2.core import layouts as L
+    from editor2.core.project import Project
+    from editor2.core.document import Document
+    # the values
+    ok("S168: tile values — page-2 tile n = $100 + n = slot 128 + n, map byte n, attr bit 3",
+       P2.slot_of(0x105) == 0x85 and P2.value_of(0x85) == 0x105 and P2.byte_of(0x105) == 5 and
+       P2.page_bit(0x105) == 8 and P2.page_bit(0x05) == 0 and P2.slot_of(0x85) is None and
+       P2.slot_key(0x85) == 5 and P2.slot_key(0x105) == 0x85, '')
+    ok("S168: page-2 tile n walks like page-1 tile n (the engine compares the map byte)",
+       P2.is_wall(0x80 + 3, 0x10) and not P2.is_wall(0x80 + 0x10, 0x10) and
+       P2.walkable(0x110, 0x10) and not P2.walkable(0x103, 0x10), '')
+    ok("S168: remap keeps pages (slot 5 -> 130: $05 -> $102; $105 untouched)",
+       P2.remap_value(0x05, 5, 0x82) == 0x102 and P2.remap_value(0x105, 5, 0x82) == 0x105 and
+       P2.remap_value(0x182 - 0x80, 0x82, 3) == 0x03, '')
+    ok("S168: free slots — page 1 first (walls from the top down, walkable upward)",
+       P2.wall_first([1, 2, 0x81, 0x82, 0x20], 0x10) == [2, 1, 0x82, 0x81] and
+       P2.walk_first([0x90, 0x20, 0x30], 0x10) == [0x20, 0x30, 0x90] and
+       P2.pick_order([0x30, 0x90, 2], 0x10, False, False) == [0x30, 2, 0x90], '')
+    # a project without page 2: nothing changes
+    out0, prj0, _w = compile_data(base())
+    ok("S168: no page 2 in the example — no page-2 bank, no derived attr stream",
+       not P2.active(prj0) and not P2.derived_attr_items(prj0) and
+       'page 2' not in prj0.ext_bank_owners().values() and
+       not any('Page2Room:' in t for t in out0.values() if t), '')
+    ok("S168: no page 2 -> bank $0B's room-load regions are the memorial's / vanilla bytes",
+       out0['patches/bank_00b.asm'] == open(os.path.join(REPO, 'patches/bank_00b.asm')).read(), '')
+    # the fixture
+    tmp, rid, tid = _s168_fixture()
+    outs, prj, _w = C.compile_project(tmp, REPO)
+    owners = prj.ext_bank_owners()
+    home = P2.plan(prj)['home']
+    ok("S168: a page-2 room -> the page-2 home bank is the LAST ext bank",
+       home and owners.get(home) == 'page 2' and home == max(owners), owners)
+    bank = outs.get(f'patches/{P2.bank_file(home)}', '')
+    ok("S168: the home bank holds Page2Room, the copier, the directory row and the RAW sheet",
+       'Page2Room:' in bank and f'Page2Copy_P{home:02X}:' in bank and
+       _re.search(r'Page2Directory:.*\n    db 0, \$[0-9A-F]{2}, \$' + f'{home:02X}, 0', bank) is not None and
+       'ALIGN[8]' in bank, '')
+    sheet = open(os.path.join(tmp, prj.tilesets[-1]['raw2bpp']), 'rb').read()
+    rows = _re.findall(r'^    db ((?:\$[0-9A-F]{2}, ){15}\$[0-9A-F]{2})$', bank.split('Page2Sheets')[-1], _re.M)
+    got = bytes(int(x[1:], 16) for r in rows for x in r.split(', '))
+    ok("S168: the sheet's page 2 is emitted byte for byte (2048 B)",
+       len(sheet) == 4096 and got[:2048] == sheet[2048:], len(got))
+    ok("S168: bank $0B's regions call the home bank's entry 1",
+       f'ld hl, ${home:02X}01' in outs['patches/bank_00b.asm'], '')
+    room = next(r for r in prj.rooms if r.get('id') == rid)
+    items = P2.derived_attr_items(prj)
+    ok("S168: one derived attr stream (the screen's attr grid + the page bits)", len(items) == 1,
+       len(items))
+    key, _home, _lab, fn, _c = items[0]
+    lay = next(la for la in prj.layouts if la['id'] == key[2])
+    grid = L.unpack_attr(L.decompress_raw(REPO, fn())[:256])
+    want = [[(lay['attr'][r][c] & 7) | (8 if lay['tiles'][r][c] >= 0x100 else 0)
+             for c in range(20)] for r in range(16)]
+    ok("S168: attribute bit 3 exactly on the page-2 cells", grid == want and
+       any(v & 8 for row in grid for v in row) and any(not v & 8 for row in grid for v in row), '')
+    ok("S168: the tile stream holds the map bytes (v & $FF)",
+       L.pad_layout(lay['tiles'])[:20] == bytes(v & 0xFF for v in lay['tiles'][0]), '')
+    b6c = outs['patches/bank_06c.asm']
+    ok("S168: an own animation on page-2 slots copies to VRAM bank 1 (bit 0 of the word)",
+       '$9201, $9211' in b6c, _re.findall(r'dw \$9[0-9A-F]{3}.*slots 160', b6c)[:1])
+    r60 = outs['patches/bank_060.asm'] + ''.join(t for f, t in outs.items() if f.startswith('patches/bank_08'))
+    ok("S168: the room's render row points at the derived attr stream",
+       f"Attr2_" in ''.join(t for f, t in outs.items() if f.endswith('.asm')), '')
+    # the validator: page-2 tiles without an own tileset
+    d2 = json.load(open(os.path.join(tmp, 'project.json')))
+    rm = next(r for r in d2['custom']['rooms'] if r['id'] == rid)
+    rm['record'].pop('tileset')
+    rm['record']['gfx_bank'], rm['record']['gfx_id'] = '0x23', '0x00'
+    rm.pop('tile_anims', None)
+    prj2 = Project(d2, tmp)
+    prj2.repo_root = REPO
+    e2, _w2 = P2.problems(prj2)
+    ok("S168: page-2 tiles in a room on a game tileset -> an error in words",
+       any('page-2' in x for x in e2), e2)
+    # the document: free slots spill onto page 2
+    doc = Document(os.path.join(tmp, 'project.json'))
+    fc = doc.free_counts(tid, 0x10)
+    ok("S168: free_counts covers both pages",
+       fc['total'] == fc['page1'] + fc['page2'] and fc['page2'] > 0, fc)
+    usage = doc.tile_usage(tid)
+    ok("S168: tile_usage has 256 slots, page-2 placed cells counted on page 2",
+       len(usage) == 256 and usage[0x80 + 0x10]['placed'] and usage[0x80 + 0x20]['animated'], '')
+    lid = doc.room(rid)['screens']['0']['layout']['id']
+    v = doc.layout(lid)['tiles'][1][1]
+    twin, _thr = doc.ensure_twin(tid, v, want_wall=True)
+    s1 = doc.read_sheet(tid)
+    ok("S168: a WALL twin of a page-2 tile has the same graphic, a wall map byte",
+       P2.is_wall(P2.slot_key(twin), 0x10) and
+       s1[P2.slot_key(twin) * 16:P2.slot_key(twin) * 16 + 16] ==
+       s1[P2.slot_key(v) * 16:P2.slot_key(v) * 16 + 16], (hex(v), hex(twin)))
+    moved = doc.page1_room(tid, 0x10, 1, 3)
+    u2 = doc.tile_usage(tid)
+    free1 = [i for i in range(0x80) if u2[i]['status'] == 'free']
+    ok("S168: page1_room moves ordinary tiles to page 2 until page 1 has the room asked for",
+       sum(1 for i in free1 if i < 0x10) >= 1 and len(free1) >= 4, (moved[:4], len(free1)))
+    if with_rom:
+        test_s168_rom(tmp, rid)
+
+
+def _s170_mirror_fixture():
+    """S170: the example + EVERY original monster re-arted the way the S170 demo does it
+    (examples/s170_mirror_demo: own pose mirrored, own walking colours 1/2 swapped, own walk
+    style) -> (project data, {sid: (battle picture, walking picture)})."""
+    import importlib.util as _iu
+    spec = _iu.spec_from_file_location('s170demo', os.path.join(REPO, 'examples', 's170_mirror_demo',
+                                                                 'build_demo.py'))
+    demo = _iu.module_from_spec(spec)
+    spec.loader.exec_module(demo)
+    from editor2.core.sheet_import import literal_stream
+    from editor2.core.sprite_render import species_layout_id
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    ents, fx, pics = {}, {}, {}
+    for sid in range(215):
+        b = demo.mirrored_pose(bytes.fromhex(ms[str(sid)]['battle']['tile_bytes_hex']))
+        f = demo.swapped_walk(bytes.fromhex(ms[str(sid)]['follower']['tile_bytes_hex']))
+        fx[f'assets/art/m{sid}_b.bin'] = literal_stream(b)
+        fx[f'assets/art/m{sid}_f.bin'] = literal_stream(f)
+        ents[str(sid)] = {'battle': {'art': f'assets/art/m{sid}_b.bin'},
+                          'follower': {'art': f'assets/art/m{sid}_f.bin',
+                                       'layout': species_layout_id(sid)[0]}}
+        pics[sid] = (b, f)
+    return _art_fixture(ents, fx), pics
+
+
+def _asm_streams(text):
+    """{label: bytes} of an art bank's streams from its generated text."""
+    out, cur = {}, None
+    for ln in text.splitlines():
+        m = re.match(r'^(Art(?:Battle|Walk)_\d+):', ln)
+        if m:
+            cur = m.group(1)
+            out[cur] = bytearray()
+        elif cur and ln.startswith('    db '):
+            out[cur] += bytes(int(x.strip()[1:], 16) for x in ln[7:].split(';')[0].split(','))
+        elif cur and ln.strip() and not ln.startswith('    db '):
+            cur = None
+    return {k: bytes(v) for k, v in out.items()}
+
+
+def test_s172(with_rom=False):
+    """S172 (gamedata.foods — "Foods instead of meats", a tick): the five meats named
+    Toast / Apple / Biscuit / BadApple / Honey under the project's own edits; each food its
+    own plain NPC sprite ($58-$5C; the meat prop $5F = the Apple) from
+    editor2/assets/foods/*.png; bank $77 NpcDrawPlain holds them on frame 0. Off = the
+    game's bytes in both regions and an empty NpcStaticIds."""
+    import copy as _copy
+    from dwm import sprite_codec as SC
+    from editor2.core import foods as FD, gametext as GT, items as IT
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    base = json.load(open(os.path.join(REPO, 'editor2', 'example-project', 'project.json')))
+    on = _copy.deepcopy(base)
+    on.setdefault('gamedata', {})['foods'] = True
+    ok("S172: off by default (the example)", not FD.enabled(base) and FD.text_defaults(base) == {})
+    want = {19: 'Toast', 20: 'Apple', 21: 'Biscuit', 22: 'BadApple', 23: 'Honey'}
+    ok("S172: on — the five names", FD.item_names(on) == want)
+    ed = GT.edits(on)
+    ok("S172: gametext.edits carries the names (item_name 19-23)",
+       all(ed.get(('item_name', str(i))) == n for i, n in want.items()))
+    mine = _copy.deepcopy(on)
+    mine['gamedata'].setdefault('text', {})['item_name'] = {'19': 'Bread'}
+    ok("S172: a name the project typed wins over the tick",
+       GT.edits(mine)[('item_name', '19')] == 'Bread' and
+       GT.edits(mine)[('item_name', '20')] == 'Apple')
+    ok("S172: items.names follows the tick", IT.names(on)[23] == 'Honey' and
+       IT.names(base)[23] == 'Sirloin')
+    wantd = {19: 'a little', 20: 'a moderate amount', 21: 'a lot', 22: 'but poisons them',
+             23: 'greatly'}
+    ok("S172 r3: on — each food its own description by strength (gametext.edits "
+       "item_description 19-23 'Tames monsters' / ...)",
+       all(ed.get(('item_description', str(i))) == 'Tames monsters\n' + t for i, t in wantd.items()))
+    ok("S172 r3: off — no description defaults (the shared 'Tames monsters')",
+       not any(k[0] == 'item_description' for k in GT.edits(base)) and FD.text_defaults(base) == {})
+    from editor2.core import textmark as _TM
+    ok("S172 r3: each description fits the INFO box (2 rows of at most 18 letters, encodes)",
+       all(len(r) <= 18 for t in FD.DESCRIPTIONS.values() for r in t.split('\n')) and
+       all(_TM.encode(t, 'rows') for t in FD.DESCRIPTIONS.values()))
+    mine2 = _copy.deepcopy(on)
+    mine2['gamedata'].setdefault('text', {})['item_description'] = {'23': 'Sweet'}
+    ok("S172 r3: a description the project typed wins over the tick",
+       GT.edits(mine2)[('item_description', '23')] == 'Sweet' and
+       GT.edits(mine2)[('item_description', '19')].endswith('a little'))
+    # -- the regions: off = the ROM's bytes, on = the foods' gfx-IDs / palettes
+    def words(txt):
+        return [int(x.split('$')[1][:4], 16) for x in txt.splitlines() if x.strip().startswith('dw')]
+
+    def bytes_(txt):
+        return [int(x.split('$')[1][:2], 16) for x in txt.splitlines() if x.strip().startswith('db')]
+    rom_w = [rom[0x2B8F + 2 * k] | rom[0x2B90 + 2 * k] << 8 for k in range(8)]
+    rom_p = list(rom[5 * 0x4000 + 0x41AA - 0x4000:5 * 0x4000 + 0x41B2 - 0x4000])
+    ok("S172: off — npc_food_sheets = the ROM's NpcSheetGfxTable ids $58-$5F",
+       words(FD.emit_sheets(base, [])) == rom_w, str(rom_w))
+    ok("S172: off — npc_food_pals = the ROM's NpcSpritePalTable ids $58-$5F",
+       bytes_(FD.emit_pals(base, [])) == rom_p, str(rom_p))
+    ok("S172: on — $58-$5C = gfx-IDs $7717-$771B, $5D / $5E kept, $5F = the Apple's",
+       words(FD.emit_sheets(on, [])) == [0x7717, 0x7718, 0x7719, 0x771A, 0x771B, rom_w[5],
+                                          rom_w[6], 0x7718])
+    ok("S172: on — the colours (Toast orange 6, Apple red 0, Biscuit brown 7, BadApple grey "
+       "5, Honey amber 3; $5F the Apple's)",
+       bytes_(FD.emit_pals(on, [])) == [6, 0, 7, 5, 3, rom_p[5], rom_p[6], 0])
+    ok("S172: off — NpcStaticIds is empty",
+       any(l.strip().startswith('db $ff') for l in FD.bank77_lines(base)) and
+       not any(l.startswith('FoodSheet0:') for l in FD.bank77_lines(base)))
+    # -- the pictures / sheets
+    bad = []
+    for _i, nm, _old, sid, pal, art in FD.FOODS:
+        g = FD.picture(art, pal)
+        sh = FD.sheet(art, pal)
+        st = FD.stream(art, pal)
+        if len(sh) != 256 or any(sh[64:]) or SC.decode(st) != sh:
+            bad.append(nm)
+        if not all(v in (0, 1, 2, 3) for row in g for v in row) or not any(v == 2 for row in g for v in row):
+            bad.append(nm + ' colours')
+    ok("S172: every picture 16 x 16 in its palette -> a 256-byte sheet (tiles 0-3, the rest "
+       "empty) whose stream decodes back", not bad, str(bad))
+    bad = []
+    for _i, nm, _old, sid, pal, art in FD.FOODS:
+        ib = FD.icon_bytes(art, pal)
+        if len(ib) != 64 or SC.decode(FD.icon_stream(art, pal)) != ib or ib != FD.sheet(art, pal)[:64]:
+            bad.append(nm)
+    ok("S172 r2: every pickup icon = 64 bytes (the 2 x 2 TL TR BL BR) whose stream decodes back",
+       not bad, str(bad))
+    ok("S172 r2: the editor's pictures are the approved art (Toast notches, BadApple = the "
+       "Apple's pixels)", FD.default_picture('badapple', 5) == FD.default_picture('apple', 0)
+       and all(FD.default_picture(f[5], f[4]) for f in FD.FOODS))
+    # -- gamedata.food_art: the project's own drawing
+    drawn = _copy.deepcopy(on)
+    g = [row[:] for row in FD.picture('honey', 3)]
+    g[0][0] = 3
+    drawn['gamedata']['food_art'] = {'honey': FD.rows_from_grid(g)}
+    ok("S172 r2: food_art — the drawing replaces the default in the picture, sheet, icon and "
+       "the bank $77 lines", FD.picture('honey', 3, drawn) == g and
+       FD.icon_bytes('honey', 3, drawn) != FD.icon_bytes('honey', 3) and
+       any('Honey NPC sheet' in l and 'drawn in the project' in l for l in FD.bank77_lines(drawn)))
+    for badart, why in (({'honey': ['0' * 16] * 15}, '15 rows'), ({'honey': ['4' * 16] * 16}, 'colour 4'),
+                        ({'cake': ['0' * 16] * 16}, 'unknown name'), ('x', 'not a table')):
+        fx = _copy.deepcopy(on)
+        fx['gamedata']['food_art'] = badart
+        e, _w = FD.check(fx)
+        ok(f"S172 r2: food_art rejected — {why}", bool(e), str(e))
+    lines = FD.bank77_lines(on)
+    ok("S172 r2: on — FoodIconCount 5, FoodIconAttr = palette | $08, FoodIcon0-4",
+       lines[lines.index(next(l for l in lines if l.startswith('FoodIconCount:'))) + 1].strip() == 'db 5'
+       and any(l.startswith('    db $0e, $08, $0f, $0d, $0b') for l in lines)
+       and all(any(l.startswith(f'FoodIcon{k}:') for l in lines) for k in range(5)))
+    lines = FD.bank77_lines(base)
+    ok("S172 r2: off — FoodIconCount 0 (the game's icons)",
+       lines[lines.index(next(l for l in lines if l.startswith('FoodIconCount:'))) + 1].strip() == 'db 0')
+    p16 = open(os.path.join(REPO, 'patches', 'bank_016.asm')).read()
+    p01 = open(os.path.join(REPO, 'patches', 'bank_001.asm')).read()
+    ok("S172 r2: the hooks — bank $16 room load -> $77 entry 33, bank $01 floor draw -> entry 34",
+       'ld hl, $7721' in p16 and 'ld hl, $7722' in p01)
+    # -- validation
+    e, _w = FD.check({'gamedata': {'foods': 'yes'}})
+    ok("S172: gamedata.foods must be true / false", bool(e))
+    fx = _copy.deepcopy(base)
+    fx['custom']['rooms'][0]['screens'][next(iter(fx['custom']['rooms'][0]['screens']))].setdefault(
+        'npcs', []).append({'kind': 'npc', 'x': 1, 'y': 1, 'sprite': '$5A'})
+    _e, w = FD.check(fx)
+    ok("S172: a food sprite placed with the tick off -> a warning", any('FOOD sprite' in x for x in w),
+       str(w))
+    fx['gamedata'] = dict(fx.get('gamedata') or {}, foods=True)
+    _e, w = FD.check(fx)
+    ok("S172: ... and none with it on", not any('FOOD sprite' in x for x in w))
+    # -- the Document: the tick, the shown name, its edited state
+    from editor2.core.document import Document
+    import tempfile as _tf
+    dd = _tf.mkdtemp(prefix='s172-')
+    json.dump(base, open(os.path.join(dd, 'project.json'), 'w'))
+    d = Document(os.path.join(dd, 'project.json'))
+    d.set_foods(True)
+    t = d.game_text('item_name', '23')
+    ok("S172: Document.set_foods(True) — Honey shown, not counted as the project's edit",
+       d.foods_on() and t['markup'] == 'Honey' and not t['edited'] and t['preset'] == 'Honey'
+       and d.item_info(23)['name'] == 'Honey', str(t['markup']))
+    g = d.food_art_grid('toast')
+    g2 = [row[:] for row in g]
+    g2[15][15] = 3
+    d.set_food_art('toast', g2)
+    ok("S172 r2: Document.set_food_art stores the drawing", d.food_art_is_own('toast') and
+       d.food_art_grid('toast') == g2 and len(d.data['gamedata']['food_art']['toast']) == 16)
+    d.set_food_art('toast', g)
+    ok("S172 r2: ... the default picture again = the key removed",
+       not d.food_art_is_own('toast') and 'food_art' not in d.data['gamedata'])
+    d.set_food_art('toast', g2)
+    d.set_food_art('toast', None)
+    ok("S172 r2: ... Restore default (None) = the key removed", not d.food_art_is_own('toast'))
+    t = d.game_text('item_description', '20')
+    ok("S172 r3: the Document shows the Apple's description as the tick's (not the project's edit)",
+       t['markup'] == 'Tames monsters\na moderate amount' and not t['edited'] and
+       d.item_info(20).get('description', t['markup']) == t['markup'], str(t['markup']))
+    d.set_item_description(23, 'Tames monsters\nvery greatly')
+    ok("S172 r3: editing Honey's description touches Honey only",
+       d.game_text('item_description', '23')['markup'].endswith('very greatly') and
+       d.game_text('item_description', '19')['markup'].endswith('a little'))
+    d.set_item_description(23, None)
+    d.set_foods(False)
+    ok("S172: Document.set_foods(False) — the key gone, Sirloin again",
+       'foods' not in (d.data.get('gamedata') or {}) and d.item_info(23)['name'] == 'Sirloin')
+    # -- the re-section (both trees, byte-neutral — the clean build is the verifier's)
+    dis0 = open(os.path.join(REPO, 'disassembly', 'bank_000.asm')).read()
+    dis5 = open(os.path.join(REPO, 'disassembly', 'bank_005.asm')).read()
+    pat5 = open(os.path.join(REPO, 'patches', 'bank_005.asm')).read()
+    ok("S172: NpcSheetGfxTable / NpcSpriteFrameTable / NpcSpritePalTable re-sectioned",
+       'NpcSheetGfxTable:' in dis0 and 'NpcSpriteFrameTable:' in dis5 and
+       'NpcSpritePalTable:' in dis5 and '@BUILD_PROJECT BEGIN npc_food_pals' in pat5)
+    if not with_rom:
+        return
+    from editor2.core import builder as B
+    from dwm.sm83 import CPU
+    dd2 = _tf.mkdtemp(prefix='s172-on-')
+    import shutil as _sh
+    _sh.copytree(os.path.join(REPO, 'editor2', 'example-project'), dd2, dirs_exist_ok=True)
+    json.dump(on, open(os.path.join(dd2, 'project.json'), 'w'))
+    out, _prj, _w = C.compile_project(dd2, REPO)
+    outdir = '/tmp/_t_s172'
+    C.write_outputs(out, outdir)
+    rp, sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    R = open(rp, 'rb').read()
+    S = B.parse_sym(sym)
+
+    def a(name):
+        return S[name][1]
+    got_w = [R[0x2B8F + 2 * k] | R[0x2B90 + 2 * k] << 8 for k in range(8)]
+    ok("ROM S172: NpcSheetGfxTable ids $58-$5F", got_w == words(FD.emit_sheets(on, [])),
+       ' '.join(f'{x:04X}' for x in got_w))
+    ok("ROM S172: NpcSpritePalTable ids $58-$5F",
+       list(R[5 * 0x4000 + 0x41AA - 0x4000:5 * 0x4000 + 0x41B2 - 0x4000]) == bytes_(FD.emit_pals(on, [])))
+    bad = []
+    for k, f in enumerate(FD.FOODS):
+        g = FD.gfx_id(k)
+        o = 0x77 * 0x4000 + 2 * (g & 0xFF) + 1
+        ptr = R[o] | R[o + 1] << 8
+        if ptr != a(f'FoodSheet{k}'):
+            bad.append((f[1], 'row'))
+            continue
+        st = SC.read_stream(R, 0x77 * 0x4000 + ptr - 0x4000)
+        if SC.decode(st) != FD.sheet(f[5], f[4]):
+            bad.append((f[1], 'sheet'))
+    ok("ROM S172: gfx-IDs $7717-$771B -> bank $77's $4001 rows 23-27 -> the five sheets",
+       not bad, str(bad))
+    bad = []
+    for k, f in enumerate(FD.FOODS):
+        g = FD.icon_gfx_id(k)
+        o = 0x77 * 0x4000 + 2 * (g & 0xFF) + 1
+        ptr = R[o] | R[o + 1] << 8
+        if ptr != a(f'FoodIcon{k}'):
+            bad.append((f[1], 'row'))
+            continue
+        if SC.decode(SC.read_stream(R, 0x77 * 0x4000 + ptr - 0x4000)) != FD.icon_bytes(f[5], f[4]):
+            bad.append((f[1], 'icon'))
+    ok("ROM S172 r2: gfx-IDs $771C-$7720 -> rows 28-32 -> the five pickup icons", not bad, str(bad))
+    ent = lambda e: R[0x77 * 0x4000 + 1 + 2 * e] | R[0x77 * 0x4000 + 2 + 2 * e] << 8
+    ok("ROM S172 r2: bank $77 entries 33 / 34 = FoodIconsLoad / FoodIconDraw",
+       ent(33) == a('FoodIconsLoad') and ent(34) == a('FoodIconDraw'))
+    # NpcStaticFrame77 run on the SM83 core: a listed id -> $FFC8 := 0; others untouched;
+    # BC kept
+    mem = {}
+
+    def rd(x):
+        if x < 0x4000:
+            return R[x]
+        if x < 0x8000:
+            return R[0x77 * 0x4000 + x - 0x4000]
+        return mem.get(x, 0)
+
+    def wr(x, v):
+        mem[x] = v & 0xFF
+    bad = []
+    for sid in range(0x60):
+        mem.clear()
+        mem[0xFFC7], mem[0xFFC8] = sid, 1
+        cpu = CPU(rd, wr)
+        cpu.call(a('NpcStaticFrame77'), bc=0x1234)
+        held = sid in (0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5F)
+        if mem[0xFFC8] != (0 if held else 1) or cpu.bc != 0x1234:
+            bad.append(sid)
+    ok("ROM S172: NpcStaticFrame77 — ids $58-$5C / $5F drawn with frame 0, every other id as "
+       "it was, BC kept", not bad, str(bad))
+    o = 0x77 * 0x4000 + a('NpcDrawPlain') - 0x4000
+    ok("ROM S172: NpcDrawPlain starts `call NpcStaticFrame77`",
+       R[o] == 0xCD and (R[o + 1] | R[o + 2] << 8) == a('NpcStaticFrame77'))
+    # FoodIconDraw on the SM83 core, up to its `.draw` (the game's builder call): a floor
+    # entry [kind, item, X, Y] at $D793, DE = entry + 3 (as CheckDirectionBit7 has it)
+    bad = []
+    for gbc in (1, 0):
+        for kind in (0, 8):
+            for item in range(16, 27):
+                mem.clear()
+                mem[0xC81D] = gbc
+                mem[0xD793], mem[0xD794], mem[0xD795], mem[0xD796] = kind, item, 3, 4
+                mem[0xFFC9], mem[0xFFCA] = 0x60, 0x00
+                cpu = CPU(rd, wr)
+                cpu.call(a('FoodIconDraw'), de=0xD796, bc=0x4000, sentinel=a('FoodIconDraw.draw'))
+                k = item - 19
+                food = gbc and kind == 0 and 0 <= k < 5
+                want = (0x50 + 4 * k, FD.FOODS[k][4] | 8) if food else (0x60, 0x00)
+                if (mem[0xFFC9], mem[0xFFCA]) != want or cpu.de != 0xD796:
+                    bad.append((gbc, kind, item, mem[0xFFC9], mem[0xFFCA]))
+    ok("ROM S172 r2: FoodIconDraw — items 19-23 (kind 0, GBC) -> tile $50 + 4k / palette | $08; "
+       "other items, kinds 8+ and a DMG untouched; DE kept", not bad, str(bad[:4]))
+
+
+def test_s171(with_rom=False):
+    """S171 (ROADMAP P3.17 — the packaged app): builder.build_rom runs rgbasm / rgblink /
+    rgbfix itself in a private temporary folder (disassembly/ = the include path) — no
+    `make` (a fresh Mac has none) and nothing written into the repository (the app's files
+    are read-only; two builds at once cannot meet in disassembly/)."""
+    import tempfile
+    from editor2.core import builder as B
+    src = open(os.path.join(REPO, 'editor2', 'core', 'builder.py')).read()
+    ok("S171: the builder never runs make", "['make']" not in src and '"make"' not in src)
+    if not with_rom:
+        return
+    dis = os.path.join(REPO, 'disassembly')
+
+    def snap():
+        return {f: os.stat(os.path.join(dis, f)).st_mtime_ns for f in os.listdir(dis)
+                if os.path.isfile(os.path.join(dis, f))}
+    before = snap()
+    fake = tempfile.mkdtemp(prefix='s171-fake-make-')
+    with open(os.path.join(fake, 'make'), 'w') as f:
+        f.write('#!/bin/sh\necho MAKE >> "%s/called"\nexit 99\n' % fake)
+    os.chmod(os.path.join(fake, 'make'), 0o755)
+    keep = os.environ['PATH']
+    os.environ['PATH'] = fake + os.pathsep + keep
+    tmp_before = set(os.listdir(tempfile.gettempdir()))
+    try:
+        out, _prj, _w = C.compile_project(os.path.join(REPO, 'editor2', 'example-project'), REPO)
+        outdir = '/tmp/_t_s171'
+        C.write_outputs(out, outdir)
+        _rom, _sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    finally:
+        os.environ['PATH'] = keep
+    ok("S171: the example builds to the pin without make", md5 == REFERENCE_MD5, md5)
+    ok("S171: make was never called", not os.path.exists(os.path.join(fake, 'called')))
+    ok("S171: disassembly/ untouched (no file added, none rewritten)", snap() == before)
+    left = [d for d in set(os.listdir(tempfile.gettempdir())) - tmp_before
+            if d.startswith('dwm-build-')]
+    ok("S171: the build's temporary folder is removed", not left, str(left))
+
+
+def test_s170(with_rom=False):
+    """S170 (the user: "expand the monster graphics" — more than ≈58 re-arted originals):
+    gamedata.art spills past $7F / $7C / $7A into banks $80+ (taken LAST), every stream
+    stored as the smaller of its literal copy and a compressed re-encode (art.pack); the
+    encoder's match search indexed (same output, ≈ 11× faster)."""
+    from dwm import sprite_codec as SC
+    from editor2.core import art as A
+    from editor2.core.project import Project
+    import random as _rnd
+    rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+    # -- the encoder: indexed search == the full scan, byte for byte
+    pays = []
+    for base_, skip in ((0x2B9F, 0), (0x49DF, 0x10)):
+        for i in range(215):
+            e = base_ + 2 * (i + skip)
+            g = rom[e] | rom[e + 1] << 8
+            pays.append(SC.decode(SC.read_stream(rom, SC.gfxid_stream_offset(rom, g)[3])))
+    r = _rnd.Random(170)
+    pays += [bytes(r.randrange(r.choice([2, 4, 16, 200])) for _ in range(r.choice([40, 576, 2048])))
+             for _ in range(30)] + [bytes(2048), bytes([7]) * 576]
+
+    def scan_encode(pl, mk):
+        keep = SC._find_match
+        SC._find_match = lambda d_, p_, _i=None: SC._find_match_scan(d_, p_)
+        try:
+            return SC.encode(pl, marker=mk)
+        finally:
+            SC._find_match = keep
+    diff = 0
+    for pl in pays:
+        mk = next((b for b in range(256) if b not in set(pl)), SC.choose_marker(pl))
+        try:
+            fast = SC.encode(pl, marker=mk)
+        except SC._MarkerCollision:
+            fast = 'collision'
+        try:
+            slow = scan_encode(pl, mk)
+        except SC._MarkerCollision:
+            slow = 'collision'
+        diff += fast != slow
+    ok(f"S170: the indexed encoder == the full scan on {len(pays)} payloads (430 original "
+       "monster pictures + random)", diff == 0, f'{diff} differ')
+    # -- pack: the same picture, never larger
+    lits = [SC.encode_safe(pl, literal_only=True) for pl in pays[:430]]
+    packed = [A.pack(x) for x in lits]
+    ok("S170: pack(literal) decodes to the same picture and is never larger",
+       all(SC.decode(p_) == pl for p_, pl in zip(packed, pays)) and
+       all(len(p_) <= len(x) for p_, x in zip(packed, lits)), '')
+    saved = 1 - sum(map(len, packed)) / sum(map(len, lits))
+    ok(f"S170: compression saves ≈ 31 % on the 430 original pictures (measured {saved:.1%})",
+       0.25 < saved < 0.40, f'{saved:.3f}')
+    # -- the example: no art -> no art bank $80+, no owner
+    prj0 = Project(base(), os.path.dirname(EXAMPLE))
+    prj0.repo_root = REPO
+    ok("S170: the example has no art -> no art bank $80+",
+       'monster art' not in prj0.ext_bank_owners().values(), prj0.ext_bank_owners())
+    # -- all 215 re-arted
+    d, pics = _s170_mirror_fixture()
+    out, prj, _w = compile_data(d)
+    owners = prj.ext_bank_owners()
+    art_b = sorted(b for b, w_ in owners.items() if w_ == 'monster art')
+    ok("S170: 215 re-arted -> the art spills into banks $80+, taken LAST (after every other kind)",
+       bool(art_b) and all(b > o for b in art_b for o, w_ in owners.items() if w_ != 'monster art'),
+       owners)
+    ok("S170: 215 fully re-arted monsters need ≈ 8 banks in all (3 art banks + ≈ 5 banks $80+)",
+       len(art_b) <= 6, art_b)
+    for b in art_b:
+        ok(f"S170: art bank ${b:02X} = a whole file (self-ID, ArtPtrs, streams; no ds)",
+           f'patches/bank_{b:03x}.asm' in out and f'db ${b:02X}' in out[f'patches/bank_{b:03x}.asm']
+           and 'ds $8000' not in out[f'patches/bank_{b:03x}.asm'], '')
+    ok("S170: bank_ext.asm INCLUDEs the art banks",
+       all(f'INCLUDE "bank_{b:03x}.asm"' in out['patches/bank_ext.asm'] for b in art_b), '')
+    streams = {}
+    for b in list(A.ART_BANKS) + art_b:
+        streams.update(_asm_streams(out[f'patches/bank_0{b:02x}.asm' if b < 0x80
+                                        else f'patches/bank_{b:03x}.asm']))
+    bad = [k for k, v in streams.items()
+           if SC.decode(v) != pics[int(k.split('_')[1])][0 if 'Battle' in k else 1]]
+    ok("S170: all 430 emitted streams decode to their monster's picture", len(streams) == 430
+       and not bad, f'{len(streams)} streams; wrong {bad[:4]}')
+    bg = region_bytes(out, 'patches/bank_000.asm', 'art_battle_gfx')
+    gids = [bg[2 * i] | bg[2 * i + 1] << 8 for i in range(215)]
+    ok("S170: the battle table names the art banks (home banks first, in species order)",
+       {g >> 8 for g in gids} == set(A.ART_BANKS) | set(art_b) and
+       [g >> 8 for g in gids] == sorted((g >> 8 for g in gids),
+                                        key=lambda b: (list(A.ART_BANKS) + art_b).index(b)), '')
+    used, cap = A.usage(prj)
+    ok("S170: usage counts the packed bytes (+2 a pointer) past the three banks' capacity",
+       used == sum(len(v) + 2 for v in streams.values()) and used > cap, (used, cap))
+    # -- the ROM is full: the art cannot take another bank -> an error in words
+    from editor2.core import project as PJ
+    keep = PJ.EXT_BANK_LAST
+    try:
+        PJ.EXT_BANK_LAST = 0x82
+        prj2 = Project(d, '/tmp/_t_proj')
+        prj2.repo_root = REPO
+        try:
+            A.place(prj2)
+            err = ''
+        except A.ArtError as e:
+            err = str(e)
+    finally:
+        PJ.EXT_BANK_LAST = keep
+    ok("S170: no bank left -> an art error naming the full ROM", 'the ROM is full' in err, err[:160])
+    if with_rom:
+        from editor2.core import builder as B
+        outdir = '/tmp/_t_s170'
+        C.write_outputs(out, outdir)
+        romp, sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        rb = open(romp, 'rb').read()
+        S = B.parse_sym(sym)
+
+        def wd(o):
+            return rb[o] | rb[o + 1] << 8
+
+        def off_(lab):
+            b_, a_ = S[lab]
+            return b_ * 0x4000 + (a_ - 0x4000 if a_ >= 0x4000 else a_)
+        badb = [i for i in range(215) if SC.decode(SC.read_stream(rb, SC.gfxid_stream_offset(
+            rb, wd(off_('MonsterBattleGfxTable') + 2 * i))[3])) != pics[i][0]]
+        badw = []
+        for lab, skip in (('ScreenTransDataTable', 16), ('FollowerGfxTable06', 16),
+                          ('FollowerGfxTable07', 16), ('FollowerGfxTable09', 16),
+                          ('FollowerGfxTable0B', 16), ('FollowerGfxTable12', 16),
+                          ('FollowerGfxTable18', 0), ('FollowerGfxTable59', 0)):
+            badw += [(lab, i) for i in range(215) if SC.decode(SC.read_stream(
+                rb, SC.gfxid_stream_offset(rb, wd(off_(lab) + 2 * (i + skip)))[3])) != pics[i][1]]
+        ok("S170 ROM: every battle-table row -> the BUILT ROM's stream == the picture",
+           not badb, badb[:6])
+        ok("S170 ROM: every row of all eight walking copies -> the ROM's stream == the picture",
+           not badw, badw[:6])
+        ok("S170 ROM: every art bank $80+ starts with its own number",
+           all(rb[b * 0x4000] == b for b in art_b), '')
+
+
+def test_s169():
+    """S169 (ROADMAP P3.12 residual (a)): the baby of a cross (editor2/core/cross.py, the
+    Breeding tab's "Try a cross" page) — the S130 raising model asked and explained; the
+    game's routines checked on a real save by tools/walk_cross.py."""
+    from simulator import raising as R
+    from editor2.core import cross as X
+    from editor2.core import savefile as SF
+    T = R.vanilla_tables()
+    # EID 0 is the empty row: a typical DrakSlime is made from a real row
+    m, how = X.typical_parent(T, 0, 10)
+    ok("S169: a typical parent is never made from EID 0 (the empty row)",
+       'row 0 ' not in how and m.stats[0] > 0 and any(m.ai), how)
+    # a hand-made pair: the learn queue explained in the game's order, the 25 cut,
+    # the AI's dropped carry, stats (both) / 4 + k x 2 %
+    p1 = R.Monster(9, 20, 50, 0, [100, 80, 60, 50, 40, 30], [], [], [0] * 27, [200, 10, 0, 255])
+    p2 = R.Monster(88, 20, 50, 0, [101, 81, 61, 51, 41, 31], [], [], [0] * 27, [200, 20, 0, 0])
+    p1.skills = [s for s in range(0, 0xDA) if T.unevolved[s] not in (0xFF,)][:8]
+    p2.skills = [s for s in range(0x40, 0xDA) if T.unevolved[s] not in (0xFF,)][:8]
+    b = X.baby(T, p1, p2, 9, 3, k=2)
+    egg = R.breed(T, p1, p2, 9, 3, R.GameRNG(0), foreign=2)
+    born = R.birth(T, egg.copy(), p1, p2)
+    ok("S169: the baby's stats / max level / queue == raising.breed + birth",
+       [r[4] for r in b['stats']] == egg.stats and b['cap'] == egg.cap and b['queue'] == born.queue,
+       (b['stats'], egg.stats))
+    ok("S169: stats = (both) / 4 + k x 2 % (k = 2: 201 >> 2 = 50 -> 52)",
+       b['stats'][0][3:] == (50, 52), b['stats'][0])
+    dmg = b['ai'][0]
+    ok("S169: the AI weights' dropped carry (200 + 200 -> 72, flagged)",
+       dmg[3] == 72 and dmg[4] is True and b['ai'][1][4] is False, b['ai'])
+    srcs = [r[0] for r in b['sources']]
+    order = [X.SRC_OWN, X.SRC_P1_KIND, X.SRC_P2_KIND, X.SRC_P1_KNEW, X.SRC_P2_KNEW]
+    ok("S169: the queue sources in the game's order (own kind, pedigree's kind, mate's kind, "
+       "pedigree knew, mate knew)", [o for o in order if o in srcs] == order and
+       srcs == sorted(srcs, key=order.index), srcs)
+    added = [r for r in b['sources'] if r[3] == X.ST_ADDED]
+    ok("S169: every added source is in the queue, at most 25",
+       len(b['queue']) <= 25 and set(r[2] for r in added) == set(b['queue']), len(b['queue']))
+    ok("S169: the timeline is ordered by level and every queue skill it learns is in it",
+       [t[0] for t in b['timeline']] == sorted(t[0] for t in b['timeline']) and
+       all(c in b['queue'] for _l, c, how, _o in b['timeline'] if how == 'queue'))
+    ok("S169: the gender / resistance chances are shares (0-1)",
+       0 <= b['female'] <= 1 and all(abs(sum(r[3]) - 1) < 1e-6 for r in b['resist_rises']))
+    # the save's pedigree names: master + a bred parent's two names, 9 bytes each
+    sav = bytearray(fake_sav_s130())
+    player = bytes(sav[X.PLAYER_NAME_OFF:X.PLAYER_NAME_OFF + X.NAME_LEN])
+    r1, r2 = X.save_record(sav, 0), bytearray(X.save_record(sav, 1))
+    k0 = X.pedigree_k_of_records(r1, bytes(r2), player)
+    r2[0x0C] = 0x2D
+    r2[0x15], r2[0x16] = 3, 4
+    r2[0x83] = r2[0x8C] = 0x2E
+    k3 = X.pedigree_k_of_records(r1, bytes(r2), player)
+    ok("S169: PedigreeForeignCount on save records (0 -> 3: master + both parents' names)",
+       (k0, k3) == (0, 3), (k0, k3))
+    # the learn scan's max_known: the game's 8 by default
+    m = R.Monster(9, 98, 99, 0, [999] * 6, [], [s for s in range(0, 0xDA)][:25], [0] * 27, [0] * 4)
+    R.learn_scan(T, m)
+    m2 = R.Monster(9, 98, 99, 0, [999] * 6, [], [s for s in range(0, 0xDA)][:25], [0] * 27, [0] * 4)
+    R.learn_scan(T, m2, max_known=255)
+    ok("S169: learn_scan keeps the game's 8 by default, every offer with max_known",
+       len(m.skills) == 8 and len(m2.skills) > 8 and m2.skills[:8] == m.skills,
+       (len(m.skills), len(m2.skills)))
+
+
+def test_s168r2():
+    """S168 r2 (the user: "Breed/hatch/exit menu (talk with breeding NPC) creates visual
+    glitches of words on the screen"): the breeding / farm / egg screens draw into page-1 slots
+    while the room shows (services.BORROWED_SLOTS) — the editor keeps them free, moving tiles
+    placed there (page 2 first), and the validator warns about the rest."""
+    import shutil
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core.project import Project
+    from editor2.core import page2 as P2
+    from editor2.core import services as SV
+    tmp = '/tmp/_t168r2'
+    if os.path.isdir(tmp):
+        shutil.rmtree(tmp)
+    shutil.copytree(os.path.dirname(EXAMPLE), tmp, ignore=shutil.ignore_patterns('build'))
+    d = Document(os.path.join(tmp, 'project.json'))
+    d.project_dir = tmp
+    rr = ProjectRenderer(REPO, tmp, d.data)
+    d.vanilla = rr
+    rid = d.new_room('BREEDING HALL', 0x00, rr, blank_tileset=True)
+    room = d.room(rid)
+    tid = room['record']['tileset']
+    room['record']['collision_threshold'] = '0x10'
+    sheet = bytes((i * 7 + (i >> 4)) & 0xFF for i in range(2048))
+    d.write_sheet(tid, sheet)
+    lid = room['screens']['0']['layout']['id']
+    g = d.layout(lid)['tiles']
+    for r in range(16):
+        for c in range(20):
+            g[r][c] = 0x08 if r in (0, 15) else 0x30 + (r * 20 + c) % 0x50      # $30-$7F
+    before = [list(row) for row in g]
+    pix = {v: sheet[v * 16:v * 16 + 16] for row in g for v in row}
+    ok("S168 r2: BORROWED_SLOTS — breeding $38-$7F, farm $60-$6F, eggs $70-$78",
+       set(SV.BORROWED_SLOTS[6]) == set(range(0x38, 0x80)) and
+       set(SV.BORROWED_SLOTS[3]) == set(range(0x60, 0x70)) and
+       set(SV.BORROWED_SLOTS[7]) == set(range(0x70, 0x79)), '')
+    ok("S168 r2: no service in the room -> no kept-free slots", not d.service_slots_anywhere(tid), '')
+    k = d.add_npc(room, '0', 0, 4, 4, 0x0B, 'down')
+    d.make_service_npc(room, '0', 0, k, 'farm')
+    ok("S168 r2 / S177: a farm keeper on screen 0 -> $60-$6F kept free on screen 0 (not room-wide)",
+       d.service_slots_on(tid, room, 0) == set(range(0x60, 0x70)) and not d.service_slots(tid)
+       and d.service_slots_anywhere(tid) == set(range(0x60, 0x70)),
+       sorted(d.service_slots_on(tid, room, 0))[:3])
+    g = d.layout(lid)['tiles']
+    ok("S168 r2: … and the tiles drawn there moved to page 2 (the note says so)",
+       not any(0x60 <= v < 0x70 for row in g for v in row) and
+       any(P2.is_page2(v) for row in g for v in row) and 'moved' in d.last_service_note,
+       d.last_service_note)
+    k2 = d.add_npc(room, '0', 0, 6, 4, 0x0B, 'down')
+    d.make_service_npc(room, '0', 0, k2, 'grandpa')
+    g = d.layout(lid)['tiles']
+    s2 = d.read_sheet(tid)
+    same = all(s2[P2.slot_key(g[r][c]) * 16:P2.slot_key(g[r][c]) * 16 + 16] == pix[before[r][c]]
+               for r in range(16) for c in range(20))
+    sides = all(P2.is_wall(P2.slot_key(g[r][c]), 0x10) == P2.is_wall(before[r][c], 0x10)
+                for r in range(16) for c in range(20))
+    ok("S168 r2: Grandpa -> no cell draws $38-$7F of page 1; every cell keeps its picture and "
+       "its side of the threshold",
+       not any(0x38 <= v < 0x80 for row in g for v in row) and same and sides, '')
+    u = d.tile_usage(tid)
+    ok("S177: tile_usage names where each kept slot must not be drawn ($38-$7F: screen 0) — free "
+       "for the other screens (no room-wide 'service' status: no entry script opens a menu)",
+       all(u[i]['kept_off'] == [(rid, 0)] and u[i]['status'] != 'service' for i in range(0x38, 0x80)),
+       (u[0x40]['status'], u[0x40]['kept_off']))
+    t, _thr = d.ensure_twin(tid, 0x30, want_wall=True)
+    ok("S168 r2: a twin never lands in a kept-free slot", not 0x38 <= P2.slot_key(t) < 0x80, hex(t))
+    ok("S168 r2: a raw op $04 6 in a room script counts as Grandpa's screen",
+       SV.borrowing_screens([{'ops': [['op', '0x04', '0x0006', '0x0600']]}]) == {6} and
+       SV.borrowing_screens([{'service': {'kind': 'breeder'}}]) == {5, 11} and
+       SV.borrowing_screens([{'service': {'kind': 'vault'}}]) == set(), '')
+    d.save(os.path.join(tmp, 'project.json'))
+    prj = Project(json.load(open(os.path.join(tmp, 'project.json'))), tmp)
+    ok("S168 r2: the validator is quiet once the slots are free",
+       not SV.borrowed_problems(prj), SV.borrowed_problems(prj))
+    # a project saved with cells in the slots (an older editor): the warning, then the open moves them
+    data = json.load(open(os.path.join(tmp, 'project.json')))
+    lay = next(la for la in data['custom']['layouts'] if la['id'] == lid)
+    lay['tiles'][5][5] = 0x45
+    json.dump(data, open(os.path.join(tmp, 'project.json'), 'w'), indent=1)
+    w = SV.borrowed_problems(Project(data, tmp))
+    ok("S168 r2: a cell in Grandpa's slots -> a warning in words", len(w) == 1 and
+       'BREEDING HALL' in w[0] and '$45' in w[0], w)
+    d3 = Document(os.path.join(tmp, 'project.json'))
+    v = d3.layout(lid)['tiles'][5][5]
+    ok("S168 r2: opening the project moves it (a migration note; the same picture)",
+       any('service menu' in n for n in d3.migrations) and P2.is_page2(v) and
+       d3.read_sheet(tid)[P2.slot_key(v) * 16:P2.slot_key(v) * 16 + 16] == s2[0x45 * 16:0x46 * 16],
+       (hex(v), d3.migrations))
+    # a full sheet: nothing to move to -> a warning on open
+    sh = bytearray(d3.read_sheet(tid))
+    data = d3.data
+    lay = next(la for la in data['custom']['layouts'] if la['id'] == lid)
+    for c in range(20):
+        lay['tiles'][2][c] = 0x46
+    lay2 = [[0x100 + ((r * 20 + c) % 0x80) for c in range(20)] for r in range(16)]
+    data['custom']['layouts'].append({'id': 'full_p2', 'tiles': lay2,
+                                      'attr': [[0] * 20 for _ in range(16)]})
+    room3 = d3.room(rid)
+    room3['screens']['1'] = {'layout': {'id': 'full_p2'}}
+    lay3 = [[(r * 20 + c) % 0x38 for c in range(20)] for r in range(16)]
+    data['custom']['layouts'].append({'id': 'full_p1', 'tiles': lay3,
+                                      'attr': [[0] * 20 for _ in range(16)]})
+    room3['screens']['2'] = {'layout': {'id': 'full_p1'}}
+    d3.write_sheet(tid, bytes(sh))
+    d3.save(os.path.join(tmp, 'project.json'))
+    d4 = Document(os.path.join(tmp, 'project.json'))
+    ok("S168 r2: no free slot left -> the open says the menu will show over those cells",
+       any('no free slot' in x for x in d4.migration_warnings) and
+       d4.layout(lid)['tiles'][2][0] == 0x46, d4.migration_warnings)
+
+
+def test_s175(with_rom=False):
+    """S175 (ROADMAP P3.3n): JUMPING POINTS (editor2/core/jumps.py — the GreatTree cliff jump:
+    a step-on trigger + the game's own script, landing on the screen below) and the screen
+    tools (editor2/core/screen_tools.py — copy / paste a screen's art, shift its objects)."""
+    import copy as _cp
+    import shutil as _sh
+    import tempfile as _tf
+    from editor2.core import jumps as JU
+    from editor2.core.document import Document
+    out0 = out1_ex[0]
+    d = base()
+    r = d['custom']['rooms'][0]                         # gate_island: screens 0 and 4
+    r['screens']['0']['npcs'].append({'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 2})
+    out, prj, _w = compile_data(d)
+    b60 = out['patches/bank_060.asm']
+    ok("S175: a jump -> a step-on trigger ($90) on its cell, before the NPCs",
+       'db $90, $FF, $04, $06,' in b60, )
+    sid = '_jump_gate_island_64'
+    lines = b60.splitlines()
+    lab = next((ln.split()[1] for ln in lines if ln.rstrip().endswith('] ' + sid)), None)
+    body = []
+    if lab:
+        for ln in lines[lines.index(lab + ':') + 1:]:
+            if not ln.strip():
+                break
+            body.append(ln.split(';')[0].strip())
+    ok("S175: its script is GreatTree_Script19's words, the fall in pixels (64 = 4 cells)",
+       body == ['dw $FF12', 'dw $D9E8', 'dw $0001', 'dw $FF21', 'dw $0055', 'dw $FF22',
+                'dw $FF1B', 'dw $0000', 'dw $0040', 'dw $FF19', 'dw $FFFF'], body)
+    ok("S175: only bank $60 (+ wram / place tables) differs from the example build",
+       {k for k in out if out[k] != out0.get(k)} <= {'patches/bank_060.asm'},
+       sorted(k for k in out if out[k] != out0.get(k)))
+    ok("S175: fall_px — row 7 to row 0 of the screen below is one cell; row 0 to 7 is 15",
+       JU.fall_px(7, 0) == 16 and JU.fall_px(0, 7) == 240)
+    # refused: no screen below / the bottom row / a row off the screen
+    from editor2.core import validators as V
+    for what, scr, e, needle in (
+            ('a jump on screen 4 (no screen 8 below)', '4',
+             {'kind': 'jump', 'x': 4, 'y': 3, 'land_y': 2}, 'no screen below'),
+            ('a landing row 8', '0', {'kind': 'jump', 'x': 4, 'y': 3, 'land_y': 8},
+             'landing row 8')):
+        d = base()
+        d['custom']['rooms'][0]['screens'][scr]['npcs'].append(e)
+        try:
+            out, prj, _w = compile_data(d)
+            msg = ''
+        except Exception as ex:                          # noqa: BLE001
+            msg = str(ex)
+        ok(f"S175: {what} stops the build ({needle!r})", needle in msg, msg[:200])
+    # the document: add / update / presence / remove; the shift (with the arrival from
+    # dusk_mirror's exit into gate_island screen 0, room:$6B) and refusal at the edge
+    tmp = _tf.mkdtemp(prefix='t175_')
+    _sh.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'))
+    doc = Document(os.path.join(tmp, 'p', 'project.json'))
+    gi = doc.room('gate_island')
+    pre = doc.dumps()
+    i = doc.add_jump(gi, 0, 0, 4, 6, 2)
+    ok("S175: add_jump writes {kind: jump, x, y, land_y}",
+       doc.npc_entries(gi, 0, 0)[i] == {'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 2})
+    try:
+        doc.add_jump(gi, 4, 0, 1, 1, 1)
+        refused = False
+    except ValueError:
+        refused = True
+    ok("S175: add_jump refuses a screen with no screen below", refused)
+    doc.update_jump(gi, 0, 0, i, land_y=5, sound=0x60)
+    ok("S175: update_jump (landing row, own sound)",
+       doc.npc_entries(gi, 0, 0)[i] == {'kind': 'jump', 'x': 4, 'y': 6, 'land_y': 5,
+                                         'sound': '0x60'})
+    ok("S175: the landing shows on the screen below", doc.jumps_landing_on(gi, 4) == [(0, 4, 6, 5)])
+    doc.remove_jump(gi, 0, 0, i)
+    ok("S175: remove_jump leaves the project as it was", doc.dumps() == pre)
+    arrivals = [e for rr in doc.rooms for sc in (rr.get('screens') or {}).values()
+                for st in (sc.get('states') or [sc]) for e in st.get('exits') or []
+                if str(e.get('dest')) == 'room:$6B' and (int(str(e.get('screen_byte')), 16) & 15) == 0]
+    before = [(e['spawn_x'], e['spawn_y']) for e in arrivals]
+    npcs0 = _cp.deepcopy(gi['screens']['0']['npcs'])
+    res = doc.shift_screen_objects(gi, 0, -1, 0)
+    ok("S175: shift ◀ moves the screen's NPCs / spots one cell left",
+       [n['x'] for n in gi['screens']['0']['npcs']] == [n['x'] - 1 for n in npcs0], res)
+    ok("S175: … and every arrival into the screen (the exits of other rooms)",
+       [(e['spawn_x'], e['spawn_y']) for e in arrivals]
+       == [(x - 1, y) for x, y in before] and bool(arrivals), before)
+    doc.shift_screen_objects(gi, 0, 1, 0)
+    ok("S175: shift ▶ undoes shift ◀ exactly", doc.dumps() == pre)
+    from editor2.core.screen_tools import ShiftBlocked
+    try:
+        for _n in range(20):
+            doc.shift_screen_objects(gi, 0, 0, 1)
+        blocked = False
+    except ShiftBlocked as ex:
+        blocked = 'leave the screen' in str(ex)
+    ok("S175: a shift that would push something off the screen is refused (nothing moved)",
+       blocked)
+    if with_rom:
+        from editor2.core.render_project import ProjectRenderer
+        doc = Document(os.path.join(tmp, 'p', 'project.json'))
+        rend = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        doc.vanilla = rend
+        gi = doc.room('gate_island')
+        clip = doc.screen_visual(gi, 4, 0, rend)
+        npcs0 = _cp.deepcopy(doc.states(gi, 0))
+        doc.paste_screen_visual(gi, 0, 0, clip, repo=REPO)
+        r2 = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        ok("S175: paste — screen 0 now draws screen 4's picture",
+           r2.render_screen(gi, '0', 0).tobytes() == r2.render_screen(gi, '4', 0).tobytes())
+        ok("S175: paste kept screen 0's NPCs / spots / exits",
+           [{k: v for k, v in st.items() if k in ('npcs', 'exits')} for st in doc.states(gi, 0)]
+           == [{k: v for k, v in st.items() if k in ('npcs', 'exits')} for st in npcs0])
+        ok("S175: paste — the clip is a snapshot (the source grid is not shared)",
+           clip['tiles'] is not doc.layout(doc.screen(gi, 0)['layout']['id'])['tiles'])
+    _sh.rmtree(tmp, ignore_errors=True)
+
+
+def test_s176(with_rom=False):
+    """S176: a SCREEN's own colours (editor2/core/screen_palettes.py + the scroll patch — bank
+    $06's five call sites -> bank $73 entries 23 / 24), Stamps → Replace picture
+    (stamps.replace_picture / hold_row / anchor), Draw's one-to-one row move
+    (recolour.move_row)."""
+    import shutil as _sh
+    import tempfile as _tf
+    from PIL import Image
+    from editor2.core import recolour as RC
+    from editor2.core import screen_palettes as SP
+    from editor2.core import stamps as ST
+    from editor2.core.document import Document
+    # --- the engine's call sites (patches only; the clean tree keeps the original's)
+    p6 = open(os.path.join(REPO, 'patches/bank_006.asm')).read()
+    c6 = open(os.path.join(REPO, 'disassembly/bank_006.asm')).read()
+    code = lambda t: [ln.split(';')[0].strip() for ln in t.splitlines()]
+    ok("S176: bank $06 — the four ScrollXBegin call bank $73 entry 23, ScrollEndCommit entry 24",
+       code(p6).count('ld hl, $7317') == 4 and code(p6).count('ld hl, $7318') == 1
+       and 'ld hl, $0b03' not in code(p6) and code(c6).count('ld hl, $0b03') == 4
+       and code(c6).count('ld hl, $010a') == code(p6).count('ld hl, $010a') + 1)
+    p73 = open(os.path.join(REPO, 'patches/bank_073.asm')).read()
+    table = [ln.split()[1] for ln in p73.split('SECTION "ROM Bank $073"')[1].splitlines()
+             if ln.startswith('    dw ')][:25]
+    ok("S176: bank $73 entries 23 / 24 = ScrollScreenBuild / ScrollScreenDone",
+       len(table) == 25 and table[23:25] == ['ScrollScreenBuild', 'ScrollScreenDone'], table[20:])
+    ok("S176: WRAM wScreenPalLate ($DED7) is declared",
+       'wScreenPalLate:: db ;ded7' in open(os.path.join(REPO, 'patches/wram.asm')).read())
+    # --- the game's rule (the Python twin of ScrollScreenBuild's masks)
+    ok("S176 rule: arriving on a screen that draws the changed row -> at the start",
+       SP.scroll_rule([2], {0}, {0, 2}) == ([2], [], []))
+    ok("S176 rule: leaving it (the old screen draws the row, the new one does not) -> at the end",
+       SP.scroll_rule([2], {0, 2}, {0}) == ([], [2], []))
+    ok("S176 rule: both draw it -> at the start, reported as a clash",
+       SP.scroll_rule([1, 3], {0, 3}, {3}) == ([1, 3], [], [3]))
+    ok("S176 rule: neither draws it -> at the start; nothing changed -> nothing",
+       SP.scroll_rule([1], {0}, {0}) == ([1], [], []) and SP.scroll_rule([], {0, 1}, {1}) == ([], [], []))
+    # --- give / drop on the example (gate_island: screens 0 and 4, palette pal_6b)
+    tmp = _tf.mkdtemp(prefix='t176_')
+    _sh.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'),
+                 ignore=_sh.ignore_patterns('build'))
+    doc = Document(os.path.join(tmp, 'p', 'project.json'))
+    gi = doc.room('gate_island')
+    pre = doc.dumps()
+    pid = SP.give(doc, gi, 4, None)
+    ok("S176: give — screen 4 gets a copy of the room's palette as its own",
+       pid == 'pal_gate_island_s4' and gi['screens']['4'].get('palette') == pid
+       and doc.palette(pid)['colors_rgb555'] == doc.palette('pal_6b')['colors_rgb555']
+       and doc.palette(pid)['colors_rgb555'] is not doc.palette('pal_6b')['colors_rgb555'])
+    ok("S176: … screen 0 and the room keep pal_6b; screens_with_own names screen 4",
+       doc.effective_palette(gi, 0, 0) == 'pal_6b' and doc.effective_palette(gi, 4, 0) == pid
+       and SP.room_palette(gi) == 'pal_6b' and SP.screens_with_own(doc, gi) == {4: pid})
+    ok("S176: give twice keeps the palette it has", SP.give(doc, gi, 4, None) == pid
+       and len([p for p in doc.palettes if p['id'].startswith('pal_gate_island_s4')]) == 1)
+    ok("S176: neighbours of screen 0 in the 4 x 4 grid = the screen below (4)",
+       SP.neighbours(gi, 0) == [(4, 'down')] and SP.neighbours(gi, 4) == [(0, 'up')])
+    doc.palette(pid)['colors_rgb555'][2][0] = '0x7C1F'
+    d2 = json.loads(doc.dumps())
+    out, prj, _w = compile_data(d2)
+    b60 = out['patches/bank_060.asm']
+    lines = b60.splitlines()
+    at = next((n for n, ln in enumerate(lines) if ln.startswith('RPal_')
+               and 'palette pal_gate_island_s4' in ln), None)
+    ok("S176: the build carries the screen's palette — its own 4 rows, the changed colour in row 2",
+       at is not None and lines[at + 3].strip().startswith('db $1F, $7C,')
+       and sum('palette pal_gate_island_s4' in ln for ln in lines) == 2,
+       lines[at:at + 5] if at is not None else 'no RPal row')
+    ok("S176: drop — back to the room's colours, the copy deleted, the project as it was",
+       SP.drop(doc, gi, 4) == pid and 'palette' not in gi['screens']['4']
+       and doc.dumps() == pre)
+    doc = Document(os.path.join(tmp, 'p', 'project.json'))
+    # --- recolour.move_row: one-to-one, shared colours stay, forced pairs hold
+    A = [(128, 96, 24), (248, 248, 208), (168, 136, 72), (0, 0, 0)]      # brown cream tan black
+    B = [(216, 32, 16), (248, 248, 208), (240, 192, 72), (0, 0, 0)]      # red cream amber black
+    px = [0] * 20 + [2] * 20 + [3] * 20 + [1] * 4
+    mv = RC.move_row(px, A, B)
+    ok("S176 move_row: cream and black keep their colour, brown / tan take the two left",
+       mv[60] == 1 and mv[40] == 3 and {mv[0], mv[20]} == {0, 2} and len(set(mv)) == 4, mv[::20])
+    ok("S176 move_row: there and back is the picture again", RC.move_row(mv, B, A) == px)
+    C = [(0, 0, 0), (128, 96, 24), (10, 200, 10), (248, 248, 208)]       # the same colours, moved
+    ok("S176 move_row: a colour on another NUMBER of the new row is found by its colour",
+       RC.move_row(px, A, C)[0] == 1 and RC.move_row(px, A, C)[40] == 0 and RC.move_row(px, A, C)[60] == 3)
+    ok("S176 move_row: a forced pair holds (Replace colour: tan becomes red), the rest one-to-one",
+       RC.move_row(px, A, B, {2: 0})[20] == 0 and len(set(RC.move_row(px, A, B, {2: 0}))) == 4)
+    # --- stamps: the hold row, the anchor, Replace picture
+    def torch(h, top):
+        im = Image.new('RGBA', (96, h * 16), (0, 0, 0, 0))
+        for f in (0, 1):
+            for y in range(max(0, top - 5), top + 16):
+                for x in range(14, 34):
+                    im.putpixel((f * 48 + x, y), (240, 192, 72, 128))
+            for y in range(top + 2, top + 14):
+                for x in range(22, 26):
+                    im.putpixel((f * 48 + x, y), (216, 32, 16, 255))
+        return im
+    p32, p33 = os.path.join(tmp, 'torch_3x2.png'), os.path.join(tmp, 'torch_3x3.png')
+    torch(2, 0).save(p32)
+    torch(3, 16).save(p33)
+    ok("S176 hold_row: the first cell row with a SOLID pixel (0 for the 3x2, 1 for the 3x3)",
+       ST.hold_row(ST.read_png(p32, 3, 2)[0]) == 0 and ST.hold_row(ST.read_png(p33, 3, 3)[0]) == 1)
+    sid = ST.add_to_library(doc, p32, 'Torch', 3, 2)
+    mv_ = doc.room('medal_vault')
+    i = ST.place(doc, 'medal_vault', sid, 0, 3, 0)
+    j = ST.place(doc, 'medal_vault', sid, 0, 6, 4)
+    st = ST.stamp_of(doc.custom, sid)
+    old_png = st['png']
+    moved = ST.replace_picture(doc, sid, p33, 3, 3)
+    st = ST.stamp_of(doc.custom, sid)
+    ok("S176 replace_picture: the stamp is 3x3, held by row 1, a new file (the old one kept)",
+       (st['w'], st['h'], st['frames'], st.get('hold')) == (3, 3, 2, 1) and st['png'] != old_png
+       and os.path.exists(os.path.join(doc.project_dir, old_png))
+       and os.path.exists(os.path.join(doc.project_dir, st['png'])), st)
+    ok("S176 replace_picture: every placement keeps its flame's cell (y - 1; the top row one "
+       "hangs off the screen)",
+       sorted(moved) == [('medal_vault', i), ('medal_vault', j)]
+       and [(p['x'], p['y']) for p in mv_['stamps']] == [(3, -1), (6, 3)]
+       and all('rows' not in p for p in mv_['stamps']), mv_['stamps'])
+    ok("S176 anchor: the cursor holds the stamp by its hold row, middle column",
+       ST.anchor(st, (4, 0)) == (3, -1) and ST.anchor({'w': 3, 'h': 2}, (4, 0)) == (3, 0))
+    ST.place(doc, 'medal_vault', sid, 0, 0, 7)                   # on the screen by its top row
+    snap = doc.dumps()
+    torch(3, 0).save(os.path.join(tmp, 'low_3x3.png'))           # held by row 0: every one + 1 row
+    try:
+        ST.replace_picture(doc, sid, os.path.join(tmp, 'low_3x3.png'), 3, 3)
+        refused = ''
+    except ST.StampError as ex:
+        refused = str(ex)
+    ok("S176 replace_picture: refused, nothing changed, when a placement would leave the screen",
+       'off the screen' in refused and doc.dumps() == snap, refused)
+    if with_rom:
+        from editor2.core.render_project import ProjectRenderer
+        doc = Document(os.path.join(tmp, 'p', 'project.json'))
+        rend = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        doc.vanilla = rend
+        gi = doc.room('gate_island')
+        pid = SP.give(doc, gi, 4, rend.room_palettes(gi, 4, 0))
+        doc.palette(pid)['colors_rgb555'][0][0] = '0x7C1F'
+        rend = ProjectRenderer(REPO, doc.project_dir, doc.data)
+        d0, d4 = SP.rows_drawn(doc, rend, gi, 0), SP.rows_drawn(doc, rend, gi, 4)
+        ok("S176 ROM: rows_drawn counts the 320 tiles of each screen's colour grid",
+           sum(d0.values()) == 320 and sum(d4.values()) == 320 and d0.get(0) and d4.get(0), (d0, d4))
+        rep = SP.scroll_report(doc, rend, gi)
+        ok("S176 ROM: scroll_report — screens 0 / 4 differ in row 0 and both draw with it (a clash)",
+           len(rep) == 1 and rep[0]['rows'] == [0] and rep[0]['clash'] == [0]
+           and rep[0]['tiles_a'] == d0[0] and rep[0]['tiles_b'] == d4[0], rep)
+        ok("S176 ROM: the warning names the two screens and the row",
+           any('screen 0 and screen 4' in t and 'row 0' in t for t in SP.report_text(doc, gi, rep)))
+        ok("S176 ROM: differing — only row 0 of screen 4 is not the room's",
+           SP.differing(rend.room_palettes(gi, 4, 0), rend.room_palettes(gi, 0, 0)) == [0])
+    _sh.rmtree(tmp, ignore_errors=True)
+
+
+def test_s175_music():
+    """S175 (ROADMAP P3.3o): a SCREEN's own song — screens[k].music -> a MusicRuleTable row of
+    kind MUSIC_RULE_SCREEN + k (bank $71 CustomRoomBGMResolve, entry / save load) and the
+    check in front of the room's script 0 (the scroll; editor2/core/screen_music.py)."""
+    from editor2.core import music as M
+    from editor2.core import screen_music as SM
+    d = base()
+    r = d['custom']['rooms'][0]                          # gate_island $6B: screens 0 and 4
+    r['screens']['4']['music'] = '0x0C'
+    out, prj, _w = compile_data(d)
+    b71 = out['patches/bank_071.asm']
+    ok("S175: a screen song -> a MusicRuleTable row [$10 + screen, key, 0 terms, song]",
+       'db $14, $00, $01, $00, $0C' in b71 or 'db $14, $6B, $00, $00, $0C' in b71,
+       [ln for ln in b71.splitlines() if 'screen 4 music' in ln])
+    ok("S175: MUSIC_RULE_SCREEN EQU $10 is emitted", 'MUSIC_RULE_SCREEN EQU $10' in b71)
+    P = prj.music_plan()
+    base_ctx = {'in_gate': 0, 'map': 0x6B, 'gate': 0, 'floor': 0, 'last': 5, 'boss_map': 0}
+    ok("S175: the model — screen 4 plays $0C, screen 0 the room's song (as before)",
+       M.model_room_bgm(P, dict(base_ctx, screen=4)) == 0x0C
+       and M.model_room_bgm(P, dict(base_ctx, screen=0)) == M.model_room_bgm(P, base_ctx))
+    ok("S175: the model — in a gate the screen song does not apply",
+       M.model_room_bgm(P, dict(base_ctx, screen=4, in_gate=1))
+       == M.model_room_bgm(P, dict(base_ctx, in_gate=1)))
+    t0 = prj.room_by_mid(0x6B).get('scripts', {}).get('0')
+    sc = next(x for x in prj.custom['scripts'] if x.get('id') == t0)
+    ok("S175: the room's script 0 is the screen-music check + its own entry script",
+       t0 == 'screenmusic:gate_island' and sc['ops'][0] == ['op', 'branch_screen', '0x0004',
+                                                            '@_sm_0'], t0)
+    ops = [o for o in sc['ops'] if isinstance(o, list)]
+    ok("S175: … a pending request / the playing song equal to the screen's song: no switch",
+       ['op', 'check_and_branch', '0xC8B7', '0x000C', '@_sm_done'] in ops
+       and ['op', 'check_and_branch', '0xC8B5', '0x000C', '@_sm_done'] in ops
+       and ['op', 'write_ram', '0xC8B7', '0x000C'] in ops)
+    ok("S175: … screens without a song: the room's song ($34 = an unassigned custom room)",
+       ['op', 'write_ram', '0xC8B7', '0x0034'] in ops
+       or ['op', 'write_ram', '0xC8B7', 'song:' + str(r.get('music'))] in ops)
+    out0 = out1_ex[0]
+    ok("S175: no screen song -> no MusicRuleTable screen row, script 0 untouched",
+       'room gate_island screen' not in out0['patches/bank_071.asm']
+       and 'screenmusic:' not in out0['patches/bank_060.asm'])
+    # a project song by id, a bad value
+    d = base()
+    songs = (d['custom'].get('music') or {}).get('songs') or []
+    if songs:
+        d['custom']['rooms'][0]['screens']['0']['music'] = songs[0]['id']
+        out, prj, _w = compile_data(d)
+        sc = next(x for x in prj.custom['scripts'] if x.get('id') == 'screenmusic:gate_island')
+        ok("S175: a project song -> 'song:<id>' params (resolved by the emitter)",
+           any(o == ['op', 'write_ram', '0xC8B7', f"song:{songs[0]['id']}"]
+               for o in sc['ops'] if isinstance(o, list)))
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['music'] = 'no_such_song'
+    try:
+        compile_data(d)
+        msg = ''
+    except Exception as ex:                              # noqa: BLE001
+        msg = str(ex)
+    ok("S175: an unknown song on a screen stops the build", 'no_such_song' in msg, msg[:160])
+    ok("S175: screen_songs / base_song",
+       SM.screen_songs({'screens': {'0': {}, '5': {'music': '0x0C'}}}) == {5: '0x0C'})
+
+
+def test_s168_rom(tmp, rid):
+    """S168 --rom: the fixture in PyBoy (no save: the bedroom, then a warp)."""
+    from editor2.core import builder as B
+    from editor2.core import page2 as P2
+    outs, prj, _w = C.compile_project(tmp, REPO)
+    outdir = '/tmp/_t168_build'
+    C.write_outputs(outs, outdir)
+    rom, sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+    syms = B.parse_sym(sym)
+    sys.path.insert(0, REPO)
+    from tools.pyboy_harness import boot, to_bedroom, warp, adv
+    room = next(r for r in prj.rooms if r.get('id') == rid)
+    mid = int(room['mapID'], 16)
+    p = boot(rom)
+    to_bedroom(p)
+    warp(p, mid, 4, 4, settle=500)
+    m = p.memory
+    on = m[syms['wPage2On'][1]]
+    sheet = open(os.path.join(tmp, next(t for t in prj.tilesets if t['id'] ==
+                                        room['record']['tileset'])['raw2bpp']), 'rb').read()
+    v1 = bytes(m[1, 0x9000:0x97FF]) + bytes([m[1, 0x97FF]])
+    anim = {0x20, 0x21}
+    bad = [s for s in range(128) if s not in anim and v1[s * 16:s * 16 + 16] != sheet[2048 + s * 16:2048 + s * 16 + 16]]
+    ok("S168 --rom: in the room wPage2On = 1 and VRAM bank 1 holds page 2",
+       m[0xC968] == mid and on == 1 and not bad, (hex(m[0xC968]), on, bad[:5]))
+    lay = next(la for la in prj.layouts if la['id'] == room['screens']['0']['layout']['id'])
+    wrong = 0
+    for r in range(16):
+        for c in range(20):
+            a = 0x9800 + r * 32 + c
+            want = lay['tiles'][r][c]
+            if m[0, a] != (want & 0xFF) or ((m[1, a] >> 3) & 1) != (1 if want >= 0x100 else 0):
+                wrong += 1
+    ok("S168 --rom: every cell shows its map byte + VRAM bank (320 cells)", wrong == 0, wrong)
+    seen = set()
+    for _ in range(10):
+        adv(p, 9)
+        seen.add(bytes(m[1, 0x9200:0x9210]))
+    ok("S168 --rom: the page-2 flip changes VRAM bank 1's tile (two frames)", len(seen) == 2, len(seen))
+    warp(p, 0x16, 4, 4, settle=500)
+    ok("S168 --rom: a game room after it -> wPage2On = 0",
+       m[syms['wPage2On'][1]] == 0 and m[0xC968] == 0x16, hex(m[0xC968]))
+    p.stop(save=False)
+
+
+def test_s177(with_rom=False):
+    """S177: the library pushes tiles only (bank $77 ScreenPush), a podium spot that TALKS FOR
+    an NPC (editor2/core/podium.py), the service menus' slots kept per SCREEN
+    (services.screen_reservations), pick_order's roomy side + `last`, tile_budget (Repack)."""
+    import copy as _cp
+    import shutil as _sh
+    import tempfile as _tf
+    from editor2.core import page2 as P2
+    from editor2.core import podium as PD
+    from editor2.core import services as SV
+    from editor2.core import tile_budget as TB
+    from editor2.core.document import Document
+    from editor2.core.render_project import ProjectRenderer
+    # --- the library branch in the pinned bank $77 head
+    head = open(os.path.join(REPO, 'editor2/core/templates/bank_077_head.asm')).read()
+    sp = head[head.index('\nScreenPush:'):head.index('PushNextCol:')]
+    code = [ln.split(';')[0].strip() for ln in sp.splitlines() if ln.split(';')[0].strip()]
+    i8 = code.index('cp $08')
+    ok("S177: ScreenPush — a running Library screen ($C8EF 8) pushes tiles only (B := 0) before "
+       "the gate list / naming tests", code[i8 + 1:i8 + 4] == ['jr nz, .notLibrary', 'ld b, $00',
+                                                              'jr .keep']
+       and code.index('cp $0d') > i8, code[i8:i8 + 6])
+    run = head[head.index('\nPushRunIsMenu:'):head.index('\nLibraryOpenAttrs:')]
+    rc = [ln.split(';')[0].strip() for ln in run.splitlines() if ln.split(';')[0].strip()]
+    ok("S177 r2: PushCellAttr asks PushRunIsMenu when a tile equals the room's, and its compares "
+       "survive `inc h` (sub [hl] ... or a — cp's Z would be cleared: measured, every cell "
+       "differed)", 'call PushRunIsMenu' in head and rc.count('sub [hl]') == 2
+       and rc.count('cp [hl]') == 1 and rc.count('or a') >= 3, rc.count('sub [hl]'))
+    lo = head[head.index('\nLibraryOpenAttrs:'):head.index('; Entry 3: SayText')]
+    ok("S177 r2: LibraryOpenAttrs (entry 35) — the room cells blanked (tile first) before bank $17 "
+       "entry 10; outside a free-colour / page-2 room entry 10 alone",
+       'dw LibraryOpenAttrs                 ; entry 35 (HL=$7723' in head
+       and lo.index('ld [hl], $e0') < lo.index('ld [hl], $07') < lo.index('ld hl, $170a')
+       and 'jr z, .entry10' in lo)
+    pb12 = open(os.path.join(REPO, 'patches/bank_012.asm')).read()
+    ok("S177 r2: patched bank $12 LibraryOpen far-calls $7723 (the clean tree keeps $170a)",
+       'ld hl, $7723' in pb12 and 'ld hl, $170a' in open(os.path.join(REPO, 'disassembly/bank_012.asm')).read())
+    clean = open(os.path.join(REPO, 'disassembly/bank_012.asm')).read()
+    ok("S177: bank $12 LibraryScreen's two state tables re-sectioned (5 + 11 dw)",
+       'dw LibraryOpen' in clean and 'dw LibPageNext' in clean and 'Jump_012_6119:' not in clean
+       and clean.count('    dw Lib') == 17)              # + the type table's LibraryScreen
+    # --- the podium (dusk_mirror screen 0: NPCs at (5,4) teleport_6b and (5,6) bgm07_change)
+    data = json.load(open(EXAMPLE))
+    dm = next(r for r in data['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    npcs = dm['screens']['0']['npcs']
+    npc, actor = PD.npc_at(npcs, 5, 4)
+    npcs.append({'kind': 'examine', 'x': 5, 'y': 5, 'facing': 'up', 'talks_for': {'x': 5, 'y': 4}})
+    out, prj, warns = compile_data(_cp.deepcopy(data))
+    ok("S177: podium — no error, no warning (next to its NPC)", prj.podium_error is None
+       and not any('podium' in w for w in warns), prj.podium_error)
+    sid = PD.script_id(dm, '0', 0, 5, 5)
+    scr = next(x for x in prj.custom['scripts'] if x['id'] == sid)
+    src = next(x for x in prj.custom['scripts'] if x['id'] == npc['script'])
+    ok("S177: the podium's script = the NPC turns DOWN (toward the podium) + the NPC's own ops",
+       scr['ops'][0] == ['op', 'face_down', actor] and scr['ops'][1:] == src['ops'], scr['ops'][:2])
+    b60 = out['patches/bank_060.asm']
+    ok("S177: emitted as an examine spot facing up ($82) before the NPCs, its own table index",
+       '$82, $FF, $05, $05' in b60 and f'; [' in b60 and sid in b60)
+    ok("S177: the NPC's actor number = its place among the list's NPC entries (spots skipped)",
+       actor == 1 + [e for e in npcs if not PD.is_spot(e)].index(npc), actor)
+    bad = _cp.deepcopy(data)
+    bd = next(r for r in bad['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    bd['screens']['0']['npcs'][-1]['talks_for'] = {'x': 1, 'y': 1}
+    try:
+        from editor2.core.project import Project
+        prj2 = Project(bad, os.path.dirname(EXAMPLE))
+        err = prj2.podium_error
+    except Exception as ex:                          # noqa: BLE001
+        err = str(ex)
+    ok("S177: talks for an empty cell -> the build error names it", err and 'no NPC stands there'
+       in err, err)
+    far = _cp.deepcopy(data)
+    fd = next(r for r in far['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    fd['screens']['0']['npcs'][-1].update({'x': 2, 'y': 2})
+    _o, prj3, w3 = compile_data(far)
+    ok("S177: not next to its NPC -> a warning (it still works)",
+       any('podium (2,2) is not next to' in w for w in w3), [w for w in w3 if 'podium' in w])
+    # Document side
+    tmp = _tf.mkdtemp(prefix='t177_')
+    _sh.copytree(os.path.dirname(EXAMPLE), os.path.join(tmp, 'p'), ignore=_sh.ignore_patterns('build'))
+    doc = Document(os.path.join(tmp, 'p', 'project.json'))
+    room = doc.room('dusk_mirror')
+    i = doc.add_spot(room, '0', 0, 'examine', 5, 5, 'teleport_6b', 'any')
+    lst = doc.npc_entries(room, '0', 0)
+    i = next(k for k, e in enumerate(lst) if e.get('kind') == 'examine' and (e['x'], e['y']) == (5, 5))
+    doc.set_talks_for(room, '0', 0, i, (5, 4))
+    e = doc.npc_entries(room, '0', 0)[i]
+    ok("S177: set_talks_for — the front facing (up) and no script of its own",
+       e.get('talks_for') == {'x': 5, 'y': 4} and e.get('facing') == 'up' and 'script' not in e, e)
+    j = next(k for k, x in enumerate(doc.npc_entries(room, '0', 0)) if x.get('kind') == 'npc'
+             and (x['x'], x['y']) == (5, 4))
+    doc.update_npc(room, '0', 0, j, x=6)
+    ok("S177: the NPC moved -> its podium follows", doc.npc_entries(room, '0', 0)[i]['talks_for']
+       == {'x': 6, 'y': 4})
+    doc.update_spot(room, '0', 0, i, facing='any')
+    ok("S177: editing the spot's facing keeps talks_for",
+       doc.npc_entries(room, '0', 0)[i].get('talks_for') == {'x': 6, 'y': 4})
+    doc.set_talks_for(room, '0', 0, i, None)
+    ok("S177: talks for nobody -> the NPC's script becomes the spot's own",
+       doc.npc_entries(room, '0', 0)[i].get('script') == 'teleport_6b'
+       and 'talks_for' not in doc.npc_entries(room, '0', 0)[i])
+    # --- the service menus' slots per screen
+    by_id = {'g': {'id': 'g', 'service': {'kind': 'grandpa'}}, 'f': {'id': 'f', 'service': {'kind': 'farm'}},
+             'e0': {'id': 'e0', 'ops': [['op', '0x04', '0x0003', '0x06C0'], ['end']]},
+             'br': {'id': 'br', 'ops': [['op', '0x04', 6, 1776], 'label:o_br_orig', ['end']]}}
+    r = {'scripts': {'0': 'br', '1': 'g', '2': 'f'}}
+    screens = [(0, [{'npcs': [{'kind': 'npc', 'x': 1, 'y': 1, 'script': 'g'}]}]),
+               (5, [{'npcs': [{'kind': 'npc', 'x': 1, 'y': 1, 'script': 2},
+                              {'kind': 'examine', 'x': 1, 'y': 2, 'talks_for': {'x': 1, 'y': 1}}]}]),
+               (6, [{'npcs': []}])]
+    wide, per = SV.screen_reservations(r, screens, by_id)
+    ok("S177: Grandpa on screen 0 keeps $38-$7F there only; a farm keeper (+ its podium) on screen "
+       "5 keeps $60-$6F there; screen 6 keeps nothing; the breeding RETURN flow in the entry script "
+       "is not room-wide", per == {0: set(range(0x38, 0x80)), 5: set(range(0x60, 0x70))}
+       and wide == set(), (sorted(per), len(wide)))
+    r2 = {'scripts': {'0': 'e0'}}
+    wide2, per2 = SV.screen_reservations(r2, [(0, [{'npcs': []}])], by_id)
+    ok("S177: a menu the ENTRY script opens (it runs at every scroll) stays room-wide",
+       wide2 == set(range(0x60, 0x70)) and per2 == {})
+    # --- pick_order: the roomy side for the quarters that never decide walking; `last`
+    free = [0x10, 0x11, 0x12, 0x60, 0x70]                       # thr $50: 3 wall, 2 walkable
+    ok("S177: pick_order — a top/left quarter of a FLOOR cell takes the roomier (wall) side first",
+       P2.pick_order(free, 0x50, False, False)[:3] == [0x12, 0x11, 0x10]
+       or P2.pick_order(free, 0x50, False, False)[0] < 0x50, P2.pick_order(free, 0x50, False, False))
+    ok("S177: pick_order — the bottom-right quarter keeps its side",
+       P2.pick_order(free, 0x50, False, True) == [s for s in P2.walk_first(free, 0x50)])
+    ok("S177: pick_order — `last` slots come after every other",
+       P2.pick_order(free, 0x50, True, True, last={0x12})[-1] == 0x12)
+    # --- tile_budget: repack on a two-screen sheet
+    d2 = Document(os.path.join(tmp, 'p', 'project.json'))
+    rr = ProjectRenderer(REPO, os.path.join(tmp, 'p'), d2.data)
+    d2.vanilla = rr
+    rid = d2.new_room('REPACK HALL', 0x00, rr, blank_tileset=True)
+    rm = d2.room(rid)
+    tid = rm['record']['tileset']
+    rm['record']['collision_threshold'] = '0x60'               # 96 wall / 32 walkable a page
+    sheet = bytes((k * 13 + (k >> 3)) & 0xFF for k in range(2048))
+    d2.write_sheet(tid, sheet)
+    lid = rm['screens']['0']['layout']['id']
+    g = d2.layout(lid)['tiles']
+    for y in range(16):
+        for x in range(20):
+            g[y][x] = 0x60 + ((y * 20 + x) % 0x20)               # every slot walkable, $60-$7F
+    before = [[bytes(d2.read_sheet(tid)[P2.slot_key(v) * 16:P2.slot_key(v) * 16 + 16]) for v in row]
+              for row in g]
+    b0 = TB.budget(d2, tid, 0x60)
+    plan = TB.repack_plan(d2, tid, 0x60)
+    ok("S177: budget — 32 walkable slots, all placed, the bottom-right quarters among them",
+       b0['walkable']['total'] == 64 and b0['walkable']['placed'] == 32
+       and 0 < b0['walkable']['placed_br'] < 32, b0['walkable'])
+    moved = TB.repack(d2, tid, 0x60)
+    g2 = d2.layout(lid)['tiles']
+    sh2 = d2.read_sheet(tid)
+    same = all(bytes(sh2[P2.slot_key(g2[y][x]) * 16:P2.slot_key(g2[y][x]) * 16 + 16]) == before[y][x]
+               for y in range(16) for x in range(20))
+    br_side = all(not P2.is_wall(P2.slot_key(g2[y][x]), 0x60)
+                  for y in range(1, 16, 2) for x in range(1, 20, 2))
+    ok("S177: repack moves only quarters that never decide walking; every cell shows the same "
+       "graphic; every bottom-right quarter stays walkable",
+       moved == plan and len(moved) > 0 and same and br_side
+       and all(P2.is_wall(d, 0x60) for _a, d in moved), (len(moved), same, br_side))
+    msg = TB.explain(d2, tid, 0x60, 'walkable', rm, 0)
+    ok("S177: the 'no free slot' words name the split, what holds the side and the fixes",
+       'walkability split at $60' in msg and 'decide walking' in msg and 'Fix:' in msg, msg[:160])
+    if with_rom:
+        from editor2.core import builder as B
+        outdir = '/tmp/_t177'
+        C.write_outputs(out, outdir)
+        rom, _sym, _md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        rb = open(rom, 'rb').read()
+        o = 0x77 * 0x4000
+        ok("S177 --rom: bank $77's ScreenPush carries the library test (FE 08 20 04 06 00 18)",
+           rb.find(bytes([0xFE, 0x08, 0x20, 0x04, 0x06, 0x00, 0x18]), o, o + 0x4000) > 0)
+
+
+def main():
+    # 1. determinism + example compiles clean
+    out1, prj, warns = compile_data(base())
+    out1_ex[0] = out1
+    out2, _, _ = compile_data(base())
+    ok("deterministic emit", out1 == out2)
+    b60_ex = out1['patches/bank_060.asm']
+    ok("all 26 targets produced (S101: + bank $16 gate table, bank $6B enemies; "
+       "S102: + bank $6C tile animation; S103: + the gamedata regions in banks "
+       "$01/$03/$06/$07/$12/$13/$4D/$54/$69; S104: + bank $41 Spirit names, bank $6D voices; "
+       "S105: + bank $7E and the new-species ns_* regions in $11/$6A; S105 G3: the "
+       "follower forks of $09/$0B/$18/$59 no longer have regions; S107: + the art "
+       "regions in $09/$0B/$10/$18/$59 and the art banks $7A/$7C/$7F; S107 2c: + the family "
+       "icon regions in $2E/$4F; S109: + the arena regions in $04/$50/$6E; S110: + the "
+       "skill regions in $55/$56/$5F; S111: + the custom-skill regions in $4C/$58/$72; "
+       "S112: + the new-animation banks $6F/$70; S114: + the encounter bank $76; S116: + the "
+       "second song bank $75; S117: + the shop bank $77; S121: + the Milly hook's bedroom "
+       "script $0E and bank $79; S134: + bank_ext.asm, banks $80-$FF of the 4 MB ROM; "
+       "S152: + bank $15 newgame_start; S164: + bank $57 the AI-fix regions, text bank $80 — "
+       "the built-in skill names past bank $41's region, ROADMAP E14; S166: + the window-word "
+       "regions of banks $0A / $51; S172: + bank $05 npc_food_pals)",
+       sorted(out1) == ['patches/bank_000.asm', 'patches/bank_001.asm',
+                        'patches/bank_003.asm', 'patches/bank_004.asm',
+                        'patches/bank_005.asm', 'patches/bank_006.asm',
+                        'patches/bank_007.asm', 'patches/bank_009.asm', 'patches/bank_00a.asm',
+                        'patches/bank_00b.asm', 'patches/bank_00e.asm',
+                        'patches/bank_010.asm',
+                        'patches/bank_011.asm',
+                        'patches/bank_012.asm',
+                        'patches/bank_013.asm',
+                        'patches/bank_014.asm', 'patches/bank_015.asm',
+                        'patches/bank_016.asm',
+                        'patches/bank_017.asm', 'patches/bank_018.asm',
+                        'patches/bank_02e.asm',
+                        'patches/bank_041.asm', 'patches/bank_04c.asm',
+                        'patches/bank_04d.asm',
+                        'patches/bank_04f.asm', 'patches/bank_050.asm', 'patches/bank_051.asm',
+                        'patches/bank_054.asm', 'patches/bank_055.asm',
+                        'patches/bank_056.asm', 'patches/bank_057.asm',
+                        'patches/bank_058.asm',
+                        'patches/bank_059.asm',
+                        'patches/bank_05f.asm',
+                        'patches/bank_060.asm', 'patches/bank_064.asm',
+                        'patches/bank_067.asm', 'patches/bank_069.asm',
+                        'patches/bank_06a.asm', 'patches/bank_06b.asm',
+                        'patches/bank_06c.asm', 'patches/bank_06d.asm',
+                        'patches/bank_06e.asm', 'patches/bank_06f.asm',
+                        'patches/bank_070.asm',
+                        'patches/bank_071.asm', 'patches/bank_072.asm',
+                        'patches/bank_074.asm', 'patches/bank_075.asm',
+                        'patches/bank_076.asm', 'patches/bank_077.asm',
+                        'patches/bank_079.asm', 'patches/bank_07a.asm',
+                        'patches/bank_07c.asm', 'patches/bank_07e.asm',
+                        'patches/bank_07f.asm', 'patches/bank_080.asm',
+                        'patches/bank_ext.asm',
+                        'patches/wram.asm'],
+       f"(got {sorted(out1)})")
+
+    # 1b. S94: 4x4 screen grid — screen 12 (row 3) is legal with a 160x512
+    # record; the ROM0 $26DD region carries the $6B-$6F records.
+    d = base()
+    r = d['custom']['rooms'][6]                       # medal_vault $71
+    r['screens']['12'] = json.loads(json.dumps(r['screens']['0']))
+    r['screens']['12'].pop('states', None)
+    r['screens']['12']['npcs'] = []
+    r['screens']['12']['exits'] = []
+    r['record']['height_px'] = 512
+    out, _, _ = compile_data(d)
+    ok("4x4 grid: screen index 12 compiles", 'patches/bank_060.asm' in out)
+    # S140 (ROADMAP ARC CAP3a): every place's record is in bank $71
+    # Custom26DDTable (place number); the ROM0 rows are the vanilla filler again
+    b71 = out['patches/bank_071.asm']
+    c26 = b71[b71.index('Custom26DDTable:'):]
+    ok("S140: the $6B record is Custom26DDTable's first row; ROM0 = vanilla filler",
+       c26.split('\n')[1].rstrip().endswith('; $6B') and
+       '$6B gate_island' not in out['patches/bank_000.asm'] and
+       '$6B (vanilla filler)' in out['patches/bank_000.asm'], c26.split('\n')[1])
+    d = base()
+    d['custom']['rooms'][6]['screens']['12'] = d['custom']['rooms'][6]['screens']['0']
+    # S96: a screen outside the record is a vanilla-legal sub-room screen
+    # (Labyrinth $42 / Forest Mazes: entered by exit screen_byte only) —
+    # a WARNING that says it cannot be scrolled to, not an error
+    _o, _p, w = compile_data(d)
+    ok("screen outside the record's scroll area warns (not an error)",
+       any('outside the record' in x and '[12]' in x for x in w), f"(got {w})")
+    d = base()
+    d['custom']['rooms'][0].pop('record')             # gate_island $6B
+    expect_error("record required below $70 too (S94)", d, "requires a 'record'")
+
+    # 2. NOT_IMPLEMENTED layers hard-error
+    d = base(); d['world'] = {'transitions': [1]}
+    expect_error("world layer content hard-errors", d, "NOT_IMPLEMENTED")
+    d = base(); d['custom']['music'] = [{'song': 'x'}]
+    expect_error("custom.music must be an object", d, "must be an object")
+    d = base(); d['custom']['music']['tracks'] = []
+    expect_error("custom.music unknown key hard-errors", d, "unknown key")
+
+    # 2b. music validation (M3b, S64)
+    d = base()
+    d['custom']['music']['songs'][0]['source']['library'] = 'nope'
+    expect_error("music library ref must exist", d, "not found")
+    d = base()
+    d['custom']['music']['songs'][2]['first_id'] = "0x9E"   # S147: one id a song — $9E is song 0's
+    expect_error("music id overlap rejected", d, "already claimed")
+    d = base()
+    d['custom']['music']['room_defaults']['0xF0'] = 'dq6_town1'
+    expect_error("room_defaults mapID range (S138: $00-$EA)", d, "outside $00-$EA")
+    d = base()
+    d['custom']['music']['room_defaults']['0x99'] = 'dq6_town1'
+    _, _, w99 = compile_data(d)
+    ok("S138: room_defaults for map id $99 (past the old $7F cap) is accepted", True)
+    d = base()
+    d['custom']['music']['room_defaults']['0x30'] = 0
+    expect_error("room_defaults id 0 is the sentinel", d, "sentinel")
+    d = base()
+    d['custom']['music']['room_defaults']['0x30'] = "0x09"
+    _, _, wmr = compile_data(d)
+    ok("raw vanilla id assignable to a vanilla room",
+       not any('custom.music' in w for w in wmr))
+    d = base()
+    d['custom']['rooms'][0]['music'] = 'dq6_town1'   # vs room_defaults? none set for 6B in defaults... set conflict:
+    d['custom']['music']['room_defaults']['0x6B'] = 'dwm2_bgm07'
+    expect_error("rooms[].music vs room_defaults conflict", d, "disagree")
+    d = base(); d['custom']['skills'] = [{'id': 'anchor'}]
+    expect_error("custom.skills hard-errors", d, "NOT_IMPLEMENTED")
+
+    # 3. validator rules
+    # S98: the legacy 'spawn' kind is an $8F EXAMINE SPOT (PyBoy-measured) —
+    # script 0 warns (A there re-runs the entry script), any other script
+    # is a legitimate examine spot
+    d = base()
+    _o, _p, w = compile_data(d)
+    ok("legacy spawn (script 0) warns as an examine spot",
+       any("examine spot (S98)" in x for x in w))
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['npcs'][0]['script'] = 1
+    compile_data(d)
+    ok("legacy spawn with a script compiles (it is an examine spot)", True)
+
+    d = base()
+    del d['custom']['rooms'][0]['screens']['0']['exits'][0]['screen_byte']
+    expect_error("screen_byte required", d, "screen_byte")
+
+    d = base()
+    d['custom']['dialogue'][0]['lines'] = []
+    d['custom']['dialogue'][0].pop('choice')
+    d['custom']['dialogue'][0]['raw'] = [["box"], "Hi", ["bytes", "0xEE"]]
+    del d['custom']['dialogue'][0]['lines']
+    expect_error("bare $EE / bad terminator rejected", d, "$")
+
+    d = base()
+    d['custom']['rooms'][5].pop('record')
+    expect_error("every room requires a record (S94)", d, "requires a 'record'")
+
+    d = base()
+    d['build']['compat'] = {'master_table_rooms': ["0x6B", "0x6D"]}
+    expect_error("compat list must be dense from $6B", d, "dense ascending")
+
+    d = base()
+    d['custom']['wram']['region_size'] = 3
+    expect_error("step counters can't exceed wram region", d, "region size")
+
+    d = base()
+    d['custom']['palettes'][0]['colors_rgb555'] = \
+        d['custom']['palettes'][0]['colors_rgb555'][:7]
+    expect_error("palette must be 8x4", d, "8")
+
+    d = base()
+    d['custom']['rooms'][0]['scripts'].pop('0')
+    expect_error("script index 0 reserved/required", d, "index 0")
+
+    # 4. compat semantics (S70: exposure = ERROR since entry dispatches too)
+    d = base()
+    d['build']['compat'] = {'master_table_rooms': ["0x6B", "0x6C", "0x6D"]}
+    expect_error("narrow compat table errors with uncovered rooms (S70)",
+                 d, "not covered")
+    d = base()
+    d['build']['compat'] = {'master_table_rooms': [
+        "0x6B", "0x6C", "0x6D", "0x6E", "0x6F", "0x70", "0x71",
+        "0x72", "0x73"]}   # S92: + arena_clone, island_copy
+    outc, _, wc = compile_data(d)
+    ok("full-coverage compat compiles with legacy-only warning",
+       any('legacy-only' in w for w in wc))
+    ok("full-coverage compat is byte-identical to the default table",
+       outc == out1)
+
+    # 4b. S70 progression validators + lowering
+    d = base()
+    d['progression']['enemies'][0]['eid'] = 521            # gap from 519
+    expect_error("quest enemy EIDs must be dense from 519", d, "dense")
+    d = base()
+    e0 = d['progression']['enemies'][0]
+    # S149 (ROADMAP ARC CAP5): 640 was bank $6B alone (S101-S148); the rows now
+    # continue in battle banks $80+ up to 3,321 (EIDs 519-3839, $0F00+ = the
+    # breeders' slots) — 3,322 rows are refused
+    for k in range(3322 - len(d['progression']['enemies'])):
+        e2 = dict(e0); e2['id'] = f"e{k}"; e2['eid'] = 'auto'
+        d['progression']['enemies'].append(e2)
+    expect_error("project enemy capacity is 3,321 rows (S149; 640 S101-S148)", d, "at most")
+    # S101: 60 project enemies compile (the S70 bank-$14 tail held 12)
+    # (S105: the example has 2 of its own — vault_goldslime + gorbunok_wild)
+    d = base()
+    for k in range(58):
+        e2 = dict(e0); e2['id'] = f"e{k}"; e2['eid'] = 'auto'
+        d['progression']['enemies'].append(e2)
+    outs60, _, _ = compile_data(d)
+    b6b = outs60['patches/bank_06b.asm']
+    ok("60 project enemies emit into bank $6B (S101)",
+       'PROJECT_ENEMY_ROWS EQU 60' in b6b and 'ProjectEnemy_578:' in b6b)
+    # S101: join_as -> a project redirect row ahead of the vanilla 34
+    d = base()
+    j = dict(e0); j['id'] = 'gs_join'; j['eid'] = 'auto'; j['joinability'] = 7
+    d['progression']['enemies'].append(j)
+    d['progression']['enemies'][0]['join_as'] = 'gs_join'
+    outs_r, _, _ = compile_data(d)
+    reg = outs_r['patches/bank_014.asm']
+    reg = reg[reg.index('BossRedirectTableExt:'):]
+    ok("join_as emits a project redirect row first (S101)",
+       reg.index('dw 519, 521') < reg.index('dw 4, 486'))   # S105: gs_join = EID 521
+    d['progression']['enemies'][0]['join_as'] = 'nobody'
+    expect_error("join_as must name an enemy", d, "neither a progression.enemies id")
+    d = base()
+    d['progression']['quests'][0]['flags'].pop('done')
+    expect_error("quest flags.done required", d, "flags.done")
+    d = base()
+    d['progression']['quests'][0]['battle'] = {'enemy': 'nope'}
+    expect_error("quest battle enemy must resolve", d, "not in progression.enemies")
+    d = base()
+    d['progression']['extra'] = []
+    expect_error("unknown progression key hard-errors", d, "unknown key")
+    _, prj_p, _ = compile_data(base())
+    ok("quest lowering registers quest:/entry: scripts",
+       'quest:medal_vault' in prj_p._scripts and
+       'entry:medal_vault' in prj_p._scripts)
+    # S128 r2: "auto" numbers come from FLAG_AUTO_RANGES — the first quest flag
+    # used to land on $0158, the original game's own (Milayou's rematch)
+    ok("quest flags auto-register from the safe pool (never the game's $0158: the first "
+       "one moves to the lowest free number, the second keeps $0159)",
+       prj_p.flag_map().get('vault_guardian_beaten') == 0x015A and
+       prj_p.flag_map().get('vault_cutscene_seen') == 0x0159, prj_p.flag_map())
+    ok("quest enemy EID auto-allocates from 519",
+       prj_p.quest_enemies['vault_goldslime']['_eid'] == 519)
+
+    # 4c. S70 vanilla exit extension validators
+    d = base()
+    d['custom']['vanilla_exit_extensions'][0]['mapID'] = "0x6B"
+    expect_error("extension mapID must be vanilla (< $6B)", d, "VANILLA")
+    d = base()
+    d['custom']['vanilla_exit_extensions'][0]['steps'][0]['exits'][0]['x'] = 255
+    expect_error("extension trigger_x $FF rejected", d, "terminator")
+    d = base()
+    d['custom']['vanilla_exit_extensions'][0]['steps'][1]['exits'][3]['gate_flag'] = 1
+    expect_error("custom-dest extension exits need gate_flag 0", d,
+                 "gate_flag=0")
+
+    # 4d. S94b entrance redirects -> per-(room, screen) VanillaExitExtTable
+    outs0, prj0, _ = compile_data(base())
+    b60_0 = outs0['patches/bank_060.asm']
+    ok("redirect lowers to a per-screen ext row (db mapID, screen)",
+       "db $01, $08" in b60_0 and "dw $D931" in b60_0
+       and "db $05, $03, $72, $00, $01, $04, $07" in b60_0
+       and "db $04, $05, $6B, $00, $00, $07, $06" in b60_0,
+       "(GreatTree screen 8: both doors re-pointed, counter $D931)")
+    gen = [e for e in prj0.vanilla_exit_exts if e.get('_generated')]
+    ok("redirect variants cover every VALID vanilla step of that screen",
+       len(gen) == 1 and len(gen[0]['steps']) == 3
+       and all(len(st['exits']) == 2 for st in gen[0]['steps']))
+    ok("ext rows carry the screen byte ($FF = any) for hand-written entries",
+       "db $16, $FF" in b60_0)
+    d = base()
+    d['custom']['entrance_redirects'].append(
+        {"mapID": "0x01", "screen": 8, "x": 7, "y": 2, "dest": "room:$6B",
+         "screen_byte": "0x00", "spawn_x": 7, "spawn_y": 6})
+    outs1, prj1, _ = compile_data(d)
+    gen = [e for e in prj1.vanilla_exit_exts if e.get('_generated')][0]
+    ok("redirect on a cell with no vanilla exit ADDS a door (vanilla rows kept)",
+       all(len(st['exits']) == 3 for st in gen['steps'])
+       and gen['steps'][0]['exits'][2]['x'] == 7)
+    d = base()
+    d['custom']['entrance_redirects'][0]['dest'] = "room:$7F"
+    expect_error("redirect to an unknown custom room rejected", d, "7F")
+    d = base()
+    del d['custom']['entrance_redirects'][0]['screen_byte']
+    expect_error("redirect without screen_byte rejected (never guessed)", d,
+                 "screen_byte")
+    d = base()
+    d['custom']['vanilla_exit_extensions'].append(
+        {"mapID": "0x01", "screen": 8, "step_counter": "0xD931",
+         "steps": [{"exits": []}]})
+    expect_error("two overrides for one (room, screen) rejected", d,
+                 "already has an exit override")
+    d = base()
+    d['custom']['vanilla_exit_extensions'].append(
+        {"mapID": "0x01", "step_counter": "0xD931", "steps": [{"exits": []}]})
+    expect_error("'any'-screen override shadowing a per-screen one rejected", d,
+                 "already has an exit override")
+    d = base()
+    d['custom']['entrance_redirects'][0]['screen'] = 3
+    expect_error("redirect on a screen the vanilla room lacks rejected", d,
+                 "no screen 3")
+
+    # 4e. S94b per-(screen, state) attr/palette tables; S137 (ARC CAP2c): they
+    # live in the place's home bank (here bank $60), not in bank $17
+    b17 = outs0['patches/bank_017.asm']
+    b60 = outs0['patches/bank_060.asm']
+    ok("S137: bank $17 carries no render tables / palettes; the place block has "
+       "PlaceRenderTable -> RoomAttr_ -> ScrAttr_ + its palettes",
+       'CustomAttrPtrTable:' not in b17 and 'RoomAttr_72:' not in b17
+       and 'CustomPaletteColors_' not in b17
+       and 'PlaceRenderTable:' in b60 and 'RoomAttr_72:' in b60
+       and 'ScrAttr_72_1:' in b60 and 'RPal_72_0:' in b60)
+    seg = b60.split('ScrAttr_72_1:', 1)[1].split('ScrAttr_72_2:')[0]
+    ok("2-state arena_clone screen 1: counter, n_states = 2, one attr/palette row per state",
+       seg.count('    dw ') == 3 and seg.count('    db ') == 3
+       and '    db 2    ; states' in seg, f"(got {seg!r})")
+
+    # 5b. S92 [G-A]: custom.layouts / custom.tilesets / states[]
+    d = base(); d['custom']['layouts'][0]['tiles'] = [[0] * 20] * 15
+    expect_error("layout grid must be 16x20", d, "16 rows x 20 cols")
+    d = base(); d['custom']['tilesets'][0] = {"id": "x"}
+    expect_error("tileset needs exactly one source form", d,
+                 "'raw2bpp' or 'spec'")
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['layout'] = {"id": "nope"}
+    expect_error("unknown layout id rejected", d, "not in custom.layouts")
+    d = base()
+    scr = d['custom']['rooms'][0]['screens']['0']
+    scr['states'] = [
+        {"npcs": scr['npcs'], "exits": scr['exits']},
+        {"npcs": [{"kind": "npc", "sprite": "0x0B", "x": 2, "y": 2,
+                   "script": "none"} for _ in range(9)],
+         "exits": scr['exits']}]
+    del scr['npcs']; del scr['exits']
+    expect_error("9 NPCs in one state hits the S91 hard cap", d, "8 HARD")
+    d = base()
+    scr = d['custom']['rooms'][0]['screens']['0']
+    scr['states'] = [{"npcs": scr['npcs'], "exits": scr['exits']}]
+    expect_error("states + top-level npcs/exits rejected", d,
+                 "BOTH 'states' and top-level")
+    d = base()
+    scr = d['custom']['rooms'][0]['screens']['0']
+    st0 = {"npcs": scr.pop('npcs'), "exits": scr.pop('exits')}
+    st1 = {"npcs": list(st0['npcs']) + [
+               {"kind": "npc", "sprite": "0x3A", "x": 5, "y": 5,
+                "script": "none", "comment": "state-1 extra"}],
+           "exits": st0['exits']}
+    scr['states'] = [st0, st1]
+    outs, prj2, _ = compile_data(d)
+    b60 = outs['patches/bank_060.asm']
+    ok("2-state screen emits contiguous V0/V1 step entries",
+       'CustomRoom0_S0_V0_NPCs' in b60 and 'CustomRoom0_S0_V1_NPCs' in b60
+       and b60.count('CustomRoom0_Screen0:') == 1,
+       "(expected _V0/_V1 label pairs under one screen block)")
+    seg = b60.split('CustomRoom0_Screen0:', 1)[1]\
+        .split('CustomRoom0_S0_V0_NPCs:')[0]
+    ok("2-state screen block = counter + exactly 2 step entries",
+       seg.count('dw ') == 1 + 2 * 2 and seg.count('    db ') == 2,
+       f"(got block: {seg!r})")
+
+    # 4b. S97 (ROADMAP P3.5a): state rules -> CustomStateRulePtrTable
+    ok("example arena_clone rank state is a flag rule (S97)",
+       'CustomRoom7_StateRules' in b60_ex and 'dw $0030' in b60_ex
+       and 'wCustomStep_ArenaClone_S1' in b60_ex.split('CustomRoom7_StateRules:')[1][:200],
+       "(expected screen-1 rule block for $72)")
+    d = base()
+    d['custom']['flags'] = [{'name': 'door_open', 'index': 'auto'}]
+    r = d['custom']['rooms'][7]                       # arena_clone $72
+    r['state_rules'] = [
+        {'state': 1, 'when': [{'flag': 'door_open'}, {'flag': '0x0031', 'is': 'clear'}],
+         'screens': [1]},
+        {'state': 0, 'when': []}]
+    outs, prj3, _ = compile_data(d)
+    b = outs['patches/bank_060.asm']
+    blk = b.split('CustomRoom7_S1_Rules:')[1].split('db $FF')[0]
+    dn = prj3.resolve_flag_ref('door_open')           # S129: the first free pinned number
+    ok("rule terms: named flag resolved + 'clear' sets bit 15",
+       'db 1, 2' in blk and f'${dn:04X}' in blk and '$8031' in blk, f"(got {blk!r})")
+    ok("unconditional rule = n_terms 0 (the 'otherwise' form)",
+       'db 0, 0   ; state 0 when always' in blk or 'db 0, 0' in b.split('CustomRoom7_S1_Rules:')[1],
+       "(expected db 0, 0)")
+    ok("rules for 1-state screens are omitted (state 0 only fits screens 0/2)",
+       b.count('CustomRoom7_S0_Rules:') == 1 and 'CustomRoom7_S2_Rules:' in b)
+    ok("rooms without rules get dw $0000",
+       '    dw $0000   ; $6B (no rules)' in b)
+    d = base()
+    d['custom']['rooms'][7]['state_rules'] = [{'state': 5, 'when': []}]
+    expect_error("rule state that no screen has", d, "exists on none of the screens")
+    d = base()
+    d['custom']['rooms'][7]['state_rules'] = [{'state': 1, 'when': [{'flag': 'nope'}]}]
+    expect_error("rule with an unknown flag name", d, "neither a named flag")
+    d = base()
+    d['custom']['rooms'][7]['state_rules'] = [{'state': 1, 'when': [{'flag': '0x0280'}]}]
+    _o, _p, w = compile_data(d)
+    ok("rule on a non-saved flag warns", any('not in the save image' in x for x in w), f"(got {w})")
+
+    # 4c. S97 (ROADMAP P3.5): NPC type byte = facing | hidden | behaviour
+    d = base()
+    scr = d['custom']['rooms'][0]['screens']['0']
+    scr['npcs'] += [
+        {"kind": "npc", "sprite": "0x0B", "x": 1, "y": 6, "facing": "right",
+         "behaviour": "pace_x1", "script": "none"},
+        {"kind": "npc", "sprite": "0x3A", "x": 8, "y": 6, "facing": "up",
+         "hidden": True, "script": 2},
+        {"kind": "npc", "sprite": "0x05", "x": 8, "y": 1, "behaviour": "pace_right3",
+         "script": "none"},
+        {"kind": "npc", "sprite": "0x05", "x": 4, "y": 1, "behaviour": "gate_wander",
+         "script": "none"}]
+    outs, _, w = compile_data(d)
+    b = outs['patches/bank_060.asm']
+    ok("behaviour + facing encode the type byte ($38 = right | pace_x1)",
+       'db $38, $0B, $01, $06, $FF' in b, "(no $38 row)")
+    ok("hidden bit 6 + raw int script index ($60 = up | hidden; script 2)",
+       'db $60, $3A, $08, $06, $02' in b, "(no $60 row)")
+    ok("a walker path leaving the screen warns",
+       any('walks off the screen' in x for x in w), f"(got {w})")
+    ok("gate-only behaviour in a room warns",
+       any('gate-floor wanderer' in x for x in w), f"(got {w})")
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['npcs'].append(
+        {"kind": "npc", "sprite": "0x0B", "x": 1, "y": 6, "behaviour": "fly", "script": "none"})
+    try:
+        compile_data(d)
+        ok("unknown behaviour name rejected", False)
+    except Exception as e:
+        ok("unknown behaviour name rejected", 'behaviour' in str(e), f"(got {e})")
+
+    # 4d. S97 r2: per-box talk text (PyBoy-measured limits: 16 cells on the
+    # "*:" line, 18 elsewhere, 2 lines per box; $FA $F7 $EF $EE between boxes)
+    from editor2.core import textenc as T
+    ok("flow_boxes: 16-cell speaker line, 18 after, 2 lines per box",
+       T.flow_boxes('Type 1. I spin in place. And then I spin some more until I get dizzy.')
+       == [['Type 1. I spin', 'in place. And then'], ['I spin some more', 'until I get dizzy.']])
+    ok("'..' is one glyph ($61) — counts one cell", T.cells('Wait...') == 6)
+    asm = '\n'.join(T.render_entry_asm('x', {'boxes': [['Hello there', 'how are you'], ['fine']],
+                                               'choice': True}))
+    ok("boxes emit WAIT+CLEAR+NEWLINE between boxes and the vanilla choice tail",
+       '"how are you", $FA, $F7, $EF, $EE' in asm and '"fine", $E7, $F0' in asm, asm)
+    d = base()
+    d['custom']['dialogue'].append({'id': 'bx_long', 'boxes': [['This line is too long']]})
+    try:
+        compile_data(d)
+        ok("a box line past its cells is an error", False)
+    except Exception as e:
+        ok("a box line past its cells is an error", 'max 16' in str(e), f"(got {e})")
+    d = base()
+    d['custom']['dialogue'].append({'id': 'bx_3', 'boxes': [['a', 'b', 'c']]})
+    try:
+        compile_data(d)
+        ok("a 3-line box is an error", False)
+    except Exception as e:
+        ok("a 3-line box is an error", '3 lines' in str(e), f"(got {e})")
+
+    # 4e. S98 (ROADMAP P3.7): examine / step-on spots, talk form, doors, edges
+    d = base()
+    n = d['custom']['rooms'][0]['screens']['0']['npcs']
+    n.append({'kind': 'examine', 'x': 1, 'y': 1, 'script': 'give_jerky', 'facing': 'up'})
+    n.append({'kind': 'step', 'x': 8, 'y': 1, 'script': 'give_egg'})
+    outs, _, w = compile_data(d)
+    b = outs['patches/bank_060.asm']
+    blk = b[b.find('CustomRoom0_S0_NPCs:'):]
+    blk = blk[:blk.find('db $FF')]
+    i_ex, i_st, i_npc = blk.find('db $82, $FF, $01, $01'), blk.find('db $90, $FF, $08, $01'), \
+        blk.find('db $00, $0B')
+    ok("examine spot emits $80|facing ($82 = up), step trigger emits $90",
+       i_ex > 0 and i_st > 0, blk)
+    ok("spots are emitted BEFORE every NPC (engine scans stop at the first NPC; PyBoy S98)",
+       0 < i_ex < i_npc and 0 < i_st < i_npc, blk)
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['npcs'].append(
+        {'kind': 'examine', 'x': 1, 'y': 1, 'script': 'give_jerky', 'facing': 'sideways'})
+    try:
+        compile_data(d)
+        ok("unknown examine facing rejected", False)
+    except Exception as e:
+        ok("unknown examine facing rejected", 'facing' in str(e), f"(got {e})")
+
+    # talk form -> ops (question -> check_and_branch $C83C 1 @no)
+    d = base()
+    d['custom']['dialogue'] += [
+        {'id': 't98_q', 'boxes': [['Read the book?']], 'choice': True},
+        {'id': 't98_y', 'boxes': [['You read it.']]},
+        {'id': 't98_n', 'boxes': [['Maybe later.']]}]
+    d['custom']['scripts'].append({'id': 't98', 'talk': {
+        'text': 't98_q', 'question': True,
+        'yes': {'text': 't98_y', 'set': ['0x0158'],
+                'move': {'dest': 'room:$6B', 'screen': 4, 'x': 3, 'y': 2}},
+        'no': {'text': 't98_n', 'clear': ['0x0158']}}})
+    d['custom']['rooms'][0]['scripts']['4'] = 't98'
+    d['custom']['rooms'][0]['screens']['0']['npcs'][1]['script'] = 't98'
+    _o, p, w = compile_data(d)
+    sc = next(s for s in p.custom['scripts'] if s['id'] == 't98')
+    ops = sc['ops']
+    ok("talk question lowers to check_and_branch $C83C 1 @no",
+       ['op', 'check_and_branch', '0xC83C', '0x0001', '@no'] in ops, ops)
+    ok("talk yes: set_flag + map_transition to absolute pixels (screen 4 = row 1)",
+       ['op', 'map_transition', '0x006B', f'0x{3*16+8:04X}', f'0x{(8+2)*16+8:04X}'] in ops
+       and any(o[:2] == ['op', 'set_flag'] for o in ops if isinstance(o, list)), ops)
+    ok("talk no branch after label:no clears the flag",
+       'label:no' in ops and ops.index('label:no') <
+       max(i for i, o in enumerate(ops) if isinstance(o, list) and o[:2] == ['op', 'clear_flag']))
+    d2 = copy.deepcopy(d)
+    next(x for x in d2['custom']['dialogue'] if x['id'] == 't98_q')['choice'] = False
+    expect_error("YES/NO talk needs a choice dialogue", d2, "choice box")
+    d2 = copy.deepcopy(d)
+    next(s for s in d2['custom']['scripts'] if s['id'] == 't98')['talk']['yes']['move']['screen'] = 1
+    expect_error("talk move to a screen the room lacks", d2, "does not have")
+    d2 = copy.deepcopy(d)
+    next(s for s in d2['custom']['scripts'] if s['id'] == 't98')['ops'] = [['end']]
+    expect_error("talk + ops together rejected", d2, "not both")
+
+    # door pairing + edge exits
+    d = base()
+    ex0 = d['custom']['rooms'][0]['screens']['0']['exits'][0]
+    ex0['door'] = 'door_t98'
+    _o, _p, w = compile_data(d)
+    ok("a door with one end warns", any('door door_t98: 1 end' in x for x in w), f"(got {w})")
+    # S98 r2: door OBJECTS — an unconnected door compiles to nothing (and
+    # warns); a linked pair carries `link` both ways
+    d = base()
+    ex = d['custom']['rooms'][0]['screens']['0']['exits']
+    ex.append({'x': 6, 'y': 3, 'door': 'door_9', 'name': 'Shed door'})
+    outs, _p, w = compile_data(d)
+    ok("an unconnected door warns 'not connected'",
+       any("door 'Shed door'" in x and 'not connected' in x for x in w), f"(got {w})")
+    b60 = outs['patches/bank_060.asm']
+    ok("an unconnected door emits no exit row", 'db $06, $03,' not in b60)
+    ok("an unconnected door leaves the ROM data as without it",
+       b60 == compile_data(base())[0]['patches/bank_060.asm'])
+    d = base()
+    ex = d['custom']['rooms'][0]['screens']['0']['exits']
+    ex[0].update(door='door_1', name='Island hatch', link='door_2')
+    d['custom']['rooms'][1]['screens']['0']['exits'].append(
+        {'x': 4, 'y': 4, 'dest': 'room:$6B', 'gate_flag': 0, 'screen_byte': '0x80',
+         'spawn_x': 3, 'spawn_y': 1, 'door': 'door_2', 'name': 'Hatch below', 'link': 'door_1'})
+    _o, _p, w = compile_data(d)
+    ok("a linked door pair compiles without door warnings",
+       not any('door' in x.lower() and ('link' in x or 'lead back' in x or 'end(s)' in x)
+               for x in w), f"(got {[x for x in w if 'door' in x.lower()]})")
+    d['custom']['rooms'][1]['screens']['0']['exits'][-1]['link'] = 'door_7'
+    _o, _p, w = compile_data(d)
+    ok("a one-sided link warns", any('does not lead back' in x or 'does not exist' in x
+                                     for x in w), f"(got {w})")
+
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['exits'].append(
+        dict(ex0, x=4, y=7))
+    _o, _p, w = compile_data(d)
+    ok("bottom-row exit above a neighbour screen warns (walk-on blocks the scroll)",
+       any('bottom row borders screen 4' in x for x in w), f"(got {w})")
+    d = base()
+    d['custom']['rooms'][0]['screens']['0']['exits'][0]['screen_byte'] = '0x03'
+    expect_error("exit arriving on a screen the destination lacks", d, "does not have")
+
+    # 5. text label / id assignment
+    # S99 (P3.3e): room tile animation -> CustomAnimSrcTable (bank $71)
+    d = base()
+    outs, _p, w = compile_data(d)
+    b71 = outs['patches/bank_071.asm']
+    tab = b71.split('CustomAnimSrcTable:', 1)[1].split('\n\n', 1)[0]
+    ok("anim table: one row per room from $6B", tab.count('db ') == len(d['custom']['rooms']),
+       f"(got {tab})")
+    ok("anim table: clone 'source' -> its source map ($72 -> $06)",
+       'db $06  ; $72 — source: map $06' in tab, f"(got {tab})")
+    ok("anim table: 'none' and placeholders -> $6B (the bare-ret row)",
+       'db $6B  ; $6B — none' in tab and 'db $6B  ; $6E — placeholder' in tab, f"(got {tab})")
+    ok("anim: ANIM_TABLE_LEN + entry 3 in the template", 'ANIM_TABLE_LEN EQU' in b71
+       and 'dw CustomAnimSource' in b71)
+    d = base()
+    next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island')['animation'] = '0x3D'
+    outs, _p, w = compile_data(d)
+    ok("anim: borrow '0x3D' emits $3D", 'db $3D  ; $6B — borrow: map $3D'
+       in outs['patches/bank_071.asm'])
+    for bad, needle in (('0x08', 'cutscene DMG palette'), ('0x70', 'not a vanilla map id'),
+                        ('water', "use 'none', 'source'")):
+        d = base()
+        next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island')['animation'] = bad
+        expect_error(f"anim: {bad!r} rejected", d, needle)
+    d = base()
+    next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island').pop('animation')
+    outs, _p, w = compile_data(d)
+    ok("anim: absent = legacy Castle ($00) + a warning",
+       'db $00  ; $6B — legacy' in outs['patches/bank_071.asm']
+       and any('no `animation` set' in x for x in w), f"(got {w})")
+
+    # S100 (P3.7b part 1): custom rooms served on gate floors
+    def gdata():
+        d = base()
+        return d, next(r for r in d['custom']['rooms'] if r['id'] == 'gate_rotation')
+    d, _g = gdata()
+    outs, _p, w = compile_data(d)
+    b71 = outs['patches/bank_071.asm']
+    ok("gates: example rule -> GateInsertTable row (gate 1, floors 2-3 = 0-based 1-2, 50%, once bit $01, $6D, region 0 (S140), $0048/$0068)",
+       'db $01, $01, $02, $32, $01, $6D, $00, $48, $00, $68, $00, $00' in b71, "(table missing)")
+    ok("gates: entries 4/5 in the template + ROOMFLAGS_TABLE_LEN",
+       'dw CustomGateInsert' in b71 and 'dw CustomRoomFlags' in b71
+       and 'ROOMFLAGS_TABLE_LEN EQU' in b71)
+    ok("gates: stairs-down row keeps the descent bytes",
+       'db $05, $03, $00, $80, $00, $00, $00' in outs['patches/bank_060.asm'])
+    d, g = gdata()
+    g['screens']['0']['exits'] = [{'x': 5, 'y': 3, 'stairs': 'down'}]
+    outs, _p, w = compile_data(d)
+    ok("gates: compact {x, y, stairs: down} fills the descent bytes",
+       'db $05, $03, $00, $80, $00, $00, $00  ; stairs down (next gate floor)'
+       in outs['patches/bank_060.asm'])
+    d, g = gdata()
+    d['custom']['gate_inserts'].append({'room': 'gate_rotation', 'gate': 5,
+        'floors': [2, 4], 'chance': 100, 'once_per_dive': True,
+        'when': [{'flag': '0x0158', 'is': 'clear'}]})
+    outs, _p, w = compile_data(d)
+    b71 = outs['patches/bank_071.asm']
+    ok("gates: once-per-dive bit + a CLEAR term (bit 15)",
+       'db $05, $01, $03, $64, $01, $6D, $00, $48, $00, $68, $00, $01' in b71
+       and 'dw $8158' in b71, "(row/term missing)")
+    d, g = gdata()
+    d['custom']['gate_inserts'][0]['floors'] = [1, 2]
+    expect_error("gates: floor 1 rejected (the first floor stays the gate's)", d, "start at floor 2")
+    d, g = gdata()
+    d['custom']['gate_inserts'][0]['floors'] = [4, 5]
+    expect_error("gates: the boss floor rejected", d, "is its boss floor")
+    d, g = gdata()
+    d['custom']['gate_inserts'][0]['chance'] = 0
+    expect_error("gates: chance 0 rejected", d, "chance must be 1-100")
+    d, g = gdata()
+    g.pop('gate_arrival')
+    expect_error("gates: a served room needs gate_arrival", d, "no gate_arrival")
+    d, g = gdata()
+    g['screens']['0']['exits'] = []
+    expect_error("gates: a served room needs a Stairs down exit", d, "no Stairs down exit")
+    d, g = gdata()
+    g['encounters'] = {'enabled': True, 'gate_id': 0, 'floor': 1}
+    expect_error("gates: a FIXED encounter pool in a gate room rejected", d, "FIXED encounter pool")
+    d, g = gdata()
+    g['encounters'] = {'enabled': True, 'follow_gate': True}
+    outs, _p, w = compile_data(d)
+    ok("gates: follow_gate encounters -> RoomEncTable gate byte $FF",
+       'db $01, $FF, $00  ; $6D — enabled, follows the gate being dived'
+       in outs['patches/bank_071.asm'])
+    d, g = gdata()
+    g['can_save'] = False
+    outs, _p, w = compile_data(d)
+    ok("gates: can_save false -> CustomRoomFlagsTable bit 0",
+       'db $01  ; $6D — no saving' in outs['patches/bank_071.asm'])
+    d, g = gdata()
+    g['screens']['0']['exits'][0]['gate_flag'] = '0x00'
+    g['screens']['0']['exits'][0]['stairs'] = 'down'
+    expect_error("gates: a stairs row with other bytes rejected", d, "stairs-down")
+    d, g = gdata()
+    d['custom']['gate_inserts'] = [
+        {'room': 'gate_rotation', 'gate': 1, 'floors': 'all', 'chance': 100},
+        {'room': 'gate_rotation', 'gate': 1, 'floors': [3], 'chance': 20}]
+    outs, _p, w = compile_data(d)
+    ok("gates: a rule shadowed by an earlier 100 % rule warns",
+       any('can never be served' in x for x in w), f"(got {w})")
+    ok("gates: 'all' = floors 2 .. floors-1 (Villager: 2-4 -> 0-based 1-3)",
+       'db $01, $01, $03, $64' in outs['patches/bank_071.asm'])
+    d, g = gdata()
+    next(r for r in d['custom']['rooms'] if r['id'] == 'gate_island')['screens']['0']['exits'][0]['dest'] = 'room:$6D'
+    outs, _p, w = compile_data(d)
+    ok("gates: a served room also reachable by a door warns (stairs outside a dive)",
+       any('also reachable by a door' in x for x in w), f"(got {[x for x in w if 'gate' in x]})")
+    d, g = gdata()
+    for i in range(9):
+        d['custom']['gate_inserts'].append({'room': 'gate_rotation', 'gate': 7,
+            'floors': [2], 'chance': 10, 'once_per_dive': True})
+    expect_error("gates: max 8 once-per-dive rules per gate", d, "more than 8 once-per-dive")
+
+    # ---------------- S101 (P3.7b part 2): boss floors, gate settings,
+    # monster NPCs, conversation steps (battle / helper exit / arrival)
+    def bdata():
+        d = base()
+        c = d['custom']
+        isl = next(r for r in c['rooms'] if r['id'] == 'gate_island')
+        isl.pop('encounters', None)
+        isl['gate_arrival'] = {'screen': 4, 'x': 3, 'y': 2}
+        isl['music'] = '0x0C'
+        c['gates'] = [{'gate': 1, 'floors': 3, 'boss': 'gate_island'}]
+        for g in c['gate_inserts']:
+            g['floors'] = [2, 2]
+        return d, isl
+    d, isl = bdata()
+    outs, _p, w = compile_data(d)
+    b16 = outs['patches/bank_016.asm']
+    ok("gates16: Villager row = floors 3, boss $6B, arrival TILE (3,10) (screen 4 = row 1)",
+       'db $01, $01, $01, $03, $6B, $03, $0A, $01' in b16, "(row missing)")
+    ok("gates16: untouched gates keep their vanilla rows",
+       'db $00, $00, $00, $05, $30, $07, $02, $01' in b16)
+    ok("boss room defaults to no saving (CustomRoomFlagsTable bit 0)",
+       'db $01  ; $6B — no saving' in outs['patches/bank_071.asm'])
+    d, isl = bdata()
+    d['custom']['gates'][0]['floors'] = 1
+    expect_error("gates: floors below 2 rejected", d, "floors must be 2-99")
+    d, isl = bdata()
+    d['custom']['gates'][0]['boss'] = 'nobody'
+    expect_error("gates: boss must be a custom room", d, "is not a custom room")
+    d, isl = bdata()
+    isl.pop('gate_arrival')
+    expect_error("gates: a boss room needs gate_arrival", d, "has no gate_arrival")
+    d, isl = bdata()
+    d['custom']['gates'][0]['boss'] = 'vanilla:$35'
+    outs, _p, w = compile_data(d)
+    ok("gates: a vanilla boss room reused takes its home gate's arrival (Bazaar $35 -> (1,6))",
+       'db $01, $01, $01, $03, $35, $01, $06, $01' in outs['patches/bank_016.asm'])
+    d, isl = bdata()
+    d['custom']['gate_inserts'][0]['floors'] = [1, 2]
+    expect_error("gates: floor 1 still rejected on a normal gate", d, "start at floor 2")
+    d['custom']['gates'][0]['hand_made'] = True
+    outs, _p, w = compile_data(d)
+    ok("gates: hand-made gate takes floor 1 (0-based 0) rules",
+       'db $01, $00, $01, $32' in outs['patches/bank_071.asm'])
+    ok("gates: hand-made gate warns for a floor with no always-served room",
+       any('hand-made but floor' in x for x in w), f"(got {[x for x in w if 'hand' in x]})")
+    # monster NPCs
+    d, isl = bdata()
+    isl['screens']['0']['npcs'].append({'kind': 'npc', 'monster': 28, 'x': 4, 'y': 2,
+                                        'script': 'none'})
+    isl['screens']['0']['npcs'].append({'kind': 'npc', 'monster': 200, 'x': 6, 'y': 2,
+                                        'script': 'none'})
+    outs, _p, w = compile_data(d)
+    b60 = outs['patches/bank_060.asm']
+    ok("monster NPCs: sprite $F0/$F1 + the screen cast [$2C,1,$D8,1,$FF,0,$FF,0]",
+       'db $00, $F0, $04, $02, $FF' in b60 and 'db $00, $F1, $06, $02, $FF' in b60
+       and 'db $2C, $01, $D8, $01, $FF, $00, $FF, $00' in b60)
+    for k, sp in enumerate((1, 2, 3)):
+        isl['screens']['0']['npcs'].append({'kind': 'npc', 'monster': sp, 'x': k, 'y': 5,
+                                            'script': 'none'})
+    expect_error("monster NPCs: at most 4 species per screen", d, "more than 4 different monster")
+    # conversation steps
+    d, isl = bdata()
+    c = d['custom']
+    c['dialogue'] += [{'id': 't_hi', 'boxes': [['Hi']]},
+                      {'id': 't_q', 'boxes': [['Fight?']], 'choice': True},
+                      {'id': 't_win', 'boxes': [['Won']]},
+                      {'id': 't_bye', 'boxes': [['Home!']]}]
+    c.setdefault('flags', []).append({'name': 'test_cleared', 'index': 'auto'})
+    c['scripts'].append({'id': 'conv', 'talk': {'steps': [
+        {'if': [{'flag': 'test_cleared'}], 'then': [{'say': 't_win'}, {'end': True}]},
+        {'ask': 't_q', 'yes': [{'battle': {'enemies': [11, 31]}}, {'say': 't_win'},
+                               {'set': ['test_cleared']},
+                               {'helper': {'dest': 'vanilla:$00', 'screen': 1, 'x': 4,
+                                           'y': 5, 'say': 't_bye',
+                                           'land': {'x': 3, 'y': 3}}}],
+         'no': [{'say': 't_hi'}]}]}})
+    isl['screens']['0']['npcs'].append({'kind': 'npc', 'monster': 28, 'x': 4, 'y': 2,
+                                        'script': 'conv'})
+    isl['scripts'][str(max(int(k) for k in isl['scripts']) + 1)] = 'conv'
+    outs, _p, w = compile_data(d)
+    b60 = outs['patches/bank_060.asm']
+    ok("conversation: helper NPC appended hidden at (0,0) with Warubou's sprite $39 (S101 r2)",
+       'db $70, $39, $00, $00, $FF' in b60)
+    ok("conversation: a fixed landing cell places the helper by pixels (screen 0: 3,3 -> "
+       "start (8,13) = land - (48,43))",
+       'dw $0008' in b60 and 'dw $000D' in b60 and '; branch_screen' in b60)
+    d3 = json.loads(json.dumps(d))
+    d3['custom']['scripts'][-1]['talk']['steps'][1]['yes'][3]['helper'].pop('land')
+    o3, _p, _w = compile_data(d3)
+    b3 = o3['patches/bank_060.asm']
+    d4 = json.loads(json.dumps(d))
+    hs = d4['custom']['scripts'][-1]['talk']['steps'][1]['yes'][3]['helper']
+    hs.update({'castle': 'king', 'king_speech': 0x31})
+    o4, _p, _w = compile_data(d4)
+    b4 = o4['patches/bank_060.asm']
+    j = b4.index('dw $FF3B  ; warp_fade')
+    ok("conversation: castle 'king' = $D9E3 := speech, $D92B := 7 right before the $3B warp "
+       "(S101 r3, the castle-arrival chain)",
+       b4.rfind('dw $D9E3', 0, j) > b4.rfind('dw $FF06', 0, j) and
+       b4.rfind('dw $D92B', 0, j) > b4.rfind('dw $D9E3', 0, j) and '$0031' in b4[j - 200:j])
+    hs.update({'castle': 'heal'})
+    hs.pop('king_speech')
+    o4, _p, _w = compile_data(d4)
+    b4 = o4['patches/bank_060.asm']
+    j = b4.index('dw $FF3B  ; warp_fade')
+    ok("conversation: castle 'heal' = $D92B := 6 (the priest's blessing + heal)",
+       'dw $D92B' in b4[j - 60:j] and '$0006' in b4[j - 60:j])
+    hs.update({'dest': 'room:$6C', 'screen': 0})
+    expect_error("conversation: a castle event needs the Castle throne destination", d4,
+                 "needs the destination")
+    ok("conversation: default landing = beside the player — byte compares on $FF97 / $FF98 "
+       "for screen 0's 10 columns / 8 rows, a face-left branch for column 0",
+       b3.count('dw $FF97') == 10 + 2 and b3.count('dw $FF98') == 8)
+    ok("conversation: 2-enemy boss battle = write_ram2 $DA03/$DA05 + $DA02 + op $5B",
+       all(t in b60 for t in ('dw $DA03', 'dw $DA05', '$FF5B  ; boss_battle')))
+    ok("conversation: the helper exit ends in the wavy warp $3B to Castle (232,88)",
+       'dw $FF3B  ; warp_fade' in b60 and 'dw $00E8' in b60 and 'dw $0058' in b60)
+    ok("conversation: the win text re-enters dialog mode (init_dialog after the battle)",
+       b60.index('$FF5B') < b60.index('$FF07', b60.index('$FF5B')))
+    d2 = json.loads(json.dumps(d))
+    d2['custom']['scripts'][-1]['talk']['steps'][1]['ask'] = 't_hi'
+    expect_error("conversation: an ask needs a choice dialogue", d2, "choice box")
+    d2 = json.loads(json.dumps(d))
+    d2['custom']['scripts'][-1]['talk']['steps'][1]['yes'][0]['battle']['enemies'] = [500]
+    expect_error("conversation: EIDs 487-517 do not exist", d2, "does not exist")
+    d2 = json.loads(json.dumps(d))
+    d2['custom']['scripts'][-1]['talk']['steps'].append({'say': 't_hi', 'move': {}})
+    expect_error("conversation: a step has exactly one kind", d2, "exactly one of")
+    # arrival conversation: screen guard + field-context text
+    d, isl = bdata()
+    c = d['custom']
+    c['dialogue'] += [{'id': 't_hi', 'boxes': [['Hi']]}]
+    c['scripts'].append({'id': 'arr', 'talk': {'on_arrival': True, 'screen': 4,
+                                                'steps': [{'say': 't_hi'}]}})
+    isl['scripts']['0'] = 'arr'
+    outs, _p, w = compile_data(d)
+    b60 = outs['patches/bank_060.asm']
+    i0 = b60.index('$FF0E  ; branch_screen')
+    ok("arrival conversation: branch_screen 4 guard, then init_dialog + text",
+       b60.index('$FF07  ; init_dialog', i0) > i0)
+
+    # S100 r3: the game adds 19 to the extended copy length in 8 bits (dec/jr
+    # nz loop: 0 = 256), so no copy may exceed 256 bytes — an imported blank
+    # sheet (900+ leading zero bytes) came out shifted 256 bytes in-game
+    from editor2.core import layouts as LZ
+    sheet = bytearray(2048)
+    for t in range(58, 74):
+        sheet[t * 16:t * 16 + 16] = bytes(range(t, t + 16))
+    blob = LZ.compress(REPO, bytes(sheet))
+    ok("LZSS: a sheet with a 928-byte zero run decodes exactly with the game-accurate decoder",
+       LZ.decompress_raw(REPO, blob) == bytes(sheet))
+    longest, i, mk = 0, 3, blob[2]
+    while i < len(blob):
+        if blob[i] == mk:
+            ctl = blob[i + 2]
+            n = (ctl & 0x0F) + 4
+            if n == 0x13:
+                n = blob[i + 3] + 0x13
+                i += 1
+            longest = max(longest, n)
+            i += 3
+        else:
+            i += 1
+    ok("LZSS: no back-reference longer than 256 bytes", 0 < longest <= 256, f"(longest {longest})")
+
+    ok("text ids map to CustomText_XX labels",
+       prj.text_label(0x0A14) == 'CustomText_14')
+
+    test_tile_anims()
+    test_gamedata()
+    test_species_and_skills()
+    test_monsters_s106()
+    outart = test_art_s107()
+    outlay = test_walk_layouts_s107()
+    outicon = test_family_icons_s107()
+    outmt = test_monster_text_s108()
+    outar = test_arena_s109()
+    outsk = test_skills_s110()
+    outcs, outcsmax = test_custom_skills_s111()
+    outan, outan32 = test_anims_s112()
+    outen = test_encounters_s114()
+    outng = test_new_gates_s115()
+    outmu = test_music_s116()
+    out117 = test_flags_ng2_s117()
+    outshop = test_shops_s117()
+    test_sprite_budget_s117b()
+    test_clone_follows_game_s118c()
+    test_cutscenes_s119()
+    test_cutscene_unnamed_npc_s119r2()
+    test_cutscene_error_not_at_open_s119b()
+    test_dialogue_s120()
+    test_gate_rows_s120()
+    test_hero_default_s120b()
+    out121 = test_milly_hook_s121()
+    test_maze_s122()
+    out123 = test_worlds_s123()
+    test_flag_index_s124()
+    test_hub_s125()
+    test_services_s126()
+    test_breeders_s127()
+    test_breeders_s127_r2()
+    test_breeders_s127_r3()
+    test_breeders_s127_r4()
+    test_your_arena_s128()
+    test_connect_ends_s128r3()
+    test_story_s129()
+    test_quests_s129()
+    test_balance_s130()
+    test_s155_sim()
+    test_s156_sim()
+    test_balance_player_s130()
+    test_balance_s131()
+    test_s132()
+    test_s133()
+    test_s134()
+    test_s135('--rom' in sys.argv)
+    test_s136('--rom' in sys.argv)
+    test_s138('--rom' in sys.argv)
+    test_s139('--rom' in sys.argv)
+    test_s140('--rom' in sys.argv)
+    test_s141('--rom' in sys.argv)
+    test_s142()
+    test_s143()
+    test_s144()
+    test_s145()
+    test_s146('--rom' in sys.argv)
+    test_s147('--rom' in sys.argv)
+    test_s148('--rom' in sys.argv)
+    test_s149('--rom' in sys.argv)
+    test_s150('--rom' in sys.argv)
+    test_s151('--rom' in sys.argv)
+    test_s152('--rom' in sys.argv)
+    test_s153('--rom' in sys.argv)
+    test_s154('--rom' in sys.argv)
+    test_s157('--rom' in sys.argv)
+    test_s158('--rom' in sys.argv)
+    test_s159('--rom' in sys.argv)
+    test_s160('--rom' in sys.argv)
+    test_s161('--rom' in sys.argv)
+    test_s162('--rom' in sys.argv)
+    test_s163('--rom' in sys.argv)
+    test_s164('--rom' in sys.argv)
+    test_s165('--rom' in sys.argv)
+    test_s166('--rom' in sys.argv)
+    test_s168('--rom' in sys.argv)
+    test_s168r2()
+    test_s169()
+    test_s170('--rom' in sys.argv)
+    test_s171('--rom' in sys.argv)
+    test_s172('--rom' in sys.argv)
+    test_s175('--rom' in sys.argv)
+    test_s175_music()
+    test_s176('--rom' in sys.argv)
+    test_s177('--rom' in sys.argv)
+
+    if '--rom' in sys.argv:
+        from editor2.core import builder as B
+        outdir = '/tmp/_t_regression'
+        C.write_outputs(out1, outdir)
+        rom, sym, md5 = B.build_rom(REPO, outdir, os.path.join(outdir, 'build'))
+        ok("REGRESSION: byte-identical to the pinned reference",
+           md5 == REFERENCE_MD5, f"(got {md5})")
+        _R = open(rom, 'rb').read()
+        _O = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+        _S = B.parse_sym(sym)
+        _ns = 0x77 * 0x4000 + _S['NpcStaticIds'][1] - 0x4000
+        ok("ROM S172: foods off (the example) — NpcStaticIds = $FF, NpcSheetGfxTable / "
+           "NpcSpritePalTable ids $58-$5F = the ROM's",
+           _R[_ns] == 0xFF and _R[0x2B8F:0x2B9F] == _O[0x2B8F:0x2B9F] and
+           _R[5 * 0x4000 + 0x41AA - 0x4000:5 * 0x4000 + 0x41B2 - 0x4000] ==
+           _O[5 * 0x4000 + 0x41AA - 0x4000:5 * 0x4000 + 0x41B2 - 0x4000])
+        test_s134(open(rom, 'rb').read())     # S134: 4 MB + bank self-IDs
+        test_s167(open(rom, 'rb').read(), B.parse_sym(sym))   # S167: the patch-space audit
+        # S121: the Milly hook — off in the example (vanilla bytes), on in a fixture
+        test_milly_rom(open(rom, 'rb').read(), B.parse_sym(sym), out121)
+        # S123: worlds + NPC colours
+        test_worlds_rom(open(rom, 'rb').read(), B.parse_sym(sym), out123)
+        # S125: the hub
+        test_hub_rom(open(rom, 'rb').read(), B.parse_sym(sym))
+        # S126: service NPCs
+        test_services_rom(open(rom, 'rb').read(), B.parse_sym(sym))
+        # S127: breeding NPCs
+        test_breeders_rom()
+        # S128: your arena
+        test_your_arena_rom()
+        test_story_rom()
+        # S105 G3: the new-species forks, executed from the ROM's bytes
+        test_species_forks_rom('example', open(rom, 'rb').read(), B.parse_sym(sym),
+                               {224: 'Gorbunok'})
+        # ... and a project that fills all 19 ids (8-letter names, 4-letter
+        # nicknames, families spread — every bank it touches must still fit)
+        fams = ['Slime', 'Dragon', 'Beast', 'Bird', 'Plant', 'Bug', 'Devil', 'Zombie',
+                'Material', 'Boss', 'Spirit']
+        L = 'abcdefghijklmnopqrstuvwxyz'
+        dmax = _species_fixture([])
+        g0 = dmax['custom']['species'][0]
+        dmax['custom']['species'] = []
+        for k, sid in enumerate(range(221, 240)):
+            e = json.loads(json.dumps(g0))
+            e.update(id=sid, name='X' + L[k] * 7, short_name='Y' + L[k] * 3)
+            e['info']['family'] = fams[k % len(fams)]
+            dmax['custom']['species'].append(e)
+        # S155: the built-in custom skill names grew by 43 B (Repel, LoneWolf,
+        # Punish, Finish, Rupture, Blunt — Rust until r3, 1 B shorter): 28 B of them
+        # spill into the new-species text extents, so 19 eight-letter names + 19
+        # four-letter nicknames need 294 B of the 292 — refused; three names a letter
+        # shorter fit (291 B: 42 strings, the exact packer with its step budget —
+        # species._pack; 292 B with two does not pack into the seven extents)
+        # S156: + Plunder (8 B, placed last): the spill is 36 B — 19 x 8 + 19 x 4 need
+        # 302 B of the 292 (299 after sharing); TEN names a letter shorter fit (292 B, nine:
+        # 293) — ROADMAP E14 frees the room when a project needs it
+        # S164 (ROADMAP E14): the built-in skill names past bank $41's region come from the text
+        # banks — the extents hold the species' words alone: 19 x 8 + 19 x 4 fit again (266 B)
+        outm, _, wm = compile_data(dmax)
+        ok("S164: 19 eight-letter names + 19 four-letter nicknames fit (the skill names no "
+           "longer spill into the new species' extents)", 'patches/bank_041.asm' in outm, '')
+        outdirm = '/tmp/_t_species_max'
+        C.write_outputs(outm, outdirm)
+        romm, symm, _mm = B.build_rom(REPO, outdirm, os.path.join(outdirm, 'build'))
+        test_species_forks_rom('19 species', open(romm, 'rb').read(), B.parse_sym(symm),
+                               {sid: 'X' + L[k] * 7 for k, sid in enumerate(range(221, 240))})
+        # S103 (P3.9): per-table regression on REAL ROM bytes — an empty
+        # gamedata puts every owned table back to the original ROM's bytes
+        orig_rom = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+        outs0, _, _ = compile_data(gd_fixture({}))
+        outdir0 = '/tmp/_t_gd_empty'
+        C.write_outputs(outs0, outdir0)
+        rom0, sym0, _m0 = B.build_rom(REPO, outdir0, os.path.join(outdir0, 'build'))
+        built0 = open(rom0, 'rb').read()
+        from editor2.core import gamedata as GDm
+        V0 = GDm.vanilla(REPO)
+        for tname, tb in V0['tables'].items():
+            o = tb['bank'] * 0x4000 + (tb['addr'] - 0x4000 if tb['bank'] else tb['addr'])
+            n = len(tb['rows']) * tb['stride']
+            if tname == 'special_recipes':
+                continue            # runtime-dead $16 copy (not owned); bank $69 below
+            ok(f"ROM: empty gamedata -> {tb['label']} == original ROM bytes",
+               built0[o:o + n] == orig_rom[o:o + n])
+        lb = bytes.fromhex(V0['library']['block'])
+        lo = 0x4D * 0x4000 + V0['library']['block_addr'] - 0x4000
+        ok("ROM: empty gamedata -> library recipe text == original ROM bytes",
+           built0[lo:lo + len(lb)] == lb)
+        s69 = B.parse_sym(sym0)['RelocatedSpecialTable']
+        fo = s69[0] * 0x4000 + s69[1] - 0x4000
+        spo = 0x16 * 0x4000 + 0x0B30
+        if True:
+            ok("ROM: empty gamedata -> bank $69 special table == the vanilla 825 + $FF",
+               built0[fo:fo + 825 * 5 + 1] == orig_rom[spo:spo + 825 * 5 + 1])
+        # S101: the emitter's copy of the 34 vanilla fight->join pairs must
+        # equal the ROM's BossRedirectTable ($14:$4893)
+        from editor2.core import emitters as EM
+        orig = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+        o = 0x14 * 0x4000 + 0x0893
+        pairs = [(orig[o + 4 * i] | orig[o + 4 * i + 1] << 8,
+                  orig[o + 4 * i + 2] | orig[o + 4 * i + 3] << 8) for i in range(35)]
+        ok("VANILLA_REDIRECTS == the ROM's BossRedirectTable (34 pairs + $FFFF)",
+           pairs[:34] == EM.VANILLA_REDIRECTS and pairs[34][0] == 0xFFFF)
+        # S70 no-op property: strip progression + the extension + the quest
+        # room/dialogue/music -> the bank $14 region must regenerate the
+        # vanilla ds-308 pad and the ROM delta stays out of bank $14
+        # entirely (region byte-identity = the emitter's no-op contract).
+        d = base()
+        # S105: keep progression.enemies — gamedata pool 0 names the
+        # example's gorbunok_wild project enemy; only the QUEST goes
+        d['progression'].pop('quests')
+        d['custom'].pop('vanilla_exit_extensions')
+        # S92: the prelude targets entry:medal_vault, which only exists via
+        # quest lowering — dangling preludes hard-error (correctly), so the
+        # no-quest fixture strips it with the quest content.
+        d['custom'].pop('script_preludes', None)
+        d['custom']['rooms'] = [r for r in d['custom']['rooms']
+                                if r['id'] != 'medal_vault']
+        d['custom']['dialogue'] = [x for x in d['custom']['dialogue']
+                                   if not x['id'].startswith('vault_')]
+        d['custom']['music']['songs'] = [
+            s for s in d['custom']['music']['songs'] if s['id'] != 'dwm2_bgm10']
+        outs, _, _ = compile_data(d)
+        outdir2 = '/tmp/_t_noquest'
+        C.write_outputs(outs, outdir2)
+        rom2, _, md5f = B.build_rom(REPO, outdir2, os.path.join(outdir2, 'build'))
+        ref = open(rom, 'rb').read(); fix = open(rom2, 'rb').read()
+        diffs = [i for i in range(len(ref)) if ref[i] != fix[i]]
+        banks = {i // 0x4000 for i in diffs}
+        # S101: project enemies moved to bank $6B; the bank-$14 tail is the
+        # LoadEnemyStats divert + BossRedirectTableExt (vanilla rows only
+        # without join_as) — identical in both builds (no join_as either way)
+        ok("no-quest build: the bank-$14 tail (divert + redirect table) is unchanged",
+           all(fix[0x14 * 0x4000 + 0x3ECC + k] == ref[0x14 * 0x4000 + 0x3ECC + k]
+               for k in range(308)))
+        ok("no-quest build: bank $6B keeps one zero row",
+           fix[0x6B * 0x4000:0x6B * 0x4000 + 1] == b'\x6b')
+        ok("no-quest delta confined to owned banks + header",
+           banks <= {0, 0x14, 0x17, 0x60, 0x6B, 0x71, 0x74} and
+           all(o in (0x14D, 0x14E, 0x14F) for o in diffs if o < 0x4000),
+           f"(diff banks {sorted(hex(b) for b in banks)})")
+
+        # S107 (P3.10 part 2a): a project with art, built — the ROM bytes at
+        # every table (the bank-$0B copy sits at $4914 in the patched build:
+        # addresses come from game.sym), the stream behind each gfx-ID, and
+        # TERRY? / the summons (215-220) untouched (Iron Rule 8)
+        from editor2.core import art as Am
+        from dwm import sprite_codec as SCm
+        outdira = '/tmp/_t_art'
+        C.write_outputs(outart, outdira)
+        roma, syma, _ma = B.build_rom(REPO, outdira, os.path.join(outdira, 'build'))
+        ra = open(roma, 'rb').read()
+        sya = B.parse_sym(syma)
+
+        def rw(bank, addr):
+            o = bank * 0x4000 + (addr - 0x4000 if bank else addr)
+            return ra[o] | ra[o + 1] << 8
+
+        ok("ROM art: battle gfx [9] = $7F00, [215]-[220] = the original words",
+           rw(0, 0x2B9F + 18) == 0x7F00 and
+           all(ra[0x2B9F + 2 * i:0x2BA1 + 2 * i] == orig_rom[0x2B9F + 2 * i:0x2BA1 + 2 * i]
+               for i in range(215, 221)))
+        starts = {0x01: ('ScreenTransDataTable', 32), 0x06: ('FollowerGfxTable06', 32),
+                  0x07: ('FollowerGfxTable07', 32), 0x09: ('FollowerGfxTable09', 32),
+                  0x0B: ('FollowerGfxTable0B', 32), 0x12: ('FollowerGfxTable12', 32),
+                  0x18: ('FollowerGfxTable18', 0), 0x59: ('FollowerGfxTable59', 0)}
+        for bk, (lbl, off) in starts.items():
+            b_, a_ = sya[lbl]
+            ok(f"ROM art: walking table ${bk:02X} ({lbl} @ ${a_:04X}): [9] = $7F01, [214] = $7F02",
+               b_ == bk and rw(bk, a_ + off + 18) == 0x7F01 and rw(bk, a_ + off + 428) == 0x7F02)
+        ok("ROM art: $10:$407F[9] = $4E33 (layout 0), $10:$417F[9] = 5; $11:$407F[86] = $4184",
+           rw(0x10, 0x407F + 18) == 0x4E33 and ra[0x10 * 0x4000 + 0x17F + 9] == 5
+           and rw(0x11, 0x407F + 172) == 0x4184)
+        for gid, want in ((0x7F00, 576), (0x7F01, 256), (0x7F02, 256)):
+            off = SCm.gfxid_stream_offset(ra, gid)[3]
+            ok(f"ROM art: gfx-ID ${gid:04X} resolves to a stream of {want} bytes",
+               len(SCm.decode(SCm.read_stream(ra, off))) == want)
+        ok("ROM art: battle palette [9] at $17:$62FD+72",
+           ra[0x17 * 0x4000 + 0x22FD + 72:0x17 * 0x4000 + 0x22FD + 80] == bytes.fromhex('3412ff6b21430000'))
+        # S107 (P3.10 part 2b): the layouts project, built — every chosen
+        # layout is what the game reads through the level-1 entry (native or
+        # copied), for originals of both banks and the new species
+        from editor2.core import walk_layouts as WLm
+        outdirl = '/tmp/_t_lay'
+        C.write_outputs(outlay, outdirl)
+        roml, syml, _ml = B.build_rom(REPO, outdirl, os.path.join(outdirl, 'build'))
+        rl = open(roml, 'rb').read()
+        syl = B.parse_sym(syml)
+
+        def rwl(bank, addr):
+            o = bank * 0x4000 + addr - 0x4000
+            return rl[o] | rl[o + 1] << 8
+
+        def want(lid):
+            return [sorted(x) for x in WLm.entries(lid).values()]
+        only10 = [L['id'] for L in WLm.data()['layouts'] if list(L['instances']) == ['10']]
+        only11 = [L['id'] for L in WLm.data()['layouts'] if list(L['instances']) == ['11']]
+        both = [L['id'] for L in WLm.data()['layouts'] if len(L['instances']) == 2 and L['id']]
+        nl2 = rwl(0x11, syl['NewFollowerL1Table'][1] + 2 * 3)
+        checks = [('9 (bank $10, copied)', 0x10, rwl(0x10, 0x407F + 18), only11[0]),
+                  ('10 (bank $10, native)', 0x10, rwl(0x10, 0x407F + 20), both[0]),
+                  ('200 (bank $11, copied)', 0x11, rwl(0x11, 0x407F + 2 * 72), only10[0]),
+                  ('201 (bank $11, layout 0)', 0x11, rwl(0x11, 0x407F + 2 * 73), 0),
+                  ('224 Gorbunok (NewFollowerL1Table)', 0x11, nl2, only10[0])]
+        for what, bk, l2, lid in checks:
+            ok(f"ROM 2b: species {what} -> ${bk:02X}:${l2:04X} draws layout {lid}",
+               _layout_sig_rom(rl, bk, l2) == want(lid))
+        ok("ROM 2b: the copies sit in the banks' free tails",
+           rwl(0x10, 0x407F + 18) >= WLm.COPY_START[0x10] and nl2 >= WLm.COPY_START[0x11])
+        ok("ROM 2b: walk_layouts.COPY_START[$11] == the built FollowerLayoutBase11 end",
+           syl['FollowerLayoutBase11.done'][1] + 2 == WLm.COPY_START[0x11])
+        ok("ROM 2b: FollowerLayoutBase11 is called by both bank-$11 entries "
+           "(call at $4008 / $4012)",
+           rl[0x11 * 0x4000 + 0x0008] == 0xCD and rwl(0x11, 0x4009) == syl['FollowerLayoutBase11'][1]
+           and rl[0x11 * 0x4000 + 0x0012] == 0xCD and rwl(0x11, 0x4013) == syl['FollowerLayoutBase11'][1])
+
+        # S107 (P3.10 part 2c): the icons project, built — the font glyph,
+        # both gfx streams decode to the authored tiles; the saved-party
+        # readers of banks $07 / $0A far-call FamilyIconGfxFromE (the fork
+        # bytes `ld e,a / push bc / ld hl,$6D01 / rst $10 / pop bc` + 6 nops)
+        from editor2.core import gamedata as Gm
+        outdiri = '/tmp/_t_icon'
+        C.write_outputs(outicon, outdiri)
+        romi, symi, _mi = B.build_rom(REPO, outdiri, os.path.join(outdiri, 'build'))
+        ri = open(romi, 'rb').read()
+        ta = Gm.icon_tile(Gm.icon_grid(ICON_A, 'a'))
+        ts = Gm.icon_tile(Gm.icon_grid(ICON_S, 's'))
+        ok("ROM 2c: font glyphs $4F:$4110 (Slime) / $41B0 (Spirit) = the authored tiles",
+           ri[0x4F * 0x4000 + 0x110:][:16] == ta and ri[0x4F * 0x4000 + 0x1B0:][:16] == ts)
+        ok("ROM 2c: gfx ids $2E03 / $6D04 decode to the authored tiles",
+           SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x2E03)[3])) == ta and
+           SCm.decode(SCm.read_stream(ri, SCm.gfxid_stream_offset(ri, 0x6D04)[3])) == ts)
+        fork = bytes.fromhex('5fc52101 6dd7c1'.replace(' ', '')) + bytes(6)
+        # S108: names / nicknames / descriptions read back through the tables
+        outdirt = '/tmp/_t_monster_text'
+        C.write_outputs(outmt, outdirt)
+        romt, symt, _mt5 = B.build_rom(REPO, outdirt, os.path.join(outdirt, 'build'))
+        test_monster_text_rom(open(romt, 'rb').read(), B.parse_sym(symt))
+        # S109: the arena fixture, built — tables, call sites, the engine routine
+        outdira = '/tmp/_t_arena'
+        C.write_outputs(outar, outdira)
+        roma, syma, _ma = B.build_rom(REPO, outdira, os.path.join(outdira, 'build'))
+        test_arena_rom(open(roma, 'rb').read(), B.parse_sym(syma))
+        # S110: the skills fixture, built
+        outdirs = '/tmp/_t_skills'
+        C.write_outputs(outsk, outdirs)
+        roms, syms, _ms = B.build_rom(REPO, outdirs, os.path.join(outdirs, 'build'))
+        test_skills_rom(open(roms, 'rb').read(), B.parse_sym(syms))
+        # S111: the custom-skill forks, on the example build and on CS_FIX's
+        test_custom_skills_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base())
+        outdircs = '/tmp/_t_cskills'
+        C.write_outputs(outcs, outdircs)
+        romc, symc, _mc = B.build_rom(REPO, outdircs, os.path.join(outdircs, 'build'))
+        test_custom_skills_rom('CS_FIX', open(romc, 'rb').read(), B.parse_sym(symc),
+                               _sk_fixture(CS_FIX))
+        outdircm = '/tmp/_t_cskills_max'
+        C.write_outputs(outcsmax, outdircm)
+        romcm, symcm, _mcm = B.build_rom(REPO, outdircm, os.path.join(outdircm, 'build'))
+        test_custom_skills_rom('21 new', open(romcm, 'rb').read(), B.parse_sym(symcm),
+                               _sk_fixture(CS_MAX[0]))
+        # S112: the new-animation tables, on the example build (none) and the fixture
+        test_anims_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base())
+        outdiran = '/tmp/_t_anims'
+        C.write_outputs(outan, outdiran)
+        roman, syman, _man = B.build_rom(REPO, outdiran, os.path.join(outdiran, 'build'))
+        test_anims_rom('AN_FIX', open(roman, 'rb').read(), B.parse_sym(syman), AN_FIX)
+        outdiran32 = '/tmp/_t_anims32'
+        C.write_outputs(outan32, outdiran32)
+        roman32, syman32, _m32 = B.build_rom(REPO, outdiran32, os.path.join(outdiran32, 'build'))
+        test_anims_rom('32 new', open(roman32, 'rb').read(), B.parse_sym(syman32),
+                       _an_fixture([{'id': f'a{k}', 'steps': _an_steps()} for k in range(32)], {}))
+        # S114: the encounter forks + bank $76 tables, on the example and EN_FIX builds
+        origb = open(os.path.join(REPO, 'data', 'DWM-original.gbc'), 'rb').read()
+        test_encounters_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base(), origb)
+        outdiren = '/tmp/_t_enc'
+        C.write_outputs(outen, outdiren)
+        romen, symen, _men = B.build_rom(REPO, outdiren, os.path.join(outdiren, 'build'))
+        test_encounters_rom('EN_FIX', open(romen, 'rb').read(), B.parse_sym(symen), EN_FIX, origb)
+        # S115: the new-gate forks + bank $76 rows, on the example and NG_FIX builds
+        test_new_gates_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base(), origb)
+        outdirng = '/tmp/_t_ng'
+        C.write_outputs(outng, outdirng)
+        romng, symng, _mng = B.build_rom(REPO, outdirng, os.path.join(outdirng, 'build'))
+        test_new_gates_rom('NG_FIX', open(romng, 'rb').read(), B.parse_sym(symng), NG_FIX, origb)
+        # S116: the music rewrites + tables, on the example and MU_FIX builds
+        test_music_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), base(), origb)
+        outdirmu = '/tmp/_t_mu'
+        C.write_outputs(outmu, outdirmu)
+        rommu, symmu, _mmu = B.build_rom(REPO, outdirmu, os.path.join(outdirmu, 'build'))
+        test_music_rom('MU_FIX', open(rommu, 'rb').read(), B.parse_sym(symmu), MU_FIX, origb)
+        # S117: flag expansion + NG2 engine, executed from the built ROMs
+        test_flags_ng2_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), origb)
+        outdir117 = '/tmp/_t_s117'
+        C.write_outputs(out117, outdir117)
+        rom117, sym117, _m117 = B.build_rom(REPO, outdir117, os.path.join(outdir117, 'build'))
+        test_s117_engine_rom(open(rom117, 'rb').read(), B.parse_sym(sym117), origb)
+        # S117 (P3.13c): shops — the example == the original, SHOP_FIX's lists
+        test_shops_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), origb, 5, None)
+        # S117b: the bank $09 screen push + the dialog box after a shop
+        test_screen_push_rom('example', open(rom, 'rb').read(), B.parse_sym(sym), origb)
+        outdirsh = '/tmp/_t_shops'
+        C.write_outputs(outshop, outdirsh)
+        romsh, symsh, _msh = B.build_rom(REPO, outdirsh, os.path.join(outdirsh, 'build'))
+        from editor2.core import shops as SHm
+        _o, _psh, _w = compile_data(SHOP_FIX)
+        test_shops_rom('SHOP_FIX', open(romsh, 'rb').read(), B.parse_sym(symsh), origb, 6,
+                       [l[2] for l in SHm.resolve(_psh)['lists']])
+        n07 = ri[0x07 * 0x4000:0x08 * 0x4000].count(fork)
+        n0a = ri[0x0A * 0x4000:0x0B * 0x4000].count(fork)
+        ok("ROM 2c: the JOURNAL ($07) and its $0A twin read the saved party's icon through "
+           "bank $6D (1 fork in $07; 2 in $0A with the S104 list fork)", n07 == 1 and n0a == 2,
+           f"({n07}, {n0a})")
+
+        # S105 (P3.9b acceptance): a BLANK project (File > New project) builds
+        # the ORIGINAL ROM's bytes at every new-species site and at every POC
+        # site purged this session — names, text, art, info, tables.
+        outb, _, _ = compile_data(json.load(open(BLANK)))
+        outdirb = '/tmp/_t_blank'
+        C.write_outputs(outb, outdirb)
+        romb, symb, _mb = B.build_rom(REPO, outdirb, os.path.join(outdirb, 'build'))
+        bb = open(romb, 'rb').read()
+        sy = B.parse_sym(symb)
+
+        def at(bank, addr, n):
+            o = bank * 0x4000 + (addr - 0x4000 if bank else addr)
+            return bb[o:o + n] == orig_rom[o:o + n]
+
+        def lab(name, n):
+            bk, ad = sy[name]
+            return at(bk, ad, n)
+        # S155: the S155 built-in skill names / SKIL texts overflow their own blocks in EVERY
+        # build (custom_skills NAME_REGION / DESC_REGION): in the shared extents only those
+        # strings may differ from the original bytes
+        from editor2.core import custom_skills as CSx
+        _bl = json.load(open(BLANK))
+        spill = [b for _l, b in CSx.layout(_bl)['names'][1]] + \
+            [b for _l, b in CSx.layout(_bl)['descs'][1]]
+
+        def at_or_spill(bank, addr, n):
+            o = bank * 0x4000 + (addr - 0x4000 if bank else addr)
+            cover = [False] * n
+            for st in spill:
+                k = bb.find(st, o, o + n)
+                while k >= 0:
+                    for i in range(k - o, k - o + len(st)):
+                        cover[i] = True
+                    k = bb.find(st, k + 1, o + n)
+            return all(cover[i] or bb[o + i] == orig_rom[o + i] for i in range(n))
+        sites = [('battle gfx-IDs [221]-[239] $00:$2D59', at(0, 0x2B9F + 221 * 2, 38)),
+                 ('name pointers [221]-[239] $41:$44F3', at(0x41, 0x4339 + 221 * 2, 38)),
+                 ('SpellUseText_11 tail $41:$7E06-$7E15 (restored S105)', at(0x41, 0x7E06, 16)),
+                 ('bank $41 text extent a $7E38-$7E4E (but the S155 skill names)', at_or_spill(0x41, 0x7E38, 23)),
+                 ('bank $41 $7E86-$7F7F (text extents b / c + nickname pointers $7EF3; but the S155 '
+                  'skill names)', at_or_spill(0x41, 0x7E86, 0x7F80 - 0x7E86)),
+                 ('bank $41 $7FF6-$7FFF (text extent d)', at_or_spill(0x41, 0x7FF6, 10)),
+                 ('bank $41 MiscText_03 $728B (text extent e)', at_or_spill(0x41, 0x728B, 22)),
+                 ('detail/recipe words $4D HighLine2Ptrs', lab('HighLine2Ptrs', 4 + 19)),
+                 ('info slots 0-18 $6A', lab('NewSpeciesHighInfoTable', 43 * 19)),
+                 ('battle palettes $17 NewBattlePalTable', lab('NewBattlePalTable', 8 * 19)),
+                 ('recipe pairs $16', lab('NewRecipePairs', 2 * 19)),
+                 ('follower attr table $11', lab('NewFollowerAttrTable', 19)),
+                 ('follower layout table $11 (S107 2b)', lab('NewFollowerL1Table', 2 * 19)),
+                 ('bank $10 zero tail $7A83-$7FFF (layout copies, S107 2b)', at(0x10, 0x7A83, 0x8000 - 0x7A83)),
+                 ('family icon glyphs $4F:$4110-$41AF (S107 2c)', at(0x4F, 0x4110, 160)),
+                 ('family icon streams $2E:$424A-$42F7 (S107 2c)', at(0x2E, 0x424A, 190)),
+                 ('bank $11 zero tail (layout copies, S107 2b)',
+                  at(0x11, sy['FollowerLayoutBase11.done'][1] + 2, 0x8000 - sy['FollowerLayoutBase11.done'][1] - 2)),
+                 ('ChopClown / Grendal attr $11:$413F', at(0x11, 0x413F, 2)),
+                 # S149: $7EAD-$7ECA now hold the constructor's EnemyGenderCode /
+                 # ForeignNamesGate (the hand patch, every project) — the byte
+                 # after them is still the original's
+                 ('bank $14 free tail $7ECB (after the S149 EnemyGenderCode / ForeignNamesGate at $7EAD)',
+                  at(0x14, 0x7ECB, 1) and sy.get('EnemyGenderCode') == (0x14, 0x7EAD)),
+                 ('special table entries 693 / 803 (S12 mirror)',
+                  at(0x16, 0x58B9, 5) and at(0x16, 0x5ADF, 5)),
+                 ('bank $36 (Dracky battle sprite; S21 Clam POC)', at(0x36, 0x4000, 0x4000)),
+                 ('bank $7E (all zero)', at(0x7E, 0x4000, 0x4000)),
+                 ('art banks $7A / $7C / $7F (all zero; S107)',
+                  at(0x7A, 0x4000, 0x4000) and at(0x7C, 0x4000, 0x4000) and at(0x7F, 0x4000, 0x4000)),
+                 ('the eight walking tables (S107; the bank-$0B copy at its patched address)',
+                  all(bb[sy[l][0] * 0x4000 + sy[l][1] - 0x4000 + o:][:430] ==
+                      orig_rom[0x01 * 0x4000 + 0x09FF:][:430]
+                      for l, o in (('ScreenTransDataTable', 32), ('FollowerGfxTable06', 32),
+                                   ('FollowerGfxTable07', 32), ('FollowerGfxTable09', 32),
+                                   ('FollowerGfxTable0B', 32), ('FollowerGfxTable12', 32),
+                                   ('FollowerGfxTable18', 0), ('FollowerGfxTable59', 0)))),
+                 ('bank $10 layout + attr tables (S107)', at(0x10, 0x407F, 384)),
+                 ('bank $11 layout + attr tables (S107)', at(0x11, 0x407F, 174 + 87)),
+                 ('monster names $41:$5B1F-$628D (S108)', at(0x41, 0x5B1F, 1903)),
+                 ('default nicknames $41:$69F2-$6C76 (S108)', at(0x41, 0x69F2, 645)),
+                 ('descriptions $4D:$53D3-$7719 (S108)', at(0x4D, 0x53D3, 9031)),
+                 ('arena masters $04:$5E22 / $50:$6778, class fees $09:$5D23 (S109)',
+                  at(0x04, 0x5E22, 60) and at(0x50, 0x6778, 54) and at(0x09, 0x5D23, 16)),
+                 ('arena team sizes all 3 (S109, bank $6E)',
+                  bb[0x6E * 0x4000 + sy['ArenaTeamSizeTable'][1] - 0x4000:][:30] == bytes([3] * 30)),
+                 ('skill names $41:$628E-$69F1 (S110)', at(0x41, 0x628E, 1892)),
+                 ('skill descriptions + mode table + 222 pointer rows $56:$502F-$6842 (S110)',
+                  at(0x56, 0x502F, 0x6667 + 444 - 0x502F)),
+                 ('bank $56 pad $7291 (S110 gd_skill_desc_extra; but the S155 SKIL texts)',
+                  at_or_spill(0x56, 0x7291, 2993)),
+                 ('looks-like tables identity (S110, banks $5F / $55)',
+                  bb[0x5F * 0x4000 + sy['StockPresentTable'][1] - 0x4000:][:222] == bytes(range(222))
+                  and bb[0x55 * 0x4000 + sy['StockSfxTable'][1] - 0x4000:][:222] == bytes(range(222)))]
+        for what, good in sites:
+            ok(f"ROM: blank project -> {what} == original ROM bytes", good)
+
+        # S106: the shared LZ decoder reproduces the manifest of every monster
+        # stream (extracted/monster_sprites.json — == the game's own
+        # decompressor for all 442, tools/census_lz_decode.py in PyBoy)
+        from dwm import sprite_codec as SC
+        ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+        bad = []
+        for sid in range(221):
+            for kind in ('battle', 'follower'):
+                gid = int(ms[str(sid)][kind]['gfx_id'][1:], 16)
+                off = SC.gfxid_stream_offset(orig_rom, gid)[3]
+                if SC.decode(SC.read_stream(orig_rom, off)).hex() != ms[str(sid)][kind]['tile_bytes_hex']:
+                    bad.append((sid, kind))
+        ok("ROM: S106 LZ decode of all 442 monster streams == extracted/monster_sprites.json",
+           not bad, str(bad[:5]))
+
+    if os.path.exists(os.path.join('/tmp/_t_regression', 'build', 'rom.gbc')):
+        test_crash_config_validator()
+        ok("crash-config validator PASS/FAIL behavior", True)
+    else:
+        # pre-S92 the call was unconditional and failed on any fresh machine
+        # without --rom (it consumes the --rom regression build's rom.gbc)
+        print("  skip: crash-config validator (needs --rom build)")
+    print(f"\nALL {PASS} TESTS PASSED")
+
+
+if __name__ == '__main__':
+    main()

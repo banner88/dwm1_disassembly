@@ -1,0 +1,7976 @@
+#!/usr/bin/env python3
+"""test_app.py — app smoke test (S72 skeleton, S93 shell), headless-safe.
+
+Runs the REAL app code offscreen (QT_QPA_PLATFORM=offscreen): opens the
+example project, checks the Rooms tab renders LIVE from project.json (no
+build needed since S93), that placeholder rooms do not render, that a
+vanilla-referenced layout is read-only, that states switch, that the
+document model round-trips project.json byte-for-byte, and (with --rom)
+drives a Build through the app's worker code path and asserts the ROM md5
+equals the pinned compat reference from editor2/tests/test_compiler.py —
+proving GUI build == CLI build == hand-staged overlay, byte-identical.
+
+SKIPs (exit 0 with a message) when PySide6 is not installed, so CI without
+Qt stays green — the same ROM-tolerant posture as verify_integrity check 5.
+The canvas acceptance (paint / states / PyBoy) lives in test_canvas.py.
+"""
+
+import os
+import re
+import sys
+import time
+
+REPO = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO)
+
+os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+
+try:
+    from PySide6.QtWidgets import QApplication          # noqa: E402
+except ImportError:
+    print('SKIP: PySide6 not installed (pip install PySide6 Pillow)')
+    sys.exit(0)
+
+
+def _keep_states_follow(dlg):
+    """S144: Make editable opens the keep-states dialog; the checks written before it
+    expect the S118c copy (every state, following the game) — choose that, accept."""
+    if dlg.copy_:
+        dlg.moment.setCurrentIndex(0)
+    return 1
+
+
+def _patch_keep_states():
+    from editor2.app.rooms import states_dialog as _SD
+    _SD.KeepStatesDialog.exec = _keep_states_follow
+
+
+def pinned_md5():
+    """Single source of truth: the compat pin inside test_compiler.py."""
+    src = open(os.path.join(REPO, 'editor2/tests/test_compiler.py')).read()
+    m = re.search(r"REFERENCE_MD5\s*=\s*['\"]([0-9a-f]{32})['\"]", src)
+    assert m, 'REFERENCE_MD5 not found in test_compiler.py'
+    return m.group(1)
+
+
+def s119_cutscene_editor(app, w, ct):
+    """S119 (ROADMAP P3.8 part B, user: "Should be specific NPCs … visual … in
+    tiles … previewable"): the cutscene editor on the example project — name an
+    NPC, add a cast member, a new entry scene, steps added (incl. a drag on the
+    stage), the model's picture / preview, the op editing of a copied room's
+    script (part c); everything undone again (the project is not saved)."""
+    from editor2.app.rooms import commands as C
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import cutscene_build as CB
+    from editor2.app.cutscenes_tab import questions_of
+    from editor2.core import cutscenes as CSm
+    from collections import namedtuple
+    _st = {0: CSm.Step(0, CSm.TEXT, [5], None, None), 1: CSm.Step(1, 0x15, [0xC83C, 0, 9], 9, None),
+           4: CSm.Step(4, CSm.TEXT, [6], None, None), 5: CSm.Step(5, CSm.END, [], None, None)}
+    _sc = namedtuple('Sc', 'script')(CSm.Script(('project', 'x'), _st))
+    _rc = namedtuple('Rc', 'script_type script_idx')(0x171, 3)
+    assert questions_of(_rc, _sc) == [[0x71, 3, 0]], questions_of(_rc, _sc)
+    print('OK: S119 questions_of — a project script\'s YES/NO text found for the auto answer')
+    s = w.session
+    start = s.undo.index()
+    s.undo.push(C.SnapshotCommand(s, 'n', lambda doc: CD.name_actor(doc, 'gate_island', 0, 0, 1, 'Guard')))
+    s.undo.push(C.SnapshotCommand(s, 'c', lambda doc: CD.add_cast(doc, 'gate_island', 0, 'Ghost', 0x0B, 1, 3, 'right')))
+    cmd = C.SnapshotCommand(s, 'new', lambda doc: CD.new_cutscene(doc, 'gate_island', 'Haunt', 0, 'entry'))
+    s.undo.push(cmd)
+    sid = cmd.result
+    app.processEvents()
+    tops = [ct.tree.topLevelItem(i).text(0) for i in range(ct.tree.topLevelItemCount())]
+    mine = ct.tree.topLevelItem(0)
+    assert mine.text(0).startswith('Your cutscenes') and mine.child(0).childCount() == 1, tops
+    ct.tree.setCurrentItem(mine.child(0).child(0))
+    app.processEvents()
+    ed = ct.editor
+    assert ct.pages.currentIndex() == 1 and ed.scene_id == sid
+    ed.add_step('show', {'show': {'actor': 'Ghost', 'how': 'flicker'}})
+    ed.add_step('walk', {'walk': {'actor': 'Ghost', 'to': [3, 3]}})
+    ed.add_step('face', {'face': {'actor': 'Ghost', 'toward': 'Guard'}})
+    ed.add_step('say', {'say': {'boxes': [['Boo!']]}})
+    ed._dragged('Guard', 4, 6)                     # a drag on the stage = a walk
+    ed.add_step('anim', {'anim': {'actor': 'Ghost', 'move': 'hop'}})
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    kinds = [CB.step_kind(x) for x in sc['steps']]
+    assert kinds == ['show', 'walk', 'face', 'say', 'walk', 'anim'], kinds
+    assert sc['steps'][4]['walk'] == {'actor': 'Guard', 'to': [4, 6]}
+    assert 'no problems' in ed.problems.text(), ed.problems.text()
+    assert ed.tree.topLevelItemCount() == 7                    # 6 steps + the end row
+    ed.path = (1,)
+    ed.refresh()
+    assert ed.stage.moves and ed.stage.moves[0][0] == 'Ghost', ed.stage.moves
+    g = ed.stage.actors['Ghost']
+    assert (g['x'], g['y']) == CB.cell_px(0, 3, 3) and g['shown'], g
+    ed.preview()
+    for _ in range(4000):
+        ed._tick()
+        if not ed.timer.isActive():
+            break
+    assert not ed.timer.isActive()
+    ed._scrub(int(ed.t_end))                       # the preview's last frame
+    last = ed.lw.info[-1]['state']
+    assert ed.stage.actors['Guard']['x'] == last['Guard']['x'] == CB.cell_px(0, 4, 6)[0]
+    grab = ed.stage.grab()
+    assert grab.width() == 480 and grab.height() == 384
+    # S119 r2 (user: "Why cant I select npc in a custom room …"): the talk trigger
+    # lists the NPCs without a scene name too; picking one names it
+    ed.trig.setCurrentIndex(ed.trig.findData('talk'))
+    app.processEvents()
+    toks = [i for i in range(ed.trig_actor.count()) if CD.is_token(ed.trig_actor.itemData(i))]
+    assert toks, [ed.trig_actor.itemText(i) for i in range(ed.trig_actor.count())]
+    ed.trig_actor.setCurrentIndex(toks[0])
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    nm = sc['trigger'].get('actor')
+    assert nm and not CD.is_token(nm) and any(
+        e.get('actor') == nm for e in r['screens']['0']['npcs']), sc['trigger']
+    assert ed.trig_actor.currentData() == nm, ed.trig_actor.currentData()
+    print(f'OK: S119 r2 — an NPC without a scene name picked for "talking to" -> named “{nm}”')
+    # S119b (user's Mac: "Segmentation fault: 11" picking an unnamed NPC in a walk's
+    # Who list): a form widget must outlive its own signal — the edit is applied
+    # after it returns (macOS crashes when a combo dies while its popup closes)
+    import shiboken6
+    from PySide6.QtWidgets import QComboBox as _QCB
+    s.undo.push(C.SnapshotCommand(s, 'npc', lambda doc: doc.room('gate_island')['screens']['0']
+                                  ['npcs'].append({'kind': 'npc', 'sprite': '0x10', 'x': 8, 'y': 2,
+                                                   'facing': 'down', 'script': 'none'})))
+    app.processEvents()
+    ed.path = (1,)                                  # the Ghost's walk
+    ed.refresh()
+    cb = ed.form.body.findChildren(_QCB)[0]
+    toks = [i for i in range(cb.count()) if CD.is_token(cb.itemData(i))]
+    assert toks, [cb.itemText(i) for i in range(cb.count())]
+    cb.setCurrentIndex(toks[0])
+    assert shiboken6.isValid(cb), 'the Who combo was deleted inside its own signal'
+    app.processEvents()
+    r, sc = CD.find(s.doc, sid)
+    who = sc['steps'][1]['walk']['actor']
+    assert who and not CD.is_token(who) and who != 'Ghost', sc['steps'][1]
+    # S119b (user: "Why is text box so slow to type in?"): keys are not commits —
+    # the text is stored once after a pause, the box keeps its cursor (it was
+    # rebuilt per key: "Hello" came out "olleH")
+    import time as _time
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QPlainTextEdit as _QPT
+    ed.path = (3,)                                  # the "Boo!" text
+    ed.refresh()
+    te = ed.form.body.findChildren(_QPT)[0]
+    te.moveCursor(te.textCursor().MoveOperation.End)
+    n0 = s.undo.index()
+    for ch in ' Hello':
+        QTest.keyClicks(te, ch)
+        app.processEvents()
+    assert s.undo.index() == n0, 'a key press must not be an undo step'
+    t0 = _time.time()
+    while _time.time() - t0 < 1.2:
+        app.processEvents()
+        _time.sleep(0.02)
+    assert shiboken6.isValid(te) and ed.form.body.findChildren(_QPT)[0] is te, 'box rebuilt'
+    r, sc = CD.find(s.doc, sid)
+    assert sc['steps'][3]['say']['boxes'] == [['Boo! Hello']], sc['steps'][3]
+    assert s.undo.index() == n0 + 1, (n0, s.undo.index())
+    print('OK: S119b — typing in a text step: no commit per key, one undo step after the '
+          'pause, the box (and its cursor) kept')
+    # S119b (user: "Why not preview message using in-game boxes …" / "Can you not hover or
+    # explain what is e.g. 'wait until everyone stops'?" / "Why cant I copy paste build log?")
+    from editor2.app.rooms.talk_editor import BoxList as _BL
+    from editor2.app.cutscene_editor import STEP_HELP
+    from PySide6.QtCore import Qt as _Qt
+    assert ed.form.body.findChildren(_BL), 'the text step has no in-game box editor'
+    assert ed.form.about.text() == STEP_HELP['say']
+    missing = [k for k in CB.STEP_KINDS if not STEP_HELP.get(k)]
+    assert not missing, f'steps without an explanation: {missing}'
+    assert ed.tree.topLevelItem(3).toolTip(0), 'step list rows have no hover text'
+    assert w.log.textInteractionFlags() & _Qt.TextSelectableByKeyboard, 'build log: ⌘A / ⌘C'
+    print('OK: S119b — text steps use the in-game box editor; every step kind explained '
+          '(form + hover); the build log selectable by keyboard')
+    print(f'OK: S119b — a walk\'s Who changed to an unnamed NPC: applied after the combo\'s '
+          f'signal (the combo survives it), the NPC named “{who}”')
+    # part c: a copied room's script, step by step (arena_clone $72)
+    from editor2.app.cutscenes_tab import SceneRef, OpDialog
+    ct._load_project()
+    scs = [x for x in ct.pcat.scenes(0x72, min_show=0) if len(x.steps) > 3]
+    assert scs
+    ct.pages.setCurrentIndex(0)
+    ct.cur = SceneRef('project', 0x72, scs[0], ct.pcat, 't')
+    ct.show_scene()
+    n_ok = 0
+    for row, st in enumerate(scs[0].steps):
+        ct.steps.setCurrentRow(row)
+        t = ct._op_target()
+        assert t is not None, row
+        sc2, i = t
+        it = sc2['ops'][i]
+        assert (it[0] == 'end') == (st.code == 0x100) and (it[0] == 'text') == (st.code == 0x101)
+        if it[0] == 'op':
+            assert OpDialog._code(it[1]) == st.code, (it, st)
+        n_ok += 1
+    assert ct.b_edit_op.isEnabled()
+    d = OpDialog(ct, ['op', 'npc_walk_x', '0x0001', '0xFFF0'], [])
+    d._ok()
+    assert d.value == ['op', '0x1A', '0x0001', '0xFFF0'], d.value
+    while s.undo.index() > start:
+        s.undo.undo()
+    app.processEvents()
+    assert s.doc.dumps() == open(s.doc.path).read(), 'undo restores the project exactly'
+    print(f'OK: Cutscene editor (S119) — named NPC + cast member, a new scene of 6 steps '
+          f'(one by dragging on the stage), the stage picture / arrows / preview, '
+          f'{n_ok} steps of a copied room\'s script mapped to their ops, undone again')
+
+
+def s120_dialogue(app, w):
+    """S120 (ROADMAP P3.6): the box editor's Speaker / Voice / Insert — through the
+    TalkDialog and the document's talk + conversation round trips."""
+    from editor2.app.rooms.talk_editor import TalkDialog
+    import copy
+    from editor2.core.document import Document
+    doc = Document(w.session.doc.path)                  # a private copy: the window's doc untouched
+    rom = w.session.renderer.rom if getattr(w.session, 'renderer', None) else None
+    spec = {'boxes': [["I'll show", "what's [new]: x&y"]], 'speaker': 'Milayou', 'voice': 'high'}
+    dlg = TalkDialog(rom=rom, spec=spec, doc=doc)
+    bl = dlg.box_list
+    assert bl.speaker() == 'Milayou' and bl.meta() == {'speaker': 'Milayou', 'voice': 'high'}, bl.meta()
+    assert not bl.bad_boxes(), bl.bad_boxes()
+    ed = bl.editors[0]
+    assert '10 cells' in ed.title.text(), ed.title.text()
+    ed.edit.setPlainText("I'll show you more")           # 16 cells > 10 after "Milayou:"
+    app.processEvents()
+    assert bl.bad_boxes() == [1], bl.bad_boxes()
+    bl.sp_kind.setCurrentIndex(bl.sp_kind.findData(''))   # no label: 18 cells
+    app.processEvents()
+    assert not bl.bad_boxes() and bl.meta() == {'speaker': '', 'voice': 'high'}, bl.meta()
+    ed.edit.setPlainText('Hi ')
+    from PySide6.QtGui import QTextCursor
+    ed.edit.moveCursor(QTextCursor.End)
+    ed._insert('{hero}')
+    assert ed.lines() == ['Hi {hero}'] and not ed.problems(), (ed.lines(), ed.problems())
+    got = dlg.spec()
+    assert got['speaker'] == '' and got['voice'] == 'high', got
+    # the document keeps them (talk form + conversation form)
+    room = next(r for r in doc.rooms if not r.get('placeholder'))
+    sid = doc.new_talk(room, got, name='s120')
+    back = doc.talk_spec(sid)
+    assert back['speaker'] == '' and back['voice'] == 'high' and back['boxes'] == [['Hi {hero}']], back
+    csid = doc.new_conversation(room, {'steps': [
+        {'say': {'boxes': [['Hello']], 'speaker': 'hero', 'voice': 'none'}},
+        {'ask': {'boxes': [['Sure?']]}, 'yes': [{'ask': {'boxes': [['Really?']]},
+                                                 'yes': [{'say': {'boxes': [['Your {lead}']]}}],
+                                                 'no': []}], 'no': []}]}, name='s120c')
+    cs = doc.conversation_spec(csid)
+    st = cs['steps']
+    assert st[0]['say'].get('speaker') == 'hero' and st[0]['say'].get('voice') == 'none', st[0]
+    assert st[1]['yes'][0]['yes'][0]['say']['boxes'] == [['Your {lead}']], st[1]
+    dlg.deleteLater()
+    print('OK: S120 — Speaker / Voice / Insert in the box editor (limits follow the speaker), '
+          'kept by the talk and the nested conversation forms')
+
+
+def s120_gates(app, w):
+    """S120 (ROADMAP P3.7b part 2): the Gates tab's Maze floors group — rows named by the
+    gates that use them, the maze pictures, one undo step per change."""
+    gt = w.gates_tab
+    w.tabs.setCurrentWidget(gt)
+    app.processEvents()
+    gt.list.setCurrentRow(5)
+    app.processEvents()
+    cb = gt.row_combos['maze_row']
+    assert cb.count() == 16 and cb.currentData() == 3 and 'Bazaar Gate' in cb.currentText(), \
+        cb.currentText()
+    assert not gt.maze_pics.pixmap().isNull(), 'no maze pictures'
+    n0 = w.session.undo.count()
+    cb.setCurrentIndex(0)
+    gt._set_row('maze_row')
+    app.processEvents()
+    assert w.session.doc.gate_setting(5).get('maze_row') == 0, w.session.doc.gate_setting(5)
+    assert w.session.undo.count() == n0 + 1
+    gt.set_depth.setValue(3)
+    gt._set_row('depth')
+    assert w.session.doc.gate_setting(5).get('depth') == 3
+    gt._rows_vanilla()
+    assert w.session.doc.gate_setting(5) == {}, w.session.doc.gate_setting(5)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert w.session.doc.gate_setting(5) == {}, w.session.doc.gate_setting(5)
+    print('OK: S120 — Gates tab maze floors: 16 rows per table named by their gates, the '
+          'pictures, maze row / item tier / Vanilla as undo steps')
+
+
+def s121_milly(app, w):
+    """S121 (ROADMAP P3.16 + E7): the Cutscenes tab's Milly hook dialog — Create the
+    roots room (a copy of $08 with Warubou's scene; the arrival), tick the hook, send
+    Warubou's walk to one of the project's rooms; text previews draw MILLY only while
+    the hook is on; everything undoes, leaving the project files as they were."""
+    from editor2.app.milly_dialog import MillyHookDialog
+    from editor2.core import milly as MH
+    from editor2.core import textenc as Tx
+    s = w.session
+    pdir = s.doc.project_dir
+    files0 = sorted(os.path.relpath(os.path.join(dp, f), pdir)
+                    for dp, _d, fs in os.walk(pdir) for f in fs if '/build' not in dp)
+    n0 = s.undo.index()
+    assert Tx.PATCHED_GLYPHS == {}, 'the example has the hook off: previews say TERRY'
+    d = MillyHookDialog(s, w)
+    assert d.roots.count() == 0 and d.b_create.isEnabled()
+    d._create_roots()
+    app.processEvents()
+    rid = d.roots.currentData()
+    assert rid and d.room.currentData() == rid and (d.x.value(), d.y.value()) == (5, 4), \
+        (rid, d.room.currentData(), d.x.value(), d.y.value())
+    assert not d.b_create.isEnabled(), 'one roots room is enough'
+    assert d.naming.isEnabled() and d.naming.isChecked(), 'S121 r3: a new roots room asks her name'
+    d.on.setChecked(True)
+    d.dest.setCurrentIndex(d.dest.findData('room:$6D'))
+    assert [d.d_screen.itemData(i) for i in range(d.d_screen.count())] == [0], \
+        'S121 r3: only the screens the destination has'
+    d.dest.setCurrentIndex(d.dest.findData('room:$6B'))
+    assert [d.d_screen.itemData(i) for i in range(d.d_screen.count())] == [0, 4]
+    d.naming.setChecked(False)
+    d._ok()
+    assert not s.doc.roots_naming(rid), 'S121 r3: unticked = no naming screen'
+    app.processEvents()
+    h = s.doc.milly_hook()
+    assert h['enabled'] and h['arrive']['room'] == rid and h['spin'], h
+    assert s.doc.roots_scene_destination(rid)['dest'] == 'room:$6B'
+    assert s.doc.milly_arrival_problem() is None
+    assert Tx.PATCHED_GLYPHS == Tx.MILLY_GLYPHS, 'hook on: previews draw MILLY'
+    assert 'hook:milly' in [k for k, _n in __import__(
+        'editor2.app.rooms.rules_panel', fromlist=['x']).well_known(s.doc)]
+    assert s.undo.index() == n0 + 2, (n0, s.undo.index())
+    for _ in range(2):
+        s.undo.undo()
+    app.processEvents()
+    assert not s.doc.milly_hook() and Tx.PATCHED_GLYPHS == {}
+    assert not any(r['id'] == rid for r in s.doc.rooms)
+    files1 = sorted(os.path.relpath(os.path.join(dp, f), pdir)
+                    for dp, _d, fs in os.walk(pdir) for f in fs if '/build' not in dp)
+    assert files0 == files1, set(files0) ^ set(files1)
+    assert MH.ROOTS_SCENE == 'milly_roots'
+    print('OK: S121 — Milly hook dialog: Create the roots room (the arrival), the tick, '
+          'Warubou\'s destination, the naming option (r3), MILLY previews only with the hook, two undo steps undone '
+          'cleanly')
+
+
+def s122_gate_themes(app, w):
+    """S122 (ROADMAP P3.7b part 2; user: "can I currently use gate themes for custom
+    room build? … as an option for tileset, properly coloured" + "the option of starting
+    with gate tiles/palettes then borrowing additional tiles elsewhere"): New room on a
+    gate theme, its picker = the maze metatiles, the themes in the Borrow list, the Maze
+    screen dialog (filters, 254 screens) stamping a screen, Change tileset -> a gate theme
+    with its colours; everything undoes to the original project.json."""
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QDialog
+    from editor2.app.rooms import tab as RT
+    from editor2.app.rooms import maze_dialog as MD
+    from editor2.app.rooms.tileset_dialog import TilesetDialog
+    from editor2.core import maze as MZ
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    d = RT.NewRoomDialog(s.renderer, rt)
+    assert d.theme.count() == 17, d.theme.count()
+    d.theme.setCurrentIndex(5)
+    assert d.theme.currentData() == 4 and not d.src.isEnabled() and not d.blank.isEnabled()
+
+    class _New(RT.NewRoomDialog):
+        def exec(self_):
+            self_.name.setCurrentText('Ice room')
+            self_.theme.setCurrentIndex(5)
+            return QDialog.Accepted
+    keep = RT.NewRoomDialog
+    RT.NewRoomDialog = _New
+    try:
+        rt._new_room()
+    finally:
+        RT.NewRoomDialog = keep
+    app.processEvents()
+    room = rt.current_room()
+    assert room is not None and doc.gate_theme(room) == 4, room
+    voc = rt._room_vocab(room)
+    assert any(m['tiles'] == [0x3C, 0x3D, 0x3E, 0x3F] for m in voc) and len(voc) >= 16, len(voc)
+    data = [rt.foreign_box.itemData(i) for i in range(rt.foreign_box.count())]
+    assert all(RT.THEME_KEY + t in data for t in range(16)), 'the 16 themes in Borrow'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(RT.THEME_KEY + 13))
+    app.processEvents()
+    md = MD.MazeScreenDialog(s.renderer, 4, rt.canvas.gfx, rt.canvas.pals, rt)
+    assert md.list.count() == 254, md.list.count()
+    md.open[MZ.OPEN_UP].setChecked(True)
+    md.exact.setChecked(True)
+    vis = [md.list.item(i) for i in range(md.list.count()) if not md.list.item(i).isHidden()]
+    assert vis and all(it.data(Qt.UserRole)[2] == MZ.OPEN_UP for it in vis), len(vis)
+    md.list.setCurrentItem(vis[0])
+    pick = md.choice()
+    assert pick is not None and pick[0] >> 4 == 11, pick      # piece 11 = open up only
+
+    class _Pick(MD.MazeScreenDialog):
+        def exec(self_):
+            for i in range(self_.list.count()):
+                if self_.list.item(i).data(Qt.UserRole)[:2] == (0x5C, 0):
+                    self_.list.setCurrentRow(i)
+            return QDialog.Accepted
+    keep = MD.MazeScreenDialog
+    MD.MazeScreenDialog = _Pick
+    try:
+        rt._maze_screen()
+    finally:
+        MD.MazeScreenDialog = keep
+    app.processEvents()
+    tiles, attr = MZ.MazeRom(s.renderer.rom).cell_grids(0x5C, 0)
+    lid = rt.current_room()['screens']['0']['layout']['id']
+    assert doc.layout(lid)['tiles'] == tiles and doc.layout(lid)['attr'] == attr
+    # borrow a Library WALL metatile: the theme's wall slots are all vocabulary ->
+    # S122: the editor offered to release the unused vocabulary; S168: page 2 has free
+    # wall slots, so the tiles land there without a question (the vocabulary stays)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x12))
+    app.processEvents()
+    lib = [m for m in rt._vanilla_vocab(0x12)
+           if m['tiles'][3] < s.renderer.vanilla_gfx(0x12).threshold][0]
+    asked = []
+    q_keep = RT.QMessageBox.question
+    RT.QMessageBox.question = staticmethod(
+        lambda *a, **k: (asked.append(a[2]), RT.QMessageBox.Yes)[1])
+    try:
+        rt._import_metatile(lib)
+    finally:
+        RT.QMessageBox.question = q_keep
+    app.processEvents()
+    room = rt.current_room()
+    assert not asked, asked
+    from editor2.core import page2 as _P2
+    bor = [m for m in doc.metatiles(doc.tileset_key(room)) if m.get('src') == 'borrowed']
+    assert not doc.released(doc.tileset_key(room)) and doc.gate_theme(room) == 4
+    assert bor and _P2.is_page2(bor[-1]['tiles'][3]) and \
+        not _P2.walkable(bor[-1]['tiles'][3], 0x30), bor[-1]
+    td = TilesetDialog(doc, s.renderer, doc.room('dusk_mirror'), rt.canvas.pals, rt)
+    td.rb_g.setChecked(True)
+    td.g_box.setCurrentIndex(9)
+    assert td.choice() == ('gate', 9, None) and td.theme_colours()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '12_gate_themes.md')).read()
+    for word in ('Gate theme', 'Maze screen', 'Borrow', 'Stairs down', '3-15'):
+        assert word in hlp, f'help 12_gate_themes.md lacks "{word}"'
+    print('OK: S122 — gate themes: New room on theme 4 (maze metatiles in the picker), the 16 '
+          'themes in Borrow, the Maze screen dialog (254 screens, openings filter) stamping a '
+          'screen, a Library wall borrowed onto page 2 (S168; was: after "release unused vocabulary"), Change tileset -> '
+          'a gate theme + colours; undo restores project.json')
+
+
+def s123_worlds(app, w):
+    """S123 (ROADMAP NG3; user: "a world that can have encounters, encounter-free rooms
+    (where you can also save), mini-bosses, endbosses, flags and triggers. Enter via
+    swirling portal, portal stops when boss beaten, OR portal is different colour"):
+    the World tab's Worlds panel (New world with a new start room in a gate look, the
+    swirl colour, the saving rule, a second room, the report), the Rooms tab's World
+    entrance here…, an NPC's colour, Make boss… (end boss of the world), the Vanish step
+    in the conversation dialog, the Gates tab showing the world locked; everything
+    undoes to the original project.json."""
+    from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
+    from editor2.app import world_tab as WT
+    from editor2.app.rooms import boss_dialog as BD
+    from editor2.app.rooms import conversation_dialog as CD
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    app.processEvents()
+    wp = wt.worlds
+    assert wp.list.count() == 0 and not wp.form_box.isEnabled()
+
+    class _NW(WT.NewWorldDialog):
+        def exec(self_):
+            self_.name.setText('Fern World')
+            self_.start.setCurrentIndex(0)          # a NEW start room
+            self_.theme.setCurrentIndex(9)          # Forest
+            return QDialog.Accepted
+    keep = WT.NewWorldDialog
+    WT.NewWorldDialog = _NW
+    try:
+        wp._new()
+    finally:
+        WT.NewWorldDialog = keep
+    app.processEvents()
+    gid = wp.current()
+    assert gid == 32 and doc.world(gid)['start']['room'] == 'fern_world_start', doc.world(gid)
+    assert doc.gate_theme(doc.room('fern_world_start')) == 9
+    assert wp.rooms.rowCount() == 1 and 'portal' in wp.problems.text().lower()
+    wp.swirl.setCurrentIndex(wp.swirl.findData(1))
+    wp._swirl_changed(0)
+    assert doc.gate_setting(gid).get('cleared_swirl') == 1
+    wp.saving.setCurrentIndex(wp.saving.findData('everywhere'))
+    wp._saving_changed(0)
+    assert doc.world(gid)['saving'] == 'everywhere'
+    keep_t, keep_i = QInputDialog.getText, QInputDialog.getItem
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Fern cave', True))
+    QInputDialog.getItem = staticmethod(lambda *a, **k: (a[3][1], True))   # gate theme 1
+    try:
+        wp._new_room()
+    finally:
+        QInputDialog.getText, QInputDialog.getItem = keep_t, keep_i
+    app.processEvents()
+    assert doc.world_rooms(gid) == ['fern_world_start', 'fern_cave'], doc.world_rooms(gid)
+    assert wp.rooms.rowCount() == 2
+    # the Gates tab: the world is listed and locked
+    gt = w.gates_tab
+    gt.refresh()
+    row = next(i for i, g in enumerate(gt.gates) if g['id'] == gid)
+    assert 'WORLD' in gt.list.item(row).text()
+    gt.list.setCurrentRow(row)
+    gt._show_gate(row)
+    assert not any(b.isEnabled() for b in gt._world_boxes) and 'WORLD' in gt.head.text()
+    # an ordinary gate: its swirl turns green once cleared (Gates tab), and back
+    row1 = next(i for i, g in enumerate(gt.gates) if g['id'] == 1)
+    gt.list.setCurrentRow(row1)
+    gt._show_gate(row1)
+    assert all(b.isEnabled() for b in gt._world_boxes)
+    gt.set_swirl.setCurrentIndex(gt.set_swirl.findData(1))
+    gt.set_swirl.activated.emit(gt.set_swirl.currentIndex())
+    assert doc.gate_setting(1).get('cleared_swirl') == 1, doc.gate_setting(1)
+    gt.list.setCurrentRow(row1)
+    gt._show_gate(row1)
+    assert gt.set_swirl.currentData() == 1
+    gt.set_swirl.setCurrentIndex(0)
+    gt.set_swirl.activated.emit(0)
+    assert doc.gate_setting(1).get('cleared_swirl') is None
+    # Rooms tab: the portal in the example's dusk_mirror, an NPC colour, Make boss
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if 'dusk_mirror' in rt.room_list.item(i).text() or 'Dusk' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            break
+    app.processEvents()
+    assert rt.current_room() is not None and rt.current_room()['id'] == 'dusk_mirror'
+    QInputDialog.getItem = staticmethod(lambda *a, **k: (a[3][0], True))
+    try:
+        rt._add_world_entrance((4, 2))
+    finally:
+        QInputDialog.getItem = keep_i
+    app.processEvents()
+    ents = doc.gate_entrances(gid)
+    assert len(ents) == 1 and ents[0][0]['id'] == 'dusk_mirror' and doc.gate_swirls(gid)
+    # an NPC in the cave: colour + Make boss (end boss)
+    for i in range(rt.room_list.count()):
+        if 'Fern cave' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            break
+    app.processEvents()
+    cave = rt.current_room()
+    assert cave['id'] == 'fern_cave'
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 5, 3, 0x08))
+    idx = cmd.result                                  # a person (Make boss works on any NPC)
+    rt._show()
+    rt._sel_npc = idx
+    rt._show_npc_panel(idx)
+    panel = rt.npc_panel
+    assert panel.colour.count() == 9 and panel.colour.isEnabled()
+    rt._npc_colour(4)
+    assert doc.npc_entries(doc.room('fern_cave'), 0, 0)[idx].get('colour') == 4
+
+    class _MB(BD.MakeBossDialog):
+        def exec(self_):
+            self_.name.setText('fern lord')
+            self_.end_boss.setChecked(True)
+            return QDialog.Accepted
+    keep = BD.MakeBossDialog
+    BD.MakeBossDialog = _MB
+    try:
+        rt._npc_make_boss()
+    finally:
+        BD.MakeBossDialog = keep
+    app.processEvents()
+    e = doc.npc_entries(doc.room('fern_cave'), 0, 0)[idx]
+    t = doc.conversation(e['script'])
+    kinds = [list(st)[0] for st in t['steps']]
+    assert kinds == ['say', 'battle', 'set', 'vanish', 'helper'], kinds
+    assert t['steps'][2]['set'] == ['fern_lord_beaten', 'gate:32'], t['steps'][2]
+    assert t['steps'][4]['helper']['dest'] == f"room:${int(doc.room('dusk_mirror')['mapID'], 16):02X}"
+    assert e.get('shown_when') == [{'flag': 'fern_lord_beaten', 'is': 'clear'}]
+    assert e.get('colour') == 4, 'Make boss keeps the colour (update_npc carries it)'
+    # the Vanish step in the conversation dialog
+    from PySide6.QtGui import QAction
+    dlg = CD.ConversationDialog(doc, rom=s.renderer.rom, room=doc.room('fern_cave'), key=0,
+                                spec=doc.conversation_spec(e['script']), parent=rt)
+    assert any(a.text().startswith('Vanish') for a in dlg.findChildren(QAction)), \
+        'no Vanish in + Add step'
+    dlg.add_step('vanish')
+    app.processEvents()
+    assert any('vanish' in st for st in dlg.spec()['steps'])
+    dlg.reject()
+    # the World tab report now: the end boss clears it, the portal exists
+    w.tabs.setCurrentWidget(wt)
+    wp.refresh()
+    app.processEvents()
+    assert 'END boss' in ' '.join(wp.rooms.item(r, 3).text() for r in range(wp.rooms.rowCount()))
+    assert 'portal' not in wp.problems.text().lower(), wp.problems.text()
+    wt.only_world.setChecked(True)
+    app.processEvents()
+    keys = set(wt.nodes)
+    assert ('room', 'fern_world_start') in keys and ('room', 'fern_cave') in keys and \
+        ('room', 'dusk_mirror') in keys and ('room', 'gate_rotation') not in keys, keys
+    wt.only_world.setChecked(False)
+    # S123 r3 (user: "SHOW VISUALLY … where it lands player INSIDE new world"): the
+    # way in as pictures; a portal added by clicking a cell; the landing changed by a
+    # click; Go to opens the cell; the Rooms canvas marks the portal + the landing
+    wp.refresh()
+    app.processEvents()
+    assert wp.land_pic.pixmap() is not None and not wp.land_pic.pixmap().isNull()
+    assert wp.portal_pic.pixmap() is not None and not wp.portal_pic.pixmap().isNull()
+    assert len(wp._portals) == 1 and wp._portals[0][:5] == ('room', 'dusk_mirror', 0, 4, 2), \
+        wp._portals
+    assert 'dusk' in wp.portal_lbl.text().lower() or 'Dusk' in wp.portal_lbl.text()
+
+    class _PD(WT.PortalDialog):
+        def exec(self_):
+            i = self_.room.findData('gate_rotation')
+            self_.room.setCurrentIndex(i)
+            assert self_.picker.pic.img is not None, 'the portal room is drawn'
+            self_.picker._clicked(3, 3)                 # a click on the picture
+            return QDialog.Accepted
+    keep_pd = WT.PortalDialog
+    WT.PortalDialog = _PD
+    try:
+        wp._add_portal()
+    finally:
+        WT.PortalDialog = keep_pd
+    app.processEvents()
+    assert ('room', 'gate_rotation', 0, 3, 3) in [c[:5] for c in doc.world_portals(gid)], \
+        doc.world_portals(gid)
+    assert '2 of 2' in wp.portal_lbl.text() or '1 of 2' in wp.portal_lbl.text()
+    keep_q = QMessageBox.question
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        wp._portal_i = [c[:5] for c in wp._portals].index(('room', 'gate_rotation', 0, 3, 3))
+        wp._remove_portal()
+    finally:
+        QMessageBox.question = keep_q
+    assert ('room', 'gate_rotation', 0, 3, 3) not in [c[:5] for c in doc.world_portals(gid)]
+
+    class _SD(WT.StartDialog):
+        def exec(self_):
+            assert self_.picker.pic.img is not None, 'the start room is drawn'
+            self_.picker._clicked(6, 2)
+            return QDialog.Accepted
+    keep_sd = WT.StartDialog
+    WT.StartDialog = _SD
+    try:
+        wp._change_start()
+    finally:
+        WT.StartDialog = keep_sd
+    st0 = doc.world(gid)['start']
+    assert (st0['room'], st0['x'], st0['y']) == ('fern_world_start', 6, 2), st0
+    got = []
+    wt.openRequested.connect(lambda k: got.append(k))
+    wp._go_land()
+    wp._go_portal()
+    assert got[0] == ('room', 'fern_world_start', 0, 6, 2) and got[1][0] == 'room', got
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(got[0])
+    app.processEvents()
+    assert rt.current_room()['id'] == 'fern_world_start' and rt.canvas.selected_cell == (6, 2)
+    assert any(m[0] == 'world_land' and (m[1], m[2]) == (6, 2) for m in rt.canvas.markers), \
+        [m[:3] for m in rt.canvas.markers]
+    rt._move_marker(('world_land', gid, st0), 5, 5)            # drag the landing
+    assert (doc.world(gid)['start']['x'], doc.world(gid)['start']['y']) == (5, 5)
+    rt.open_node(('room', 'dusk_mirror', 0, 4, 2))
+    app.processEvents()
+    assert any(m[0] == 'portal' and (m[1], m[2]) == (4, 2) for m in rt.canvas.markers)
+    w.tabs.setCurrentWidget(wt)
+    # flag pickers name the world's cleared flag
+    from editor2.app.rooms.rules_panel import well_known
+    assert ('gate:32', 'world cleared — Fern World (gate 32)') in well_known(doc)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    wp.refresh()
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '65_worlds.md')).read()
+    for word in ('New world', 'World entrance here', 'Make boss', 'Vanish', 'green', 'JOURNAL',
+                 'Castle'):
+        assert word in hlp, f'help 65_worlds.md lacks "{word}"'
+    print('OK: S123 — worlds: New world (a new Forest start room), swirl turns green, saving '
+          'everywhere, a second room, the Gates tab locks it, World entrance here…, an NPC '
+          'colour, Make boss (end boss: own flag + gate:32 + Vanish + helper to the portal), '
+          'the Vanish step, the report and "only this world"; undo restores project.json')
+
+
+def s125_hub(app, w):
+    """S125 (ROADMAP P3.14d; user: "Make a single room be HUB but … transferrable upon
+    flag"): the World tab's Hub box — a rule to the example's gate_island, a rule to the
+    Castle once a flag is ON (kept before the unconditional one), the order, Add the
+    arrival scenes; the H marker on the Rooms canvas; the cutscene editor's Arrival home
+    menu, the Heal step, "home" as a move destination; the conversation dialog's Home
+    destination; the Flags tab's way to a hub rule; everything undoes."""
+    from PySide6.QtWidgets import QDialog, QMessageBox
+    from editor2.app import world_tab as WT
+    from editor2.app.cutscene_editor import room_items
+    from editor2.app.rooms import conversation_dialog as CVD
+    from editor2.app.rooms import commands as C
+    from editor2.core import cutscene_doc as CD
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    app.processEvents()
+    hb = wt.worlds.hub
+    hb.refresh()
+    assert hb.list.count() == 1 and 'Castle' in hb.list.item(0).text(), hb.list.item(0).text()
+    s.undo.push(C.SnapshotCommand(s, 'flag', lambda d: d.add_flag('post_game')))
+    plan = [('gate_island', [], (0, 4, 4)), ('castle', [{'flag': 'post_game'}], None)]
+
+    class _RD(WT.HubRuleDialog):
+        def exec(self_):
+            rid, terms, cell = plan.pop(0)
+            self_.room.setCurrentIndex(self_.room.findData(rid))
+            for t in terms:
+                self_.terms._add(t)
+            if cell:
+                assert self_.picker.pic.img is not None, 'the room is drawn'
+                self_.picker._clicked(cell[1], cell[2])
+            return QDialog.Accepted
+    keep = WT.HubRuleDialog
+    WT.HubRuleDialog = _RD
+    try:
+        hb._add()
+        hb._add()
+    finally:
+        WT.HubRuleDialog = keep
+    rules = doc.hub_rules()
+    assert [r['room'] for r in rules] == ['castle', 'gate_island'], rules
+    assert rules[0]['when'] == [{'flag': 'post_game'}] and (rules[1]['x'], rules[1]['y']) == (4, 4)
+    assert hb.list.count() == 2 and 'post_game is ON' in hb.list.item(0).text()
+    hb.list.setCurrentRow(1)
+    hb._move(-1)                                    # the unconditional rule first: a problem
+    assert 'never applies' in hb.problems.text(), hb.problems.text()
+    hb._move(1)
+    assert not hb.problems.isVisible() or not hb.problems.text()
+    keep_i = QMessageBox.information
+    QMessageBox.information = staticmethod(lambda *a, **k: None)
+    try:
+        hb.list.setCurrentRow(1)
+        hb._arrivals()
+    finally:
+        QMessageBox.information = keep_i
+    arr = doc.hub_arrival_scenes('gate_island')
+    assert [a[2] for a in arr] == [['lost', 'wiped', 'final_lost'], ['warpwing'], ['home'],
+                                   ['continue']], arr      # S138: + an old save
+    # the Rooms canvas marks the hub cell
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'gate_island', 0, 4, 4))
+    app.processEvents()
+    assert any(m[0] == 'hub' and (m[1], m[2]) == (4, 4) for m in rt.canvas.markers), \
+        [m[:3] for m in rt.canvas.markers]
+    # the cutscene editor: Arrival home, Heal, a move home
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    ct.open_cutscene('gate_island', arr[1][0])
+    app.processEvents()
+    ed = ct.editor
+    assert ed.arr_btn.isVisibleTo(ed) and 'WarpWing' in ed.arr_btn.text(), ed.arr_btn.text()
+    ed._toggle_arrival('home', True)
+    app.processEvents()
+    assert CD.find(doc, arr[1][0])[1]['trigger']['arrival'] == ['warpwing', 'home']
+    ed._toggle_arrival('home', False)
+    ed.add_step('heal')
+    ed.add_step('move', {'move': {'dest': 'hub'}})
+    app.processEvents()
+    steps = CD.find(doc, arr[1][0])[1]['steps']
+    assert {'heal': {}} in steps and {'move': {'dest': 'hub'}} == steps[-1], steps
+    assert room_items(s)[0][:2] == ('home — the hub (World tab)', 'hub')   # S143: a PlaceEntry
+    errs, _warns, _lw = CD.problems(doc, doc.room('gate_island'), CD.find(doc, arr[1][0])[1])
+    assert not errs, errs
+    # the conversation dialog: Home as a destination
+    mv = {'dest': 'vanilla:$00', 'screen': 1, 'x': 4, 'y': 5}
+    de = CVD.DestEditor(doc, mv, lambda: None)
+    de.room.setCurrentIndex(de.room.findData('hub'))
+    de._changed()
+    assert mv == {'dest': 'hub'} and not de.sp['x'].isEnabled(), mv
+    assert CVD.new_step('heal', doc, None, 0) == {'heal': {}}
+    # the Flags tab's link to a hub rule
+    w.navigate_to({'tab': 'worlds', 'hub': 0})
+    app.processEvents()
+    assert w.tabs.currentWidget() is wt and hb.list.currentRow() == 0
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hb.refresh()
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '66_hub.md')).read()
+    for word in ('Add rule', 'arrival scenes', 'Arrival home', 'Heal', 'WarpWing', 'Castle',
+                 'half the gold'):
+        assert word in hlp, f'help 66_hub.md lacks "{word}"'
+    print('OK: S125 — the hub: rules (a room, the Castle once a flag is ON) in order, the '
+          'order problem, Add the arrival scenes, the H marker, Arrival home / Heal / move '
+          'home in the cutscene editor, Home in conversations, the Flags tab link; undo '
+          'restores project.json')
+
+
+def s124_progression(app, w):
+    """S124 (ROADMAP P3.14a): the Progression & Flags tab — every flag with what turns
+    it ON / OFF and what checks it (with links to the place), New flag (a fixed
+    number, never $0158), a note, Rename (every use follows), Renumber, Delete,
+    the Triggers page (a double-click opens the place), the Problems page; every
+    edit undoes to the original project.json."""
+    from PySide6.QtWidgets import QInputDialog, QMessageBox
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    pt = w.progression_tab
+    w.tabs.setCurrentWidget(pt)
+    app.processEvents()
+    pt.refresh()
+    tops = [pt.tree.topLevelItem(i).text(0) for i in range(pt.tree.topLevelItemCount())]
+    assert tops[0].startswith('Your flags') and any(t.startswith('The original game') for t in tops), tops
+    # S128 r2: the example's quest flag is no longer on $0158 (the game's) — no problem
+    vg = doc.flag_numbers()['vault_guardian_beaten']
+    assert vg == 0x015A and not any(p.code == 'game_shares' for p in pt.problems)
+    pt.select_flag(vg)
+    assert 'vault_guardian_beaten' in pt.title.text()
+    assert 'Turned ON by' in pt.detail.toPlainText() and pt.b_renumber.isEnabled()
+    keep_t, keep_q = QInputDialog.getText, QMessageBox.question
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Bridge repaired', True))
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        pt._new_flag()
+        n = doc.flag_numbers()['bridge_repaired']
+        assert n != 0x0158 and str(doc.flag_entry('bridge_repaired')['index']).startswith('0x')
+        assert pt.cur == n and 'bridge_repaired' in pt.title.text()
+        pt.note.setText('The east bridge can be crossed')
+        pt._note_done()
+        app.processEvents()
+        assert doc.flag_entry('bridge_repaired').get('comment') == 'The east bridge can be crossed'
+        # rename a used flag (the quest's): every use follows, the number stays
+        pt.select_flag(vg)
+        QInputDialog.getText = staticmethod(lambda *a, **k: ('Vault guard beaten', True))
+        pt._rename()
+        q = doc.data['progression']['quests'][0]
+        assert q['flags']['done'] == 'vault_guard_beaten', q['flags']
+        assert doc.flag_numbers()['vault_guard_beaten'] == 0x015A
+        pt._renumber()
+        assert doc.flag_numbers()['vault_guard_beaten'] not in (0x0158, 0x015A, n)
+        assert not any(p.code == 'game_shares' and p.idx == 0x0158 for p in pt.problems)
+        # delete: refused while used, allowed when unused
+        keep_i = QMessageBox.information
+        QMessageBox.information = staticmethod(lambda *a, **k: QMessageBox.Ok)
+        try:
+            pt._delete()
+            assert doc.flag_entry('vault_guard_beaten') is not None
+        finally:
+            QMessageBox.information = keep_i
+        pt.select_flag(n)
+        pt._delete()
+        assert all(f.get('name') != 'bridge_repaired' for f in doc.flags())
+    finally:
+        QInputDialog.getText, QMessageBox.question = keep_t, keep_q
+    # the Triggers page: sentences grouped by place; a double-click SHOWS the place in
+    # the side panel (S124 r3), its Open button goes to the room
+    pt.pages.setCurrentIndex(1)
+    app.processEvents()
+    assert pt.t_tree.topLevelItemCount() > 0
+    g = pt.t_tree.topLevelItem(0)
+    it = g.child(0)
+    assert it.text(0).startswith('When ') and '→' in it.text(0), it.text(0)
+    nav = it.data(0, 0x0100)
+    pt._trigger_go(it, 0)
+    app.processEvents()
+    assert w.tabs.currentWidget() is pt and not pt.place_panel.isHidden()
+    if nav and nav.get('tab') == 'rooms':
+        pt.place_panel._open()
+        app.processEvents()
+        assert w.tabs.currentWidget() is w.rooms_tab and w.rooms_tab.room_id == nav['room']
+    s124r3_places(app, w, pt)
+    # undo -> the original project
+    s.undo.setIndex(n0)
+    app.processEvents()
+    assert doc.dumps() == before, 'S124 edits did not undo to the original project'
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    print(f'OK: S124 Progression & Flags — {len(pt.fi.flags)} flags, {len(pt.fi.triggers)} '
+          'triggers, new / note / rename / renumber / delete, Triggers → the room, undo')
+
+
+def s124r3_places(app, w, pt):
+    """S124 r3 (user: "show the specific NPC in the specific room … rather than moving
+    to a totally different tab"; "allow naming all NPCs … carry that through";
+    "You dont actually show the correct NPC"): game flag $0080 (talked to Santi) —
+    "show" opens the side panel at GreatTree screen 8 / screen 12 IN THE RIGHT STATE
+    with the NPC outlined; Name… names a game room's NPC (editor data), the name
+    carries to the flag's sentences, the Rooms tab canvas and its NPC panel; Open
+    lands the Rooms tab on that screen, state and NPC."""
+    from PySide6.QtWidgets import QInputDialog
+    s = w.session
+    doc = s.doc
+    if pt.catalogue() is None:
+        print('SKIP: S124 r3 places (no ROM)')
+        return
+    w.tabs.setCurrentWidget(pt)
+    pt.pages.setCurrentIndex(0)
+    pt.show_box.setCurrentIndex(pt.show_box.findData(2))      # every game flag
+    app.processEvents()
+    pt.refresh()
+    pt.select_flag(0x0080)
+    key = next(k for k, (pl, _v) in pt._navs.items()
+               if any(p.get('map') == 1 and p.get('screen') == 12 for p in pl))
+    from PySide6.QtCore import QUrl
+    pt._anchor(QUrl(f'go:{key}'))
+    app.processEvents()
+    pp = pt.place_panel
+    assert w.tabs.currentWidget() is pt and not pp.isHidden()
+    p = pp.place()
+    assert (p['map'], p['screen'], p['state'], p['x'], p['y'], p['n']) == (1, 12, 1, 1, 6, 1), p
+    assert pp.state == 1 and pp.sel_n == 1
+    assert any(r[0] == 1 and (r[2], r[3]) == (1, 6) for r in pp.rows), pp.rows
+    assert 'GreatTree' in pp.head.text() and 'screen 12' in pp.head.text()
+    # state 0 of screen 12: Santi is NOT there (the bug the user saw: state 0 only)
+    pp.state_box.setCurrentIndex(0)
+    app.processEvents()
+    assert not any((r[2], r[3]) == (1, 6) and r[0] is not None for r in pp.rows)
+    pp.state_box.setCurrentIndex(1)
+    app.processEvents()
+    pp.sel_n = 1
+    from PySide6.QtWidgets import QMessageBox
+
+    def _fail(*a, **k):
+        raise AssertionError(f'Name this NPC refused: {a[2] if len(a) > 2 else a}')
+    keep, keep_w = QInputDialog.getText, QMessageBox.warning
+    QInputDialog.getText = staticmethod(lambda *a, **k: ('Santi', True))
+    QMessageBox.warning = staticmethod(_fail)
+    try:
+        pp._name()
+    finally:
+        QInputDialog.getText, QMessageBox.warning = keep, keep_w
+    app.processEvents()
+    names = doc.data['custom']['_editor']['npc_names']
+    assert names.get('01:12:1:1') == 'Santi' and names.get('01:12:2:1') == 'Santi', names
+    pt.refresh()
+    pt.select_flag(0x0080)
+    assert 'talking to Santi at (1, 6)' in pt.detail.toPlainText()
+    assert any(r[5] == 'Santi' for r in pp.rows)
+    # Open → the Rooms tab at GreatTree screen 12 state 1 with Santi selected and named
+    pp._open()
+    app.processEvents()
+    rt = w.rooms_tab
+    assert w.tabs.currentWidget() is rt
+    assert (rt.vanilla_mid, rt.key, rt.state_idx) == (1, 12, 1), (rt.vanilla_mid, rt.key, rt.state_idx)
+    ref = rt.canvas.selected_marker
+    assert ref is not None and rt.canvas.npc_tags.get(id(ref)) == 'Santi'
+    assert 'Santi' in rt.npc_panel.name_lbl.text()
+    # the father in the Old Man Gate Room ($0D) checks it: the panel shows him there
+    pt.select_flag(0x0080)
+    key = next(k for k, (pl, _v) in pt._navs.items()
+               if any(p.get('map') == 13 for p in pl))
+    pt._anchor(QUrl(f'go:{key}'))
+    app.processEvents()
+    p = pp.place()
+    assert (p['map'], p['x'], p['y']) == (13, 3, 5) and any(
+        r[0] == p['n'] and (r[2], r[3]) == (3, 5) for r in pp.rows)
+    pt.show_box.setCurrentIndex(0)
+    print('OK: S124 r3 the place panel — $0080: GreatTree screen 12 state 1 at (1, 6), '
+          'named Santi (game room, editor data) → the sentences, the canvas, the NPC '
+          'panel; Open → that screen / state / NPC; the Old Man Gate Room (3, 5)')
+
+
+def s126_services(app, w):
+    """S126 (ROADMAP P3.14e1): Rooms tab → NPC → Service… makes an NPC a service
+    NPC (here the farm keeper with a new line set and a first visit remembered
+    by a new flag); the Services tab lists it (Go to opens it), edits the line
+    set (speaker, a line with the box preview, the game's words back) and the
+    Medal Man's rewards; the project compiles; every edit undoes to the
+    original project.json."""
+    from PySide6 import QtWidgets as QW
+    import editor2.app.rooms.service_dialog as SDm
+    import editor2.app.services_tab as SVm
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 6, 4, 0x06))
+    idx = cmd.result
+    rt._after_npc_edit(idx)
+    app.processEvents()
+    assert rt.npc_panel.btn_service.isEnabled()
+    d_exec = SDm.ServiceDialog.exec
+    k_text = SDm.QInputDialog.getText
+
+    def _farm(dlg):
+        for i in range(dlg.kinds.count()):
+            if dlg.kinds.item(i).data(256) == 'farm':
+                dlg.kinds.setCurrentRow(i)
+        dlg.lines.setCurrentIndex(dlg.lines.findData(SDm.NEW_SET))
+        dlg.first.setChecked(True)
+        dlg.first_text.set_value([['Hi! I keep the', 'farm up here.']])
+        dlg.flag.setText('mira_met')
+        dlg._ok()
+        return QW.QDialog.Accepted
+    SDm.ServiceDialog.exec = _farm
+    SDm.QInputDialog.getText = staticmethod(lambda *a, **k: ("Mira's lines", True))
+    try:
+        rt._npc_service()
+    finally:
+        SDm.ServiceDialog.exec = d_exec
+        SDm.QInputDialog.getText = k_text
+    app.processEvents()
+    room = doc.room('dusk_mirror')
+    sv = doc.service_of(room, rt.key, rt.state_idx, idx)
+    assert sv['kind'] == 'farm' and sv['lines'] == 'mira_s_lines', sv
+    assert sv['first_time']['boxes'] == [['Hi! I keep the', 'farm up here.']], sv
+    assert any(f.get('name') == 'mira_met' for f in doc.flags()), 'first-visit flag not made'
+    assert 'Farm keeper' in rt.npc_panel.talk_preview.text(), rt.npc_panel.talk_preview.text()
+    # the flag's uses show on the Progression & Flags tab
+    from editor2.core import flag_index as FI
+    fx = FI.FlagIndex(doc.data, REPO)
+    num = doc.flag_numbers()['mira_met']
+    roles = sorted(u.role for u in fx.uses if u.idx == num)
+    assert roles == ['on', 'test'] and all(u.kind == 'service' for u in fx.uses
+                                           if u.idx == num), roles
+    # the Services tab
+    vt = w.services_tab
+    w.tabs.setCurrentWidget(vt)
+    vt.refresh()
+    app.processEvents()
+    assert vt.npcs.rowCount() == 1 and vt.npcs.item(0, 3).text() == 'Farm keeper', \
+        [vt.npcs.item(0, c).text() for c in range(5)]
+    got = []
+    vt.navigate.connect(got.append)
+    vt.npcs.setCurrentCell(0, 0)
+    vt._goto()
+    assert got and got[-1]['room'] == 'dusk_mirror' and (got[-1]['x'], got[-1]['y']) == (6, 4), got
+    # S132: hidden tabs refresh when shown — come back to the Services tab
+    # after Go to (it switched to the Rooms tab), as the user would
+    w.tabs.setCurrentWidget(vt)
+    app.processEvents()
+    vt.pages.setCurrentIndex(1)
+    assert vt.current_set_id() == 'mira_s_lines' and vt.lines.rowCount() == 39
+    vt.set_speaker.setText('Mira')
+    vt.set_speaker.editingFinished.emit()
+    app.processEvents()
+    assert doc._line_set('mira_s_lines')['speaker'] == 'Mira'
+    vt.lines.setCurrentCell(0, 0)
+    app.processEvents()
+    assert vt.line_edit.toPlainText().startswith('Hey there!'), vt.line_edit.toPlainText()
+    vt.line_edit.setPlainText('Howdy! What\ndo you need?')
+    app.processEvents()
+    assert vt.line_probs.text() == '' and vt.preview_v.count() == 2   # one box + stretch
+    vt._apply_line()
+    app.processEvents()
+    assert doc._line_set('mira_s_lines')['lines'] == {'0': 'Howdy! What\ndo you need?'}
+    assert vt.lines.item(0, 2).text().startswith('Howdy!')
+    vt.line_edit.setPlainText('This line is far too long for one box line')
+    app.processEvents()
+    assert 'cells' in vt.line_probs.text(), vt.line_probs.text()
+    vt._line_game()                                        # the game's words again
+    app.processEvents()
+    assert doc._line_set('mira_s_lines').get('lines') == {}, doc._line_set('mira_s_lines')
+    vt.lines.setCurrentCell(0, 0)
+    vt._show_line(0)
+    vt.line_edit.setPlainText('Howdy! What\ndo you need?')
+    vt._apply_line()
+    app.processEvents()
+    # the Medal Man
+    vt.pages.setCurrentIndex(2)
+    assert vt.medals.rowCount() == 4 and 'game' in vt.medals_state.text()
+    vt.medals.item(0, 0).setText('3')
+    app.processEvents()
+    rw = doc.data['gamedata']['medals']['rewards']
+    assert [r['medals'] for r in rw] == [3, 18, 25, 30], rw
+    warned = []
+    k_w = SVm.QMessageBox.warning
+    SVm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    vt.medals.item(1, 0).setText('2')                       # not rising: refused
+    app.processEvents()
+    SVm.QMessageBox.warning = k_w
+    assert warned and 'more medals' in warned[0], warned
+    assert [r['medals'] for r in doc.data['gamedata']['medals']['rewards']] == [3, 18, 25, 30]
+    vt._medal_add()
+    app.processEvents()
+    assert vt.medals.rowCount() == 5 and doc.data['gamedata']['medals']['rewards'][-1]['medals'] == 35
+    cb = vt.medals.cellWidget(4, 1)
+    cb.setCurrentIndex(cb.findData(336))
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['enemy'] == 336
+    vt.medals.item(4, 2).setText("A gift ⏎ for you!")
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['line'] == 'A gift\nfor you!'
+    # reward 5 speaks block line +7, which ends with a line break: its last box holds one
+    assert 'reward 5' in vt.medal_probs.text() and 'holds 1' in vt.medal_probs.text(), \
+        vt.medal_probs.text()
+    vt.medals.item(4, 2).setText("A gift for you!")
+    app.processEvents()
+    assert doc.data['gamedata']['medals']['rewards'][-1]['line'] == 'A gift for you!' \
+        and vt.medal_probs.text() == '', vt.medal_probs.text()
+    # the edits compile (service script, line set, medal table)
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'SERVICE_SET_COUNT EQU 1' in outs['patches/bank_077.asm']
+    assert 'MEDAL_REWARD_COUNT EQU 5' in outs['patches/bank_012.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    vt._medal_reset()
+    app.processEvents()
+    assert 'medals' not in (doc.data.get('gamedata') or {})
+    k_q = SVm.QMessageBox.question
+    SVm.QMessageBox.question = staticmethod(lambda *a, **k: SVm.QMessageBox.Yes)
+    vt.pages.setCurrentIndex(1)
+    vt._delete_set()
+    SVm.QMessageBox.question = k_q
+    app.processEvents()
+    assert doc.service_line_sets() == [] and \
+        doc.service_of(doc.room('dusk_mirror'), rt.key, rt.state_idx, idx).get('lines') is None
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S126 service edits did not undo to the original'
+    print('OK: S126 Services — Service… (farm keeper, new line set, first visit + flag), '
+          'the Services tab (NPC list + Go to, speaker, a line with preview / problems / the '
+          "game's words, Medal Man rewards add / egg / line / refused / reset), compiles, "
+          'undoes to the original')
+
+
+def s127r3_game_text_rule(app, w):
+    """S127 r3 (user: "Use game text box previews. FOr the love of god make that default
+    for all text entries in editor this is like the fifth time this comes up"): no plain
+    text edit in the app becomes game text — every QPlainTextEdit is a log / read-only
+    view, the box editor's own field or the Services tab's line editor (which draws its
+    boxes beside it). A new one fails here until it is a GameTextField / BoxList."""
+    import re as _re
+    allowed = {('app/main.py', 'self.log'), ('app/cutscenes_tab.py', 'self.log'),
+               ('app/cutscenes_tab.py', 'self.textbox'),
+               ('app/text_tab.py', 'self.edit'),     # S150: the game's own texts — markup with the game-font picture beside it
+               ('app/items_tab.py', 'self.edit'),    # S151: MarkupField — an item's words as markup with the game-font picture beside it
+               ('app/ending_dialog.py', 'self.role'),     # S153: a credits page's role / names — the page as the game
+               ('app/ending_dialog.py', 'self.names'),    # draws it (its font, pixel exact) beside them
+               ('app/services_tab.py', 'self.line_edit'),
+               ('app/rooms/talk_editor.py', 'self.edit'),
+               ('app/rooms/play_dialog.py', 'self.preview')}     # S132: read-only party preview
+    found = []
+    base = os.path.join(REPO, 'editor2')
+    for sub in ('app', 'app/rooms'):
+        for fn in sorted(os.listdir(os.path.join(base, sub))):
+            if not fn.endswith('.py'):
+                continue
+            rel = f'{sub}/{fn}'
+            for ln in open(os.path.join(base, sub, fn), encoding='utf-8'):
+                m = _re.search(r'([\w.]+)\s*=\s*QPlainTextEdit\(', ln)
+                if m:
+                    found.append((rel, m.group(1)))
+    bad = [f for f in found if f not in allowed]
+    assert not bad, f'plain text edits that may become game text (use GameTextField): {bad}'
+    # the Services tab's line editor draws the boxes; a medal reward shows its boxes too
+    vt = w.services_tab
+    vt.refresh()
+    vt.pages.setCurrentIndex(2)
+    app.processEvents()
+    vt._medal_preview(0)
+    from PySide6.QtWidgets import QLabel as _QL
+    pics = [x for x in vt.medal_prev.findChildren(_QL) if x.pixmap() is not None and
+            not x.pixmap().isNull()]
+    assert pics, 'the medal reward has no game box preview'
+    # S127 r4 (user: "Why is first visit greyed out? Also why is box1 duplicated weirdly
+    # glitchily?"): a breeder has a first visit; a filled field holds exactly its boxes
+    import editor2.app.rooms.service_dialog as SDm
+    from editor2.app.rooms.talk_editor import BoxEditor as _BE
+    dlg = SDm.ServiceDialog(w.session.doc, {'kind': 'breeder',
+                                            'first_time': {'boxes': [['First time here?']],
+                                                           'flag': 'brd_met'},
+                                            'breeder': {'mate': 306, 'intro': [['Yo!']]}})
+    dlg.show()
+    app.processEvents()
+    assert dlg.first.isEnabled() and dlg.first.isChecked() and dlg.first_text.isVisible()
+    for fld in (dlg.first_text, dlg.brd_intro, dlg.brd_notyet, dlg.brd_after):
+        kids = [x for x in fld.holder.findChildren(_BE) if x.parent() is not None]
+        assert len(kids) == len(fld.editors) == 1, (len(kids), len(fld.editors))
+    dlg.first.setChecked(False)
+    app.processEvents()
+    assert not dlg.first_text.isVisible()
+    dlg.close()
+    print(f'OK: S127 r3 game text rule — {len(found)} QPlainTextEdit(s), all logs / views / the '
+          'box editor / the line editor; the Service… / Shopkeeper texts are box editors; a '
+          'medal reward previews its boxes')
+
+
+def s127_breeding(app, w):
+    """S127 (ROADMAP P3.14e2): the Services tab → Breeding pools (New, the scales, bands
+    in the table + Apply, Try it = the band nearest a player, a refused band), Rooms tab
+    → NPC → Service… → Breeder (rolled from the pool, offers only when a flag holds,
+    done flag + once) and → Grandpa; the Gates tab's rule dialog: every gate + the
+    chance by the party's level; the project compiles (bank $77 pool data, the room's
+    return script, GATE_ANY + ScaledChanceTable); every edit undoes to the original."""
+    from PySide6 import QtWidgets as QW
+    import editor2.app.rooms.service_dialog as SDm
+    import editor2.app.services_tab as SVm
+    import editor2.app.gates_tab as GTm
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    vt = w.services_tab
+    w.tabs.setCurrentWidget(vt)
+    vt.refresh()
+    vt.pages.setCurrentIndex(3)
+    k_text = SVm.QInputDialog.getText
+    SVm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Wild mates', True))
+    try:
+        vt._new_pool()
+    finally:
+        SVm.QInputDialog.getText = k_text
+    app.processEvents()
+    assert vt.current_pool_id() == 'wild_mates' and vt.bands.rowCount() == 1
+    vt.pool_scales['arena'].setChecked(True)
+    app.processEvents()
+    assert doc._pool('wild_mates')['measures'] == ['level', 'arena']
+    vt._band_add()
+    for c, val in enumerate(['late', '35', '4', '0', '0', '310, 313×3']):
+        vt.bands.item(1, c).setText(val)
+    vt._bands_apply()
+    app.processEvents()
+    b = doc._pool('wild_mates')['bands']
+    assert len(b) == 2 and b[1]['mates'] == [{'enemy': 310}, {'enemy': 313, 'weight': 3}], b
+    vt.try_spins['level'].setValue(30)
+    vt.try_spins['arena'].setValue(3)
+    app.processEvents()
+    assert 'band 2 "late"' in vt.try_out.text() and '75 %' in vt.try_out.text(), vt.try_out.text()
+    vt.try_spins['level'].setValue(8)
+    vt.try_spins['arena'].setValue(0)
+    assert 'band 1' in vt.try_out.text(), vt.try_out.text()
+    warned = []
+    k_w = SVm.QMessageBox.warning
+    SVm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    vt.bands.item(0, 1).setText('150')                       # level 150: refused
+    vt._bands_apply()
+    SVm.QMessageBox.warning = k_w
+    app.processEvents()
+    assert warned and '0-99' in warned[0], warned
+    assert doc._pool('wild_mates')['bands'][0]['level'] == 10
+    # Rooms tab: a random breeder + a Grandpa
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    made = []
+    for x in (6, 7, 8):
+        cmd = rt._npc_op('Add NPC', lambda d, r, k, st, x=x: d.add_npc(r, k, st, x, 4, 0x08))
+        made.append(cmd.result)
+    d_exec = SDm.ServiceDialog.exec
+
+    def pick(dlg, kind):
+        for i in range(dlg.kinds.count()):
+            if dlg.kinds.item(i).data(256) == kind:
+                dlg.kinds.setCurrentRow(i)
+
+    def _breeder(dlg):
+        pick(dlg, 'breeder')
+        assert dlg.brd.isVisibleTo(dlg) or not dlg.isVisible()
+        dlg.brd_pool.setChecked(True)
+        dlg.brd_pools.setCurrentIndex(dlg.brd_pools.findData('wild_mates'))
+        dlg.brd_intro.set_value([['Fancy a match?']])
+        dlg.brd_when.setText('saw_ruins')
+        dlg.brd_after.set_value([['Come back', 'another time!']])
+        dlg._ok()
+        return QW.QDialog.Accepted
+
+    def _grandpa(dlg):
+        pick(dlg, 'grandpa')
+        dlg._ok()
+        return QW.QDialog.Accepted
+
+    def _breeder_lv(dlg):                 # S127 r2: a species at a level; long words
+        pick(dlg, 'breeder')
+        assert dlg.brd_level_rb.isChecked()                  # the default for a new breeder
+        dlg.brd_species.setCurrentIndex(dlg.brd_species.findData(47))
+        dlg.brd_level.setValue(25)
+        dlg.brd_flag.setText('lv_bred')
+        dlg.brd_once.setChecked(True)
+        dlg.brd_after.set_value([['THanks for breeding with me!']])
+        assert dlg.brd_after.problem() and 'Fit' in dlg.brd_after.problem()
+        dlg.brd_after._fit_all()                 # S127 r3: the box editor wraps it
+        assert dlg.brd_after.problem() is None, dlg.brd_after.boxes()
+        dlg._ok()
+        return QW.QDialog.Accepted
+    try:
+        for idx, fn in zip(made, (_breeder, _grandpa, _breeder_lv)):
+            rt._after_npc_edit(idx)
+            SDm.ServiceDialog.exec = fn
+            rt._npc_service()
+            app.processEvents()
+    finally:
+        SDm.ServiceDialog.exec = d_exec
+    room = doc.room('dusk_mirror')
+    sv = doc.service_of(room, rt.key, rt.state_idx, made[0])
+    assert sv['kind'] == 'breeder' and sv['breeder']['pool'] == 'wild_mates' and \
+        sv['breeder']['when'] == [{'flag': 'saw_ruins', 'is': 'set'}] and \
+        sv['breeder']['intro'] == [['Fancy a match?']] and \
+        sv['breeder']['after'] == [['Come back', 'another time!']], sv
+    assert any(f.get('name') == 'saw_ruins' for f in doc.flags())
+    assert doc.service_of(room, rt.key, rt.state_idx, made[1])['kind'] == 'grandpa'
+    sv3 = doc.service_of(room, rt.key, rt.state_idx, made[2])['breeder']
+    assert doc.mate_info(sv3['mate']) == (47, 25) and \
+        sv3['after'] == [['THanks for', 'breeding with me!']], sv3
+    vt.refresh()
+    kinds = sorted(vt.npcs.item(r, 3).text() for r in range(vt.npcs.rowCount()))
+    assert kinds == ['Breeder (my monster)', 'Breeder (my monster)', 'Grandpa (breeding)'], kinds
+    assert 'dusk_mirror_breeder' in vt.pool_users.text() or vt.current_pool()['users'], \
+        vt.pool_users.text()
+    # the Gates tab: a rule for every gate, its chance by level
+    gt = w.gates_tab
+    w.tabs.setCurrentWidget(gt)
+    gt.refresh()
+    gt.list.setCurrentRow(1)
+    app.processEvents()
+    dlg = GTm.GateRuleDialog(doc, gt.gate(), parent=gt)
+    dlg.room.setCurrentIndex(dlg.room.findData('gate_rotation'))
+    dlg.every.setChecked(True)
+    dlg.by_level.setChecked(True)
+    dlg.lv_from.setValue(5)
+    dlg.pc_from.setValue(10)
+    dlg.lv_to.setValue(40)
+    dlg.pc_to.setValue(60)
+    rule = dlg.rule()
+    assert rule['gate'] == 'any' and rule['chance_by_level'] == {'from': [5, 10], 'to': [40, 60]}
+    gt._push('every gate rule', [dict(r) for r in doc.gate_inserts()] + [rule], [])
+    app.processEvents()
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'BREED_POOL_COUNT EQU 1' in outs['patches/bank_077.asm']
+    assert 'GATE_ANY EQU $FE' in outs['patches/bank_071.asm'] and \
+        '; row 0: level 5 -> 10 %, level 40 -> 60 %' in outs['patches/bank_071.asm']
+    assert 'breed:dusk_mirror:entry' in outs['patches/bank_060.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S127 breeding edits did not undo to the original'
+    print('OK: S127 Breeding — Services tab Breeding pools (new, scales, bands + Apply, Try it, '
+          'a refused band), Service… Breeder (pool, when, words; r2: CatFly at level 25, long '
+          'words wrapped) + Grandpa, Gates tab every '
+          'gate + chance by level, compiles, undoes to the original')
+
+
+def s128_arena(app, w):
+    """S128 (ROADMAP P3.14e3): the Arena tab → ★ Your arena (Make your arena = copies of the
+    Arena Lobby + the Arena Battle room, the night arena ONE layout for states 1-4 — S128 r2),
+    the receptionist's words (game text boxes), a class page's "In your arena" box (a new won
+    flag, won words, a win goes to the hub), Starry Night offered with the game's ending; the
+    labels say Monster Grandpa's match (S128 r2, not "King"); the project compiles with the
+    arena's room ids in bank $6E; every edit undoes to the original."""
+    import json
+    import PySide6.QtWidgets as QWm
+    import editor2.app.arena_tab as ATm
+    from editor2.core import arena as AR
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    at.refresh()
+    app.processEvents()
+    labels = [at.list.item(i).text() for i in range(at.list.count())]
+    assert labels[0].startswith('★') and any("Monster Grandpa's match" in t for t in labels) \
+        and not any('King' in t for t in labels), labels
+    at.list.setCurrentRow(0)
+    app.processEvents()
+    yp = at.your_page
+    assert yp.isVisibleTo(at) and yp.make_btn.isVisibleTo(yp)
+    def _no_warning(*a, **k):
+        raise AssertionError(f'unexpected warning: {a[2] if len(a) > 2 else a}')
+    k_w = ATm.QMessageBox.warning
+    ATm.QMessageBox.warning = staticmethod(_no_warning)
+    k_q = ATm.QMessageBox.question
+    ATm.QMessageBox.question = staticmethod(lambda *a, **k: ATm.QMessageBox.Yes)
+    try:
+        yp._make()
+    finally:
+        ATm.QMessageBox.question = k_q
+    app.processEvents()
+    a = doc.your_arena()
+    assert a and doc.room(a['lobby'])['source_mapID'] in ('0x06', '0x6') and \
+        int(str(doc.room(a['battle'])['source_mapID']), 0) == 0x5D, a
+    sts = doc.room(a['battle'])['screens']['0']['states']
+    night = {json.dumps(st.get('layout')) for st in sts[1:]}
+    assert len(sts) == 5 and len(night) == 1, (len(sts), night)    # S128 r2: one night look
+    at.list.setCurrentRow(0)
+    app.processEvents()
+    yp.refresh()
+    assert yp.body.isVisibleTo(yp) and not yp.make_btn.isVisibleTo(yp)
+    yp.words['lost'].set_value([['Too bad!', 'Train more.']])
+    yp.words['locked'].set_value([['Not open yet.']])
+    yp._words()
+    app.processEvents()
+    wd = doc.your_arena()['words']
+    assert wd['lost'] == {'boxes': [['Too bad!', 'Train more.']]} and \
+        wd['locked'] == 'Not open yet.', wd
+    # a class page: a new won flag, won words, a win goes to the hub
+    at.show_your_arena('F')
+    app.processEvents()
+    cb = at.class_box
+    assert cb.isVisibleTo(at) and cb.name == 'F'
+    k_t = QWm.QInputDialog.getText
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('F class won', True))
+    try:
+        cb._new_flag()
+    finally:
+        QWm.QInputDialog.getText = k_t
+    cb.words.set_value([['F class is', 'yours!']])
+    cb.then.setCurrentIndex(cb.then.findData('hub'))
+    cb._apply()
+    app.processEvents()
+    sp = doc.your_arena_class('F')
+    assert sp['won_flag'] == 'f_class_won' and sp['then'] == {'to': 'hub'} and \
+        sp['won_words'] == {'boxes': [['F class is', 'yours!']]}, sp
+    assert any(f.get('name') == 'f_class_won' for f in doc.flags())
+    # Starry Night: offered, the game's ending after the final
+    at.show_your_arena('StarryNight')
+    app.processEvents()
+    assert cb.name == 'StarryNight' and cb.offer_box.isVisibleTo(cb)
+    cb.offered.setChecked(True)
+    cb.then.setCurrentIndex(cb.then.findData('ending'))
+    cb._apply()
+    app.processEvents()
+    assert doc.your_arena()['starry']['then'] == {'to': 'ending'}, doc.your_arena()
+    # the Monster Grandpa page has no "In your arena" box
+    at.list.setCurrentRow(AR.GROUPS.index('King') + 1)
+    app.processEvents()
+    assert "Monster Grandpa" in at.title.text() and not cb.isVisibleTo(at), at.title.text()
+    # S128 r3 (user: "When I double click on an exit or entry, it should bring up a window
+    # that can set both ends"): double-click the lobby copy's bottom exit (a plain game
+    # exit) on the Rooms tab -> the connect window lists your rooms' exits + the game's
+    # doors; pick GreatTree's arena door -> both ends written (the lobby exit becomes a
+    # door, its second cell follows; the game's double door leads into the lobby)
+    import editor2.app.rooms.door_dialog as DDm
+    from PySide6.QtCore import Qt as _Qt
+    rt = w.rooms_tab
+    w.navigate_to({'tab': 'rooms', 'room': a['lobby'], 'screen': 1, 'state': 0, 'x': 4, 'y': 7})
+    app.processEvents()
+    row = next(e for e in doc.exits_of(doc.room(a['lobby']), 1, 0)
+               if (e['x'], e['y']) == (4, 7))
+    seen = {}
+    vid = doc.vanilla_door_id(0x01, 4, 4, 3)
+    k_exec = DDm.DoorPropsDialog.exec
+
+    def _pick(dlg):
+        groups = [dlg.tree.topLevelItem(i).text(0) for i in range(dlg.tree.topLevelItemCount())]
+        seen['groups'] = groups
+        seen['title'] = dlg.windowTitle()
+
+        def find(item):
+            for i in range(item.childCount()):
+                c = item.child(i)
+                d = c.data(0, _Qt.UserRole)
+                if d and d[1] == vid:
+                    return c
+                hit = find(c)
+                if hit:
+                    return hit
+            return None
+        for i in range(dlg.tree.topLevelItemCount()):
+            hit = find(dlg.tree.topLevelItem(i))
+            if hit:
+                dlg.tree.setCurrentItem(hit)
+                break
+        return QWm.QDialog.Accepted
+    DDm.DoorPropsDialog.exec = _pick
+    try:
+        rt._marker_activated({'kind': 'exit', 'ref': ('exit', 0, row)})
+    finally:
+        DDm.DoorPropsDialog.exec = k_exec
+    app.processEvents()
+    assert seen.get('title') == 'Exit — connect both ends' and \
+        any(g.startswith("Your rooms' exits") for g in seen['groups']), seen
+    rows = doc.exits_of(doc.room(a['lobby']), 1, 0)
+    d_main = [e for e in rows if e.get('door') and (e['x'], e['y']) == (4, 7)]
+    d_twin = [e for e in rows if e.get('twin_of') and (e['x'], e['y']) == (5, 7)]
+    rds = [r for r in doc.custom.get('entrance_redirects') or [] if r.get('mapID') == '0x01'
+           and r.get('screen') == 4 and r.get('y') == 3]
+    assert d_main and d_main[0].get('link') == vid and d_twin and \
+        sorted(r['x'] for r in rds) == [4, 5], (d_main, d_twin, rds)
+    import shutil as _sh
+    import tempfile
+    from editor2.core import compiler as Cc
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b6e = outs['patches/bank_06e.asm']
+    lmid = int(str(doc.room(a['lobby'])['mapID']), 0)
+    assert f'ARENA_LOBBY_MID EQU ${lmid:02X}' in b6e, b6e[b6e.find('arena_rooms'):][:400]
+    assert 'arena:desk' in outs['patches/bank_060.asm']
+    _sh.rmtree(td, ignore_errors=True)
+    ATm.QMessageBox.warning = k_w
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S128 arena edits did not undo to the original'
+    print("OK: S128 Your arena — Arena tab Make your arena (one night layout), the desk's "
+          "words, F class (new won flag, words, then the hub), Starry Night (the game's "
+          "ending), Monster Grandpa's match page; r3: double-click the lobby's game exit -> "
+          "connect window -> GreatTree's arena door (both ends, both cells); compiles, undoes "
+          "to the original")
+
+
+def s129_story(app, w):
+    """S129 (ROADMAP P3.14b/c/d): the story tools in the app — Progression & Flags: the
+    story checks' group (New story check…, Edit…, Rename… everywhere, Delete), the Story
+    page (milestones added / moved / renamed / removed, the quests listed and edited); the
+    Music tab's "Music by flag…" for one of your rooms and for a gate; the Shops tab's
+    "Item sets by flag…"; the project compiles with the MusicRuleTable / ShopSetTable rows
+    and the StoryCheckTable; every edit undoes to the original."""
+    import shutil as _sh
+    import tempfile
+    import PySide6.QtWidgets as QWm
+    import editor2.app.flags_tab as FTm
+    import editor2.app.story_widgets as SWm
+    from editor2.core import compiler as Cc
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    pt = w.progression_tab
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    app.processEvents()
+    tops = [pt.tree.topLevelItem(i).text(0) for i in range(pt.tree.topLevelItemCount())]
+    grp = next(pt.tree.topLevelItem(i) for i in range(pt.tree.topLevelItemCount())
+               if pt.tree.topLevelItem(i).text(0).startswith('Story checks'))
+    names = sorted(grp.child(i).text(0).lstrip('ℹ⚠✖ ') for i in range(grp.childCount()))
+    assert names == ['has_2_medals', 'vault_rich'], (tops, names)
+    # New story check… (the dialog filled in: the party's average level 12)
+    k_exec = SWm.CheckDialog.exec
+
+    def _fill(dlg):
+        dlg.name.setText('party lv 12')
+        dlg.kind.setCurrentIndex(dlg.kind.findData('level'))
+        dlg._fields['mode'].setCurrentIndex(dlg._fields['mode'].findData('average'))
+        dlg._fields['level'].setValue(12)
+        assert 'average' in dlg.said.text(), dlg.said.text()
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.CheckDialog.exec = _fill
+    try:
+        pt._new_check()
+    finally:
+        SWm.CheckDialog.exec = k_exec
+    app.processEvents()
+    c = doc.check('party_lv_12')
+    assert c == {'name': 'party_lv_12', 'kind': 'level', 'mode': 'average', 'level': 12}, c
+    f = pt.fi.flags.get(pt.cur)
+    assert f is not None and f.kind == 'check' and f.idx == 0x1802, (f and (f.kind, f.idx))
+    assert pt.b_edit.isVisible() or not pt.isVisible()
+    assert not pt.b_renumber.isEnabled() and 'average' in pt.detail.toPlainText()
+    # used by a music rule below, then Rename… follows it everywhere
+    rid = 'medal_vault'
+    mt = w.music_tab
+    k_m = SWm.MusicRulesDialog.exec
+
+    def _rules(dlg):
+        dlg._add()
+        dlg.song.setCurrentIndex(1)
+        dlg.terms._add({'flag': 'party_lv_12'})
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.MusicRulesDialog.exec = _rules
+    try:
+        mt._room_rules(rid, 'Medal Vault')
+        gid = doc.all_gates()[0]['id']
+        mt._gate_rules(gid, '')
+    finally:
+        SWm.MusicRulesDialog.exec = k_m
+    app.processEvents()
+    rr = doc.room_music_rules(doc.room(rid))
+    gr = doc.gate_music_rules(gid)
+    assert len(rr) == 1 and rr[0]['when'] == [{'flag': 'party_lv_12'}] and rr[0]['song'], rr
+    assert len(gr) == 1 and gr[0]['when'] == [{'flag': 'party_lv_12'}], gr
+    k_t = QWm.QInputDialog.getText
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('strong party', True))
+    try:
+        pt._rename()
+    finally:
+        QWm.QInputDialog.getText = k_t
+    app.processEvents()
+    assert doc.check('strong_party') and not doc.check('party_lv_12')
+    assert doc.room_music_rules(doc.room(rid))[0]['when'] == [{'flag': 'strong_party'}]
+    assert doc.gate_music_rules(gid)[0]['when'] == [{'flag': 'strong_party'}]
+    # Edit… (now level 20, every monster)
+    def _edit(dlg):
+        assert dlg.kind.currentData() == 'level' and dlg._fields['level'].value() == 12
+        dlg._fields['mode'].setCurrentIndex(dlg._fields['mode'].findData('all'))
+        dlg._fields['level'].setValue(20)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.CheckDialog.exec = _edit
+    try:
+        pt._edit_check()
+    finally:
+        SWm.CheckDialog.exec = k_exec
+    assert doc.check('strong_party') == {'name': 'strong_party', 'kind': 'level',
+                                         'mode': 'all', 'level': 20}, doc.check('strong_party')
+    # Delete is refused while used
+    seen = {}
+    k_i = FTm.QMessageBox.information
+    FTm.QMessageBox.information = staticmethod(lambda *a, **k: seen.setdefault('i', a[2]))
+    try:
+        pt._delete()
+    finally:
+        FTm.QMessageBox.information = k_i
+    assert 'still used in 2 places' in seen.get('i', ''), seen
+    # the Shops tab: an item set sold while the check holds
+    st = w.shops_tab
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    st.list.setCurrentRow(0)
+    app.processEvents()
+    key = st.current()['key']
+    k_s = SWm.ItemSetsDialog.exec
+
+    def _sets(dlg):
+        dlg._add()
+        dlg.name.setText('Strong party goods')
+        dlg.terms._add({'flag': 'strong_party'})
+        dlg.items._add({'item': 0x05, 'count': 1}) if hasattr(dlg.items, '_add') else None
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.ItemSetsDialog.exec = _sets
+    try:
+        st._item_sets()
+    finally:
+        SWm.ItemSetsDialog.exec = k_s
+    app.processEvents()
+    sets = doc.shop_sets(key)
+    assert len(sets) == 1 and sets[0]['name'] == 'Strong party goods' and \
+        sets[0]['when'] == [{'flag': 'strong_party'}] and sets[0]['items'][0] == 0x01, sets
+    assert '(1)' in st.btn_sets.text(), st.btn_sets.text()
+    # the Story page: milestones and quests
+    w.tabs.setCurrentWidget(pt)
+    pt.refresh()
+    pt.pages.setCurrentIndex(3)
+    app.processEvents()
+    assert pt.ms_list.count() == 1 and pt.q_list.count() == 1 and \
+        'medal' in pt.q_list.item(0).text().lower(), pt.q_list.item(0).text()
+    k_gi = QWm.QInputDialog.getItem
+    QWm.QInputDialog.getItem = staticmethod(lambda *a, **k: ('mini_medal_quest_started', True))
+    QWm.QInputDialog.getText = staticmethod(lambda *a, **k: ('The keeper asked', True))
+    try:
+        pt.ms_list.setCurrentRow(-1)
+        pt._ms_add()
+        pt.ms_list.setCurrentRow(1)
+        pt._ms_move(-1)
+    finally:
+        QWm.QInputDialog.getItem = k_gi
+        QWm.QInputDialog.getText = k_t
+    assert [f for f, _n in doc.milestones()] == ['mini_medal_quest_started',
+                                                 'mini_medal_quest_done'], doc.milestones()
+    assert pt.ms_list.item(0).text().startswith('1. The keeper asked')
+    k_qd = SWm.QuestDialog.exec
+
+    def _quest(dlg):
+        dlg.name.setText('Two medals for the keeper')
+        dlg.r_gold.setValue(600)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.QuestDialog.exec = _quest
+    try:
+        pt.q_list.setCurrentRow(0)
+        pt._quest_edit()
+    finally:
+        SWm.QuestDialog.exec = k_qd
+    q = doc.quest('mini_medal_quest')
+    assert q['name'] == 'Two medals for the keeper' and q['reward']['gold'] == 600 and \
+        q['flags'] == {'started': 'mini_medal_quest_started', 'done': 'mini_medal_quest_done'}, q
+    assert 'Two medals' in pt.q_list.item(0).text()
+    # the Rooms tab: Lock until… on an exit (a second room state, the shut look), and an
+    # NPC's Quest… (its script becomes the quest's conversation)
+    import editor2.app.rooms.tab as RTm
+    rt = w.rooms_tab
+    w.navigate_to({'tab': 'rooms', 'room': 'ember_keystone', 'screen': 0, 'state': 0,
+                   'x': 3, 'y': 1})
+    app.processEvents()
+    room = doc.room('ember_keystone')
+    rows = doc.exits_of(room, 0, 0)
+    i = next(j for j, e in enumerate(rows) if (e['x'], e['y']) == (3, 1))
+    rt._show_exit_panel(i, rows[i])
+    k_l = SWm.LockDialog.exec
+
+    def _lock(dlg):
+        dlg.terms._add({'flag': 'has_2_medals'})
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.LockDialog.exec = _lock
+    try:
+        rt._lock_exit()
+    finally:
+        SWm.LockDialog.exec = k_l
+    app.processEvents()
+    room = doc.room('ember_keystone')
+    sts = room['screens']['0']['states']
+    assert len(sts) == 2 and not [e for e in sts[1].get('exits') or []
+                                  if (e['x'], e['y']) == (3, 1)], sts[1].get('exits')
+    assert any(e.get('kind') == 'examine' and (e.get('x'), e.get('y')) == (3, 1)
+               for e in sts[1].get('npcs') or []), sts[1].get('npcs')
+    rules = doc.state_rules(room)
+    assert rules[-2]['state'] == 0 and rules[-2]['when'] == [{'flag': 'has_2_medals'}] and \
+        rules[-1]['state'] == 1 and rt.state_idx == 1, (rules, rt.state_idx)
+    w.navigate_to({'tab': 'rooms', 'room': 'dusk_mirror', 'screen': 0, 'state': 0,
+                   'x': 5, 'y': 6})
+    app.processEvents()
+    rt._show_npc_panel(2)
+    assert rt._sel_npc == 2
+    k_qd = SWm.QuestDialog.exec
+    k_q = RTm.QMessageBox.question
+
+    def _new_quest(dlg):
+        dlg.name.setText('Bard song')
+        dlg.objective._add({'flag': 'vault_rich'})
+        dlg.r_gold.setValue(50)
+        dlg.accept()
+        return QWm.QDialog.Accepted
+    SWm.QuestDialog.exec = _new_quest
+    RTm.QMessageBox.question = staticmethod(lambda *a, **k: RTm.QMessageBox.Yes)
+    try:
+        rt._npc_quest()
+    finally:
+        SWm.QuestDialog.exec = k_qd
+        RTm.QMessageBox.question = k_q
+    q = doc.quest('bard_song')
+    assert q and q['giver'] == 'bgm07_change' and q['objective'] == [{'flag': 'vault_rich'}] \
+        and q['flags'] == {'started': 'bard_song_started', 'done': 'bard_song_done'}, q
+    assert doc.script('bgm07_change')['ops'] == [['end']]
+    # the conversation window's new steps (each step's editor opens)
+    from PySide6.QtWidgets import QTreeWidgetItemIterator
+    from editor2.app.rooms import conversation_dialog as CVm
+    dlg = CVm.ConversationDialog(doc, rom=s.renderer.rom, room=doc.room('gate_island'), key=0,
+                                 spec={'steps': [{'say': {'boxes': [['Hello!']]}}]}, parent=rt)
+    for k in ('by_progress', 'give_item', 'give_monster', 'take_item', 'gold', 'refresh'):
+        dlg.tree.setCurrentItem(dlg.tree.topLevelItem(dlg.tree.topLevelItemCount() - 1))
+        dlg.add_step(k)
+        app.processEvents()
+    it = QTreeWidgetItemIterator(dlg.tree)
+    n_items = 0
+    while it.value():
+        dlg.tree.setCurrentItem(it.value())
+        app.processEvents()
+        n_items += 1
+        it += 1
+    sp = dlg.spec()
+    kinds = [CVm.step_kind(x) for x in sp['steps']]
+    assert kinds == ['say', 'by_progress', 'give_item', 'give_monster', 'take_item', 'gold',
+                     'refresh'], kinds
+    assert sp['steps'][1]['by_progress'][0]['milestone'] == 'mini_medal_quest_started', sp
+    assert CVm.spec_problems(sp, doc) == [], CVm.spec_problems(sp, doc)
+    assert n_items >= 9, n_items
+    dlg.reject()
+    # the cutscene editor's new steps: several of an item, take items, gold, refresh
+    from editor2.app.rooms import commands as C
+    from editor2.app.cutscene_editor import STEP_HELP
+    from editor2.core import cutscene_doc as CD
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    app.processEvents()
+    if ct.cat is None:
+        ct.load()
+    cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island', 'Pay', 0,
+                                                              'entry'))
+    s.undo.push(cmd)
+    sid = cmd.result
+    app.processEvents()
+    ct.refresh()
+    app.processEvents()
+    mine = ct.tree.topLevelItem(0)
+    pick = None
+    for i in range(mine.childCount()):
+        for j in range(mine.child(i).childCount()):
+            if 'Pay' in mine.child(i).child(j).text(0):
+                pick = mine.child(i).child(j)
+    ct.tree.setCurrentItem(pick)
+    app.processEvents()
+    ed = ct.editor
+    assert ed.scene_id == sid, ([mine.child(i).text(0) for i in range(mine.childCount())],
+                                pick and pick.text(0), sid, ed.scene_id)
+    ed.add_step('give_item', {'give_item': {'item': 0x1E, 'count': 3}})
+    ed.add_step('take_item', {'take_item': {'item': 0x1E, 'count': 2}})
+    ed.add_step('gold', {'gold': {'give': 250}})
+    ed.add_step('refresh', {'refresh': True})
+    app.processEvents()
+    assert 'no problems' in ed.problems.text(), ed.problems.text()
+    for n, k in enumerate(('give_item', 'take_item', 'gold', 'refresh')):
+        ed.path = (n,)
+        ed.refresh()
+        assert ed.form.about.text() == STEP_HELP[k], (k, ed.form.about.text())
+    # compiles: the tables carry the rows
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b71, b77 = outs['patches/bank_071.asm'], outs['patches/bank_077.asm']
+    mrt = b71[b71.find('MusicRuleTable:'):].split('db $FF')[0]
+    assert 'db $00' in mrt and 'db $01' in mrt, mrt
+    assert 'ShopSetTable:' in b77 and "sells 'Strong party goods'" in b77
+    assert '= strong_party' in b77, b77[b77.find('StoryCheck_'):][:300]
+    cmds = b77[b77.find('StoryCmdPtrs:'):][:900]
+    assert 'give_item' in cmds and 'take_item' in cmds and 'give_gold' in cmds, cmds
+    _sh.rmtree(td, ignore_errors=True)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'S129 story edits did not undo to the original'
+    print('OK: S129 story — the conversation window\'s new steps (says by progress, give '
+          'items / a monster, take, gold, refresh); the cutscene editor\'s new steps (3 of an item, take, gold, '
+          'refresh); Rooms tab Lock until… (a shut state + its rules), an NPC\'s '
+          'Quest…; Progression & Flags: the story checks group (New story check…, '
+          'Rename… follows into the music rules, Edit…, Delete refused while used), the Story '
+          'page (milestones added / moved, the quest edited); Music by flag for a room and a '
+          'gate; a shop\'s item set; compiles with MusicRuleTable / ShopSetTable / '
+          'StoryCheckTable; undoes to the original')
+
+
+def s132_rooms_ui(app, w):
+    """S132 (user: "Why is placing tiles so incredibly laggy", "borrow palette from any
+    other room", "editing tiles by pixel", "a 'play this room'", "right panel is
+    annoying as fuck to scroll through"): the side rail (one page at a time, pages
+    open themselves), a paint stroke that skips repeated cells, Borrow palette (whole /
+    rows, one undo step), the Draw tab (everywhere / as a new metatile on the selected
+    cell, undone), the Play dialog's setup round trip and Play here up to the Playback
+    window (stubbed: no emulator). Every edit is undone."""
+    import json as _json
+    import tempfile
+    from PySide6.QtCore import Qt
+    from editor2.app.rooms import commands as C
+    from editor2.core import palette_borrow as PBor
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    doc = w.session.doc
+    room = next(r for r in doc.rooms if not r.get('placeholder') and r.get('record')
+                and any('id' in (doc.state_layout_ref(r, k, 0) or {}) for k in doc.screen_keys(r)))
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(Qt.UserRole) == room['id']:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.room_id == room['id'], rt.room_id
+    before = _json.dumps(doc.data, sort_keys=True)
+    start = w.session.undo.index()
+    # --- the rail
+    assert rt.rail.order == ['tiles', 'stamps', 'palettes', 'object', 'room', 'screen', 'gates'], \
+        rt.rail.order                              # S174: + Stamps
+    rt.rail.show_page('room')
+    assert rt.rail.current_key() == 'room' and rt.sec_insp.is_expanded()
+    rt._set_tool('paint')
+    app.processEvents()
+    assert rt.rail.current_key() == 'tiles', 'Paint opens the Tiles page'
+    rt._set_tool('select')
+    for i, mk in enumerate(rt.canvas.markers):
+        if mk[0] == 'npc' and mk[5] and mk[5][0] == 'npc':
+            rt.canvas.markerSelected.emit({'kind': mk[0], 'x': mk[1], 'y': mk[2],
+                                           'sprite': mk[3], 'label': mk[4], 'ref': mk[5]})
+            app.processEvents()
+            assert rt.rail.current_key() == 'object' and not rt.npc_panel.isHidden()
+            break
+    # --- a paint stroke: a repeated cell is not re-rendered
+    cv = rt.canvas
+    cv.set_tool('paint')
+    cv.brush = cv.cell_metatile(0, 0)
+    n_render = [0]
+    orig = cv._render
+
+    def counting():
+        n_render[0] += 1
+        orig()
+    cv._render = counting
+    cv._begin_stroke()
+    for _ in range(20):
+        cv._stroke_cell((1, 1))
+    cv._end_stroke()
+    cv._render = orig
+    # 1 for the cell + the commit's reload(s); before S132 every move re-rendered (20+)
+    assert n_render[0] <= 3, f'20 moves on one cell rendered {n_render[0]} times'
+    app.processEvents()
+    while w.session.undo.index() > start:
+        w.session.undo.undo()
+    app.processEvents()
+    cv.set_tool('select')
+    print('OK: S132 the side rail (6 pages; Paint -> Tiles, an NPC -> Object), a paint '
+          f'stroke re-renders a repeated cell {n_render[0]} time(s) for 20 moves')
+    # --- Borrow palette
+    from editor2.app.rooms.palette_borrow_dialog import BorrowPaletteDialog
+    dlg = BorrowPaletteDialog(w.session, rt.current_room(), rt.key, rt.state_idx, rt.canvas, rt)
+    dlg.select_source(('theme', 3))
+    app.processEvents()
+    assert dlg.src == ('theme', 3) and dlg.ok.isEnabled()
+    dlg.slot_boxes[2].setCurrentIndex(1 + 1)
+    app.processEvents()
+    v = dlg.values()
+    assert v['mode'] == 'rows' and v['mapping'][2] == 1, v
+    rid, key, st = rt.room_id, rt.key, rt.state_idx
+    cmd = C.SnapshotCommand(w.session, 'Borrow', lambda d: PBor.apply_borrow(d, rid, key, st, **v))
+    w.session.undo.push(cmd)
+    assert cmd.error is None, cmd.error
+    pid = cmd.result[0]
+    assert [int(str(c), 0) for c in doc.palette(pid)['colors_rgb555'][2]] == v['src_rows'][1]
+    w.session.undo.undo()
+    dlg.close()
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Borrow palette — a gate theme\'s row 1 into slot 2, one undo step, undone')
+    # --- Draw
+    rt._show()
+    app.processEvents()
+    cell = next((cx, cy) for cy in range(8) for cx in range(10)
+                if rt.canvas.cell_metatile(cx, cy)['tiles'][0] < 0x80)
+    rt.canvas.selected_cell = cell
+    rt.canvas.selected_marker = None
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert dt.loaded() and rt.picker_tabs.currentWidget() is rt._draw_scroll
+    px = dt.current()
+    px[1] = [3 - x for x in px[1]]
+    dt.pad.px = px
+    dt._changed()
+    dt._update_report()
+    rep = dt.last_report
+    # S176: ONE "Apply to" chooser (this cell / the room / everywhere / nowhere yet) + Apply
+    assert [dt.target.itemData(i) for i in range(dt.target.count())] == \
+        ['selection', 'room', 'everywhere', None]
+    if rep['everywhere']['ok']:
+        dt.target.setCurrentIndex(dt.target.findData('everywhere'))
+        assert dt.apply_btn.isEnabled() and 'cell(s)' in dt.note.text(), dt.note.text()
+        dt._apply()
+        app.processEvents()
+        assert 'redrew' in rt.status_line.text(), rt.status_line.text()
+        w.session.undo.undo()
+        app.processEvents()
+    dt.target.setCurrentIndex(dt.target.findData('selection'))   # the selected cell(s)
+    rt.canvas.selected_cell = cell
+    dt._update_report()
+    if dt.last_report['new']['ok']:
+        assert 'selected cell' in dt.note.text(), dt.note.text()
+        dt._apply()
+        app.processEvents()
+        assert 'new metatile' in rt.status_line.text(), rt.status_line.text()
+        w.session.undo.undo()
+        app.processEvents()
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Draw — a quarter redrawn everywhere ('
+          f"{rep['everywhere']['cells']} cells) and as a new metatile on the cell, both undone")
+    # --- Play: the dialog's setup, and Play here up to the Playback window
+    from editor2.app.rooms import play_dialog as PD
+    from editor2.app import cutscenes_tab as CTm
+    dlg = PD.PlayDialog(w.session, 'room', 'here', {'source': 'story', 'step': 3,
+                                                    'flags_on': [0x30]}, REPO, rt)
+    app.processEvents()
+    v = dlg.value()
+    assert v['source'] == 'story' and v['step'] == 3 and v['flags_on'] == [0x30], v
+    dlg.radios['manual'].setChecked(True)
+    dlg.members[0].sp.setCurrentIndex(1)
+    dlg.members[0].lv.setValue(7)
+    v2 = dlg.value()
+    assert v2['source'] == 'manual' and v2['party'][0]['level'] == 7, v2
+    dlg._timer.stop()
+    dlg.close()
+    opened = []
+
+    class FakePlayback:
+        def __init__(self, parent, rom, sav, cache, items, title, start_extra=None, **k):
+            opened.append((rom, sav, items, title, start_extra))
+
+        def show(self):
+            pass
+
+        def close(self):
+            pass
+    real = CTm.PlaybackWindow
+    CTm.PlaybackWindow = FakePlayback
+    tmp = tempfile.mkdtemp()
+    fake_rom = os.path.join(tmp, 'rom.gbc')
+    open(fake_rom, 'wb').write(b'\0' * 16)
+    old_rom = w.session.last_rom
+    w.session.last_rom = fake_rom
+    try:
+        rt._needs_build = lambda: False
+        rt._play_go(dict(PD.PS.default_setup(), source='manual', party=v2['party'],
+                         flags_on=[0x30]), (4, 4))
+        t0 = time.time()
+        while not opened and time.time() - t0 < 120:
+            app.processEvents()
+            time.sleep(0.05)
+    finally:
+        CTm.PlaybackWindow = real
+        w.session.last_rom = old_rom
+        del rt._needs_build
+    assert opened, 'Play here opened no Playback window'
+    rom, sav, items, title, extra = opened[0]
+    rec = items[0][0]
+    assert os.path.isabs(rom) and sav is None and 0x30 in rec.flags_set and \
+        extra['repoke'] is False and len(extra['records']) == 1 and \
+        len(bytes.fromhex(extra['records'][0])) == 0x95, (rec, extra)
+    assert _json.dumps(doc.data, sort_keys=True) == before
+    print('OK: S132 Play here — the dialog\'s setup round trip; a hand-set party (1 record of '
+          '149 B) + flag $0030 handed to the Playback window, no re-poke')
+
+
+def s130_balance(app, w):
+    """S130 (ROADMAP P3.15a): the Balance tab — offscreen without a project (the
+    original game only: rows from a small anchor, project columns hidden) and with
+    the example project (its timeline, the anchor's numbers on the same rows, one
+    fight computed with tiny sizes into a scratch cache, the breeding setting as
+    one undo step); the Team page (a tiny roll, a save's party, a picked member);
+    the Fight page (the team evaluated, a what-if applied — the story data
+    untouched — and reset). Nothing is saved; every edit is undone."""
+    import tempfile
+    from editor2.app import balance_tab as BT
+    from editor2.core import balance as BL
+    sys.path.insert(0, os.path.join(REPO, 'editor2', 'tests'))
+    from test_compiler import fake_sav_s130
+
+    def ev(l90, l50, unm=0.05, tl=None, win=0.92, ehp=0.0, tactic=None):
+        r = {'l90': l90, 'l50': l50, 'at90': {'win': win, 'rounds': 3.0, 'hp_left': 0.5,
+                                             'battles': 96, 'unmodelled': unm,
+                                             'enemy_hp_left': ehp,
+                                             'team_level': tl or (l90 or 99)}}
+        if tactic is not None:
+            r['at90']['tactic'] = tactic
+        return r
+
+    def kit(step, fights):                     # a kit as kits.step_kit writes it
+        mem = [{'species': 78, 'name': 'Dracky', 'src': ['join', 4], 'plus': 0,
+                'skills': [51, 21], 'skill_names': ['Sleep', 'Antidote'], 'level': 6},
+               {'species': 53, 'name': 'Anteater', 'src': ['join', 3], 'plus': 0,
+                'skills': [], 'skill_names': [], 'level': 6},
+               {'species': 8, 'name': 'Slime', 'src': ['join', 1], 'plus': 0,
+                'skills': [3], 'skill_names': ['Blaze'], 'level': 7}]
+        return {'step': step, 'level': 6, 'members': mem, 'score': 0.9, 'version': 1,
+                'why': ['Dracky L6 (joins (EID 4)): ordered Attack 70%'], 'fights': fights}
+    anchor = {
+        'sim_version': BL.SIM_VERSION, 'breeding_opens': BL.BREEDING_OPENS_AFTER,
+        'steps': [{'index': 0, 'kind': 'gate', 'id': 0, 'label': 'Gate of Beginning',
+                   'postgame': False, 'breeding': False, 'fights': ['gate0.f1', 'gate0.boss0'],
+                   'kit': kit(0, {'gate0.boss0': {'win': 1.0, 'tactic': None}})},
+                  {'index': 1, 'kind': 'class', 'id': 0, 'label': 'G class', 'postgame': False,
+                   'breeding': False, 'fights': ['arena0.m0'],
+                   'kit': kit(1, {'arena0.m0': {'win': 0.8, 'tactic': 1}})}],
+        'fights': {'gate0.f1': {'step': 0, 'kind': 'list', 'label': 'Gate of Beginning — floors 1-4',
+                                'step_label': 'Gate of Beginning', 'casual': ev(3, 1), 'strong': ev(2, 1),
+                                'player': ev(2, 1)},
+                   'gate0.boss0': {'step': 0, 'kind': 'boss', 'label': 'Gate of Beginning — boss: Healer',
+                                   'step_label': 'Gate of Beginning', 'casual': ev(9, 6, 0.3, 7.0),
+                                   'strong': ev(7, 5), 'player': ev(5, 4)},
+                   'arena0.m0': {'step': 1, 'kind': 'arena', 'label': 'G class — match 1',
+                                 'step_label': 'G class', 'casual': ev(None, 40, win=0.17, ehp=0.4),
+                                 'strong': ev(30, 20), 'player': ev(8, 5, tactic=1)}},
+        'dives': {'0': {'casual': {'direct': {'level': 6, 'eval': {'clear': 0.9, 'battles': 4.2}},
+                                   'sweep': {'level': 10, 'eval': {'clear': 0.9, 'battles': 12.0}}}}}}
+    # --- pure pieces
+    assert BT.delta_class(10, 20) == ('+10', 'much harder') and BT.delta_class(10, 13)[1] == 'harder'
+    assert BT.delta_class(10, 11)[1] == 'similar' and BT.delta_class(10, 6)[1] == 'easier'
+    assert BT.delta_class(100, 100)[1] == 'similar' and BT.lv_text({'l90': None}) == '99+'
+    r99 = ev(None, None, win=0.17, ehp=0.4)                 # not even at 99: graded
+    assert BT.lv_text(r99) == '99+ (17 %)' and abs(BT.chart_value(r99) - 112.3) < 0.01
+    assert BT.delta_beyond(ev(None, None, win=0.6), r99) == ('-43 % at 99', 'much harder')
+    assert BT.lv_text({'l90': None, 'dive': True, 'at90': {'clear': 0.5}}) == '99+ (50 %)'
+    assert BT.anchor_problem(None) and BT.anchor_problem(anchor) is None
+    # --- no project: the original game only
+    from PySide6.QtCore import QSettings
+    QSettings('dwm1_disassembly', 'DWM1Editor').remove('balance/details')
+    t = BT.BalanceTab(None, anchor=anchor)
+    t.resize(1200, 700)
+    t.show()
+    app.processEvents()
+    st = t.story
+    # the simple view is the default (user: "really crowded"): Fight | Level needed
+    assert not t.details and not t.cb_details.isChecked()
+    shown = [c for c in range(len(BT.HEADERS)) if not st.tree.isColumnHidden(c)]
+    assert shown == [BT.C_FIGHT, BT.C_VP90], shown
+    assert st.tree.headerItem().text(BT.C_VP90) == 'Level needed'
+    b = st.items['gate0.boss0']
+    assert b.text(BT.C_VP90) == 'Lv 5' and 'wins 9 of 10' in b.toolTip(BT.C_VP90), b.toolTip(BT.C_VP90)
+    assert st.items['dive0.direct'].isHidden() and st.simple_line.isVisibleTo(t)
+    assert not st.kit_panel.isVisibleTo(t) and not st.chart_prof.isVisibleTo(t)
+    st.b_show_team.setChecked(True)
+    assert st.kit_panel.isVisibleTo(t)
+    assert st.tree.topLevelItem(0).text(BT.C_VP90) == 'Lv 5'
+    assert BT.simple_change(ev(20, 10), ev(32, 20)) == ('much harder (+12)', 'much harder')
+    assert BT.simple_change(ev(20, 10), ev(25, 20)) == ('harder (+5)', 'harder')
+    assert BT.simple_change(ev(20, 10), ev(21, 20))[0] == 'about the same'
+    assert BT.simple_change(ev(20, 10), ev(16, 10))[0] == 'easier (−4)'
+    assert BT.simple_change(ev(40, 10), ev(28, 10))[0] == 'much easier (−12)'
+    assert BT.simple_text(ev(None, None, win=0.38)) == "can't win (38 %)"
+    assert not t.team.prof.isVisibleTo(t) and t.team.prof.currentText() == 'player'
+    assert not t.fight.prof.isVisibleTo(t) and not t.fight.orders.isVisibleTo(t)
+    t.cb_details.setChecked(True)                   # the full view, as before
+    assert t.details and not st.tree.isColumnHidden(BT.C_V90) and not st.items['dive0.direct'].isHidden()
+    assert st.tree.headerItem().text(BT.C_VP90) == BT.HEADERS[BT.C_VP90]
+    assert st.tree.isColumnHidden(BT.C_P90) and st.tree.isColumnHidden(BT.C_PP90) and \
+        not st.b_casual.isVisibleTo(t) and not st.b_player.isVisibleTo(t)
+    # the player profile is the main number: first, bold, the chart's and Change's default
+    assert not st.tree.isColumnHidden(BT.C_VP90) and BT.C_VP90 < BT.C_V90
+    assert st.tree.headerItem().font(BT.C_VP90).bold() and not st.tree.headerItem().font(BT.C_V90).bold()
+    assert st.chart_prof.currentText() == 'player' == st.delta_prof.currentText()
+    assert st.items['gate0.boss0'].text(BT.C_VP90) == '5' and st.items['gate0.boss0'].text(BT.C_VP50) == '4'
+    assert st.chart.van == {0: 5, 1: 8}, st.chart.van
+    assert "best tactic: Mixed" in st.items['arena0.m0'].text(BT.C_NOTE), st.items['arena0.m0'].text(BT.C_NOTE)
+    st.show_sec.setChecked(False)
+    assert st.tree.isColumnHidden(BT.C_V90) and not st.tree.isColumnHidden(BT.C_VP90)
+    st.show_sec.setChecked(True)
+    st.chart_prof.setCurrentText('casual')
+    tops = [st.tree.topLevelItem(i).text(0) for i in range(st.tree.topLevelItemCount())]
+    assert tops == ['1. Gate of Beginning', '2. G class'], tops
+    b = st.items['gate0.boss0']
+    assert [b.text(c) for c in (BT.C_V90, BT.C_V50, BT.C_VS90, BT.C_UNM)] == ['9', '6', '7', '30 %']
+    assert 'level caps' in b.text(BT.C_NOTE), b.text(BT.C_NOTE)
+    # level colours by band (S130 user: "colour code levels")
+    bg = lambda it, c: it.background(c).color()                          # noqa: E731
+    c7 = bg(b, BT.C_VS90)
+    a0 = st.items['arena0.m0']
+    c40, c99 = bg(a0, BT.C_V50), bg(a0, BT.C_V90)
+    assert c7 == BT.level_colour(7) == BT.level_colour(1) and c40 == BT.level_colour(31)
+    assert c99 == BT.level_colour(100, 0.83) and len({c7.rgba(), c40.rgba(), c99.rgba()}) == 3
+    assert BT.level_colour(45) != BT.level_colour(40) and BT.level_colour(45) == BT.level_colour(50)
+    assert BT.level_colour(100, 1.0).alpha() > BT.level_colour(100, 0.1).alpha()
+    assert 'Levels:' in st.level_legend.text() and '76-98' in st.level_legend.text()
+    assert a0.text(BT.C_V90) == '99+ (17 %)' and 'enemies left with 40 % HP' in a0.toolTip(BT.C_V90)
+    assert st.items['dive0.direct'].text(BT.C_V90) == '6' and st.items['dive0.sweep'].text(BT.C_V90) == '10'
+    assert st.tree.topLevelItem(0).text(BT.C_V90) == '9'            # the step's hardest fight
+    assert st.chart.van[0] == 9 and abs(st.chart.van[1] - 112.3) < 0.01, st.chart.van
+    # the kit view: the step's kit (3 members), the arena fight's tactic, "use this kit"
+    st.tree.setCurrentItem(st.items['arena0.m0'])
+    kv = st.kit_view.toPlainText()
+    assert 'Original game' in kv and all(n in kv for n in ('Dracky', 'Anteater', 'Slime')) \
+        and 'joins (EID 3)' in kv and 'Mixed' in kv, kv
+    assert st.b_use_kit.isEnabled() and '(L8)' in st.b_use_kit.text(), st.b_use_kit.text()
+    st.use_kit()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'player kit' in \
+        t.team.summary.text(), t.team.summary.text()
+    assert [m.species for m in t.team.team] == [78, 53, 8]
+    # Team page: a tiny roll on the original game; the player profile = the step kit
+    t.pages.setCurrentWidget(t.team)
+    assert t.wait_idle(60) and t.team.step.count() >= 40, t.team.step.count()
+    t.team.level.setValue(5)
+    t.team.prof.setCurrentText('casual')
+    t.team.roll()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'Rolled casual team #0' in \
+        t.team.summary.text(), t.team.summary.text()
+    t.team.prof.setCurrentText('player')
+    t.team.roll()
+    assert t.wait_idle(60) and t.team.table.rowCount() == 3 and 'player kit of 1.' in \
+        t.team.summary.text(), t.team.summary.text()
+    t.shutdown()
+    t.deleteLater()
+    print('OK: S130 Balance tab without a project — rows from the anchor (99+, dives, the step\'s '
+          'hardest fight, the chart), player columns first, the kit view (3 members, the arena '
+          'tactic), project columns hidden, teams rolled (casual, the player kit)')
+    # --- with the example project
+    s = w.session
+    before = s.doc.dumps()
+    n0 = s.undo.index()
+    assert w.tabs.indexOf(w.balance_tab) >= 0, 'no Balance tab'
+    t = BT.BalanceTab(s, anchor=anchor)
+    t.teams, t.battles = 2, 2
+    t.resize(1200, 700)
+    t.show()
+    assert t.wait_idle(120), 'project data not read'
+    st = t.story
+    t.cb_details.setChecked(False)
+    shown = [c for c in range(len(BT.HEADERS)) if not st.tree.isColumnHidden(c)]
+    assert shown == [BT.C_FIGHT, BT.C_VP90, BT.C_PP90, BT.C_DELTA], shown
+    assert [st.tree.headerItem().text(c) for c in shown[1:]] == ['Original game', 'Your project',
+                                                                 'Change']
+    assert st.b_simple.isVisibleTo(t) and not st.b_casual.isVisibleTo(t) and not st.b_player.isVisibleTo(t)
+    t.cb_details.setChecked(True)
+    pc = t.ctx['project']
+    tmp = tempfile.mkdtemp()
+    pc.cache = BL.FightCache(os.path.join(tmp, 'balance_cache.json'))   # never the example's build/
+    for cp in list(t._caches):
+        t._caches[cp] = pc.cache                                         # (re-reads too)
+    t.kit_budget = {'evals': 2, 'teams': 1, 'battles': 2}                # a tiny kit search
+    assert not st.tree.isColumnHidden(BT.C_P90)
+    assert len(pc.tl.steps) == len(BL.VANILLA_STEPS) and st.tree.topLevelItemCount() >= 41
+    k = pc.tl.steps[0]['fights'][0]
+    assert st.items[k].text(BT.C_V90) == ('3' if k == 'gate0.f1' else '—')
+    assert st.breed.currentData() == BL.BREEDING_OPENS_AFTER
+    st.dives.setChecked(False)
+    st.tree.clearSelection()
+    st.items[k].setSelected(True)
+    assert st.selected_keys() == [k]
+    st.compute_selected()
+    assert t.wait_idle(300), 'compute did not finish'
+    assert st.items[k].text(BT.C_P90) not in ('—', '') and st.items[k].text(BT.C_PS90) != '—', \
+        [st.items[k].text(c) for c in range(15)]
+    assert st.items[k].text(BT.C_PP90) not in ('—', ''), [st.items[k].text(c) for c in range(15)]
+    assert len(st.kits_prj[0]['members']) == 3
+    st.tree.setCurrentItem(st.items[k])
+    assert 'Your project' in st.kit_view.toPlainText() and st.b_use_kit.isEnabled()
+    assert os.path.exists(os.path.join(tmp, 'balance_cache.json')) and \
+        not os.path.exists(os.path.join(s.project_dir, 'build', 'balance_cache.json'))
+    # the breeding setting: one undo step in meta.balance, the timeline re-read
+    st.breed.setCurrentIndex(st.breed.findData(BL.BREEDING_OPENS_AFTER - 1))
+    st._breed_changed(st.breed.currentIndex())
+    assert s.doc.data['meta'].get('balance') == {'breeding_opens_after': BL.BREEDING_OPENS_AFTER - 1}
+    assert t.wait_idle(120) and t.ctx['project'].tl.breeding_opens == BL.BREEDING_OPENS_AFTER - 1
+    s.undo.setIndex(n0)
+    assert 'balance' not in s.doc.data['meta']
+    # Team page: a save's party, a picked member
+    tm = t.team
+    path = os.path.join(tmp, 'party.sav')
+    open(path, 'wb').write(fake_sav_s130())
+    assert tm.import_sav(path) is None and tm.table.rowCount() == 3
+    assert [tm.table.item(r, 0).text() for r in range(3)] == ['Goo', 'Ant', 'Bat']
+    assert tm.import_sav(os.path.join(tmp, 'nope.sav'))          # a problem, not a crash
+    ctx = t.ctx.get('project')
+    if ctx is None:
+        t.with_ctx('project', lambda _c: None)
+        assert t.wait_idle(120)
+        ctx = t.ctx['project']
+    tm.table.selectRow(2)
+    tm.add_member(BL.custom_member(ctx.data, 8, 12, [3]))
+    assert tm.table.rowCount() == 3 and tm.team[2].species == 8 and tm.team[2].skills == [3]
+    # Fight page: evaluate the team, a what-if (the story data untouched), reset
+    fp = t.fight
+    t.pages.setCurrentWidget(fp)
+    assert t.wait_idle(60) and fp.fights.count() >= 100, fp.fights.count()
+    key = next(k for k in ctx.tl.fights if '.boss' in k)
+    fp.show_fight('project', key)
+    assert t.wait_idle(60) and fp.fights.currentData() == key and fp.enemies.rowCount() >= 1
+    fp.n_battles.setValue(4)
+    fp.eval_team()
+    assert t.wait_idle(60) and fp.results.item(0, 0).text().endswith('%'), fp.status.text()
+    how_row = [k for k, _l in BT.RES_ROWS].index('how')
+    assert fp.results.item(how_row, 0).text() == 'your orders (Command)'
+    ehp_row = [k for k, _l in BT.RES_ROWS].index('enemy_hp_left')
+    assert fp.results.item(ehp_row, 0).text().endswith('%'), fp.results.item(ehp_row, 0).text()
+    eid = fp.w_enemy.currentData()
+    ctx = fp.ctx()
+    fp.apply_whatif(eid, level=99, atk=999, skills=[3])
+    assert ctx.whatif.enemy_overrides.get(eid) and not ctx.data.enemy_overrides
+    assert ctx.whatif.enemy_rec(eid)['atk'] == 999 and ctx.data.enemy_rec(eid)['atk'] != 999
+    assert 'What-if on' in fp.w_note.text()
+    fp.eval_team()
+    assert t.wait_idle(60) and fp.results.item(0, 1).text().endswith('%'), fp.status.text()
+    fp.prof.setCurrentText('player')                # the player level, as is and what-if
+    fp.level_needed()
+    assert t.wait_idle(300), fp.status.text()
+    l90_row = [k for k, _l in BT.RES_ROWS].index('l90')
+    assert fp.results.item(l90_row, 0).text() and fp.results.item(l90_row, 1).text() not in ('', '—'), \
+        (fp.results.item(l90_row, 0).text(), fp.results.item(l90_row, 1).text(), fp.status.text())
+    assert not ctx.data.enemy_overrides
+    t.project_changed(now=True)                   # a project edit: re-read, the what-if kept
+    assert t.wait_idle(120) and t.ctx['project'] is not ctx
+    ctx = fp.ctx()
+    assert ctx.whatif.enemy_overrides.get(eid) and fp.fights.currentData() == key
+    fp.reset_whatif()
+    assert not ctx.whatif.enemy_overrides and fp.w_note.text() == 'No what-if.'
+    # the simple view's Change words on a computed row
+    t.cb_details.setChecked(False)
+    for kk in ('gate0.f1',):
+        if ('prj', 'player', kk) in st.res and ('van', 'player', kk) in st.res:
+            txt = st.items[kk].text(BT.C_DELTA)
+            assert any(wd in txt for wd in ('harder', 'easier', 'about the same')), txt
+    fp.apply_mode()
+    win_row = [k for k, _l in BT.RES_ROWS].index('win')
+    assert fp.results.verticalHeaderItem(win_row).text() == 'Wins'
+    t.shutdown()
+    t.deleteLater()
+    app.processEvents()
+    assert s.undo.index() == n0 and s.doc.dumps() == before
+    print(f'OK: S130 Balance tab with the example project — {len(st.items)} rows, {k} computed '
+          '(tiny sizes, scratch cache), breeding setting undone, a .sav party + a picked member, '
+          'the team evaluated (orders) with and without a what-if, the player level with a '
+          'tiny kit search')
+
+
+def s142_scale(app, w):
+    """S142 (ROADMAP ARC CAP4a; user: copies never share talk — "Yes ok"): Copy
+    room gives the copy its OWN scripts, texts and doors (an edit of the copy's
+    words leaves the original's), one undo step restores the file; the undo
+    steps keep only what changed (interned snapshot pieces); then a generated
+    300-place project (300 copies of the example's rooms) opens in a second
+    window with few compiler builds, edits / undo / the World tab stay fast
+    and the space meter measures it. Timings are printed and only gross
+    regressions fail (the S141 code took 28 s to open such a project here, an
+    edit 0.5-2 s, the World tab 4-6 s)."""
+    import json as _json
+    import shutil
+    import tempfile
+    import time as _t
+    from editor2.app.rooms import commands as C
+    from editor2.core.document import Document, Snapshot
+    from editor2.core import project as P
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    n0 = s.undo.index()
+    src = doc.room('dusk_mirror')
+    cmd = C.SnapshotCommand(s, 'Copy room', lambda d: d.copy_room('dusk_mirror', 'Dusk copy'))
+    s.undo.push(cmd)
+    app.processEvents()
+    cp = doc.room(cmd.result)
+    s_src = set((src.get('scripts') or {}).values())
+    s_cp = set((cp.get('scripts') or {}).values())
+    assert s_cp and not (s_src & s_cp), (s_src, s_cp)
+    dids = {d['id'] for d in doc.custom.get('dialogue', [])}
+
+    def texts(room):
+        out = []
+        for sid in (room.get('scripts') or {}).values():
+            Document._strings_in(doc.script(sid), dids, out)
+        return set(out)
+    assert texts(cp) and not (texts(src) & texts(cp)), (texts(src), texts(cp))
+    talk = next(sid for sid in sorted(s_cp) if doc.talk_boxes(sid) is not None)
+    orig_sid = next(o for o in s_src if talk.endswith(o[len('dusk_mirror'):]))
+    was = doc.talk_boxes(orig_sid)
+    doc.set_talk_boxes(talk, [['ONLY THE', 'COPY SAYS THIS']])
+    assert doc.talk_boxes(orig_sid) == was, 'editing the copy changed the original'
+    # the snapshots share every piece the copy did not change
+    shared = sum(1 for k in cmd.before.lists for a, b in zip(cmd.before.lists[k],
+                                                             cmd.after.lists[k]) if a is b)
+    total = sum(len(v) for v in cmd.before.lists.values())
+    assert total - shared <= 3, (shared, total)
+    n_texts = len(texts(cp))
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo did not restore the project'
+    print(f'OK: S142 Copy room — own scripts ({len(s_cp)}) and texts ({n_texts}), '
+          f'the original\'s words kept, the undo step shares {shared} of {total} pieces, undone')
+
+    # ---- a generated 300-place project
+    tmp = tempfile.mkdtemp(prefix='s142_scale_')
+    try:
+        pdir = os.path.join(tmp, 'p300')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        gen = Document(os.path.join(pdir, 'project.json'))
+        bases = [r['id'] for r in gen.rooms if not r.get('placeholder')
+                 and r['id'] not in ('medal_vault',)]
+        t = _t.perf_counter()
+        for i in range(300):
+            gen.copy_room(bases[i % len(bases)], f'Place {i:03d}')
+        t_gen = _t.perf_counter() - t
+        gen.save()
+        nplaces = len([r for r in gen.rooms if not r.get('placeholder')])
+        regions = sorted({int(str(r['mapID']), 0) >> 8 for r in gen.rooms})
+        from editor2.app.main import MainWindow
+        built = [0]
+        orig_init = P.Project.__init__
+
+        def counting(self, *a, **k):
+            built[0] += 1
+            return orig_init(self, *a, **k)
+        w2 = MainWindow()                  # (re-opens the last project, as at a start)
+        w2.resize(1300, 800)
+        w2.show()
+        app.processEvents()
+        P.Project.__init__ = counting
+        try:
+            t = _t.perf_counter()
+            w2.open_project(pdir)
+            t_open = _t.perf_counter() - t
+            n_open = built[0]
+        finally:
+            P.Project.__init__ = orig_init
+        app.processEvents()
+        s2, rt = w2.session, w2.rooms_tab
+        assert rt.room_list.count() == nplaces, (rt.room_list.count(), nplaces)
+        rt.room_list.setCurrentRow(nplaces - 1)
+        app.processEvents()
+        k0 = s2.undo.index()
+        sizes = []
+        t = _t.perf_counter()
+        for j in range(10):
+            rid = rt.room_id
+            pre = s2.doc.snapshot()
+            c = C.SnapshotCommand(s2, 'Rename', lambda d, j=j, rid=rid: d.rename_room(rid, f'Probe {j}'))
+            s2.undo.push(c)
+            app.processEvents()
+            new = sum(len(b) for k in c.after.lists for a, b in zip(pre.lists[k], c.after.lists[k])
+                      if a is not b) + (0 if c.after.rest is pre.rest else len(c.after.rest))
+            sizes.append(new)
+        t_edit = (_t.perf_counter() - t) / 10
+        t = _t.perf_counter()
+        s2.undo.undo()
+        app.processEvents()
+        t_undo = _t.perf_counter() - t
+        while s2.undo.index() > k0:
+            s2.undo.undo()
+        app.processEvents()
+        assert not s2.dirty or s2.doc.dumps() == open(s2.doc.path).read()
+        wt = w2.world_tab
+        t = _t.perf_counter()
+        w2.tabs.setCurrentWidget(wt)
+        app.processEvents()
+        t_world = _t.perf_counter() - t
+        moved = next(iter(wt.nodes))
+        wt.nodes[moved].setPos(-500, -500)          # a room moved by hand stays put
+        wt._mark()
+        app.processEvents()
+        assert wt.nodes[moved].pos().x() == -500, 'a hand-moved room jumped back'
+        w2.space_meter.measure()
+        usage = w2.space_meter.last
+        ext = [b for b in usage if b >= 0x80]
+        assert usage and ext, usage
+        print(f'OK: S142 scale — {nplaces} places in regions {regions} (300 copies '
+              f'{t_gen:.1f} s); opened in {t_open:.1f} s with {n_open} compiler builds; '
+              f'a rename step {t_edit:.2f} s keeping {max(sizes):,} B of new pieces, undo '
+              f'{t_undo:.2f} s; World tab {t_world:.1f} s (a moved room stays); the meter: '
+              f'{len(ext)} new banks')
+        assert n_open <= 5, f'{n_open} compiler builds while opening (S142: 3)'
+        assert max(sizes) < 64 * 1024, sizes
+        assert t_open < 25 and t_edit < 2.0 and t_undo < 2.0 and t_world < 8, \
+            (t_open, t_edit, t_undo, t_world)
+        w2.session.undo.clear()
+        w2.close()
+        w2.deleteLater()
+        app.processEvents()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+
+
+# --------------------------------------------------------------------------- S143
+
+
+def _leak_patterns(names):
+    """Regexes that catch a place shown by a technical id (S143, ROADMAP ARC CAP4b):
+    'room $6B', 'map $0B', 'vanilla:$01' / 'room:$16B', '(0x6B)', '$6B  Castle',
+    'Castle ($6B)'. Sprite / flag / bank / song numbers are allowed."""
+    import re
+    hx = r'\$[0-9A-Fa-f]{2,3}\b'
+    pats = [re.compile(r'\b(?:room|map|mapID|vanilla|Room|Map)\s*' + hx),
+            re.compile(r'\b(?:room|vanilla):\$'),
+            re.compile(r'\(0x[0-9A-Fa-f]{2,3}\)')]
+    alts = '|'.join(re.escape(n) for n in sorted(names, key=len, reverse=True) if len(n) >= 4)
+    if alts:
+        pats.append(re.compile(hx + r'\s{1,4}(?:' + alts + r')'))
+        pats.append(re.compile(r'(?:' + alts + r')\s*\(' + hx + r'\)'))
+    return pats
+
+
+def _texts(root):
+    """Every text a person can read in a widget tree (labels, buttons, items of
+    combos / lists / trees / tables, group titles, tool tips, scene items)."""
+    from PySide6.QtWidgets import (QAbstractButton, QComboBox, QGraphicsView,
+                                   QGroupBox, QLabel, QLineEdit, QListWidget,
+                                   QPlainTextEdit, QTableWidget, QTreeWidget, QWidget)
+    out = []
+    ws = [root] + root.findChildren(QWidget)
+    for wd in ws:                     # hidden pages too (a sub-tab not shown is still filled)
+        if wd.toolTip():
+            out.append(wd.toolTip())
+        if isinstance(wd, (QLabel, QAbstractButton)):
+            out.append(wd.text())
+        elif isinstance(wd, QGroupBox):
+            out.append(wd.title())
+        elif isinstance(wd, QComboBox):
+            out += [wd.itemText(i) for i in range(wd.count())]
+        elif isinstance(wd, QListWidget):
+            out += [wd.item(i).text() for i in range(wd.count())]
+        elif isinstance(wd, QTreeWidget):
+            stack = [wd.topLevelItem(i) for i in range(wd.topLevelItemCount())]
+            while stack:
+                it = stack.pop()
+                out += [it.text(c) for c in range(wd.columnCount())]
+                out += [it.toolTip(c) for c in range(wd.columnCount())]
+                stack += [it.child(k) for k in range(it.childCount())]
+        elif isinstance(wd, QTableWidget):
+            for r in range(wd.rowCount()):
+                for c in range(wd.columnCount()):
+                    it = wd.item(r, c)
+                    if it is not None:
+                        out.append(it.text())
+        elif isinstance(wd, QGraphicsView) and wd.scene() is not None:
+            for gi in wd.scene().items():
+                if gi.toolTip():
+                    out.append(gi.toolTip())
+                if hasattr(gi, 'text'):
+                    try:
+                        out.append(gi.text())
+                    except TypeError:
+                        pass
+        elif isinstance(wd, QPlainTextEdit):
+            out += wd.toPlainText().splitlines()[-300:]
+    return [t for t in out if t]
+
+
+def _leaks(root, pats):
+    bad = []
+    for t in _texts(root):
+        for p in pats:
+            if p.search(t):
+                bad.append(t[:140])
+                break
+    return bad
+
+
+def s143_names(app, w):
+    """S143 (ROADMAP ARC CAP4b; user S142/S143: places by name, map ids hidden — "view
+    show in case I want them", areas one level, duplicate names renamed on open, the
+    game's odd rooms kept "so I know wtf it is"): on a generated 300-place project in
+    three regions, every tab and the place dialogs show NO map id / region; the one
+    searchable place picker finds a place by typing; areas are folders (Rooms list) and
+    a World tab filter; names are unique (New / Copy / Rename / Make editable / on open);
+    View > Show technical ids brings the ids back; the arena copies' sprite warning."""
+    import json as _json
+    import shutil
+    import tempfile
+    import time as _t
+    from editor2.app.rooms import commands as C
+    from editor2.core.document import Document
+    from editor2.core import place_names as PN
+    from editor2.core import formats as F
+    tmp = tempfile.mkdtemp(prefix='s143_names_')
+    try:
+        pdir = os.path.join(tmp, 'p300')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        gen = Document(os.path.join(pdir, 'project.json'))
+        bases = [r['id'] for r in gen.rooms if not r.get('placeholder')
+                 and r['id'] not in ('medal_vault',)]
+        areas = ['Northlands', 'Sunken Port', 'Old Tower']
+        for i in range(300):
+            rid = gen.copy_room(bases[i % len(bases)], f'Place {i:03d}')
+            gen.set_room_area(rid, areas[i % 3])
+        # a duplicate name (an older project) is renamed on open
+        dup = gen.copy_room(bases[0], 'Twin hall')
+        gen.room(dup)['name'] = gen.room_name(gen.room(bases[0]))
+        gen.save()
+        nplaces = len([r for r in gen.rooms if not r.get('placeholder')])
+        regions = sorted({int(str(r['mapID']), 0) >> 8 for r in gen.rooms})
+        assert regions[-1] >= 2, regions
+        from editor2.app.main import MainWindow
+        from PySide6.QtCore import QSettings
+        # S145: a new window reads View > Show technical ids back from the settings —
+        # pin it off here (a run that toggled it and died left it on: this check failed)
+        QSettings('dwm1_disassembly', 'DWM1Editor').setValue('view/show_ids', False)
+        PN.SHOW_IDS = False
+        w2 = MainWindow()
+        w2.resize(1400, 900)
+        w2.show()
+        app.processEvents()
+        t = _t.perf_counter()
+        w2.open_project(pdir)
+        t_open = _t.perf_counter() - t
+        app.processEvents()
+        s2, rt, doc = w2.session, w2.rooms_tab, w2.session.doc
+        names = [doc.room_name(r) for r in doc.rooms if not r.get('placeholder')]
+        assert len({n.casefold() for n in names}) == len(names), 'names not unique after open'
+        assert any('renamed' in n for n in doc.migrations), doc.migrations
+        vnames = [PN.vanilla_name(m) for m, _n, _s in s2.renderer.vanilla_rooms()]
+        assert len(set(vnames)) == len(vnames), 'two game rooms share a name'
+        assert 'Castle (unused copy 1)' in vnames and 'Unnamed game room' not in vnames
+        pats = _leak_patterns(names + vnames)
+        # ---- every tab, a region-2 room and a game room on the Rooms tab
+        bad = {}
+        far = next(r for r in reversed(doc.rooms) if int(str(r['mapID']), 0) >> 8 == 2)
+        rt.room_list.select_data(far['id'])
+        app.processEvents()
+        bad['Rooms (a region-2 room)'] = _leaks(w2, pats)
+        rt.vanilla_list.select_data(0x0B)
+        app.processEvents()
+        bad['Rooms (a game room)'] = _leaks(w2, pats)
+        rt.room_list.select_data(far['id'])
+        for i in range(w2.tabs.count()):
+            w2.tabs.setCurrentIndex(i)
+            app.processEvents()
+            bad[w2.tabs.tabText(i)] = _leaks(w2, pats)
+        w2.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        # ---- the place dialogs (built, scanned, closed)
+        from editor2.app.rooms.door_dialog import DoorDialog
+        from editor2.app.rooms.redirect_dialog import RedirectDialog
+        from editor2.app.rooms.tab import NewRoomDialog
+        from editor2.app.rooms.tileset_dialog import TilesetDialog
+        from editor2.app.world_tab import NewWorldDialog, HubRuleDialog
+        from editor2.app.gates_tab import GateRuleDialog
+        from editor2.app.milly_dialog import MillyHookDialog
+        from editor2.app.rooms.palette_borrow_dialog import BorrowPaletteDialog
+        from editor2.app.rooms.conversation_dialog import ConversationDialog
+        dialogs = {'Add a door': lambda: DoorDialog(s2, far['id'], 0, 0, (4, 4), w2),
+                   'Route a vanilla door': lambda: RedirectDialog(s2, far['id'], w2),
+                   'New room': lambda: NewRoomDialog(s2.renderer, w2),
+                   'Change tileset': lambda: TilesetDialog(doc, s2.renderer, far,
+                                                           rt.canvas.pals, w2),
+                   'New world': lambda: NewWorldDialog(s2, w2),
+                   'Gate rule': lambda: GateRuleDialog(doc, doc.all_gates()[2], parent=w2),
+                   'Hub rule': lambda: HubRuleDialog(s2, parent=w2),
+                   'Milly hook': lambda: MillyHookDialog(s2, w2),
+                   'Borrow palette': lambda: BorrowPaletteDialog(s2, far, 0, 0, rt.canvas, w2),
+                   'Conversation': lambda: ConversationDialog(
+                       doc, s2.renderer.rom, room=far, spec={'steps': [
+                           {'move': {'dest': mv_dest, 'screen': 0, 'x': 4, 'y': 4}},
+                           {'move': {'dest': 'vanilla:$0B', 'screen': 0, 'x': 4, 'y': 4}}]},
+                       parent=w2)}
+        mv_dest = f"room:${int(str(far['mapID']), 0):02X}"
+        for nm, mk in dialogs.items():
+            dlg = mk()
+            dlg.show()
+            app.processEvents()
+            bad[nm] = _leaks(dlg, pats)
+            dlg.close()
+            dlg.deleteLater()
+        app.processEvents()
+        w2.validate()                               # the Build log: validation messages
+        app.processEvents()
+        log = w2.log.toPlainText()
+        assert 'Validation OK' in log, log[-800:]
+        bad['Build log (validation)'] = [ln[:140] for ln in log.splitlines()
+                                         if any(p.search(ln) for p in pats)]
+        n_warn = sum(1 for ln in log.splitlines() if ln.startswith('  '))
+        bad = {k: v for k, v in bad.items() if v}
+        assert not bad, 'map ids shown: ' + _json.dumps(bad, indent=1)[:3000]
+        print(f'OK: S143 names only — {nplaces} places in regions {regions} (+ the game\'s '
+              f'{len(vnames)} rooms) opened in {t_open:.1f} s; {w2.tabs.count()} tabs, a '
+              f'region-2 room, a game room, {len(dialogs)} place dialogs and the {n_warn} '
+              f'validation warnings show no map id')
+        # ---- the place picker: every place, search by typing
+        from editor2.app.place_picker import PlacePicker
+        pl = PN.Places.of(doc)
+        ents = (pl.special_entries() + pl.room_entries('dest')
+                + pl.vanilla_entries(s2.renderer.vanilla_rooms(), value='dest'))
+        t = _t.perf_counter()
+        pp = PlacePicker()
+        pp.set_entries(ents)
+        t_fill = _t.perf_counter() - t
+        assert pp.value() == 'hub', pp.value()
+        comp = pp.completer()
+        comp.setCompletionPrefix('place 29')
+        hits = [comp.completionModel().index(i, 0).data()
+                for i in range(comp.completionModel().rowCount())]
+        assert hits and all('Place 29' in h for h in hits), hits[:5]
+        pp._picked('Place 297')
+        r297 = next(r for r in doc.rooms if r.get('name') == 'Place 297')
+        assert pp.value() == f"room:${int(str(r297['mapID']), 0):02X}", pp.value()
+        comp.setCompletionPrefix('unused copy')
+        assert comp.completionModel().rowCount() == 9, comp.completionModel().rowCount()
+        pp.setCurrentIndex(0)                       # a header is never current
+        assert pp.value() is not None
+        print(f'OK: S143 place picker — {len(ents)} places filled in {t_fill * 1000:.0f} ms, '
+              f'"place 29" → {len(hits)} matches, a typed pick = the room\'s stored '
+              f'destination, "unused copy" → the 9 game rooms that are copies')
+        assert t_fill < 1.0, t_fill
+        # ---- areas: folders, search, a move, the World tab filter
+        folders = [rt.room_list.topLevelItem(i).text(0)
+                   for i in range(rt.room_list.topLevelItemCount())]
+        assert [f.split('   (')[0] for f in folders[:3]] == areas, folders
+        assert folders[-1].startswith(PN.NO_AREA), folders
+        rt.room_search.setText('Place 29')
+        app.processEvents()
+        vis = sum(1 for i in range(rt.room_list.count()) if not rt.room_list.item(i).isHidden())
+        assert vis == 10, vis
+        rt.room_search.setText('sunken')
+        app.processEvents()
+        vis = sum(1 for i in range(rt.room_list.count()) if not rt.room_list.item(i).isHidden())
+        assert vis == 100, vis
+        rt.room_search.setText('')
+        k0 = s2.undo.index()
+        rt._room_to_area(far['id'], 'Old Tower')
+        app.processEvents()
+        assert doc.room(far['id']).get('area') == 'Old Tower'
+        wt = w2.world_tab
+        w2.tabs.setCurrentWidget(wt)
+        app.processEvents()
+        wt.area.setCurrentIndex(wt.area.findData('Northlands'))
+        app.processEvents()
+        inside = [k for k, it in wt.nodes.items() if not it.info.get('outside')]
+        assert len(inside) == 100, len(inside)
+        wt.find.setText('Place 003')
+        app.processEvents()
+        assert wt._hits and wt.focus == wt._hits[0], wt._hits
+        wt.near.setChecked(True)
+        app.processEvents()
+        n_near = len(wt.nodes)
+        assert wt.focus in wt.nodes and 2 <= n_near <= 1 + 8, n_near
+        wt.near.setChecked(False)
+        wt.area.setCurrentIndex(0)
+        app.processEvents()
+        print(f'OK: S143 areas — {len(folders)} folders (3 areas + No area), search '
+              f'"Place 29" → 10 rooms, "sunken" → the area\'s 100; a room moved to another '
+              f'area (undo step); World tab: area filter (100 rooms + their neighbours '
+              f'faded), find, the room and its neighbours ({n_near} rooms)')
+        # ---- unique names everywhere
+        try:
+            doc.rename_room(far['id'], 'Place 001')
+            raise AssertionError('a rename to a taken name was accepted')
+        except ValueError as ex:
+            assert 'Place 001' in str(ex)
+        assert doc.unique_room_name('Place 001') == 'Place 002' or \
+            doc.unique_room_name('Place 001').startswith('Place ')
+        c = C.SnapshotCommand(s2, 'Copy', lambda d: d.copy_room(far['id'], 'Place 001'))
+        s2.undo.push(c)
+        assert doc.room_name(doc.room(c.result)) not in ('Place 001',), 'copy kept a taken name'
+        c2 = C.SnapshotCommand(s2, 'Make editable', lambda d: d.clone_vanilla(
+            0x01, PN.vanilla_name(0x01), REPO, s2.renderer))
+        s2.undo.push(c2)
+        c3 = C.SnapshotCommand(s2, 'Make editable', lambda d: d.clone_vanilla(
+            0x01, PN.vanilla_name(0x01), REPO, s2.renderer))
+        s2.undo.push(c3)
+        n1, n2 = doc.room_name(doc.room(c2.result)), doc.room_name(doc.room(c3.result))
+        assert n1 != n2 and n2.startswith(n1.split(' ')[0]), (n1, n2)
+        app.processEvents()
+        # ---- View > Show technical ids
+        w2.a_ids.setChecked(True)
+        app.processEvents()
+        w2.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        txt = [rt.room_list.item(i).text() for i in range(rt.room_list.count())]
+        assert any('[region 2 $' in x for x in txt), txt[-3:]
+        vt = [rt.vanilla_list.item(i).text() for i in range(rt.vanilla_list.count())]
+        assert any('[game $0B]' in x for x in vt), vt[:5]
+        w2.a_ids.setChecked(False)
+        app.processEvents()
+        while s2.undo.index() > k0:
+            s2.undo.undo()
+        app.processEvents()
+        print(f'OK: S143 unique names — a taken name refused on Rename, Copy / Make editable '
+              f'pick "{n2}"; View > Show technical ids → "[region 2 $..]" / "[game $0B]" and back')
+        # ---- the Arena Battle copies (user S143: the sprite warning there)
+        arena = {'source_mapID': '0x5D'}
+        npcs = [{'kind': 'npc', 'x': x, 'y': 5} for x in (6, 7)] + \
+               [{'kind': 'npc', 'x': 3, 'y': y} for y in range(4, 10)]
+        assert F.sprite_budget(npcs) and not F.sprite_budget(npcs, F.party_walks(arena))
+        assert F.party_walks({'source_mapID': '0x01'}) and F.party_walks({})
+        print('OK: S143 a copy of the Arena Battle room (its NPCs are the party) gets no '
+              'walking-party sprite warning; other rooms keep it')
+        w2.session.undo.clear()
+        w2.close()
+        w2.deleteLater()
+        app.processEvents()
+    finally:
+        PN.SHOW_IDS = False
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+
+def s145_capacity(app, w):
+    """S145 (ROADMAP ARC CAP4d; user S145: "Sounds good" to a Capacity tab + two status-bar
+    meters, "Perfect" to rows in words with the fullest room / screen by name and the
+    banks only with View → Show technical ids): the tab is there, fed by the meter's one
+    measurement; the two meters (ROM space, rooms) open it; every row of the report shows;
+    a per-room row opens that room on the Rooms tab, a project-wide row its tab; no
+    technical text without Show technical ids, the banks with it; the warning count
+    ignores one room / screen using all of its own allowance; and the measurement that
+    froze opening a fresh 160-room project (the LZ search) is fast."""
+    import shutil
+    import tempfile
+    import time as _t
+    from PySide6.QtCore import Qt
+    from editor2.core import capacity as CAP
+    from editor2.core import place_names as PN
+    tmp = tempfile.mkdtemp(prefix='s145_cap_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        PN.SHOW_IDS = False
+        w.open_project(pdir)
+        app.processEvents()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert 'Capacity' in titles and titles.index('Capacity') == titles.index('Build && Play') - 1, titles
+        m, t = w.space_meter, w.capacity_tab
+        assert set(m.bars) == {'space', 'rooms'}, m.bars        # S145: two numbers, not six banks
+        t0 = _t.perf_counter()
+        m.measure()
+        app.processEvents()
+        took = _t.perf_counter() - t0
+        rep = m.report
+        assert rep and not rep['errors'] and rep['rows'], rep.get('errors')
+        assert t.rep is rep, 'the tab shows the meter\'s report'
+        assert m.bars['space'].format().startswith('ROM space') and \
+            m.bars['rooms'].format().startswith('rooms ') and '≈' in m.bars['rooms'].format()
+        assert m.last.get(0x60), 'the meter keeps the bank usage (S96 API)'
+        keys = {x['key'] for x in rep['rows']}
+        for k in ('rom_space', 'rooms', 'screens_room', 'npcs_screen', 'exits_screen',
+                  'screens_group', 'room_block', 'texts', 'flags', 'checks', 'commands',
+                  'gates', 'enc_lists', 'enemies', 'pools', 'species', 'skills', 'anims',
+                  'song_ids', 'song_bytes'):
+            assert k in keys, k
+        assert not [x for x in rep['rows'] if x['shown'] == '?'], \
+            [(x['key'], x['tech']) for x in rep['rows'] if x['shown'] == '?']
+        # the meters open the tab
+        w.tabs.setCurrentIndex(0)
+        m.openRequested.emit()
+        app.processEvents()
+        assert w.tabs.currentWidget() is t
+        t._fill()
+        items = [t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount())]
+        rows = [it for it in items if it.data(0, Qt.UserRole)]
+        assert len(rows) == len(rep['rows']), (len(rows), len(rep['rows']))
+        assert t.tree.isColumnHidden(4) and not any(it.text(4) for it in items), \
+            'no technical text without Show technical ids'
+        assert not any(it.text(0).strip().startswith('bank $') for it in items)
+        texts = '\n'.join(_texts(t))
+        leaks = [p.pattern for p in _leak_patterns(
+            [w.session.doc.room_name(r) for r in w.session.doc.rooms]) if p.search(texts)]
+        assert not leaks, leaks
+        # a per-room row opens that room; a project-wide row opens its tab
+        it = next(x for x in rows if x.data(0, Qt.UserRole)['key'] == 'screens_room')
+        rid = it.data(0, Qt.UserRole)['room']
+        t._open(it, 0)
+        app.processEvents()
+        assert w.tabs.currentWidget() is w.rooms_tab and w.rooms_tab.room_id == rid, \
+            (w.rooms_tab.room_id, rid)
+        # S173: opening the room refills the tree (the project's rooms tab shows) — the
+        # rows read above are gone; read them again (HEAD failed here: "Internal C++
+        # object (QTreeWidgetItem) already deleted")
+        rows = [it for it in (t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount()))
+                if it.data(0, Qt.UserRole)]
+        it = next(x for x in rows if x.data(0, Qt.UserRole)['key'] == 'song_ids')
+        t._open(it, 0)
+        app.processEvents()
+        assert w.tabs.tabText(w.tabs.currentIndex()) == 'Music'
+        # View → Show technical ids: the column + the banks
+        w._ids_toggled(True)
+        app.processEvents()
+        t._fill()
+        items = [t.tree.topLevelItem(i) for i in range(t.tree.topLevelItemCount())]
+        assert not t.tree.isColumnHidden(4) and any(it.text(4) for it in items)
+        assert any(it.text(0).strip() == 'bank $60' for it in items)
+        w._ids_toggled(False)
+        # the warning count: a room using all 16 screens is not a warning
+        fake = {'rows': [dict(x) for x in rep['rows']]}
+        for x in fake['rows']:
+            if x['key'] == 'screens_room':
+                x['level'] = 'full'
+        assert not any(x['key'] == 'screens_room' for x in CAP.worst(fake))
+        for x in fake['rows']:
+            if x['key'] == 'flags':
+                x['level'] = 'near'
+        assert [x['key'] for x in CAP.worst(fake)] == ['flags']
+        w.tabs.setCurrentIndex(0)
+        print(f'OK: Capacity (S145) — the tab + the two meters (ROM space, rooms) from one '
+              f'measurement ({took:.1f} s on the example), {len(rep["rows"])} rows in words, '
+              'a room row opens the room, a row its tab, no technical text unless Show '
+              'technical ids (then the banks), warnings skip one room\'s own allowance')
+    finally:
+        PN.SHOW_IDS = False
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s144_states(app, w):
+    """S144 (ROADMAP ARC CAP4c; user S144: "select states and play with states, vanilla and
+    custom"): Make editable opens the keep-states dialog — pictures of every state, the
+    moment (after Starry Night for a town room, "about to do its gate" for a boss floor),
+    ticks + "starts here"; accepting copies those states only (talk answered, the boss's
+    beaten state remembered); "Every state, following…" keeps the S118c copy; Keep states…
+    on a project room renumbers it; Play here resolves the shown state (a game room: its
+    counter; a project room: its label from game.sym + a state rule's flag)."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QDialog
+    from editor2.app.rooms import states_dialog as SD
+    from editor2.core import room_states as RS
+    tmp = tempfile.mkdtemp(prefix='s144_states_')
+    keep_exec = SD.KeepStatesDialog.exec
+    seen = {}
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        rt, doc = w.rooms_tab, w.session.doc
+
+        def look(dlg):
+            seen['title'] = dlg.windowTitle()
+            seen['moment'] = dlg.moment.currentText()
+            seen['screens'] = len(dlg.checks)
+            seen['kept'] = {k: [i for i, cb in enumerate(c) if cb.isChecked()]
+                            for k, c in dlg.checks.items()}
+            seen['pics'] = sum(1 for k in dlg.checks for lab in
+                               dlg.area.widget().findChildren(SD.QLabel)
+                               if lab.pixmap() is not None and not lab.pixmap().isNull()) > 0
+            seen['summary'] = dlg.summary.text()
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = look
+        n0 = len(doc.rooms)
+        rt.vanilla_list.select_data(0x01)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        gt = doc.rooms[-1]
+        assert len(doc.rooms) == n0 + 1 and gt.get('states_kept'), 'GreatTree not kept'
+        assert seen['moment'].startswith('right after Starry Night'), seen['moment']
+        assert seen['screens'] == 8 and seen['kept']['0'] == [3], seen['kept']
+        assert seen['pics'] and 'Keeping' in seen['summary'], seen
+        assert 'states' not in gt['screens']['0'], 'screen 0 should keep one state'
+        print('OK: S144 Make editable → the keep-states dialog (8 screens, after Starry '
+              'Night), GreatTree screen 0 = its post-game state only')
+        # a boss floor: about to do its gate, both states, the beaten one remembered
+        rt.vanilla_list.select_data(0x31)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        vb = doc.rooms[-1]
+        assert seen['moment'].startswith('about to do Gate of Villager'), seen['moment']
+        assert seen['kept']['0'] == [0, 1] and len(vb['screens']['0']['states']) == 2
+        assert (vb.get('state_rules') or [{}])[0].get('state') == 1, vb.get('state_rules')
+        print('OK: S144 Boss: Villager → both states, the beaten one kept by a flag + rule')
+        # every state, following the game: the S118c copy
+        def follow(dlg):
+            dlg.moment.setCurrentIndex(0)
+            seen['summary'] = dlg.summary.text()
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = follow
+        rt.vanilla_list.select_data(0x04)
+        app.processEvents()
+        rt._clone_vanilla()
+        app.processEvents()
+        farm = doc.rooms[-1]
+        assert not farm.get('states_kept') and doc.follows_game(farm), 'Farm should follow'
+        assert 'start-of-game' in seen['summary'], seen['summary']
+        # Keep states… on it: screen 0 keeps 2 + 3, starts in 3
+        def pick(dlg):
+            assert dlg.copy_
+            for i, cb in enumerate(dlg.checks['0']):
+                cb.setChecked(i in (2, 3))
+            dlg.starts['0'].button(3).setChecked(True)
+            return QDialog.Accepted
+        SD.KeepStatesDialog.exec = pick
+        rt.room_list.select_data(farm['id'])
+        app.processEvents()
+        assert rt.state_keep.isEnabled()
+        rt._keep_states()
+        app.processEvents()
+        s0 = farm['screens']['0']
+        assert farm.get('states_kept') and len(s0['states']) == 2 and \
+            s0['states'][0]['comment'] == 'vanilla step 3', [x.get('comment') for x in s0['states']]
+        w.session.undo.undo()
+        app.processEvents()
+        farm = doc.room(farm['id'])
+        assert not farm.get('states_kept') and len(farm['screens']['0']['states']) == 4
+        print('OK: S144 Every state (follows the game) + Keep states… renumbers; undo restores')
+        # Play here in the shown state
+        rt.room_list.select_data(vb['id'])
+        app.processEvents()
+        rt.key, rt.state_idx = 0, 1
+        lab = vb['screens']['0']['step_counter']['label']
+        bdir = os.path.join(tmp, 'b')
+        os.makedirs(bdir)
+        open(os.path.join(bdir, 'game.sym'), 'w').write(f'00:CDA7 {lab}\n')
+        ram, on, off, note = rt._play_state(vb, int(str(vb['mapID']), 0), 0,
+                                            os.path.join(bdir, 'rom.gbc'))
+        fnum = doc.flag_numbers()[vb['state_rules'][0]['when'][0]['flag']]
+        assert ram == {0xCDA7: 1} and on == {fnum} and not off, (ram, on, off)
+        rt.state_idx = 0
+        ram0, on0, off0, _n = rt._play_state(vb, int(str(vb['mapID']), 0), 0,
+                                             os.path.join(bdir, 'rom.gbc'))
+        assert ram0 == {0xCDA7: 0} and not on0 and off0 == {fnum}, (ram0, on0, off0)
+        rt.state_idx = 2
+        ramv, *_r = rt._play_state(None, 0x01, 0, os.path.join(bdir, 'rom.gbc'))
+        assert ramv == {0xD92D: 2}, ramv
+        print('OK: S144 Play here starts the room in the state shown (game room: its '
+              'counter; your room: its label + the state rule\'s flag)')
+    finally:
+        SD.KeepStatesDialog.exec = keep_exec
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+def s150_text(app, w):
+    """S150 (ROADMAP P3.6 / Phase F T-author; user: "Let's start with dialogue … Everything but
+    differentiate by tab within editor. Samesize NOT preferred"): the Text tab — one sub-tab
+    per kind (Dialogue, Battle, Items, Menus & field, Credits, Other tabs); a line edited as
+    markup with the game-font picture beside it, applied as one undo step (with its copies),
+    a longer line kept; a 10-letter item name refused before Apply; Original; the other tabs'
+    texts read-only; the Capacity row; undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    from editor2.core import gametext as GT
+    tmp = tempfile.mkdtemp(prefix='s150_text_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert 'Text' in titles and 'Dialogue' not in titles, titles
+        tt = w.dialogue_tab
+        w.tabs.setCurrentWidget(tt)
+        app.processEvents()
+        names = [tt.tabs.tabText(i).replace('&&', '&') for i in range(tt.tabs.count())]
+        assert names == ['Dialogue', 'Battle', 'Items', 'Menus & field', 'Credits', 'Window words', 'Other tabs'], names
+        pg = tt.pages['dialogue']
+        tt.tabs.setCurrentWidget(pg)
+        pg.query.setText('Now, head to')
+        app.processEvents()
+        assert pg.table.rowCount() == 1 and pg.cur.key == '$0489', pg.table.rowCount()
+        new = '{low}*:A much longer\nline than the old▼\n*:one, kept in a\nbank of its own.'
+        pg.edit.setPlainText(new)
+        app.processEvents()
+        assert pg.pic.pixmap() is not None and not pg.pic.pixmap().isNull()
+        assert pg.apply_b.isEnabled() and pg.status.text().endswith('bytes'), pg.status.text()
+        pg._apply()
+        app.processEvents()
+        assert doc.data['gamedata']['text']['dialogue']['$0489'] == new
+        pg.query.setText('$0489')
+        app.processEvents()
+        assert pg.table.rowCount() == 1 and pg.table.item(0, 0).text() == '✎'
+        # a line the game shows through several ids: edited together
+        x = next(GT.index(REPO).entries[k] for k in GT.index(REPO).order
+                 if GT.index(REPO).entries[k].source == 'dialogue'
+                 and len(GT.index(REPO).entries[k].same) >= 2 and GT.index(REPO).entries[k].first)
+        pg.query.setText(x.key)
+        app.processEvents()
+        assert pg.cur.key == x.key and not pg.copies.isHidden(), (pg.cur.key, x.key)
+        pg.edit.setPlainText('{low}*:Shared and changed.')
+        pg._apply()
+        rows = doc.data['gamedata']['text']['dialogue']
+        assert all(rows.get(k) == '{low}*:Shared and changed.' for _s, k in x.same), x.same
+        # Items: a 10-letter name is refused before Apply
+        ip = tt.pages['items']
+        tt.tabs.setCurrentWidget(ip)
+        ip.query.setText('#1')
+        ip.kind.setCurrentIndex(ip.kind.findData('item names (bank $41 mode 8)'))
+        app.processEvents()
+        assert ip.cur is not None and ip.cur.source == 'item_name', ip.cur
+        ip.edit.setPlainText('Herbalicious')
+        app.processEvents()
+        assert not ip.apply_b.isEnabled() and ip.status.text().startswith('✗'), ip.status.text()
+        ip.edit.setPlainText('Leaf')
+        ip._apply()
+        assert doc.data['gamedata']['text']['item_name'][ip.cur.key] == 'Leaf'
+        ip._original()
+        assert ip.cur.key not in (doc.data['gamedata']['text'].get('item_name') or {})
+        op = tt.pages['other']
+        assert op.edit.isReadOnly() and not op.apply_b.isEnabled()
+        from editor2.core import capacity as CAP
+        rep = CAP.measure(doc.data, doc.project_dir, REPO)
+        row = next(r for r in rep['rows'] if r['key'] == 'game_texts')
+        assert row['used'] == 4, row                   # $0489 + the shared line's 3 ids
+        for _ in range(4):
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Text tab (S150) — six sub-tabs; a dialogue line rewritten longer with the '
+              'game-font picture, a shared line edited with its copies, a 10-letter item name '
+              'refused, Original, the other tabs\' texts read-only, the Capacity row; undo restores '
+              'everything')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))   # the --rom build reads w's project
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s151_items(app, w):
+    """S151 (ROADMAP E9; user: "Lets do items"): the Items tab — the game's 43 then the
+    project's own; a game item's power / used-up chance edited (sparse gamedata.items),
+    its battle power (the item skill's record); New item… (works like the Herb) with its
+    own price, power and use line; Copy; Delete; the Shops tab offers the new item;
+    Original; undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    import editor2.app.items_tab as ITm
+    from editor2.core import items as IT
+    tmp = tempfile.mkdtemp(prefix='s151_items_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        titles = [w.tabs.tabText(i) for i in range(w.tabs.count())]
+        assert titles.index('Items') + 1 == titles.index('Shops'), titles
+        it = w.items_tab
+        w.tabs.setCurrentWidget(it)
+        it.refresh()
+        app.processEvents()
+        assert it.list.count() == 43 and it.current_id() == 1, it.list.count()
+        assert it.name.text() == 'Herb' and it.power.value() == 30 and \
+            not it.name.pic.pixmap().isNull() and \
+            it.consume.value() == 100 and it.b_power.isEnabled(), it.power.value()
+        n0 = w.session.undo.index()
+        it.power.setValue(40)
+        it._field('power', it.power.value())
+        it.b_power.setValue(45)
+        it._battle(power=45)
+        app.processEvents()
+        assert doc.data['gamedata']['items'] == {'1': {'power': 40}}, doc.data['gamedata']['items']
+        assert doc.data['gamedata']['skills'][str(1 + 0xAF)]['record'] == \
+            {'party_min': 45, 'enemy_min': 45}, doc.data['gamedata']['skills']
+        assert it.list.item(0).foreground().color() == ITm.EDITED
+        # the WarpWing (29): permanent
+        it._select(29)
+        app.processEvents()
+        assert it.info['name'] == 'WarpWing' and it.consume.value() == 100
+        it.consume.setValue(0)
+        it._field('consume', 0)
+        assert doc.data['gamedata']['items']['29'] == {'consume': 0}
+        # S157 (ROADMAP E9): permanent = ONE-ONLY — the note, the locked keep box, the
+        # One-only items box and its "already has" line (box style, the game-font picture)
+        it._select(29)
+        app.processEvents()
+        assert it.info['one_only'] and not it.one_only.isHidden() and \
+            'ONE-ONLY' in it.one_only.text() and 'WarpWing: no longer found' in \
+            it.one_only.text(), it.one_only.text()
+        assert it.keep.isChecked() and not it.keep.isEnabled()
+        assert 'WarpWing (29)' in it.oo_list.text() and 'BeastTail (38)' in it.oo_list.text(), \
+            it.oo_list.text()
+        assert it.oo_line.text() == IT.DEFAULT_ALREADY_HAS and it.oo_line.style == 'box' and \
+            not it.oo_line.pic.pixmap().isNull()
+        it.oo_line.edit.setPlainText('{hero} has one:\n{ins 00}!')
+        app.processEvents()
+        assert it.oo_line.apply_b.isEnabled(), it.oo_line.status.text()
+        it.oo_line._apply()
+        app.processEvents()
+        assert doc.data['gamedata']['item_rules'] == {'already_has': '{hero} has one:\n{ins 00}!'}
+        it._select(1)
+        app.processEvents()
+        assert it.one_only.isHidden() and it.keep.isEnabled()
+        # New item… works like the Herb
+        k_gi, k_gt = ITm.QInputDialog.getItem, ITm.QInputDialog.getText
+        ITm.QInputDialog.getItem = staticmethod(lambda _p, _t, _l, labels, *a, **k:
+                                                (labels[0], True))
+        ITm.QInputDialog.getText = staticmethod(lambda *a, **k: ('MegaHerb', True))
+        try:
+            it._new()
+        finally:
+            ITm.QInputDialog.getItem, ITm.QInputDialog.getText = k_gi, k_gt
+        app.processEvents()
+        assert it.current_id() == 44 and it.info['new'] and it.info['base'] == 1, it.info
+        assert it.base.isEnabled() and not it.b_power.isEnabled()
+        assert it.info['fields']['power'] == 40          # starts as the (edited) Herb
+        it.power.setValue(80)
+        it._field('power', 80)
+        it.price.setValue(300)
+        it._field('price', 300)
+        it.own_use.edit.setPlainText('{ins 00} feeds\n{ins 10} a\n{ins 20}!')
+        app.processEvents()
+        assert it.own_use.apply_b.isEnabled() and it.own_use.pic.pixmap() is not None and \
+            not it.own_use.pic.pixmap().isNull(), it.own_use.status.text()
+        it.own_use._apply()
+        app.processEvents()
+        e = doc.new_item_entry(44)
+        assert e['power'] == 80 and e['price'] == 300 and \
+            e['use_text'] == '{ins 00} feeds\n{ins 10} a\n{ins 20}!' and 'use_message' not in e, e
+        assert not it.use_line.isEnabled() and '(its own line)' in it.use_line.currentText()
+        r = IT.resolve(doc.data, REPO)
+        assert r['records'][44][9] == 80 and r['base'][44] == 1 and \
+            r['records'][44][7] == IT.USE_MESSAGES, r['records'][44]
+        # Copy, then Delete the copy
+        it._copy()
+        app.processEvents()
+        assert it.current_id() == 45 and doc.new_item_entry(45)['power'] == 80
+        k_q = ITm.QMessageBox.question
+        ITm.QMessageBox.question = staticmethod(lambda *a, **k: ITm.QMessageBox.Yes)
+        try:
+            it._delete()
+        finally:
+            ITm.QMessageBox.question = k_q
+        app.processEvents()
+        assert doc.new_item_entry(45) is None and it.list.count() == 44
+        # the Shops tab offers it
+        st = w.shops_tab
+        st.refresh()
+        assert st.pick.findData(44) >= 0 and '(yours)' in st.pick.itemText(st.pick.findData(44))
+        # Original: the Herb back
+        it._select(1)
+        app.processEvents()
+        it._original()
+        assert '1' not in (doc.data['gamedata'].get('items') or {}) and \
+            str(1 + 0xAF) not in (doc.data['gamedata'].get('skills') or {})
+        # S151 r2: a Give step's "no room" choice — stop (default) / carry on
+        from editor2.app.rooms import conversation_dialog as CVm
+        dlg = CVm.ConversationDialog(doc, rom=w.session.renderer.rom, room=doc.room('gate_island'),
+                                     key=0, spec={'steps': [{'give_item': {'item': 44}},
+                                                            {'say': {'boxes': [['Done!']]}}]},
+                                     parent=it)
+        dlg.tree.setCurrentItem(dlg.tree.topLevelItem(0))
+        app.processEvents()
+        assert dlg.on_full.currentData() == 'stop', dlg.on_full.currentData()
+        assert 'no room: stop here' in dlg.tree.topLevelItem(0).text(0), \
+            dlg.tree.topLevelItem(0).text(0)
+        dlg.on_full.setCurrentIndex(1)
+        dlg.on_full.activated.emit(1)
+        app.processEvents()
+        assert dlg.spec()['steps'][0]['give_item'].get('on_full') == 'continue', dlg.spec()
+        dlg.reject()
+        # the Text tab's Items page still opens (the new item's words are the Items tab's)
+        tt = w.dialogue_tab
+        ip = tt.pages['items']
+        tt.tabs.setCurrentWidget(ip)
+        w.tabs.setCurrentWidget(tt)
+        app.processEvents()
+        while w.session.undo.index() > n0:
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Items tab (S151 + S157 one-only) — the Herb\'s power and battle power, a permanent WarpWing '
+              '(one-only: the note, the locked keep box, the "already has" line), '
+              'a new MegaHerb (works like the Herb) with its own price / power / use line, '
+              'Copy, Delete, offered by the Shops tab, Original; undo restores everything')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s152_opening(app, w):
+    """S152 (ROADMAP E3 a2; user: "New game -> where to start -> etc." and "giving player
+    new monster and setting up farm as a simple button"): the Cutscenes tab's New game…
+    button and dialog — a room start (room / screen / cell / facing) + the original
+    opening as done, refused for the game's intro without the Milly hook; the farm
+    keeper dialog's "hands over the first monster" box (species, level, flag, the naming
+    screen); undo restores project.json exactly."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QMessageBox, QPushButton
+    from editor2.app.newgame_dialog import NewGameDialog
+    from editor2.app.rooms.service_dialog import ServiceDialog
+    tmp = tempfile.mkdtemp(prefix='s152_opening_')
+    real_warn, real_info = QMessageBox.warning, QMessageBox.information
+    said = []
+    QMessageBox.warning = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    QMessageBox.information = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        s = w.session
+        doc = s.doc
+        before = doc.dumps()
+        n0 = s.undo.index()
+        ct = w.cutscenes_tab
+        assert any(b.text() == 'New game…' for b in ct.findChildren(QPushButton)), \
+            'no New game… button on the Cutscenes tab'
+        ng = NewGameDialog(s, w)
+        assert ng.r_intro.isChecked() and ng.r_untouched.isChecked(), 'defaults: the game\'s own'
+        # the game's intro + "as after the opening" without the Milly hook: refused
+        ng.r_done.setChecked(True)
+        assert not ng._apply() and said and 'Milly hook' in said[-1], said
+        assert doc.dumps() == before
+        ng.r_room.setChecked(True)
+        ng.room.setCurrentIndex(ng.room.findData('gate_island'))
+        ng._room_changed()
+        ng.screen.setCurrentIndex(ng.screen.findData(4))
+        ng.x.setValue(3)
+        ng.y.setValue(5)
+        ng.face.setCurrentIndex(ng.face.findData('left'))
+        assert ng._apply()
+        ng.deleteLater()
+        assert doc.new_game() == {'start': 'room', 'story': 'opening_done',
+                                  'at': {'room': 'gate_island', 'screen': 4, 'x': 3, 'y': 5,
+                                         'face': 'left'}}, doc.new_game()
+        assert doc.new_game_problem() is None and doc.new_game_start_room() == 'gate_island'
+        ng2 = NewGameDialog(s, w)                       # shows what was saved
+        assert ng2.r_room.isChecked() and ng2.r_done.isChecked() and \
+            ng2.room.currentData() == 'gate_island' and ng2.screen.currentData() == 4 and \
+            (ng2.x.value(), ng2.y.value()) == (3, 5), 'the dialog re-opens on the saved start'
+        ng2.deleteLater()
+        # the farm keeper dialog: the first monster
+        sd = ServiceDialog(doc, None, w)
+        for i in range(sd.kinds.count()):
+            if sd.kinds.item(i).data(256) == 'farm':
+                sd.kinds.setCurrentRow(i)
+        assert sd.starter_spec() is None
+        sd.st_on.setChecked(True)
+        sd.st_species.setCurrentIndex(sd.st_species.findData(20))
+        sd.st_level.setValue(3)
+        fm = sd.starter_spec()
+        assert fm['species'] == 20 and fm['level'] == 3 and fm['name'] == 'ask' and \
+            fm['flag'] == 'first monster given', fm
+        for i in range(sd.kinds.count()):
+            if sd.kinds.item(i).data(256) == 'vault':
+                sd.kinds.setCurrentRow(i)
+        assert sd.starter_spec() is None, 'only a farm keeper hands over a first monster'
+        sd.deleteLater()
+        while s.undo.index() > n0:
+            s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: New game… (S152) — refused for the intro without the hook, a room start '
+              '(room / screen / cell / facing) + the opening as done, re-shown; the farm keeper\'s '
+              'first monster box; undo restores everything')
+    finally:
+        QMessageBox.warning, QMessageBox.information = real_warn, real_info
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s153_ending(app, w):
+    """S153 (ROADMAP E5; user: "If intro has "Milayou's Journey" or whatever text I want
+    added to it that would be cool. The final cutscene before credits also should be
+    editable and you can send a given cutscene to credits."): the Cutscenes tab's Title &
+    ending… button and dialog (title lines + preview, credits pages + preview, seconds),
+    the three ending steps in the cutscene editor (story point / roll the credits / TO BE
+    CONTINUED: forms, help, no problems), the build carries them; undo restores
+    project.json exactly."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QMessageBox, QPushButton
+    from editor2.app.ending_dialog import EndingDialog
+    from editor2.app.rooms import commands as C
+    from editor2.app.cutscene_editor import STEP_HELP
+    from editor2.core import cutscene_doc as CD
+    from editor2.core import ending as EN
+    from editor2.core import compiler as Cc
+    tmp = tempfile.mkdtemp(prefix='s153_ending_')
+    real_warn, real_info = QMessageBox.warning, QMessageBox.information
+    said = []
+    QMessageBox.warning = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    QMessageBox.information = lambda *a, **k: said.append(a[2] if len(a) > 2 else '')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        s = w.session
+        doc = s.doc
+        before = doc.dumps()
+        n0 = s.undo.index()
+        ct = w.cutscenes_tab
+        assert any(b.text() == 'Title & ending…' for b in ct.findChildren(QPushButton)), \
+            'no Title & ending… button on the Cutscenes tab'
+        dlg = EndingDialog(s, w)
+        assert dlg.lines.rowCount() == 0 and len(dlg.pages) == EN.VANILLA_PAGES, \
+            'a new project: no title lines, the game\'s 27 pages'
+        assert dlg.title_pic.pixmap() is not None and not dlg.title_pic.pixmap().isNull()
+        dlg._add_line({'text': "Milayou's Journey", 'row': 13, 'colour': 'orange'})
+        dlg._add_line({'text': 'v1', 'row': 17, 'col': 17, 'colour': 'black'})
+        assert 'Milayou' not in dlg.title_problem.text()
+        dlg.page_list.setCurrentRow(EN.VANILLA_PAGES - 2)
+        app.processEvents()
+        dlg._add_page()
+        app.processEvents()
+        i = dlg.page_list.currentRow()
+        assert i == EN.VANILLA_PAGES - 1, i
+        dlg.role.setPlainText('ROMHACK')
+        dlg.names.setPlainText('MILAYOU')
+        dlg.monster.setCurrentIndex(dlg.monster.findData(20))
+        app.processEvents()
+        assert dlg.pages[i] == {'role': 'ROMHACK', 'names': 'MILAYOU', 'monster': 20}, dlg.pages[i]
+        assert not dlg.page_pic.pixmap().isNull(), 'the page preview'
+        dlg.seconds.setValue(3)
+        # a page that cannot be drawn: refused with the reason, nothing changed
+        dlg.names.setPlainText('\n'.join(['X'] * 14))
+        app.processEvents()
+        dlg._ok()
+        assert said and 'page' in said[-1], said
+        assert doc.dumps() == before
+        dlg.names.setPlainText('MILAYOU')
+        app.processEvents()
+        dlg._ok()
+        dlg.deleteLater()
+        t = doc.title_settings()
+        assert [ln['text'] for ln in t['lines']] == ["Milayou's Journey", 'v1'], t
+        c = doc.credits_settings()
+        assert c['own'] and len(c['pages']) == EN.VANILLA_PAGES + 1 and c['seconds'] == 3, \
+            (len(c['pages']), c['seconds'])
+        assert c['pages'][-2]['role'] == 'ROMHACK' and c['pages'][-1] == \
+            EN.vanilla_pages()[-1], 'the new page before the closing page'
+        dlg2 = EndingDialog(s, w)                    # shows what was saved
+        assert dlg2.lines.rowCount() == 2 and len(dlg2.pages) == EN.VANILLA_PAGES + 1 and \
+            dlg2.seconds.value() == 3
+        dlg2.deleteLater()
+        # the cutscene editor: the three ending steps
+        w.tabs.setCurrentWidget(ct)
+        app.processEvents()
+        if ct.cat is None:
+            ct.load()
+        cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island',
+                                                                  'The end', 0, 'entry'))
+        s.undo.push(cmd)
+        sid = cmd.result
+        app.processEvents()
+        ct.refresh()
+        app.processEvents()
+        mine = ct.tree.topLevelItem(0)
+        pick = None
+        for a in range(mine.childCount()):
+            for b in range(mine.child(a).childCount()):
+                if 'The end' in mine.child(a).child(b).text(0):
+                    pick = mine.child(a).child(b)
+        ct.tree.setCurrentItem(pick)
+        app.processEvents()
+        ed = ct.editor
+        assert ed.scene_id == sid
+        from editor2.app.cutscene_editor import default_step
+        for k in ('story_point', 'credits'):
+            ed.add_step(k, default_step(k, ed))
+        app.processEvents()
+        assert 'no problems' in ed.problems.text(), ed.problems.text()
+        for n, k in enumerate(('story_point', 'credits')):
+            ed.path = (n,)
+            ed.refresh()
+            assert ed.form.about.text() == STEP_HELP[k], (k, ed.form.about.text())
+            assert ed.form.form.rowCount() >= 1, k
+        r, sc = CD.find(doc, sid)
+        assert sc['steps'][1]['credits']['dest'].startswith('room:'), sc['steps'][1]
+        # a second scene: TO BE CONTINUED
+        cmd = C.SnapshotCommand(s, 'new', lambda d: CD.new_cutscene(d, 'gate_island',
+                                                                  'Paused', 0, 'entry'))
+        s.undo.push(cmd)
+        sid2 = cmd.result
+        app.processEvents()
+        r2, sc2 = CD.find(doc, sid2)
+        sc2['steps'] = [default_step('to_be_continued', ed)]
+        s.undo.push(C.SnapshotCommand(s, 'tbc', lambda d: CD.set_scene(d, sid2, sc2)))
+        app.processEvents()
+        assert 'do not play on CONTINUE' in STEP_HELP['to_be_continued']
+        # the build carries them (bank $79 entries 3-5, the bank $5F regions)
+        td = tempfile.mkdtemp()
+        shutil.copytree(doc.project_dir, os.path.join(td, 'p'),
+                        ignore=shutil.ignore_patterns('build'))
+        open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+        outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+        b79, b5f = outs['patches/bank_079.asm'], outs['patches/bank_05f.asm']
+        assert 'TitleTextData:' in b79 and 'StoryPoint_0:' in b79, 'bank $79 data'
+        assert 'cp $1b' in b5f.lower() and 'cp $03' in b5f.lower(), 'pages / seconds regions'
+        shutil.rmtree(td, ignore_errors=True)
+        while s.undo.index() > n0:
+            s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo must restore project.json exactly'
+        print('OK: Title & ending… (S153) — title lines + preview, a credits page before the '
+              'closing page + preview, seconds, a broken page refused; the story point / roll '
+              'the credits / TO BE CONTINUED steps (forms, help, no problems); the build '
+              'carries them; undo restores everything')
+    finally:
+        QMessageBox.warning, QMessageBox.information = real_warn, real_info
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s154_memorial(app, w):
+    """S154 (the memorial; user: "objects that will take on sprites (non-moving) and
+    interactables (text when examined) of any monsters the player beat a boss OR an arena
+    level with ... ONLY if monster is no longer with player"): + Statue (U) on a selected
+    cell (the vocabulary release asked and answered), the canvas marker M, the statue
+    panel (fill order, its tiles, its words), a second statue, Earlier / Later, Memorial
+    settings… (cap), Its words… (own words), the project still compiles (the statue's
+    script + the picture bank), Remove from this state; undo restores project.json."""
+    import shutil
+    import tempfile
+    from PySide6.QtWidgets import QDialog, QMessageBox
+    import editor2.app.rooms.tab as TABm
+    import editor2.app.rooms.memorial_dialog as MDm
+    from editor2.core import compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s154_memorial_')
+    k_w = TABm.QMessageBox.warning
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.rooms_tab
+        w.tabs.setCurrentWidget(rt)
+        from PySide6.QtCore import Qt
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(Qt.UserRole) == 'gate_island':
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.room_id == 'gate_island', rt.room_id
+        assert rt.act_add_statue.text() == '+ Statue (U)'
+        k_q = TABm.QMessageBox.question
+
+        def _no_warning(*a, **k):                # a warning box would wait for ever offscreen
+            raise AssertionError(f'unexpected warning box: {a[1:]!r}')
+        TABm.QMessageBox.warning = staticmethod(_no_warning)
+        TABm.QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+        try:
+            rt._add_statue((2, 2))
+            app.processEvents()
+            rt._add_statue((4, 2))
+            app.processEvents()
+        finally:
+            TABm.QMessageBox.question = k_q
+        room = doc.room('gate_island')
+        sts = room.get('statues') or []
+        assert len(sts) == 2 and [len(s['tiles']) for s in sts] == [4, 4], sts
+        ents = [e for e in doc.npc_entries(room, rt.key, rt.state_idx) if e.get('kind') == 'statue']
+        assert [(e['x'], e['y']) for e in ents] == [(2, 2), (4, 2)], ents
+        mk = [m for m in rt.canvas.markers if m[0] == 'statue']
+        assert len(mk) == 2, [m[0] for m in rt.canvas.markers]
+        assert not rt.statue_panel.isHidden(), 'the new statue opens its panel'
+        assert 'statue 2 of 2' in rt.statue_panel.order.text(), rt.statue_panel.order.text()
+        tid = room['record']['tileset']
+        slots = doc.statue_slots(tid)
+        usage = doc.tile_usage(tid)
+        assert all(usage[t]['status'] == 'statue' for t in slots) and len(slots) == 8, slots
+        thr = int(str(room['record']['collision_threshold']), 0)
+        assert all(int(str(s['tiles'][3]), 0) < thr for s in sts), 'the bottom-right is a wall'
+        # S154 r2: two cells — the room's shared Pedestal on the clicked cell, the monster's
+        # tiles on the cell above; both in the statue's palette slot
+        assert sts[0]['pedestal'] == sts[1]['pedestal'], 'one Pedestal for the room'
+        ref = doc.state_layout_ref(room, rt.key, rt.state_idx)
+        g = doc.layout(ref['id'])['tiles']
+        for s_, (cx, cy) in zip(sts, ((2, 2), (4, 2))):
+            ped = [g[cy * 2 + a][cx * 2 + c] for a in (0, 1) for c in (0, 1)]
+            mon = [g[(cy - 1) * 2 + a][cx * 2 + c] for a in (0, 1) for c in (0, 1)]
+            assert ped == [int(str(t), 0) for t in s_['pedestal']] and \
+                mon == [int(str(t), 0) for t in s_['tiles']], (ped, mon, s_)
+        assert any(m.get('name') == 'Pedestal' for m in doc.metatiles(tid)), 'the Pedestal metatile'
+        assert 'pedestal' in rt.status_line.text().lower(), rt.status_line.text()
+        _sel = rt._sel_statue()
+        _e = doc.npc_entries(doc.room('gate_island'), rt.key, rt.state_idx)[_sel[2]] if _sel else {}
+        assert (_e.get('x'), _e.get('y')) == (4, 2), 'the new statue stays selected'
+        rt._statue_order(-1)
+        app.processEvents()
+        assert rt._sel_statue() is not None, 'still selected after Earlier'
+        assert [s['id'] for s in doc.room('gate_island')['statues']] == ['statue_2', 'statue_1']
+        k_e, k_v = MDm.MemorialDialog.exec, MDm.MemorialDialog.values
+        MDm.MemorialDialog.exec = lambda self: QDialog.Accepted
+        MDm.MemorialDialog.values = lambda self: {'cap': 50, 'text': [['In memory of',
+                                                                       '{fallen}.']],
+                                                  'empty': [['Nobody yet.']]}
+        try:
+            rt._memorial_settings()
+        finally:
+            MDm.MemorialDialog.exec, MDm.MemorialDialog.values = k_e, k_v
+        app.processEvents()
+        assert doc.custom['memorial'] == {'cap': 50, 'text': 'memorial_text',
+                                          'empty': 'memorial_empty'}, doc.custom['memorial']
+        k_e, k_v = MDm.StatueWordsDialog.exec, MDm.StatueWordsDialog.values
+        MDm.StatueWordsDialog.exec = lambda self: QDialog.Accepted
+        MDm.StatueWordsDialog.values = lambda self: {'own': True,
+                                                     'text': [['Here stands', '{fallen}.']],
+                                                     'empty': None}
+        try:
+            rt._statue_words()
+        finally:
+            MDm.StatueWordsDialog.exec, MDm.StatueWordsDialog.values = k_e, k_v
+        app.processEvents()
+        sid = next(e['statue'] for e in doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                        rt.state_idx)
+                   if e.get('kind') == 'statue' and (e['x'], e['y']) == (4, 2))
+        assert doc.statue(doc.room('gate_island'), sid).get('text'), 'its own words'
+        out, prj, _w = C2.compile_project(pdir if False else _save_tmp(doc, tmp), REPO)
+        assert any('MemPicDraw:' in v for k, v in out.items() if k != 'patches/bank_079.asm')
+        assert 'MemRoomTable:' in out['patches/bank_079.asm']
+        rt._statue_delete()
+        app.processEvents()
+        n = [e for e in doc.npc_entries(doc.room('gate_island'), rt.key, rt.state_idx)
+             if e.get('kind') == 'statue']
+        assert len(n) == 1 and len(doc.room('gate_island')['statues']) == 1, n
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print('OK: S154 the memorial — + Statue (U) x2 (vocabulary released on the question; '
+              'r2: pedestal + the monster cell above, one shared Pedestal metatile), '
+              'markers M, the statue panel (statue 2 of 2), 8 statue tiles marked "statue" on '
+              'the sheet (bottom-right on the wall side), Earlier, Memorial settings (cap 50 + '
+              'words), its own words, the project compiles (picture bank, MemRoomTable), '
+              'Remove; undo restores project.json')
+    finally:
+        TABm.QMessageBox.warning = k_w
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))   # the later tests' project
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s158_hints(app, w):
+    """S158 (the breeding hints; user: "the player can come across a new breeding
+    combination by interacting with a monument … Archive will be: 1 per family … Colour it
+    in editor"): + Monument (O) / + Archive (K) on selected cells (the archive's family
+    asked), the canvas markers (Mo, the archive in its family's colour As), the hint panel
+    (families, skip owned, what it shows), Its words…, the Breeding tab's Hints page
+    (whitelist, a tick, a riddle, the page's rows), the project compiles (bank $79's
+    HintTable, story command 8), Remove; undo restores project.json."""
+    import shutil
+    import tempfile
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QDialog, QInputDialog
+    import editor2.app.rooms.tab as TABm
+    import editor2.app.hints_dialog as HDm
+    import editor2.app.breeding_tab as BTm
+    from editor2.app.rooms import canvas as CVm
+    from editor2.core import compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s158_hints_')
+    k_w = TABm.QMessageBox.warning
+    k_bw = BTm.QMessageBox.warning
+    k_item = QInputDialog.getItem
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.rooms_tab
+        w.tabs.setCurrentWidget(rt)
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(Qt.UserRole) == 'gate_island':
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.room_id == 'gate_island', rt.room_id
+        assert rt.act_add_monument.text() == '+ Monument (O)'
+        assert rt.act_add_archive.text() == '+ Archive (K)'
+
+        def _no_warning(*a, **k):
+            raise AssertionError(f'unexpected warning box: {a[1:]!r}')
+        TABm.QMessageBox.warning = staticmethod(_no_warning)
+        BTm.QMessageBox.warning = staticmethod(_no_warning)
+        QInputDialog.getItem = staticmethod(lambda *a, **k: ('Dragon', True))
+        rt._add_hint_object((2, 2), 'monument')
+        app.processEvents()
+        rt._add_hint_object((3, 2), 'archive')
+        app.processEvents()
+        room = doc.room('gate_island')
+        assert [m['id'] for m in room.get('monuments')] == ['monument_1'], room.get('monuments')
+        assert room.get('archives') == [{'id': 'archive_1', 'family': 'Dragon'}], \
+            room.get('archives')
+        kinds = [m[0] for m in rt.canvas.markers]
+        assert 'monument' in kinds and 'archive1' in kinds, kinds
+        assert CVm.MARKER_TEXT['archive1'] == 'ADr' and CVm.MARKER['archive1'] == \
+            CVm.ARCHIVE_COLOURS[1]
+        assert not rt.hint_panel.isHidden() and 'Dragon' in rt.hint_panel.title(), \
+            rt.hint_panel.title()
+        # the monument: Slime only, no skip, riddles
+        idx = next(i for i, e in enumerate(doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                           rt.state_idx))
+                   if e.get('kind') == 'monument')
+        rt._show_hint_panel(idx)
+        rt._hint_fields({'families': ['Slime'], 'skip_owned': False, 'show': 'riddle'})
+        app.processEvents()
+        m = doc.monument(doc.room('gate_island'), 'monument_1')
+        assert m == {'id': 'monument_1', 'families': ['Slime'], 'skip_owned': False,
+                     'show': 'riddle'}, m
+        assert rt._sel_hint() is not None, 'still selected after the edit'
+        k_e, k_v = HDm.HintWordsDialog.exec, HDm.HintWordsDialog.values
+        HDm.HintWordsDialog.exec = lambda self: QDialog.Accepted
+        HDm.HintWordsDialog.values = lambda self: {'intro': [['A mossy stone.']], 'text': None,
+                                                   'outro': None, 'exhausted': None}
+        try:
+            rt._hint_words()
+        finally:
+            HDm.HintWordsDialog.exec, HDm.HintWordsDialog.values = k_e, k_v
+        app.processEvents()
+        assert doc.monument(doc.room('gate_island'), 'monument_1').get('intro') == \
+            [['A mossy stone.']]
+        # the Breeding tab's Hints page: whitelist + two Slime crosses, a riddle
+        bt = w.breeding_tab
+        w.tabs.setCurrentWidget(bt)
+        bt.show_hints()
+        app.processEvents()
+        assert bt.h_table.rowCount() > 100, bt.h_table.rowCount()
+        # S158r3 (the user: "clicking 'take the shown out' just makes it freeze"): the
+        # whole pool out and back in, each in seconds (ResizeToContents re-measured every
+        # row at each setItem — minutes); then undo both
+        import time as _time
+        _t = _time.time()
+        bt._hint_shown(False)
+        app.processEvents()
+        _t_out = _time.time() - _t
+        assert len(doc.custom['hints'].get('exclude', [])) == bt.h_table.rowCount(), \
+            'every shown cross out of the pool'
+        _t = _time.time()
+        bt._hint_shown(True)
+        app.processEvents()
+        _t_in = _time.time() - _t
+        assert not doc.custom['hints'].get('exclude'), 'every cross back in'
+        assert _t_out < 15 and _t_in < 15, f'take out {_t_out:.1f} s, put in {_t_in:.1f} s'
+        w.session.undo.undo()
+        w.session.undo.undo()
+        app.processEvents()
+        bt.h_mode.setCurrentIndex(1)
+        app.processEvents()
+        assert doc.custom['hints'].get('mode') == 'whitelist'
+        bt.h_fam.setCurrentIndex(1)                          # Slime
+        app.processEvents()
+        n_slime = bt.h_table.rowCount()
+        assert 0 < n_slime < 200, n_slime
+        bt.h_table.item(0, 0).setCheckState(Qt.Checked)
+        app.processEvents()
+        key0 = bt.h_table.item(0, 0).data(Qt.UserRole)
+        assert doc.custom['hints'].get('include') == [key0], doc.custom['hints']
+        bt.h_table.setCurrentCell(0, 3)
+        k_e, k_v = HDm.RiddleDialog.exec, HDm.RiddleDialog.value
+        HDm.RiddleDialog.exec = lambda self: QDialog.Accepted
+        HDm.RiddleDialog.value = lambda self: [['A small riddle', 'of {child}.']]
+        try:
+            bt._hint_riddle()
+        finally:
+            HDm.RiddleDialog.exec, HDm.RiddleDialog.value = k_e, k_v
+        app.processEvents()
+        assert doc.custom['hints']['riddles'] == {key0: [['A small riddle', 'of {child}.']]}
+        assert 'A small riddle' in bt.h_table.item(0, 7).text(), bt.h_table.item(0, 7).text()
+        assert key0 in doc.custom['hints']['numbers'], 'its number pinned'
+        out, prj, _w = C2.compile_project(_save_tmp(doc, tmp), REPO)
+        b79 = out['patches/bank_079.asm']
+        assert 'HINT_COUNT EQU' in b79 and 'HintRiddle_' in b79 and 'HintMonTable:' in b79
+        assert (8, 0, 0) in prj.story_commands(), prj.story_commands()
+        w.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        idx = next(i for i, e in enumerate(doc.npc_entries(doc.room('gate_island'), rt.key,
+                                                           rt.state_idx))
+                   if e.get('kind') == 'archive')
+        rt._show_hint_panel(idx)
+        rt._hint_delete()
+        app.processEvents()
+        assert not doc.room('gate_island').get('archives'), 'the archive removed'
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print('OK: S158 the breeding hints — the whole pool out / in in seconds (r3), + Monument (O), + Archive (K) (family asked), '
+              'markers Mo / ADr (the family colour), the hint panel (Slime only, no skip, '
+              'riddle), Its words… (an intro), the Hints page (whitelist, a tick, a riddle, '
+              'its number pinned), the project compiles (HintTable, story command 8), '
+              'Remove; undo restores project.json')
+    finally:
+        TABm.QMessageBox.warning = k_w
+        BTm.QMessageBox.warning = k_bw
+        QInputDialog.getItem = k_item
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def s163_failed_op_assets(app, w):
+    """S163 (A4's root): a structural edit that FAILS leaves no trace — not even a tileset sheet
+    it created before failing. A refused walkability flip localized the room's tileset first
+    (assets/ts_28_0D.2bpp, later ts_28_04.2bpp, were left in the example project that way:
+    the document was restored, the file was not)."""
+    from editor2.app.rooms import commands as C
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    adir = os.path.join(doc.project_dir, 'assets')
+    files0 = sorted(os.listdir(adir))
+    room = doc.room('dusk_mirror')
+    assert 'tileset' not in room['record'], 'the probe needs a room on a game tileset'
+    sheet = bytes(s.renderer.room_gfx(room).sheet)
+    made = []
+
+    def op(d):
+        made.append(d.localize_tileset(d.room('dusk_mirror'), sheet))
+        raise RuntimeError('refused after the copy (the probe)')
+    n0 = s.undo.count()
+    cmd = C.SnapshotCommand(s, 'probe', op)
+    s.undo.push(cmd)
+    app.processEvents()
+    assert made and isinstance(cmd.error, RuntimeError), (made, cmd.error)
+    assert sorted(os.listdir(adir)) == files0, \
+        f'a failed op left {sorted(set(os.listdir(adir)) - set(files0))} in assets/'
+    assert doc.dumps() == before and s.undo.count() == n0, 'a failed op leaves no trace'
+    print(f'OK: S163 a failed structural edit removes the sheet it made ({made[0]}.2bpp) — '
+          'assets/ and project.json unchanged')
+
+
+def s168_page2(app, w):
+    """S168 (ROADMAP P3.3g, the user: "more tiles per room"): PAGE 2 in the editor — a full
+    page 1 spills a borrowed metatile onto page 2, the Tileset tab shows 256 slots, the
+    metatile editor's sheet offers page 2 (a click emits $100 + n), the canvas draws a
+    page-2 cell with page 2's art, Walkability flips a page-2 cell (its twin keeps the
+    picture), every edit is one undo step and undone."""
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QMouseEvent
+    from PySide6.QtCore import QEvent
+    from editor2.app.rooms import commands as C
+    from editor2.app.rooms.metatile_editor import MetatileEditor
+    from editor2.core import page2 as P2
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    before = doc.dumps()
+    adir = os.path.join(doc.project_dir, 'assets')
+    files0 = sorted(os.listdir(adir))
+    start = s.undo.index()
+    made = {}
+
+    def mk(d):
+        rid = d.new_room('S168 PAGES PROBE', 0x00, s.renderer, blank_tileset=True)
+        room = d.room(rid)
+        tid = room['record']['tileset']
+        room['record']['collision_threshold'] = '0x10'
+        d.write_sheet(tid, bytes((k * 37 + (k >> 4) * 11 + 1) & 0xFF for k in range(2048)))
+        lid = room['screens']['0']['layout']['id']
+        g = d.layout(lid)['tiles']
+        for k in range(128):                     # every page-1 slot placed
+            r, c = divmod(k, 20)
+            g[r][c] = k
+        made.update(rid=rid, tid=tid, lid=lid)
+    s.undo.push(C.SnapshotCommand(s, 'S168 probe room', mk))
+    app.processEvents()
+    rid, tid, lid = made['rid'], made['tid'], made['lid']
+    fc = doc.free_counts(tid, 0x10)
+    assert fc['page1'] == 0 and fc['page2'] == 128, fc
+    # a borrowed metatile: page 1 is full -> its four tiles land on page 2
+    src = bytearray(2048)
+    for k in range(4):
+        src[(0x20 + k) * 16:(0x21 + k) * 16] = bytes([0xA0 + k] * 16)
+    got = {}
+
+    def borrow(d):
+        got['mt'] = d.import_metatile(d.room(rid), {'tiles': [0x20, 0x21, 0x22, 0x23], 'pal': 1},
+                                      bytes(src), 0x10, name='probe')
+    s.undo.push(C.SnapshotCommand(s, 'S168 borrow', borrow))
+    app.processEvents()
+    tiles = got['mt']['tiles']
+    assert all(P2.is_page2(t) for t in tiles) and not P2.is_wall(P2.slot_key(tiles[3]), 0x10), tiles
+    sheet = doc.read_sheet(tid)
+    assert all(sheet[P2.slot_key(t) * 16] == 0xA0 + k for k, t in enumerate(tiles)), tiles
+    assert os.path.getsize(doc.sheet_path(tid)) == 4096, 'the sheet file grew a page 2'
+    # paint it on cell (8, 7) and show the room
+    g = doc.layout(lid)['tiles']
+    for j, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+        g[14 + dr][16 + dc] = tiles[j]
+    doc.touch()
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(Qt.UserRole) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.room_id == rid, rt.room_id
+    s.renderer._sheet_cache.clear()
+    rt._show()
+    app.processEvents()
+    cv = rt.canvas
+    img = cv.screenshot()
+    want = s.renderer.render_tile(P2.pad_sheet(sheet), tiles[0], cv.pals, cv.attr[14][16] & 7)
+    cell = img.crop((128, 112, 136, 120))
+    assert list(cell.getdata()) == list(want.getdata()), 'the canvas draws the page-2 tile'
+    # the Tileset tab: 256 slots, page 2 counted
+    rt.tileset_map.refresh()
+    assert len(rt.tileset_map.usage) == 256 and 'page 2' in rt.tileset_map.summary.text()
+    assert rt.tileset_map.usage[P2.slot_key(tiles[0])]['status'] == 'placed'
+    # the metatile editor's sheet: a click on page 2 emits $100 + n
+    ed = MetatileEditor(s.renderer, cv.gfx.sheet, cv.pals, 0x10)
+    pk = ed.picker
+    emitted = []
+    pk.tileSelected.connect(emitted.append)
+    sc = 8 * pk.scale
+    pos = QPointF(1 + 5 * sc + 2, 1 + 9 * sc + 2)          # row 9 = page 2, slot 16 + 5
+    ev = QMouseEvent(QEvent.MouseButtonPress, pos, pos, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+    pk.mousePressEvent(ev)
+    assert emitted == [0x100 + 0x15], emitted
+    ed.deleteLater()
+    # walkability: the page-2 cell (8, 7) is walkable; flip it to a wall
+    assert cv.cell_walkable(8, 7)
+    rt._flip_walk(8, 7)
+    app.processEvents()
+    br = doc.layout(lid)['tiles'][15][17]
+    sh2 = doc.read_sheet(tid)
+    assert not P2.walkable(br, 0x10), hex(br)
+    assert sh2[P2.slot_key(br) * 16:P2.slot_key(br) * 16 + 16] == \
+        sh2[P2.slot_key(tiles[3]) * 16:P2.slot_key(tiles[3]) * 16 + 16], 'the twin keeps the picture'
+    # undo everything
+    while s.undo.index() > start:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo restores project.json'
+    assert sorted(os.listdir(adir)) == files0, 'undo removes the probe tileset'
+    print(f'OK: S168 page 2 — a full page 1 spills a borrowed metatile to page 2 '
+          f'({", ".join(P2.label(t) for t in tiles)}), the canvas draws it, 256 slots on the '
+          f'Tileset tab, the sheet offers page 2 ($115), a page-2 cell flipped to a wall '
+          f'(BR {P2.label(br)}), undone')
+
+
+def s164_ai_fixes(app, w):
+    """S164 (ROADMAP E17 note "the original AI's bugs"): the Skills tab's Enemy AI fixes…
+    dialog — five tick boxes (off = the original game), OK = one undo step writing
+    gamedata.ai_fixes; the compile follows (bank $57's regions); undo restores project.json."""
+    import json
+    import editor2.app.skills_tab as STm
+    from PySide6.QtWidgets import QCheckBox
+    from editor2.core import ai_fixes as AF
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    st = w.skills_tab
+    assert st.ai_fix_btn.text() == 'Enemy AI fixes…'
+    seen = {}
+
+    class Tick(STm.QDialog):
+        def exec(self):
+            boxes = self.findChildren(QCheckBox)
+            seen['n'] = len(boxes)
+            seen['titles'] = [b.text() for b in boxes]
+            for b in boxes:
+                b.setChecked(True)
+            return STm.QDialog.Accepted
+    real = STm.QDialog
+    STm.QDialog = Tick
+    try:
+        n0 = s.undo.count()
+        st._ai_fixes()
+        app.processEvents()
+    finally:
+        STm.QDialog = real
+    assert seen.get('n') == 5 and seen['titles'] == [AF.TEXT[k][0] for k in AF.AI_FIXES], seen
+    assert doc.ai_fixes() == frozenset(AF.AI_FIXES) and s.undo.count() == n0 + 1, doc.ai_fixes()
+    from editor2.core import compiler as C2
+    from editor2.core.project import Project
+    prj = Project(json.loads(doc.dumps()), doc.project_dir)
+    prj.repo_root = REPO
+    gen, _w = C2._emit_all(prj)
+    txt = gen['region:patches/bank_057.asm#gd_ai_fix_cut']
+    assert 'LoadBtlAI_44a7' in txt, txt
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before and doc.ai_fixes() == frozenset(), 'undo restores the project'
+    print('OK: S164 Enemy AI fixes… — 5 boxes, one undo step, gamedata.ai_fixes all on, the '
+          'compile emits the fixed bank $57 regions; undo restores project.json')
+
+
+def s165_window_words(app, w):
+    """S165 (ROADMAP Phase F T-follow (a)): the Text tab's Window words page — the words drawn in
+    the windows as tiles; an edit = one undo step writing gamedata.window_words; a letter the
+    screen's font lacks / a longer word refused (the project unchanged); the compile emits the
+    run with the new cells; undo restores project.json."""
+    import json
+    from editor2.core import window_words as WW
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    tt = w.dialogue_tab
+    pg = tt.pages['window_words']
+    tt.tabs.setCurrentWidget(pg)
+    pg.fill_kinds()
+    app.processEvents()
+    keys = pg.keys
+    assert len(keys) == len(WW.slots()) and '07:704D/1/2' in keys, len(keys)
+    r = keys.index('07:704D/1/2')
+    assert pg.table.item(r, 1).text() == 'INFO', pg.table.item(r, 1).text()
+    n0 = s.undo.count()
+    pg.table.item(r, 3).setText('STAT')
+    app.processEvents()
+    assert doc.window_words() == {'07:704D/1/2': 'STAT'} and \
+        s.undo.undoText().startswith('Window word INFO'), (doc.window_words(), s.undo.undoText())
+    r = pg.keys.index('07:70F7/3/2')
+    pg.table.item(r, 3).setText('QQQ')                    # no Q in the field font
+    app.processEvents()
+    assert '07:70F7/3/2' not in doc.window_words() and '✗' in pg.status.text(), pg.status.text()
+    r = pg.keys.index('07:70F7/3/2')
+    pg.table.item(r, 3).setText('POWER')                  # 5 letters in a 3-cell slot
+    app.processEvents()
+    assert '07:70F7/3/2' not in doc.window_words() and 'room for 3' in pg.status.text(), \
+        pg.status.text()
+    from editor2.core import compiler as C2
+    from editor2.core.project import Project
+    prj = Project(json.loads(doc.dumps()), doc.project_dir)
+    prj.repo_root = REPO
+    gen, _w = C2._emit_all(prj)
+    txt = gen['region:patches/bank_007.asm#win_words_07_704d']
+    assert '$d6, $0b, $00, $0b' in txt and 'STAT' in txt, txt[:600]
+    s.undo.undo()                                         # the one step of the edit
+    app.processEvents()
+    assert doc.dumps() == before and doc.window_words() == {}, 'undo restores the project'
+    print('OK: S165 Window words — every slot listed, INFO -> STAT one undo step (gamedata.window_words), '
+          'a Q / a longer word refused, the compile emits the bank $07 run with the new cells; '
+          'undo restores project.json')
+
+
+def s171_colour_true(app, w):
+    """S171 r4 (ROADMAP P3.3i — user: "the palette for a room is fixed and if you import a
+    sort of similar looking tileset the colours are fairly random and there is no way to
+    re-roll the colour allocation or change it. Nor can you edit an individual tile";
+    "Draw … doesnt allow all colours"; "It does NOT work well if you are ADDING it to an
+    existing room"): Borrow matches colours (the source's own colours shown; each piece in
+    the closest row, renumbered; the truth recorded), several at once, a PNG straight in;
+    Palettes → Re-plan colours (plans, re-roll, apply = one undo step, exact undo); Draw
+    offers every row and moves a quarter to the row of its colour."""
+    import json
+    import tempfile
+    from PIL import Image
+    from editor2.core import recolour as RC
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core import tile_draw as TD
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    # core: the closest row, renumbered
+    q = RC.Quarter.from_rgb([(200, 40, 40)] * 32 + [(10, 10, 10)] * 32)
+    rows = [[(255, 255, 255), (248, 248, 208), (120, 120, 120), (0, 0, 0)],
+            [(208, 48, 48), (248, 248, 208), (40, 40, 200), (0, 0, 0)],
+            [(0, 200, 0)] * 3 + [(0, 0, 0)], [(255, 255, 0)] * 3 + [(0, 0, 0)]]
+    r_, idx, _e = RC.best_row(q, rows)
+    assert r_ == 1 and idx[0] == 0 and idx[40] == 3, (r_, idx[:2])
+    # a room whose screens are its own (the example shares island_s0 between rooms of
+    # different colours — the re-plan refuses those, rightly)
+    rid = None
+    for room in doc.rooms:
+        if not room.get('screens') or not room.get('record'):
+            continue
+        k0 = doc.screen_keys(room)[0]
+        sc = RC.Scope(doc, room, k0, 0, s.renderer.room_palettes(room, k0, 0),
+                      s.renderer.room_gfx(room).sheet)
+        if not sc.problems and sc.lids:
+            rid = room['id']
+            break
+    assert rid is not None, 'the example has a room of its own'
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    assert rt.picker_foreign.foreign_pals is not None, 'match colours shows the source colours'
+    nmt = len(doc.metatiles(doc.tileset_key(doc.room(rid))))
+    rt._import_metatile(rt.picker_foreign.foreign[5])
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 1 — colours:'), rt.status_line.text()
+    tid = doc.tileset_key(doc.room(rid))
+    assert len(doc.metatiles(tid)) >= nmt + 1
+    assert doc.custom['_editor']['truth'][tid], 'the real colours are recorded'
+    # several at once: one undo step
+    i1 = s.undo.index()
+    rt.picker_foreign.foreign_ticked = {6, 7, 8}
+    rt._import_selected()
+    app.processEvents()
+    assert s.undo.index() == i1 + 1 and rt.status_line.text().startswith('Imported 3'), \
+        rt.status_line.text()
+    # a picture straight in (no helper room)
+    tmp = tempfile.mkdtemp(prefix='s171r4-')
+    png = os.path.join(tmp, 'two.png')
+    im = Image.new('RGB', (48, 32), (248, 0, 248))          # a key colour round the art
+    for x in range(16):
+        for y in range(16):
+            im.putpixel((8 + x, 8 + y), (0, 128, 248) if (x + y) % 3 else (24, 24, 120))
+            im.putpixel((24 + x, 8 + y), (240, 200, 64) if x % 4 else (120, 64, 0))
+    im.save(png)
+    rt._borrow_png(png)
+    app.processEvents()
+    assert not rt.png_box.isHidden() and len(rt.png_cells.cells) == 2, len(rt.png_cells.cells)
+    rt.png_cells.selected = {0, 1}
+    rt._import_selected()
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 2'), rt.status_line.text()
+    tid = doc.tileset_key(doc.room(rid))
+    new = doc.metatiles(tid)[-6:]
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x01))      # closes the picture
+    app.processEvents()
+    assert rt.png_box.isHidden()
+    # put them on the screen, then re-plan
+    room = doc.room(rid)
+    lid = doc.state_layout_ref(room, rt.key, rt.state_idx)['id']
+
+    def place(d):
+        alid = d.writable_attr_id(d.room(rid), rt.key, rt.state_idx)
+        ch, ach = [], []
+        for n, mt in enumerate(new):
+            pals = TD.quarter_pals(mt)
+            for qq, (dr, dc) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+                ch.append((2 + dr, n * 2 + dc, mt['tiles'][qq]))
+                ach.append((2 + dr, n * 2 + dc, pals[qq]))
+        d.set_cells(lid, 'tiles', ch)
+        d.set_cells(alid, 'attr', ach)
+    s.undo.push(RCMD.SnapshotCommand(s, 'place', place))
+    rt._show()
+    app.processEvents()
+    from PySide6.QtCore import QTimer
+    seen = {}
+
+    def drive():
+        dlg = rt._replan_dlg
+        seen['n'] = len(dlg.plans)
+        seen['first'] = dlg.plans[0].error
+        dlg._reroll()
+        seen['reroll'] = len(dlg.plans)
+        dlg._compute(reset=True)
+        dlg.accept()
+    QTimer.singleShot(200, drive)
+    rt._replan_colours()
+    app.processEvents()
+    assert seen.get('n', 0) >= 2 and seen.get('reroll', 0) >= 1, seen
+    assert rt.status_line.text().startswith('Re-plan colours: re-planned'), rt.status_line.text()
+    # the plan applied fits: planning again from it changes nothing much
+    cv = rt.canvas
+    room = doc.room(rid)
+    sc = RC.Scope(doc, room, rt.key, rt.state_idx, cv.pals, cv.gfx.sheet,
+                  s.renderer.common_blocks(), doc.animated_slots(doc.tileset_key(room)))
+    now = RC.plan_rows(sc.quarters(), 3, locked={r: cv.pals[r] for r in range(4)})
+    assert now.error <= seen['first'] + 0.05, (now.error, seen['first'])
+    # Draw: every row; a quarter moves to another row (S171 r7: by the row buttons only)
+    cv.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert len(dt.swatches) == 16
+    tgt = (dt.qrow[0] + 1) % 4
+    dt._mark_clicked(tgt, [0])                   # S176: the row's ◤ mark
+    assert dt.qrow[0] == tgt and dt.rows_changed() and dt.pal_value() != dt.old_qrow[0]
+    dt._update_report()
+    assert not dt.can_everywhere(), 'everywhere refused once a row changed'
+    dt.target.setCurrentIndex(dt.target.findData('everywhere'))
+    assert not dt.apply_btn.isEnabled() and 'another colour row' in dt.note.text()
+    dt.target.setCurrentIndex(0)
+    dt._tool('undo')
+    assert dt.qrow == dt.old_qrow
+    # all of it undone exactly
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print(f"OK: S171 r4 colour-true tiles — Borrow matches colours (source colours shown, truth "
+          f"recorded), 3 at once = 1 undo step, a PNG straight in (2 cells); Re-plan colours "
+          f"({seen['n']} plans, re-roll, applied, error {now.error:.2f}); Draw offers 16 colours "
+          f"and moves a quarter's row (row button); all undone exactly")
+
+
+def s171_parking(app, w):
+    """S171 r5 (ROADMAP P3.3j — user: "I added 38 metatiles and immediately get 'The tileset
+    has no free walkable slot' … there is a difference between having more than possible
+    tiles AVAILABLE versus ACTUALLY HAVING THEM DOWN ON THE SCREEN"): only placed tiles hold
+    slots. A full sheet parks the unplaced My metatiles on an import (kept with their own
+    graphics, shown under Parked, 0 slots); clicking a parked one brings it back with the
+    same graphics; the Tileset tab parks / deletes; when the PLACED tiles fill the sheet an
+    import is parked instead of refused and painting it says why; all undone exactly."""
+    import json
+    from editor2.core import parking as PK
+    from editor2.core import recolour as RC
+    from editor2.core import page2 as P2
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    rid = None
+    for room in doc.rooms:
+        if not room.get('screens') or not room.get('record'):
+            continue
+        k0 = doc.screen_keys(room)[0]
+        sc = RC.Scope(doc, room, k0, 0, s.renderer.room_palettes(room, k0, 0),
+                      s.renderer.room_gfx(room).sheet)
+        if not sc.problems and sc.lids and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    assert rid is not None
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    castle = list(rt.picker_foreign.foreign)
+    rt._import_metatile(castle[5])                 # the room's tileset is the project's now
+    app.processEvents()
+    tid = doc.tileset_key(doc.room(rid))
+    thr = val(doc.room(rid)['record']['collision_threshold'])
+    assert ':' not in tid
+
+    def fill(d, name, place_lid=None):
+        """every free slot gets a graphic of its own + an (unplaced / placed) metatile"""
+        free = [i for i, u in enumerate(d.tile_usage(tid)) if u['status'] == 'free']
+        sh = d.read_sheet(tid)
+        sh = bytearray(P2.pad_sheet(sh))
+        for i in free:
+            sh[i * 16:i * 16 + 16] = bytes([i & 0xFF, 0x5A, len(name)] + [(i * 7 + k) & 0xFF
+                                                                       for k in range(13)])
+        d.write_sheet(tid, sh)
+        n = 0
+        for g in range(0, len(free), 4):
+            grp = free[g:g + 4]
+            grp += [grp[0]] * (4 - len(grp))
+            vals = [P2.value_of(x) for x in grp]
+            d.add_metatile(tid, f'{name}{n}', vals, 0)
+            if place_lid is not None:
+                cx, cy = n % 10, n // 10
+                d.set_cells(place_lid, 'tiles', [(cy * 2 + dr, cx * 2 + dc, vals[q])
+                                                 for q, (dr, dc) in enumerate(
+                                                     ((0, 0), (0, 1), (1, 0), (1, 1)))])
+            n += 1
+        return n
+    s.undo.push(RCMD.SnapshotCommand(s, 'fill', lambda d: fill(d, 'filler')))
+    nfill = s.undo.command(s.undo.index() - 1).result
+    assert doc.free_counts(tid, thr)['total'] == 0, doc.free_counts(tid, thr)
+    # 1. an import into the full sheet parks the unplaced ones
+    rt._import_metatile(castle[6])
+    app.processEvents()
+    assert rt.status_line.text().startswith('Imported 1'), rt.status_line.text()
+    pk = PK.parked(doc, tid)
+    names = {e['name'] for e in pk}
+    assert sum(1 for nm in names if nm.startswith('filler')) == nfill, (len(pk), nfill)
+    assert not any(m['name'].startswith('filler') for m in doc.metatiles(tid))
+    assert doc.free_counts(tid, thr)['total'] > 0
+    assert len(rt.picker.parked) == len(pk), 'the picker shows them under Parked'
+    rt.picker_tabs.setCurrentIndex(0)
+    app.processEvents()
+    assert 'parked metatiles <b>%d</b>' % len(pk) in rt.tileset_map.summary.text()
+    # 2. a parked one clicked = back with the same graphics, and it is the brush
+    i_f = [e['name'] for e in pk].index('filler0')
+    e = pk[i_f]
+    rt._unpark(i_f)
+    app.processEvents()
+    mt = doc.metatiles(tid)[-1]
+    assert mt['name'] == 'filler0' and rt.canvas.brush['tiles'] == mt['tiles'], mt
+    sh = P2.pad_sheet(doc.read_sheet(tid))
+    for q, t in enumerate(mt['tiles']):
+        k = P2.slot_key(t)
+        assert bytes(sh[k * 16:k * 16 + 16]).hex() == e['q'][q]['g'], \
+            ('same graphics', q, t, bytes(sh[k * 16:k * 16 + 16]).hex(), e['q'][q], mt)
+    assert 'filler0' not in {x['name'] for x in PK.parked(doc, tid)}
+    # 3. the Tileset tab parks (the unplaced) and deletes (the parked)
+    n_park, _fr = PK.preview(doc, tid, thr)
+    assert n_park >= 1
+    rt._purge_metatiles('park')
+    app.processEvents()
+    assert 'filler0' in {x['name'] for x in PK.parked(doc, tid)}
+    assert not PK.parkable(doc, tid)
+    # 4. the PLACED tiles fill the sheet: an import is parked, painting it says why
+    room = doc.room(rid)
+    rt._add_screen(max(int(k) for k in doc.screen_keys(room)) + 1)
+    app.processEvents()
+    lid_new = doc.state_layout_ref(doc.room(rid), rt.key, rt.state_idx)['id']
+    s.undo.push(RCMD.SnapshotCommand(s, 'fill placed',
+                                     lambda d: fill(d, 'placed', lid_new)))
+    assert doc.free_counts(tid, thr)['total'] == 0
+    npk = len(PK.parked(doc, tid))
+    rt.picker_tabs.setCurrentIndex(1)
+    rt._import_metatile(castle[7])
+    app.processEvents()
+    assert 'parked' in rt.status_line.text(), rt.status_line.text()
+    assert len(PK.parked(doc, tid)) == npk + 1
+    warned = []
+    from PySide6.QtWidgets import QMessageBox
+    keep_w = QMessageBox.warning
+    QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]) or QMessageBox.Ok)
+    try:
+        rt._unpark(len(PK.parked(doc, tid)) - 1)
+    finally:
+        QMessageBox.warning = keep_w
+    assert warned and 'fill this tileset' in warned[-1], warned
+    # 5. delete parked (asks first)
+    keep_q = QMessageBox.question
+    QMessageBox.question = staticmethod(lambda *a, **k: QMessageBox.Yes)
+    try:
+        rt._purge_metatiles('delete_parked')
+    finally:
+        QMessageBox.question = keep_q
+    assert not PK.parked(doc, tid)
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print(f'OK: S171 r5 parking — a full sheet ({nfill} unplaced fillers) parked on import, '
+          f'shown under Parked, one brought back with its graphics as the brush, Tileset tab '
+          f'park / delete; placed tiles filling the sheet: the import parked, painting it '
+          f'explains; all undone exactly')
+
+
+def s171_recolour(app, w):
+    """S171 r6 (user: "Why cant I undo 'draw' on cell? Also why does it just make a whole
+    quarter a blank colour"; "I may want some tiles to be 1 colour and some other tiles to be
+    a different (palette-compatible) colour"; "I will never want to change the actual
+    structure, only RECOLOR ALL PIXELS THAT ARE EXACTLY THE SAME COLOUR. Only me clicking
+    individual pixels should change STRUCTURE"): matching is one-to-one (two colours never
+    become one); Draw keeps colour numbers when a quarter changes row, ⌘Z / ⌘⇧Z undo / redo
+    strokes, row / swap tools keep shapes; Borrow → into row N + the preview; right-click →
+    Copy in row N (no slot); all undone exactly."""
+    import json
+    from editor2.core import recolour as RC
+    from editor2.core import parking as PK
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+    # core: two near reds stay two colour numbers
+    q = RC.Quarter.from_rgb([(200, 40, 40)] * 32 + [(190, 50, 50)] * 16 + [(10, 10, 10)] * 16)
+    rows = [[(255, 255, 255), (248, 248, 208), (120, 120, 120), (0, 0, 0)],
+            [(208, 48, 48), (248, 248, 208), (40, 40, 200), (0, 0, 0)]]
+    _r, idx, _e = RC.best_row(q, rows)
+    assert len(set(idx)) == 3 and idx[0] != idx[40] and idx[0] == idx[31], idx[:2]
+    rid = None
+    for room in doc.rooms:
+        if room.get('screens') and room.get('record') and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == rid:
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    n0 = s.undo.index()
+    snap0 = json.dumps(doc.data, sort_keys=True)
+    # Draw (S171 r7): a quarter is painted with its own row; ⌘Z undoes the stroke
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    from editor2.app.rooms import commands as RCMD
+    rt.picker_tabs.setCurrentIndex([rt.picker_tabs.tabText(i) for i in
+                                    range(rt.picker_tabs.count())].index('Draw'))
+    app.processEvents()
+    rt.canvas.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    assert dt.owns_undo()
+    pad = dt.pad
+
+    def click(x, y, button=_Qt.LeftButton):
+        QTest.mouseClick(pad, button, _Qt.NoModifier,
+                         QPoint(3 + x * pad.zoom + pad.zoom // 2, 3 + y * pad.zoom + pad.zoom // 2))
+        app.processEvents()
+    before = dt.current()
+    r0 = dt.qrow[0]
+    # a colour only another row has: nothing changes, no undo step — and (S176) the bar
+    # under the drawing says why and offers the switch
+    other = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                  tuple(dt.rows[r][i][:3]) not in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    if other is not None:
+        n_u = len(dt._undo)
+        dt._pick_swatch(*other)
+        click(0, 0)
+        assert dt.current() == before and dt.qrow[0] == r0 and len(dt._undo) == n_u, \
+            'another row\'s colour does not repaint the quarter'
+        assert dt.pending and dt.pending['quarters'] == [0] and not dt.bar_q.isHidden() and \
+            f'row {other[0]}' in dt.bar_q.text(), dt.bar_q.text()
+        dt.bar_no.click()
+        assert dt.pending is None and dt.bar_q.isHidden()
+    # black of another row = this row's black: one pixel, the row stays
+    blk = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                tuple(dt.rows[r][i][:3]) in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    assert blk is not None
+    want = [tuple(c[:3]) for c in dt.rows[r0]].index(tuple(dt.rows[blk[0]][blk[1]][:3]))
+    i0 = next(i for i in range(64) if before[0][i] != want)
+    dt._pick_swatch(*blk)
+    click(i0 % 8, i0 // 8)
+    after = dt.current()
+    assert dt.qrow[0] == r0 and after[0][i0] == want, (after[0][i0], want)
+    assert sum(1 for i in range(64) if after[0][i] != before[0][i]) == 1 and after[1:] == before[1:]
+    # right-click picks the clicked quarter's own row
+    dt._pick_swatch((r0 + 1) % 4, 0)
+    click(1, 1, _Qt.RightButton)
+    assert dt.cur_row == r0 and dt.pad.colour == after[0][9]
+    assert w.a_undo.isEnabled() and 'stroke' in w.a_undo.text(), w.a_undo.text()
+    w.a_undo.trigger()
+    assert dt.current() == before, 'Cmd+Z undid the stroke'
+    assert s.undo.index() == n0, 'the project was not undone'
+    w.a_redo.trigger()
+    assert dt.current() == after, 'Cmd+Shift+Z redid it'
+    # a quarter on another row (S176: the row's mark): one-to-one — as many colours as
+    # before, and a colour the new row also has keeps it. Replace colour = pick the new
+    # colour, click the colour to change
+    q1 = dt.qrow[1]
+    p0 = list(dt.current()[1])
+    rgb0 = [tuple(dt.rows[q1][v][:3]) for v in p0]
+    dt._mark_clicked(3, [1])
+    p1 = list(dt.current()[1])
+    own3 = [tuple(c[:3]) for c in dt.rows[3]]
+    assert dt.qrow[1] == 3 and len(set(p1)) == len(set(p0))
+    assert len({(a, b) for a, b in zip(p0, p1)}) == len(set(p0)), 'one-to-one'
+    if len(set(own3)) == 4 and len({tuple(c[:3]) for c in dt.rows[q1]}) == 4:
+        assert all(own3[b] == c for c, b in zip(rgb0, p1) if c in own3), 'a shared colour stays'
+    src_v = p1[0]
+    tgt_v = next(i for i in range(4) if own3[i] != own3[src_v])
+    dt.set_tool('replace')
+    dt.only_q.setChecked(True)
+    dt._pick_swatch(3, tgt_v)
+    click(8, 0)
+    hits = {n for n, c in enumerate(own3) if c == own3[src_v]}
+    assert dt.current()[1] == [tgt_v if v in hits else v for v in p1], 'Replace colour'
+    assert dt.current()[0] == after[0] and dt.pending is None
+    dt.only_q.setChecked(False)
+    dt.set_tool('pencil')
+    dt._tool('revert')
+    dt._set_part('whole')
+    # the palette changes: the drawing shows it at once
+    pid = s.renderer.state_palette_id(doc.room(rid), rt.key, rt.state_idx)
+    if pid:
+        old_rows = [list(r) for r in dt.rows]
+        s.undo.push(RCMD.SetPaletteColor(s, pid, dt.qrow[0], 2, 0x001F))
+        app.processEvents()
+        assert dt.rows != old_rows and dt.pals[0] == dt.rows[dt.qrow[0]], 'set_rows'
+        s.undo.undo()
+        app.processEvents()
+        assert dt.rows[:4] == old_rows[:4]
+    # Borrow: into row 2 + the preview
+    rt.picker_tabs.setCurrentIndex(1)
+    rt.borrow_match.setChecked(True)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))        # Castle
+    app.processEvents()
+    rt.borrow_rows.setCurrentIndex(rt.borrow_rows.findData(2))
+    rt.borrow_preview.setChecked(True)
+    app.processEvents()
+    assert rt.picker_foreign.preview_fn is not None
+    pm = rt.picker_foreign._render('foreign', rt.picker_foreign.foreign[5])
+    assert pm is not None
+    rt._import_metatile(rt.picker_foreign.foreign[5])
+    app.processEvents()
+    tid = doc.tileset_key(doc.room(rid))
+    got = doc.metatiles(tid)[-1]
+    from editor2.core import tile_draw as TD
+    assert TD.quarter_pals(got) == [2, 2, 2, 2], got
+    rt.borrow_preview.setChecked(False)
+    rt.borrow_rows.setCurrentIndex(0)
+    # right-click -> Copy in row 1: the same tiles, no new slot, the brush
+    free0 = doc.free_counts(tid, rt.canvas.gfx.threshold)['total']
+    rt._copy_in_row(got, 1)
+    app.processEvents()
+    tw = doc.metatiles(tid)[-1]
+    assert tw['tiles'] == got['tiles'] and tw['pal'] == 1 and rt.canvas.brush['pal'] == 1
+    assert doc.free_counts(tid, rt.canvas.gfx.threshold)['total'] == free0, 'no slot spent'
+    # a parked one too
+    rt._purge_metatiles('park')
+    pk = PK.parked(doc, tid)
+    assert pk
+    rt._parked_copy_in_row(0, 3)
+    pk = PK.parked(doc, tid)
+    assert [q['row'] for q in pk[-1]['q']] == [3] * 4 and \
+        [q['g'] for q in pk[-1]['q']] == [q['g'] for q in pk[0]['q']]
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert json.dumps(doc.data, sort_keys=True) == snap0, 'undo restores the project'
+    rt.foreign_box.setCurrentIndex(0)
+    rt.picker_tabs.setCurrentIndex(0)
+    print('OK: S171 r6/r7 recolour — matching one-to-one (2 near reds stay 2 colours); Draw: a '
+          'quarter keeps its row (another row\'s colour refused, a shared black paints one '
+          'pixel), right-click picks its own row, Cmd+Z / Cmd+Shift+Z undo / redo the stroke '
+          '(not the project), row tool + Recolour keep shapes, palette edits reach the drawing; '
+          'Borrow into row 2 + preview; Copy in row 1 (no slot) and a parked copy in row 3; all '
+          'undone exactly')
+
+
+def s172_foods(app, w):
+    """S172 (user: "replace the meats and meat icons … Toast, Apple, Biscuit, Honey … Make
+    this a TICK on the editor that I can turn on/off. When off its vanilla behaviour"):
+    the Items tab's "Foods instead of meats" — on: the five names (19-23), the pictures,
+    the NPC sprite picker lists $58-$5C as the foods drawn from editor2/assets/foods (the
+    meat prop $5F the Apple); one undo step each way; a name the project typed wins."""
+    from editor2.app.rooms.canvas import SpriteCache
+    from editor2.app.rooms.npc_panel import SpritePicker
+    from editor2.core import foods as FD
+    s = w.session
+    doc = s.doc
+    it = w.items_tab
+    w.tabs.setCurrentWidget(it)
+    app.processEvents()
+    it.refresh()
+    assert not it.foods.isChecked() and not doc.foods_on()
+    assert doc.item_names_all()[19] == 'BeefJerky'
+    n0 = s.undo.index()
+    it.foods.setChecked(True)
+    it._foods_clicked(True)
+    app.processEvents()
+    assert doc.foods_on() and s.undo.index() == n0 + 1
+    names = doc.item_names_all()
+    assert [names[i] for i in range(19, 24)] == ['Toast', 'Apple', 'Biscuit', 'BadApple', 'Honey'], names
+    rows = {it.list.item(r).data(0x100): it.list.item(r).text() for r in range(it.list.count())}
+    assert 'Honey' in rows[23] and 'Toast' in rows[19], rows[23]
+    assert len(it.food_btns) == 5 and all(not b.icon().isNull() for b in it.food_btns)
+    assert 'click to draw' in it.food_btns[4].toolTip()
+    assert 'Toast (was BeefJerky' in it.food_note.text(), it.food_note.text()
+    # the sprite picker: the foods are offered, drawn from their pictures
+    pm = SpriteCache.get(0x5C)
+    assert pm is not None and not pm.isNull() and pm.width() == 16
+    img = pm.toImage()
+    g = FD.picture('honey', 3)
+    cols = FD.obj_palette(3)
+    x, y = next((x, y) for y in range(16) for x in range(16) if g[y][x] == 2)
+    c = img.pixelColor(x, y)
+    assert (c.red(), c.green(), c.blue()) == cols[2], ((c.red(), c.green(), c.blue()), cols[2])
+    dlg = SpritePicker(current=None, parent=w, monsters=False, project_data=doc.data)
+    shown = dlg.info.text()
+    from PySide6.QtWidgets import QToolButton
+    tips = [b.toolTip() for b in dlg.scroll.widget().findChildren(QToolButton)]
+    dlg.deleteLater()
+    for sid, nm in ((0x58, 'Toast'), (0x5C, 'Honey'), (0x5F, 'Apple')):
+        assert any(t.startswith(f'${sid:02X} {nm}') for t in tips), (sid, shown)
+    # S172 r2: draw a food (the Draw tab's pad): Apply = one undo step, the NPC sprite
+    # redrawn at once; Restore default = one undo step back to the editor's picture
+    from editor2.app import food_art_dialog as FAD
+    from PySide6.QtCore import QPointF, QEvent
+    from PySide6.QtGui import QMouseEvent
+    seen = {}
+
+    def fake_exec(dlg, action='paint'):
+        seen['title'] = dlg.windowTitle()
+        if action == 'restore':
+            dlg._restore()
+            return 1
+        z = dlg.pad.zoom
+        dlg._set_colour(2)
+        for btn, mods in ((Qt.LeftButton, Qt.NoModifier),):
+            ev = QMouseEvent(QEvent.MouseButtonPress, QPointF(3 + 0.5 * z, 3 + 0.5 * z),
+                             QPointF(0, 0), btn, btn, mods)
+            dlg.pad.mousePressEvent(ev)
+        seen['undo'] = len(dlg._undo)
+        dlg._apply()
+        return 1
+    real = FAD.FoodArtDialog.exec
+    from PySide6.QtCore import Qt
+    try:
+        FAD.FoodArtDialog.exec = lambda dlg: fake_exec(dlg)
+        n1 = s.undo.index()
+        it._food_art(4)                                     # Honey
+        assert seen['title'] == 'Draw the Honey picture' and seen['undo'] == 1, seen
+        assert s.undo.index() == n1 + 1 and doc.food_art_is_own('honey')
+        assert doc.food_art_grid('honey')[0][0] == 2
+        img = SpriteCache.get(0x5C).toImage()
+        c = img.pixelColor(0, 0)
+        assert (c.red(), c.green(), c.blue()) == cols[2] and c.alpha() == 255, c
+        assert 'your drawing' in it.food_btns[4].toolTip()
+        FAD.FoodArtDialog.exec = lambda dlg: fake_exec(dlg, 'restore')
+        it._food_art(4)
+        assert s.undo.index() == n1 + 2 and not doc.food_art_is_own('honey')
+        assert SpriteCache.get(0x5C).toImage().pixelColor(0, 0).alpha() == 0
+        s.undo.undo()
+        assert doc.food_art_is_own('honey') and SpriteCache.get(0x5C).toImage().pixelColor(0, 0).alpha() == 255
+        s.undo.undo()
+        assert not doc.food_art_is_own('honey') and s.undo.index() == n1
+    finally:
+        FAD.FoodArtDialog.exec = real
+    # a typed name wins; Original takes it back to the food
+    from editor2.app.rooms import commands as C
+    s.undo.push(C.SnapshotCommand(s, 'name', lambda d: d.set_game_text('item_name', '23',
+                                                                       'Nectar')))
+    assert doc.item_names_all()[23] == 'Nectar'
+    s.undo.undo()
+    assert doc.item_names_all()[23] == 'Honey'
+    # off again: the game's meats, one undo step; undo brings the foods back
+    it.foods.setChecked(False)
+    it._foods_clicked(False)
+    app.processEvents()
+    assert not doc.foods_on() and doc.item_names_all()[23] == 'Sirloin'
+    assert SpriteCache.food(0x5C) is None
+    s.undo.undo()
+    assert doc.foods_on() and doc.item_names_all()[23] == 'Honey'
+    s.undo.undo()
+    it.refresh()
+    assert not doc.foods_on() and not it.foods.isChecked() and s.undo.index() == n0
+    print('OK: S172 foods — the tick (one undo step each way), the five names in the list, '
+          'the pictures + note, the sprite picker offers $58-$5C / $5F as the foods (drawn '
+          'in their own colours), a typed name wins; r2: a food drawn (Apply / Restore '
+          'default, one undo step each, the sprite redrawn)')
+
+
+def s171_borrow_custom(app, w):
+    """S171 r3 (user: "Borrow should show my custom rooms. Currently I dont see it. Also
+    its an enormous giant unalphabetized list at least have 2 drop downs, 1 for custom 1
+    for vanilla"): the Borrow tab has 'Your room' (the project's rooms, A-Z, the room shown
+    left out) and 'Game room' (the game's rooms + the 16 gate themes, A-Z); a choice in one
+    clears the other; a metatile of YOUR room on another tileset is imported into this
+    room's tileset (the graphics copied, the bottom-right on its side), undo removes it."""
+    from editor2.app.rooms import tab as RT
+    from editor2.core import page2 as P2
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+
+    def pick(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+    rooms = [r["id"] for r in doc.rooms]
+    a, b = rooms[0], rooms[1]
+    rt.borrow_match.setChecked(False)          # S171 r4: the graphics copied as they are
+    pick(a)
+    # room A gets a Castle metatile (its tileset becomes the project's own)
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
+    app.processEvents()
+    assert rt.foreign_custom.currentIndex() == 0
+    castle = rt.picker_foreign.foreign[5]
+    n0 = s.undo.count()
+    rt._import_metatile(castle)
+    app.processEvents()
+    ta = doc.tileset_key(doc.room(a))
+    mine = doc.metatiles(ta)[-1]
+    # the two lists
+    labs = [rt.foreign_box.itemText(i) for i in range(1, rt.foreign_box.count())]
+    assert labs == sorted(labs, key=lambda t: (t.casefold())) or \
+        [t.casefold() for t in labs] == sorted(t.casefold() for t in labs), 'Game room list A-Z'
+    assert sum(1 for i in range(rt.foreign_box.count())
+               if (rt.foreign_box.itemData(i) or 0) >= RT.THEME_KEY) == 16
+    pick(b)
+    cust = [rt.foreign_custom.itemData(i) for i in range(1, rt.foreign_custom.count())]
+    clabs = [rt.foreign_custom.itemText(i).casefold() for i in range(1, rt.foreign_custom.count())]
+    assert str(b) not in cust and str(a) in cust and len(cust) == len(rooms) - 1, cust
+    assert clabs == sorted(clabs), 'Your room list A-Z'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x00))
+    rt.foreign_custom.setCurrentIndex(rt.foreign_custom.findData(str(a)))
+    app.processEvents()
+    assert rt.foreign_box.currentIndex() == 0, 'picking your room clears the game room'
+    voc = rt.picker_foreign.foreign
+    assert any(m['tiles'] == mine['tiles'] for m in voc), "your room's own metatile is listed"
+    assert not rt.picker_foreign.foreign_same
+    src = [m for m in voc if m['tiles'] == mine['tiles']][0]
+    rt._import_metatile(src)
+    app.processEvents()
+    rec = doc.room(b)['record']
+    tb = doc.tileset_key(doc.room(b))
+    got = doc.metatiles(tb)[-1]
+    sa, sb = doc.read_sheet(ta), doc.read_sheet(tb)
+    for t_src, t_dst in zip(src['tiles'], got['tiles']):
+        ks, kd = P2.slot_key(t_src), P2.slot_key(t_dst)
+        assert bytes(sb[kd * 16:kd * 16 + 16]) == bytes(sa[ks * 16:ks * 16 + 16]), 'graphic copied'
+    thr_a = val(doc.room(a)['record']['collision_threshold'])
+    thr_b = val(rec['collision_threshold'])
+    assert P2.is_wall(P2.slot_key(got['tiles'][3]), thr_b) == \
+        P2.is_wall(P2.slot_key(src['tiles'][3]), thr_a), 'bottom-right keeps its side'
+    rt.foreign_box.setCurrentIndex(rt.foreign_box.findData(0x01))
+    app.processEvents()
+    assert rt.foreign_custom.currentIndex() == 0, 'picking a game room clears your room'
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    rt.foreign_box.setCurrentIndex(0)
+    rt.borrow_match.setChecked(True)
+    print(f'OK: S171 r3 Borrow — "Your room" ({len(cust)} rooms, A-Z, this room left out) and '
+          f'"Game room" (A-Z, 16 gate themes); one list clears the other; a metatile of your '
+          f'room imported into another tileset (graphics + wall side), undone')
+
+
+def s173_room_aids(app, w):
+    """S173 (the user: "Move archive button and something else button to the side arrow and
+    put eyedrops and walkability as button … Allow removal of grid (toggle) … 'De-animate'
+    button … Allow zooming in … 1.5x and 2x. Maybe even 3x"; then "No stop entirely … Make a
+    new un-animated tile I can use … [own animations] yes … I want to choose a frame …
+    Brush preview … Show where tile is used … Whole room view … Reference window"):
+    (1) two bars — the tools (Select / Paint / Eyedrop / Walkability / Still / + Door /
+    + Examine / + NPC / + More ▸ Statue · Monument · Archive, keys kept) and the view (Grid /
+    Palettes / Markers / Anim / Clean / ▶ Play / zoom / Whole room / Reference), all shown at
+    1,512 px; (2) zoom steps 1-12 with half steps, ± and Fit; (3) clean view (button, H
+    held) draws the art only; (4) the Still tool on the game's animation AND on an own
+    animation: the frames listed, the chosen one becomes a NEW tile in still slots, no cell
+    changes, it is the brush, exact undo; a still cell is refused with no undo step; (5) the
+    brush preview under the mouse; (6) the picker's hover outlines the cells drawn with it;
+    (7) the Whole room window (every screen; double-click = edit it); (8) the Reference
+    window (any room, read-only; right-click = brush when the tiles are the same)."""
+    from PySide6.QtCore import Qt as _Qt
+    from PySide6.QtTest import QTest
+    from PySide6.QtWidgets import QDialog as _QD
+    from editor2.app.rooms import commands as C
+    from editor2.app.rooms import room_view as RV
+    from editor2.app.rooms.canvas import ZOOMS
+    from editor2.core import animate as AN
+    from editor2.core import page2 as P2
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    app.processEvents()
+
+    def pick(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+
+    # (1) the bars
+    size0 = w.size()
+    w.resize(1512, 945)
+    for _ in range(5):
+        app.processEvents()
+    for bar, want in ((rt.tools, [rt.tool_actions[n] for n in ('select', 'paint', 'pick',
+                                                                'walk', 'still')]
+                       + [rt.act_add_door, rt.act_add_examine, rt.act_add_npc]),
+                      (rt.view_bar, [])):
+        for a in want:
+            wd = bar.widgetForAction(a)
+            assert wd is not None and wd.isVisible(), f'{a.text()} hidden at 1512 px'
+    for wd in (rt.more_btn, rt.clean_btn, rt.zoom_box, rt.room_view_btn, rt.ref_btn,
+               rt.play_btn, rt.layer_buttons['grid']):
+        assert wd.isVisible(), f'{wd} hidden at 1512 px'
+    assert not rt.layer_buttons['walk'].isVisible(), 'Walk = the Walkability tool, shown once'
+    assert [a.text() for a in rt.more_btn.menu().actions()] == \
+        ['+ Jump (J)', '+ Statue (U)', '+ Monument (O)', '+ Archive (K)']   # S175: + Jump
+    for a in (rt.act_add_statue, rt.act_add_monument, rt.act_add_archive):
+        assert a in rt.actions(), 'the key works without opening + More'
+    w.resize(size0)
+    app.processEvents()
+
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # a copy of the GreatTree: the game's sway (16 slots) moves its leaves
+    from editor2.core import place_names as PN
+    from editor2.app.session import REPO as _REPO
+    cl = C.SnapshotCommand(s, 'Make editable', lambda d: d.clone_vanilla(
+        0x01, PN.vanilla_name(0x01), _REPO, s.renderer))
+    s.undo.push(cl)
+    assert cl.error is None, cl.error
+    rt._fill_rooms(keep=cl.result)
+    app.processEvents()
+    rooms = {r['id']: r for r in doc.rooms}
+    rid = cl.result
+    assert doc.room_animation(rooms[rid])['slots'], 'the GreatTree copy sways'
+    pick(rid)
+
+    # (2) zoom
+    cv.set_zoom(1.5)
+    assert rt.zoom_box.currentText() == '1.5×' and abs(cv.transform().m11() - 1.5) < 1e-9
+    cv.zoom_step(1)
+    assert cv.zoom() == 2
+    rt.zoom_box.setCurrentIndex(ZOOMS.index(10))
+    assert cv.zoom() == 10 and abs(cv.transform().m11() - 10) < 1e-9
+    cv.zoom_step(1)
+    cv.zoom_step(1)
+    assert cv.zoom() == 12, 'the top step holds'
+    z = cv.fit_zoom()
+    vp = cv.viewport().size()
+    assert z in ZOOMS and 160 * z <= vp.width() and 128 * z <= vp.height(), (z, vp)
+    cv.set_zoom(3)
+
+    # (3) clean view
+    def shot():
+        app.processEvents()
+        return cv.viewport().grab().toImage()
+    cv._hover = None
+    cv.selected_cell = None
+    cv.sel_rect = None
+    a_ = shot()
+    rt.clean_btn.setChecked(True)
+    b_ = shot()
+    assert a_ != b_, 'clean view hides the grid / markers'
+    rt.clean_btn.setChecked(False)
+    for n in ('grid', 'markers', 'anim'):
+        rt.layer_buttons[n].setChecked(False)
+    c_ = shot()
+    assert c_ == b_, 'clean view == every overlay off'
+    for n in ('grid', 'markers', 'anim'):
+        rt.layer_buttons[n].setChecked(True)
+    cv.setFocus()
+    QTest.keyPress(cv, _Qt.Key_H)
+    assert cv.is_clean() and shot() == b_, 'H held = clean'
+    QTest.keyRelease(cv, _Qt.Key_H)
+    assert not cv.is_clean() and shot() == a_, 'H released = the overlays back'
+
+    # (4) Still — the game's animation
+    still_tid = doc.tileset_key(rooms[rid]) if 'tileset' in rooms[rid]['record'] else None
+    cell = next((c, r) for r in range(8) for c in range(10) if cv.cell_moves(c, r))
+    mt = cv.cell_metatile(*cell)
+    frames = AN.cell_frames(cv.anim_mid, doc.tile_anims(rooms[rid]), cv.gfx.sheet, mt['tiles'])
+    assert len(frames) >= 2, frames
+    assert frames[0] == tuple(bytes(cv.gfx.sheet[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                              for t in mt['tiles']), 'frame 1 = at rest'
+    pick_k = [len(frames) - 1]
+    seen = {}
+
+    def fake_exec(dlg):
+        seen['n'] = dlg.list.count()
+        dlg.list.setCurrentRow(pick_k[0])
+        return _QD.Accepted
+    old_exec = RV.StillFrameDialog.exec
+    RV.StillFrameDialog.exec = fake_exec
+    try:
+        grid0 = [list(r_) for r_ in cv.tiles]
+        rt._set_tool('still')
+        assert cv.tool == 'still'
+        rt._still_cell(cell)
+        app.processEvents()
+        assert seen['n'] == len(frames), 'every frame offered'
+        new = cv.brush
+        assert new and new['tiles'] != mt['tiles'], new
+        assert cv.tool == 'paint', 'the new tile is the brush'
+        r_now = doc.room(rid)
+        tid = doc.tileset_key(r_now)
+        moving = doc.room_animation(r_now)['slots'] | doc.own_anim_slots(r_now)
+        sheet = doc.read_sheet(tid)
+        from editor2.core.document import val as _val
+        thr = _val(r_now['record']['collision_threshold'])
+        for k_, (t_old, t_new) in enumerate(zip(mt['tiles'], new['tiles'])):
+            ko, kn = P2.slot_key(t_old), P2.slot_key(t_new)
+            if ko in moving:
+                assert kn not in moving, 'the copy never moves'
+                assert bytes(sheet[kn * 16:kn * 16 + 16]) == frames[-1][k_], 'the chosen frame'
+                assert P2.is_wall(kn, thr) == P2.is_wall(ko, thr), 'same side'
+            else:
+                assert t_new == t_old
+        rt._show()
+        app.processEvents()
+        # S173 r2 (user: "I made the animation still but the play here button shows it
+        # still animating in-game"): the clicked cell gets the still tile; no other cell
+        want0 = [list(r_) for r_ in grid0]
+        (c0, r0) = cell
+        want0[r0 * 2][c0 * 2], want0[r0 * 2][c0 * 2 + 1], want0[r0 * 2 + 1][c0 * 2], \
+            want0[r0 * 2 + 1][c0 * 2 + 1] = new['tiles']
+        assert [list(r_) for r_ in cv.tiles] == want0, 'only the clicked cell changed'
+        assert not cv.cell_moves(*cell), 'the clicked cell is still now'
+        assert any(m['tiles'] == new['tiles'] for m in doc.metatiles(tid)), 'in My metatiles'
+        assert 'Still:' in rt.status_line.text(), rt.status_line.text()
+        # a cell that does not move: refused, no undo step
+        k0 = s.undo.index()
+        cv2 = next(((c, r) for r in range(8) for c in range(10) if not cv.cell_moves(c, r)), None)
+        if cv2 is not None:
+            rt._still_cell(cv2)
+            assert s.undo.index() == k0 and 'does not move' in rt.status_line.text()
+        pre1 = None
+        s.undo.undo()
+        app.processEvents()
+        assert s.undo.index() == n0 + 1
+        pre1 = doc.dumps()
+        s.undo.redo()
+        s.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == pre1, 'Still undoes exactly'
+
+        # (4b) Still — an OWN animation (a cell of a room without the game's animation)
+        rid2 = next(r for r in rooms if not doc.room_animation(rooms[r])['slots']
+                    and doc.screen_keys(rooms[r]))
+        pick(rid2)
+        sh0 = cv.gfx.sheet
+        cell2 = next((c, r) for r in range(8) for c in range(10)
+                     if len({bytes(sh0[P2.slot_key(t) * 16:P2.slot_key(t) * 16 + 16])
+                             for t in cv.cell_metatile(c, r)['tiles']}) > 1
+                     and not cv.cell_moves(c, r))
+        lid = cv.lid
+        rect = (cell2[0], cell2[1], cell2[0], cell2[1])
+        cmd = C.SnapshotCommand(s, 'test anim', lambda d: d.add_tile_anim(
+            rid2, lid, rect, 'drift_right', 8, own_sheet=bytes(sh0[:2048])))
+        s.undo.push(cmd)
+        assert cmd.error is None, cmd.error
+        rt._show()
+        app.processEvents()
+        assert cv.cell_moves(*cell2), 'the own animation moves the cell'
+        mt2 = cv.cell_metatile(*cell2)
+        fr2 = AN.cell_frames(cv.anim_mid, doc.tile_anims(doc.room(rid2)), cv.gfx.sheet,
+                             mt2['tiles'])
+        assert len(fr2) >= 3, len(fr2)
+        pick_k[0] = 2
+        grid1 = [list(r_) for r_ in cv.tiles]
+        k1 = s.undo.index()
+        rt._still_cell(cell2)
+        app.processEvents()
+        assert s.undo.index() == k1 + 1
+        new2 = cv.brush
+        r2 = doc.room(rid2)
+        sheet2 = doc.read_sheet(doc.tileset_key(r2))
+        own = doc.own_anim_slots(r2)
+        for k_, (t_old, t_new) in enumerate(zip(mt2['tiles'], new2['tiles'])):
+            if P2.slot_key(t_old) in own:
+                kn = P2.slot_key(t_new)
+                assert kn not in own and bytes(sheet2[kn * 16:kn * 16 + 16]) == fr2[2][k_]
+        rt._show()
+        app.processEvents()
+        want1 = [list(r_) for r_ in grid1]
+        (c1, r1) = cell2
+        want1[r1 * 2][c1 * 2], want1[r1 * 2][c1 * 2 + 1], want1[r1 * 2 + 1][c1 * 2], \
+            want1[r1 * 2 + 1][c1 * 2 + 1] = new2['tiles']
+        assert [list(r_) for r_ in cv.tiles] == want1, 'only the clicked cell changed (own)'
+        assert not cv.cell_moves(*cell2), 'the clicked cell is still now (own animation)'
+        assert fr2[2] != fr2[0]
+    finally:
+        RV.StillFrameDialog.exec = old_exec
+    # the dialog itself shows (pictures, the start frame preselected)
+    dlg = RV.StillFrameDialog(s.renderer, cv.gfx.sheet, cv.pals, mt2, fr2, start=1)
+    assert dlg.list.count() == len(fr2) and dlg.chosen() == 1
+    dlg.deleteLater()
+    while s.undo.index() > n0 + 1:            # the GreatTree copy stays for (5)-(8)
+        s.undo.undo()
+    app.processEvents()
+
+    # (5) the brush preview
+    pick(rid)
+    rt._set_tool('paint')
+    cv.set_zoom(3)
+    far = cv.cell_metatile(0, 0)
+    other = next(cv.cell_metatile(c, r) for r in range(8) for c in range(10)
+                 if cv.cell_metatile(c, r) != far)
+    rt._brush_selected(other)
+    cv._hover = (0, 0)
+    g_on = shot()
+    cv.ghost = False
+    g_off = shot()
+    cv.ghost = True
+    assert g_on != g_off, 'the brush shows under the mouse'
+    cv._hover = None
+    rt._set_tool('select')
+
+    # (6) where a metatile is used
+    used_mt = cv.cell_metatile(*cell)
+    rt._picker_hover_mt(used_mt)
+    assert cell in cv.used_cells() and 'used on' in rt.status_line.text(), rt.status_line.text()
+    u_on = shot()
+    rt._picker_hover_mt(None)
+    assert cv.used_cells() == [] and shot() != u_on
+
+    # (7) the whole room
+    room = doc.room(rid)
+    keys = [int(k) for k in doc.screen_keys(room)]
+    rt._open_room_view()
+    app.processEvents()
+    rv = rt.room_view
+    assert sorted(rv.view.keys) == sorted(keys)
+    pm = rv.view.item.pixmap()
+    assert pm.width() == rv.view.cols * 160 and pm.height() == rv.view.rows * 128
+    if len(keys) > 1:
+        other_k = [k for k in keys if k != rt.key][0]
+        rv.view.screenClicked.emit(other_k)
+        app.processEvents()
+        assert rt.key == other_k and rv.view.current == other_k, 'double-click = edit it'
+        rt.select_screen(keys[0])
+    rv.close()
+
+    # (8) the reference window
+    rt._open_reference()
+    app.processEvents()
+    rw = rt.ref_win
+    rw.show_source(('vanilla', 0x00))
+    app.processEvents()
+    assert rw.canvas.source == ('vanilla', 0x00) and rw.canvas.tiles is not None
+    assert rw.screen.count() >= 1 and rw.state.count() >= 1
+    rw.search.setText('zzzz-no-room')
+    assert rw.rooms.count() == 0
+    rw.search.setText('')
+    rw.show_source(('custom', rid))
+    app.processEvents()
+    assert rw.canvas.source == ('custom', rid) and not rw.canvas.is_editable()
+    ref_mt = rw.canvas.cell_metatile(*cell)
+    rw.brushOffered.emit(ref_mt, bytes(cv.gfx.sheet))
+    assert cv.brush and cv.brush['tiles'] == ref_mt['tiles'], 'same tiles -> the brush'
+    rw.brushOffered.emit(ref_mt, bytes(4096))
+    assert 'Borrow' in rt.status_line.text()
+    tiles_before = [list(r_) for r_ in rw.canvas.tiles]
+    QTest.mouseClick(rw.canvas.viewport(), _Qt.LeftButton)
+    assert [list(r_) for r_ in rw.canvas.tiles] == tiles_before
+    pre8 = doc.dumps()
+    QTest.mouseClick(rw.canvas.viewport(), _Qt.RightButton)
+    assert [list(r_) for r_ in rw.canvas.tiles] == tiles_before and doc.dumps() == pre8, \
+        'the reference never edits'
+    rw.close()
+    rt._set_tool('select')
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'everything undone'
+    print(f'OK: S173 room aids — two bars (all shown at 1512 px; Statue / Monument / Archive '
+          f'in + More, keys kept), zoom 1-12 with half steps / ± / Fit ({z}×), clean view '
+          f'(button + H held == every overlay off), Still on the game\'s animation '
+          f'({len(frames)} frames) and an own one ({len(fr2)} frames): a new still tile on '
+          f'the clicked cell only (r2), the brush, exact undo; brush preview; where-used outline; Whole '
+          f'room ({len(keys)} screens); Reference (read-only, brush on the same tiles)')
+
+
+def s173_anim_import(app, w):
+    """S173 r3 (user: "Allow the editor to import them then, please, rather than fiddling with
+    my project"): Animate → "Import frames from PNG…" (editor2/core/anim_import). On a room
+    that borrows a game tileset (medal_vault: made its own first) with one free palette row:
+    a 2-frame strip (red / cream / orange / black — no row has them) → ONE new row (colour 1
+    the cream: own colour 1 stays off), frame 1 = the cell's tiles (same wall side), the cell's
+    row, its metatile in My metatiles, a flip animation of 2 frames every 32; the canvas cell
+    moves; exact undo (project + assets). The window shows the frames; a wrong size is refused
+    with no undo step; a 3x-zoomed strip reads the same; r5: see-through pixels keep the map
+    (alpha 0) or light it (half-clear, the map's black kept)."""
+    import os
+    import tempfile
+    from PIL import Image
+    from editor2.app.rooms import tab as TABm
+    from editor2.core import anim_import as AI
+    from editor2.core import page2 as P2
+    from editor2.core.document import val
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'medal_vault':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    assert rt.current_room()['id'] == 'medal_vault'
+    room = rt.current_room()
+    assert 'tileset' not in room['record'], 'the test wants a borrowed game tileset'
+    adir = os.path.join(doc.project_dir, 'assets')
+    assets0 = sorted(os.listdir(adir))
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # the art: 2 frames 16x16 in four colours no row of the room has
+    RED, CREAM, ORANGE, BLACK = (224, 24, 16), (248, 248, 208), (248, 160, 0), (0, 0, 0)
+    tmp = tempfile.mkdtemp(prefix='s173imp_')
+    strip = Image.new('RGB', (32, 16), ORANGE)
+    for f in (0, 1):
+        for y in range(16):
+            for x in range(16):
+                c = ORANGE
+                if 4 <= x <= 11 and 2 + f <= y <= 13:
+                    c = RED if (x + y + f) % 3 else CREAM
+                if x in (3, 12) or y in (1 + f, 14):
+                    c = BLACK
+                strip.putpixel((f * 16 + x, y), c)
+    p1 = os.path.join(tmp, 'flame.png')
+    strip.save(p1)
+    strip.resize((96, 48), Image.NEAREST).save(os.path.join(tmp, 'flame_x3.png'))
+    fr3, info3 = AI.read_frames(Image.open(os.path.join(tmp, 'flame_x3.png')), 1, 1)
+    fr1, info1 = AI.read_frames(Image.open(p1), 1, 1)
+    assert info3['scale'] == 3 and info3['n'] == 2 and \
+        [list(f.getdata()) for f in fr3] == [list(f.getdata()) for f in fr1], '3x reads the same'
+    # refusals: the wrong size, a see-through pixel (no undo step)
+    warned = []
+    keep_w = TABm.QMessageBox.warning
+    TABm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[2]))
+    try:
+        cell = next((c, r) for r in range(8) for c in range(10))
+        cv.set_selection((cell[0], cell[1], cell[0], cell[1]))
+        Image.new('RGB', (20, 16)).save(os.path.join(tmp, 'bad.png'))
+        rt._tanim_import_png(os.path.join(tmp, 'bad.png'))
+        assert warned and 'each frame is 16×16' in warned[-1], warned
+        assert s.undo.index() == n0 and doc.dumps() == pre
+    finally:
+        TABm.QMessageBox.warning = keep_w
+    # the import (the window: the frames, one new row, speed 32 by default)
+    seen = {}
+
+    def auto(dlg):
+        seen['plan'] = dlg.plan
+        seen['vals'] = dlg.values()
+        return dlg.values()
+    rt._import_auto = auto
+    k_before = [list(r_) for r_ in cv.tiles]
+    wall_before = [P2.is_wall(P2.slot_key(k_before[cell[1] * 2 + j][cell[0] * 2 + i]),
+                              val(room['record']['collision_threshold']))
+                   for j in (0, 1) for i in (0, 1)]
+    try:
+        rt._tanim_import_png(p1)
+    finally:
+        rt._import_auto = None
+    app.processEvents()
+    plan = seen['plan']
+    assert seen['vals']['speed'] == 32, 'the game\'s torch speed by default'
+    assert list(plan['new_rows']) == [2] and not plan['free1'] and plan['off_px'] == 0, \
+        (plan['new_rows'], plan['free1'], plan['off_px'])
+    assert s.undo.index() == n0 + 1, 'one undo step'
+    room = doc.room('medal_vault')
+    assert 'tileset' in room['record'], 'the game tileset was made the room\'s own'
+    pid = doc.effective_palette(room, rt.key, rt.state_idx)
+    row2 = [int(v, 16) if isinstance(v, str) else v for v in doc.palette(pid)['colors_rgb555'][2]]
+    from editor2.core import png_import as PI
+    assert set(row2) == {PI.to555(c) for c in (RED, CREAM, ORANGE, BLACK)} and row2[1] == 0x6BFF \
+        and row2[3] == 0, [hex(v) for v in row2]
+    items = doc.tile_anims(room)
+    assert len(items) == 1 and int(str(items[0]['speed']), 0) == 32 and \
+        len(items[0].get('frames') or []) == 1, items
+    cx, cy = cell
+    T = doc.layout(cv.lid)['tiles']
+    A = doc.layout(cv.attr_lid)['attr']
+    thr = val(room['record']['collision_threshold'])
+    for n, (j, i) in enumerate(((0, 0), (0, 1), (1, 0), (1, 1))):
+        r_, c_ = cy * 2 + j, cx * 2 + i
+        assert A[r_][c_] & 7 == 2, 'the cell is drawn with the new row'
+        assert P2.is_wall(P2.slot_key(T[r_][c_]), thr) == wall_before[n], 'same wall side'
+        sl = P2.slot_key(T[r_][c_])
+        assert bytes(doc.read_sheet(doc.tileset_key(room))[sl * 16:sl * 16 + 16]) == \
+            plan['gfx'][0][(r_, c_)], 'frame 1 = the tiles'
+    tiles_now = [T[cy * 2][cx * 2], T[cy * 2][cx * 2 + 1], T[cy * 2 + 1][cx * 2], T[cy * 2 + 1][cx * 2 + 1]]
+    assert any(m['tiles'] == tiles_now for m in doc.metatiles(doc.tileset_key(room))), \
+        'the cell is in My metatiles'
+    assert cv.cell_moves(cx, cy), 'the cell moves on the canvas'
+    assert 'Imported' in rt.status_line.text(), rt.status_line.text()
+    # S173 r5 see-through pixels (user: "because you drew OVER other tiles I am concerned the
+    # background wont fit together"): alpha 0 keeps the map, half-clear = light (its colour,
+    # except where the map is black) — planned against what the screen shows
+    under = s.renderer.render_screen(room, rt.key, rt.state_idx).convert('RGB')
+    cell2 = next((c, r) for r in range(8) for c in range(10) if (c, r) != cell)
+    ov = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            if x >= 8:
+                ov.putpixel((x, y), ORANGE + (128,))          # light on the right half
+    rf, rinfo = AI.read_frames(ov, 1, 1)
+    assert rinfo['alpha']
+    pl2 = AI.plan(doc, s.renderer, room, rt.key, rt.state_idx, cv.lid, cv.attr_lid,
+                  (cell2[0], cell2[1], cell2[0], cell2[1]), rf)
+    for y in range(16):
+        for x in range(16):
+            u = under.getpixel((cell2[0] * 16 + x, cell2[1] * 16 + y))
+            want = u if (x < 8 or u == (0, 0, 0)) else ORANGE
+            r_, c_ = cell2[1] * 2 + y // 8, cell2[0] * 2 + x // 8
+            got = pl2['rgb'][0][(r_, c_)][(y % 8) * 8 + x % 8]
+            assert tuple(got) == tuple(want), (x, y, got, want)
+    # the window itself
+    from editor2.app.rooms.anim_import_dialog import AnimImportDialog
+    dlg = AnimImportDialog(plan, info1, 50, 'flame.png')
+    assert dlg.values()['order'] == 'loop' and dlg.values()['name'] == 'flame'
+    dlg.deleteLater()
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'the import undoes exactly'
+    assert sorted(os.listdir(adir)) == assets0, 'no asset left behind'
+    print(f'OK: S173 r3 Import frames from PNG — 2 frames (and the same at 3x), one new row (row 2,'
+          f' colour 1 the cream), the game tileset made the room\'s own, frame 1 = the tiles '
+          f'(same wall side), the row, My metatiles, a flip every 32; a wrong size refused with no '
+          f'undo step; see-through = the map / light; exact undo')
+
+
+def s174_stamps(app, w):
+    """S174 (ROADMAP P3.3m; user: "Allow me to 'stamp' these types of things … on top of any
+    tiles … I should be able to remove this stamp and put it elsewhere or copy and paste etc.
+    When I remove it put the tiles back as before and don't create a million random crappy
+    broken tiles"): Rooms → Stamps. On medal_vault (a game tileset it borrows; its room-level
+    colour grid island_s0 is SHARED with five rooms): import a 2-frame 3×2 see-through strip (the size
+    from the name), place it with the Stamp tool, an overlapping one refused, move, copy + paste,
+    light colour / unlit; the project's tiles / layouts / palettes / tileset files never change;
+    the canvas draws what stamps.simulate plans; the BAKE (the build's copy) writes only
+    a colour grid medal_vault alone uses (island_s0 untouched) and draws exactly the canvas picture, every frame;
+    the space meters bake too; delete, remove from the library; undo back to the start."""
+    import json
+    import os
+    import shutil
+    import tempfile
+    from PIL import Image, ImageQt as IQ
+    from editor2.core import stamps as ST
+    from editor2.core import tileanim as TAm
+    from editor2.core.render_project import ProjectRenderer
+    from editor2.core import compiler as CMP
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'medal_vault':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'medal_vault'
+    adir = os.path.join(doc.project_dir, 'assets')
+    assets0 = {f: open(os.path.join(adir, f), 'rb').read() for f in os.listdir(adir)
+               if f.endswith('.2bpp')}
+    had_dir = os.path.isdir(os.path.join(adir, 'stamps'))
+    n0 = s.undo.index()
+    pre = doc.dumps()
+
+    def bare(text):
+        """The project minus the stamps and the palettes (S174 r2: placing writes the rows a
+        stamp owns into the palette; a borrowed palette becomes the room's own)."""
+        d = json.loads(text)
+        d['custom'].pop('stamps', None)
+        d['custom'].pop('palettes', None)
+        for r in d['custom'].get('rooms') or []:
+            r.pop('stamps', None)
+            (r.get('render') or {}).pop('palette', None)
+            for sc in (r.get('screens') or {}).values():
+                for st_ in sc.get('states') or []:
+                    st_.pop('palette', None)
+        return json.dumps(d, sort_keys=True)
+    # the art: a half-clear round glow, a 2-frame flame (opaque), clear elsewhere — 3 x 2 cells
+    AMB, RED, CRM, BLK = (240, 192, 72), (216, 32, 16), (248, 248, 208), (0, 0, 0)
+    strip = Image.new('RGBA', (96, 32), (0, 0, 0, 0))
+    for f in (0, 1):
+        for y in range(32):
+            for x in range(48):
+                if (x - 24) ** 2 + (y - 8) ** 2 <= (11 + f) ** 2:
+                    strip.putpixel((f * 48 + x, y), AMB + (128,))
+        for y in range(3 + f, 15):
+            for x in range(21, 27):
+                strip.putpixel((f * 48 + x, y), (CRM if x in (21, 26) else RED) + (255,))
+        for y in range(16, 26):
+            strip.putpixel((f * 48 + 24, y), BLK + (255,))
+    tmp = tempfile.mkdtemp(prefix='s174st_')
+    path = os.path.join(tmp, 'torch_3x2.png')
+    strip.save(path)
+    rt._import_auto = lambda dlg: dict(dlg.values(), name='Torch')
+    try:
+        sid = rt._stamp_import(path)
+    finally:
+        rt._import_auto = None
+    app.processEvents()
+    st = ST.stamp_of(doc.custom, sid)
+    assert st and (st['w'], st['h'], st['frames'], st['speed']) == (3, 2, 2, 32), st
+    assert os.path.exists(os.path.join(doc.project_dir, st['png']))
+    assert rt.stamps_panel.current_id() == sid and rt.stamps_panel.list.count() == 1
+    rt._set_tool('stamp')
+    app.processEvents()
+    assert cv.tool == 'stamp' and cv.stamp_brush == sid
+    # place: the cursor on the middle column, top row
+    i0 = rt._stamp_place((4, 1))
+    app.processEvents()
+    room = rt.current_room()
+    assert i0 == 0 and {k: v for k, v in room['stamps'][0].items() if k != 'rows'} == \
+        {'stamp': sid, 'screen': rt.key, 'x': 3, 'y': 1}, \
+        room.get('stamps')
+    assert bare(doc.dumps()) == bare(pre), 'placing changed nothing but the stamps + palette'
+    # S174 r2: the rows it owns are IN the palette (shown under it on the Palettes page)
+    room = rt.current_room()
+    pid = doc.effective_palette(room, rt.key, 0)
+    own = (room['stamps'][0].get('rows') or {}).get(pid)
+    assert pid and own is not None, room['stamps'][0]
+    words = doc.palette(pid)['colors_rgb555']
+    if own:
+        assert not rt.pal_stamps.isHidden(), 'the Palettes page names them'
+        assert 'Torch' in rt.pal_stamps.text() and f'row {own[0]}' in rt.pal_stamps.text(), \
+            rt.pal_stamps.text()
+    info = cv.stamp_info(0)
+    assert info and info['rect'] == (3, 1, 5, 2) and len(info['frames']) == 2, info
+    pm = IQ.fromqpixmap(cv.base.pixmap()).convert('RGB')
+    assert pm.crop((48, 16, 96, 48)).tobytes() == info['frames'][0].tobytes(), \
+        'the canvas draws the planned stamp'
+    # overlapping: refused, no undo step
+    n1 = s.undo.index()
+    assert rt._stamp_place((5, 2)) is None and 'overlap' in rt.status_line.text()
+    assert s.undo.index() == n1
+    # move, copy + paste, the light
+    rt._stamp_move(0, 0, 1)
+    room = rt.current_room()
+    assert (room['stamps'][0]['x'], room['stamps'][0]['y']) == (0, 1), \
+        (room['stamps'], rt.status_line.text())
+    rt._stamp_copy(0)
+    i1 = rt._stamp_paste((7, 4))
+    assert i1 == 1 and (room['stamps'][1]['x'], room['stamps'][1]['y']) == (6, 4)
+    cv.stamp_sel = 1
+    rt._stamp_set_light(light='#88b8f8')
+    assert room['stamps'][1]['light'] == '#88b8f8'
+    cv.stamp_sel = 0
+    rt._stamp_set_light(lit=False)
+    assert room['stamps'][0].get('lit') is False
+    app.processEvents()
+    assert bare(doc.dumps()) == bare(pre)
+    for f, b in assets0.items():
+        assert open(os.path.join(adir, f), 'rb').read() == b, f'{f} changed'
+    # the bake == the canvas, every frame; the shared colour grid not touched
+    sim = ST.simulate(doc, s.renderer)
+    bdir, bwarn = ST.baked_dir(doc.data, doc.project_dir, REPO)
+    from editor2.core.document import Document
+    bd = Document(os.path.join(bdir, 'project.json'))
+    br = ProjectRenderer(REPO, bd.project_dir, bd.data)
+    broom = bd.room('medal_vault')
+    assert 'stamps' not in broom and 'stamps' not in bd.custom
+    a_id = ST._attr_id(br, broom, rt.key, 0)
+    _tu, au = ST._users(bd, br)
+    assert a_id and {u[0] for u in au[a_id]} == {'medal_vault'}, ('a colour grid of its own', a_id)
+    assert bd.layout('island_s0').get('attr') == doc.layout('island_s0').get('attr'), \
+        'island_s0 (shared) untouched'
+    items = bd.tile_anims(broom)
+    sh0 = bytes(bd.read_sheet(broom['record']['tileset']))
+    for f in (0, 1):
+        sh = bytearray(sh0)
+        if f:
+            for it in items:
+                for s_, hx in zip(TAm.slots_of(it), it['frames'][0]):
+                    sh[s_ * 16:s_ * 16 + 16] = bytes.fromhex(hx)
+        stt = br.screen_state(broom, rt.key, 0)
+        grid, _l = br.layout_grid(stt['layout'])
+        at, _n = br.attr_grid(broom, rt.key, 0)
+        img = br.compose(bytes(sh), grid, at, br.room_palettes(broom, rt.key, 0))
+        for k in (0, 1):
+            inf = sim[('medal_vault', k, 0)]
+            c0, r0, c1, r1 = inf['rect']
+            assert img.crop((c0 * 16, r0 * 16, (c1 + 1) * 16, (r1 + 1) * 16)).tobytes() == \
+                inf['frames'][f].tobytes(), ('bake == canvas', k, f)
+    warn_any = any(sim[('medal_vault', k, 0)]['warn'] for k in (0, 1))
+    assert warn_any == bool(bwarn), (bwarn, [sim[('medal_vault', k, 0)]['warn'] for k in (0, 1)])
+    usage, errs = CMP.measure_banks(doc.data, doc.project_dir, REPO)
+    assert not errs and usage, errs
+    # delete one, remove the stamp from the library (with its other placement)
+    words = [list(x) for x in doc.palette(pid)['colors_rgb555']]
+    rt._stamp_delete(1)
+    assert len(rt.current_room()['stamps']) == 1
+    rt._stamp_remove_lib(sid, ask=False)
+    assert 'stamps' not in rt.current_room() and 'stamps' not in doc.custom
+    assert bare(doc.dumps()) == bare(pre)
+    assert doc.palette(pid)['colors_rgb555'] == words, 'the colours stay in the palette for tiles'
+    assert rt.pal_stamps.isHidden() and not rt.pal_stamps.text()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undone exactly'
+    rt._set_tool('select')
+    shutil.rmtree(tmp, ignore_errors=True)
+    if not had_dir:
+        shutil.rmtree(os.path.join(adir, 'stamps'), ignore_errors=True)
+    else:
+        os.remove(os.path.join(doc.project_dir, st['png']))
+    assert {f: open(os.path.join(adir, f), 'rb').read() for f in os.listdir(adir)
+            if f.endswith('.2bpp')} == assets0
+    print(f'OK: S174 stamps — import (3×2 from the name, 2 frames, speed 32), place under the '
+          f'cursor, overlap refused, move, copy + paste, light colour / unlit; nothing but the '
+          f'stamps + their palette rows {own} (named on the Palettes page, kept after removal) '
+          f'changed in the project; canvas == plan; the bake writes a colour grid only '
+          f'medal_vault uses (island_s0 untouched) and == the canvas both frames'
+          f'{" (warned: nearest colours)" if bwarn else ""}; meters bake; delete, remove; '
+          f'undone exactly')
+
+
+def s175_jumps_screens(app, w):
+    """S175 (ROADMAP P3.3n; user: "copy-paste a whole room into a different screen … keep
+    backups"; "shift all the scripts left/right and up/down"; "Jumping points … set where it
+    dumps you on the screen below"): Rooms → + More ▸ Jump (J) on gate_island screen 0 —
+    the landing picked by row (panel), the ↓J marker on screen 4, dragged; the Whole room
+    arrows; Copy screen 4 / Paste over screen 0 (the art only, its objects stay); Shift
+    objects ◀ (+ the arrivals into it) and back; every step undone to the start."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'gate_island':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'gate_island'
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt.select_screen(0)
+    app.processEvents()
+    assert rt.act_add_jump in rt.more_btn.menu().actions(), '+ Jump not in + More'
+    rt.canvas.selected_cell = (4, 6)
+    rt.act_add_jump.trigger()
+    app.processEvents()
+    jumps = [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump']
+    assert len(jumps) == 1 and (jumps[0]['x'], jumps[0]['y']) == (4, 6), jumps
+    assert rt.jump_panel.isVisible() is not None and not rt.jump_panel.isHidden(), \
+        'the Jump panel is not shown'
+    assert any(m[0] == 'jump' and (m[1], m[2]) == (4, 6) for m in rt.canvas.markers)
+    rt._jump_fields({'land_y': 3})
+    app.processEvents()
+    assert [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump'][0]['land_y'] == 3
+    rt.select_screen(4)
+    app.processEvents()
+    land = [m for m in rt.canvas.markers if m[0] == 'jump_land']
+    assert land and (land[0][1], land[0][2]) == (4, 3), land
+    rt._move_marker(land[0][5], 4, 5)               # what a drag of the ↓J marker does
+    app.processEvents()
+    assert [e for e in doc.npc_entries(room, 0, 0) if e.get('kind') == 'jump'][0]['land_y'] == 5
+    from editor2.app.rooms.room_view import WholeRoomView
+    v = WholeRoomView(s, w)
+    v.show_room(('custom', 'gate_island'), 4, 0)
+    app.processEvents()
+    assert v.view.jumps == [(0, 4, 6, 5)], v.view.jumps
+    v.close()
+    # copy screen 4, paste over screen 0: the art; screen 0 keeps its objects
+    objs0 = [{k: x for k, x in st.items() if k in ('npcs', 'exits')}
+             for st in doc.states(room, 0)]
+    rt._copy_screen(4)
+    assert rt.btn_paste_screen.isEnabled()
+    rt._paste_screen(0)
+    app.processEvents()
+    r = s.renderer
+    assert r.render_screen(room, '0', 0).tobytes() == r.render_screen(room, '4', 0).tobytes()
+    assert [{k: x for k, x in st.items() if k in ('npcs', 'exits')}
+            for st in doc.states(room, 0)] == objs0, 'paste changed the objects'
+    # shift ◀ and ▶
+    xs = [e['x'] for e in doc.npc_entries(room, 0, 0)]
+    rt._shift_objects(0, -1, 0)
+    app.processEvents()
+    assert [e['x'] for e in doc.npc_entries(room, 0, 0)] == [x - 1 for x in xs]
+    assert 'Shifted' in rt.status_line.text(), rt.status_line.text()
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    rt._screen_clip = None
+    rt.btn_paste_screen.setEnabled(False)
+    rt.minimap.can_paste = None
+    print('OK: S175 jumps + screens — + More ▸ Jump on gate_island (4,6), the landing row from '
+          'the panel and by dragging ↓J on screen 4, Whole room arrow; Copy screen 4 / Paste over '
+          '0 (picture == screen 4, objects kept); Shift objects ◀; undone exactly')
+
+
+def s175_screen_music(app, w):
+    """S175 (ROADMAP P3.3o; user: "different pieces of music playing on different screens of
+    a multi screen room … Song only switches if a screen's song is new"): the Screen page's
+    music choice on gate_island screen 4 writes screens['4'].music (one undo step), shows it
+    back, '(the room's song)' removes it; undone to the start."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'gate_island':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt.select_screen(4)
+    app.processEvents()
+    cb = rt.inspector.s_music
+    assert cb.isEnabled() and cb.currentData() is None, (cb.isEnabled(), cb.currentData())
+    i = cb.findData('0x0C')
+    assert i > 0, 'game song $0C not offered'
+    cb.setCurrentIndex(i)
+    app.processEvents()
+    assert room['screens']['4'].get('music') == '0x0C', room['screens']['4']
+    assert s.undo.index() == n0 + 1, 'not one undo step'
+    rt.select_screen(0)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() is None
+    rt.select_screen(4)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() == '0x0C', 'the choice is not shown back'
+    rt.inspector.s_music.setCurrentIndex(0)
+    app.processEvents()
+    assert 'music' not in room['screens']['4']
+    # S175r3 (the user: "random numerals for songs, no custom songs … can't preview it
+    # … where are the DWM2 songs?"): named game songs, the DWM2 library, ▶ preview
+    pick = rt.inspector.s_music_pick
+    labels = [cb.itemText(k) for k in range(cb.count())]
+    assert any('DWM2 songs' in x for x in labels), labels[:8]
+    j = cb.findData('0x0C')
+    assert cb.itemText(j).strip() != '$0C game song', cb.itemText(j)
+    lid = next(k for k in sorted(doc.library_songs()) if 'dwm2' in k)
+    j = cb.findData('lib:' + lid)
+    assert j > 0, 'DWM2 song not offered'
+    n1, songs0 = s.undo.index(), len(doc.project_songs())
+    cb.setCurrentIndex(j)
+    app.processEvents()
+    sid = room['screens']['4'].get('music')
+    assert len(doc.project_songs()) == songs0 + 1, 'library song not added to the project'
+    assert any(x['id'] == sid and x['source'].get('library') == lid
+               for x in doc.project_songs()), (sid, doc.project_songs())
+    assert s.undo.index() == n1 + 1, 'add + assign is not one undo step'
+    rt.select_screen(4)
+    app.processEvents()
+    assert rt.inspector.s_music.currentData() == sid, 'the added song is not shown back'
+    k = rt.inspector.s_music.findData('lib:' + lid)
+    assert k < 0, 'the added library song is still offered as a new library song'
+    pcm = pick.renderer(doc, ('song', sid)).render(seconds=0.5)
+    pcm2 = pick.renderer(doc, ('game', 0x0C, 'bgm')).render(seconds=0.5)
+    assert len(pcm) and len(pcm2), 'preview renders nothing'
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    print("OK: S175 screen music — the Screen page's music on gate_island screen 4 "
+          "(screens['4'].music = '0x0C', one undo step, shown back, the room's song again); "
+          "S175r3: named game songs + DWM2 library offered, picking a DWM2 song adds it to "
+          "the project and assigns it in ONE undo step, ▶ preview renders; undone exactly")
+
+
+def s177_podium_repack(app, w):
+    """S177 (user: "can [the podium] proxy the NPC exactly?"; "Why am I getting so few
+    tiles?"): Rooms → an examine spot on dusk_mirror screen 0 → the Spot page's *talks for*
+    the NPC at (5,4): the spot keeps no script, faces up, the preview names the NPC, the
+    canvas tooltip says podium; *nobody* gives it the NPC's script back; the Tileset tab's
+    Repack button and its handler on a game sheet (nothing to move). Everything undone."""
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    for i in range(rt.room_list.count()):
+        if rt.room_list.item(i).data(0x100) == 'dusk_mirror':
+            rt.room_list.setCurrentRow(i)
+    app.processEvents()
+    room = rt.current_room()
+    assert room['id'] == 'dusk_mirror'
+    rt.select_screen(0)
+    app.processEvents()
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    rt._npc_op('Add examine spot', lambda d, r, k, st: d.add_spot(r, k, st, 'examine', 5, 5,
+                                                                  'teleport_6b', 'any'))
+    app.processEvents()
+    lst = doc.npc_entries(rt.current_room(), 0, 0)
+    idx = next(i for i, e in enumerate(lst) if e.get('kind') == 'examine' and (e['x'], e['y']) == (5, 5))
+    rt._show_spot_panel(idx)
+    app.processEvents()
+    sp = rt.spot_panel
+    datas = [sp.talks_for.itemData(i) for i in range(sp.talks_for.count())]
+    assert datas[0] is None and '5,4' in datas and '5,6' in datas, datas
+    sp.talks_for.setCurrentIndex(datas.index('5,4'))          # what picking it does
+    app.processEvents()
+    e = doc.npc_entries(rt.current_room(), 0, 0)[idx]
+    assert e.get('talks_for') == {'x': 5, 'y': 4} and e.get('facing') == 'up' and 'script' not in e, e
+    assert 'Answers exactly as the NPC at (5,4)' in sp.preview.text(), sp.preview.text()
+    assert sp.form.isRowVisible(sp.script) is False, 'the script row still shows for a podium'
+    assert any(m[0] == 'examine' and (m[1], m[2]) == (5, 5) and 'podium' in m[4]
+               for m in rt.canvas.markers), [m[4] for m in rt.canvas.markers if m[0] == 'examine']
+    rt._show_spot_panel(idx)
+    app.processEvents()
+    sp.talks_for.setCurrentIndex(0)                            # nobody: its own script again
+    app.processEvents()
+    e = doc.npc_entries(rt.current_room(), 0, 0)[idx]
+    assert e.get('script') == 'teleport_6b' and 'talks_for' not in e, e
+    tm = rt.tileset_map
+    assert tm.repack_b.text().startswith('Repack'), tm.repack_b.text()
+    n1 = s.undo.index()
+    rt._purge_metatiles('repack')                              # a game sheet: nothing moves
+    app.processEvents()
+    assert s.undo.index() in (n1, n1 + 1)
+    s.undo.setIndex(n0)
+    app.processEvents()
+    assert doc.dumps() == pre, 'undo did not bring the project back'
+    print('  ok: s177_podium_repack (talks for, the preview, the tooltip, nobody, Repack)')
+
+
+def s176_colours_draw_stamps(app, w):
+    """S176 (the user: "Please allow per-screen palette! … Make it explicit visually"; the Draw
+    panel "shows palette rows but wont let me change the row … make it fucking normal … if I
+    want to recolour all the pixels of a certain colour a different colour, make that
+    intuitive"; the torch's glow "cut off at the top"):
+    (a) Rooms → Palettes: the strip says WHOSE colours the rows are; *Give screen 4 its own
+    colours* = a copy (nothing looks different), a row changed there changes that screen only,
+    the row is marked "not the room's", the mini-map carries the strip, the scroll rule + the
+    warning when both screens draw with the row; the mini-map's menu takes it back;
+    (b) Stamps → Replace picture…: a 3×2 torch whose glow is cut at the top -> a 3×3 one, the
+    placement kept where its flame is (y − 1), the tool holds the stamp by its flame row (the
+    cap may hang off the top edge);
+    (c) Draw: every row in its true colours with the quarters' marks; a mark hovered =
+    preview, clicked = the quarter on that row one-to-one; a colour the quarter's row lacks ->
+    the bar's one-click switch (+ the pixel); Fill crosses the quarters; Replace colour over
+    the whole tile and through a row switch; the panel fits its page.
+    Everything undone to the start."""
+    import os
+    import tempfile
+    from PIL import Image, ImageQt as IQ
+    from PySide6.QtCore import QPoint, Qt as _Qt
+    from PySide6.QtTest import QTest
+    from editor2.app.rooms import commands as RCMD
+    from editor2.core import screen_palettes as SP
+    from editor2.core import stamps as ST
+    s = w.session
+    doc = s.doc
+    rt = w.rooms_tab
+    cv = rt.canvas
+    w.tabs.setCurrentWidget(rt)
+
+    def go(rid):
+        for i in range(rt.room_list.count()):
+            if rt.room_list.item(i).data(0x100) == rid:
+                rt.room_list.setCurrentRow(i)
+        app.processEvents()
+        assert rt.current_room()['id'] == rid
+    n0 = s.undo.index()
+    pre = doc.dumps()
+    # ---------------- (a) a screen's own colours
+    assert SP.scroll_rule([1, 2, 3], {0, 3}, {0, 2, 3}) == ([1, 2, 3], [], [3])     # arriving
+    assert SP.scroll_rule([1, 2, 3], {0, 2, 3}, {0, 3}) == ([1, 3], [2], [3])       # leaving
+    assert SP.scroll_rule([], {0}, {0}) == ([], [], [])
+    go('gate_island')
+    rt.select_screen(4)
+    rt.rail.show_page('palettes')
+    app.processEvents()
+    room = rt.current_room()
+    base = SP.room_palette(room)
+    assert 'THE ROOM\'S COLOURS' in rt.pal_scope.text() and '2 of its 2 screens' in \
+        rt.pal_scope.text(), rt.pal_scope.text()
+    assert not rt.btn_screen_own.isHidden() and rt.btn_screen_room.isHidden()
+    assert rt.btn_screen_own.text() == 'Give screen 4 its own colours'
+    assert rt.minimap.own_pal == {} and rt.minimap.can_own
+    pic0 = IQ.fromqpixmap(cv.base.pixmap()).convert('RGB').tobytes()
+    shown0 = [list(map(tuple, r)) for r in s.renderer.room_palettes(room, 0, 0)[:4]]
+    rt.btn_screen_own.click()
+    app.processEvents()
+    room = rt.current_room()
+    pid = SP.own(doc, room, 4)
+    assert pid and pid != base and doc.effective_palette(room, 4, 0) == pid
+    assert doc.effective_palette(room, 0, 0) == base and SP.room_palette(room) == base
+    assert SP.screens_with_own(doc, room) == {4: pid}
+    assert 'SCREEN 4: ITS OWN COLOURS' in rt.pal_scope.text() and 'still the same' in \
+        rt.pal_scope.text(), rt.pal_scope.text()
+    assert rt.btn_screen_own.isHidden() and not rt.btn_screen_room.isHidden()
+    assert list(rt.minimap.own_pal) == [4] and rt.palettes.notes == {}
+    assert IQ.fromqpixmap(cv.base.pixmap()).convert('RGB').tobytes() == pic0, \
+        'its own colours start as a copy: the screen looks the same'
+    assert s.undo.index() == n0 + 1, 'one undo step'
+    words = [int(str(c), 0) for c in doc.palette(pid)['colors_rgb555'][2]]
+    new_c = 0x7C1F if words[0] != 0x7C1F else 0x03E0
+    s.undo.push(RCMD.SetPaletteColor(s, pid, 2, 0, new_c))
+    rt._show()
+    app.processEvents()
+    room = rt.current_room()
+    assert rt.palettes.notes.get(2, ('',))[0] == 'not the room\'s' and list(rt.palettes.notes) == [2]
+    assert 'Row 2 is not the room\'s' in rt.pal_scope.text(), rt.pal_scope.text()
+    assert [list(map(tuple, r)) for r in s.renderer.room_palettes(room, 0, 0)[:4]] == shown0, \
+        'the other screen keeps the room\'s colours'
+    rep = SP.scroll_report(doc, s.renderer, room)
+    assert len(rep) == 1 and (rep[0]['a'], rep[0]['b'], rep[0]['rows']) == (0, 4, [2]), rep
+    d0, d4 = SP.rows_drawn(doc, s.renderer, room, 0), SP.rows_drawn(doc, s.renderer, room, 4)
+    both = bool(d0.get(2) and d4.get(2))
+    assert rep[0]['clash'] == ([2] if both else [])
+    assert rt.pal_scroll_warn.isHidden() == (not both), rt.pal_scroll_warn.text()
+    if both:
+        assert 'screen 0 and screen 4' in rt.pal_scroll_warn.text()
+    rt.select_screen(0)
+    app.processEvents()
+    assert 'THE ROOM\'S COLOURS' in rt.pal_scope.text() and 'Screen 4 has colours of its own' \
+        in rt.pal_scope.text(), rt.pal_scope.text()
+    n_pal = len(doc.palettes)
+    rt.minimap.ownColoursRequested.emit(4, False)            # the mini-map's menu
+    app.processEvents()
+    room = rt.current_room()
+    assert SP.own(doc, room, 4) is None and len(doc.palettes) == n_pal - 1
+    assert rt.minimap.own_pal == {}
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre
+    print('OK: S176 a screen\'s own colours — the strip, Give screen 4 its own (a copy: the '
+          'same picture), a row changed there only, "not the room\'s", the mini-map strip, the '
+          f'scroll report (row 2, both draw: {both}), back by the mini-map menu; undone')
+    # ---------------- (b) Replace picture
+    go('medal_vault')
+    adir = os.path.join(doc.project_dir, 'assets')
+    had_dir = os.path.isdir(os.path.join(adir, 'stamps'))
+    AMB, RED, CRM, BLK = (240, 192, 72), (216, 32, 16), (248, 248, 208), (0, 0, 0)
+
+    def torch(cells_h, top):
+        im = Image.new('RGBA', (96, cells_h * 16), (0, 0, 0, 0))
+        for f in (0, 1):
+            for y in range(cells_h * 16):
+                for x in range(48):
+                    if (x - 24) ** 2 + (y - top - 8) ** 2 <= (11 + f) ** 2:
+                        im.putpixel((f * 48 + x, y), AMB + (128,))
+            for y in range(top + 3 + f, top + 15):
+                for x in range(21, 27):
+                    im.putpixel((f * 48 + x, y), (CRM if x in (21, 26) else RED) + (255,))
+            for y in range(top + 16, top + 26):
+                im.putpixel((f * 48 + 24, y), BLK + (255,))
+        return im
+    tmp = tempfile.mkdtemp(prefix='s176st_')
+    p32, p33 = os.path.join(tmp, 'torch_3x2.png'), os.path.join(tmp, 'torch_3x3.png')
+    torch(2, 0).save(p32)                         # the glow cut flat by the picture's top
+    torch(3, 16).save(p33)                        # the same torch one row lower, the glow whole
+    rt._import_auto = lambda dlg: dict(dlg.values(), name='Torch')
+    try:
+        sid = rt._stamp_import(p32)
+        app.processEvents()
+        st = ST.stamp_of(doc.custom, sid)
+        assert (st['w'], st['h']) == (3, 2) and 'hold' not in st and ST.anchor(st, (4, 1)) == (3, 1)
+        rt._set_tool('stamp')
+        i0 = rt._stamp_place((4, 1))
+        app.processEvents()
+        assert i0 == 0 and (rt.current_room()['stamps'][0]['x'],
+                            rt.current_room()['stamps'][0]['y']) == (3, 1)
+        old_png = st['png']
+        def flame(img, top):
+            """Where the flame's own colour is drawn in its cell."""
+            c = img.crop((16, top, 32, top + 16))
+            mid = c.getpixel((8, 9))
+            return {(x, y) for y in range(16) for x in range(16) if c.getpixel((x, y)) == mid}
+        flame0 = flame(cv.stamp_info(0)['frames'][0], 0)
+        assert 20 < len(flame0) < 120, len(flame0)
+        n1 = s.undo.index()
+        assert not rt.stamps_panel.b_replace.isHidden() and rt.stamps_panel.b_replace.isEnabled()
+        got = rt._stamp_replace(sid, p33)
+        app.processEvents()
+    finally:
+        rt._import_auto = None
+    st = ST.stamp_of(doc.custom, sid)
+    room = rt.current_room()
+    pl = room['stamps'][0]
+    assert got == 1 and s.undo.index() == n1 + 1, 'one undo step'
+    assert (st['w'], st['h'], st['frames'], st.get('hold')) == (3, 3, 2, 1), st
+    assert st['png'] != old_png and os.path.exists(os.path.join(doc.project_dir, old_png)) and \
+        os.path.exists(os.path.join(doc.project_dir, st['png'])), 'the old picture stays for undo'
+    assert (pl['x'], pl['y']) == (3, 0) and 'rows' in pl, pl
+    info = cv.stamp_info(0)
+    assert info and info['rect'] == (3, 0, 5, 2) and len(info['frames']) == 2, info
+    assert flame(info['frames'][0], 16) == flame0, 'the flame is where it was'
+    assert ST.anchor(st, (4, 1)) == (3, 0), 'the tool holds it by its flame row'
+    i1 = rt._stamp_place((8, 0))                  # the top row: the cap hangs off the screen
+    app.processEvents()
+    pl1 = rt.current_room()['stamps'][i1]
+    assert (pl1['x'], pl1['y']) == (7, -1) and cv.stamp_info(i1)['rect'] == (7, 0, 9, 1), pl1
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    rt._set_tool('select')
+    assert doc.dumps() == pre
+    import shutil
+    shutil.rmtree(tmp, ignore_errors=True)
+    if not had_dir:
+        shutil.rmtree(os.path.join(adir, 'stamps'), ignore_errors=True)
+    else:
+        for f in os.listdir(os.path.join(adir, 'stamps')):
+            if f.startswith('torch'):
+                os.remove(os.path.join(adir, 'stamps', f))
+    print('OK: S176 Stamps → Replace picture… — a 3×2 torch (glow cut at the top) -> 3×3: the '
+          'placement kept (y − 1, the flame where it was), hold row 1, the tool places one on '
+          'the top row with its cap off the screen (y −1); one undo step; undone')
+    # ---------------- (c) Draw
+    rid = None
+    for room in doc.rooms:
+        if room.get('screens') and room.get('record') and not doc.tileset_sharers(room):
+            rid = room['id']
+            break
+    go(rid)
+    rt.picker_tabs.setCurrentIndex([rt.picker_tabs.tabText(i) for i in
+                                    range(rt.picker_tabs.count())].index('Draw'))
+    rt.rail.show_page('tiles')
+    app.processEvents()
+    cv.selected_cell = (0, 1)
+    rt._draw_load_cell()
+    app.processEvents()
+    dt = rt.draw_tab
+    pad = dt.pad
+    assert dt.minimumSizeHint().width() <= 361 and dt.minimumSizeHint().height() <= 720, \
+        dt.minimumSizeHint()
+
+    def click(x, y, button=_Qt.LeftButton):
+        QTest.mouseClick(pad, button, _Qt.NoModifier,
+                         QPoint(3 + x * pad.zoom + pad.zoom // 2, 3 + y * pad.zoom + pad.zoom // 2))
+        app.processEvents()
+    assert set(dt.tool_btns) == {'pencil', 'fill', 'replace', 'pick'} and dt.tool == 'pencil'
+    assert len(dt.swatches) == 16 and len(dt.marks) == 16 and len(dt.tags) == 4
+    for k in range(4):
+        assert [r for r in range(4) if dt.marks[(r, k)].isChecked()] == [dt.qrow[k]]
+        assert dt.tags[k].row == dt.qrow[k]
+    assert 'Colours' in dt.scope.text() and ('room' in dt.scope.text() or 'own' in dt.scope.text())
+    for (r, i), b in dt.swatches.items():         # true colours, never dimmed
+        c = dt.rows[r][i]
+        assert f'#{c[0]:02x}{c[1]:02x}{c[2]:02x}' in b.styleSheet(), (r, i, b.styleSheet())
+    before = dt.current()
+    r0 = dt.qrow[0]
+    other = next(((r, i) for r in range(4) for i in range(4) if r != r0 and
+                  tuple(dt.rows[r][i][:3]) not in {tuple(c[:3]) for c in dt.rows[r0]}), None)
+    if other is not None:
+        row, idx = other
+        # hovering the mark: the tile as it would look; nothing changed
+        dt._preview((row, [0]))
+        assert pad.preview is not None and dt.current() == before and dt.qrow[0] == r0
+        want0 = pad.preview[0][0]
+        dt._preview(None)
+        assert pad.preview is None
+        # the pencil with that colour: asked in the bar; the button switches AND paints
+        dt._pick_swatch(row, idx)
+        click(2, 2)
+        assert dt.current() == before and dt.pending['kind'] == 'pencil'
+        assert pad.flash == [0] and not dt.bar_all.isHidden()
+        n_u = len(dt._undo)
+        dt.bar_q.click()
+        app.processEvents()
+        now = dt.current()
+        assert dt.qrow[0] == row and dt.qrow[1:] == dt.old_qrow[1:] and len(dt._undo) == n_u + 1
+        assert now[0][2 * 8 + 2] == idx and now[1:] == before[1:]
+        assert [v for i, v in enumerate(now[0]) if i != 18] == \
+            [v for i, v in enumerate(want0) if i != 18], 'the switch == the preview'
+        assert dt.marks[(row, 0)].isChecked() and not dt.marks[(r0, 0)].isChecked()
+        assert dt.tags[0].row == row and dt.pending is None and pad.flash is None
+        dt.undo()
+        assert dt.current() == before and dt.qrow == dt.old_qrow, 'one undo: the row and the pixel'
+    # a blank tile: Fill crosses the quarters; Replace colour over the whole tile
+    rt._draw_blank(0)
+    app.processEvents()
+    assert dt.target.currentData() in ('selection', None)
+    assert not (dt.target.model().flags(dt.target.model().index(1, 0)) & _Qt.ItemIsEnabled), \
+        'a blank tile has no original to replace in the room'
+    cols0 = [tuple(c[:3]) for c in dt.rows[0]]
+    a = next(i for i in range(1, 4) if cols0[i] != cols0[0])
+    dt._pick_swatch(0, a)
+    dt.set_tool('fill')
+    click(0, 0)
+    assert all(v == a for q in dt.current() for v in q), 'Fill area crosses the four quarters'
+    b = next(i for i in range(4) if cols0[i] not in (cols0[a],))
+    dt.set_tool('pencil')
+    dt._pick_swatch(0, b)
+    click(9, 9)
+    dt.set_tool('replace')
+    dt._pick_swatch(0, b)
+    click(0, 0)                                   # every pixel of colour a -> b
+    assert all(v == b for q in dt.current() for v in q), 'Replace colour: the whole tile'
+    oth = next(((r, i) for r in range(1, 4) for i in range(4)
+                if tuple(dt.rows[r][i][:3]) not in cols0), None)
+    if oth is not None:
+        dt._pick_swatch(*oth)
+        click(0, 0)                               # a colour row 0 lacks: asked for all four
+        assert dt.pending and dt.pending['kind'] == 'replace' and \
+            dt.pending['quarters'] == [0, 1, 2, 3] and dt.bar_all.isHidden()
+        assert all(v == b for q in dt.current() for v in q)
+        dt.bar_q.click()
+        app.processEvents()
+        assert dt.qrow == [oth[0]] * 4 and all(v == oth[1] for q in dt.current() for v in q), \
+            'the switch carries "this colour becomes that one"'
+        dt.set_tool('pick')
+        dt._pick_swatch(0, 0)
+        click(3, 3)
+        assert (dt.cur_row, dt.pad.colour) == oth, 'Pick'
+    dt.set_tool('pencil')
+    while s.undo.index() > n0:
+        s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == pre
+    print('OK: S176 Draw — the rows in true colours + the quarters\' marks and tags; a mark '
+          'hovered previews, the bar switches a quarter\'s row and paints (one undo); Fill '
+          'crosses the quarters; Replace colour over the tile and through a row switch; Pick; '
+          'the panel fits its page')
+
+
+def s171_app_window(app, w):
+    """S171 (the user: "when I change tabs a random empty window pops up that never loads"
+    + a screenshot over the Arena tab; "when I open editor its a bit slow at first"):
+    (1) a widget a page drops never becomes a window — the Arena class page shown twice in
+    one event-loop turn left its first "opens when" table as a top-level window (Qt's
+    queued show after setParent(None)); the same pattern in the Encounters room battle
+    and the Skills tab's parameters; qt_safe.discard + the app's StrayWindowGuard;
+    (2) tabs are made on first need: opening a project makes the Rooms tab only;
+    (3) no `setParent(None)` in the editor without a hide() first (static)."""
+    import re
+    import glob
+    from PySide6.QtWidgets import QApplication, QWidget
+
+    w.show()
+    app.processEvents()
+    # windows earlier tests made on purpose (s130 shows a BalanceTab of its own) are not strays
+    before = {id(x) for x in QApplication.topLevelWidgets() if x.isVisible()}
+
+    def strays():
+        return [type(x).__name__ for x in QApplication.topLevelWidgets()
+                if x.isVisible() and x.parent() is None and x is not w
+                and id(x) not in before and type(x).__name__ not in ('QMenu',)]
+    # (1) the Arena race, measured S171: two show_class in one turn
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    doc = w.session.doc
+    had_arena = doc.your_arena() is not None
+    if not had_arena:
+        doc.data.setdefault('custom', {})['arena'] = {}
+    try:
+        at.refresh()
+        at.list.setCurrentRow(1)
+        app.processEvents()
+        if at.class_box.isVisibleTo(at):
+            at.class_box.show_class('G')
+            at.class_box.show_class('G')
+            app.processEvents()
+        for r in (2, 3, 4, 1):
+            at.list.setCurrentRow(r)
+        app.processEvents()
+    finally:
+        if not had_arena:
+            doc.data['custom'].pop('arena', None)
+            at.refresh()
+    assert not strays(), f'Arena: a dropped widget became a window: {strays()}'
+    # the Skills tab's parameter rows, twice in one turn
+    sk = w.skills_tab
+    w.tabs.setCurrentWidget(sk)
+    app.processEvents()
+    if sk.list.count() > 2:
+        sk.list.setCurrentRow(1)
+        sk.list.setCurrentRow(2)
+        sk.list.setCurrentRow(1)
+    app.processEvents()
+    assert not strays(), f'Skills: a dropped widget became a window: {strays()}'
+    # the guard (the app installs it in main()): a stray is never shown, and is named
+    from editor2.app.qt_safe import StrayWindowGuard
+    said = []
+    g = StrayWindowGuard(app, said.append)
+    try:
+        lost = QWidget()
+        lost.show()
+        app.processEvents()
+        assert not lost.isVisible() and g.stopped == ['QWidget'] and said, (g.stopped, said)
+    finally:
+        app.removeEventFilter(g._filter)
+    # (3) static: every setParent(None) in the editor's pages is preceded by hide()
+    bad = []
+    for f in glob.glob(os.path.join(REPO, 'editor2', 'app', '**', '*.py'), recursive=True):
+        lines = open(f, encoding='utf-8').read().splitlines()
+        for i, ln in enumerate(lines):
+            if '.setParent(None)' in ln and not ln.lstrip().startswith('#') \
+                    and not any('.hide()' in x for x in lines[max(0, i - 3):i]) \
+                    and not f.endswith('qt_safe.py'):
+                bad.append(f'{os.path.relpath(f, REPO)}:{i + 1}')
+    assert not bad, f'setParent(None) without a hide() first (use qt_safe.discard): {bad}'
+    # (2) lazy tabs: a fresh open makes the Rooms tab only; naming a tab makes it
+    path = w.session.project_dir
+    w.open_project(path)
+    made = [n for n in w.LAZY_TABS if w.built_tab(n) is not None]
+    assert made == [], f'tabs made at open: {made}'
+    i = w.tabs.indexOf(w.tabs.widget(0))
+    assert i == 0 and w.tabs.built(0) is w.rooms_tab
+    mt = w.monsters_tab                       # named -> made
+    assert w.built_tab('monsters_tab') is mt and w.tabs.indexOf(mt) >= 0
+    k = next(j for j in range(w.tabs.count()) if w.tabs.tabText(j) == 'Breeding')
+    assert w.tabs.built(k) is None
+    w.tabs.setCurrentIndex(k)                 # shown -> made, with its "?" corner buttons
+    app.processEvents()
+    bt = w.built_tab('breeding_tab')
+    assert bt is not None and w.tabs.currentWidget() is bt
+    from PySide6.QtCore import Qt
+    from PySide6.QtWidgets import QTabWidget
+    tws = [t for t in bt.findChildren(QTabWidget)]
+    assert all(t.cornerWidget(Qt.TopRightCorner) is not None for t in tws), 'no "?" on a late tab'
+    w.tabs.setCurrentIndex(0)
+    app.processEvents()
+    print(f'OK: S171 no stray window (Arena double show, Skills rows, the guard stops and names '
+          f'one, no bare setParent(None)); tabs made on first need ({len(w.LAZY_TABS)} lazy, '
+          f'Rooms at open, Monsters when named, Breeding when shown with its "?")')
+
+
+def s170_art_space(app, w):
+    """S170 (the user: "expand the monster graphics"): new battle poses for all 215 originals —
+    more than the three art banks hold — is no error any more: the Monsters tab's meter and
+    the Capacity tab say how much went on into the ROM space; the build plan takes banks
+    $80+ for it (last)."""
+    import copy
+    import json
+    from editor2.core import art as A
+    from editor2.core import capacity as CP
+    from editor2.core.sheet_import import literal_stream
+    from dwm import sprite_codec as SC
+    doc = w.session.doc
+    before = copy.deepcopy(doc.data)
+    ms = json.load(open(os.path.join(REPO, 'extracted', 'monster_sprites.json')))['monsters']
+    adir = os.path.join(doc.project_dir, 'assets', 'art')
+    os.makedirs(adir, exist_ok=True)
+    made = []
+    art = doc.data.setdefault('gamedata', {}).setdefault('art', {})
+    for sid in range(215):
+        b = bytes.fromhex(ms[str(sid)]['battle']['tile_bytes_hex'])
+        g = SC.tiles_to_indices(b, 6, 6)
+        b = SC.indices_to_tiles([r[::-1] for r in g], 6, 6)
+        rel = f'assets/art/s170_{sid}_battle.bin'
+        open(os.path.join(doc.project_dir, rel), 'wb').write(literal_stream(b))
+        made.append(os.path.join(doc.project_dir, rel))
+        art[str(sid)] = {'battle': {'art': rel}}
+    doc.bump()
+    used, cap = doc.art_capacity()
+    assert used > cap, (used, cap)
+    mt = w.monsters_tab
+    mt._meters()
+    assert 'in the ROM space' in mt.meters.text(), mt.meters.text()
+    rep = CP.measure(doc.data, doc.project_dir, REPO)
+    row = next(r for r in rep['rows'] if r['key'] == 'art')
+    assert row['level'] == 'ok' and 'in the ROM space' in row['shown'], row
+    prj = doc.model_project()
+    owners = prj.ext_bank_owners()
+    artb = [b for b, k in owners.items() if k == 'monster art']
+    assert artb and all(b > o for b in artb for o, k in owners.items() if k != 'monster art'), owners
+    A._PACKED.clear()
+    doc.data.clear()
+    doc.data.update(before)
+    doc.bump()
+    for f in made:
+        os.remove(f)
+    if not os.listdir(adir):
+        os.rmdir(adir)
+    mt._meters()
+    assert 'in the ROM space' not in mt.meters.text()
+    print(f'OK: S170 art space — 215 re-arted battle poses ({used:,} B as stored, {cap:,} in '
+          f'the three banks): the meter and the Capacity row say "in the ROM space", art banks '
+          f'{" ".join(f"${b:02X}" for b in artb)} taken last')
+
+
+def s169_window_and_cross(app, w):
+    """S169: (1) the user: "clicking on a different tab resizes the window and I have to make
+    it fullscreen again every time" — the tab row scrolls, every page sits in a scroll area
+    (editor2/app/page_tabs.py), so no tab can push the window past the screen; the window
+    comes back as it was closed. (2) ROADMAP P3.12 residual (a): the Breeding tab's "Try a
+    cross" page — the baby (editor2/core/cross.py) from typical parents or a save's."""
+    import tempfile
+    from PySide6.QtCore import QSettings
+    from editor2.app.page_tabs import PageScroll, PageTabs
+    from editor2.core import cross as X
+    from test_compiler import fake_sav_s130
+    tabs = w.tabs
+    assert isinstance(tabs, PageTabs) and tabs.tabBar().usesScrollButtons()
+    for i in range(tabs.count()):                      # every page shown once (the lazy ones grow)
+        tabs.setCurrentIndex(i)
+        app.processEvents()
+        page = tabs.widget(i)
+        assert not isinstance(page, PageScroll) and isinstance(tabs.wrapper(i), PageScroll)
+        assert tabs.indexOf(page) == i and tabs.currentWidget() is page
+    mh = w.minimumSizeHint()
+    assert mh.width() < 900 and mh.height() < 600, mh      # was 1,530 x 911 (1,696 on macOS)
+    w.resize(1440, 860)
+    app.processEvents()
+    for i in range(tabs.count()):
+        tabs.setCurrentIndex(i)
+        app.processEvents()
+        assert w.size().width() == 1440 and w.size().height() == 860, (tabs.tabText(i), w.size())
+    # the window comes back where it was closed (size, place, maximized / full screen, docks)
+    st = QSettings('dwm1_disassembly', 'DWM1Editor')
+    old = st.value('window/geometry'), st.value('window/state')
+    # (a size that fits the offscreen screen: restoreGeometry clamps to the screen, 800 x 800)
+    w.resize(700, 600)
+    app.processEvents()
+    w._save_window()
+    assert st.value('window/geometry') and st.value('window/state')
+    w.resize(500, 400)
+    w._restore_window()
+    app.processEvents()
+    assert (w.size().width(), w.size().height()) == (700, 600), w.size()
+    w.resize(1440, 860)
+    for key, v in zip(('window/geometry', 'window/state'), old):
+        if v is None:
+            st.remove(key)
+        else:
+            st.setValue(key, v)
+    # (2) Try a cross
+    bt = w.breeding_tab
+    tabs.setCurrentWidget(bt)
+    cp = bt.cross_page
+    bt.t_p1.set_value(9)
+    bt.t_p2.set_value(88)
+    bt.t_lv1.setValue(20)
+    bt.t_lv2.setValue(20)
+    bt._baby_detail()
+    app.processEvents()
+    assert bt.pages.currentWidget() is cp and cp.result is not None
+    b = cp.result
+    T = cp.tables()
+    p1, _h = X.typical_parent(T, 9, 20)
+    p2, _h = X.typical_parent(T, 88, 20)
+    an = w.session.doc.breeding_analysis()
+    c = an.br.resolve(9, 88, 0, 0, p1.level, p2.level)
+    want = X.baby(T, p1, p2, c.species, c.plus, 0)
+    assert (b['species'], b['plus'], b['cap'], b['queue']) == \
+        (want['species'], want['plus'], want['cap'], want['queue'])
+    assert cp.queue.topLevelItemCount() >= len(b['queue']) and cp.tl.topLevelItemCount() == len(b['timeline'])
+    assert cp.stats.item(0, 4).text() == str(b['stats'][0][4])
+    # S169 r2: the pictures — pedigree × mate → the egg, each the project's own battle pose
+    from editor2.app import sprite_qt as Qs
+    from editor2.app.rooms import commands as Cm
+    for pic, sid in ((cp.pic1, 9), (cp.pic2, 88), (cp.pic_baby, b['species'])):
+        want_img = Qs.pixmap(Qs.species_art(w.session.doc, sid)[0], 2).toImage()
+        assert pic.sid == sid and pic.pic.pixmap().toImage() == want_img, sid
+    icons = [lab.pixmap().toImage() for lab in bt.t_icons]
+    assert icons[0] == Qs.species_icon(w.session.doc, 9, 2).toImage() and \
+        icons[2] == Qs.species_icon(w.session.doc, b['species'], 2).toImage()
+    before = cp.pic1.pic.pixmap().toImage()
+    pal = list(w.session.doc.original_palettes(9)[0])
+    pal[0] = 0x001F if pal[0] != 0x001F else 0x7C00               # the pedigree re-coloured
+    n0 = w.session.undo.index()
+    w.session.undo.push(Cm.SnapshotCommand(w.session, 'colour', lambda d: d.set_original_art_props(9, battle_palette=pal)))
+    cp.update_baby()
+    app.processEvents()
+    after = cp.pic1.pic.pixmap().toImage()
+    assert after != before and after == Qs.pixmap(Qs.species_art(w.session.doc, 9)[0], 2).toImage(), \
+        'an edited monster must be drawn with its new colours'
+    w.session.undo.setIndex(n0)
+    cp.update_baby()
+    assert cp.pic1.pic.pixmap().toImage() == before
+    # k by hand: +2 % per name
+    base_hp = b['stats'][0][4]
+    cp.k.setValue(5)
+    app.processEvents()
+    s_ = cp.result['stats'][0][3]
+    assert cp.result['k'] == 5 and cp.result['stats'][0][4] == s_ + s_ * 5 // 50 and \
+        'by hand' in cp.k_lbl.text(), (base_hp, cp.result['stats'][0])
+    # a save's monsters as parents
+    tmp = tempfile.mkdtemp()
+    path = os.path.join(tmp, 'party.sav')
+    open(path, 'wb').write(fake_sav_s130())
+    old_sav = st.value('breeding/sav')
+    assert cp.load_sav(path) is None and cp.p1.which.count() == 4
+    assert cp.load_sav(os.path.join(tmp, 'nope.sav'))           # a problem, not a crash
+    cp.p1.which.setCurrentIndex(cp.p1.which.findData(0))
+    cp.p2.which.setCurrentIndex(cp.p2.which.findData(1))
+    app.processEvents()
+    assert cp.p1.kind.value() == 8 and cp.p1.level.value() == 10 and not cp.p1.level.isEnabled()
+    assert cp.result['k'] == 0 and 'from your save' in cp.parents_lbl.text()
+    cp.p1.which.setCurrentIndex(0)                              # back to a typical one
+    app.processEvents()
+    assert cp.p1.level.isEnabled()
+    if old_sav is None:
+        st.remove('breeding/sav')
+    else:
+        st.setValue('breeding/sav', old_sav)
+    # its "?" -> the help's heading
+    from editor2.app import context_help as CH
+    assert CH.subtab_target('Breeding', 'Try a cross') == ('58_breeding.md', 'Try a cross: the baby')
+    print('OK: S169 — no tab resizes the window (min %d x %d), the window state kept; '
+          'Try a cross: the baby (%d queue skills, %d timeline rows), the pictures (the project\'s '
+          'art; a colour edit shows), k by hand, a save\'s monsters as parents' % (mh.width(), mh.height(), len(b['queue']), len(b['timeline'])))
+
+
+def s167_qt_safe(app, w):
+    """S167 (the S166 note "talk_editor BoxEditor's Insert menu: QStandardItem.triggered"):
+    a Python wrapper of a combo item Qt owns, kept past the combo's clear(), is handed out
+    for the next C++ object at that address — QMenu.addAction returned a QStandardItem.
+    No editor code takes such a wrapper any more (combo rows changed by index, the Insert
+    menu's actions made in Python); the hazard itself reproduced, and menu_action immune."""
+    import re as _re
+    from PySide6.QtGui import QAction
+    from PySide6.QtWidgets import QComboBox, QMenu
+    from editor2.app.qt_safe import combo_row_enabled, menu_action
+    app_dir = os.path.join(REPO, 'editor2', 'app')
+    offenders = []
+    for root, _d, files in os.walk(app_dir):
+        for fn in files:
+            if fn.endswith('.py') and fn != 'qt_safe.py':
+                t = open(os.path.join(root, fn), encoding='utf-8').read()
+                if _re.search(r'\.model\(\)\.item\(|\bmodel\.item\(|itemFromIndex\(', t):
+                    offenders.append(fn)
+    assert not offenders, f'Python wrappers of Qt-owned items (use qt_safe): {offenders}'
+    cb = QComboBox()
+    for i in range(4):
+        cb.addItem(f'x{i}')
+    combo_row_enabled(cb, 1, False, 'tip')
+    m = cb.model()
+    from PySide6.QtCore import Qt as _Qt
+    assert not (m.flags(m.index(1, 0)) & _Qt.ItemIsEnabled) and cb.itemData(1, _Qt.ToolTipRole) == 'tip'
+    combo_row_enabled(cb, 1, True)
+    assert m.flags(m.index(1, 0)) & _Qt.ItemIsEnabled
+    # the hazard: keep a wrapper of a Qt-made item, clear the combo -> the next addAction
+    # may come back as that QStandardItem; menu_action never does
+    keep, stale, made = [], 0, 0
+    for _r in range(400):
+        c = QComboBox()
+        for i in range(20):
+            c.addItem(f'y{i}')
+        keep.append(c.model().item(5))           # the pattern S167 removed from the editor
+        c.clear()
+        mn = QMenu()
+        for _k in range(10):
+            if not isinstance(mn.addAction('a'), QAction):
+                stale += 1
+            made += 1
+            assert isinstance(menu_action(mn, 'b'), QAction)
+    keep.clear()
+    print(f'OK: S167 qt_safe — no editor code wraps a Qt-owned item; combo rows by index; the '
+          f'hazard reproduced ({stale} of {made} plain addAction calls returned a stale wrapper), '
+          f'menu_action always a QAction')
+
+
+def s167_context_help(app, w):
+    """S167 (ROADMAP P3.H — user: "a glossary, a '?' button per section, screenshots"): every
+    topic / heading the "?" buttons name exists, every help link / picture resolves; the tab
+    bar's "?" and F1 open the shown tab's topic, a sub-tab's "?" its heading, "Back" returns;
+    a dialog of DIALOG_TOPICS gets its "?" when shown; the Glossary topic is there."""
+    import re as _re
+    from urllib.parse import unquote
+    from PySide6.QtWidgets import QDialog, QTabWidget, QVBoxLayout, QLabel
+    from editor2.app import context_help as CH
+    from editor2.app.help_tab import HELP_DIR, load_topics, topic_headings, _norm
+    topics = {n: md for _t, md, n in load_topics()}
+    assert '95_glossary.md' in topics and '51_families.md' in topics
+
+    def has_heading(f, h):
+        hs = [_norm(x) for x in topic_headings(topics[f])]
+        return any(_norm(h) == x or _norm(h) in x for x in hs)
+    n = 0
+    for name in ('TAB_TOPICS', 'SUBTAB_TOPICS', 'RAIL_TOPICS', 'DIALOG_TOPICS'):
+        for k, (t, h) in getattr(CH, name).items():
+            assert t in topics, (name, k, t)
+            assert not h or has_heading(t, h), (name, k, t, h)
+            n += 1
+    links = pics = 0
+    for f, md in topics.items():
+        for m in _re.finditer(r'\]\(([^)\s]+(?:\([^)]*\))?[^)\s]*)\)', md):
+            u = m.group(1)
+            if u.startswith('http'):
+                continue
+            if u.startswith('img/'):
+                assert os.path.exists(os.path.join(HELP_DIR, u)), (f, u)
+                pics += 1
+                continue
+            path, _, frag = u.partition('#')
+            tgt = path or f
+            assert tgt in topics, (f, u)
+            assert not frag or has_heading(tgt, unquote(frag)), (f, u)
+            links += 1
+    titles = [w.tabs.tabText(i).replace('&&', '&') for i in range(w.tabs.count())]
+    missing = [t for t in titles if t not in CH.TAB_TOPICS]
+    assert not missing, f'tabs without a help topic: {missing}'
+    ht = w.help_tab
+    # the tab bar's "?" — the Music tab's topic, then Back
+    corner = w.tabs.cornerWidget()
+    assert corner is not None and corner.text() == '?'
+    w.tabs.setCurrentWidget(w.music_tab)
+    app.processEvents()
+    corner.click()
+    app.processEvents()
+    assert w.tabs.currentWidget() is ht and ht.topics[ht.current][2] == '61_music.md'
+    assert ht.btn_back_tab.isVisible() and 'Music' in ht.btn_back_tab.text()
+    ht.btn_back_tab.click()
+    assert w.tabs.currentWidget() is w.music_tab
+    # F1 = the same
+    w.tabs.setCurrentWidget(w.items_tab)
+    CH.f1(w)
+    assert w.tabs.currentWidget() is ht and ht.topics[ht.current][2] == '74_items.md'
+    # a sub-tab bar's "?" (the Text tab's Window words page -> its heading, scrolled)
+    w.tabs.setCurrentWidget(w.dialogue_tab)
+    app.processEvents()
+    tw = w.dialogue_tab.tabs
+    assert isinstance(tw, QTabWidget) and tw.cornerWidget() is not None
+    tw.setCurrentWidget(w.dialogue_tab.pages['window_words'])
+    tw.cornerWidget().click()
+    app.processEvents()
+    assert ht.topics[ht.current][2] == '56_text.md' and ht.view.verticalScrollBar().value() > 0
+    # links inside a topic: the glossary's link to Families
+    ht.open_topic('95_glossary.md')
+    from PySide6.QtCore import QUrl
+    ht._link(QUrl('51_families.md'))
+    assert ht.topics[ht.current][2] == '51_families.md'
+    ht._previous()
+    assert ht.topics[ht.current][2] == '95_glossary.md'
+    # the Rooms tab's page column has its "?"
+    rail = w.rooms_tab.rail
+    assert getattr(rail, '_help_btn', None) is not None
+    # a dialog named in DIALOG_TOPICS gets its "?" when shown
+    Dlg = type('MemorialDialog', (QDialog,), {})
+    d = Dlg(w)
+    lay = QVBoxLayout(d)
+    lay.addWidget(QLabel('test'))
+    d.show()
+    app.processEvents()
+    assert getattr(d, '_help_button', None) is not None
+    d._help_button.click()
+    app.processEvents()
+    assert ht.topics[ht.current][2] == '77_memorial.md'
+    d.close()
+    d.deleteLater()
+    w.tabs.setCurrentIndex(0)
+    app.processEvents()
+    print(f'OK: S167 context help — {n} "?" targets, {links} help links, {pics} pictures resolve; '
+          f'tab-bar "?" / F1 / sub-tab "?" / Back / a dialog\'s "?" / topic links work')
+
+
+def s166_window_words(app, w):
+    """S166 (ROADMAP Phase F T-follow (a) / (b)): the Window words page lists the other screens'
+    windows (the shop, the battle …: the screen's own letters) and the words a window cuts out of
+    a text; BUY -> GET = gamedata.window_words, PUT -> STOW = the row in gamedata.text (one undo
+    step each), a letter the shop lacks refused; undo restores project.json."""
+    from editor2.core import window_words as WW
+    s = w.session
+    doc = s.doc
+    before = doc.dumps()
+    tt = w.dialogue_tab
+    pg = tt.pages['window_words']
+    tt.tabs.setCurrentWidget(pg)
+    pg.fill_kinds()
+    app.processEvents()
+    keys = pg.keys
+    assert '09:6F3C/1/2' in keys and 'T:field_message:11/0' in keys and \
+        len(keys) == len(WW.slots()), len(keys)
+    shops = [pg.kind.itemText(i) for i in range(pg.kind.count())]
+    assert 'the shop: BUY / SELL / EXIT' in shops and 'the Vault: PUT / TAKE / EXIT' in shops, shops
+    r = keys.index('09:6F3C/1/2')
+    pg.table.item(r, 3).setText('GET')
+    app.processEvents()
+    assert doc.window_words() == {'09:6F3C/1/2': 'GET'}, doc.window_words()
+    r = pg.keys.index('09:6F3C/1/2')
+    pg.table.item(r, 3).setText('CAR')                     # no A / C on the shop's sheet
+    app.processEvents()
+    assert doc.window_words() == {'09:6F3C/1/2': 'GET'} and '✗' in pg.status.text(), pg.status.text()
+    r = pg.keys.index('T:field_message:11/0')
+    assert 'any letter' in pg.table.item(r, 4).text(), pg.table.item(r, 4).text()
+    n0 = s.undo.count()
+    pg.table.item(r, 3).setText('STOW')
+    app.processEvents()
+    assert s.undo.count() == n0 + 1 and \
+        (doc.data['gamedata'].get('text') or {}).get('field_message', {}).get('11') == 'STOWTAKEEXIT', \
+        doc.data['gamedata'].get('text')
+    assert doc.window_words().get('T:field_message:11/0') == 'STOW', doc.window_words()
+    s.undo.undo()
+    s.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before and doc.window_words() == {}, 'undo restores the project'
+    print('OK: S166 Window words — the other screens listed (the shop, the Vault …), BUY -> GET '
+          '(the shop sheet\'s letters; CAR refused), PUT -> STOW rewrites field_message 11 '
+          '(one undo step); undo restores project.json')
+
+
+def s159_resistances(app, w):
+    """S159 (ROADMAP E16; user: "a proper resistance table visualizer and setter … Make sure
+    that I can look up which skills fall where, especially once I start fiddling with skill
+    resistance belonging and move them around"): the Resistances tab — the grid (every
+    species, 27 columns in groups, Earth included, the name in the row header), cells set
+    by the buttons (one undo step, `*` changed), a column's reference (its skills), the
+    map's right-click move (Quake to Earth: the map and the Skills tab follow), the
+    Monsters tab's grouped box (Earth), the compile (StockElemTable / CustomElemTable 26),
+    the whole grid timed with the window SHOWN; undo restores project.json."""
+    import shutil
+    import tempfile
+    import time
+    from PySide6.QtCore import Qt
+    from editor2.app.resistances_tab import FIRST_COL
+    from editor2.core import resistances as RZ, compiler as C2
+    tmp = tempfile.mkdtemp(prefix='s159_res_')
+    try:
+        pdir = os.path.join(tmp, 'p')
+        shutil.copytree(os.path.join(REPO, 'editor2/example-project'), pdir,
+                        ignore=shutil.ignore_patterns('build'))
+        w.open_project(pdir)
+        app.processEvents()
+        doc = w.session.doc
+        before = doc.dumps()
+        rt = w.resistances_tab
+        w.show()
+        w.tabs.setCurrentWidget(rt)
+        app.processEvents()
+        g = rt.grid
+        assert g.columnCount() == 1 + 27, g.columnCount()
+        heads = [g.horizontalHeaderItem(c).text() for c in range(g.columnCount())]
+        assert heads[FIRST_COL + RZ.ORDER.index(26)] == 'ELEM\nEarth', heads
+        assert g.rowCount() >= 220, g.rowCount()
+        assert 'DrakSlime' in g.verticalHeaderItem(0).text(), g.verticalHeaderItem(0).text()
+        col = FIRST_COL + RZ.ORDER.index(26)
+        t0 = time.time()
+        for r in range(5):
+            g.item(r, col).setSelected(True)
+        rt.set_selected(2)
+        app.processEvents()
+        dt = time.time() - t0
+        assert dt < 15, f'setting 5 cells + the refresh took {dt:.1f} s (shown)'
+        sids = [g.item(r, 0).data(Qt.UserRole) for r in range(g.rowCount())
+                if g.item(r, col).data(Qt.UserRole) == 2]
+        assert len(sids) == 5 and all(g.item(r, col).text() == '2*' for r in range(g.rowCount())
+                                      if g.item(r, 0).data(Qt.UserRole) in sids)
+        m = doc.data['gamedata']['monsters']
+        assert all(m[str(s)]['resist'].get('Earth') == 2 for s in sids), m
+        n_undo = w.session.undo.index()
+        rt._header_clicked(FIRST_COL + RZ.ORDER.index(0))
+        names = {rt.t_skills.topLevelItem(i).text(0).strip().split(None, 1)[1]
+                 for i in range(rt.t_skills.topLevelItemCount())}
+        assert {'Blaze', 'Blazemore', 'Blazemost', 'FireSlash', 'BigBang'} <= names, names
+        assert rt.move_skills([230], 26)
+        app.processEvents()
+        assert doc.data['gamedata']['skills']['230']['element'] == 'Earth'
+        rt._show_type(26)
+        earth = [rt.t_skills.topLevelItem(i).text(0) for i in range(rt.t_skills.topLevelItemCount())]
+        assert any('Quake' in x for x in earth), earth
+        d = doc.skill_detail(230)
+        assert d['element'] == 26, d['element']
+        mt = w.monsters_tab
+        assert 'Earth' in mt.w_resist, sorted(mt.w_resist)
+        out, _prj, _w = C2.compile_project(_save_tmp(doc, tmp), REPO)
+        b72 = out['patches/bank_072.asm']
+        assert 'CustomElemTable:' in b72, 'the element tables are emitted'
+        assert w.session.undo.index() == n_undo + 1
+        while w.session.undo.canUndo():
+            w.session.undo.undo()
+        app.processEvents()
+        assert doc.dumps() == before, 'undo restores project.json'
+        print(f'OK: S159 the Resistances tab — {g.rowCount()} monsters x 27 (Earth), 5 cells '
+              f'set to 2 in one undo step ({dt:.1f} s shown), the Fire column lists the Blaze '
+              'line, Quake moved to Earth by the map (the Skills tab follows), the Monsters box '
+              'has Earth, the project compiles; undo restores project.json')
+    finally:
+        w.open_project(os.path.join(REPO, 'editor2/example-project'))
+        app.processEvents()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _save_tmp(doc, tmp):
+    """The document as it stands -> a project folder the compiler reads (assets beside)."""
+    import json as _json
+    q = os.path.join(tmp, 'q')
+    if os.path.isdir(q):
+        shutil_rm(q)
+    import shutil as _sh
+    _sh.copytree(doc.project_dir, q, ignore=_sh.ignore_patterns('build'))
+    with open(os.path.join(q, 'project.json'), 'w') as f:
+        _json.dump(doc.data, f)
+    return q
+
+
+def shutil_rm(p):
+    import shutil as _sh
+    _sh.rmtree(p, ignore_errors=True)
+
+
+def main():
+    do_rom = '--rom' in sys.argv
+    app = QApplication.instance() or QApplication(sys.argv)
+    _patch_keep_states()
+    from editor2.app.main import MainWindow             # noqa: E402
+    w = MainWindow()
+    w.open_project(os.path.join(REPO, 'editor2/example-project'))
+    n = w.room_list.count()
+    assert n >= 6, f'room list has {n} entries, expected >= 6'
+    assert w.a_build.isEnabled(), 'Build action not enabled after open'
+    assert not w.session.dirty, 'opening must not dirty the project'
+    assert w.session.doc.dumps() == open(w.session.doc.path).read(), \
+        'document model must round-trip project.json byte-for-byte'
+    print(f'OK: window up, {n} rooms listed, Build enabled, doc round-trips')
+
+    # S101 r2: the Help tab (user: "needs lookup") — every topic loads, search
+    # filters, and the help is kept up to date WITH the editor: its
+    # _revision.md must name the current EDITOR_REVISION
+    from editor2 import EDITOR_REVISION
+    from editor2.app.help_tab import help_revision, load_topics
+    ht = w.help_tab
+    assert w.tabs.indexOf(ht) >= 0, 'no Help tab'
+    topics = load_topics()
+    assert len(topics) >= 8 and ht.list.count() == len(topics), (len(topics), ht.list.count())
+    ht.search.setText('warubou')
+    assert 0 < ht.list.count() < len(topics), ht.list.count()
+    ht.search.setText('')
+    assert ht.show_topic('Boss floors') and 'step by step' in ht.view.toPlainText()
+    assert help_revision() == EDITOR_REVISION, (
+        f'editor2/help/_revision.md says {help_revision()!r} but EDITOR_REVISION is '
+        f'{EDITOR_REVISION!r} — update the help topics for this delivery, then the stamp')
+    # S119b (user: "Your help tab is cut off for cutscenes"): a raw <word> outside a
+    # code span is read as an HTML tag and hides the rest of the topic — every topic
+    # must render to its last words
+    import re as _re
+    from PySide6.QtGui import QTextDocument
+    for title, md, fname in topics:
+        d = QTextDocument()
+        d.setMarkdown(md)
+        shown = ' '.join(d.toPlainText().split())
+        tail = _re.findall(r'[A-Za-z]{5,}', md)[-3:]
+        assert all(t in shown for t in tail), f'help {fname} is cut off when shown (look for <…>)'
+    print(f'OK: Help tab — {len(topics)} topics, search, help revision == {EDITOR_REVISION}, '
+          f'every topic shown to its end')
+    s120_dialogue(app, w)
+    s120_gates(app, w)
+    s121_milly(app, w)
+    s122_gate_themes(app, w)
+    s123_worlds(app, w)
+    s124_progression(app, w)
+    s125_hub(app, w)
+    s126_services(app, w)
+    s127_breeding(app, w)
+    s127r3_game_text_rule(app, w)
+    s128_arena(app, w)
+    s129_story(app, w)
+    s130_balance(app, w)
+    s132_rooms_ui(app, w)
+
+    # S101 r3: World tab zoom (wheel, around the mouse) + pan (drag empty canvas)
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent, QMouseEvent
+    wt = w.world_tab
+    w.tabs.setCurrentWidget(wt)
+    w.resize(1300, 800)
+    w.show()
+    app.processEvents()
+    z0 = wt.view.transform().m11()
+    vp = wt.view.viewport()
+    c = QPointF(vp.width() / 2, vp.height() / 2)
+    for _ in range(4):
+        ev = QWheelEvent(c, vp.mapToGlobal(c), QPoint(0, 0), QPoint(0, 120), Qt.NoButton,
+                         Qt.NoModifier, Qt.NoScrollPhase, False)
+        wt._wheel(ev)
+    z1 = wt.view.transform().m11()
+    assert z1 > z0 * 1.5, (z0, z1)
+    h0 = wt.view.horizontalScrollBar().value()
+    wt.view.horizontalScrollBar().setValue(h0 + 200)       # what a hand-drag does
+    assert wt.view.horizontalScrollBar().value() != h0, 'no room to pan when zoomed'
+    wt.zoom(1 / 50)
+    assert abs(wt.view.transform().m11() - wt.ZOOM_MIN) < 1e-6
+    wt.fit()
+    print(f'OK: World tab — wheel zoom {z0:.2f} -> {z1:.2f}, pans when zoomed, clamp, Fit')
+
+    # Rooms tab: the canvas renders LIVE from project.json (S93) — no build
+    # needed. The selected room must produce pixels; placeholder rooms must
+    # not; the arena clone's vanilla-referenced layout must be read-only.
+    app.processEvents()
+    rt = w.rooms_tab
+    pm = rt.canvas.base.pixmap()
+    assert pm is not None and not pm.isNull() and pm.width() == 160, \
+        'canvas produced no 160px-wide screen pixmap'
+    for i in range(n):
+        if 'placeholder' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            app.processEvents()
+            assert rt.canvas.room is None, 'placeholder room unexpectedly rendered'
+            break
+    for i in range(n):
+        if 'arena_clone' in rt.room_list.item(i).text():
+            rt.room_list.setCurrentRow(i)
+            app.processEvents()
+            rt.select_screen(1)
+            assert not rt.canvas.is_editable(), 'vanilla layout ref must be read-only'
+            assert rt.state_box.count() == 2, 'arena_clone screen 1 has 2 states'
+            rt.select_state(1)
+            assert len(rt.canvas.markers) > 0
+            break
+    rt.room_list.setCurrentRow(0)
+    app.processEvents()
+    assert w.tabs.count() >= 11, 'tab strip incomplete'
+    print('OK: Rooms tab renders live (placeholders skipped, vanilla refs '
+          'read-only, states switch); shell has the §5.0 tab strip')
+
+    # S104 (P3.10a): Families tab — 11 families, move a monster, dialogue voice,
+    # Spirit names; each edit is one undo step and undo restores the file
+    from editor2.core import gamedata as G
+    ft = w.families_tab
+    w.tabs.setCurrentWidget(ft)
+    app.processEvents()
+    assert ft.fam_list.count() == 11, ft.fam_list.count()
+    doc = w.session.doc
+    before = doc.dumps()
+    n_spirit = len(doc.family_members()[10])
+    ft.fam_list.setCurrentRow(0)
+    for i in range(ft.members.count()):
+        if ft.members.item(i).data(Qt.UserRole) == 4:          # Snaily
+            ft.members.setCurrentRow(i)
+    ft.move_to.setCurrentIndex(ft.move_to.findData(10))
+    ft._move()
+    assert len(doc.family_members()[10]) == n_spirit + 1
+    # S104 r5: display order puts Spirit before ??? (row 9)
+    assert ft.fam_list.item(9).text().startswith('Spirit'), ft.fam_list.item(9).text()
+    assert ft.fam_list.item(10).text().startswith('???'), ft.fam_list.item(10).text()
+    ft.fam_list.setCurrentRow(9)
+    ft.voice.setCurrentIndex(ft.voice.findData('A'))
+    ft._voice(0)
+    assert doc.family_voice(10) == 'A'
+    assert ft.names_box.isVisibleTo(ft)
+    ft.name_edits[0].setText('Boo')
+    ft._names()
+    assert doc.spirit_names()[0] == 'Boo'
+    fam = doc.data['gamedata']['families']
+    assert any(v.get('dialogue') == 'A' and v.get('names', [''])[0] == 'Boo'
+               for v in fam.values()), fam
+    ft.name_edits[1].setText('TOOLONG'[:G.NAME_MAX] + '1')   # maxLength stops the 5th char
+    assert len(ft.name_edits[1].text()) <= G.NAME_MAX
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Families tab — 11 families, move Snaily to Spirit, voice A, a Spirit '
+          'name; undo restores the document')
+
+    # S107 (P3.10 part 2c): the family icon editor — a painted stroke = one
+    # undo step into gamedata.families.<f>.icon; a PNG import; the original
+    # again removes the key; undo restores the file
+    from editor2.app import families_tab as FT
+    before = doc.dumps()
+    ft.fam_list.setCurrentRow(0)                                   # Slime
+    app.processEvents()
+    assert ft.icon_canvas.grid == doc.vanilla_family_icon(0)
+    assert not ft.icon_reset.isEnabled()
+    g = [list(r) for r in ft.icon_canvas.grid]
+    g[0][0] = 3
+    ft.icon_canvas.set_grid(g)
+    ft._icon_edited(g)
+    assert doc.data['gamedata']['families']['slime']['icon'][0][0] == '3', \
+        doc.data['gamedata']['families']
+    assert ft.icon_reset.isEnabled() and ft.icon_canvas.grid == g
+    import tempfile
+    from PIL import Image
+    tmp = os.path.join(tempfile.mkdtemp(), 'icon.png')
+    im = Image.new('RGB', (8, 8), (255, 255, 255))
+    for k in range(8):
+        im.putpixel((k, k), (0, 0, 0))
+        im.putpixel((7 - k, k), (90, 90, 90))
+    im.save(tmp)
+    want = FT.png_to_grid(tmp)
+    assert want[0][0] == 3 and want[0][7] == 0 and want[1][2] == 1, want
+    ft.fam_list.setCurrentRow(9)                                   # Spirit
+    app.processEvents()
+    real = FT.QFileDialog.getOpenFileName
+    FT.QFileDialog.getOpenFileName = staticmethod(lambda *a, **k: (tmp, ''))
+    try:
+        ft._icon_png()
+    finally:
+        FT.QFileDialog.getOpenFileName = real
+    assert doc.family_icon(10) == want
+    ft._icon_original()
+    assert doc.family_icon(10) == doc.vanilla_family_icon(10)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Families tab (S107) — icon painted, a PNG imported for Spirit, back to '
+          'the original; undo restores the document')
+
+    # S106 (P3.10 part 1): Monsters tab — species list (original + new),
+    # species field edits, an enemy-row edit, a new species cut from a sprite
+    # sheet through the real dialog; every edit one undo step, undo restores
+    # project.json AND removes the written art / sheet files
+    mt = w.monsters_tab
+    w.tabs.setCurrentWidget(mt)
+    app.processEvents()
+    ids = [mt.list.item(i).data(Qt.UserRole) for i in range(mt.list.count())]
+    assert 224 in ids and 0 in ids and 220 in ids, 'species list incomplete'
+    assert sum(1 for i in ids if i is not None) == 222, len(ids)
+    before = doc.dumps()
+    mt.select(8)
+    assert mt.sid == 8 and 'Slime' in mt.title.text()
+    assert mt.walk.frames is not None and mt.battle.pixmap() is not None
+    mt.w_cap.setValue(60)
+    mt._set('level_cap', 60)
+    mt.w_resist['Fire'].setCurrentIndex(3)
+    mt._set('resist.Fire', 3)
+    assert doc.data['gamedata']['monsters']['8'] == {'level_cap': 60, 'resist': {'Fire': 3}}, \
+        doc.data['gamedata']['monsters']['8']
+    mt.pages.setCurrentIndex(1)
+    app.processEvents()
+    rows = {mt.table.item(r, 0).text(): r for r in range(mt.table.rowCount())}
+    assert '2' in rows and '1' in rows, rows
+    # S161: the AI weights cell names its four numbers (Damage / Heal/support / Status / Obedience)
+    tip = mt.table.item(rows['2'], 11).toolTip()
+    assert tip.startswith('Damage ') and 'Heal/support' in tip and 'Obedience' in tip \
+        and 'plain Attack' in tip, tip
+    it = mt.table.item(rows['2'], 3)          # HP of the wild Slime (EID 2)
+    it.setText('99')
+    assert doc.data['gamedata']['enemies']['2'] == {'hp': 99}, doc.data['gamedata'].get('enemies')
+    # S106 r3: "Put the selected row in a gate…" — a new enemy row of Gorbunok,
+    # into the free slot of the Gate of Beginning list, chances to 100 %
+    from editor2.app.pool_dialog import PoolDialog
+    mt.select(224)
+    mt._new_enemy_row()
+    nid = [e for e in mt._rows if e['kind'] == 'project'][-1]
+    # S162: the Group spells column — a tick on your own row (a copy of the wild Slime: off),
+    # one undo step per change; the game's rows read-only ("casts" / "holds back")
+    def _gcell(pid):
+        r_ = next(i for i, e in enumerate(mt._rows) if e['id'] == pid)
+        return mt.table.item(r_, 14)
+    gi = _gcell(nid['id'])
+    assert gi.flags() & Qt.ItemIsUserCheckable and gi.checkState() == Qt.Unchecked \
+        and gi.text() == 'casts', (gi.text(), int(gi.flags()))
+    gi.setCheckState(Qt.Checked)
+    app.processEvents()
+    pe = {e['id']: e for e in doc.data['progression']['enemies']}[nid['id']]
+    assert pe.get('holds_group_spells') is True, pe
+    assert _gcell(nid['id']).text() == 'holds back'
+    _gcell(nid['id']).setCheckState(Qt.Unchecked)
+    app.processEvents()
+    pe = {e['id']: e for e in doc.data['progression']['enemies']}[nid['id']]
+    assert 'holds_group_spells' not in pe, pe
+    w.session.undo.undo()
+    w.session.undo.undo()
+    app.processEvents()
+    mt.select(8)
+    app.processEvents()
+    orig = {mt.table.item(r_, 0).text(): mt.table.item(r_, 14) for r_ in range(mt.table.rowCount())}
+    assert orig['2'].text() == 'casts' and not orig['2'].flags() & Qt.ItemIsUserCheckable, \
+        orig['2'].text()
+    mt.select(224)
+    app.processEvents()
+    pd = PoolDialog(doc, nid['id'], 'test row', parent=mt)
+    pd.pool.setCurrentIndex(pd.pool.findData(0))
+    assert pd.table.currentRow() == 4, pd.table.currentRow()     # the free slot preselected
+    pd._put()
+    pd.table.cellWidget(3, 1).setCurrentIndex(5)                 # Gorbunok 70 % -> 50 %
+    pd._ok()
+    assert pd.result_slots and pd.result_slots[4][0] == nid['id'], pd.result_slots
+    pi, slots = pd.result_pool, pd.result_slots
+    assert mt._push('gate', lambda d: d.set_pool_slots(pi, slots))
+    assert doc.data['gamedata']['encounters']['0']['eids'][4] == nid['id']
+    w.session.undo.undo()
+    w.session.undo.undo()
+    from editor2.app.sheet_import_dialog import SheetImportDialog, copy_sheet_into_project
+    sheet = os.path.join(REPO, 'examples/follower_swap/W_bluedragon.png')
+    dlg = SheetImportDialog(doc, 'new', parent=mt)
+    dlg.load_sheet(sheet)
+    k = next(i for i, e in enumerate(dlg.entries)
+             if e['frames'] and e['frames']['DOWN-a']['x'] == 232 and e['frames']['DOWN-a']['y'] == 8)
+    dlg.select_entry(k)
+    it = dlg.items['DOWN-a']
+    it.setPos(it.pos().x() + 1, it.pos().y())       # a dragged box changes the preview
+    assert dlg.current()['frames']['DOWN-a']['x'] == 233
+    it.setPos(it.pos().x() - 1, it.pos().y())
+    dlg.name.setText('Aquadrak')
+    dlg._accept()
+    r = dlg.result_data
+    assert r and r['id'] == 221 and r['art']['follower_palette'] == 2, r and r.get('id')
+    assets = doc.species_asset_paths(r['id'], r['name']) + [r['source']['sheet']]
+
+    def op(d):
+        copy_sheet_into_project(d.project_dir, r['sheet_abs'], r['source']['sheet'])
+        d.add_species(r['id'], r['name'], r['short'], r['clone_from'], r['family'],
+                      r['art'], source=r['source'])
+    assert mt._push('New species Aquadrak', op, assets=assets)
+    files = [os.path.join(doc.project_dir, a) for a in assets]
+    assert all(os.path.exists(f) for f in files), files
+    mt.refresh()
+    mt.select(221)
+    assert mt.sid == 221 and 'Aquadrak' in mt.title.text() and mt.pages.isTabEnabled(2)
+    for _ in range(4):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    assert not any(os.path.exists(f) for f in files), 'undo must remove the written art'
+    sdir = os.path.join(doc.project_dir, 'assets', 'sheets')
+    if os.path.isdir(sdir) and not os.listdir(sdir):
+        os.rmdir(sdir)
+    print('OK: Monsters tab — 222 species listed, Slime level cap + Fire resistance, wild '
+          'Slime HP, a Gorbunok row put in a gate, a new species cut from the water sheet; undo restores everything')
+
+    # S107 (P3.10 part 2a): new art for an ORIGINAL monster (Dracky, 78) through
+    # the real sheet dialog ('original' mode), a battle colour + walking palette
+    # on another (Slime 8, colours only), TERRY? (215) has no art page; undo
+    # restores project.json and removes the written art
+    before = doc.dumps()
+    mt.select(215)
+    assert not mt.pages.isTabEnabled(2), 'TERRY? must have no art page (Iron Rule 8)'
+    mt.select(78)
+    assert mt.pages.isTabEnabled(2) and mt.orig_btn.isVisibleTo(mt.art_page) \
+        and mt.name_box.isVisibleTo(mt.art_page) and not mt.a_desc.isVisibleTo(mt.art_page)
+    dlg = SheetImportDialog(doc, 'original', sid=78, parent=mt)
+    assert 'Dracky' in dlg.windowTitle()
+    dlg.load_sheet(sheet)
+    dlg.select_entry(k)
+    # S107 2b: the walk style list = all 155 layouts ranked, best first, the
+    # sheet's own frames shown beside the game's; picking another re-packs
+    assert dlg.lay_combo.count() == 155 and dlg.lay_combo.currentIndex() == 0
+    assert dlg._follow[2] == dlg._fit[0][1] and dlg.walk_sheet.frames
+    other = dlg.lay_combo.itemData(5)
+    dlg.lay_combo.setCurrentIndex(5)
+    dlg._lay_chosen(5)
+    assert dlg._follow[2] == other and dlg.lay == other
+    dlg.lay_combo.setCurrentIndex(0)
+    dlg._lay_chosen(0)
+    dlg._accept()
+    r = dlg.result_data
+    assert r and 'id' not in r and r['art']['follower_palette'] == 2
+    assert r['art']['layout'] == dlg._fit[0][1], r['art'].get('layout')
+    assets = doc.original_art_paths(78) + [r['source']['sheet']]
+
+    def op2(d):
+        copy_sheet_into_project(d.project_dir, r['sheet_abs'], r['source']['sheet'])
+        d.set_original_art(78, r['art'], source=r['source'])
+    assert mt._push('Dracky: new art', op2, assets=assets)
+    e = doc.data['gamedata']['art']['78']
+    assert e['battle']['art'].startswith('assets/art/078_') and e['follower']['palette'] == 2, e
+    assert e['follower']['layout'] == r['art']['layout'], e
+    from editor2.app import sprite_qt as Qs
+    from editor2.core import sprite_render as SRr
+    bnew, fnew = Qs.species_art(doc, 78)
+    assert bnew and fnew and bnew != SRr.vanilla_battle(78), 'the tab must draw the new art'
+    mt.select(8)
+    mt.a_pal.setCurrentIndex(5)
+    mt._prop('follower_palette', 5)
+    assert doc.data['gamedata']['art']['8'] == {'follower': {'palette': 5}}, doc.data['gamedata']['art']
+    mt._prop('follower_palette', doc.original_palettes(8)[1])       # back to the original value
+    assert '8' not in doc.data['gamedata']['art'], 'an original value must disappear'
+    files = [os.path.join(doc.project_dir, a) for a in assets]
+    assert all(os.path.exists(f) for f in files)
+    for _ in range(3):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    assert not any(os.path.exists(f) for f in files[:2]), 'undo must remove the written art'
+    if os.path.isdir(sdir) and not os.listdir(sdir):
+        os.rmdir(sdir)
+    adir = os.path.join(doc.project_dir, 'assets', 'art')
+    if os.path.isdir(adir) and not os.listdir(adir):
+        os.rmdir(adir)
+    print('OK: Monsters tab (S107) — Dracky re-arted from the water sheet, Slime walking '
+          'palette set and set back, TERRY? has no art page; undo restores everything')
+
+    # S108 (P3.10 part 3): rename an original monster (name, default nickname,
+    # description) through the tab's fields; the Dialogue tab lists the texts
+    # that name it (old + new name); a new species gets its own description;
+    # undo restores everything
+    before = doc.dumps()
+    mt.pages.setCurrentIndex(2)
+    mt.select(8)
+    app.processEvents()
+    assert mt.a_name.text() == 'Slime' and mt.a_short.text() == 'SL', (mt.a_name.text(), mt.a_short.text())
+    assert mt.a_lines[0].text() == 'The most abundant'
+    n0 = int(mt.a_mentions.text().split('(')[-1].rstrip(')'))
+    assert n0 > 5, mt.a_mentions.text()
+    mt.a_name.setText('Goober')
+    mt._text_edit('name', 'Goober')
+    mt.a_short.setText('GOOB')
+    mt._text_edit('nickname', 'GOOB')
+    for k, t in enumerate(['A wobbly blob', "that's always", 'grinning']):
+        mt.a_lines[k].setText(t)
+    mt._desc_done()
+    e = doc.data['gamedata']['monster_text']['8']
+    assert e == {'name': 'Goober', 'nickname': 'GOOB',
+                 'description': ['A wobbly blob', "that's always", 'grinning']}, e
+    assert any(s_['id'] == 8 and s_['name'] == 'Goober' for s_ in doc.species_catalog())
+    assert 'Goober' in mt.title.text()
+    dt = w.dialogue_tab                     # S150: the Text tab (was the Dialogue tab)
+    w._show_dialogue_for(8)
+    app.processEvents()
+    pg = dt.pages['dialogue']
+    assert w.tabs.currentWidget() is dt and dt.tabs.currentWidget() is pg
+    assert pg.table.rowCount() >= 1, pg.table.rowCount()
+    assert 'Goober' in pg.monster.currentText() and 'was Slime' in pg.monster.currentText()
+    pg.query.setText('$0000')
+    assert pg.table.rowCount() >= 0
+    pg.monster.setCurrentIndex(0)
+    pg.query.setText('Terry! Wait!')
+    assert pg.table.rowCount() == 1 and pg.shown[0][0].key == '$0000', pg.table.rowCount()
+    pg.query.clear()
+    w.tabs.setCurrentWidget(mt)
+    mt.select(224)
+    for k, t in enumerate(['A gentle dragon', 'from the deep sea', '']):
+        mt.a_lines[k].setText(t)
+    mt._desc_done()
+    g = next(x for x in doc.data['custom']['species'] if x['id'] == 224)
+    assert g.get('description') == ['A gentle dragon', 'from the deep sea'] and \
+        'description_from' not in g, g
+    try:
+        doc.set_monster_text(215, name='Rival')
+        raise AssertionError('TERRY? must not be renamed')
+    except Exception as ex:                                       # noqa: BLE001
+        assert 'Iron Rule 8' in str(ex)
+    for _ in range(4):
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Monsters tab (S108) — Slime renamed Goober / GOOB with a new description, '
+          'the Dialogue tab lists its texts (old + new name), Gorbunok got its own '
+          'description, TERRY? refused; undo restores everything')
+
+    # S109 (P3.10b): the Arena tab — Starry Night: match 1 one monster (a Slime
+    # at level 5), match 3's master a monster (Coatol), the G class fee 20;
+    # a summon in a fighting team is refused; undo restores everything
+    before = doc.dumps()
+    at = w.arena_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    assert at.list.count() == 11, at.list.count()     # S128: row 0 = ★ Your arena
+    assert at.list.item(1).text().startswith('G class') and 'fee 0' in at.list.item(1).text()
+    at.list.setCurrentRow(9)
+    app.processEvents()
+    assert 'Starry Night' in at.title.text() and not at.fee.isVisible()
+    c1 = at.cards[0]
+    c1.size_btns[0].click()                          # 1 monster
+    app.processEvents()
+    assert doc.data['gamedata']['arena'] == {'StarryNight': {'matches': {'0': {'size': 1}}}}, \
+        doc.data['gamedata'].get('arena')
+    c1 = at.cards[0]
+    assert '(not fought)' in c1.table.verticalHeaderItem(1).text()
+    combo = c1.table.cellWidget(0, 0)
+    combo.setCurrentIndex(combo.findData(8))          # a Slime
+    app.processEvents()
+    assert doc.data['gamedata']['enemies']['296']['species'] == 8
+    c1 = at.cards[0]
+    c1.table.item(0, 1).setText('5')                  # level 5
+    app.processEvents()
+    assert doc.data['gamedata']['enemies']['296']['level'] == 5
+    at.set_master(2, {'monster': 40})
+    assert doc.data['gamedata']['arena']['StarryNight']['matches']['2'] == {'master': {'monster': 40}}
+    assert 'Coatol' in at.cards[2].master_btn.text()
+    at.list.setCurrentRow(1)
+    app.processEvents()
+    assert at.fee.isVisible()
+    at.fee.setValue(20)
+    app.processEvents()
+    assert doc.data['gamedata']['arena']['G'] == {'fee': 20}
+    assert 'fee 20' in at.list.item(1).text()
+    n_undo = w.session.undo.index()
+    try:
+        doc.set_enemy_fields(224, {'species': 217})
+        raise AssertionError('a summon in a fighting arena team must be refused')
+    except Exception as ex:                                       # noqa: BLE001
+        assert 'Iron Rule 8' in str(ex), ex
+    import editor2.app.arena_tab as ATm
+    warned = []
+    orig_warn = ATm.QMessageBox.warning
+    ATm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    try:
+        at.cards[0].table.item(0, 2).setText('notanumber')        # refused by the parser
+        app.processEvents()
+    finally:
+        ATm.QMessageBox.warning = orig_warn
+    assert warned and w.session.undo.index() == n_undo, (warned, w.session.undo.index(), n_undo)
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    print('OK: Arena tab (S109) — Starry Night match 1 = one Lv-5 Slime, match 3 master = '
+          'Coatol, G class fee 20; a summon in a team refused; undo restores everything')
+
+    # S110 (P3.11): the Skills tab — Zap renamed Spark with a new SKIL text, MP 1,
+    # party power 150-159, looks like Bang; MetalCut aimed at all foes; a flag;
+    # a bad name refused without an undo step; a battle item is read-only;
+    # other tabs' skill lists follow the rename; undo restores everything
+    from editor2.core import skills as SKm
+    import editor2.app.skills_tab as STm
+    before = doc.dumps()
+    warned = []
+    orig_warn = STm.QMessageBox.warning
+    STm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    st = w.skills_tab
+    w.tabs.setCurrentWidget(st)
+    app.processEvents()
+    assert st.list.count() == 225, st.list.count()     # S111: + the 10 custom skills; S155: + 6; S156: + Plunder; S160: - the 14 reclaimed item ids (new-skill slots)
+
+    def pick(sid):
+        for i in range(st.list.count()):
+            if st.list.item(i).data(0x0100) == sid:
+                st.list.setCurrentRow(i)
+        app.processEvents()
+        assert st.sid == sid, (st.sid, sid)
+    pick(16)
+    assert st.name.text() == 'Zap' and st.mp.value() == 10
+    st.name.setText('Spark')
+    st.name.editingFinished.emit()
+    st.desc[0].setText('Sparks leap at')
+    st.desc[1].setText('every foe')
+    st.desc[2].setText('')
+    st.desc[0].editingFinished.emit()
+    st.mp.setValue(1)
+    st.power['party'][0].setValue(150)
+    st.power['party'][1].setValue(159)
+    st.looks.setCurrentIndex(st.looks.findData(6))
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['16']
+    assert e['name'] == 'Spark' and e['description'] == ['Sparks leap at', 'every foe'] \
+        and e['mp'] == 1 and e['looks_like'] == 6 \
+        and e['record'] == {'party_min': 150, 'party_range': 9}, e
+    assert 'Spark' in st.title.text() and '(was Zap)' in st.list.currentItem().text()
+    pick(72)
+    st.target.setCurrentIndex(st.target.findData(0x12))
+    st.flags['f8_dodge'].setChecked(False)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['72']['record']['target_mode'] == 0x12
+    assert doc.skill_detail(72)['record']['flags']['f8_dodge'] is False
+    assert not warned, warned                          # no modal popped so far
+    n_undo = w.session.undo.index()
+    st.name.setText('Sp@rk')                           # a character the font lacks
+    st.name.editingFinished.emit()
+    app.processEvents()
+    STm.QMessageBox.warning = orig_warn
+    assert warned and w.session.undo.index() == n_undo, (warned, w.session.undo.index(), n_undo)
+    pick(176)                                          # HERB, a battle item
+    assert not st.sec_text.content.isEnabled() and 'read-only' in st.kind_note.text()
+    assert doc.skill_names_effective()[16] == 'Spark'
+    w.monsters_tab.refresh()
+    assert any(c.itemText(c.findData(16)) == 'Spark' for c in w.monsters_tab.w_skill)
+    assert 'Spark' in SKm.names(doc.data)[16]
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    for _o, _b, key, label, _h in SKm.FLAG_BITS:
+        assert label in hlp, f'help 54_skills.md lacks the behaviour box "{label}"'
+    print('OK: Skills tab (S110) — Zap -> Spark (SKIL text, MP 1, 150-159, looks like '
+          'Bang), MetalCut at all foes, a flag; a bad name refused; items read-only; '
+          'the Monsters tab follows the rename; undo restores everything')
+
+    # S111 (P3.11c/d): custom skills + new skills + elements in the Skills tab
+    from editor2.core import custom_skills as CSm
+    before = doc.dumps()
+    warned = []
+    STm.QMessageBox.warning = staticmethod(lambda *a, **k: warned.append(a[1:3]))
+    w.tabs.setCurrentWidget(st)
+    st.kind.setCurrentIndex(0)
+    app.processEvents()
+    pick(230)                                          # Quake (built in)
+    assert st.sec_params.isVisible() or not st.isVisible()
+    assert not st.power['party'][0].isEnabled() and not st.sec_target.content.isEnabled()
+    st.mp.setValue(12)
+    st.element.setCurrentIndex(st.element.findData(2))        # Explosion
+    app.processEvents()
+    assert st.ann_mode.currentData() == 0xFD and st.ann_lines[0].text() == '{name} sets off'
+    st.ann_lines[1].setText('a big quake!')
+    st.ann_lines[1].editingFinished.emit()
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['230']
+    assert e['mp'] == 12 and e['element'] == 'Explosion' and \
+        e['announce'] == ['{name} sets off', 'a big quake!'], e
+    pick(224)                                          # MagicBurn: MP is code
+    assert not st.mp.isEnabled()
+    assert set(st.ratio_edits) == {'burn', 'damage_per_mp'}, st.ratio_edits
+    st.ratio_edits['burn'].setText('1/4')              # [S111] the ratios
+    st.ratio_edits['burn'].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['224']['burn'] == '1/4'
+    assert st.ratio_edits['burn'].text() == '1/4'
+    warned_before = len(warned)
+    st.ratio_edits['damage_per_mp'].setText('9')       # refused: at most 4
+    st.ratio_edits['damage_per_mp'].editingFinished.emit()
+    app.processEvents()
+    assert 'damage_per_mp' not in doc.data['gamedata']['skills']['224']
+    assert len(warned) == warned_before + 1 and 'at most 4' in str(warned[-1]), warned
+    warned.pop()
+    pick(230)
+    assert set(st.ratio_edits) == {'ally_damage'}
+    st.ratio_edits['ally_damage'].setText('1/3')       # = the original: nothing written
+    st.ratio_edits['ally_damage'].editingFinished.emit()
+    app.processEvents()
+    assert 'ally_damage' not in doc.data['gamedata']['skills']['230']
+    pick(233)
+    st.ratio_edits['per_fallen'].setText('1/2')
+    st.ratio_edits['per_fallen'].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['233']['per_fallen'] == '1/2'
+    # S155: the S155 built-ins — LoneWolf's two percentages, Blunt's line, the
+    # one-foe / all-foes target choice (nothing else of the target section)
+    pick(223)                                          # LoneWolf
+    assert set(st.pct_spins) == {'duo', 'alone'}, st.pct_spins
+    assert len(st.result_edits) == 2           # S155 r2: one page, shown before the attack
+    assert st.result_edits[0].text() == "A lone wolf's", st.result_edits[0].text()
+    st.pct_spins['alone'].setValue(500)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['alone'] == 500
+    # S155 r3: "Show it" — every time (the default) / only when the bonus applies
+    assert st.line_shows is not None and st.line_shows.currentData() == 'always'
+    st.line_shows.setCurrentIndex(st.line_shows.findData('bonus'))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['line_shows'] == 'bonus'
+    st.line_shows.setCurrentIndex(st.line_shows.findData('always'))
+    app.processEvents()
+    assert 'line_shows' not in doc.data['gamedata']['skills']['223']
+    assert st.sec_target.content.isEnabled()
+    tv = [st.target.itemData(i) for i in range(st.target.count())]
+    assert tv == [0x11, 0x12], [hex(x) for x in tv]
+    st.target.setCurrentIndex(st.target.findData(0x12))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['223']['record']['target_mode'] == 0x12
+    pick(238)                                          # Blunt (Rust until S155 r3)
+    assert 'Blunt' in st.title.text(), st.title.text()
+    assert set(st.pct_spins) == {'atk_loss'} and len(st.result_edits) == 6
+    assert st.line_shows is None                       # its line is the result: always
+    st.result_edits[1].setText('{amount} ATK!')
+    st.result_edits[1].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['238']['result_line'] == [['{target} loses', '{amount} ATK!']], \
+        doc.data['gamedata']['skills']['238']
+    pick(234)                                          # S156 Plunder: no numbers, one foe
+    assert 'Plunder' in st.title.text(), st.title.text()
+    assert not st.pct_spins and st.line_shows is None and len(st.result_edits) == 6
+    assert not st.sec_target.content.isEnabled() and 'one foe only' in st.target_note.text().lower()
+    assert [e.text() for e in st.result_edits[:3]] == ['{name} steals', "{target}'s", '{buff}!'], \
+        [e.text() for e in st.result_edits]
+    st.result_edits[1].setText('{target}!')
+    st.result_edits[1].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['234']['result_line'] == \
+        [['{name} steals', '{target}!'], ['{buff}!']], doc.data['gamedata']['skills']['234']
+    assert doc.skill_detail(234)['params']['result_line'][0] == \
+        [['{name} steals', '{target}!'], ['{buff}!']]
+    # S156 r2: the two rise pages (a raised DEF / AGL stolen: how much the user's stat rose)
+    assert set(st.rise_edits) == {'def_rise', 'agl_rise'}, st.rise_edits
+    assert [e.text() for e in st.rise_edits['agl_rise']] == ["{name}'s speed", 'goes up by {amount}!']
+    st.rise_edits['def_rise'][0].setText('{name} hardens')
+    st.rise_edits['def_rise'][0].editingFinished.emit()
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['234']['def_rise'] == ['{name} hardens', 'goes up by {amount}!'], \
+        doc.data['gamedata']['skills']['234']
+    pick(222)                                          # Repel: field only, no numbers
+    assert not st.pct_spins and not st.sec_target.content.isEnabled()
+    nid = st.create_skill(16, 'Thunder')                # a NEW skill based on Zap
+    app.processEvents()
+    assert nid == 239 and st.sid == 239 and 'Thunder' in st.title.text(), (nid, st.sid)
+    st.power['party'][0].setValue(60)
+    st.power['party'][1].setValue(75)
+    st.looks.setCurrentIndex(st.looks.findData(6))     # Bang's look
+    st.sounds.setCurrentIndex(st.sounds.findData(15))  # Bolt's sounds
+    st.element.setCurrentIndex(st.element.findData(2))
+    st.learnable.setChecked(True)
+    app.processEvents()
+    st.prereqs.setText('Zap')
+    st.prereqs.editingFinished.emit()
+    app.processEvents()
+    e = doc.data['gamedata']['skills']['239']
+    assert e['base'] == 16 and e['name'] == 'Thunder' and e['looks_like'] == 6 and \
+        e['sounds_like'] == 15 and e['element'] == 'Explosion' and \
+        e['record']['party_min'] == 60 and e['learn']['prereqs'] == [16], e
+    assert doc.skill_names_effective()[239] == 'Thunder'
+    # [S161] ROADMAP E17: a new skill's AI Preference (0 = as its base, -60 … +60)
+    assert st.ai_pref.isVisibleTo(st) and st.ai_pref.value() == 0 and \
+        'as they judge Zap' in st.ai_pref_note.text(), st.ai_pref_note.text()
+    st.ai_pref.setValue(30)
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['239']['ai_preference'] == 30
+    assert '+30' in st.ai_pref_note.text() and st.ai_pref.font().bold()
+    st.ai_pref.setValue(0)
+    app.processEvents()
+    assert 'ai_preference' not in doc.data['gamedata']['skills']['239']
+    assert st.ai_pref.minimum() == -60 and st.ai_pref.maximum() == 60
+    w.monsters_tab.refresh()
+    assert any(c.findData(239) >= 0 for c in w.monsters_tab.w_skill)
+    pick(30)                                           # Upper: no element to change
+    assert not st.element.isEnabled()
+    assert not st.ai_pref.isVisibleTo(st)              # [S161] an original skill: no Preference
+    pick(0)                                            # Blaze -> Ice
+    st.element.setCurrentIndex(st.element.findData(5))
+    app.processEvents()
+    assert doc.data['gamedata']['skills']['0']['element'] == 'Ice'
+    assert doc.skill_detail(0)['record']['status_id'] == 6       # the AI element follows
+    pick(239)
+    st._delete_skill()
+    app.processEvents()
+    assert 239 not in doc.new_skill_ids()
+    STm.QMessageBox.warning = orig_warn
+    assert not warned, warned
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    for word in ('New skill', 'Element', 'Sounds like', 'Its own numbers', 'share of the current MP',
+                 'Preference', 'as its base'):
+        assert word in hlp, f'help 54_skills.md lacks "{word}"'
+    print('OK: Skills tab (S111) — Quake MP 12 / Explosion / its own line; MagicBurn MP is '
+          'code, its burn share 1/4 (9 refused); Mourn per fallen 1/2; a new skill Thunder (Zap base, Bang look, Bolt sounds, Explosion, evolves '
+          'from Zap; S161 its AI Preference +30 / back to 0); Blaze -> Ice (AI element follows); delete; S155 LoneWolf x5 alone / all foes / its line only with the bonus, Blunt\'s line; S156 Plunder\'s line ({name} / {target} / {buff}) + r2 its rise pages; '
+          'undo restores everything')
+
+    # S112 (P3.11e): the Animations tab (a mashup with the preview) and the
+    # Skills tab's Animation section; delete refused while a skill shows it;
+    # undo restores everything; the help names the parts
+    import editor2.app.anims_tab as ATm
+    from editor2.core import battle_anims as BAm
+    before = doc.dumps()
+    at = w.anims_tab
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    awarned = []
+    a_warn, a_q = ATm.QMessageBox.warning, ATm.QMessageBox.question
+    ATm.QMessageBox.warning = staticmethod(lambda *a, **k: awarned.append(a[1:3]))
+    ATm.QMessageBox.question = staticmethod(lambda *a, **k: ATm.QMessageBox.Yes)
+    assert at.list.count() == len(doc.animations())
+    aid = at.create(0x10, 'Spark storm')               # all of Zap's steps
+    app.processEvents()
+    assert aid == 'spark_storm' and at.aid == aid and at.list.count() == len(doc.animations())
+    n0 = at.table.rowCount()
+    assert n0 == len(BAm.expand_source(0x10)) and at.box.preview.full, n0
+    dlg = ATm.AddFramesDialog(at, 0x06)                # Bang: its first two steps
+    dlg.steps.item(0).setSelected(True)
+    dlg.steps.item(1).setSelected(True)
+    new = dlg.chosen()
+    assert [('from' in x) or ('sound' in x) for x in new] == [True, True], new
+    at.table.clearSelection()
+    at.insert_steps(new, 'two Bang steps')
+    at._add_blank()
+    app.processEvents()
+    e = doc.animation(aid)
+    assert len(e['steps']) == n0 + 3 and e['sources'] == [0x10, 0x06] and e['error'] is None, e
+    sp = at.table.cellWidget(0, 1)
+    sp.setValue(9)                                     # step 1 shows 9 frames
+    app.processEvents()
+    assert doc.animation(aid)['steps'][0]['hold'] == 8
+    at.box.preview.play()
+    for _ in range(5):
+        at.box.preview._tick()
+    assert at.box.preview.pos == 5
+    at.box.preview.stop()
+    # a skill shows it: Zap, on each target in turn
+    w.tabs.setCurrentWidget(st)
+    pick(16)
+    st.anim_kind.setCurrentIndex(st.anim_kind.findData('animation'))
+    app.processEvents()
+    st.anim_which.setCurrentIndex(st.anim_which.findData(doc.animation(aid)['number']))
+    app.processEvents()
+    st.anim_motion.setCurrentIndex(st.anim_motion.findData(2))
+    app.processEvents()
+    assert doc.skill_presentation(16)['own'] == {'kind': 'animation', 'animation': aid,
+                                                  'motion': 2}, doc.skill_presentation(16)
+    assert 'your monsters' in st.anim_note.text() and st.anim_preview.preview.full
+    pick(94)                                           # Scorching: the screen blinks
+    st.anim_kind.setCurrentIndex(st.anim_kind.findData('effect'))
+    app.processEvents()
+    assert doc.skill_presentation(94)['own'] == {'kind': 'effect', 'effect': 4}
+    assert doc.animation_users(aid) == [16]
+    w.tabs.setCurrentWidget(at)
+    app.processEvents()
+    at._delete()                                       # refused: Zap shows it
+    app.processEvents()
+    assert awarned and 'Zap' in str(awarned[-1]) and aid in [x['id'] for x in doc.animations()]
+    ATm.QMessageBox.warning, ATm.QMessageBox.question = a_warn, a_q
+    STm.QMessageBox.warning = orig_warn
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '57_animations.md')).read()
+    for word in ('Add frames', 'Add sound', 'Limits', 'Skills'):
+        assert word in hlp, f'help 57_animations.md lacks "{word}"'
+    assert '## Animation' in open(os.path.join(REPO, 'editor2', 'help', '54_skills.md')).read()
+    print('OK: Animations tab (S112) — Spark storm = Zap + two Bang steps + a blank, a step '
+          'held 9 frames, the preview plays; Zap shows it on each target, Scorching blinks '
+          'the screen; delete refused while Zap shows it; undo restores everything')
+
+    # S113 (P3.12): the Breeding tab — depth / roots read-outs, try a cross,
+    # a recipe added for two exact monsters beats the general ones, a special
+    # row changed and removed + brought back, a family (library) recipe,
+    # the whole-table form, a generated tree; undo restores everything
+    import editor2.app.breeding_tab as BTm
+    before = doc.dumps()
+    bt = w.breeding_tab
+    w.tabs.setCurrentWidget(bt)
+    app.processEvents()
+    an = bt.an
+    assert 'deepest' in bt.summary.text() and bt.sp_tree.topLevelItemCount() == len(an.species)
+    bt.select_species(8)                                    # Slime
+    app.processEvents()
+    assert bt.current_species() == 8 and 'Slime' in bt.sp_title.text()
+    bt.t_p1.set_value(8); bt.t_p2.set_value(8); bt.t_plus1.setValue(4)
+    app.processEvents()
+    assert 'KingSlime' in bt.t_out.text() and '#0' in bt.t_out.text(), bt.t_out.text()
+    bt.t_plus1.setValue(0)
+    app.processEvents()
+    assert 'KingSlime' not in bt.t_out.text().split('<br>')[0], bt.t_out.text()
+    bwarned = []
+    b_warn, b_q = BTm.QMessageBox.warning, BTm.QMessageBox.question
+    BTm.QMessageBox.warning = staticmethod(lambda *a, **k: bwarned.append(a[1:3]))
+    BTm.QMessageBox.question = staticmethod(lambda *a, **k: BTm.QMessageBox.Yes)
+    # Slime x DragonKid -> Healer (a vanilla Slime x [Dragon] row fits them too)
+    van_res = an.br.resolve(8, 20).species
+    assert bt._push('Recipe for Healer', lambda d: d.add_special(
+        {'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 9, 'plus_mod': 0}))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['special']['appends'][-1] == \
+        {'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 9, 'plus_mod': 0}
+    bt.t_p1.set_value(8); bt.t_p2.set_value(20); bt._try()
+    assert bt.an.br.resolve(8, 20).species == 9 and van_res != 9 and 'Healer' in bt.t_out.text()
+    # a duplicate of an existing row is refused (it could never fire)
+    n_undo = w.session.undo.index()
+    bt._push('dup', lambda d: d.add_special({'p1': 8, 'p2': 20, 'min_plus': 0, 'result': 4,
+                                            'plus_mod': 0}))
+    app.processEvents()
+    assert bwarned and 'same parents' in str(bwarned[-1]) and w.session.undo.index() == n_undo
+    # change vanilla row 0 (Slime x Slime +5 -> KingSlime) to need +9, remove row 1, bring back
+    r0 = next(r for r in doc.special_rows() if r['src'] == ('vanilla', 0))
+    assert bt._push('row 0', lambda d: d.set_special(('vanilla', 0), dict(r0, min_plus=9)))
+    app.processEvents()
+    assert [o for o in doc.data['gamedata']['breeding']['special']['overrides']
+            if o.get('index') == 0][0]['min_plus'] == 9
+    assert bt._push('rm 1', lambda d: d.remove_special(('vanilla', 1)))
+    app.processEvents()
+    assert bt.removed.count() == 1 and bt.removed.currentData() == 1
+    bt._restore_special()
+    app.processEvents()
+    assert bt.removed.count() == 0
+    # the family (library) recipe of Slime: [Slime] x [Slime]
+    assert bt._push('fam', lambda d: d.set_family_recipe(8, 0xF0, 0xF0))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['family']['8'] == {'p1': 'Slime', 'p2': 'Slime'}
+    assert bt.fam_table.item(8, 4).text() == 'changed'
+    # whole-table form
+    bt._to_table()
+    app.processEvents()
+    tab = doc.data['gamedata']['breeding']['special']
+    assert list(tab) == ['table'] and len(tab['table']) == len(bt.an.br.special)
+    assert not bt.b_table.isEnabled() and 'whole table' in bt.summary.text()
+    # a generated tree (seeded), applied as one undo step
+    dlg = BTm.GenerateDialog(bt, w.session, bt.an)
+    dlg.seed.setValue(7)
+    dlg.max_depth.setValue(12)                              # deeper than vanilla's 9
+    app.processEvents()
+    assert sorted(dlg.share) == list(range(1, 13)) and 'at most' in dlg.cap_note.text()
+    dlg.propose()
+    from editor2.core.breeding import Analysis as _An
+    from editor2.core.project import Project as _Pr
+    from editor2.core import breed_gen as _BG
+    _a12 = _An(_Pr(_BG.apply_to(doc.data, dlg.gd), doc.project_dir))
+    assert max(d for d in _a12.depth.values() if d < 99) >= 11, _a12.histogram()
+    assert dlg.b_apply.isEnabled() and 'special recipes' in dlg.report.text()
+    gd = dlg.gd
+    assert bt._push('Generated breeding tree', lambda d: d.apply_breeding(gd))
+    app.processEvents()
+    assert doc.data['gamedata']['breeding']['special']['table'] == gd['special']['table']
+    assert not bt.an.unreachable() or all(s >= 221 for s in bt.an.unreachable()), bt.an.unreachable()
+    BTm.QMessageBox.warning, BTm.QMessageBox.question = b_warn, b_q
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '58_breeding.md')).read()
+    for word in ('Depth', 'Try a cross', 'Special recipes', 'Family recipes', 'Generate',
+                 'whole table', 'never fires'):
+        assert word in hlp, f'help 58_breeding.md lacks "{word}"'
+    print('OK: Breeding tab (S113) — Slime x Slime +5 = KingSlime (#0); Slime x DragonKid -> '
+          'Healer beats the general rows; a duplicate refused; row 0 needs +9; row 1 removed '
+          'and brought back; Slime\'s library recipe; the whole table; a generated tree; '
+          'undo restores everything')
+
+    # S114 (P3.13a): the Encounters tab — lists (staged slot edits + Apply), a
+    # project list copied, a gate floor given it + a flag variant, a room on its
+    # own list with a rate; undo restores project.json exactly
+    import editor2.app.encounters_tab as ETm
+    et = w.encounters_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(et)
+    app.processEvents()
+    assert et.list_w.count() == 128, et.list_w.count()
+    assert et.list_w.item(1).text().startswith('1 · Gate of Villager floors 1-2'), \
+        et.list_w.item(1).text()
+    et.show_list(0)
+    app.processEvents()
+    le = et.list_ed
+    assert 'Gorbunok' in le.odds.text() and 'Gate of Beginning floors 1-4' in le.uses.text(), \
+        (le.odds.text(), le.uses.text())
+    # staged: 10 % then 20 % — Apply only once the slots add up to 100 %
+    le.table.cellWidget(0, 1).setCurrentIndex(0)            # Slime 10 % -> 0 %
+    app.processEvents()
+    assert not le.apply_btn.isEnabled() and 'must be exactly' in le.total.text()
+    le.table.cellWidget(1, 1).setCurrentIndex(2)            # Dracky 10 % -> 20 %
+    app.processEvents()
+    assert le.apply_btn.isEnabled(), le.total.text()
+    le._apply()
+    app.processEvents()
+    assert doc.data['gamedata']['encounters']['0']['slot_chance'][:2] == [0, 2]
+    e_q = ETm.QInputDialog.getText
+    ETm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Night wolves', True))
+    et.cur_list = 12
+    et._new_list()
+    app.processEvents()
+    assert et.cur_list == 128 and doc.data['custom']['encounter_lists'][0]['id'] == 'night_wolves'
+    ETm.QInputDialog.getText = e_q
+    et.pages.setCurrentIndex(1)
+    app.processEvents()
+    et.gate_w.setCurrentRow(1)                              # Gate of Villager
+    app.processEvents()
+    ge = et.gate_ed
+    assert ge.table.rowCount() == 4 and "the game's rule (list 1)" in ge.table.item(0, 2).text()
+    c = ge.table.cellWidget(0, 1)
+    c.setCurrentIndex(c.findData(128))
+    app.processEvents()
+    g1 = next(g for g in doc.data['custom']['gates'] if g['gate'] == 1)
+    assert g1['encounters'] == {'floors': [{'floors': 1, 'list': 'night_wolves'}]}, g1
+    assert ge.table.item(0, 2).text() == 'your plan'
+    assert et.push('variant', lambda d: d.set_gate_variants(
+        1, [{'when': [{'flag': '0x0030'}], 'floors': [{'floors': 'all', 'list': 5}]}]))
+    app.processEvents()
+    assert ge.which.count() == 2 and 'when' in ge.which.itemText(1)
+    ge.which.setCurrentIndex(1)
+    app.processEvents()
+    assert all(ge.table.item(i, 2).text() == 'this variant' for i in range(4))
+    et.pages.setCurrentIndex(2)
+    app.processEvents()
+    k = et.room_ids.index('dusk_mirror')
+    et.room_w.setCurrentRow(k)
+    app.processEvents()
+    re_ = et.room_ed
+    re_.mode_btn['own'].setChecked(True)
+    app.processEvents()
+    re_.rate_on.setChecked(True)
+    app.processEvents()
+    re_.rate.setCurrentIndex(7)
+    app.processEvents()
+    dm = next(r for r in doc.data['custom']['rooms'] if r['id'] == 'dusk_mirror')
+    assert dm['encounters'] == {'enabled': True, 'list': 0, 'rate': 7}, dm['encounters']
+    assert 'steps between battles' in re_.rate_steps.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    import tempfile
+    import shutil as _sh
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'EncGatePlan_01' in outs['patches/bank_076.asm'] and \
+        '; list 128: night_wolves' in outs['patches/bank_076.asm']
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '59_encounters.md')).read()
+    for word in ('Lists', 'Real chance', 'Apply', 'Gates', 'Flag variants', 'Rooms',
+                 'Its own list', 'Shared'):
+        assert word in hlp, f'help 59_encounters.md lacks "{word}"'
+    print('OK: Encounters tab (S114) — list 0 staged to 0/20 % and applied; a copy of list 12 '
+          'as list 128; Villager floor 1 on it + a flag variant; dusk_mirror on its own list at '
+          'rate 7; compiles; undo restores everything')
+
+    # S115 (ROADMAP NG1): new gates — Gates tab New gate… (a copy of Memories, 4
+    # floors), rename, the Encounters tab lists it, the Rooms tab puts a gate
+    # entrance on a cell; compiles; Delete gate; undo restores project.json
+    import editor2.app.gates_tab as GTm
+    gt = w.gates_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(gt)
+    app.processEvents()
+    n0 = gt.list.count()
+    assert n0 == 32, n0
+    e_exec, e_vals = GTm.NewGateDialog.exec, GTm.NewGateDialog.values
+    GTm.NewGateDialog.exec = lambda self: GTm.QDialog.Accepted
+    GTm.NewGateDialog.values = lambda self: (3, 'Ember Gate', 4)
+    gt._new_gate()
+    GTm.NewGateDialog.exec, GTm.NewGateDialog.values = e_exec, e_vals
+    app.processEvents()
+    assert gt.list.count() == 33 and 'NEW' in gt.list.item(32).text(), gt.list.item(32).text()
+    assert gt.list.currentRow() == 32 and gt._btn_delete.isEnabled()
+    assert 'no entrance yet' in gt.sub.text(), gt.sub.text()
+    assert doc.data['custom']['gates'][-1] == {'gate': 32, 'copy_of': 3, 'name': 'Ember Gate',
+                                               'floors': 4}, doc.data['custom']['gates']
+    e_t = GTm.QInputDialog.getText
+    GTm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Cinder Gate', True))
+    gt._rename_gate()
+    GTm.QInputDialog.getText = e_t
+    app.processEvents()
+    assert doc.gate_name(32) == 'Cinder Gate' and 'Cinder Gate' in gt.list.item(32).text()
+    et = w.encounters_tab
+    w.tabs.setCurrentWidget(et)
+    et.refresh() if hasattr(et, 'refresh') else None
+    app.processEvents()
+    et.pages.setCurrentIndex(1)
+    app.processEvents()
+    assert et.gate_ids[-1] == 32 and 'NEW (copy of gate 3)' in et.gate_w.item(32).text()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    import PySide6.QtWidgets as QW
+    q_gi = QW.QInputDialog.getItem
+    QW.QInputDialog.getItem = staticmethod(lambda _p, _t, _l, items, *a, **k: (items[0], True))
+    rt._add_gate_entrance((2, 3))
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    ents = doc.gate_entrances(32)
+    assert len(ents) == 1 and ents[0][3]['gate_flag'] == 1 and ents[0][3]['dest'] == 'gate:32', ents
+    w.tabs.setCurrentWidget(gt)
+    gt.refresh()
+    app.processEvents()
+    gt.list.setCurrentRow(32)
+    app.processEvents()
+    assert 'entrance:' in gt.sub.text(), gt.sub.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    assert 'NEW_GATE_LEN EQU 1' in outs['patches/bank_076.asm'] and \
+        'gate 32 Cinder Gate' in outs['patches/bank_076.asm']
+    e_q = GTm.QMessageBox.question
+    GTm.QMessageBox.question = staticmethod(lambda *a, **k: GTm.QMessageBox.Yes)
+    gt._delete_gate()
+    GTm.QMessageBox.question = e_q
+    app.processEvents()
+    assert gt.list.count() == 32 and not doc.gate_entrances(32)
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '60_gates.md')).read()
+    for word in ('New gate', 'copy of', 'Gate entrance here', 'Delete'):
+        assert word in hlp, f'help 60_gates.md lacks "{word}"'
+    print('OK: New gates (S115) — Gates tab New gate (copy of Memories, 4 floors) as gate 32, '
+          'renamed; listed on the Encounters tab; a gate entrance on dusk_mirror (2,3); '
+          'compiles; Delete gate removes it and its entrance; undo restores everything')
+
+    # S116 (ROADMAP P3.13b): the Music tab — the song list (the game's sounds,
+    # DWM2, MIDI library, the project's), rename, Add to the project, a room song,
+    # a gate's songs, a battle setting, a fight; the preview renders through the
+    # game's engine (headless: no audio device, the renderer is called directly);
+    # compiles; undo restores project.json exactly
+    mt = w.music_tab
+    doc = w.session.doc
+    before = doc.dumps()
+    w.tabs.setCurrentWidget(mt)
+    app.processEvents()
+    kinds = {r['kind'] for r in mt._rows()}
+    assert kinds == {'project', 'game', 'effect', 'dwm2', 'midi'}, kinds
+    n_game = sum(1 for r in mt._rows() if r['kind'] in ('game', 'effect'))
+    # S147: the meter counts SONGS (one id each), not channels (S116: 12 = 4 songs x 3)
+    assert n_game >= 85 and mt.ids_bar.value() == 4, (n_game, mt.ids_bar.value())
+    assert mt.data_lbl.text().startswith('song data ') and 'ROM space' not in mt.data_lbl.text(), \
+        mt.data_lbl.text()
+    mt.filter.setCurrentIndex(mt.filter.findData('dwm2'))
+    app.processEvents()
+    assert mt.song_list.count() == 31, mt.song_list.count()
+    mt.song_list.setCurrentRow(3)                      # BGM #04: four channels
+    app.processEvents()
+    assert mt.cur['lib'] == 'dwm2_bgm04' and '4 channel(s)' in mt.info.text() and \
+        'noise' in mt.info.text(), mt.info.text()
+    pcm = mt._renderer(mt.cur).render(seconds=1.0)
+    assert pcm.shape[1] == 2 and len(pcm) > 30000 and abs(pcm).max() > 1000, pcm.shape
+    mt.name_e.setText('Drum song')
+    mt._rename()
+    mt._add_song()
+    app.processEvents()
+    assert doc.song_name('dwm2_bgm04') == 'Drum song' and \
+        doc.project_song('dwm2_bgm04') is not None and mt.cur['kind'] == 'project', mt.cur
+    assert mt.ids_bar.value() == 5, mt.ids_bar.value()
+    mt.filter.setCurrentIndex(mt.filter.findData('game'))
+    app.processEvents()
+    r27 = next(i for i, r in enumerate(mt.shown) if r['key'] == '$27')
+    mt.song_list.setCurrentRow(r27)
+    app.processEvents()
+    assert 'battle start' in mt.info.text() and '4 channel(s)' in mt.info.text(), mt.info.text()
+    mt.push('room', lambda d: d.set_room_music_id(0x01, 'dwm2_bgm04'))
+    mt.push('gate', lambda d: d.set_gate_music(2, floors='dwm2_bgm04', battles=0x2B))
+    mt.push('battle', lambda d: d.set_battle_music('starry', 'dwm2_bgm04'))
+    mt.push('fight', lambda d: d.set_fight_music(325, 0x31))
+    mt.refresh()
+    app.processEvents()
+    gl = [mt.gates_t.cellWidget(i, 1).currentData() for i in range(mt.gates_t.rowCount())]
+    assert gl[2] == 'dwm2_bgm04' and mt.fights_t.rowCount() == 1, (gl[:4], mt.fights_t.rowCount())
+    rows = [mt.rooms_t.item(i, 0).text() for i in range(mt.rooms_t.rowCount())]
+    from editor2.core import place_names as _PN                # S143: rows by name
+    i01 = rows.index(_PN.Places.of(doc).vanilla_label(0x01))
+    assert mt.rooms_t.cellWidget(i01, 2).currentData() == 'dwm2_bgm04'
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    P = pp.music_plan()
+    assert P.room_bgm[0x01] == P.song_ids['dwm2_bgm04'] and P.gate_battle[2] == 0x2B and \
+        P.fights == [(325, 0x31)] and \
+        len(next(r for r in P.songs if r['id'] == 'dwm2_bgm04')['channels']) == 4
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    hlp = open(os.path.join(REPO, 'editor2', 'help', '61_music.md')).read()
+    for word in ('Import MIDI', 'Add to the project', 'Starry Night final', 'battles here',
+                 'numpy', '95 songs'):
+        assert word in hlp, f'help 61_music.md lacks "{word}"'
+    print('OK: Music tab (S116) — every kind of song listed; DWM2 BGM #04 shows 4 channels '
+          '(noise) and renders through the game engine; renamed + added (5 songs, S147: one id a '
+          'song); $27 = the '
+          'battle start; room / gate / Starry / fight songs compile; undo restores everything')
+
+    # S116b: the song player (user report, macOS: "stopped early after a few seconds,
+    # replay froze completely"). A fake sink (headless: no audio device) with a buffer
+    # SMALLER than the old 0.25 s feed chunk and partial writes must keep the song
+    # going; replay / stop discard (reset), never drain (stop); a stream the system
+    # stops (device change) is restarted and the song continues.
+    import time as _time
+    from editor2.app.music_tab import SongPlayer
+
+    class _Nm:
+        def __init__(self, n):
+            self.name = n
+
+    class FakeSink:
+        def __init__(self, cap):
+            self.cap, self.fill, self.calls, self.st, self.got = cap, 0, [], 'ActiveState', 0
+
+        def bytesFree(self):
+            return self.cap - self.fill
+
+        def bufferSize(self):
+            return self.cap
+
+        def state(self):
+            return _Nm(self.st)
+
+        def error(self):
+            return _Nm('IOError' if self.st == 'StoppedState' else 'NoError')
+
+        def reset(self):
+            self.calls.append('reset')
+            self.fill, self.st = 0, 'StoppedState'
+
+        def stop(self):
+            self.calls.append('stop')
+
+        def start(self):
+            self.calls.append('start')
+            self.st = 'ActiveState'
+            return self
+
+        def write(self, b):
+            n = min(len(b), self.cap - self.fill, 1000)       # partial writes
+            self.fill += n
+            self.got += n
+            return n
+
+        def consume(self, n):
+            self.fill = max(0, self.fill - n)
+
+        def deleteLater(self):
+            pass
+
+    fake = FakeSink(int(48000 * 0.1) * 4)                  # 0.1 s buffer < 0.25 s
+    pl = SongPlayer()
+
+    def _fake_sink():
+        pl.sink, pl.rate, pl._dev_id = fake, 48000, b'fake'
+    pl._ensure_sink = _fake_sink
+    from editor2.core import music_preview as MPv
+    pl.play(MPv.Renderer.vanilla(mt._rom(), 0x09))
+    pl.timer.stop()                                         # the test drives the ticks
+    for _ in range(150):                                    # 3 s of device time
+        fake.consume(48000 * 4 // 50)
+        pl._feed()
+    assert pl.playing and pl.r.frames >= int(59.7 * 2.9), pl.r.frames
+    assert fake.got >= 48000 * 4 * 2.9, fake.got
+    pl.play(MPv.Renderer.vanilla(mt._rom(), 0x09))          # replay
+    pl.timer.stop()
+    assert fake.calls[-2:] == ['reset', 'start'] and 'stop' not in fake.calls, fake.calls
+    f0 = pl.r.frames
+    fake.st = 'StoppedState'                                # the system stopped the stream
+    pl._feed()
+    t_end = _time.time() + 1.0
+    while _time.time() < t_end and fake.calls.count('start') < 3:
+        app.processEvents()
+        _time.sleep(0.01)
+    pl.timer.stop()
+    for _ in range(50):
+        fake.consume(48000 * 4 // 50)
+        pl._feed()
+    assert fake.calls.count('start') == 3 and pl.playing and pl.r.frames >= f0 + 50, \
+        (fake.calls, pl.r.frames, f0)
+    pl.stop()
+    assert not pl.playing and 'stop' not in fake.calls, fake.calls
+    print('OK: song player (S116b) — a 0.1 s buffer with partial writes keeps the song '
+          'going (3 s); replay = reset + start (no draining stop); a stream the system '
+          'stops is restarted and the song continues; stop discards')
+
+    # S117 (ROADMAP NG2 + P3.13c): a gate entrance gets the spinning swirl (shown
+    # while the gate is not cleared) and the still swirl picture; a vanilla portal
+    # led to another gate; an NPC made a shopkeeper; the Shops tab — a new shop,
+    # items, a price; compiles; undo restores project.json
+    import editor2.app.shops_tab as STm
+    import editor2.app.rooms.tab as RTm
+    import PySide6.QtWidgets as QW
+    doc = w.session.doc
+    before = doc.dumps()
+    rt = w.rooms_tab
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    q_gi = QW.QInputDialog.getItem
+    QW.QInputDialog.getItem = staticmethod(
+        lambda _p, _t, _l, items, *a, **k: (next(i for i in items if i.startswith(' 2 ')), True))
+    rt._add_gate_entrance((2, 3))
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    sw = doc.gate_swirls(2)
+    assert len(sw) == 1 and (sw[0][3]['x'], sw[0][3]['y']) == (2, 3) and \
+        sw[0][3]['swirl_of'] == 2, sw
+    assert 'Gate entrance' in rt.status_line.text() and 'swirl' in rt.status_line.text(), \
+        rt.status_line.text()
+    QW.QInputDialog.getItem = staticmethod(
+        lambda _p, _t, _l, items, *a, **k: (next(i for i in items if i.startswith(' 5 ')), True))
+    rt._portal_to_gate({'mapID': 0x24, 'screen': 0, 'x': 2, 'y': 2})
+    QW.QInputDialog.getItem = q_gi
+    app.processEvents()
+    pr = doc.portal_redirects()
+    assert len(pr) == 1 and pr[0][1]['dest'] == 'gate:5', pr
+    gt = w.gates_tab
+    gt.refresh()
+    gt.list.setCurrentRow(5)
+    app.processEvents()
+    assert 'cleared' in gt.sub.text(), gt.sub.text()
+    room = doc.room('dusk_mirror')
+    cmd = rt._npc_op('Add NPC', lambda d, r, k, st: d.add_npc(r, k, st, 6, 4, 0x06))
+    rt._after_npc_edit(cmd.result)
+    app.processEvents()
+    assert rt._sel_npc == cmd.result
+    STm.QInputDialog.getText = staticmethod(lambda *a, **k: ('Mirror stall', True))
+    st = w.shops_tab
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    app.processEvents()
+    assert st.list.count() == 5 and st.prices.rowCount() == 43, (st.list.count(),
+                                                                 st.prices.rowCount())
+    st._new_shop()
+    STm.QInputDialog.getText = QW.QInputDialog.getText
+    app.processEvents()
+    assert st.list.count() == 6 and st.current()['key'] == 'mirror_stall', st.current()
+    assert 'nobody sells' in st.where.text(), st.where.text()
+    st.pick.setCurrentIndex(st.pick.findData(29))              # ...
+    st._add_item()
+    st.items.setCurrentRow(1)
+    st._move(-1)
+    app.processEvents()
+    assert st.current()['items'] == [29, 1], st.current()['items']
+    st.prices.item(0, 1).setText('12')                         # Herb costs 12
+    app.processEvents()
+    assert doc.data['gamedata']['items'] == {'1': {'price': 12}}, doc.data.get('gamedata')
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    rt._after_npc_edit(cmd.result)
+    d_exec = RTm.QDialog.exec
+
+    def _pick_shop(dlg):
+        cb = dlg.findChild(QW.QComboBox)
+        cb.setCurrentIndex(cb.findData('mirror_stall'))
+        dlg.findChild(QW.QPlainTextEdit).setPlainText('MIRROR STALL.\nLook around!')
+        return QW.QDialog.Accepted
+    RTm.QDialog.exec = _pick_shop
+    rt._npc_shop()
+    RTm.QDialog.exec = d_exec
+    app.processEvents()
+    room = doc.room('dusk_mirror')
+    so = doc.shopkeeper_of(room, rt.key, rt.state_idx, cmd.result)
+    assert so == ('mirror_stall', [['MIRROR STALL.', 'Look around!']]), so
+    w.tabs.setCurrentWidget(st)
+    st.refresh()
+    app.processEvents()
+    st.list.setCurrentRow(5)
+    app.processEvents()
+    assert 'Sold by:' in st.where.text(), st.where.text()
+    from editor2.core import compiler as Cc                # the edits compile
+    td = tempfile.mkdtemp()
+    _sh.copytree(doc.project_dir, os.path.join(td, 'p'), ignore=_sh.ignore_patterns('build'))
+    open(os.path.join(td, 'p', 'project.json'), 'w').write(doc.dumps())
+    outs, _pp, _ww = Cc.compile_project(os.path.join(td, 'p'), REPO)
+    b77 = outs['patches/bank_077.asm']
+    assert 'SHOP_COUNT EQU 6' in b77 and 'Mirror stall' in b77 and '$1d, $01, $ff' in b77, b77
+    # S151: the records live in bank $77's ItemTable (bank $03's table is no longer read)
+    assert '    db $00, $0c, $00, $64, $00, $04, $00, $03, $04, $1e, $28, $00   ; [  1] Herb (edited)' \
+        in b77, [ln for ln in b77.splitlines() if '[  1]' in ln]
+    b60 = outs['patches/bank_060.asm']
+    assert 'VanillaNPCExtTable:' in b60 and 'is CLEAR' in b60, 'no swirl conditions'
+    e_q = STm.QMessageBox.question
+    STm.QMessageBox.question = staticmethod(lambda *a, **k: STm.QMessageBox.Yes)
+    st._delete()
+    STm.QMessageBox.question = e_q
+    app.processEvents()
+    assert st.list.count() == 5 and doc.shopkeeper_of(doc.room('dusk_mirror'), rt.key,
+                                                       rt.state_idx, cmd.result) is None
+    # S117b: the sprite limits show on the Rooms tab banner (3 NPCs on one row)
+    w.tabs.setCurrentWidget(rt)
+    rt.open_node(('room', 'dusk_mirror'))
+    app.processEvents()
+    for x in (1, 3, 5):
+        rt._npc_op('Add NPC', lambda d, r, k, st_, x=x: d.add_npc(r, k, st_, x, 6, 0x06))
+    rt._show()
+    app.processEvents()
+    assert 'Sprite limit: row 6 has' in rt.banner.text(), rt.banner.text()
+    while w.session.undo.index() > 0 and doc.dumps() != before:
+        w.session.undo.undo()
+    app.processEvents()
+    assert doc.dumps() == before, 'undo must restore project.json exactly'
+    for fn, words in (('60_gates.md', ('swirl', 'cleared', 'Lead this portal')),
+                      ('62_shops.md', ('Shopkeeper', 'New shop', 'Shops pay', '20 items')),
+                      ('30_flags.md', ('gate:', '$1000'))):
+        hlp = open(os.path.join(REPO, 'editor2', 'help', fn)).read()
+        for word in words:
+            assert word in hlp, f'help {fn} lacks "{word}"'
+    print('OK: Swirls + shops (S117) — a gate entrance gets its swirl (shown until gate 2 is '
+          'cleared); the Villager / Talisman room portal (2,2) led to gate 5; the Shops tab makes "Mirror '
+          'stall" (2 items, reordered), Herb at 12; an NPC sells it with its own greeting; '
+          'compiles (6 lists, swirl conditions); Delete unbinds it; the sprite-limit banner (S117b); '
+          'undo restores everything')
+
+    # S118 (P3.8 part A): the Cutscenes tab — every scene, the storyboard, the
+    # model picture, and (with PyBoy + the ROM) the Playback window playing the
+    # intro chain in the real game with auto text
+    ct = w.cutscenes_tab
+    w.tabs.setCurrentWidget(ct)
+    app.processEvents()
+    if ct.cat is None:
+        ct.load()
+    if ct.cat is None:
+        print('SKIP: Cutscenes tab needs data/DWM-original.gbc')
+    else:
+        tops = [ct.tree.topLevelItem(i).text(0) for i in range(ct.tree.topLevelItemCount())]
+        assert tops[0].startswith('Your cutscenes') and tops[1].startswith('Chains') and \
+            'Your rooms' in tops and 'Game rooms' in tops, tops
+        game = ct.tree.topLevelItem(3)
+        assert game.childCount() >= 40, game.childCount()
+        chain = ct.tree.topLevelItem(1).child(0)
+        ct.tree.setCurrentItem(chain)
+        app.processEvents()
+        rows = [ct.steps.item(i).text() for i in range(ct.steps.count())]
+        assert len(rows) > 80 and any('walks left 2 tiles' in r for r in rows), rows[:10]
+        assert any('Milayou:Terry!' in r for r in rows), 'the bedtime text'
+        assert 'starts by' in ct.head.text(), ct.head.text()
+        # S118e (user: "Milayou and Terry … both are in wrong positions"): the
+        # bedtime scene is played from a new game itself
+        assert ct._recipe.action == 'newgame', ct._recipe
+        assert ct._model_picture(10).width() == 320
+        ct.search.setText('Watabou')
+        app.processEvents()
+        n_hits = sum(ct.tree.topLevelItem(3).child(i).childCount()
+                     for i in range(ct.tree.topLevelItem(3).childCount()))
+        ct.search.setText('')
+        app.processEvents()
+        chain = ct.tree.topLevelItem(1).child(0)
+        assert n_hits > 0, 'search finds Watabou scenes'
+        for word in ('Play', 'Auto text', 'intro', 'pyboy', 'save file'):
+            assert word in open(os.path.join(REPO, 'editor2', 'help', '63_cutscenes.md')).read(), word
+        from editor2.core import playback as PB
+        if PB.available()[0]:
+            ct.tree.setCurrentItem(chain)
+            app.processEvents()
+            ct.play()
+            pw = ct.playback
+            pw.speed_box.setCurrentIndex(3)          # 8x (no sound) keeps the test short
+            import time as _t
+            t0 = _t.time()
+            def frames():
+                return pw.st.get('frames', 0) if pw.st else 0
+            while _t.time() - t0 < 30 and (pw.eng is None or frames() < 1500):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert pw.eng is not None and frames() >= 1500, 'playback did not run'
+            assert pw.st['map'] == 0x2F, pw.st
+            assert ct.steps.currentRow() > 5, 'the storyboard follows the game'
+            # the game runs in its own process: a game that stops answering is
+            # killed and reported, the editor keeps going (Restart starts it again)
+            import signal
+            pw.toggle()                              # pause
+            os.kill(pw.eng.proc.pid, signal.SIGSTOP)
+            t1 = _t.time()
+            pw._run_frames(1)
+            for _ in range(20):
+                app.processEvents()
+            assert pw.hung and pw.eng is None, 'a hung game is reported'
+            assert _t.time() - t1 < 15
+            pw.restart()
+            t0 = _t.time()
+            while _t.time() - t0 < 30 and (pw.eng is None or frames() < 300):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert pw.eng is not None and not pw.hung and frames() >= 300, 'restart after a hang'
+            pw.close()
+            app.processEvents()
+            # ▶ From this step: the steps before it run fast, then normal play
+            ct.tree.setCurrentItem(chain)
+            app.processEvents()
+            ct.steps.setCurrentRow(40)
+            target = ct.cur.scene.steps[40].pos
+            ct.play(from_step=True)
+            pw = ct.playback
+            assert pw.skip_to == target
+            t0 = _t.time()
+            while _t.time() - t0 < 60 and (pw.eng is None or pw.skipping or not pw.st):
+                app.processEvents()
+                _t.sleep(0.002)
+            assert not pw.skipping, 'the fast run reached the chosen step'
+            from editor2.core import cutscenes as CS2
+            cur = CS2.step_at_counter(ct.cur.scene.script, pw.st['pos'])
+            assert cur is not None and cur.pos >= target, (cur, target)
+            assert pw.speed_box.currentData() == 8 or pw.clock.isActive() or pw.player
+            # S118e: View → Mute game playback overrides every window's Sound box
+            was = w.a_mute.isChecked()
+            w.a_mute.setChecked(True)
+            app.processEvents()
+            assert not pw.c_sound.isEnabled() and (pw.player is None or not pw.player.playing)
+            w.a_mute.setChecked(False)
+            app.processEvents()
+            assert pw.c_sound.isEnabled()
+            w.a_mute.setChecked(was)
+            # Step ▸▸ / ◂ Step back (S118b: step through the scene step by step)
+            f0 = pw.st.get('frames', 0)
+            pw.step_script()
+            pw.step_script()
+            app.processEvents()
+            log = pw.log.toPlainText()
+            assert log.count('▸▸ after') + log.count('no new step') + \
+                log.count('has ended') >= 2, log[-400:]
+            f2 = pw.st.get('frames', 0)
+            pw.step_script(back=True)
+            assert pw.st.get('frames', 0) <= f2 and not pw.clock.isActive()
+            assert f2 >= f0
+            pw.close()
+            app.processEvents()
+            # S118c (user: "selecting a script then clicking on another … after
+            # playing a GreatTree cutscene — new cutscene doesnt appear"): after a
+            # playback, other scenes still open; every 7th scene of the whole
+            # tree opens without an error and shows its own steps
+            errs = []
+            old_hook = sys.excepthook
+            sys.excepthook = lambda t, v, tb: errs.append(f'{t.__name__}: {v}')
+            ct.only_moves.setChecked(False)
+            app.processEvents()
+            refs = []
+
+            def _walk(it):
+                for i in range(it.childCount()):
+                    c = it.child(i)
+                    if isinstance(c.data(0, ROLE_CS), SceneRef_CS):
+                        refs.append(c)
+                    _walk(c)
+            from editor2.app.cutscenes_tab import ROLE as ROLE_CS
+            from editor2.app.cutscenes_tab import SceneRef as SceneRef_CS
+            for i in range(ct.tree.topLevelItemCount()):
+                _walk(ct.tree.topLevelItem(i))
+            saved_auto = ct._auto_record
+            ct._auto_record = lambda: False
+            for c in refs[::7]:
+                ct.tree.setCurrentItem(c)
+                app.processEvents()
+                ref = c.data(0, ROLE_CS)
+                assert ct.cur is ref and ct.steps.count() == len(ref.scene.steps), c.text(0)
+            ct._auto_record = saved_auto
+            sys.excepthook = old_hook
+            assert not errs, errs[:3]
+            assert len(refs) > 500, len(refs)
+            ct.only_moves.setChecked(True)
+            app.processEvents()
+            # S118f (user: "I want everything interpretable"): no step of any game
+            # script is left as a bare address / number
+            import re as _re
+            from editor2.core import script_ops as SO2
+            from editor2.app.cutscenes_tab import TextCtx as _TC
+            raw = []
+            for _m in ct.cat.map_types():
+                _ctx = _TC(ct.cat.text, {}, {}, cat=ct.cat, vanilla=ct.cat)
+                _ctx.bank = CS2.script_bank(_m)
+                for _sc in ct.cat.scripts(_m):
+                    for _st in (_sc.steps.values() if _sc else []):
+                        _t = SO2.sentence(_st.code, _st.params, _ctx, _st.target)
+                        if ('not yet named' in _t or 'game screen' in _t or 'slot byte' in _t
+                                or _re.search(r'\(\w+ \$[0-9A-F]{4}\)$', _t)):
+                            raw.append(_t)
+            assert not raw, raw[:5]
+            _ctx = _TC(ct.cat.text, {}, {}, cat=ct.cat, vanilla=ct.cat)
+            assert SO2.sentence(0x12, (0xD92B, 0), _ctx).startswith('Room state of Castle screen 1')
+            assert 'arena class G won' in SO2.sentence(0x03, (0x30,), _ctx)
+            # the egg appraiser's plain talk is not a "moving" scene; the GreatTree
+            # cliff scene plays in the room state the Castle leaves (S118 user report)
+            egg = [s for s in ct.cat.scenes(0x09) if s.entry == 20][0]
+            assert not CS2.moves(egg)
+            cliff = [s for s in ct.cat.scenes(0x01) if s.entry == 202][0]
+            assert ct.cat.recipe(cliff, 0x01).room_step == 2
+            ct.shutdown()
+            print('OK: Cutscenes (S118) — chains / your rooms / game rooms, the intro storyboard '
+                  f'({len(rows)} steps), search, model picture; Playback ran the intro in the '
+                  f'game ({1500}+ frames, storyboard highlight); a hung game is killed, Restart works; From this step; Step ▸▸ / back')
+        else:
+            print('OK: Cutscenes (S118) — storyboard (Playback SKIPPED: no PyBoy)')
+        s119_cutscene_editor(app, w, ct)
+
+    s142_scale(app, w)
+    s143_names(app, w)
+    s144_states(app, w)
+    s145_capacity(app, w)
+    s150_text(app, w)
+    s151_items(app, w)
+    s152_opening(app, w)
+    s153_ending(app, w)
+    s154_memorial(app, w)
+    s158_hints(app, w)
+    s159_resistances(app, w)
+    s163_failed_op_assets(app, w)
+    s164_ai_fixes(app, w)
+    s165_window_words(app, w)
+    s166_window_words(app, w)
+    s167_qt_safe(app, w)
+    s167_context_help(app, w)
+    s169_window_and_cross(app, w)
+    s170_art_space(app, w)
+    s171_app_window(app, w)
+    s171_borrow_custom(app, w)
+    s171_colour_true(app, w)
+    s171_parking(app, w)
+    s171_recolour(app, w)
+    s172_foods(app, w)
+    s173_room_aids(app, w)
+    s173_anim_import(app, w)
+    s174_stamps(app, w)
+    s175_jumps_screens(app, w)
+    s175_screen_music(app, w)
+    s176_colours_draw_stamps(app, w)
+    s177_podium_repack(app, w)
+    s168_page2(app, w)              # last: it leaves its undone steps on the stack
+
+    if do_rom:
+        from editor2.app.build_worker import BuildWorker  # noqa: E402
+        results = []
+        worker = BuildWorker(REPO, w.project_path)
+        worker.log.connect(lambda s: print('  |', s))
+        worker.finished_build.connect(results.append)
+        worker.start()
+        worker.wait()
+        app.processEvents()
+        res = results[0]
+        assert res.ok, f'GUI build failed: {res.error}'
+        want = pinned_md5()
+        assert res.rom_md5 == want, \
+            f'GUI build md5 {res.rom_md5} != pinned {want}'
+        print(f'OK: GUI build byte-identical to pin {want}')
+        # S153: the build thread's Python wrapper outlived the QApplication at exit
+        # ("pure virtual method called", exit 134 / 139 after PASS) — free it first
+        worker.log.disconnect()
+        worker.finished_build.disconnect()
+        worker.deleteLater()
+        app.processEvents()
+        del worker
+    w.close()
+    w.deleteLater()
+    app.processEvents()
+    print('PASS')
+
+
+if __name__ == '__main__':
+    main()

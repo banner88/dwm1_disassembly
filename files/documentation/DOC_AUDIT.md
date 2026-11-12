@@ -1,0 +1,1227 @@
+# DOC AUDIT — Every Checkable Claim, Verified Against the ROM
+
+Audit date: 2026-06-13 (full corpus). Rows added later are DATED ADDENDA —
+this file does not imply a re-audit of everything after 2026-06-13. Method: clean repo built byte-perfect
+(MD5 `1ca6579…`), then every factual claim in `documentation/` was tested
+against the original ROM bytes, the disassembly source, the linker symbol
+file (`game.sym`), and the extracted JSON. Verdicts: ✅ confirmed ·
+✏️ corrected (fix applied to the doc) · ⚠️ open question.
+
+Re-run spot checks any time with the snippets in each row's "How verified".
+
+---
+
+## A. Cross-document CONTRADICTIONS found and resolved
+
+| # | Claim A | Claim B | Verdict — resolution applied |
+|---|---------|---------|------------------------------|
+| 1 | "Original MD5 `b909574…`" (NEXT_CLAUDE_MESSAGE, SESSION1_ARCHIVE) | "`1ca6579…`" (README, SCRIPT_TOOLS) | ✏️ **`1ca6579359f21d8e27b446f865bf6b83` is correct** (matches user's ROM; clean build now reproduces it). `b909…` was a drifted build from the bank $0B refactor. Stale docs deleted; verifier polices this forever. |
+| 2 | Inventory at `$CA21–$CA50` (old README) | `wInventory = $CA51` × 20 (ARCHITECTURE, known_RAM_map, patches/wram.asm) | ✏️ **$CA51 correct** — confirmed by GiveItem handler (`ld hl, wInventory` in patches/bank_004) and known_RAM_map. README fixed. |
+| 3 | NPC RAM slot = **17 bytes** ($11) (ROOM_DATA_FORMAT) | NPC RAM = **32 bytes** per NPC (ARCHITECTURE) | ✏️ **32 bytes correct.** The room-init parser at `$0B:Call_00b_477e` advances slots with `add $20` and writes fields at offsets +$00,+$01…+$11,+$16,+$18. The "$11" was a field offset, misread as the stride. ROOM_DATA_FORMAT fixed. |
+| 4 | "530 NPC scripts" (EVENT_FLAGS, NEXT_CLAUDE_MESSAGE, ARCHITECTURE) | "209 scripts" (README, all_scripts.json blurb) | ✏️ **518 scripts**: bank $0C=129, $0D=168, $0E=130, $0F=91 (counted `*_ScriptNN:` labels; `extracted/all_scripts.json` also holds 518 entries). Both old numbers wrong; docs fixed. |
+| 5 | Boss table "at `$14:$4897`, 33 entries" (old README) | "Boss redirect table at `$14:$4893`" (DATA_STRUCTURES) | ✏️ Both real, different things: **$4893** = redirect table start (first entry `0004→01E6` is a non-boss redirect), **$4897** = boss table proper, **32 gates × 4 bytes** `[fight_eid:2][join_eid:2]`. Verified against ROM bytes; matches bank_014.asm header. Docs standardized. |
+| 6 | Bank $01 free space "$7FE0, 31 bytes, FF fill at bank end" (ARCHITECTURE) | — | ✏️ Actual FF run is **$7FD5–$7FFE (42 bytes)**; **$7FFF = $01, NOT free**. "31 bytes at $7FE0" was a safe subset but the boundary claim was false. ARCHITECTURE fixed. |
+| 7 | "Custom tilesets — needs LZ compressor (~50 lines)" (NEXT_CLAUDE_MESSAGE) | — | ✏️ **Compressor already exists**: `tools/compress_tiles.py`, format-compatible with decompressor `$00:$14CF`, roundtrip re-verified this session (512→141 bytes, decompress matches). Roadmap updated. |
+| 8 | `CheckEventFlag` at $26AE (EVENT_FLAGS) | source label `TestEventFlag` | ✏️ Address right, name wrong. Symbols verified via game.sym: `$26A0 SetEventFlag`, `$26A6 ClearEventFlag`, `$26AE TestEventFlag`. EVENT_FLAGS fixed to match source. |
+| 9 | "Repo always builds to the original MD5" + "Bank $0B is safe (insertions OK, pinned SECTION)" (KEY_LESSONS) | byte-perfect rule | ✏️ The "$0B is safe" loophole is exactly what caused drift #1. Rule rewritten: $0B insertions are fine **in patches/ only**; `disassembly/` admits zero byte-changing edits of any kind. |
+| 10 | "9 of 105 banks annotated" (old README) vs "~45%, banks $00/$04 fully" (NEXT_CLAUDE_MESSAGE) | — | ✏️ Measured (labels + comment density): **11 fully annotated** ($00 $03 $04 $0B $0C $0D $0E $0F $13 $14 $41), **~14 usefully partial**, **~80 raw**. "45%" conflated function-naming coverage with annotation. PROJECT_STATE carries the measured table. |
+| 11 | `extracted/map_table.json` field names | ROOM_DATA_FORMAT + SameBoy verification | ⚠️ Known generator bug: interact/exit pointers **swapped** in the JSON (`dump_map_table.py`). ROOM_DATA_FORMAT labels are the verified truth. Fix the generator before the editor consumes this file (ROADMAP Phase 0). |
+| 12 | "Skill dispatch at `$52:$4211`; 256 entries; 140 handlers" (bank_052 header, ROADMAP Arc 2) | actual disassembly + usage | ✏️ **All three wrong (S44).** Dispatch (`ld hl, SkillFunctionTable`) is at **`$6CC7`**; `$4211` is merely the first byte after the 444-byte table. Real count is **222** ($00–$DD), with **115** unique handlers (the 256/140 came from over-reading the table past id 221). Headers + ROADMAP corrected. |
+| 13 | `TilesetLookupTable` at `$07:$570C` (disassembly label) | ROM bytes + FAQ | ✏️ **Mislabel (S44).** **RESOLVED S51 — renamed `SkillMPCostTable` (see E. Addenda).** The 222 × u16 LE values (2,4,10,… ; 999 for ids 50/102) are the **SkillMPCostTable**, not tileset pointers (far too small for addresses). Reader `$56E8` = `GetSkillMPCost`. Annotated in comments; label/fn rename deferred pending SameBoy confirmation of the `$56E8` callers. |
+| 14 | Skill id 215 = "Sheldodge" (name table) | family sub `$6349` + StubBird usage + FAQ learn reqs | ✏️ **Placeholder name (S44).** id 215's handler tests family code `$05`=Bug; StubBird's enemy list uses 215; its learn reqs (Lv12/HP68/Atk72/Agl62) match the FAQ "BugBlow" row exactly. It is the **Bug-family cut** → renamed **"BugCut"** in `patches/bank_041.asm`, SameBoy-confirmed. |
+| 15 | mgbdis labels `Map4C/4D/4E/50/51/52/5A_Script*` in bank `$5f` (`$5660`–`$5b8e`) imply a clean map-cutscene-script region | live battle-anim code (`$5f:$52F0`/`$5441`) + ROM bytes + SameBoy (2026-06-28) | **[S112] RESOLVED — wrong premise (the labels are bank $0F's); the tables are data since S112, see the S112 addendum.** ⚠️ ~~CONTESTED REGION~~ (historical:) The animation index tables `$5f:$58dd`/`$59c3`/`$5aa9` (230 B each, by skill id, value=routine index, `$0d`=no-visual) are **verified by the live dispatch code + watchpoint** (Zap read `$58dd+id`). But these addresses fall **inside** the address span carrying the auto-generated `Map*_Script*` labels, and at least `Map5A_Script02` (`$5aea`) / `Map5A_Script03` (`$5b46`) sit **on `$0d` animation-padding bytes** — i.e. those two labels are **bogus** (mgbdis mis-traced an `rst $10` into anim data). Decoding `$5660` "as script pointers" yields `$db8a` (a RAM addr) = nonsense, so the `Map4C_ScriptPtrTable` labeling there is **also suspect**. The bank-`$5f` map-cutscene-script system was NOT traced this session, so which bytes are genuine map-script vs anim-table vs mislabel is unresolved. **Converting the anim tables to proper `db` requires first reversing the `$5f` map-script accessors to fix the boundaries — its own task.** Tool `tools/emit_anim_data_sections.py` emits byte-exact `db`/`dw` for the anim tables (230-B boundaries confirmed) but is NOT yet spliced for this reason. See BATTLE_SKILL_SYSTEM.md §11. |
+
+## B. Claims VERIFIED CORRECT against ROM bytes (sample commands preserved)
+
+| Claim (doc) | Verdict | How verified |
+|-------------|---------|--------------|
+| Monster table `$03:$4461`, 221 × 43 B (DATA_STRUCTURES) | ✅ | All 221 family bytes ∈ 0–9 at stride 43 from ROM offset `3*0x4000+0x461` |
+| Enemy stats `$14:$4C1D`, 487 × 25 B, `$FF` delim at +$18 | ✅ | 487/487 entries have $FF at +$18 |
+| Breeding special table `$16:$4B30`, 825 × 5 B, $FF-terminated | ✅ | Byte at base+825×5 = $FF; first entry `00 1B 00 0C 00` |
+| Room pointer table `$0B:$4B43`, 107 rooms (mapIDs $00–$6A) | ✅ | 106/107 in-bank pointers + 1 $FFFF hole; entries 107–108 = $FFFF ⇒ `CUSTOM_ROOM_START = $6B` is exactly one past the table |
+| Bank $00 free space $3FE8–$3FFF, 24 B FF-fill | ✅ | ROM bytes all $FF |
+| Bank $51 free space $7B34, 1,228 B 00-fill | ❌ OFF BY ONE (S166 r2) | $7B34 is the last byte of the LZ stream gfx `$5112` (`SC.read_stream` = 38 B from $7B0F); the fill starts at **$7B35, 1,227 B** (ARCHITECTURE corrected). The original row's check ("ROM bytes all $00") could not see it: the stream's last literal IS `$00` |
+| Empty banks: 23 banks ($60,$64,$67,$69–$77,$79–$7A,$7C,$7E–$7F) | ✅ | Scanned all 128 banks for uniform $00/$FF; exact match, 23 banks = 368 KB |
+| 2,067 text IDs decoded | ✅ | `len(text_id_map.json) == 2067` |
+| 256 skills, 221 monsters extracted | ✅ | JSON lengths match |
+| Encounter pools: 32 gates, pool indices 0–127 (125 referenced) | ✅ | encounters.json: 32 gates / 64 floor-groups / 125 distinct pools, max index 127. (Old "128 pools decoded" wording ≈ table capacity, kept but clarified.) |
+| Event flag fns $26A0/$26A6/$26AE | ✅ | game.sym after byte-perfect build |
+| `wScreenIndex = $C925` (ROUTING) vs "?" (known_RAM_map) | ✅ | game.sym `00:c925 wScreenIndex`; known_RAM_map annotated |
+| Custom WRAM $D378+ free of original code refs | ✅ | Repo-wide grep: original references stop at `$D375` and `ld [$d376],sp` (touches $D376–77). $D378 onward clean. |
+| Script compiler functional, all 100 opcodes | ⚠️ S96: 102 opcodes; decompile_script/compile_script arity WRONG for 36 | `compile_script.py --test` passes (a self round trip cannot catch a wrong arity) — see S96 addendum |
+| LZSS compressor roundtrip | ✅ | compress→decompress == original (512 B layout) |
+| Text control codes ($E7=CHOICE, terminator `$F7 $F0`, `$EF $EE` newline) | ✅ (by prior in-game testing v23; consistent with bank $56 jump table) | Not re-traced this session |
+
+## C. Claims that are PLAUSIBLE but UNVERIFIED (flagged in docs)
+
+| Claim | Why unverified | Where tracked |
+|-------|----------------|---------------|
+| "All 2,404 function entry points named" | No reproducible counting method recorded; label census can't distinguish functions from branch targets. Treat as historical. | PROJECT_STATE (removed as a status metric) |
+| Bank $51 1,228 zero bytes are SAFE for code | Zero-fill ≠ unreferenced; needs read-access trace | ROADMAP Phase D |
+| Custom event flags persist in SRAM saves | Save format unmapped | ROADMAP Phase 0 (top priority) |
+| "1,164 flag operations" (EVENT_FLAGS) | Derived from the script dump with the wrong script count; re-run `analyze_event_flags.py` after audit | EVENT_FLAGS note |
+
+## D. Documentation consolidation executed
+
+21 files → 17, with one entry point. Merges preserve all unique content:
+
+| Action | File | Disposition |
+|--------|------|-------------|
+| DELETE | NEXT_CLAUDE_MESSAGE.md | Superseded by PROJECT_STATE + SESSION_PROTOCOL (wrong MD5, stale TODO list) |
+| DELETE | SESSION1_ARCHIVE.md | Already marked superseded; wrong MD5 |
+| MERGE→DELETE | SESSION2_CUSTOM_CONTENT.md | Bank $56 jump table → TEXT_SYSTEM.md; GiveItem wrapper → KEY_LESSONS (already there) + DATA_STRUCTURES; BGM table already lived in known_RAM_map (fuller version — gates 7–8 that SESSION2's copy dropped) |
+| MERGE→DELETE | FIRST_5MIN_TRACE.md | Boot/intro trace appended to ROUTING.md as an appendix |
+| KEEP+FIX | ARCHITECTURE.md | Bank $01 free space corrected; NPC slot 32 B; script count 518 |
+| KEEP+FIX | ROOM_DATA_FORMAT.md | 17-byte slot → 32-byte slot with field offsets from the parser |
+| KEEP+FIX | EVENT_FLAGS.md | 530→518 scripts; CheckEventFlag→TestEventFlag; flag-op recount flagged |
+| KEEP+FIX | DATA_STRUCTURES.md | Boss table $4893/$4897 clarified |
+| KEEP+FIX | KEY_LESSONS.md | "$0B safe" rule scoped to patches/ |
+| KEEP | TEXT_SYSTEM, CROSSBANK_ROOMS, BANK04_SCRIPT_ENGINE, ROUTING, MONSTER_DATA, BREEDING_SYSTEM, QUEST_OPCODES, CUSTOM_CUTSCENES, SCRIPT_TOOLS, SAMEBOY_GUIDE, known_RAM_map, known_NOTES | Audited; no errors found beyond the above |
+| NEW | PROJECT_STATE, SESSION_PROTOCOL, ROADMAP, EDITOR_DESIGN, DOC_AUDIT (this file) | The meta layer |
+
+Rule going forward (SESSION_PROTOCOL §2): one concept, one home; corrections
+are made in place; no new session/handoff files, ever.
+
+## E. Addenda
+
+| Date | Note |
+|------|------|
+| 2026-07-08 (S54) | **ROADMAP facts-table row "Custom WRAM $D378–$D477 unclaimed by original code" REFUTED** — the third recorded instance of the literal-grep-≠-free bug class (after $D95E MedalMan and $D9A0-2 wEventFlags bytes 5-7, both noted in wram.asm). The range sits inside the party/storage monster array `$CAC1-$D664` (20 × $95 via `GetMonsterDataPtr`, indexed access → zero literal refs). All 14 custom WRAM labels ($D378-$D48B) collide (class B). Root cause of the S53 egg-give anomaly: `$FF29` writes a 149-B record into the first empty slot; slots 14-16 overlay live room state (dead exit + scroll crash); reverse direction corrupts stored monsters #15-17 during normal play (wRoomRecScratch rewritten every room transition since S42). **Runtime-confirmed by user probe same session** ($da14=$10/slot 16; counters clobbered; wRoomRecScratch self-heals per-frame so it masks its own corruption — probe bytes in PROJECT_STATE S54). New tool `tools/audit_wram.py` (+`extracted/wram_usage.json`) maps literal refs + curated evidence-cited indexed arrays + known_RAM_map spans; its `--selftest` pins this exact detection. Also corrected: known_RAM_map "1:D6B0 end of monster data" → actual end `$D664`; library seen-bits documented ($CA94-$CAB1, 240-bit scan in bank_007 — new species 224's bit at $CAB0 is IN extent, benign, but counts toward the 100-monster library rewards). S53's anomaly (a) (Gate of Villager) closed as user-misread; room $24's pedestal exits proven step-invariant (dest=1/gate 2=Talisman across all 4 steps) so the "story-step-dependent hub exit data" suspect is dead. |
+| 2026-07-02 (S51) | Row #13 RESOLVED: `TilesetLookupTable` → `SkillMPCostTable` and `LoadFld_56e8` → `GetSkillMPCost` renamed in `disassembly/bank_007.asm` + `patches/bank_007.asm` (labels/comments only; clean build byte-perfect). Role confirmed live by the S48 3-reader map + the S49 MagicBurn MP path. The `dw`/`db` re-section of both skill tables is a ROADMAP Phase D box. |
+| 2026-07-02 (S51b) | User-approved follow-on: housekeeping deletions executed (see TOOLS_AND_DATA Tier L); `SkillMPCostTable` + `SkillLearnReqTable` re-sectioned to real `dw`/`db` in both trees (`tools/resection_skill_tables.py`, probe-build, byte-perfect, PASS 4/4); Phase-D stale boxes ($03/$14/$16 → `db`) verified + ticked. New defect: `dump_monsters.py` writes legacy `monsters.json` / reads `monsters_full.json` — Tier-A attribution for monsters_full is suspect. Build-infra fix (after S51 became the SECOND recorded violation of the pre-existing four-doc never-`make clean` rule): `disassembly/Makefile` clean target no longer deletes `gfx/*.2bpp` (ROM-exact INCBIN source data, 17/18 not PNG-regenerable) and the `%.2bpp: %.png` pattern rules were removed; `disassembly/gfx/README.md` added. `SkillLearnReqTable:` label + `ld hl, SkillLearnReqTable` relabel landed in both trees (byte-identical). |
+| 2026-07-06 (S52) | THREE doc errors found by the Stage-2 audit + HW captures, corrected in place: (1) PROJECT_STATE/ROADMAP claimed "$0640 mirrors in patches/bank_052.asm" — FALSE: those two `$0640`s are the VANILLA meter cap (present in the clean tree, `disassembly/bank_052.asm:4544/4550`); the only crank was one line in bank_072. (2) "revert to `$000A` (Beef Jerky tier)" — MISLABEL: per-meat meter boosts are the meat records' `power_enemy` words = FeedMeat 10 / BeefJerky 30 / PorkChop 100 / BadMeat 5 / Sirloin 400; $0A=10 is FEEDMEAT tier. (3) §11.7 claimed the battle enemy is OBJ and the hit-blink "likely an OAM visibility toggle" — WRONG PREMISE: the enemy is BG-DRAWN (`$c500` buffer → `LoadBtl_7627` → `$98xx`); the blink is a tilemap toggle in bank `$5f` entry 5 (full map now in §11.7). Three fix attempts failed on the bad premise before HW captures corrected it. |
+| 2026-07-02 (S51) | Doc consolidation: PROJECT_STATE/ROADMAP compressed; all cut text preserved verbatim in `SESSION_HISTORY.md` (cold archive). Contradictions fixed: empty-bank counts (canonical = PROJECT_STATE "Bank allocation"), script counts (518 labels = 551 unique bodies = 732 pointer-table entries, verified), flag counts (328/298), stale `documentation/reference/` path, FIRST_5MIN_TRACE/known_ROM_map pointers, BREEDING_SYSTEM "NOT yet built" header, TOOLS_AND_DATA manifest (103 tools / 56 JSONs). |
+
+## S55 addendum (2026-07-10)
+- **known_RAM_map "$DD80 ~208 (INFERRED) per-combatant battle struct array"
+  was WRONG** — it is the AUDIO engine: 6 channels × 26 B ($DD80-$DE1B, bound
+  `ld b,$06` in bank $00 ClearAudioChannels) + scalars to $DE2B. Corrected in
+  place; S45's "battle corruption" from poking $DDF0/$DDFE was audio bytes.
+- **"screen tile-id shadow = $C300-$C3FF (256 B)" was too small** — the engine
+  treats $C300-$C4FF as ONE 512-B staging unit (bank $06 bulk copy ×$0200;
+  save-copied whole). Corrected in known_RAM_map + audit_wram curated arrays.
+- **S54's "top relocation candidates $C20D/$C42B" were FALSE gaps** (attr
+  staging / screen staging). ROADMAP Phase 0 row rewritten S55.
+- **ARCHITECTURE.md's save table was CORRECT all along** (three WRAM blocks +
+  $A1FB partial path); the S54-era reading quoted only the $C8EA prose line.
+  Lesson: quote the table, not the summary sentence. New fact added: the
+  $B124-$BCC7 SRAM hole = the farm sleep pool (20×$95, exactly).
+| 2026-07-11 (S56) | **bank_054.asm header: two stale DISCOVERIES_v2 claims corrected in place** — "Post-battle EXP distribution and level-up (entries 0-6)" (entries 0-6 are the skill-record accessors, documented S46/S48; exp distribution is bank $50 `CallBtl_61e2`) and "$CA94: Party/storage count" ($CA94 = library seen-bits, S54-verified; the party count is $CA8D, found S56). Same failure class as the S2/S3 wrong comments: a bank-header claim reads as authoritative and nearly misdirected the CF1 RE. Comment-only fix, build byte-perfect. |
+| 2026-07-13 (S58) | **MONSTER_DATA CF1 + the bank_001 canonicalizer comment block claimed the tail `$0106` call "reloads follower art" — WRONG**: bank $01 entry 6 is `ScanPartySlotTable` (the +$29/+$31 ID-list sanitizer), read straight from the entry table. Both fixed in place (comment-only in disassembly, byte-perfect). Follower art after roster changes is keyed off the party LIST by its own loaders, not this tail. Call-site count RE-VERIFIED with its generator (S56 rule): `grep 'ld hl, \$0105$'` over `disassembly/` = **22 sites** (2+4+8+1+3+1+3) across **7 banks** ($04 $0A $12 $15 $18 $50 $51), every one followed by `rst $10`; patch copies add zero new sites. S56's "22 / 8 banks" was right on sites, off by one on banks. (An S58 in-session count of "36 / 16 banks" was a broken grep — patches double-counted + `dw $0105` text-ID and `ld bc,$0105` lines in the file list — caught before it reached the docs; the near-miss is exactly the KEY_LESSONS "grep the docs/ROM before asserting" class.) |
+| 2026-07-13 (S57) | **EVENT_FLAGS "Free Flag Slots" broader ranges were WRONG** — "$0158-$017F, $0188-$018F, $01E0-$023F, $0248-$0257, $0260-$026F … ~200 safe flags" was derived from script analysis only. Per-byte audit (engine literal grep across disassembly/+patches/ + all_scripts.json full text) shows the underlying bytes $D9CC, $D9D9-$D9E2, $D9E4-$D9E5, $D9E7-$D9E8 are live engine named variables and/or script-referenced. Truly clean persistent flag bytes: $D9C6-$D9C7 + $D9D7-$D9D8 (+ $D9C8-$D9CA, retired S57 to wPendingFarmExp). Section rewritten in place; `editor2/core/project.py FLAG_SAFE_RANGES` corrected [(0x0158,0x0167),(0x01E0,0x01EF)] — the allocator could previously have written flags onto live engine variables. KEY_LESSONS S57. |
+| 2026-07-16 (S59) | **The "only remaining reader" claim was inverted, in two docs.** ROADMAP's `skills.json` retire box and PROJECT_STATE's Open-defects row both said the file was "still read by `gen_name_tables_db.py`". Backwards: that tool declared `SKILLS_PATH` and **never opened it** (dead constant, 1 occurrence — removed S59, output byte-identical), while the three real readers — `gen_skill_table_db.py`, `gen_enemy_stats_db.py`, `gen_monster_db.py` (all `open(SKILLS_PATH)`) — were named in neither doc. The item was ~4× its documented scope. Both docs fixed in place. Same row also miscounted the junk records as **33**; it is **34** (256 − 222 = ids 222–255). Failure class: scope taken from a doc's prose instead of a grep for the *reads*. KEY_LESSONS S59. |
+| 2026-07-16 (S59) | **`bank_052.asm` header arithmetic: `$4011..$41BC` is wrong, the table ends at `$41CC`** — `$4011 + 444 ($1BC) = $41CD`, so the last table byte is `$41CC`; the comment appears to have concatenated `$41` + `$1BC` rather than adding. Off by 16 bytes. Present identically in `disassembly/bank_052.asm` and `patches/bank_052.asm`; both corrected in place (comment-only, clean build re-verified byte-perfect `1ca6579…`). The entry COUNT (222) was right all along — only the end address was wrong, which is the dangerous shape: a correct-looking header with one bad number. Also corrected in the same headers: `; Sources: … skills.json` → `extracted/skill_records.json` (retired-file attribution). |
+| 2026-07-16 (S59) | **`gen_skill_table_db.py` had drifted from the disassembly it regenerates** — it emitted `256 entries x 2 bytes = 512 bytes` and `Referenced by code at $4211 via: ld hl, $4011`, while `disassembly/bank_052.asm` has had the correct 222 entries since S45. Both tool claims are wrong: the table is 222 entries (`$4011..$41CC`), and the single `ld hl,$4011` site in bank $52 is **`$6CD5`** (verified by byte-scan for `21 11 40` — one hit), inside the block labelled `jr_052_6cc7`, which is why the disassembly says `$6CC7`. `$4211` matches nothing. Tool corrected to 222 + `$6CC7`; its output's emitted `dw` values are unchanged (comments-only delta), so no re-section is implied. Lesson: a generator can silently rot past the source it was written from — the disassembly, not the tool, is the reference. |
+| 2026-07-17 (S61) | **ROADMAP Arc 3's audio claims were speculation and are FALSIFIED** — "song data lives in banks `$61 $62 $63 $65 $66 $68 $78 $7b $7d`, reached as DATA via the engine's bank-switch, e.g. `$08` → `$78`" named nine banks, none of which hold audio. The engine is entirely ROM0 ($3331–$3AB2 region, VBlank-driven; bank $08's `LoadAudP` really is only the SGB packet path), and ALL sequence data lives in banks **$1C/$1D/$1E** via the master table @ ROM0 `$3466` (rows `[base_id, ptr, bank]`). Banks $61+ contain sparse non-audio (graphics-like) data. Corrected in place in ROADMAP; owning doc SOUND_SYSTEM.md (new, S61). Failure class: a plausible-sounding bank list written into a planning doc without a grep — the master table took one hour to find from `AudioProcess`'s `ld hl,$3466`. |
+| 2026-07-17 (S62) | **SOUND_SYSTEM §5's `$FC` grammar (S61) was WRONG** — "`B0 FC lo hi` … (3 bytes; also appears as bare `FC lo hi`)" described a standalone 3-byte jump token that does not exist. Instruction-level reading of `AudioCheckC0`→`AudioCheckFC`→`AudioReadPairHL` (S62): the engine inspects the **Bn pair's OWN param byte**; `$FC` there makes the NEXT PAIR a (lo,hi) jump target — the construct is 4 bytes = 2 aligned pairs, and top-level `$FC` is a plain 2-byte no-op that never occurs in real data. `tools/enumerate_songs.py` carries the same mislabel in its walker (its FC branch simply never fired, so extents/termination results stand); `song_codec.py` is the corrected reference (byte-identical selftest). Also falsified: §5's claim that DWM2's `$AC` is "safe to feed this engine" (its target pair executes as a bogus command; see §7), and §6's "Custom-room NPC currently sets BGM $1E" (the script existed but **no NPC entity was wired to it** — room $6B placed only script_ids 1-2; discovered when the user found no BGM NPC in-game). All three fixed in place S62. Failure class: engine semantics inferred from data patterns instead of the handler's instructions; and a doc asserting an in-game behavior that was never play-tested. |
+| 2026-07-18 (S63) | **SOUND_SYSTEM §1's engine addresses were transcription slips** — `AudioProcess ($3477)` and `AudioUpdate1x/2x/3x $3474/$3471/$346E` are all wrong; the linker sym file gives **`AudioProcess $33D2`, `AudioUpdate1x/2x/3x $33CF/$33CC/$33C9`** (the `ld hl` table operand sits at $33D8-$33DA — proven by the M3a operand patch's diff envelope). The master-table address $3466 itself was correct. Fixed in place. |
+| 2026-07-18 (S63) | **`CustomGFXMapID`'s own header comment ("Used by GFX loader (bank $0B Entry 0+1) and collision threshold (ROM0)") had been FALSE since S42** — bank $71 Entry 0 (`CopyCustomRoomRecord`) replaced it at all three consumer sites (stated in bank_071.asm's own header!); zero call sites remained (grep: only the definition + comments). Dead function deleted S63; its 9 bytes + the byte-identical `MapIDClampForDispatch`/`MapIDClampForPalette` twins (merged S63, both labels on one body @ $3BC2) freed the $3FE8 slot for `AudioMasterTableExt`. Related off-by-one: the S-era comments "at $3BC1"/"17 rst $38 bytes at $3BC1" — the code was at **$3BC2** ($3BC1 is one more vanilla filler byte, sym-verified). Failure class: a patch comment describing the world at authoring time, never revisited when a later session rewired the consumers. |
+| 2026-07-18 (S63) | **S62 broke the compiler byte-identity property silently** — S62 hand-edited compiler-owned `patches/bank_060.asm` (BGM NPC record, `SetBGM $9E`, "DWM2 music!" text) without folding the change into `editor2/example-project/project.json` or re-pinning `REFERENCE_MD5` (still S60's), so `test_compiler.py --rom` failed on the committed tree ("patched/compiler pin untouched" in PROJECT_STATE S62 was a rule violation, not a fact of health). It went unnoticed because **CI runs only `verify_integrity.py`, not the compiler tests**. Fixed S63: S62 content ported into the example project (compat build == hand-staged tree again, both `c23beed7…`), pin re-pinned. Open follow-up in ROADMAP: add `test_compiler.py --rom` to CI. |
+| 2026-07-18 (S64) | **SOUND_SYSTEM §4/§5's tick model (S61) is FALSIFIED** — "+8 $EC note length remaining (ticks)" and "$FA/$FB tick length reload/countdown (frames per tick, from $A3)" implied lengths scale with $A3. Instruction-level reading of the per-frame countdown (bank_000 ~11110): both branches of the $FB check fall into `dec [hl]` on $FFEC — **note lengths are FRAMES (~59.73/s), decremented every frame unconditionally**; $FA/$FB only gates the groove stepper (`AudioProcessChannel` ~$3937 early-ret; groove table $3B83). Duration evidence: the 0:01 jingles. Also corrected in place: §5's note row said high nibble = "octave downshift (freq >> n)" — the SHIFT is on the period table word, which RAISES pitch n octaves (freq = 131072/(P>>n); note $00 = C2 = MIDI 36); and §5's $A3 row now records that every groove row at $3B83 is a live vibrato/detune shape (no straight row) — `$A3 $80` is the deterministic groove-off. All three fixed in place S64; byte carriage was never affected (why the S62 selftest couldn't catch it). Failure class: same as S62's $FC — semantics inferred from the writer, not the reader. |
+| 2026-07-18 (S64) | **PROJECT_COMPILER's quick-start `--expect-md5` had drifted AGAIN** — stale at S63v4's `c23beed7…` while the test pin was S63v5's `3009b75e…`: the identical doc-vs-pin drift class the S63 audit row records (that fix updated the §"two proofs" prose but the quick-start command line was missed the second time it appeared). Both sites now carry S64's `7cc0857f…` with the lineage inline. The CI box (run `test_compiler.py --rom` in CI) remains the structural fix; a grep for the OLD pin across docs at re-pin time is the cheap manual guard. |
+| 2026-07-18 (S64) | **bank_001's `cp $61` comment ";maps do not go above 5F. This is unused. w" was wrong on both counts** — mapIDs $5D-$60 DO reach the compare (BTLDEMO-range rooms use the table), and the guard is load-bearing for $61+: it is exactly the branch that sent custom rooms ($6B+) to the gate-music path (the S63 save/reload transience). Also: the "unused" table padding it guards ($4373 entries $61-$6F = $34) is real data — the table is $70 entries, not $61. Comment corrected in both trees during the S64 re-section (byte-neutral; clean build re-verified `1ca6579…`). |
+| 2026-07-18 (S65) | **The S58 "EXPLOIT" save-semantics decision for the CF3-freed window was foreclosed by S60's build and stood unannotated for five sessions.** ROADMAP's S58 user-decision block declared the freed range persistent via the vanilla block copy; S60's shipped architecture skips the window's SRAM image ($A3BA-$AD9E — the live farm) in BOTH copy directions (bank $73 entries 5/6, instruction-verified S65), making the trick unimplementable, not merely unimplemented. Refutation now annotated at the decision text (ROADMAP CF-arc), window documented TRANSIENT-permanently (ARCHITECTURE, known_RAM_map, PROJECT_COMPILER §2.6, patches/wram.asm banner). Failure class: refuted DECISION not fixed in place (the fact-repair discipline existed; the decision-repair discipline didn't). |
+| 2026-07-18 (S65) | **PROJECT_COMPILER §2.7 still listed the pre-S57 "broader" flag pool** ($0158–$017F, $0188–$018F, $01E0–$023F, $0248–$0257, $0260–$026F) that the S57 per-byte audit refuted — five sessions after EVENT_FLAGS and `FLAG_SAFE_RANGES` were corrected to the 32-flag pool. Fixed in place; the doc now names the pool and cites EVENT_FLAGS instead of restating ranges. |
+| 2026-07-18 (S65) | **known_RAM_map's "link+arena still time-share it [the freed window] as scratch" was UNSOURCED and is refuted** — no owning doc backs it, and the S56 access map (extracted/monster_walkers.json) shows zero arena entries and only staging-slot ($D665/$D6FA, outside the window) + GMDP-array link flows. Self-contradictory in its own sentence ("FREE/dead (…still time-share…)"). Removed in place with the refutation noted. |
+| 2026-07-18 (S65) | **"WRAM $CC80-$D664 is free" needed a junk-ref qualification** — a full literal census finds 136 referenced addresses inside the window, incl. plausible-looking named "code" in annotated banks; all are data-as-code artifacts ($CD = CALL opcode minting fake $CDxx operands; bank_003's cluster sits inside a proven data table, bank_000's inside audio-data soup). Structural proof of freedom: the vanilla array occupied the window. audit_wram.py now models this (F-class freed windows, selftest-pinned) so the next census doesn't re-derive the scare. |
+| 2026-07-18 (S66) | **ROADMAP A′1's "sign-bit tests (`bit 7` / `add a` / `jp m`-class patterns)" named an impossible pattern** — the SM83 has no sign flag and no `jp m`/`jp p` (those are Z80); a sign-conditional jump on mapID cannot exist in this ROM. The audit reframed the risk correctly: the ≥$80 hazards are 8-bit `add a` doubling carry-loss (RST_00 is $7F-capped by construction: `add a / add l` destroys the doubling carry before `adc h`) and fixed-size tables — and every instance is already diverted/clamped/gate-context in the patched tree (CROSSBANK_ROOMS §"mapID ≥$80 readiness audit"). Original wording left in place in the ROADMAP history block; the A′1 box now carries the verdict. Failure class: hazard model imported from another CPU family without checking the instruction set. |
+| 2026-07-19 (S67) | **`boss_table.json`'s framing ("the $4897 boss table, 32 gates") implied a gate→boss selection table — WRONG semantics, right bytes.** $14:$4893 is the fight→join REDIRECT table scanned BY FIGHT EID (LookupBossRedirect, entry 6); which boss a gate spawns is the opcode $5A/$05 param hardcoded in each boss ROOM's script (53-site census in arena_brackets.json — incl. Medal Gate's THREE variants 156/153/155, only 153 previously known). Data output unchanged; docstring + TOOLS_AND_DATA row corrected. Also corrected: QUEST_OPCODES' "$1F: zero script uses" (Arena Lobby scr6 uses it at $0D:$486C — linear-decoder artifact) and known_RAM_map's $D9CE ("round counter…254=unavailable" was guesswork; it's the GROUP 0-9, the $FE sentinel lives in $D9CD). Failure class: a positional convention (rows happen to be gate-ordered) read as an engine lookup key. |
+| 2026-07-19 (S67) | **ROADMAP E1's "nothing since has decoded it / zero doc hits for roster" was a search-term artifact** — QUEST_OPCODES had held the core $1F arena formula since its writing; the searches used "roster", the doc says "ArenaBattleSetup". The gap was real but half its stated size. Grep synonyms (setup/bracket/opponent/battle) before declaring a knowledge gap. |
+| 2026-07-19 (S68) | **bank_050.asm's header framed the bank as "the main game state" and $C86C as a "gate world flag" — both WRONG.** ROM0's mode tables ($00:$030F init / $00:$050F per-frame, dispatching on wGameMode $C88A) prove bank $50 runs only in mode 2 = BATTLE; $D9F4 is a battle-scoped NESTED sub-machine (ticked from battle phase $04), and the header's "(overworld)/(gate world)" state variants are actually LOCAL vs LINK — $C86C's only setters are the bank $03 serial code ($40D4/$4113) + bank $15/$18 link menus, while wInGateworld is $C969. Header rewritten in place in BOTH trees (byte-perfect, `1ca6579…`). Failure class: a bank header written from one flow's perspective, promoted to global architecture without checking the mode dispatch. |
+| 2026-07-19 (S68) | **MONSTER_DATA's "$D9EC: 15-state dispatch" and "$DB55: Post-battle flag (always 0 for bosses)" were both wrong.** The BattlePhaseTable at $50:$5F3A has **18 entries** (code resumes at $5F5E = 36 table bytes, byte-verified), and $D9EC drives the whole battle (intro/turns/post/exit), not just post-battle; state $0E = $640A is the battle EXIT handler, not "post-join cleanup". $DB55 is the battle OUTCOME (0=win, 1=loss, 2=undecided; set by bank $52's KO scans ~$76E0/$7727, XOR'd for the link peer) — "always 0 for bosses" was a win-path observation mistaken for a property. Fixed in place (MONSTER_DATA, known_RAM_map, wram.asm comment). |
+| 2026-07-19 (S68) | **SIDEQUEST_MAP's engine-variable interpretations for two gate quests were wrong.** "cond_branch [$CA8D]==1 = selected monster has required skill" (Well, Bazaar Edge): $CA8D is the canonicalizer party COUNT (every slot-param opcode bounds against it; the Well words show no evaluator before the branch) — the check is the can't-forfeit-your-last-monster refusal; the skill checks are the engine-set flags ($005E/$009E). "$FF92 holds species/evaluation result (215/216/217)": hFF92 is the player X coordinate low byte ($FF92/93 X word, $FF95/96 Y) — a position gate at the Bazaar counter. Both corrected in place; trivially confirmable in-game. |
+| 2026-07-19 (S69) | **The S65/ROADMAP E3 implementation sketch ("RAMB=0 (re)establishment inside CF3's SRAM entry points with interrupt discipline") was INSUFFICIENT as written and was not built.** Instruction-level reading of the vblank audio tick (S69): the ISR saves only the interrupted ROM bank and on exit RECOMPUTES `RAMB := quadrant(popped bank)` (AudioPopSetDE; identically every RST_10/28 return tail) — RAMB is not part of the saved interrupt context. A per-entry RAMB=0 in bank $73 would be clobbered back to 3 by the first vblank mid-scan, and the CF3 walker dereferences in banks $50/$51 (quadrant 2) were outside the sketch's "CF3 entry points" surface entirely. The built design removes the convention at its 19 ROM0 producer sites (the RAMB PIN) instead of disciplining consumers; ARCHITECTURE "SRAM banking as built S69" is the owning statement; the ROADMAP sketch is annotated superseded. Failure class: an audit that correctly identified the hazard sources but sketched a fix against an unverified assumption (that the ISR is banking-state-transparent by value). |
+| 2026-07-19 (S69) | **ARCHITECTURE's "Safe contiguous block for custom flags: $0158-$017F (40 flags)" had been stale since S57** — wPendingFarmExp took bytes $D9C8-$D9CA (= flags $0168-$017F) in S57, and the S57 audit (EVENT_FLAGS, FLAG_SAFE_RANGES, PROJECT_COMPILER §2.7 fixed S65) reduced the pool to 32 flags ($0158-$0167 + $01E0-$01EF). ARCHITECTURE was the last doc carrying the pre-CF2 claim — same drift class as the S65 PROJECT_COMPILER row (a corrected fact surviving in a doc the correction pass didn't grep). Fixed in place S69. |
+| 2026-07-19 (S69v2) | **The S69 coffin adjudication ("probable Coliseum faint + bench save") was WRONG — corrected same session by user evidence.** User: Coliseum faints auto-revive win or lose; and an unsaved CATCH also persisted. True root cause: CF3 v2 eager roster — the canonicalizer's WRAM→SRAM party mirror ($CA8D-$CC7F → $A1C7-$A3B9, incl. current HP/status) plus live farm writes make UNSAVED deaths/catches survive reset; the reload then trusts the eager image. The v2 consequence WAS documented ("roster changes are never undone by reloading") but never play-tested against the vanilla reset contract. Two failure lessons: (a) when a report contradicts an architecture's documented consequences, check the architecture FIRST before inventing external causes; (b) the wrong theory was also user-refutable game knowledge — ask the user before adjudicating on game-mechanics assumptions. Fixed by persistence v3 (roster snapshot, MONSTER_DATA). |
+| S74 | BATTLE_SKILL_SYSTEM §12.3/§13.1 "MagicBurn record +9 must be $17" | STALE/WRONG: the live CustomRecord_E0 byte[9] is `$02` and the skill is user-verified working; Tame's is `$17`. What actually matters (measured S74): the POWER WORDS +11..+18 must be zero in custom records — nonzero powers loop the presentation. §13.7 is canonical. |
+| S74 | (new finding) | Battle effect step map: step1=$52:$6CB2 (sub-state $d9ee via $53:5305; handler far-call at $6CD5 when $d9ee==$0B; unknown ids fall through $6cfa `jp $6d56` into the step-2 body same frame); step2=$6D56 waits `($dd80&$dd9a)==$FF` (INCLUDES sound-done bits); the $da82 spin at $6c4d calls the $5F:entry-5 anim driver while $da82==0. |
+| 2026-08-15 (S82) | **"$4358 (cat2, 61 rules)" in BATTLE_SKILL_SYSTEM §15.10.5 + the PROJECT_STATE S81 block was a MISCOUNT — the chain holds 85 rules** (byte walk: $4358 + 85 dw hits the $0000 terminator at $4402, flush against the cat3 base $4404). The companion claims "131 unique, ~27 shared" check out exactly (39+85+40 = 164 instances, 131 unique, 27 shared, no in-chain duplicates); no natural reading yields 61 (cat2-exclusive = 59, shared = 26, all pointers plausible code addresses). Both docs fixed in place; the chains are now committed as labeled `dw` lists in `disassembly/bank_057.asm` (S82 re-section), so the next count is a `grep -c`, not a transcription. |
+| 2026-08-15 (S82) | **`bank_000.asm` CheckMonsterSlot ($00:$2FA5) header comment "CF=valid" was INVERTED** — instruction-level reading: A>=8, $DD1B[slot]==$FF, and ==1 (processed-dead) all exit through `scf` (carry SET); only the alive path ($DD1B==0) exits via `ld a,$0a / cp $01` (carry CLEAR). So **CF SET = NOT a live monster**. With 101 call sites in bank $57 alone (the AI rule chains' validity primitive), the inverted comment would poison any future reader; corrected in place with the full contract (S82, byte-perfect). Consistent with the S81 measurements ($DD1B: 0 alive / 1 processed-dead / $FF invalid) — the code was always right, only the comment lied. |
+| 2026-08-15 (S82) | **DATA_STRUCTURES shared-helper row `AddBToHL16 … "[HL] += B (16-bit)"` was wrong on name and width** — the routine is a saturating 8-bit `[hl] += b` capped at $FF (7 bytes, S82 decode), the AI accumulator write primitive. Renamed `AISatAdd_455f` in source + row corrected. Same class as the S68 header rows: an auto/early label's guess read as fact. |
+| 2026-08-20 (S83) | **BATTLE_SKILL_SYSTEM §15.10.6 "far-calls bank $58 entry 4 ($6379)" was WRONG on the call path** — the $53:$520C far-call operand is `ld hl,$5808` = **entry 8** ($5498) under the rst $10 `$4001+2·L` convention (byte-verified against the handler at $00:$0020; the ARCHITECTURE.md:74 "L=entry index" rule was already right). Entry 8 = `BtlQueueFetchService_5498`, a state-keyed queue service dispatching per-skill through the previously-undocumented 230-dw table `BtlSkillTargetDispatch_401d` ($58:$401D); $6379 (dw slot 4) IS the measured resolver, reached per-skill. The S81 measurement (hooks at $6379) was correct; only the caller attribution was wrong. §15.10.6 fixed in place; tables annotated in source. Lesson: "entry N" prose derived from an address must be re-derived from the OPERAND, not the dw slot position. |
+| 2026-08-20 (S83) | BATTLE_SKILL_SYSTEM §15.7 paragraph placement implied the confusion rewrite (`LoadBattle_7ab5`, table $7AFF) lives in bank $53 — **both are bank $52** ($52:$7AFF = {$3A,$5E,$62,$80} byte-verified; $53:$7AFF is zero-fill). Clarified in place; renamed `ConfusionActionRewrite_7ab5` / `ConfusionActionTable_7aff` in source. |
+| 2026-09-05 (S85) | **BATTLE_SKILL_SYSTEM §15.7 / simulator/status.py phase-9 DoT cap "RNG16/6+10" (poison) and "RNG16/11+30" (heavy) were WRONG** — `Div16x8To16` ($00) returns the quotient in HL and the REMAINDER in A; `LoadBtl_6bc4` does `add $0a`/`add $1e` on A → 10 + (RNG16 mod 6) / 30 + (RNG16 mod 11). Measured (heavy class 13/13, S85 corpus). Both fixed. |
+| 2026-09-05 (S85) | **known_RAM_map C899 row: "battle engine save/restores it via $C1ED/EE ($52:$556D, phase-6 cycle)" was WRONG** — `BattleRNG` ($52:$556D) forks on $C86C: LINK mode uses the private $C1ED/EE chain (load, step, store — keeps two GBs in sync); non-link steps the live pair. Row corrected. |
+| 2026-09-05 (S85) | **BATTLE_SKILL_SYSTEM §14.1 / bank $72 comment "Anchor in battle … the cast is a silent no-op"** — false on the AI-commit path: CustomDispatch52 had already run MegaMagicDamage_653e + the $a8 descriptor, so an AI-committed Anchor dealt MegaMagic damage to the caster's own side (−67 HP measured). Fixed in patches/bank_072.asm; doc annotated. |
+| 2026-09-05 (S85) | **BATTLE_SKILL_SYSTEM §13.7 "caster-skip + flying-skip on ADVANCE"** — flying victims are VISITED by the sweep (target fetch + gate machine run), only the damage is skipped (3 flying Gremlins all visited, 0 damaged). §13.7.12 correction; battle.quake_victims models the visits. |
+| 2026-09-05 (S85) | **BATTLE_SKILL_SYSTEM §13.7 / S84 DispatchBoundsStub note "$E5 slack row = self target; the quake handler sweeps sides itself"** — self-target = OWN-side base for an AI-committed cast, so the sweep started on the party (−55 HP on the caster, enemy untouched). $E5-$E8 now route to $62BF. |
+| 2026-09-05 (S85) | **bank_053 label `BattleHPLookupTable` ($41DF)** looked up no HP — it is the per-EID flag table of the duplicate-group-cast conversion. Renamed `EnemyDupConvFlagTable_41df`; DATA_STRUCTURES mention updated. |
+| 2026-09-05 (S85b) | **S85 §14.1 wording "the AI still WASTES the turn on it; an AI-side exclusion is the follow-up"** assumed vanilla excludes field-only skills from the AI — it does not: vanilla's tactics AI commits StepGuard $37 (measured, StepGuard-only movepool) and it runs the shared Attack handler. Anchor now matches that (queue rewrite to $3A in DispatchBoundsStub). |
+
+## S87 addendum (2026-09-15)
+
+| Claim | Verdict | Correction |
+|-------|---------|------------|
+| ROM0 `SetMonsterSkill1/2/3` / `ClearMonsterSkill1/2/3` labels | WRONG | They clamp-adjust the record AI-weight/personality bytes ($CB25/26/28), not skills (skills live at slot+$29). Renamed `Add/SubMonsterAIWeightCat1/3/2` (both trees). |
+| ROM0 `ClearMonsterAGL` label | WRONG | Subtracts the WLD field ($CB21), not AGL. Renamed `SubMonsterWLD`; unnamed add sibling labeled `AddMonsterWLD`. |
+| §15.10.7a "carry iff $db4e+$db4f > $db4c+c" (S84) | INCOMPLETE | The RHS also adds $db4d (w3/10) and $db53 (ObedienceThreshTable value). Full inequality validated 889/889 (S87). |
+| §15.10.7a "$7997 … consumption point in the decide chain still to pin" (S84) | CLOSED | $db53 is a direct addend in AIPreambleDecide_7a5d. Table re-sectioned to `db` as `ObedienceThreshTable_7997` (byte-identical). |
+| "obedience gate on wBattleLVL low byte" read as LEVEL (S84/S86 prose + model) | MISLEADING | wBattleLVL holds the WLD stat (record slot+$60; INFO-screen "WLD"; 5×level−10×arenaTier at creation). Display level is $db9b (slot+$4B). |
+| MONSTER_DATA record rows "$4B Level / $4C Level cap / $50 HP / $52 MP / $54 ATK …" | WRONG (shifted) | $52/$56 are MaxHP/MaxMP; stat words run $58..$5E; $60 = WLD; $64..$67 = AI weights. Pinned by the bank $51 walk + live reads (S87). |
+| MONSTER_DATA S36 prose "growth/personality (WLD-style) set to species base ±2" | WRONG | The ±2 roll is the individual LEVEL CAP (slot+$4C). WLD is computed (5×level−10×tier). |
+| PROJECT_STATE/§15.8c level-2 percentiles quoted without invocation | GAP | The run used `--pskills 0xe9,0xe5`; recorded S87, `--pbases` added. |
+
+
+## S88: ConfusionActionRewrite_7ab5 misattribution (S79 -> corrected S88)
+
+The S79 decode labeled $52:$7AB5 "ConfusionActionRewrite" and documented
+its table {$3A, Scorching, IceStorm, DeMagic} as the confused actor's
+action picker, including a "random target with cross-side wrap quirk".
+ALL of it was misattributed: the routine's only callers are the act-time
+id switch entries for $AA Transform / $D5 BeDragon. The real confusion
+generator is bank $53 entry 1 ($4BEB), producing meta ids $99-$A1 — a
+completely different mechanism (§15.8c). The "random target" claim was
+also internally wrong even for Transform: both RNG1&3 reads share one
+un-stepped value, so the attack pick's candidate is always the opposing
+base slot. Cost: S85's curse-confusion $99 observations sat unexplained
+for three sessions because the documented table contradicted them.
+Lesson reinforced: a decoded routine is not attributed until its CALLERS
+are traced; "reachable from the state machine" is not "reached by the
+gate you assumed".
+
+
+## S89 addendum (2026-09-17)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| status.py +7 "packed $C0 turn counters — candidates: scare/lick-class enemy sillies" (S79) | WRONG candidates | The writers are Ironize $2A / IRONIZE $DC (measured, deterministic set+tick). The WarCry family — the ROADMAP's named candidates — writes +5 one-shots instead (WarCry bit4, LegSweep/BigTrip bit2). |
+| §15.9 "interception redirects — TurnOrderDefensiveBoost's defensive set §15.6 is the likely home" | IMPRECISE | The order boost is only WHY defensives resolve first. The redirect itself is the act-time guard-table consumer ($53 ~$552x/$567x + the $670E state-0), keyed on $DB08/09+8t marks written by Cover/Guardian. |
+| `SacrificeEntry_670e` "action state 3 routes Sacrifice here" (S79) | INCOMPLETE | The label heads the SHARED state-3 dispatcher (7 rst-table states, table was misassembled as code until S89); Cover $88/Guardian $89 route here too. Label kept, comment corrected in source. |
+| pacing.default_wld "possibly level-up (writer not yet traced)" | CLOSED EMPTY | Level-up never writes slot+$60 (L1→L13 frame-sampled). Docstring corrected. |
+| known_RAM_map "$DB00 blocks: 8 B/combatant" byte roles for +0/+1 (unmapped) | GAP filled | +0/+1 are the guard/defensive pair, read one slot shifted ($DB08/09+8t = slot t's record). |
+
+## S90 addendum (2026-09-18)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| EDITOR_DESIGN v1 §8 "Reserved bank map" ($6A=CustomRoomTable, $6B-$6E layouts, $6F-$72 tilesets, $73-$74 text, $75-$76 scripts, $77 metadata) | STALE (predates the real allocation) | The actual allocation diverged bank-by-bank ($6A=new-species info hi-table, $71=dispatch keystone, $72=custom skills, $73=Cold Farm, $74=songs; layouts=$64, tilesets=$67). PROJECT_STATE "Bank allocation" is the single source; the v1 table is retired (EDITOR_DESIGN v2 §11 ledger). |
+| EDITOR_DESIGN v1 §7 sprite-pipeline "flagged confirmations: pointer table repointable?; per-monster dimensions?" | SUPERSEDED | Both answered by the built GFX-1..4 stack (resolver has no bank gating, any of 221 repointable; dimensions = the 155-layout library). v1 §7 retired to the v2 §11 ledger; MONSTER_DATA owns the as-built facts. |
+
+## S91 addendum (2026-09-18)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| bank_004.asm banner: "$D7D2+ NPC RAM buffer (32 bytes per NPC, up to 40 NPCs)" | WRONG | 8 slots ($D7D2-$D8D2): RoomEntry7 zero-fills exactly $101 bytes and vanilla's valid-step census maxes at 8; a 9th entry overruns into the $D8D3+ script-state block (measured S91). Comment fixed in place (byte-perfect rebuild verified). ROOM_DATA_FORMAT "NPC capacity & sprite-sheet budget (S91)" owns the facts. |
+| KEY_LESSONS S70 / project.json _sprite_note: "sprite $11 hard-crashes the room render" | CONTEXT-SPECIFIC, not a property of the id | $11 (King/Royalty) renders fine in vanilla rooms — solo-rendered along with every candidate id, ZERO crashes ($00-$7F, $E0-$E3, $F0-$F3, $FF). The S70 crash was custom-room/franken-state context. The S70 "guardian renders draconic" $23 = a boss_composite_fragment (one tile of a multi-tile boss), per user classification. No GoldSlime field icon exists; blue slime $3A is the closest intended look (catalog). |
+| extracted/npc_catalog.json rows (e.g. "Castle screen 0 step 6" with 28 NPCs, sprite $FA, y=200) | CONTAMINATED by phantom steps | dump_all_npcs walked step entries past each screen's real list; engine step validation only checks tileset_bank in (0,$80), so garbage decodes plausibly. Valid-step filter (tileset_bank in {$23-$31,$37,$38} + interact ptr in $4000-$7FFF + sane coords, dedup by (mt,ptr)) is in tools/dump_npc_sprite_catalog.py --census; vanilla's real distinct sprite set + max-8-NPC fact both come from the filtered census. npc_catalog.json itself left as-is (regen is a named ROADMAP residual). |
+
+## S92
+
+- `editor2/core/scriptgen.py` OPS row `post_battle_check: (0x27, 1)` was WRONG
+  (inherited from decompile_script's table; the op is MonsterPartyOp2, 0
+  params, not a branch — PyBoy ctr trace 2F→30 linear + handler $04:$5F5C).
+  Never emitted by any project content pre-S92, so no built ROM carried the
+  defect. Corrected with a fixed-count legacy alias. Lesson: "verified"
+  annotations in the compiler's own table were not all verified.
+- The S92 audit's "9-step Arena Lobby" claim (session audit text, not a doc)
+  was CASTLE's step block misattributed — the lobby is 3 screens × 1 step.
+  Measured before anything was built on it.
+- `editor2/tests/test_compiler.py` ran test_crash_config_validator
+  unconditionally while it consumes the --rom regression build — plain
+  invocations failed on any fresh machine. Guarded S92.
+
+## S94 addendum (2026-09-20)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| ROOM_DATA_FORMAT "Exit Checker": byte 0 `$00` = "arrival point", `$09` = "special marker", both "skipped" (also the `kind` labels in `tools/dump_map_table.py` / `extracted/map_table.json`) | MISLEADING | They are skipped by **Entry 6** only; **Entry 9** (`RoomEntry9`, patches/bank_00b.asm `jr_00b_44ec`) matches rows with x ∈ {0, 9} or y ∈ {0, 7} against the player — they are the LEFT/RIGHT edge exits (e.g. GreatTree screen 9 `09 03 02 …` = east edge → Bazaar). ROOM_DATA_FORMAT corrected; the JSON `kind` strings stay (regenerating is a residual) and `editor2/core/vanilla.py` keeps every row verbatim. |
+| PROJECT_COMPILER §11 / KEY_LESSONS S93: "attr grids are per screen, not per state — the engine never indexes attr by the step counter" | WRONG | The vanilla attr walk reads `[counter]` and selects a per-step `[attr_entry, attr_bank, pal_ptr]` row (bank $17 `AttrPtrTable` chain; measured: Servant room $3F steps differ in 221 attr cells + palette). Corrected in PROJECT_COMPILER §2.11/§11, ROOM_DATA_FORMAT, GATE_GENERATION §7.4; engine now mirrors the vanilla shape (S94b). |
+| PROJECT_COMPILER §vanilla_exit_extensions (S70): "y=0/7 extension rows are inert" | STALE since S94b | Entry 9 is diverted through bank $60 entry 7 too; boundary rows are live. Section updated. |
+
+
+## S96 addendum (2026-09-25)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE / ARCHITECTURE / DATA_STRUCTURES / bank_004 catalog: "100 script opcodes ($00-$63)" | WRONG | The rst $00 ScriptCommandTable has **102** rows; `$64` (BranchIfPartyHealthy, 1 param) and `$65` (WaitDD80, 0) are used by vanilla scripts ($0F:$594A Priest floor, $0E:$4DFA intro bedroom). Found when cloning those rooms failed on "unknown opcode". |
+| `tools/decompile_script.py` PARAM_COUNTS ("parameter counts" reference in DATA_STRUCTURES; "0 unknowns across 5,377 commands") | WRONG for 36 opcodes (+2 missing) | Handler analysis = counter increments per path (`tools/script_param_counts.py` → `extracted/script_param_counts.json`, verify_integrity check 5). E.g. `$11` 2 not 4, `$37` 1 param and NOT a branch (its "target" was the next op), `$41` 1 not 2, `$42` 2 not 0. "0 unknowns" was self-consistency: a wrong arity resyncs onto other valid-looking opcodes. The table agrees with every previously verified row. |
+| `tools/extract_room.py` (S92): "all scripts via a segmentation-PROOF decoder" | WRONG for most rooms | It read bank `$0D` for EVERY room; scripts live in `$0C/$0D/$0E/$0F` by map type (MapTypeDispatch). Clones of Castle/GreatTree/Farm/… carried bank-$0D filler as "scripts" (the proof passed on garbage); boss rooms `$30/$34` failed. Fixed (`script_bank()`), plus per-map list bounds. The example project's arena clone ($06 → bank $0D) was correct. |
+| `tools/generate_attr_map.parse_room_attr_entry` reads 8 screen slots | STALE (4×2 era) | Screens are indexed row×4+col up to 15 — cloning GreatTree ($01, screens to 11) died with KeyError 8. extract_room now indexes the bank-$17 screen table directly. generate_attr_map itself unchanged (its own callers only use screens < 8). |
+| validators: "screens need WxH but record is …" = ERROR | TOO STRICT | Vanilla rooms keep sub-room screens outside the record's scroll area on purpose (Labyrinth $42, Forest Mazes $53/$61-$63 — record 1×1, screens entered via exit screen_byte). Now a warning. |
+| KEY_LESSONS S7: colour 1 is forced "every frame" by "a palette refresh/animation system tied to the source tileset" | WRONG mechanism | bank $17 `LoadPal_4102` copies slot 7's colours 1/3 into slots 0-6 when palettes are LOADED ($C797 buffer). Opt-out for custom rooms built S96 (FreeColor1Hook). GATE_GENERATION §7.1 updated. |
+| Room clones: palette = the room's screen-0 palette for every screen | INCOMPLETE | Labyrinth $42 screen 1 step 0 has its own palette; clones now get `screens[k].palette` where a screen's step-0 palette differs (all 211 screens / 526 states pixel-identical to vanilla, test_canvas all-clones). |
+
+## S97 addendum (2026-09-25)
+
+| Claim | Verdict | Correction |
+|---|---|---|
+| ROOM_DATA_FORMAT "NPC Type Byte Encoding": "$40 (down,non-interactive) … Lower nibble values 6 and 7 appear frequently — may control movement pattern" | INCOMPLETE / guessed | Measured S97: low nibble = behaviour routine (bank $06 `NPCBehaviourTable`, 12 distinct handlers — stand variants, spin, pacing, square, figure 8, sway, gate wanderers); bit 6 = HIDDEN entry (not drawn, not solid, no behaviour, not talkable) — "non-interactive" undersold it. Section rewritten ("NPC behaviour types"). |
+| `extracted/npc_names.json` `type_names` ("0x10 Walking random", "0x30 Patrol path", "0x50 Off-screen trigger", "0x60 Animated decoration" …) | WRONG (hand guesses) | $10/$20/$30 are standing NPCs facing left/up/right; $5x/$6x/$7x are hidden entries with a facing. Replaced by the measured table (legacy `editor/` reads it). |
+| bank $06 `LoadMapS_4043` bytes after `rst $00` (mgbdis: `ld [hl], b / ld b, b / sub b …`) | MISASSEMBLED | A 16-entry `dw` jump table + 9 per-handler sub-tables + two byte tables ($425E, $4B17/$4B1B) decoded as code. Re-sectioned S97 in both trees (byte-perfect). |
+| BANK04_SCRIPT_ENGINE NPC buffer: "+$05 bit 0 = interacting"; "+$18 movement counter" | WRONG | +$05 bit 0 = walking (walk animation; set by every walker step, cleared while paused); bit 6 = talking; +$18/+$1A = pixel X/Y. Corrected; full map in ROOM_DATA_FORMAT "NPC RAM slot". |
+| ROOM_DATA_FORMAT Key Constants "$D7D2 NPC RAM buffer (17 bytes per slot)", "$C925 … 0-7 in the 4×2 grid" | STALE | 32 B × 8 slots (DOC_AUDIT A.3 had fixed the prose, not the table); $C925 = 0-15 on the 4×4 grid. |
+| ROOM_DATA_FORMAT "Custom rooms use $D478–$D47B … verified-unused WRAM gap" | STALE since S54/S65 | Counters live at $CD80+ (compiler region, transient). Rewritten with the S97 state-rule note. |
+| ROOM_DATA_FORMAT "opcodes $48/$49 npc_hide/npc_show move an NPC offscreen" | UNVERIFIED | The handlers (`label4_684d`/`label4_6866`) read one word and jump to CheckZeroJPEnd — nothing touches the NPC slots. Marked unverified in place; not relied on by the editor. |
+| S92 "state selection reads the counter at LOAD, before the entry script" (KEY_LESSONS S92) — implied "Entry 0 is the first reader" | INCOMPLETE | At a custom-room load bank $17 `CustomAttrCheck`/`CustomPalCheck` read the counter BEFORE bank $0B Entry 0 (PyBoy hook order S97). A state rule evaluated only in Entry 0 selects the right layout/NPCs but the PREVIOUS state's palette (A/B proven on the servant clone). The rules run from the bank-$17 hook first. |
+| S97 r1 summary / textenc: "auto-wrap 18 cells" for NPC text; "the engine auto-wraps a line that overflows" | WRONG | Box 1 line 1 has 16 cells after "*:"; cells past any edge wrap and are OVERWRITTEN by the next line (lost) — PyBoy S97 r2, TEXT_SYSTEM "Text boxes". |
+| TEXT_SYSTEM YES/NO "Text ends with `$EF $EE $E7 $F0`" (as the only form) | INCOMPLETE | Vanilla ends the question line directly with `$E7 $F0` ($13:$67F7); both work (PyBoy S97 r2). |
+| (implicit since S96) "text boxes are cream" | CONDITIONAL | Only while colour 1 is forced: the boxes never set GBC attrs; free-colour rooms need bank $73 entries 14-18 (S97 r2). |
+
+## S98 addendum (2026-09-26)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| ROOM_DATA_FORMAT / ROUTING / CROSSBANK_ROOMS / PROJECT_COMPILER / KEY_LESSONS S4: "`$8F` = spawn point / arrival point", "`$90` = walk-on exit", "byte 4 = source/destination map_type" | WRONG (misnomer since S1) | `$80-$83/$8F` = EXAMINE spot (A press on the own or faced cell; low nibble = required facing, F = any), `$90` = STEP-ON trigger (walking onto the cell); byte 4 = a room SCRIPT index. Arrival is only ever the exit row's bytes 4-6. PyBoy S98 (facing matrix, walk-on vs arrival). Corrected in place; ROOM_DATA_FORMAT "Interact entries ≥$80". |
+| (implicit) interact entries ≥$80 may appear anywhere in the list | WRONG | Both bank-$0B scans stop at the first NPC entry (bit 7 clear): a spot after an NPC is dead (measured). Vanilla puts spots first in 157/160 lists; `$1F` screen 0's trailing `$81` is dead in the original game. The emitter partitions spots first. |
+| Pre-S98 validator + EDITOR_DESIGN: "a room needs a spawn point (teleports need one)"; "spawn script must be 0" | WRONG | Nothing reads a spawn. The warning and the error are gone; the legacy spawn warns only when its script is 0 (A there re-runs the entry script). New rooms get no marker. |
+| DATA_STRUCTURES `SearchNPCAtFacing` "find NPC at player facing pos"; `CheckExitCoords` "coordinate match for exits"; `RoomEntry4_NPCMovement` / `RoomEntry5_NPCRender` | WRONG names | `SearchStepTriggers` (step-on `$90` lookup), `InteractEntryAtPos` (≥$80 entry at a cell), `RoomEntry4_TalkTargetLookup`, `RoomEntry5_StepTriggerLookup`; renamed in both trees (byte-perfect). |
+| Pre-S98 validator: "exit to a single-width custom room must use screen nibble 0" | WRONG | The nibble IS the 4×4 screen index; the check is "the destination has that screen" (now an error). |
+| ROOM_DATA_FORMAT "Entry 6 checks exits at Y=1-6 … Entry 9 checks Y=0 and Y=7" read as "every edge exit fires on a push" | INCOMPLETE | An x=0/9 or y=0 exit that borders another screen of the room never fires — the push scrolls first (PyBoy S98); a custom-room y=7 exit fires on walk-on (S70v3) and blocks walking down through that cell. |
+| S98 r1 (own docs + editor text): interior-door arrival "stepping out of the doorway … like the vanilla doors" presented as the natural arrival | MISLEADING (verified by pixel measurement in r3) | Screen-byte bit 7 draws the player HALF A CELL below the door (vanilla Library → GreatTree `$88`: pixel y = 320, standing positions ≡ 8 mod 16). The r2 PyBoy check read the logical cell ($FF97/98), which hides the offset. The user's rule: arrive fully ON the door tile; the editor does that now (S98 r3). |
+| S98 r1: "a door needs a dialog to pick the other end by room/screen/x/y" | SUPERSEDED (user design) | Doors are objects placed on a cell and connected to another door object (EDITOR_DESIGN "S98 r2"). |
+
+## S99 addendum (2026-09-26)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| CROSSBANK_ROOMS §6 + KEY_LESSONS v8 + ROADMAP P3.3e (c): "a bare `ret` VRAM handler causes yellow palette corruption, so custom rooms must run Castle's" | WRONG (measured S99) | Forcing a `ret` handler in two custom rooms (PyBoy hook on the `rst $00`): screen pixel-identical, palette buffer unchanged; only tiles 77-78 stop rolling. Vanilla's own table already points $6B-$6F at a `ret`. The S1 yellow most likely came from the clamp's palette use at the time. |
+| CROSSBANK_ROOMS / ROADMAP / bank_001 comment: VRAM dispatch table "107 entries" | WRONG | 112 entries ($00-$6F), ending where the first handler starts ($61F9); $6B-$6F = bare `ret`. |
+| KEY_LESSONS S7 / ROADMAP: Castle rotates "$94D0-$94FF" | WRONG range | $94D0-$94EF = tiles 77-78 only (two 16-byte rolls). |
+| CROSSBANK_ROOMS §"How Room Data Flows" 10: Castle's handler is a "harmless `ret`-equivalent … maintains needed VRAM state" | WRONG | It rolls tiles 77-78 every 32 frames — in EVERY custom room (pre-S99), whatever art sits there; it maintains no state. |
+| bank_001.asm comments: "Map $20/$21 … THIS is what crashes when custom room NPCs are talked to … copies garbage VRAM addresses"; `VRAMTileCopy_6636` "one-way copy"; `CheckVisualEffectType` / `GetVisualEffectMask` "Text/event visual helper"; header "handlers do palette animation" | WRONG / unsupported | $20/$21 swap tiles 50-51 ↔ 56-57 (both placed); no crash mechanism exists (the swap touches fixed sheet slots). `RollTileRight` (rrc, 1 px), `RollTilePairWobble`, `GreatTreeSway`; only map $08 touches a palette (the DMG `wBGPalette`). Comments replaced S99. |
+| (implicit, S1-S98) "Secret Passage and the Goopy rooms animate" (they have non-`ret` handlers) | INERT | Their handlers roll / swap slots that are blank in their own sheets — nothing visible (census `inert_in_vanilla`). |
+| `tools/audit_mapid_range.py --selftest` (TOOLS_AND_DATA: "any unadjudicated site prints NEEDS_REVIEW and fails") | WAS FAILING since S73 (not in verify check 5) | 9 unkeyed sites from S73-S97 (`BattleExitHandler` rename, FreeColor1Hook, StateRulesHook17, CustomStateRules, VanillaExitResolve, AnchorField14Tail, MenuOpenFreePal, BoxAttrActive) + the S99 `PerRoomDispatchEntry` / `CustomAnimSource` adjudicated; selftest PASS (clean 58 / patched 64); JSON regenerated. |
+| S99 r1 (own docs: PROJECT_COMPILER §2.15, EDITOR_DESIGN S99): the migration rule "`source` when the room still draws with its source room's sheet" | INCOMPLETE (user-found, r4) | A copied sheet can still carry other art in the source's animated slots (pre-S99 imports took the unplaced hidden-frame slots as free) — that art started moving. r4: `stray_report` / `repair_animation` on open (asked) + Make still. |
+| S99 r3 (own docs: EDITOR_DESIGN S99 r3 / animate_tab): a room animation whose slots are all drawn is "FULL" — Make animated cannot use it | SUPERSEDED (user-found, r6) | Full is re-assignable: the tile TAKES OVER a slot and what moved there keeps its look in a still copy (asked first). The grey button also covered two other limits (animation too small; tileset out of free wall/walkable slots) under one tag — now named, with a count box. |
+| S99 r3-r6 (own code/docs): the Make animated check — "fits" / "needs N more free wall slots" | WRONG in three ways (user-found, r7) | It counted only the requested kind's slots on a switch (Zoma's roll 49-50 missed), treated the old animation's slots as unusable, and counted every quarter as moving; with one side full it never moved the split. The check and the operation now share one count; the split moves automatically. |
+
+## S100 addendum (2026-09-27; gate rooms, ROADMAP P3.7b part 1)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| GATE_GENERATION §3: special rooms need "wRNG1 bit4 AND (RNG mod 3 == 2)" | WRONG (code + PyBoy S100) | `Div8x8` divides B = `wCurrentFloor`: special rooms appear only on floors 3, 6, 9 … (1-based), ~50 % (wRNG1 bit 4); 5/13 on floors 3/6, 0/39 on floors 2/4/5/7/8 (Gate of Reflection). |
+| extracted/gate_names.json (tools/map_gate_names.py, "derived from boss data"): gates 23-31 | WRONG (one gate late) | The tool indexed the boss REDIRECT table ($14:$4897, one row per boss — Demolition has two) by gate id. Rewritten on `GateFloorDataTable` (floors + boss map, FAQ-checked): 23 Demolition, 24 Mastermind, 25 Control, 26 Extinction, 27 Sleep, 28 Bazaar Edge, 29 Arena-Right, 30 Old Man's, 31 Unused. The 48 gate-name comments generated from it in bank $01 (both trees) corrected. |
+| tools/gate_reference.py (hand data): gates 12-17 | WRONG order | Were FAQ chapter order; ROM order is 12 Joy, 13 Wisdom, 14 Arena-Left, 15 Happiness, 16 Temptation, 17 Medal (floors 14/15/16/18/20/19). Medal 16 → 19, Mastermind 28 → 27. |
+| bank_006.asm (S51 re-section) + DATA_STRUCTURES / MONSTER_DATA / ROADMAP / TOOLS_AND_DATA: `SkillLearnReqTable` "222 × 18 B, $50E0-$607C"; `label6_6034` "fake-decode artifact … NOT a real entry point" | WRONG | 218 rows ($00-$D9, $50E0-$6033 — the learn scanner loops 0..$D9, BATTLE_SKILL_SYSTEM); $6034-$607D is bank $06 entry 6 `FieldStateDispatch` (the bank header `dw`, called per field frame from bank $01 $4E0F) — re-sectioned back to code S100, byte-perfect. The fake "rows $DA-$DD" (LIFE lvl 250 …) are code bytes. |
+| bank_006.asm: `DispMapS_566b` "referenced by a fake instruction in a not-yet-re-sectioned region" | RESOLVED | The referrer was the 24-entry `MapTransStateTable` after `Jump_006_6b87` (fake `call c, DispMapS_566b …`); re-sectioned to `dw` S100 — the label is now unreferenced. |
+| KEY_LESSONS S8 "Bank $06 $C905 state machine treats custom rooms as gate-like … gate-like menu behavior" | IMPRECISE | $C905 there is the MAP-TRANSITION sub-state: `Jump_006_6b87` (reached on wGameState bit 5 = map change) picks the transition STYLE for the room being left — $10 = in-gate / special-room style, 0 = normal fade. Not a menu behaviour. |
+| SOUND_SYSTEM §8: gate path = "$34, or RoomBGMTable[wBossMapType] on the boss floor" | OFF BY ONE FLOOR | The boss theme starts on the floor BEFORE the boss floor (`wCurrentFloor == wLastFloor−2`) and carries into the boss floor (PyBoy: Bazaar floors 7/8/9 = $34/$0C/$0C). |
+| PROJECT_COMPILER §2.7: named-flag pool "`$0158–$0167` and `$01E0–$01EF` = 32 flags" | STALE since S73 | 16 flags: $01E0-$01EF became wAnchorGate/wAnchorFloor (EVENT_FLAGS already said so). |
+| GATE_GENERATION §7.5 "Production note (not in the POC)" | DONE S100 | §7.6 — data-driven insertion; `CustomGate1Setup` removed. |
+| TOOLS_AND_DATA: `compress_tiles.py` / `decompress_tiles.py` "✅ roundtrip" (S100 r3) | WRONG (game decoder, PyBoy) | Both used an unbounded `byte + 19` extended length; the game computes it in 8 bits (`$00:HandleCompressedRun`, 0 = 256), so the compressor's 257-274-byte copies decoded shifted in-game while the Python round trip passed. Fixed: MAX_COPY 256, decoder 8-bit. |
+| KEY_LESSONS S96 "the menu blanks … vanilla relies on every colour 1 being cream" — scope | INCOMPLETE (S100 r3) | The descent transition (bank $06 states $10-$17) relies on it too: tile-$E0 blank rows + a fade to the BUFFER's colour 1 (GATE_GENERATION §7.6 "Free-colour rooms"). Normal door transitions (states $00-$06) were not re-measured. |
+
+## S101 addendum (2026-09-27; custom boss floors, ROADMAP P3.7b part 2)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE catalog / bank_004 comments: $47/$48/$49 "npc_buffer_write / npc_hide / npc_show", $4A unnamed | WRONG (PyBoy trace of the vanilla boss exit + handler bytes) | $47-$4A = face UP / DOWN / LEFT / RIGHT for NPC n (0 = player). Table "S101 corrections" in BANK04_SCRIPT_ENGINE; comments fixed in both trees. |
+| BANK04_SCRIPT_ENGINE: $1C "CompareRAM" | WRONG | NPC animation `$SSNN` ($16 = fly in from the NPC's position: `$D8E3`·8 frames, +2 px/frame right, down along curve `$D8E4`; $04 = hop). S101 r2 corrected S101's own "fly to the tile in $D8E3/4". |
+| BANK04_SCRIPT_ENGINE: $0D "WriteNPCByte" (use unclear), $06 unnamed, $3B / $58 unnamed | INCOMPLETE | $0D `npc,0,0` reveals a hidden NPC; $06 closes the text box; $3B = wavy fade warp; $58 = FloorSkip (gate-world script 4 only). |
+| MONSTER_DATA "Boss Join System": story bosses "join through the natural probability path" | IMPRECISE | Tier 0 skips the roll (`LoadB54_5683`) — always joins when it is the candidate; the candidate is the enemy KO'd last (`$DD61`). |
+| bank_00b.asm `Call_00b_4839` (unannotated) / ROOM_DATA_FORMAT S91 "ids $F0+ alias $00" | INCOMPLETE | Sprite ids $E1-$E3 = party slot monsters, $F0-$F3 = the display list at `$D7CA` (any species as its follower); aliasing to $00 happens only while the list is empty. |
+| Summary "helper = Warubou" (user wording S101) vs ROM | NOTE | The vanilla boss-exit helper is NPC sprite $21 and its text box is labelled "Watabou:" (FAQ agrees); sprite $14 (intro) may be Warubou — unconfirmed. The helper step lets the author pick sprite and text. |
+
+## S102 addendum (2026-09-28; own animated tiles, ROADMAP P3.3f)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| ROADMAP P3.3e / EDITOR_DESIGN S99: "Limits that stay (engine): one animation per room, 2-16 slots per animation, fixed rhythms" | SUPERSEDED S102 | Bank $6C `CustomTileAnimate` (called by bank $71 entry 3 before the vanilla handler) animates any slot at any speed from authored frames; the vanilla source still runs next to it (PROJECT_COMPILER §2.19). |
+| PROJECT_STATE "Bank allocation": Unallocated "$6B–$70 … (11 banks)" | STALE since S101 | $6B = project enemy rows (S101), $6C = own tile animations (S102); unallocated $6D–$70, $75–$77, $79–$7A, $7C (9 banks). |
+| disassembly bank_000 `LCDCInterruptHandler`: `ld b, b` / `LCDCHandlerBody: cpl` / `MenuClearContents: ld a, [$082e] …` after the `rst $00` | WRONG (data decoded as code) | A 4-entry dw table (`LCDCStateTable`: $2F40 nothing, $2EFA hide sprites below the LYC line, $2F08 / $2F24 per-line SCX / SCY waves); the field runs state 1 at LYC 127 (PyBoy S102). Re-sectioned as bytes (labels kept — bank $34 data-as-code references `LCDCHandlerBody`); clean build byte-perfect. |
+| (session-internal, S102) "PyBoy does not block VRAM writes during mode 3, so it cannot test DMA timing" | WRONG (measured) | With the HBlank wait removed, PyBoy showed 581 bad tile-frames and SameBoy 631: both block mode-3 VRAM writes, GDMA included (PYBOY_DEBUGGING "S102"). |
+| every `rHDMA1-5` operand in disassembly banks $04/$05/$09/$10/$15/$33/$3A/$4B/$5B/$5D | DATA DECODED AS CODE | The game never uses HDMA/GDMA (jump tables and graphics bytes read as `ldh [$ff5x]`); bank $6C is the first user (ROOM_DATA_FORMAT "Own tile animations (S102)"). |
+
+## S103 addendum (2026-09-29; Layer A-lite gamedata, ROADMAP P3.9)
+
+| Claim (where) | Verdict | Correction |
+|---|---|---|
+| DATA_STRUCTURES / bank_001 header / randomizer romdata.py: pool +20..+24 are "weights (0 = slot unusable)", +0..+9 "header (floor range info)" | WRONG / INCOMPLETE (code read + PyBoy) | +20 = per-slot MAX COUNT (1 = only ever alone; the 2nd/3rd draw needs max ≥ copies and ≠ 1); who is drawn = the chance codes at +5..+9; +0 = rate code → wC8A9; +2..+4 = 1/2/3-monster chance codes; +25 = maze size → $C93D. DATA_STRUCTURES "Encounter pool entry". |
+| disassembly bank_001: 7 instructions after `LookupEncounterEntry` (`nop / ld a,[bc] / inc d …`) | DATA DECODED AS CODE | `EncounterChancePercent` $01:$69C0 = 0,10,20,30,40,50,70,100 (both trees; `ld hl, $69c0` → the label, byte-neutral). |
+| TEXT_SYSTEM bank $4D mode table: modes 2-6 "small routine targets (not per-species tables)" | WRONG | Those words are dispatch entries 5-10 = the recipe-string pointers of species 0-5 (the mode table overlaps the mode-0 table); no mode 2-7 reader. Hence recipe strings are rewritten in place, never repointed. |
+| disassembly bank_04d $43CE-$53D2 (~3,570 lines of `ld b, e` / `ld h, d` …) | DATA DECODED AS CODE | The library recipe strings (221 slots, 215-220 share one), re-sectioned as `LibRecipeText_NNN` db rows in both trees; clean build byte-perfect. |
+| BREEDING_SYSTEM B5: "bank $16's special table is left byte-identical to the ROM forever" | WRONG (byte diff) | Entries 693 / 803 of the runtime-dead $16 copy still hold the S12 GoldSlime mirror in the patched tree. Harmless (dead), not compiler-owned, recorded. |
+| known_RAM_map `$C8A9` "? (related to floor change in Gate)" | INCOMPLETE | The current pool's rate code (EncounterRateModifierTable index). |
+| PROJECT_STATE / patches (pre-S103): the vanilla table edits (Spirit family, starter harness, Gorbunok pool, B4/B5 recipes) are "hand overlay" facts every project inherits | CHANGED S103 | They are the example project's `gamedata`; a project without them builds the vanilla tables (PROJECT_COMPILER §2.20). |
+
+## S104 addendum (2026-09-30; Spirit as the 11th family, ROADMAP P3.10a)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| KEY_LESSONS S20-era "The Spirit icon ships on byte $19 … $1A is not fill-immune"; BREEDING_SYSTEM "Family icons" correction box + table rows; TOOLS_AND_DATA build_family_icon row; ROADMAP B9 | NOT REPRODUCED (S104) | PyBoy: glyph $1A renders on the INFO page and the library tab strip once the bank-$41 mode-4 Spirit string (`$41:$7E16`) says `$1A`. Spirit is on $1A/`$4F:$41B0`; the vanilla ??? glyph at `$41A0` is restored. The old entries carry SUPERSEDED notes. |
+| bank_041 head "Code/dispatch table at $4000-$4338 (73-entry dispatch + handler code)" and the raw `db` rows | WRONG | `db $41` + 3 rst entries + the 15-word mode list `$4007` + the mode 0-4 tables (10/100/113/160/11 words); re-sectioned in both trees (TEXT_SYSTEM). |
+| B9 relocation of mode 4 to `$41:$7E18` (only in a patch comment) | UNDOCUMENTED | Now in TEXT_SYSTEM + BREEDING_SYSTEM: 16 words, id 10 = Spirit, ids 11-15 = the empty string. |
+| B9 (implied): mode-4 id 10 was free for Spirit | WRONG | Vanilla id 10 = `$5B1E` (empty) = the "no family" icon the pedigree page prints for family `$FF` (bank $07 `jr_007_69ac`); since B9 unknown parents drew the Spirit icon. S104: that request uses id 11. |
+| BREEDING_SYSTEM "Future — 11th family": "an 11th family can't cleanly be $FA … repurpose $FA or extend" | DECIDED S104 | `$FA` repurposed (the family-scan `jr z` is two nops); matchers accept "Spirit", "AnyFamily" is an error. |
+| build_breeding.py / editor2 gamedata `_matches`: the SPECIAL table honours a mate-side `$FA` wildcard | WRONG | Only the vanilla FAMILY scan had it; the special scanners never did. Both Python mirrors now match exactly. |
+| bank_00a `ld hl, $46b5` + the code-decoded bytes after `ret` | DATA DECODED AS CODE | `FamilyIconGfxTable0A` (10 dw `$2E03`-`$2E0C`), then `LoadFldA_46c9` (the 4 `call $46c9` sites now use the label); unclamped for family 10 — twin of `FollowerFamilyGfxTable`. |
+| QUEST_OPCODES `$60F4` "misassembled as instructions … needs annotation" | STALE | Annotated as `FamilyTextPtrTable`; S104: dead in the patched build (bank $6D entry 2). |
+| FX1 (S71) "roster lists + canonicalizer map -> wMonList $D001" (bank $12 sites) + B7 `LibScanByFamily` "Out: $C0D8" | BUG (S104 r3, user-reported freeze) | The library writer kept $C0D8 while FX1 moved its bank-$12 readers to wMonList: every tab showed the roster list, lookups opened species = list index, an unseen id froze the text engine. Writer now wMonList (KEY_LESSONS S104 r3). |
+| bank_073 CF3SnapXfer header / MONSTER_DATA FX1 "snapshot R4 dual-region": the 28 lazy tile bytes in the 94th chunk make the restore "a proven no-op" | WRONG (S104 r4, user-reported save wipe; PyBoy-reproduced on S103 and S104 builds) | The commit runs before SaveGameState's tile block, so bank 1 holds the previous save's row; the restore broke checksum v3 → save lost on the next boot, top row wrong after CONTINUE. Restore now stops at $BCC7 (KEY_LESSONS S104 r4). |
+
+## S105 addendum (2026-09-30; purge of the POC content, ROADMAP P3.9b)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| TOOLS_AND_DATA "Making a sprite swap PERMANENT": "The S23 hand-off left the patched build CLEAN — the clam swap is a reproducible example … NOT baked in" | WRONG (whole-ROM diff) | The S21 in-place swap `patches/bank_036.asm` (entry 39 = Dracky's `$3627` → `ClamBattleSprite`) was in EVERY patched build 2026-06-19 → S105; the S103 purge audit missed it too. Deleted S105 (bank $36 vanilla; PyBoy battle A/B). |
+| MONSTER_DATA follower section (S34): "layout level-1: write the species' `$11:$407f + (species-$80)*2` slot (e.g. `$413f` for 224) … part of the overshoot, not a free slot" | HARMFUL | `$413F` = the attr bytes of ChopClown (146) / Grendal (147) (`FollowerAttrTable11` follows the 87-entry level-1 table); measured OAM `$A4` / `$41` in every build S34-S104. S105: nothing is written there; `NewAttrHandler` redirects HRAM `$C7` to a donor's index. |
+| ROADMAP P3.9b (S103 audit) list of leaking POC content | INCOMPLETE | + the Dracky Clam and the ChopClown / Grendal attr overwrite (found by the S105 diff). |
+| BATTLE_SKILL_SYSTEM §14 / PROJECT_COMPILER S73: Anchor's arming "works in any physical room" | TRUE ONLY FOR THE EXAMPLE PROJECT | It armed room `$71` of the example; in a project without that room (the user's) the cast soft-locked the game (PyBoy S105). Now script type `$FF` = built-in skill scripts in every build. |
+| editor2 gamedata `fam_code` "(effective family byte) → $F0-$FA" | WRONG (off by one) | It returned None for family 10 (`f <= 9`), so Spirit parents escaped the shadow checks; `f <= 10` S105. |
+| `extracted/monster_npc_sprites.json` (S101 census) species list = "every species" | PROJECT-SPECIFIC | Captured on the pre-S105 example build, so its id 224 is that project's Gorbunok; the editor now takes ids ≥ 224 only from the project's `custom.species`. |
+| disassembly bank_011 `$407F-$4183` (240 lines of `add h` / `ld b, c` …) | DATA DECODED AS CODE | `FollowerLayoutL1Table11` (87 dw) + `FollowerAttrTable11` (87 db), both trees; `jr_011_4132` / `jr_011_4176` kept (referenced from the data-as-code after `$4184`); `ld de, $407f` ×2 / `ld hl, $412d` use the labels. |
+| patches/bank_041.asm `SpellUseText_11` (B9 S28, commit `e97b6da`: "dead tail" `$7E06-$7E15` zeroed for the Spirit icon block) | WRONG — LIVE TEXT | Bytes `52 51 F7 F2 4A 4C 4B 50 51 42 4F 5F F1 F7 F0 00` are the end of spell-use message 11 ("…knocked out monster!" + wait/page/end), pointed to by SpellUseTextPtrTable[11]. The message ran into zeros (text id $00 …) in every build since S28. Restored S105 G3; test_compiler --rom checks the original bytes. |
+| tools/map_species_slots.py `N6_GATES` ("clears 6 bytes @ $DA82 for ids … 221, 223"; "special-cases id 221") | MISLABELED | All four ladders test a SKILL id (`$db8a` / `GetPresentId`), as MONSTER_DATA N6 (S31) already says — ids 221-223 are clean new-species ids (S105 G3). |
+| MONSTER_DATA "Default nickname" row / "`$4739` overshoot bound" (`cp $e0`, id ≥ 224) and every "id ≥ 224" fork note | SUPERSEDED S105 G3 | All forks gate on id ≥ 221 (19 ids 221-239); the nickname base is `$7D39`. |
+| PROJECT_COMPILER §2.21 (S105 first build) "Capacity 1 … banks $06/$07/$0B/$59 have zero bytes after the one entry" | SUPERSEDED S105 G3 | True of the table design; the forks now compute the gfx-ID (no tables), capacity 19. |
+
+## S106 addendum (2026-10-01; the Monsters tab, ROADMAP P3.10 part 1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| MONSTER_DATA sprite section (S22): "Back-refs index a shared VRAM tile pool pre-loaded before the per-monster stream, so a single stream does NOT decode standalone"; "Pool dependency … extracted sprites render correctly (Slime/Dracky/Anteater verified)"; dwm/sprite_codec docstrings | WRONG (PyBoy, all 442 streams) | No pool: a copy source at/after the payload end wraps 4 KB down and reads 0 below the destination, per byte (`TextMakeVisible`). The Python decoder zeroed whole copies → 213 battle + 49 walking streams garbled in `extracted/monster_sprites.json` S22-S105. Fixed + regenerated; `tools/census_lz_decode.py`. |
+| sprite_codec `MAX_COPY = 0xFF + 0x13` / `cnt = byte + 0x13` | WRONG (same class as S100 r3) | The game's copy count is 8-bit (0 = 256); encoder capped at 256 (no production encode used >256: all literal). |
+| tools/extract_monster_follower_layouts.py `ATTR_BASE = 0x417F` for both banks → `monster_follower_layouts.json` `attr_base` of species 128-214 | WRONG | bank $11's attr table is `$412D` (MONSTER_DATA already said so since S25's fix note); the JSON held level-2 layout bytes. Regenerated: every collectible species 0-7. |
+| MONSTER_DATA "Monster Info Table" resistances "0=weak, 1=some resist, 2=normal, 3=immune" (+ the Resistance Type Ordering line) | WRONG | Level 0 = full effect, 1 = some (×0.85 spells), 2 = strong (×0.5), 3 = immune (BATTLE_SKILL_SYSTEM §15 ladders). |
+| extracted/monster_npc_sprites (S101 census) = "each species as the game draws it" | BUILD-SPECIFIC | ChopClown (146) / Grendal (147) were captured with the pre-S105 overwritten attrs; the editor now draws thumbnails with `sprite_render` (== the census for the other 213). |
+| MONSTER_DATA battle palette "c1 = $6bff backdrop(forced) … only c0/c2 vary"; the S35 Gorbunok spec ("leaving idx0/idx2/idx3 for body colours (3 usable)") | INCOMPLETE (S106 r2) | c1 is ALSO a body colour: all 215 original poses draw white / cream parts with it — 4 usable colours. |
+
+
+## S107 addendum (2026-10-01; new art for the original monsters + walking layouts + family icons, ROADMAP P3.10 parts 2a / 2b / 2c)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| MONSTER_DATA G2 note, patches/bank_000.asm S105 comment, editor2/core/species.py `VANILLA_BATTLE_GFX`: `$320F` = the "Durran" placeholder of ids 216-255 | WRONG (ROM) | `$320F` is **Darkdrium's** (214) battle gfx-ID; 216-220 (and 221-255 unused) alias it. Durran (154) = `$3423`. Comments corrected; the bytes were always right. |
+| patches/bank_00b.asm `RoomScreenPtrTable: ; $4974 — screen index lookup table` (S14) | STALE LABEL | It sat mid-way in the follower gfx-ID copy and nothing referenced it any more (S14 repointed the real reader); removed with the S107 re-section (`FollowerGfxTable0B`). In the patched build that table is at `$4914`, not `$4974`. |
+| MONSTER_DATA "8 follower gfx-ID copies" (S25): "repoint ALL 8" | CONFIRMED + SHARPENED (ROM) | Exactly 8 copies (signature search), byte-identical for species 0-214; from 215 on each is followed by unrelated bytes. Battle art has ONE table and 13 readers; battle palettes ONE table, one reader. |
+| disassembly banks $06/$07/$09/$0B/$12/$18/$59 (follower tables as `nop` / `cpl` / `ld b, b` …) and bank $10 `$407F-$41FE` | DATA DECODED AS CODE | Labeled `dw` / `db` rows in both trees (S107); 48 fake labels in bank $0B's copy kept at their offsets (referenced from data-as-code), 1 in bank $10 (`jr_010_41f1`). |
+| EDITOR_DESIGN §5.2 / PROJECT_STATE Open defects "custom-sprite background white vs cream" | RESOLVED | User on the S106 r2 ROM: "background colour is perfect". |
+| S107 2a check (PROJECT_STATE S107 block): the re-arted parent icon "alternates" (2 OAM states) | INCOMPLETE (user) | The two states were layout 0's flip on / off — the same picture for a symmetric monster; user: "STILL. Vanilla behaviour is MOVING". 2b packs real B frames (KEY_LESSONS S107 2b). |
+| MONSTER_DATA follower section / extract_monster_follower_layouts "155 distinct layouts" | CONFIRMED + SHARPENED (ROM) | 155 as SETS of entries per frame (now incl. Y-flip; count unchanged); 175 if entry order counts (matters where entries overlap: 137 of 930 frames), 188 as raw bytes (attr bit4 = DMG palette). |
+| editor2/core/sprite_render.py `follower_frames` (S106): later entries drawn on top; Y-flip only from the species attr | WRONG (hardware rule) | CGB: the lower OAM index (entry 0) wins; one ROM entry (species 139 right_B) has its own Y-flip. Fixed S107. |
+| MONSTER_DATA / PROJECT_COMPILER §2.21 (S105): new species walk "like a bank-$11 species (128-214)" via a `$C7` donor rewrite | SUPERSEDED (S107 2b) | `FollowerLayoutBase11` + `NewFollowerL1Table`: any of the 155 layouts; the handler no longer touches `$C7`. |
+| PROJECT_STATE canonical "Reassignment … (same-bank only)" | SHARPENED (S107 2b) | Still true of a level-2 pointer; the editor copies a layout of the other bank into the species' bank's zero tail. |
+| BREEDING_SYSTEM "Spirit — the 11th family (S104)": the audit of every reader indexed by family | INCOMPLETE (ROM search S107 2c) | Two more unclamped icon tables: `$07:$62AB` (JOURNAL saved-party line) and `$0A:$6013` (twin) — a saved Spirit member stalled the JOURNAL (PyBoy). Forked S107; table "Family icons as project data". |
+| disassembly bank_007 `$62AB` / bank_00a `$6013` (`inc bc / ld l,$04 …`) | DATA DECODED AS CODE | `SavedPartyFamilyIconTable07` / `0A` (10 dw) + `Fld_62bf` / `FldA_6027` (the code after them, called by raw address), both trees (S107). |
+| editor2/app/families_tab.py `SHADES` (S104): icon shade colours yellow / cream / brown / black | WRONG (PyBoy S107) | 1 = cream, 3 = black everywhere; 0 / 2 follow the screen: greens on the INFO page, orange / gold in the continue box. Fixed in the editor previews. |
+
+
+## S108 addendum (2026-10-01; renaming the original monsters + every dialogue text, ROADMAP P3.10 part 3)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| `extracted/text_id_map.json` + `tools/dump_text_id_map.py` (TOOLS_AND_DATA, TEXT_SYSTEM "Data Files"): "2,061 entries … structurally identical (id/bank/index/addr)", "exact bank/index" | WRONG (PyBoy S108) | The id → (bank, address) map was modelled (pointer table read at a fixed $400B; bank $42's mode-0 table starts at $4009, so every bank-$42 id was one slot late; a guessed per-page index rule; no overflow banks). Measured by stub-calling `TextBankDispatch` for all 2,560 ids: **62 of 2,061 entries matched**. Rebuilt from the measured `extracted/dialogue.json` (`tools/dump_dialogue.py`). |
+| disassembly/bank_00c-00f.asm `; Text $XXXX: "…"` previews (6,520, from gen_script_banks.py) and bank_047 `TextStr_47_<addr>: ; id …` lists (70, S43 T1) | WRONG (inherited from the map) | Refreshed from dialogue.json (`tools/refresh_script_text_comments.py`); previews now carry the measured `$bank:$addr`. Bank $47's T1 region also misses its first string `$40C1` (id $03C8) — still fake code (PROJECT_STATE open defects). |
+| TEXT_SYSTEM "Text ID → Bank Routing": ids → banks $42-$4E only ("All decoded in text_id_map.json"); ARCHITECTURE "$42-$4E Text handler banks" | INCOMPLETE (PyBoy S108) | Each corpus bank's entry 0 forwards the upper part of its index range to an overflow bank ($42/$43→$1A, $44/$46→$1B, $45/$48→$1F, $47→$21, $49→$18, $4A→$22, $4B→$3F, $4E→$4F): 1,177 of the 2,560 ids live in banks $18 $1A $1B $1F $21 $22 $3F $4F. |
+| TEXT_SYSTEM Control Codes `$E8` = "PAUSE — brief pause", `$E9` = "NUM — insert number" | WRONG (handler code $56:$451F / $4554) | `$E8` takes 2 bytes and sets the draw position; `$E9` takes 1 byte and plays a sound effect. Table corrected in place. |
+| disassembly/patches bank_041 `FamilyCodePtrTable` / `FamilyCode_NNN_XX` ("2-letter family abbreviation per monster ID") | MISLEADING LABEL (already flagged S33) → RENAMED | `MonsterNickPtrTable` / `MonsterNick_NNN_XX`: the species' default nickname — the JOIN naming screen pre-fills the nickname with it (PyBoy S108: "SL" for a Slime). |
+| BREEDING_SYSTEM S104 table "Naming-screen default name (bank $09 jr_009_68aa, text mode 3)"; bank_009 comment "Default NAME offered for a monster" | WRONG ROLE (PyBoy + code S108) | The PRE-FILL is mode 7 (`FuncFld9_621f`, $C8F5); mode 3 (`LoadFld9_688e`) is the random family name given when the name is still blank at END. Corrected in place (both trees). |
+| MONSTER_DATA overshoot registry row "Default nickname + 'take X with you'" (S32) | SHARPENED (PyBoy S108) | Mode 7 is the naming screen's pre-fill; "Want to take GOOB with you?" prints the nickname actually chosen. |
+| disassembly bank_04d `$53D3-$7719` (`ld c, h / ld d, e …`) | DATA DECODED AS CODE | 215 `MonsterDesc_NNN_<Name>` db rows + `db $00` (the fake `ldh a, [rP1]` fused the last terminator with the zero tail), mode-1 pointer words → labels, both trees (`tools/resection_monster_desc.py`). |
+| PROJECT_COMPILER §2.21 / species.py: new-species names "1-9 letters A-Z / a-z" | SUPERSEDED (S108) | One name encoder for all monsters: letters, digits, space, `' , . ! ? - &`. |
+
+## S109 addendum (2026-10-01; the Arena editor, ROADMAP P3.10b)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROM0 `AddGold` $2424 (label; DATA_STRUCTURES "Gold": "Add CDE to wCurrGoldLo") | WRONG (code + PyBoy S109) | It SUBTRACTS: C:D:E := E:H:L, then `CompareGoldHL` does wCurrGold −= C:D:E with a floor of 0 (arena fee 3800 → 3750). Label kept (callers), comment above it in both trees; DATA_STRUCTURES row corrected in place. |
+| BANK04_SCRIPT_ENGINE / DATA_STRUCTURES opcode `$04` "GameActionDispatch … 0 = shop, others = gate events"; the bank $09 entry 0 handler (mgbdis `label9_4005`, "screen effects") | INCOMPLETE (S109) | `$C8EF` indexes bank $09's `ScreenEffectTable09` ($09:$4009, 16 words); type 4 = `ArenaClassMenu` (the arena class-registration menu). Both names describe the same path; the table is now labelled with per-type comments. |
+| disassembly bank_009 $5B64-$5EA4 (mgbdis code: `Jump_009_5c0a`, `SetFld9_5c28` …) | DATA DECODED AS CODE (in part) | Re-sectioned both trees (`tools/resection_arena_menu.py`): the 5-state outer + 9-state inner machines, `ArenaClassLetterTable`, `ArenaClassFeeTable` (0 10 50 100 500 1000 5000 10000), the two cursor tables; helpers renamed `ArenaMenu…`. |
+| disassembly bank_004 / bank_050 `ld hl, $5e22` / `ld hl, $6778` (raw addresses into data) | RAW POINTER → LABEL | `ld hl, ArenaMasterSpriteTable` / `ArenaMasterSpriteTable50` (same bytes; the compiler regions own the tables). |
+
+## S110 addendum (2026-10-02; the Skills tab, ROADMAP P3.11)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BATTLE_SKILL_SYSTEM §7 / §10 / bank_054 comment: `SkillMagnitudeBySide` = "dispatch entry 5, `$535F`" | WRONG (S110 reader census) | The side-selected power read is entry 3 `$52C7` (`SkillPowerBySide`); entry 4 `$5313` is a twin with no caller; entry 5 `$535F` is the battle ITEM target lookup (+10, +2). Dispatch rows relabelled, both trees. |
+| BATTLE_SKILL_SYSTEM §7: +5 "status_id … groups by effect (Sleep fam=$08 …)" | WRONG | +5 is read only by the AI (bank $57): a resistance slot 1-27 the AI assumes; the damage element comes from the handler. |
+| §7: +0 "effect_class … HIGH"; +7/+8/+9 "presentation / anim / cast-behaviour bitfield (MED)"; +10 "small class flag (LOW)" | WRONG / INCOMPLETE | +0 is NOT READ; every read bit of +7/+8/+9 is named (§7 table: breath / dance / spell seals, reflects, redirects, crits, dodge, …); +7 b2, +8 b3, +9 b6/b7 and +1's low nibble are NOT READ; +10 is items only (1 = not usable in battle). |
+| PROJECT_COMPILER §2.20: record +4 `mp_byte` "reader untraced" + the editor warning | WRONG | +4 is the BATTLE MP cost (menu afford $50, act-time afford + deduct $53, AI veto $57, TakeMagic). `mp` now writes it; the warning is retired. |
+| BATTLE_SKILL_SYSTEM §12.3 table: the bank-$55 sound table "indexed at `$55:$4067`" | WRONG ADDRESS | The one reader is `$55:$4061` (`ld a, [$db8a]`). |
+| EDITOR_DESIGN Appendix (S74): "GetAnimPresentId"; "MP … menu shows one, battle spends the other" | WRONG NAME / INCOMPLETE | `GetPresentId`; the battle menu also checks the +4 copy — only the FIELD menu reads `$07`. |
+| patches/bank_041.asm `SkillName_215_BugCut: db "BugCut", $F0, $F0, $F0, $F0` (S44) | HIDDEN HAND EDIT | Restored to `SkillName_215_Sheldodge`; the rename is example-project data (`gamedata.skills.215.name`). |
+| S74 note "HealMore's look stalls" (as a rule for looks) | NOT REPRODUCED for stock skills | 1,554 PyBoy battles: no donor stalls a stock borrower (BATTLE_SKILL_SYSTEM §11.8). The note belongs to the custom-skill path. |
+| disassembly bank_056 $4E4C-$6866 (mgbdis code over the SKIL texts, the mode table, the pointer table) | DATA DECODED AS CODE | Re-sectioned both trees (`tools/resection_skill_desc.py`): `SkillDesc_NNN_<Name>` / `_Blank` / `_None` strings, `SkillDescModeTable` $664B, `SkillDebugTextPtrs` $664F (12 debug strings), `SkillDescPtrTable` $6667 (256 dw); `ld de, $664b` by label. |
+
+## S111 addendum (2026-10-02; the custom skills as project data, ROADMAP P3.11c / P3.11d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| patches/bank_055.asm (S110) `SfxPresentId`: "custom ids keep their id" (presented as harmless) | WRONG BEHAVIOUR (measured S111) | Custom ids read past the 222-B SFX tables (next table's rows; from the last table, code). Now `CustomSfxTable[id-$DE]`, default $09 = the party-side sounds they had (BATTLE_SKILL_SYSTEM §13.2 / §13.9). |
+| BATTLE_SKILL_SYSTEM §13.4 open follow-up (a) "custom-id skill-name insert" | CLOSED S111 | bank $50 `SaveBtl_5ad2` returns ids ≥ $DE unchanged (it read code: "CleanCut"). |
+| disassembly bank_050 $5AE1-$5AE4 (mgbdis `add hl,de / and c / ld a,[hl+] / ld [hl],b`) | DATA DECODED AS CODE | `SkillNameSubst_5ae1: db $19, $a1, $2a, $70` (the names shown for LIFE / RUN / IRONIZE / Ahhh); `ld hl, $5ae1` by label. |
+| ROADMAP P3.11c "Today the custom skills ($DE Scorch / $DF Smite …) … confirm the full list" | SETTLED S111 | $DE/$DF are retired (refused; names dropped); the built-ins are $E0-$E9; $EA-$FE are new-skill slots. |
+| PROJECT_STATE canonical "Skill text + looks (S110)": the custom skills' texts "[S73] … `SkillDescPtr_E0..E9`" (TEXT_SYSTEM row) | STALE | Compiler regions `gd_custom_skill_name_ptrs` / `_names` ($41) and `gd_custom_skill_desc_ptrs` / `_desc` ($56), rows 222-254 (TEXT_SYSTEM "Skill text blocks" row updated). |
+| BATTLE_SKILL_SYSTEM §15.3 element grid as "the element of a skill" | INCOMPLETE | Measured for all 222 (`extracted/skill_element_census.json`, 38 elemental); the grid stands. An element is the handler's choice of resistance byte, now overridable per skill (§15.3 "Element override (S111)"). |
+| patches/bank_058.asm `DispatchBoundsStub` (S84): "$DE-$E3 = the vanilla slack rows of their own ids … a harmless target write" | WRONG for MagicBurn / Tame ×3 (measured S111b) | Under the act-time AI the self row `$6367` aimed them at the caster's own side. Now Firebal's / Blaze's rows (BATTLE_SKILL_SYSTEM §13.9 "AI target rows"). Harmless only for the retired $DE/$DF, Anchor (rewritten to Attack) and unused ids. |
+| BATTLE_SKILL_SYSTEM §13 / bank_072 header: MagicBurn "spends HALF current MP; deals that exact amount to ALL foes" | INCOMPLETE (measured S111b) | The handler runs per target: each foe in turn costs half of what is LEFT and takes that amount (then the MegaMagic-context ladder). Behaviour unchanged; the share is data now. |
+
+## S112 addendum (2026-10-02; skill animation editing, ROADMAP P3.11e)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BATTLE_SKILL_SYSTEM §11.0 / §11.4: three layers, the `$56ed`/`$57d5` → `$da81` byte = "sound + screen flash" (layer 2) | WRONG (measured S112) | It is the ANIMATION NUMBER: frames + timeline (whose `$FD` cues are the sounds) + tiles + colours; the routine index picks motion / screen effect / nothing (§11.9; banners added to §11 / §11.4). |
+| DOC_AUDIT #15 (above): the bank $5F anim tables sit in a contested "Map*_Script" region; converting needs the map-script accessors reversed first | WRONG PREMISE (S112) | The `Map*_Script*` labels at those ADDRESSES are bank **$0F**'s (the map-script bank: `Map4C_ScriptPtrTable` $0F, `Map5A_Script02/03` $0F) — bank $5F's file carried none (checked at HEAD before S112), so nothing contested the region; the tables are labelled `db` / `dw` since S112 (`tools/resection_battle_anims.py`, both trees, byte-perfect; §11.5 note). |
+| disassembly bank_050 header: "`$DA80` master-intro loader state" | WRONG NAME | The battle-animation loader state (1 = decode animation [$DA81]'s tiles + palette, then 2); header comment corrected in both trees. |
+| PROJECT_COMPILER §2.26 table: `StockPresentTable` `$5F:$7EEB` | WRONG ADDRESS | `$5F:$7EDA` (S111 and S112 .sym); corrected in place. |
+| BATTLE_SKILL_SYSTEM §11.2 per-bank table shape "`$5d`/`$5e` begin with a run of repeated DEFAULT pointers … counts verified-decodable, not proven-exhaustive" | SETTLED (S112) | Each frame bank's `AnimFrameTable5x` ($4071) = 32 dw per animation of its range; unused slots point at an empty `$80` frame; slot $1F = the blank frame. Census: all 45 = the model. |
+| disassembly bank_05f `$61BC-$61ED` (mgbdis `rst $38 / jr … / ldh [$e0],a …`) | DATA DECODED AS CODE (the shade part) | `EffectDebugShadeTable` $61C1 (45 B, = `AnimObjShadeTable`) as `db`, `ld hl, $61c1` by label; the menu text before it is still mgbdis code (its `jr_05f_61xx` targets are kept). |
+
+## S113 addendum (2026-10-02; the Breeding tab, ROADMAP P3.12)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BREEDING_SYSTEM "A post-recipe mutation system (~1-5% RNG) at `$16:$44DA` can override the result" (+ the bank $16 header, ARCHITECTURE / EVENT_FLAGS "mutation flag", "precedence … → mutation") | WRONG (measured S113) | `$44DA` (`BreedRareMutation_Unreferenced`) has no caller (no call/jp in the ROM, not in the jump table; 0 executions in the census); `$D9E6` is never set. Corrected in BREEDING_SYSTEM + both bank $16 trees. |
+| bank $16 jump table "Entry 3: BreedingResolve alt (no mutation step)" | MISLEADING | Entry 3 = `BreedResolvePreview` (the Old Man's preview, bank $0A); the only difference is the `$44D0` flag-clear call. |
+| bank $16 header "Entry 2 … (scripts `dw $1602`)" (S113 first draft) / the `dw $1602` words in banks $0E/$0F | WRONG | Those words are `CompareRAM $D8E3` VALUES, not far calls; entry 2 has no far caller (entry 0 calls it). Corrected the same session. |
+| MONSTER_DATA FX1 "only index WRITERS changed ($15 …, $18 …, $0A …, $50 …, $14 …)" — implying every staging index writer was moved | INCOMPLETE (measured S113) | bank $16 `BreedCreateOffspring` still wrote $14/$15 to `$DA75/$DA76` → farm slots 20/21 (every egg +1, no + recipe; S71-S112). Fixed S113 ($28/$29); MONSTER_DATA FX1 note added. |
+| BREEDING_SYSTEM Plus Value "Read both parents' plus values from party struct offset `$CB23`" | INCOMPLETE | Via `GetMonsterDataPtr` with the slot numbers in `$DA75/$DA76`; link session uses the pedigree's plus only. |
+| ROADMAP Phase D "STILL PENDING … bank $16 breeding-determination internals" | DONE S113 | Annotated both trees (BREEDING_SYSTEM "The resolver as measured (S113)"). |
+| PROJECT_COMPILER §2.20 validators "a shadowed special append / override" | SUPERSEDED S113 | The special table is auto-ordered; the error is two rows with the same parents + min plus (§2.29). |
+
+## S114 addendum (2026-10-03; encounter lists, ROADMAP P3.13a)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| `extracted/encounters.json` (dump_encounters.py) floor ranges "Floors 1-3 / 4-6 / 7+" | WRONG (measured S114, 633 / 633 on the ORIGINAL ROM) | The breakpoint walk counts breakpoints ≤ the floor (the game's numbering): Gate of Villager list 1 = floors 1-2, list 2 = floors 3-4 (floor 5 is the boss). Ranges also ignored the floor count; only 4 of 5 slots were read; "weight" = the +20 max count; its gate-name list was out of order. Tool rewritten + data regenerated (TOOLS_AND_DATA S114). |
+| DATA_STRUCTURES / bank_001 `CalcEncounterPoolIdx` "returns the first entry whose sum exceeds the draw" | WRONG (measured S114) | First entry whose running sum is 100 or **≥** the draw; the draw is (wRNG2:wRNG1) mod 100. The first slot with a chance gets one point more (30/50/20 → 31/50/19). |
+| DATA_STRUCTURES Encounter Runtime Flow step 6 + KEY_LESSONS S11 "SetRandomEncounterCounter's only caller `label16_5b4e` … never seeds the counter when wInGateworld = 0" | WRONG (grep + measured S114) | The one caller is bank $16 entry 6 `label16_5fe4` (the call precedes its wInGateworld test), far-called by bank $0B Entry 0 at every room load — measured re-seeds in a custom room at entry and after each battle. Corrected in place. |
+| DATA_STRUCTURES step 3 "Non-gate default: 100×16/64 = 25 per step" | WRONG | wC8A9 = the list's rate code, reloaded by LoadNextDungeonFloor at every step (vanilla codes 2-4): 50-125 per step outside gates; measured 100 (code 3), 200 (code 7). |
+| bank_001 (both trees) `EncounterPoolData` banner "Header (10 bytes) / Weights / Unknown (usually 8 or 15)" | STALE (S103 decoded it) | Banner rewritten to the S103 field map (both trees, comments only). |
+| bank_016 `RandomEncounterCounterTable` comments "→ 1,100 steps" | WRONG UNIT | Counter units; steps = counter / the per-step drain (base × modifier / 64). Corrected (comments). |
+| bank_016 `EncounterRateData` "Per-gate-floor-threshold encounter rate parameters" | WRONG | Indexed by wMapID ×8 on gate maze floors (= the floor TYPE), three words by the player's tile row class $0C/$0D/$0E — the step's base rate. Corrected (comments). |
+| randomizer/romdata.py `Pool.weights` (+20) "0 = slot unusable" (and simulator/sweep_ttk weighting by it) | WRONG SEMANTICS (S103) — **FIXED S131** (S131 addendum) | +20 = the slot's max count; the chance is the +5..+9 code. Not changed (the randomizer is shipped); ROADMAP P3.15 note: the Balance service uses `encounters_doc.enc_list_threat_rows` (real chances). |
+| PROJECT_STATE Bank allocation "Unallocated: $75–$77, $79–$7A, $7C" | STALE since S107 | $7A / $7C are art banks (S107); S114 takes $76. Unallocated now $75 (next song bank), $77, $79 + reserved $7F. |
+| PYBOY_DEBUGGING S100 "staircase kick: wCurrentFloor = floor − 2 (entry 5 increments)" | CONTEXT-DEPENDENT (measured S114) | From a maze floor (wInGateworld 1) the kick did not increment: poke floor − 1. The S100 value was measured from special rooms. |
+| PROJECT_COMPILER §1 "compat build == hand-staged tree" (property restored S63, re-verified S64) | DRIFTED (found S114) | The committed `patches/bank_041.asm` regions differed from the example's compiled output (name pointer bytes, $41:$46E9-$4735): the verifier's patched build was not the pin. Regenerated S114 (the other region files differ from the compile in comments only — byte-identical). The CI box (test_compiler --rom in CI) would catch it. |
+| tools/audit_mapid_range.py `--selftest` | FAILING since S100 (found S114) | 8 sites added S100-S102 were never adjudicated (+ S114's EncResolve); adjudicated S114, PASS. |
+
+## S115 addendum (2026-10-03; new gates, ROADMAP NG1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP ARC NG facts "every gate-number reader that indexes `GateFloorDataTable` … (bank $16 `jr_016_5b72`, `jr_016_5be1`, …)" | CONFIRMED + CLOSED (census S115) | Exactly two readers; no script reads `$C935`; every other `wGateID` user is 8-bit and table-free (GATE_GENERATION §7.8). |
+| PROJECT_COMPILER §2.17 validators "gate outside 0-31 = ERROR"; gates.py "gate: 0-31"; help 60_gates.md "the 32 vanilla gates" | SUPERSEDED S115 | 0-95: 32-95 are the project's NEW gates (`copy_of` + `name`, §2.31). Updated in place. |
+| bank_076_head.asm / encounters.py "Gate numbers past the 32 vanilla gates give 0" (S114) | SUPERSEDED S115 | A new gate walks its source gate's rule (`NewGateSource`); undefined numbers still 0. |
+| GATE_GENERATION §1 "byte 7 … selects … the floor's visual tier" vs §7.7 "byte 7 = depth tier (only reader: the bank $01 item tier)" | UNRESOLVED (not measured S115) | The two sections disagree on whether byte 7 reaches the tileset; S115 copies byte 7 from the source gate, so new gates are unaffected. Left for the private-floor-types residual (ROADMAP NG1). |
+| PYBOY_DEBUGGING S114 "the staircase kick did NOT increment wCurrentFloor: poke floor − 1 for the floor you want" | CONTRADICTED as worded (measured S115, two kicks from maze floors) | The kick added one: poke 1 → wCurrentFloor 2, poke 2 → 3 (= the game's floor − 2). Kept the S114 line, the S115 measurement added beside it. |
+
+
+## S116 addendum (2026-10-03; the Music tab, ROADMAP P3.13b)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| SOUND_SYSTEM §1 "consume wBGM ($C8B4)" | WRONG (game.sym, S116) | wBGM = **$C8B7**, wSoundEffect $C8B8, wCurrPlayingBGM $C8B5. Corrected in place. |
+| SOUND_SYSTEM §1 flow "VBlankProcessAudio -> ProcessBGMQueue … SaveBankAndAudioState per-frame driver" (order implied queue first) | ORDER WRONG + INCOMPLETE (measured S116) | The driver runs first, then the queue; the driver also runs from VBlankReentry on lag frames (no queue pass). |
+| SOUND_SYSTEM §8 / PROJECT_COMPILER §2.9 "every BGM is normalized to the exact pulse1/pulse2/wave trio … extra channels dropped" | SUPERSEDED S116 | A song keeps its 1-6 channels; the rewritten InitBGM starts its own count (CustomBGMChanTable). |
+| PROJECT_COMPILER §6 "Custom music. Blocked on ROADMAP Arc 3 M1–M3 … Until then custom.music hard-errors." | STALE since S64 | Built S64 / S116 (struck through in place). |
+| EDITOR_DESIGN §5.6 / gap G-I "audition in PyBoy" | SUPERSEDED S116 | The editor runs the game's own sequencer on its SM83 interpreter (SOUND_SYSTEM §9) — no emulator needed on the user's Mac. |
+| ROADMAP Phase 1 "Custom music — parked; sound engine unexplored" | STALE since S64 | Checked (Arc 3 + P3.13b). |
+| bank_000 (both trees) `$3466` "nop / ld bc,$1c40 / ld hl,$4001 / dec e / scf / AudioSetBC1E40: ld bc,$1e40 / rst $38" | MISASSEMBLED DATA | The vanilla master sound table: 3 rows + $FF. Re-sectioned as `AudioMasterTable` (db), clean build byte-perfect; the unreferenced fake label `AudioSetBC1E40` is gone. |
+| known_RAM_map / SOUND_SYSTEM "battle music" (absent) | GAP CLOSED S116 | bank $51 LoadBattle: $27 for every battle, $2B in map $5D when wArenaStarryBattle == 2 (the Starry Night final); the battle-start jingle $4B / $4D comes first (bank $13 label13_7370). A conversation battle runs as $DA09 = 3 (a "boss" battle) — measured. |
+
+## S117 addendum (2026-10-03; extended flags, gate swirls ROADMAP NG2, shops ROADMAP P3.13c)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| bank_003 (both trees) `SpriteFrameDataTable` ($03:$71DA, mgbdis code; DATA_STRUCTURES "new labels created" S14) | MISLABELED + MISASSEMBLED DATA | The item records `ItemInfoTable` (44 × 12 B; +1/+2 = the buy price — == the FAQ's prices, the shops read them; +$0B bit 2 keep-on-defeat as SIDEQUEST_MAP already said). Re-sectioned as `db` rows (clean build byte-perfect; `tools/resection_shops.py`); DATA_STRUCTURES annotated in place. |
+| BANK04_SCRIPT_ENGINE / DATA_STRUCTURES opcode `$04` "0 = shop" | CONFIRMED + COMPLETED (S117) | Every vanilla shopkeeper is `text $0680 / $FF04 $0000 $0680 / text $0682 / end`; the second word is the text base (`$C8F0/1`). The list is chosen by the ROOM (map `$50` → gate shop, else `wScreenIndex` 0/2/4/other) — DATA_STRUCTURES "Shops (S117)". bank $09 mgbdis `LoadFld9_45e5` / `SetFld9_4875` / `_47cd` / `_480a` / `_4bc8` renamed (ScreenEffectSay, ShopCountItems, ShopDrawNames, ShopDrawPrices, ShopSellPrice) and the shop tables re-sectioned (`tools/resection_shops_09.py`). |
+| bank_009 `ShopBuyStockFill` (as decoded in the clean tree) "cp $05 → RareItemShopInventory" | INCOMPLETE reading | The `cp $05 / jr z` and the fall-through reach the same label: EVERY screen other than 0 / 2 / 4 gets the Rare item shop's list. |
+| EVENT_FLAGS "There are only 3 call sites to SetEventFlag" | TRUE for the original; patched builds +1 | bank $76 entry 2 `GateBossWin` (S117). Noted in EVENT_FLAGS "Extended flags (S117)". |
+| ARCHITECTURE / PROJECT_STATE "SRAM bank 3 free" | SUPERSEDED S117 | Bank 3 = the extended flags "X1" ($A000 magic, $A010 256 B). |
+| ROOM_DATA_FORMAT / help: a gate portal's swirl (undocumented) | GAP CLOSED S117 (measured) | Still swirl = BG art (room $24 sheet $20-$23, palette 3); the spinning swirl = NPC sprite `$4D`, script `$FF`, removed by the boss script's step-counter advance (room $24 `$D969`), never by a flag test; the portal never checks it (GATE_GENERATION §7.9). |
+| PROJECT_COMPILER §2.31 "Entrance conditions (NG2) are plain exit rows / room states today" | SUPERSEDED S117 (the swirl part) | §2.32: swirls follow the entered gate's cleared flag; the portal stays a plain exit (as the game's). Updated in place. |
+| ROOM_DATA_FORMAT "8 NPC entries per (screen, step-state)" read as "8 NPCs are visible" | INCOMPLETE (S117b, user report + OAM model) | 8 is the list / slot ceiling; what the hardware DRAWS with the player + 3 monsters is ~6 per screen (40 objects) and 1 per row while the party walks along it (10 objects per line) — ROOM_DATA_FORMAT "Sprite limits (S117b)". |
+| bank_009 `LoadFld9_40fa` (mgbdis name, no comment) | DECODED S117b | The bank $09 screen push: `$C500` (18 × 32: room `$C300` + HUD `$C1C0` + the windows) → the BG map at `[$C909]`, tiles only. Every bank $09 screen ends in it (DATA_STRUCTURES "Shops (S117)", "The shop screens"). |
+
+## S118 addendum (2026-10-04; the Cutscenes tab, ROADMAP P3.8 part A)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE / CUSTOM_CUTSCENES / scriptgen: `$22` "begin_walk", REQUIRED before NPC walks | WRONG (handler + PyBoy, S118) | `$22 walk_fast` only sets `$D8D7` bit 6: the movement programs run twice a frame (double speed). Walks work without it. |
+| BANK04_SCRIPT_ENGINE catalog `$4C` "RestoreBGM" | WRONG (S118) | `$4C wait_dpad` re-runs itself until a D-pad direction is pressed (the bedroom wake-up); `$4B` restores the BGM. |
+| catalog `$21` "TriggerBattle2" / "SkipScriptData2" | WRONG (S118) | `$21` = play a sound effect (`$C8B8`). |
+| catalog `$3C` / `$3D` (unnamed / misc) | DECODED S118 | The next text box opens at the bottom / top (`$D8D8` bits 0 / 1, read by bank $06). |
+| script_param_counts.json / BANK04 params: `$24` / `$61` = 0 | WRONG (S96 tracer stopped at `rst $10`) | 1 each — read by the script bank's entry 1 / 2 (`ScriptBank0XDrawTiles` / `DrawAttrs`). Every decode already consistent (no project / ROM byte change). |
+| `$0A` / `$0B` "NPC walk X / Y" queued like `$1A/$1B` | INCOMPLETE (S118) | `$0A/$0B` (and `$10/$11`) are WAITED walks (one actor, `$D8D7` bit 3, script blocks); `$1A/$1B/$1C` queue into the movement buffers and the script goes on. |
+| BANK04 / known_RAM_map `$D8D7` bits 3/4/6 "NPC_walk / pos_update" | WRONG (S118) | bit 3 waited walk, bit 4 movement programs queued, bit 5 lock facing, bit 6 walk_fast — BANK04_SCRIPT_ENGINE "Script State Flags". |
+| bank_004 handler labels `label4_XXXX`, `OpcodeHandler*`, `TextOpcodeCheck1-3`, `TextFollowPointer`, `ScriptEndCheck`, `HramScr_4745`, `LoadScr_43ec` … | RENAMED S118 (both trees, byte-perfect) | `ScriptCmdNN_<name>`, `MoveProgNN_*` / `PlayerProgNN_*`, `FacePlayerDir1-3`, `WalkToXFrom`, `FacePlayerTail`, `MoveProgCurveStep`, `MoveProgramsAll`, `PlayerMoveProgram`, `NpcMoveProgram`. |
+| `$47-$4A` npc_buffer_write / npc_hide / npc_show (pre-S101 names, still in older cloned-room decodes) | SUPERSEDED (S101, confirmed S118) | face up / down / left / right for actor n. |
+| MONSTER_DATA "Script give $29" (`$04:$5C14`) / "Script give $28" (`$04:$5F9A`); map_monster_walkers roles | WRONG OPCODE NUMBERS (S118, the bank $04 dispatch table) | `$5C14` = opcode **`$18`** `give_monster` (joins the party if < 3), `$5F9A` = **`$29`** `add_monster` (storage); `$28` = the storage-full test. Corrected in place; `extracted/monster_walkers.json` regenerated (+ the S118 label names, line numbers). |
+| extracted/mapid_range_audit.json / `audit_mapid_range.py --selftest` | FAILS since S117 (not run by the verifier) | the S117 shop code (bank $09 `ShopBuyStockFill` / `ShopSellPrice`, bank $76 / $77 templates) loads wMapID at 11 unadjudicated sites; the S118 bank $04 renames are adjudicated (keys updated, JSON regenerated). Backlog: ROADMAP "audit_mapid_range re-adjudication". |
+| BANK04 / EDITOR_DESIGN / ROADMAP "Census S118b … 419 ended, 1 step on an empty NPC slot (`$07` @12, the arena's cast)" | WRONG (S118d, user report) | `$07` @12 crash-RESET the game (set up on screen 0); "ended" counted the reset. Fixed + the census checks resets (BANK04 "Census S118d"). |
+| extracted/npc_names.json `sprite_names` (used as NPC names by the S118 storyboard) | NOT GAME DATA (S118g, user report) | hand guesses per sprite id: `$0B` "Watabou / generic helper" sits on 215 NPCs, `$08` "Terry / Player sprite" is the GreatTree old man. The storyboard now names an NPC only by its own text's speaker. |
+| dwm/map_names.py "human-verified" room names | LABELS (S118g) | typed by people, not in the ROM; the Cutscenes header now adds how the game's exit tables / scripts enter each room. |
+| BANK04 "Script variables (S118f)" `$C8F2` "= the new monster's name" | WRONG (S118g) | `$CA42` is the HERO's name (text code `$F6` prints it); corrected in place. |
+| PROJECT_COMPILER §2.6 / ROOM_DATA_FORMAT "custom-room step counters are transient (`$CD80`), state comes from flags + entry scripts" applied to COPIES of game rooms | INCOMPLETE (S118c, user report S118b) | A copy of a game room now uses the ORIGINAL's counter (`step_counter.vanilla`, EQU, saved) so the story's writes from other rooms reach it; new rooms keep `$CD80` counters (PROJECT_COMPILER §2.6 "S118c"). |
+## S119 addendum (2026-10-04; the cutscene editor, ROADMAP P3.8 parts B / c / d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| KEY_LESSONS S11 / S53, PROJECT_COMPILER §7: a custom room's entry script runs "not dependably at initial entry" | STALE since S70v3 (CROSSBANK_ROOMS: `$01:$4C3E` reverted) — re-measured S119 | the entry script runs at the first arrival (door and warp mailbox); notes added in place |
+| BANK04 "Tile patches", CUSTOM_CUTSCENES, help 90_limits: `$24` / `$61` in a copied room read bank $0F's tables "(read from the code, not measured)" | CONFIRMED S119 (PyBoy: nothing drawn) and FIXED (patched builds) | bank $04 → bank $60 entries 9 / 10; the copy's patches live in the room (`patch_data`) |
+| ROM0 label `CheckSoundQueueState` ($00:$056E) | WRONG NAME (S119, code + PyBoy) | `ScreenShakeTick` — the `$C8B1` / `$C8B2` screen shake (both trees, byte-perfect) |
+| extracted/npc_field_sprites/id_XX.png as "the NPC's look" | INCOMPLETE (S119) | one facing, on the throne-room floor; `extracted/npc_facing_sprites/` = four facings + step frames, transparent, captured from the game (tools/extract_npc_facings.py) |
+| BANK04 "Script opcodes as measured (S118)": text boxes need `$07 init_dialog` "for scripts that did not start from a talk" | INCOMPLETE (S119, PyBoy) | after ANY yielding step a text needs it, talk / examine / step-on scripts included (BANK04 "Writing scenes (S119)") |
+
+
+## S120 addendum (2026-10-05; overlay guard, mapID audit, dialogue P3.6, gate rows P3.7b, mop-up)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| PROJECT_COMPILER §1 "compat build == hand-staged tree" (held since S63) | BROKEN S119, unseen (S120) | the S119 template re-pin was never `--apply`'d: `patches/bank_060.asm` stayed S117 while `bank_004.asm` called its entries 9 / 10 (overlay `0591928d…`, patched, historical). Regenerated; verify check 2 now compares the overlay with `REFERENCE_MD5`. |
+| ROADMAP "audit_mapid_range re-adjudication": "11 wMapID loads in the S117 shop code" | WRONG LIST (S120) | 12 sites (bank $09 ×3, $60 `CustomReadInteract` + `CutPatchRoute`, $71 `BattleBGMResolve` ×4, $76 `GateBossWin`, $77 ×2) + 4 stale verdict keys (renamed labels) — CROSSBANK_ROOMS "S120 burn-down". |
+| CROSSBANK_ROOMS authoring rule 4: the gate_flag / trigger_x $FF validators are "not yet implemented" | STALE (S120) | both exist in `editor2/core/validators.py`. |
+| TEXT_SYSTEM "DTE (Dual-Tile Encoding) — $65-$7F" (`$65 ll`, `$6D th`, `$6E he` … `$7F al`); dwm/text.py `DTE`; tools/dump_dialogue.py `DTE`; EDITOR_DESIGN "auto-DTE" | WRONG (S120: font rendered, vanilla usage counted, PyBoy) | no letter pairs exist: `$65` = `"`, `$66-$71` = one-cell contractions 'l 't 's 'r 'm 'y 'v 'd 'e 'c 'n 'T, `$72-$7F` blank. 57 text ids + 85 table texts were mis-decoded ("Dn'a" = "D'ya"). Tables fixed, dialogue.json re-decoded. |
+| TEXT_SYSTEM "Text boxes": "the vanilla indent under '*:' comes from the `$EB` opener"; textenc / talk_editor comments | WRONG (S120, PyBoy) | `$EA` / `$EB` take no parameters, print nothing and indent nothing: they turn the voice on with blip sound `$5B` / `$5A`. |
+| TEXT_SYSTEM control table: `$EA` "Text box init (2 param bytes)", `$EB` "BOX2 alternate box", `$EC` NAME "insert NPC name", `$ED` MONSTER "insert monster name" | WRONG (S120, bank $56 handlers + PyBoy) | `$EA` / `$EB` voices (no params); `$EC` = text speed from the menu; `$ED` = print at once. Neither `$EC` nor `$ED` occurs in field dialogue. |
+| TEXT_SYSTEM: control-code handler table "at `$56:$44CD`" | OFF BY ONE (S120) | `rst $00` is at `$44CD`, `TextCodeTable` at `$44CE` (labelled both trees). |
+| TEXT_SYSTEM / decoders: only `$E8` (2), `$E9`, `$F9` (1) take parameter bytes | INCOMPLETE (S120, handlers) | `$F8`, `$FB`, `$FC` read 1 parameter byte too (`$FC` in 89 battle messages — the decoder printed its byte as a glyph). |
+| dwm/text.py `decode`: `$EA` skips 2 parameter bytes | WRONG (S120) | the "*:" after `$EA` is text; nothing is skipped. |
+| ROOM_DATA_FORMAT "Monster NPCs": a monster NPC is not redrawn after a talk battle (S101) | NOT REPRODUCIBLE (S120, PyBoy on the user's save: 1-enemy, 3-enemy, the user's helper conversation) | OAM / VRAM / pixels identical before and after; the S101 observation is unexplained (the S101 r1 helper landed on fixed cells). |
+| GATE_GENERATION §1 "byte 7 … drives tileset *and* item tier" | CONTRADICTS §7.7 (S101: "only reader: the bank $01 item tier") | S120 wording follows §7.7 (the item tier) in the new text; the census pictures show the floor type alone sets the look. |
+| PROJECT_STATE open defect: "TOOLS_AND_DATA's attribution monsters_full.json ← dump_monsters.py is suspect" | RESOLVED (S120) | no repo tool writes it (first import `cba8952`); its 221 rows equal the ROM's MonsterInfoTable on every numeric field checked. |
+| TEXT_SYSTEM `$F6`: the 4-cell hero budget "inferred" (S120) | MEASURED (S120b, PyBoy: the Castle naming scene) | the naming screen takes ≤ 4 letters; the default `$D3-$D6` is stored + `$F0` × 4; the END check refuses 4 identical letters + a 14-name list (`$09:$6985`). |
+| editor2/core/playback.py `_hero_name`: "Put in TERRY the way the naming screen leaves a name" (5 letters `encode_name('TERRY')` + `$F0` × 3) | WRONG (S120b, PyBoy) | accepting the default leaves the 4 tiles + `$F0` × 4; fixed (S120b: the tiles kept, `$F0` padding). |
+
+## S121 addendum (2026-10-05; the Milly hook, ROADMAP P3.16 + E7)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP E7: the player's sheet is "unlocated RE"; "likely small … same-size 2bpp swap" | LOCATED (S121) | MONSTER_DATA "The player's sprite (S121)"; not a swap — drawn with Milayou's NPC sprite under a flag (her 6 frames ≠ Terry's 21-frame layout). |
+| ROADMAP P3.16: the bifurcation = "the dresser repoint + Terry-intro strip, authored via the World tab", "preserved-island flag audit" | SUPERSEDED (S121) | the cut is in the bedroom script (no exit repoint), authored in the Cutscenes tab; the rest of the game is unchanged, so no flag audit was needed. |
+| extracted/map_table.json: maps `$08` / `$5D` / `$5E` have no steps | WRONG (S121) | `$FFFF` = "no exits" was read as an error by dump_map_table.py; 9 / 5 / 4 steps. |
+| PROJECT_COMPILER §2.3 / TEXT_SYSTEM: every project builds the MILLY tiles (S120b) | CHANGED (S121, user) | only with the Milly hook on; the example builds TERRY again. |
+| PROJECT_STATE bank allocation: `$79` unallocated; Canonical Facts: overflow order ends `$79` | STALE (S121) | `$79` = story hooks; `dwm/sprite_bank.py` no longer lists it. |
+| disassembly/bank_00e.asm bedroom script: mgbdis comments `$FF17 ; SetupBossBattle`, `$0060 ; Text $0060 …` | MISLEADING (S121) | `$17` = `bedroom_tile_swap` (script_ops / BANK04 already say so) and the "Text $00xx" words are opcode parameters (sound `$60`, delay 8 …); a comment before the tail says so (both trees). |
+
+## S122 addendum (2026-10-05; gate themes as room tilesets, the maze carve, NG2 residual a — ROADMAP P3.7b part 2)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| bank $16 labels `FloorTypeSortData` `$7055`, `FloorTypeOrderTable` `$7096`, `FloorTilePatterns` `$7736`, `FloorDataPtrTable1/2` `$7896` / `$7A96` (both trees; DATA_STRUCTURES, GATE_GENERATION) | MISLABELLED (S122) | `MazePieceTable` (16 × [openings, piece, class, 0]), `MazeCellOrder` (the carve's cell visiting order — not "a permutation of piece ids"), `MazePatterns` (21 ready-made grids), `MazeScreenTable` / `MazeScreenTableB` (cell → [layout id, bank]); renamed both trees, byte-perfect. |
+| ROM0 `WaitInputRelease` `$1E31` (DATA_STRUCTURES "Input") | MISNOMER (S122) | `TileAtPixel`: tile id at pixel `$FFA5-$FFA8` → `$AA`, walkable → `$A9`; no input wait. Renamed both trees + the 3 callers' banks. |
+| ROM0 `$2DA7` assembled as code (`TileRotatePadding` …) | MISASSEMBLY (S122) | `ScreenOriginTable` — 16 × 4 B per-screen origins, re-sectioned as `db` (same bytes). |
+| bank $17 comments on `GateAttrTable_A` / `_B`: "shape mode == 0" / "== 1" | WRONG (S122) | A = shape modes 0 / 1, B = mode 2 (`$C93F == 2`). |
+| DATA_STRUCTURES `FloorLayoutData` `$16:$7436` "1120 bytes"; GATE_GENERATION §4.3 "per-floor feature / piece sub-selection, mapping not pinned" | WRONG SIZE / ROLE (S122) | 16 rows × 48 B = 768 B of item sub-kind odds by contents row; the remaining bytes are `MazePatterns` + `MazeNPCChance`. |
+| DATA_STRUCTURES `FloorTypeSelectionTable3` "17 rows" | WRONG (S122) | 16 rows; the "17th" (`$7426`) is `MazeItemSubKind` (16 B by item kind). |
+| GATE_GENERATION §4.1 / §4.2: variants 0-11 "unless shape mode 1 fixes the variant"; the carve "understood in outline" | INCOMPLETE (S122) | Variant 12 = the plain drawing (mode 1); the carve, re-fit and placements are traced and modelled bit-exact (`census_maze.py` 4,000 / 0). |
+| `gamedata.encounters[].maze_size` editable 0-255 (Encounters tab, PROJECT_COMPILER) | UNSAFE (S122) | 1-2 can freeze (measured), 0 / 16+ overrun; 3-15 enforced. |
+| GATE_GENERATION §7: gate floors override BG palette slot 4 | NOT USED (S122) | all 275 maze attr streams use palettes 0-3 only; the floor palette `$17:$51F5[type]` fills slots 0-3. |
+| ROADMAP P3.7b S100 r3 carry-over (b): normal door exits from an own-colour-1 room "likely" fade to that colour | REFUTED (S122, PyBoy) | they fade to white (248,248,248) like any room. |
+| GATE_GENERATION §7.9 / PROJECT_COMPILER §2.32 (S117): the boss win's portal-counter write "was not found" / not replicated | INCOMPLETE (S122) | it is in the boss script's tail after `write_ram $D92B 7`, past the window `cleared_flags` read; decoded as `win_tails` and run by `RunWinTail`. |
+## S123 addendum (2026-10-05; worlds, NPC colours, the Vanish step — ROADMAP NG3)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| bank $06 `SaveMapS_4d0a` (auto-label) | MISNOMER (S123) | `NPCDrawSlot` — draws one NPC slot's sprite pieces into the OAM buffer; renamed both trees (patched: calls bank $60 entry 11). |
+| bank $05 `HramAudE_406e` (auto-label) | MISNOMER (S123) | `NPCSpritePaletteOr` — ORs the sprite id's own palette (`$05:$4152`) into each piece; renamed (MONSTER_DATA updated). Clean build byte-perfect. |
+| `validators.TEMPLATE_SIZE[0x60]` = 678 | STALE (S123) | the template was 1070 B since S122; 1273 after S123. |
+| PROJECT_COMPILER §2.32 / help: a cleared gate's swirl always disappears | SUPERSEDED (S123) | `cleared_swirl` = a palette keeps it spinning in that colour. |
+| help `90_limits.md`: "Fully custom branching gates are the next step (NG3)" | SUPERSEDED (S123) | NG3 redefined by the user as worlds (built S123). |
+| help `20_npcs.md`: "they show only until their gate is cleared" | INCOMPLETE (S123) | unless the gate's swirl turns a colour. |
+| GATE_GENERATION §7.11 (S123 r1): a world portal = "the game's (wave + cream fade, measured)" | WRONG (S123 r2) | it ran the floor-change ladder ($C905 $10-$17, sound $55) — the measurement injected a warp from a vanilla room; fixed (bank $60 entry 12) and re-measured == room $24's portal. |
+| GATE_GENERATION §7.5.1 (S41): `CustomDescentInGate` for "custom-room descents" | TOO BROAD (S123 r2) | it fired for every gate-flag exit of a custom room, gate entrances included (S115 new-gate entrances too); now Stairs down ($80) only. |
+| render_project.py header / tools/render_rooms.py: "tile ids >= 128 draw tile 0" | WRONG for `$80-$AF` (S123 r3) | every room has sheet `$29:$1D` at `$8800` (bank $0B loader; `ld a, $08` is not a compare) — the roots room (copy of `$08`) previewed with a black cross; in-game it was right. Fixed; ROOM_DATA_FORMAT "Common tiles". |
+| `Project.repo_root` "set in `__init__`" (implicit) | WRONG ORDER (S123) | set late; a conversation testing `gate:N` crashed — now set first. |
+
+## S124 addendum (2026-10-05; the flag index and the Progression & Flags tab — ROADMAP P3.14a)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| EVENT_FLAGS "Free Flag Slots": `$0158–$0167` "zero script refs … SAFE" (S8 / S57) | WRONG for `$0158` (S124) | Arena Battle (`$5D`) script 0 tests + sets `$0158` (`$0F:$6890` / `$6898`, Milayou's rematch); PyBoy S124: OFF → pos 857 then ON, ON → pos 862. The S57 scan read the pre-S96 `all_scripts.json`. Pool for new flags = `$0159-$0167` (`FLAG_AUTO_RANGES`); `GAME_SHARED_FLAGS` warns. |
+| EVENT_FLAGS: bank $12 `$6C78` "conditionally sets $0057" | IMPRECISE (S124, code-read) | sets `$0050 + [$D9E1]` (eggs already given 0-7) — `$0050-$0057` in turn. |
+| EVENT_FLAGS / SIDEQUEST_MAP: `$00F1` "set in an unreached branch ($0C:$46C4, guarded by $CAB9)", "after the Starry Night victory" | WRONG (S124) | reached by the S124 decoder (handler arities); `FF03 00F1` at `$0C:$46C4` then `$D92B := 5`; per the research read (code-read) it runs once `$00EE` (the ending) is set. |
+| EVENT_FLAGS Statistics: 328 flags / 298 with sets / 29 check-only | STALE (pre-S96 decoder) | S124 (`cutscenes.Catalogue`, handler arities): 587 scripts, 1,674 flag ops, 332 flags, 327 with a set; check-only `$0007` `$0050` `$0053` (the game's code) + `$00E5` `$02C1` (not traced). |
+| GATE_GENERATION §7.7: every King's speech "changes NO saved flag" | WRONG for `$30` (S124) | speech `$30` sets `$0009` (`$0C:$49F2` `FF03 0009`) + `$D92C` / `$D92D` / `$D92F` / `$D93C`. |
+| `script_ops.py` / bank $04 `ScriptCmd33_CompareGold`: op `$33` "compare the gold" | WRONG (S124, code-read) | ADDS the word to the gold (ROM0 `CompareGold` → `WriteStatAndRet`, cap 99,999); renamed `ScriptCmd33_GiveGold` both trees (the editor's op name kept: saved projects). |
+| `script_ops.py` `$56`: "Gold / 10 … adds it back" | WRONG (S124) | takes a tenth (AddGold subtracts, S109). |
+| `script_ops.py` `$5F`: "when the level is below its maximum" | INVERTED (S124) | branches when level +$4B is AT the cap +$4C. |
+| `script_ops.py` `$60`: "(lead monster level + 1) × 10" | WRONG (S124) | (plus value +$62 of monster `[$CA40]` + 1) × 10. |
+| SIDEQUEST_MAP §5: `$31` CheckPartyLevel, `$40` CheckMonsterInStorage, `$60` CheckInventoryItem, Library tier by `$34` | WRONG (S124) | `$31` = 100+ species seen; `$40` = PARTY only (status 2); `$60` = the gold fee above; the tier is `$51`; `$34` tests skills. |
+| QUEST_OPCODES: `wInventory` at `$D980` | WRONG (S124) | `$CA51` (wram.asm). |
+| bank $09 `$607E-$60AD` (mgbdis code) | MISASSEMBLED (S124) | three 16-byte tables of the gate keeper's list: `GateListClearedFlags` / `GateListClearedByte` / `GateListUnlockFlags`; re-sectioned both trees, byte-perfect, text diff = only those lines. |
+| PROJECT_COMPILER §progression / EDITOR_DESIGN §5.7: quest enemies "≤ 12 rows", "12-row tail"; `flags.seen` | STALE (S124) | bank $6B since S101 (cap EID 640); the key is `flags.cutscene_seen`. |
+| PROJECT_COMPILER §2.7: "16 flags", "the example uses none"; help / PROJECT_STATE: "1,968 named flags" | STALE (S121/S124) | `$179E`/`$179F` went to the Milly hook (S121) and `$0158` is the game's: 1,965 numbers for new flags. |
+| `validators._validate_worlds` warning text "gate:{gid} cleared" | BUG (S124) | one line lacked its `f` prefix — the build log showed `{gid}`; fixed. |
+| `scriptgen.OPS` `npc_hide` / `npc_show` (legacy quest actions) | WRONG OPCODES (S124, code-read) | `$48` / `$49` = face_down / face_left (S101) — a quest's "hide" only turns the NPC; the quest form is replaced in ROADMAP P3.14c. |
+| `extracted/all_scripts.json` `words` addresses | DRIFTS (S124, research read) | its word lists are not contiguous ROM words from Castle script 0 on — use `cutscenes.Catalogue` (the ROM) for addresses. |
+| EDITOR_DESIGN §5.7 "As built S124": **open** of a game room's use goes to "a game room" (implied: the place) | WRONG (S124 r3, user-reported) | it opened the room's FIRST screen in state 0 (nav = the map only; `_go_end` forced state 0) — e.g. `$0080` → GreatTree's start screen, not Santi (screen 12, states 1-2). Fixed: `Use.places` + `open_node` / `_go_end` keep screen / state / cell; text corrected (r3 paragraph). |
+
+## S125 addendum (2026-10-06; the hub — ROADMAP P3.14d1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| ROADMAP P3.14 / PROJECT_STATE S124: "a lost battle is hard-wired to the Castle (bank $50 `$64AF`)" | IMPRECISE (S125, code-read + PyBoy) | an ordinary lost battle is `$6559` (gold halved, items dropped after it); `$64AF` is reached with `wBattlePostFlag` = 1 — the lost Starry Night / arena final. Both write `$D92B` = 8. A third send: bank $06 `$6A39`, the party killed by damage floors (message `$021A`). |
+| GATE_GENERATION §7.7 / disassembly bank $07 comment: `$D92B` = 6 "(gate return)" | IMPRECISE (S125, PyBoy) | written by the **WarpWing item**'s use path (the item menu: "MILLY throws a WarpWing!"); the boss exits use 7 (King) or the script's own choice. |
+| BANK04_SCRIPT_ENGINE / `script_ops.py` op `$27` `refresh_party`: "Re-count the party (bank $01 entries 9 + 3)" | WRONG (S125, PyBoy) | bank $01 entry 9 (`IteratePartySlots20`) HEALS every monster: status := 0, HP := max, MP := max (KO'd 0 HP / 0 MP → full); then entry 3. Corrected; the Heal step uses it. |
+| known_RAM_map `$C8EC`: "set 1 by room transitions, cleared … when `$D92B` is not 1-5" | INCOMPLETE (S125, PyBoy) | the WarpWing's exit sets it itself and relies on the Castle arrival to clear it; a warp elsewhere left every sprite hidden. Added. |
+
+
+## S126 addendum (2026-10-06; service NPCs — ROADMAP P3.14e1)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| DATA_STRUCTURES label table + disassembly: `AddCursorOffset` `$12:$441F` "UI cursor offset calc" | WRONG name (S126, code-read + PyBoy hook) | it adds the screen effect's text base `[$C8F0]` to HL and speaks the line — bank $12's say helper (farm / Library / Namer / Medal Man). Renamed `ScreenEffectSay12` in both trees; bank $0A's copy `LoadFldA_441f` → `ScreenEffectSay0A`. |
+| DATA_STRUCTURES label table: `GetScreenPos` `$12:$40E5` "Screen position from RAM" | WRONG name (S126) | a byte-identical copy of bank $09's window push `LoadFld9_40fa` (bank $0A has a third at `$40E5`). Renamed `ScreenPush12` / `ScreenPush0A`; both now far-call bank $77 entry 2. |
+| disassembly bank $12 `$6D29` (mgbdis code) | WRONG (S126, code-read) | data: the Medal Man's reward table, 4 × (dw medals, dw EID) + `$FFFF` (re-sectioned `MedalRewardTable`, the readers use the label; text diff = those lines, clean build byte-perfect). |
+| S117b note "free-colour windows fixed (the shop, the Vault)" | INCOMPLETE (S126, PyBoy) | only bank $09's screens were fixed; the farm, Library, namer, Medal Man and egg windows used the bank $0A / $12 copies and were still garbled in a free-colour room. Fixed with them. |
+| BANK04_SCRIPT_ENGINE `$04` row: "Open a game screen of bank $09 … speaking with the text id" | IMPRECISE (S126) | the second word is the text BASE (every menu line = base + offset), not one line; the per-type bases are listed there now. |
+| ROOM_DATA_FORMAT "Text boxes and sprites" (S121): the rule skips sprites over tiles ≥ `$FFD4` "(`$80` = the font tiles)" | INCOMPLETE (S126 r2, code-read + PyBoy) | `$80` is set at every map load (bank $01 `ClearAnimationState`) but the farm menu sets `$60` (bank $12 `$44A7`) and bank $0A screen types 5 / 6 / 11 set `$78` / `$40` / `$40`, none restored — until the next map load. Added there; the service close restores it in custom rooms. |
+
+## S127 addendum (2026-10-06; breeding in the project's rooms — ROADMAP P3.14e2)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| BANK04_SCRIPT_ENGINE / `editor2/core/script_ops.py` op `$42` `save_return_point`(**text**, actor) | WRONG (S127, code-read + PyBoy) | param 1 is the breeding MATE's enemy row → `$C8F7/8` (bank $0A `LoadFldA_4ba2` loads it, the type-5 menu names it); fixed in both, comments in both trees. |
+| BANK04_SCRIPT_ENGINE op `$50` "NPC 2 faces the player" | IMPRECISE (S127) | the FIXED NPC slot 1 (`$D7F8`, Grandpa in the shrine). |
+| known_RAM_map `$C8EF`: "5 = arena-lobby party list … 11 = shrine entry" | WRONG for bank $0A (S127, code + PyBoy) | 5 = a breeding master's own monster (base `$0600`), 6 = Grandpa's BREED / HATCH, 11 = "Take … with you now?"; noted there. |
+| `tools/decompile_script.py` / `compile_script.py` / `dump_all_scripts.py` param tables (`0x42:0`, …) | STALE (S127, seen) | the handler-derived counts are BANK04 "Parameter counts" (S96) and `editor2/core/script_ops.py`; these legacy tools are not used by the editor. Not changed. |
+
+## S128 addendum (2026-10-07; your arena — ROADMAP P3.14e3)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| SIDEQUEST_MAP / QUEST_OPCODES / known_RAM_map / EDITOR_DESIGN / ROADMAP / the bank $04 / $50 comments: arena group 9 = "the King battle" | WRONG (S128 r2, user correction: "ITS NOT KING MATCH ITS MONSTER GRANDPA MATCH") | group 9 (EIDs 481-483, GoldSlime / Divinegon / Rosevine L70) = **Monster Grandpa's match**; fixed in those docs, the Arena tab and help (data key `King` kept). SESSION_HISTORY left verbatim. |
+| `render_project.vanilla_steps`: a step whose exit pointer is `$FFFF` is invalid | WRONG (S128, PyBoy) | `$FFFF` = "no exits" (the `$5D` room's 5 steps, `$08`'s 9, `$5E`'s 4); the copy of `$5D` had 1 state and Starry Night crashed in it. |
+| known_RAM_map `$D999` only "wArenaStarryBattle" | INCOMPLETE (S128) | it is ALSO the `$5D` room's step counter: 0 the classes (layout `$2314`), 1-3 Starry Night, 4 Monster Grandpa's match (layout `$2315` for 1-4). |
+| The Arena Lobby's receptionist = an NPC with script 6 | IMPRECISE (S128, seen) | an `$8F` examine spot at (3, 4) on screen 1 carries script 6 — the player talks across the counter. |
+| `tools/decompile_script.py` op name `npc_show` (the lobby's party hide) | WRONG name (S128, seen) | the handler faces an actor left (`face_left`); the S118 names in `script_ops.py` are right. |
+| help `64_milly_hook.md` / PROJECT_COMPILER §2.34: with the hook "the player is MILLY: her own sprite in every room" | INCOMPLETE (S128 r3, PyBoy) | the arena's player figure (NPC sprite `$E0`) kept Terry's frames over her tiles until `MillyE0Type`. |
+| EVENT_FLAGS "`FLAG_SAFE_RANGES` still admits $0158 … Renumber move them" | SUPERSEDED (S128 r2) | the compiler moves an "auto" flag off `$0158` and opening a project moves a pinned one (no manual Renumber). |
+
+## S129 addendum (2026-10-07; story checks, quests, music by flag, shop item sets — ROADMAP P3.14b / c / d)
+
+| Claim (where) | Verdict | Correct |
+|---|---|---|
+| PROJECT_COMPILER §progression "Known defect (S124): `npc_hide` / `npc_show` emit `$48` / `$49`" | FIXED (S129, PyBoy) | they emit `npc_write n, 0, $0040` / `npc_write n, 0, 0` (the slot's type byte); the example's vault guardian's slot reads type `$40` on entry once beaten. |
+| BANK04_SCRIPT_ENGINE op table `$26` "reload_room() — Reload the room." | IMPRECISE (S129, PyBoy) | `$C88F++`: the room reloads IN PLACE — bank $0B room entry 0 again (custom rooms: the state rules and the room's music pick again), the player keeps his cell and facing. |
+| known_RAM_map `wCustomPool $D509-$D5E4` (S127) | SUPERSEDED (S129) | `$D509` = `wStoryFlag` (the story checks' answer byte); `wCustomPool` starts at `$D50A`. |
+| ROADMAP P3.14b "the result tested by the existing `$15` (byte == value)" | IMPRECISE (S129) | conditions are virtual FLAGS (`$1800 + n`, bank $73 `FlagAddr` → bank $77 `StoryCheck`), so every flag reader tests them; only "give n items" leaves a byte (`$D8E1`) for `$15`. |
+| ROADMAP P3.14c "the legacy `progression.quests` lowering retired" | NOT DONE, by choice (S129) | kept for old projects (the example's S70 battle quest and many tests use it); its `npc_hide` / `npc_show` bug fixed; new quests are `custom.quests` (PROJECT_COMPILER §2.42). |
+
+## S130 addendum (2026-10-07; every battle skill — the ten skill families + the raising model)
+
+Sources: the ten family captures (PyBoy, user's save on the u22 build; validators 0 mismatches,
+BATTLE_SKILL_SYSTEM §15.11) and the raising census (`tools/census_raising.py`, MONSTER_DATA
+"Raising a monster (S130)"). ✏️ = fixed in the doc this session; 📌 = recorded here, the file
+belongs to another owner (code docstrings, `disassembly/` comments, ROADMAP, the families'
+scratch skill map `FAMILIES.md` / `skill_handlers.json`, which is not in `documentation/`).
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §15.8 table: PoisonAir +2 bit1 "hit-chance via BattleCall_65b5, chance not modelled" | ✏️ (F1) | PoisonAir rolls `HitPoison_65c9` (res 18, ladder `$6749`); modelled | byte-read `$52:$497B`; corpus g3 (both sides, L0-3) |
+| BATTLE_SKILL_SYSTEM §15.8 "+5 0-5 ONE-SHOT compulsions (cleared at victim's turn)"; §15.9 "consumed-bit-only one-shot clearing"; `status.py` docstring "consumed when the victim's turn comes up" | ✏️ doc / 📌 status.py (F1) | ANY forced action (iron, paralysis, sleep, a one-shot) clears ALL of +5 bits 0-5 (`ClearOneShots_4b39` via `Jump_053_462c`) | byte-read `$53:$462C`; 83 multi-bit samples |
+| BATTLE_SKILL_SYSTEM §15.8 "Status-spell hit rolls (S85)": the three share CheckTargetGuardB | ✏️ precision (F1) | true for Sleep $15 / StopSpell / Surround; through the same helpers SleepAll/SleepAir and SandStorm roll `$6749`, Radiant B | `$5CAE`, `$5CF4`; corpus |
+| `battle.py miss_gate` vs §15.10.9 "+7&$0C … 50 % dodge" | 📌 code fixed (F1, F8) | RNG1 even → dodge; RNG1 odd → the AGL ladder still runs (the doc was right, the code returned 'pass') | `$53:$57BD-$57C8`; 14 odd-RNG dodges; `bi_dodge` RNG1 $03 vs AGL 40 dodged |
+| `battle.py target_unreachable` use: the whole action fails on an iron first target | 📌 (F1) | per victim; a sweep continues past the iron slot | ironize_e capture |
+| `battle.py apply_damage` / §15.7: a KO = HP 0, `$DD1B`/`$DD13` only | ✏️ (F1, F8) | the KO state also zeroes `$DB02+8t..$DB09+8t` (+2 seen $88 → $00) | `$51:$4C26`; beat_ko |
+| `battle.py side_wiped` | 📌 (F1) | the party side also loses when every live member is paralysed | `$52:$76C8`, `$50:$6CD3`; 3 battles |
+| `battle.py snap_out` (S88) "+2 &= $63" | 📌 (F1) | also `$DD13 := 3` when the victim was asleep (its turn is lost) | `$53:$5F6E/$5FA7`; g2 captures |
+| `battle.py simulate_round` / validate_battle order: confusion check before curse | 📌 (F1) | curse roll first; an hp/mp curse effect skips the confusion branch | `$53:$45CA/$45F9`, `$4C97`; g1_keep |
+| BATTLE_SKILL_SYSTEM §15.10.6 "Dead-target redirect at act time … not exercised" | ✏️ (F1, F5) | single target + `$DD0B == 0` → fizzle; group → first-valid scan; `$DD0B != 0` single → bank $58 re-pick; $32/$96/$95/$AD keep the queue byte | `$53:$47B2`; beat_e_L2, beat_w_row40; F5 row calls |
+| FAMILIES.md F1 "Compare_6adc followed by $6710 or $6749" | 📌 (F1) | the `$65xx/$66xx` helpers and `$5C51` skip `SureHitCheck_6adc`: no `$DB42` bit2 sure hit for them | byte-read; sure-hit battles |
+| `status.py` / BATTLE_SKILL_SYSTEM §15.9 S88 / known_RAM_map: "+7 bits1:0 surround counter" | ✏️ doc / 📌 status.py (F1) | the SandStorm/Radiant accuracy mark (attacker-side 37.5 % miss), set \|= 3, never decremented | `$52:$4A22`, `$53:$5785` |
+| BATTLE_SKILL_SYSTEM §15.8c S88 rider map: `$65E3` users "Ahhh, OddDance, SideStep, LureDance, LushLicks/SickLick, LegSweep/BigTrip, WarCry" | ✏️ (F1 table) | `HitCompel_65e3` users: Ahhh, LureDance, LushLicks, LegSweep, BigTrip, WarCry; SickLick rolls `HitDefDown_5dcc`, SideStep has no roll, OddDance is the MP-drain roll | F1 byte-read table |
+| BATTLE_SKILL_SYSTEM §15.4: {… $3E Kamikaze …} AUTO-FAIL vs enemy targets when db73 == 1 | ✏️ (F23) | the gate's list names $3E but `KamikazeDamage_6232` never calls it (callers `$5C51`, `$65B5`, `SacrificeResolve_67a9`): Kamikaze lands on bosses | 7 party→enemy Kamikaze applies at db73 = 1; the S85 "blocked" battle was res 14 level 3 (immune) |
+| BATTLE_SKILL_SYSTEM §15.5 Sacrifice "consumes NO RNG steps" | ✏️ (F23) | one `LoadBtlC_4e33` step before each target's res/kill reads, one more before the caster's roll (S79's hook at $67DB sat after the step) | 50/50 gates, 38/38 damages from the `$67A9`-entry RNG + one step |
+| same: "Caster dies in the state chain" | ✏️ (F23) | the caster rolls: RNG1 < $7F (after a step) → dies; else survives at max(HP/100,1) | 19/19 caster rolls, both outcomes |
+| same: Sacrifice treated as single-target | ✏️ (F23) | sweeps from the queued target to the end of its side | 19/19 sweeps |
+| BATTLE_SKILL_SYSTEM §15.7 "Boss-gated Sacrifice … leaves the CASTER at 1 HP (1/1)" | ✏️ (F23) | that was the survivor branch (max(HP/100,1) = 1 for HP < 200); about half the time the caster dies | as above |
+| BATTLE_SKILL_SYSTEM §15.5 + `damage.py vacuum()`: "Vacuum 2L+30 / 1.5L" (enemy 1.5L) | ✏️ doc / 📌 damage.py (F23) | enemy casters also use 2L+30 — the `cp $04` tests the LINK byte; `skillfx/f23_phys.vacuum_base` is the measured formula | 90/90 Vacuum incl. enemy casts at L 3-150 |
+| TOOLS_AND_DATA `s79_damage_events` row + KEY_LESSONS "'arena' … meant the LINK flag" ("measured both skills … enemy-cast") | ✏️ (F23) | the S79 corpus holds 2 Vacuum events, both party-cast | `s79_damage_events.json` vacuum_in rows |
+| `disassembly/wram.asm` ("$DB86-87 free gap"), BATTLE_SKILL_SYSTEM §3 ("`$db86` … unused `ds` gap … Verified safe by testing"), known_RAM_map `$DB86`, KEY_LESSONS (S45 free-RAM lesson) | ✏️ docs / 📌 wram.asm (F23) | `wJoinability` is a PER-ENEMY table `$DB85+c` (`SaveBtlS_47e0`): `$DB86/$DB87` = enemies 2/3's joinability; with 2-3 enemies the S45 alias path dispatches every Blaze cast to the handler of skill `[$DB86]` (patch defect, not fixed) | `$DB86` = 3 from battle init with 2-3 enemies, 0 with one; 6/6 Blaze casts on u22 used the Firebal resistance; `blaze1` (1 enemy) type 0 |
+| BATTLE_SKILL_SYSTEM §15.1 "Beserker ×2 (+ sets $db08 bit2)" | ✏️ (F23) | the mark is the user's guard record `$DB08+8a`; consumer `$53:$5A44` doubles physical hits ON the user (not $3C/$3E, only with defence nibble 0) | §15.11.F2 |
+| FAMILIES.md / skill_handlers.json UltraDown "BattleCall_5c51 … unsure" damage part | 📌 (F23, F7) | no HP damage; sub 2 SETS +3 bit1 (Surround), sub 3 sets bit7 unconditionally, DEF/AGL floor at 1 with a minimum amount of 1; no `$DB42` sure hit | 6/6 no `$6D56`; F7 28 casts |
+| `disassembly/bank_052.asm` (pre-S130) `Jump_052_6e89` tail rows as code | 📌 fixed (F23) | `rst $00` + `dw` tables (re-sectioned, byte-identical) | clean md5 unchanged |
+| BATTLE_SKILL_SYSTEM §15.5 "**Massacre**: random target with a $A0/256 gate" | ✏️ (F4) | Massacre ALWAYS crits (own +4 bit7, ATK-based); the RNG1 ≥ $A0 gate is EvilSlash's, only for an awake, unafflicted target; the target is the side-blind `$6379` resolver (allies included) | 90/90 outcomes, 82/82 picks |
+| BATTLE_SKILL_SYSTEM §15.9 S89 block, known_RAM_map `$DB42`, `battle.db42_boost` docstring: "The SETTER is not yet located" | ✏️ docs / 📌 code (F4) | `$58:LoadBtlFX_5ba1` (`TensionRollB_5ba1`) → `SetBtlFX_5b17`: `ld a,[hl] / or d / ld [hl],a`, d = $40, in the command phase, party slots only, w3 ladder A | 13528/13528 roll pairs |
+| BATTLE_SKILL_SYSTEM §7 flags8 b4 "(+ ChargeUP's 'attacks with full force!')" + `bank_053.asm` `[S110 rec]` at $5349 "$db42 &3 (ChargeUP armed)" | ✏️ doc / 📌 asm fixed (F4) | `$DB42` bits 0/1 are the tension roll's sure-crit / defence-class bits; ChargeUP lives in own +6 bits 0-1; $67 announces the bit0 sure crit | code + 82 bit0 sets |
+| BATTLE_SKILL_SYSTEM §7 flags9 b4 + `bank_052.asm` `[S110 rec]` at $6F5B: "FOLLOW-UP … writer not found" | ✏️ doc / 📌 asm fixed (F4) | SkillFocus own +6 bit7, rotated to bit6 by phase 9 | 20/20, 14 follow-ups |
+| `bank_053.asm` (pre-S130) `DispatchEntry_53_0`; FAMILIES.md §F4; `f8_multihit.crit_stage` docstring; F8 notes: crit table "$53:$4000/$4001 (or $4001/$4102) + species" | 📌 fixed (F4) | party/link crit table **$4025** (221 B), enemy table $4102; data misassembled as code (now `db`, byte-identical) | md5 unchanged; 10747 rolls |
+| `skillfx/f8_multihit.py crit_stage` docstring: threshold table and crit damage "NOT modelled" | 📌 (F4) | modelled; it delegates to `battle.CRIT_STAGE` (docstring left as history) | — |
+| `battle.py heal_target` docstring "re-resolved heal target = the lowest-HP live ally" | 📌 (F5) | the row `$58:$44F7` by AI mode (§15.11.F5) | 267 row calls |
+| FAMILIES.md §2 F5 / skill_handlers.json: Farewell, LifeDance and LifeSong all run the $53 entry-14 revive chain | 📌 (F5) | Farewell/LifeDance → entry 14; LifeSong → `$52:$6F42` tails only (revive, no heal, no caster price) | `vivify_in` inside LifeSong turn 2, no `chain_walk` |
+| skill_handlers.json Farewell "revives dead and heals to MaxHP; MP then zeroed" | 📌 (F5) | missing: the caster's HP price (dies on RNG1 < $7F, else keeps HP/100) | 27 chains |
+| skill_handlers.json RESTOREMP "target MP := MaxMP (if not already)" | 📌 (F5) | skipped when MP's low byte == high byte (MP 0 is never restored) | MP 0/1/10/93/257/300 |
+| FAMILIES.md "Revive picks the first dead ally" | 📌 (F5) | the target ROW scans own base+2 DOWN (highest dead slot); only the handler's live-target re-target scans from the base up | row calls |
+| FAMILIES.md §0 "the driver only sweeps target_mode 18" | 📌 (F5) | also: the driver never deducted MP at all (now `battle.act_mp_spend`) | 652/652 spends |
+| BATTLE_SKILL_SYSTEM §15.10.8 "Normal skills get the opposite side base"; `pacing._commit_target` docstring | ✏️ doc / 📌 code (F5, F7) | per-skill rows differ (own base, first live own, HP-need, MP-res scores); enemy tm 33/34 buffs commit the own side base, Slow a concrete party slot | F5 row calls; F7 natural runs 22/22 |
+| BATTLE_SKILL_SYSTEM §7 +4 `mp_byte` "what a TakeMagic target soaks"; skillmap TakeMagic "a spell aimed at it is soaked" | ✏️ doc / 📌 skillmap (F6) | the target GAINS min(MP cost, MaxMP − MP); the damage / status still lands | `$53:$5CBC/$5D22`; takemagic 22, tm_occur 27 |
+| BATTLE_SKILL_SYSTEM §7 flags8 b7 "dodge-able (Dodge 50 %, else the AGL ladder)" | ✏️ (F6) | that 50 % is SideStep's +7 & $0C status; the Dodge SKILL $8C is a separate act-state-7 machine on flags7 bit7 that moves the hit (often onto the attacker) | `$53:$554D-$5578`, `$5091-$51A8`; dodge 45 |
+| BATTLE_SKILL_SYSTEM §7 flags7 b7 consumer list | ✏️ incomplete (F6) | also the Dodge machine and the BladeD COUNTER (attacker takes dmg>>1, ~50 %) | `$52:$6ECF/$7BEC`; counter 48 |
+| BATTLE_SKILL_SYSTEM §15.9 S89 guard: consumers redirect to the protector for a live mark | ✏️ (F6) | only when the protector is CAPABLE (GetMonsterSlotInfo); `battle.guard_redirect` tested HP only (fixed) | `$53:$54FA`; p_coverslp (2 kept) |
+| BATTLE_SKILL_SYSTEM §15.9 residual "the guard/defensive +8/+9 flags beyond their setters" | ✏️ CLOSED (F6) | all decoded and measured, §15.11.F6 | 19542/0 |
+| skillmap FAMILIES.md §F6 Dodge "only `$58:~$5118` (AI target scoring) was found. unsure"; `bank_052.asm` SkillDodge "consumer not yet traced" | 📌 asm updated (F6) | consumer `$53:$557A` → `$5091` dodge machine | dodge 45 |
+| skillmap SuckAll "absorbs the side's incoming breaths" | 📌 (F6) | the user TAKES the breath (the sweep ends) and breathes it back at the other side | absorb 14, suckback 13 |
+| skillmap FAMILIES.md §1 "Cover and Guardian are never wired" | 📌 (F6) | wired (F6 handler → `set_guard_mark`); `guard_redirect` was already called | — |
+| skillmap BladeD "also counters … body not read" | 📌 (F6) | read + measured (gate, 1 step, RNG1 writes, dmg>>1 to the attacker) | counter 48 |
+| KEY_LESSONS "ROADMAP breadcrumbs" (AglUp "AGL x4 cap $01FF"), ROADMAP ~3193, `bank_052.asm` S79 comment above `AglUpStatCapCheck_6a49` | ✏️ KEY_LESSONS / 📌 ROADMAP, asm (F7) | ×4 for a target slot < 4 or a link battle, **×2 for an enemy target** (`StatCapMul_6af5` keys on `[$DD74]`); an overshoot ≥ 511 clamps to 511 even above a lower ×2 cap | `e_upper` (Gremlin AGL 9 → 13 → 17 → 18 = ×2 cap), `quirk_agl` (base 210, AGL 410 → 511) |
+| FAMILIES.md §F7 "DEF += baseDEF/2 capped min(999, base ×4 party\|link, ×2 enemy)" | 📌 (F7) | not a min: the clamp writes the bound of the check that failed, 999 / 511 first (`quirk_def`: base 420, cap 840, DEF 830 → 999); "×4 party" = the TARGET slot | quirk_def |
+| FAMILIES.md §F7 "Board: add base_atk/dfn/agl/maxhp/maxmp[8] (NEW)" | 📌 (F7) | not needed: `Board.base` already holds them and equals the bank $57 source | 813/813 + 833/833 |
+| `battle.py victims_of`: sweeps a tm 18 skill from the side BASE | 📌 (F7) | the sweep starts at the queued target (`side_victims` docstring, validate_battle); F7 passes `start` itself | Defence/SlowAll queued 5 → [5, 6] |
+| BATTLE_SKILL_SYSTEM §15.1 "RainSlash … 4-hit cap MEASURED S79: handler `$52:$48B4` stops at $DD69==5 … dead targets skipped by walking $DB89" | ✏️ (F8) | the cap is continuation `$52:$6FD4` (ends at `$DD69 >= 4`) plus its walk (ends at a slot with `&3 == 3`); the dead-slot walk acts on `$DCED` without consuming `$DD69`; a 3-slot side gives ≤ 3 hits | `rain_*` (56 actions, every pass) |
+| `$53:$56E1` comment and `battle.target_unreachable` docstring: CallHelp/YellHelp/$14 "keep going" / exempt | 📌 (F8) | at pass 1 CallHelp/YellHelp are diverted (`$5715`: `$DD69 := $10`, msg $C2) — the summon fails; at `$DD69 >= 2` a helper hit fails with $BA like any skill | `ch_iron` / `yh_iron`, 10 passes |
+| skillmap BiAttack "dead target → re-pick via SetHLBattle_4807 = $580A"; METEOR "walks opposing side then own"; CallHelp "hit count unsure" | 📌 (F8) | re-pick = `$5805` (entry 5, `$642C`) in `$6F83`, `$4807` unreachable; METEOR's order holds only from the side base; helper counts measured (§15.11.F8) | f8 corpus |
+| FAMILIES.md F9 / skill_handlers.json $D5/$AA: "later turns rewritten by TransformActionRewrite_7ab5" | 📌 (F9) | the rewrite runs in the cast's own act state 4 and re-runs the actor at once; later turns are AI commits from the dragon's option list | 59 rewrites / 56 walks |
+| `bank_052.asm` comments: `TransformActionRewrite_7ab5` "for skills $AA Transform"; `TransformActionTable_7aff` "Confusion action table"; `Jump_052_6f38` "; $80 BiAttack" | 📌 fixed (F9, F10) | $AA is CHGDRAGON; the table is the dragon rewrite table; $80 is DeMagic (that tail unreached in 41 dispel actions) | hook `$52:$7A49` |
+| F7 notes "helper 3/7 base = the species row `$DC3C[slot]+$100`" | ✏️ (F9; §15.11.F7 written with it) | the row read is enemy_stats `$0100\|$DC3C` = 472-475 (Orochi, Trumpeter, Snapper, HornBeet), not the helpers' own rows 344-347 | `p_tf_h` (Transform into Bazoo copied HornBeet) |
+| F7 notes "a transformed PARTY monster's forced Surge acted as Attack — an action rewrite for +3 bit5" | ✏️ (F9; not carried into §15.11) | no such rewrite: `p_tf_surge` cast Surge twice and Heal; the F7 sample is most likely the `$DD0B == 2` act-time re-decide | p_tf_surge |
+| skill_handlers.json $DB RUN "self `$DD1B := $FF`; enemy clears its `$DC33` record + BattleTarget_7242" | 📌 (F9) | incomplete: a fleeing enemy is also reloaded and gets HP 0 / MP clamp / status wipe (`FleeSlot_4be8`); a fleeing helper clears the summon bit | p_run / e_run |
+| skill_handlers.json $A2/$A4 "target HP := 0 and target RUNs — removed" | 📌 (F9) | removal walks on to the next live slots up to 6 (party caster); an enemy caster removes one victim; CALLHOROR's first target scans up to base\|3 | 10/10 victim lists |
+| `battle.py apply_damage` docstring / BATTLE_SKILL_SYSTEM §15.7 "a TRANSIENT full-HP value … the source MaxHP" | ✏️ doc / 📌 code (F9) | the KO reload (`LoadBtlS_44a9`) writing the source stats before `KOStatusWipe_4c26`; permanent for MaxHP/MaxMP/ATK/DEF/AGL/INT | ko_revert 8/8 |
+| F23 notes CALLEVIL "own `$DB08+8a` bit0 set" | ✏️ (F9; §15.11.F2 says so) | set during the action, clear again at the next actor fetch | 9/9 Chance → CALLEVIL |
+| FAMILIES.md §F10 / skill_handlers.json DeMagic "restores stats to base (`$650C`, msg $D8)" | 📌 (F10) | `$53:$650C` (`DispelDismissHelper_650c`) removes the helper; the stat restore is DEF/AGL only (`$647C`) or the full revert (`$626B`); iron +7 := $11 (A clobber); the walk is forward-only; ThickFog/FILTHZONE run a second pass on the caster's side | `p_poke4/5`, `tatsu_p`, `fog_p` |
+| `battle.py simulate_round` "S130 F5: these veto paths still pay" excluded $1F | 📌 code fixed (F10) | a seal-vetoed spell pays (`SaveBtlC_4b4f`, floor 0) unless a `$DD0B == 2` actor re-decides | 8/8 |
+| `status.py` / BATTLE_SKILL_SYSTEM §15.8 "+3 bit4/bit5 transformed (Transform sets bit4; CHGDRAGON/BeDragon bit5)" | ✏️ doc / 📌 status.py (F10, F7, F9) | Transform sets +3 **bit5**, the dragon form bit4 | `tf_p1`: +3 = $20 after Transform |
+| BATTLE_SKILL_SYSTEM §15.9 "DeMagic/ThickFog pass-conditions … untraced — conservative veto" | ✏️ CLOSED (F10) | decoded + measured (`ai_rules.f10_rules`) | 332/332 |
+| `simulator/ai_rules.py`: no `AIRule_4c13` | 📌 open (F10) | code-read: for every cat-1/2 skill it vetoes when every live opponent has resistance level 3 at the record's +5 element | not in the S81 boards |
+| BATTLE_SKILL_SYSTEM §15.10.9 gate 1 "target $db06 bit2 … semantics unpinned" | ✏️ (F4) | +6 & $0C = HighJump airborne: flags7-bit7 hits on a jumper are blocked with no RNG step | 12/12 |
+| MONSTER_DATA "every stat word is scaled" (creation) | 📌 fixed by the raising agent | MaxHP, MaxMP, ATK, DEF, INT get the creation roll `SaveEnem_4821`; **AGL is not rolled** (`$CB1D ← $DA25`, no roll call) | census create 962/962 |
+| ROADMAP P3.10 residual (e) "a joining monster brings none" | 📌 (raising; ROADMAP is the integrator's) | wrong: a created monster knows its enemy row's 4 skills (`FuncEnem_47a8` copies 4; then `DropKnownSkillBases`) | census create 962/962 |
+| ROADMAP P3.12 residual (a) "bank $16 entry 4 = skill/stat inheritance" | 📌 (raising) | entry 4 (`BreedBirthFinalize`, ex-`label16_474a`) is the BIRTH finalizer: WLD := 0, master := player, the learn queue rebuilt, egg flag cleared; its "keep by plus" roll is dead (`jr $482B` skips it, 25 RNG steps) | census birth 400/400 |
+| KEY_LESSONS / BATTLE_SKILL_SYSTEM §13.8 learn scanner code 2 "blanket stat-qualification, no species latch" | ✏️ precision (raising) | code 2 = a skill not in the learn queue whose 2-5 prereqs are ALL known (stats and level gate every code) | census all_prereq 90 |
+
+## S131 addendum (2026-10-08; Balance follow-ups — ROADMAP P3.15b)
+
+Sources: the special-room walks (PyBoy, original ROM, `tools/census_dive.py --measure-specials`:
+7 / 7 rooms walked with the joypad, every EncounterStep / drain / counter seed == the model) and
+code reads of bank $01 / $0A / $0B / $16. ✏️ = fixed in place this session.
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| GATE_GENERATION §4.4 / dive.py / PROJECT_COMPILER §2.43 "special maze rooms (forest / maze / conveyor) count as a normal maze floor" | ✏️ superseded (an approximation) | they are walked as their own rooms: mazes 46-63 cells, conveyors 77-108 (every belt cell ridden is a step), the forest 24 cells over 3 rooms with a re-seed per room — 0.88 / 1.45 / 0 battles at code 3 vs 0.43 for a size-8 maze floor (GATE_GENERATION §4.4 "Special rooms (S131)") | PyBoy 7 / 7 |
+| `dwm/map_names.py` (and the frozen legacy `editor/editor.py`) `$61-$64` "Forest Maze Gate Floor 1-4"; bank $0B "sub-room 1-4" | ✏️ map_names comment + bank $0B comments (the strings stay: generated JSON carries them; the legacy editor is not touched) | the forest maze's other four rooms, one screen each, joined to `$53` by edge exits; no gate floor | exit tables + PyBoy walk |
+| bank $01 `CheckGateworldForNPC` ($5D9C) | ✏️ renamed `ConveyorBeltPush` (both trees) | the belt push: class `$0F`-`$12` of the standing cell → forced velocity right / left / down / up, `$FF90` bits 1:0; only in the walkable specials | code + PyBoy ride |
+| ROADMAP P3.15b (3) / DOC_AUDIT S114 row "randomizer Pool.weights (+20) … Not changed (the randomizer is shipped)" | ✏️ fixed S131 | `Pool.max_counts` (+20, `weights` kept as an alias), `slot_chances()` = the real draw % from +5..+9 (== editor2 encounters.real_chances on 128 / 128 lists), `live_slots()` by chance code (== the old set on every vanilla list: 0 differences); `sweep_ttk` weighs by chance; the randomizer output is byte-identical (seed 4242: `183904fb…` before and after) | ROM + run |
+| Balance "unmodelled = the share of actions logged no-effect" (PROJECT_COMPILER §2.43, help) | ✏️ | a heal on a full-HP / fallen target is the game's own "no effect" (f5_heal) — no longer counted (`balance.count_actions`); S130's anchor showed up to 13 % on heal-heavy teams from it | code read |
+| `extracted/encounters.json` readers, `gen_encounter_db.py` comments "Weights" | ✏️ | max counts (+20) and maze size (+25) | DATA_STRUCTURES "Encounter pool entry" |
+
+## S132 addendum (2026-10-09; the Rooms tab made usable — paint lag, side rail, Borrow palette, Draw, Play here)
+
+Sources: cProfile of the editor offscreen on the user's project (`my-dwm-hack_24`); the story
+census (`tools/census_story_state.py`, PyBoy on the original ROM: 39 / 39 playable story steps,
+the game's own win tails / arena cascades == `editor2/core/story_state.py`); script decodes
+(`cutscenes.decode_vanilla`). ✏️ = fixed in place this session.
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| SIDEQUEST_MAP "Per-class VICTORY cascade" (code-read, S67) | ✅ confirmed + measured | the Arena Lobby script 0 branch per class writes exactly the table's flags / `$CAB4` / step counters (catch-up flags included); the lobby script then warps to the Castle, whose cascade ($D92B = 0) plays next — the table is the LOBBY's half only | interpreter == table for G-S; PyBoy census steps 1/5/8/12/18/21/24/28 |
+| GATE_GENERATION §7.7 "the vanilla boss win tails … `$D92B = 7`" | ✏️ completed | the boss room's ENTRY script writes `$D92B := 6` on arrival (Gate of Beginning: script 0 pos 0); the win branch writes `$D9E3` then `$D92B := 7` right before the tail (script 1 pos 69 / 74) — so a WarpWing out of an unbeaten gate gets the priest's heal | decode + PyBoy (a tail armed after a warp went to the priest until `$D92B` was set to 7) |
+| EVENT_FLAGS: `$00F1` "set by Castle script 0 … once `$00EE` is set" (S124 read, not measured) | ✅ reproduced by the interpreter | Castle script 0 on screen 1 with `$D92B` = 0 and `$00EE` set, `$00F1` clear sets `$00F1` and `$D92B` 5, `$D92C` 4, `$D92D` 3, `$D933` 2, `$D934` 2 (the documented post-game states) | `story_state.state_at(31)`; not PyBoy-played (the ending is not run by the census) |
+| `editor2/core/playback.py` `Engine.STARTER` / `tools/pyboy_harness.py give_party_monster` default record "the starter as the engine builds it" | ⚠ open (documented) | the hex is 148 B, ONE byte short somewhere in the resistance block (+$68-$82): bytes from there on sit one early (the parents' nickname block starts at +$82). Everything before +$68 is aligned (species, level, HP / MP, AI, skills, queue). `play_setup.party_record` pads it to 149 and rewrites +$68 onward | byte read of the template vs MONSTER_DATA "Party Monster Structure" |
+| `editor2/app/space_meter.py` "re-measures the unsaved document shortly after each edit" (cost not stated) | ✏️ | it re-emitted every bank and recompressed every layout / tileset on the UI thread — 2 s on the user's project, 0.7 s after every paint stroke; now four banks + memoised compression, 0.14 s | cProfile |
+
+## S133 addendum (2026-10-09; campaign-scale capacity audit — ROADMAP ARC CAP)
+
+Sources: three read-only census passes over both trees + the compiler (stored map ids, 4 MB
+hazards, map-keyed tables / destinations / data placement), hand spot-checks (✓ in
+CROSSBANK_ROOMS "S133 capacity audit"), PyBoy on the user's 11-room project build + `.sav`
+(exit fire → commit, script reads across a commit) and on scratch 4 MB builds (boot, bank
+mapping, a `rst $10` executing in bank $80). ✏️ = fixed in place this session.
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ROOM_DATA_FORMAT "Step validation uses the tileset_bank byte (must be > 0 and < $80)" and "Phantom-step hazard … Step validation in the engine only checks `tileset_bank ∈ (0,$80)`"; KEY_LESSONS S91 "the engine's only explicit check"; this file's S91 row ("engine step validation only checks …") | ✏️ WRONG (the S91 row stays as history) | the ENGINE checks nothing: bank $0B `ReadStepBlock` / bank $60 `CustomReadStep` return the bank byte raw to `DecompressTileLayout`; the `(0, $80)` test is in the Python dumpers (`tools/dump_room_data.py:141/148`, `decompress_tiles.py:169`, `render_rooms.py:72`, `analyze_bank17.py:180`). Banks $80+ for layouts / tilesets are fine | code read, both trees |
+| EDITOR_DESIGN §6.4 (S90) "11 unallocated banks = 176 KB … Verdict: fork-first is affordable for the whole campaign at current scope"; `extracted/capacities.json` `free_rom_banks` 11, `event_flags_safe_pool` 32, `custom_species_slots` 32 (224-255) | ✏️ stale | every vanilla-empty bank is owned since S121; ≈315 KB free inside the custom banks (user's build); flags 1,965 (S117/S124), species 19 (221-239, S105). §6.4 rewritten for hundreds of places; capacities.json refreshed | PROJECT_STATE bank table; scratch measurement |
+| ARCHITECTURE "Empty ROM Banks" note "8 of these are now patch-owned" | ✏️ stale | all 23 | PROJECT_STATE bank table |
+| CROSSBANK_ROOMS "Custom-side arithmetic ceilings" row: the `sub $6B` + 8-bit `add a` readers = CustomPtrChase + bank $17 | ✏️ incomplete | + bank $60 `CustomStateRules`, `CustomMonsterCast` (the S99 sweep had keyed them, the ceiling row had not); and the compiler never enforced `$EA` — a room at `$EB` built and read room `$6B`'s tables (now `project.CUSTOM_MID_MAX`, ProjectError) | template read; test_compiler `test_s133` |
+| SOUND_SYSTEM §2 "`(bank>>5)&3` -> `[$4100]` … every bank stores its own number at $4000" | ✏️ stale + over-broad | the quadrant write goes to `$6100` since S69; 15 vanilla / empty banks do not start with their number (`$20 $40 $61 $62 $63 $65 $66 $68 $78 $7B $7D` + empty `$79 $7A $7C $7F`) — nothing far-calls them | patched ROM bytes |
+| `dwm/sprite_bank.py` docstring "self-ID (resolver ignores it; convention)" | ✏️ understated | the byte is load-bearing: `rst $10`, `AudioSaveBankState` and the text engine save the current bank by reading `[$4000]` | ROM0 read |
+| KEY_LESSONS S42 "`rst $10` clobbers A/BC and is unreliable for HL-return" | ⚠ imprecise (not edited: a lesson's wording) | the return path is `pop af / ld [$2100], a / … / ret`: only A/F are clobbered; BC/DE/HL come back as the callee left them (the CALLER's BC is lost — `$4001` on the way in); bank $60 `CustomScriptRead` returns its word in BC and `CustomReadInteract` its buffer in HL this way | bytes `$0020-$0037`; ARCHITECTURE "RST Dispatch Mechanisms" |
+| bank $00 `RST_28: ld [$f100], sp` (both trees) | ✏️ commented (mgbdis artifact) | bytes `$08 $00 $F1` = the operand of RST_20's `call $0008` + `pop af` (the far-call return) | ROM bytes; byte-perfect rebuild |
+| `$C96A` / `$C96B` (unnamed) | ✏️ labelled `wMapIDMirror` / `wInGateworldMirror` (both trees) | written at field init / new game / link seed, saved, never read | grep, literal + pointer forms |
+| `extracted/mapid_range_audit.json` line numbers (e.g. `ArenaLossWarp50` 11583, `label16_5b4e` 2053) | ⚠ stale line numbers (the verdicts and site counts 58 / 85 are current) | the tool keys by label + ordinal; the line field is informational — regenerate with the next engine session that runs the tool | fresh scan |
+
+## S134 addendum (2026-10-09; the 4 MB ROM — ROADMAP ARC CAP1)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `editor2/core/builder.py` docstring "always restoring the tree" | ✏️ was not always true | `build_rom` copied every generated file into `disassembly/` but removed only `PATCH_NEW_FILES`; a generated file the list did not name stayed in the clean tree. Fixed: it removes every file it created; both stagers find new bank files by rule | code read (never fired: every generated file was listed) |
+| PYBOY_DEBUGGING S100 save recipe "Menu OPTN → JOURNAL: `A (80) / down / right / A (60) / down ×3 / A (90)`" | ⚠ incomplete (kept; S134 section supersedes) | works only when the player faces nothing — facing an NPC, the first A talks; START shows the party levels, not the menu | PyBoy S134 on the user's 4 MB build |
+| ROADMAP CAP1 acceptance "a compiler-emitted bank $80 entry far-called from a real call site" | ✏️ moved to CAP2 | CAP1 puts no code in $80+ (nothing would call it); the far call into bank $80 was measured S133 with a scratch probe; the first real tenant is CAP2's place banks | — |
+
+## S135 addendum (2026-10-09; the LZ stream spill — ROADMAP ARC CAP2a)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `patches/bank_064.asm` header (generated) "tiles entry then attr entry per item (the L,A interleave CustomAttrCheck's screen-0->base / other->base+2 stride expects — bank_017.asm)" + the same in `project.py` | ✏️ stale since S94b | no stride exists — S94b's per-state render rows name each attr entry; S135 rewrote both comments (the order is kept for byte identity only) | `CustomAttrCheck` read (bank_017) |
+| ROOM_DATA_FORMAT step entry "+1 tileset_bank — bank containing compressed tile layout data" | ✏️ clarified | the byte is the LAYOUT stream's bank (the tileset comes from the `$26DD` record); any bank $01-$FF | S135 trace (`ReadStepBlock` → `DecompressTileLayout`) |
+| CROSSBANK_ROOMS lesson 4 "$FFFF screen guard" as THE unused-screen protection | ⚠ incomplete | the bank $17 render walk has no guard; the compiler's `$0000` rows crashed the game (PyBoy S135) — fixed in the compiler, lesson extended | PyBoy S135 |
+| `editor2/app/rooms/inspector.py` "custom tileset … (bank $67)" | ✏️ fixed | a project tileset may sit in an overflow bank $80+ (S135) | — |
+| `editor2/core/emitters.py` `ext_bank_files` docstring "Empty until ARC CAP2" | ✏️ updated | S135: the stream overflow banks | — |
+| The S134 4 MB ROM "NOT yet user-tested" (PROJECT_STATE, ROADMAP CAP1) | ✏️ updated | USER-CONFIRMED at the S135 start ("1) yes") | user S135 |
+| (note) the example project's `combined_room6b` tileset (bank $67 entry 0) | ℹ️ | no example room points at it (every record uses $28 / $29 sheets) — it is carried for the S92 byte identity | S135 subagent read of bank_000 / bank_071 records |
+
+## S136 addendum (2026-10-09; place banks — ROADMAP ARC CAP2b)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ROADMAP CAP2b "Bank $60 entries 0/1/5/6/7/8/9/10 become forwarders" | ✏️ corrected | the FORWARDERS are entries 0 / 1 / 2 / 4 / 5 / 8 / 9 / 10 (2 and 4 are reached only internally — through 7 and 6 — but are forwarded too); 6 / 7 stay global routing in $60 (their custom branches jump to the forwarders) | the S136 caller census: `ld hl, $60xx` sites in banks $04 / $06 / $0B / $17 / $77 |
+| `editor2/core/validators.py` `_payload_bytes` "Exact byte size of generated db/dw/ds lines" | ⚠ was not exact | a quoted string counted 1 byte per character; the charmap's `".."` is one byte — fixed (`_string_bytes`, longest-first over `disassembly/charmap.asm`) | test_s136 ROM half (plan == assembled bank) |
+| "a text section fits in bank $60" (implicit since S53: one `CustomTextPtrTable`) | ⚠ not at scale | a full 256-id section at ~80 B a text is ~20 KB — more than any bank; auto ids now break sections at 12,288 B | PROJECT_COMPILER §2.45 |
+| PROJECT_COMPILER §4 "`bank_060` generated layout order" | ✏️ superseded | S136 layout (§2.45) | — |
+| PROJECT_COMPILER §7 / ARCHITECTURE "RST Dispatch" — CustomScriptRead returns BC | ✏️ completed | it returns BC (the word) AND HL (the word's address), and the bank $04 branch tail uses HL; the S136 forwarders keep both | BANK04_SCRIPT_ENGINE "Parameter counts"; ARCHITECTURE "Place banks (S136)" |
+| `editor2/core/render.py` "screens : CustomRoomPtrTable (bank $60)" | ✏️ updated | `PlaceDirectory` → the home bank's `PlaceRoomTable` | test_canvas `--rom`; the S136 renderer check (33 / 33 screens == S135) |
+| `editor2/core/builder.py` manifest "owned" = banks $60 / $71 | ✏️ updated | + the place banks (texts / scripts in them had `addr` None) | review S136 |
+| `tools/audit_mapid_range.py` keys `CustomPtrChase` ×2, `CustomStateRules`, `CustomMonsterCast`, `CustomReadInteract` | ✏️ retired | those readers index `[wPlaceIdx]`; the forwarders' loads keyed instead | selftest PASS clean 58 / patched 84 |
+| (note) bank $60 out-of-range reads (a script type past the last place — the transient `$70` with < 6 places, a sentinel `$54` with a custom `wMapID`) | ℹ️ behaviour change, deliberate | before S136 the reader indexed past `CustomScriptMasterTable` (garbage); now BC = `$FFFF` (end), steps / lists the dummy ones (with `DummyExits`), an op `$24` / `$61` word stepped over | CROSSBANK_ROOMS "S136 sites" |
+
+## S137 addendum (2026-10-09; room colours in the place banks — ROADMAP ARC CAP2c)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ARCHITECTURE "LZ stream banks" — palettes "cannot move without code: ROADMAP CAP2c" | ✏️ completed | S137 added that code for custom rooms (bank $60 entry 13 → WRAM) | ARCHITECTURE "Room colours in the place banks (S137)" |
+| PROJECT_COMPILER §2.5 `placement` "pins the block to region A / B" | ✏️ superseded | ignored since S137: a palette is emitted (32 B) into each room's block | PROJECT_COMPILER §2.46 |
+| PROJECT_COMPILER §3 / §4 — regions `room_palettes_a` / `room_render_tables` hold the palettes / tables | ✏️ updated | both emit a comment since S137 | test_compiler 4e |
+| GATE_GENERATION §7.4, ROOM_DATA_FORMAT, CROSSBANK_ROOMS ceilings — custom tables in bank $17 | ✏️ updated | the rows + palettes live in the home bank; `CustomAttrCheck` no longer doubles `mapID − $6B` | CROSSBANK_ROOMS "S137 sites" |
+| `extracted/capacities.json` `free_rom_banks` "bank $17 3,937 B (room palettes + render tables live there)" | ✏️ updated | constant 4,651 B free since S137 (measured: four S137 builds) | the S137 builds |
+| (note) the space meter / `bank_usage` never measured bank $17 | ℹ️ gap, moot | the per-room data left bank $17 instead of gaining a meter | KEY_LESSONS S137 |
+| `tools/build_combined_tileset.py` "bank_017.asm palette wiring" (TOOLS_AND_DATA) | ⚠ dead path | it rewrites `CustomPaletteColors_6B:` in bank_017.asm, a label the compiler no longer emits (the compiler owns room palettes since S53 anyway) | grep |
+| `tools/audit_wram.py` "rerun after ANY wram.asm change" | ⚠ broken since S102 | stopped at `ds 2 * TILEANIM_MAX_GROUPS` ("unsupported ds expression"); S137 taught it `EQU` constants — its selftest now runs and FAILS: the `$DE74` scratch block (`wRoomRecScratch` … `wCustomRoomFlag`) classifies A′ (a `known_RAM_map` span over it), so `extracted/wram_usage.json` (last regenerated ~S100) was NOT regenerated | ROADMAP S137 backlog note |
+| (note) bank $17 / bank $60 out-of-range render reads | ℹ️ behaviour change, deliberate | before S137 a map id past the last room read past `CustomAttrPtrTable`; now HL = 0 → the Castle's colours; a screen word `$0000` → the Castle's (was a ROM0 walk) | ARCHITECTURE S137 |
+| (S137 r2) PROJECT_COMPILER §2.39 "a `service` script → the vanilla NPC's own shape" (the librarian) | ⚠ incomplete since S126 | the shape assumed the vanilla Library's geometry (the player in the upper half → the bottom box); from the lower half the library's two-box lines showed twice — op `$3C` added (§2.39, KEY_LESSONS S137) | PyBoy: lib2 (the hall librarian) == the original ROM's Library |
+
+## S138 addendum (2026-10-09; stale saves + room songs past $7F — ROADMAP ARC CAP2e)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `tools/audit_mapid_range.py` key `CustomPalCheck#0` = IDX8_SUB6B | ⚠ stale (since S94b) | bank $17 `CustomPalCheck` compares `wMapID` with `CUSTOM_ROOM_START` and tests the slot (`cp $07`) — it indexes nothing; the render tables it once indexed moved out in S94b → CP_UNSIGNED | read of `patches/bank_017.asm`; CROSSBANK_ROOMS "S138 sites" |
+| `patches/bank_017.asm` comment "Per-custom-room render tables (Pillar A). Indexed by (wMapID - $6B) … mapIDs $70+ need a $26DD intercept (follow-up)" | ⚠ historical | the tables left bank $17 (S94b tail, S137 place blocks); the `$26DD` intercept is bank $71 entry 0 (S42) — the comment describes S6-era state (left as is: it sits on reserved padding) | ARCHITECTURE "Room colours in the place banks" |
+| CROSSBANK_ROOMS "Custom-side arithmetic ceilings": bank $71 entry 0 "safe through mapID $FE" | ✏️ completed | the 16-bit index is safe, but the TABLE ended at the last room: an id past it copied junk (S137 hang); since S138 `StalePlace` reads the Castle's record for it | `census_stale_places.py` (`rec_stale`: the S137 build 137 / 137 wrong, S138 0) |
+| CROSSBANK_ROOMS / ROADMAP A′1 "Room-default music is capped at $7F … do it when the first room ≥ $80 ships" | ✏️ done S138 | 256-row tables, no `cp $80`; the first room ≥ $80 is a project's 22nd | PROJECT_COMPILER §2.47; PyBoy grottos `$80-$85` |
+| `music.model_battle_bgm` == bank $71 entry 7 (SOUND_SYSTEM §10, S116) | ⚠ wrong since S128 | entry 7 reads the arena tests through ROM0 `ArenaMapID` (the project's arena copy = `$5D`); the model compared the raw map id — `census_music_resolve.py` on the user's project: 15 / 3,000 mismatched (Starry final in the copy), never run on a project with an arena copy until S138 | the S137 build of the user's project; fixed (`Plan.arena_alias`): 0 / 3,000 |
+| disassembly bank $15: `rst $00` table at `$444E` as `ld d,d / ld b,h / db $fc / ld b,l` | ✏️ re-sectioned | `dw ContinueLoadSave, $45FC` (the CONTINUE screen's steps); `$445D-$44D6` = DEAD code (a gate save continued twice → the Castle; nothing jumps there) | clean build `1ca6579…` |
+| (note) a save in a deleted room | ℹ️ behaviour change, deliberate | S137: hang at CONTINUE; S138: CONTINUE goes home (hub / Castle, healed). A save in a room whose NUMBER was given to a new room still loads into that room (by design — map ids are numbers) | ARCHITECTURE "Stale places at CONTINUE"; help `66_hub.md` |
+
+## S140 addendum (2026-10-10; regions — ROADMAP ARC CAP3a)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| ROADMAP CAP3 / EDITOR_DESIGN §6.4 C / CROSSBANK_ROOMS S133: per region places `$6B-$EF` (133) + link slots `$F0-$FE` | ✏️ superseded by the build | places `$6B-$EA` (128, the compiler's `$EA` kept), link ids `$EB-$FE` (20; an exit list holds at most 17 rows) | `wram.asm` `LINK_ID_FIRST` / `LINK_IDS`; ARCHITECTURE "Regions (S140)" |
+| EDITOR_DESIGN §6.4 C: a place cache (`wPlaceIdx` / `wPlaceBank` / `wPlaceHdr`) from a place directory; script warps preceded by a compiler command (op `$24 $FFxx`), so the 255-command space must be widened first | ✏️ superseded by the build | no cache: the per-place tables are indexed by a 16-bit place number on every call; script warps get an ordinary `write_ram wWarpRegion` (op `$12`), and the command space is untouched | §6.4 C "As built S140"; PROJECT_COMPILER §2.49 |
+| ROADMAP CAP2 note / S133 audit: bank $71 "≈ 60 B a room" | ⚠ wrong (estimate) | 15 B a place, measured from the S140 demo's game.sym (8 + 3 + 1 + 1 + 1 + 1) | KEY_LESSONS S140 |
+| `extracted/capacities.json` `custom_mapids` = 128 | ✏️ refreshed | 63 regions × 128 ids; bank $71 binds at ≈950 places | the S140 build |
+| `editor2/help/90_limits.md` "The 128-room limit goes next" | ✏️ refreshed | regions; the help explains region ids and the shared step counters | test_app PASS |
+| ROADMAP "Tool drift: `tools/audit_wram.py`" (S137) | ✏️ fixed | the selftest failure came from OUR OWN `known_RAM_map` rows being read as vanilla evidence; `CUSTOM_ROW_MARKERS` excludes them; `extracted/wram_usage.json` regenerated | selftest PASS |
+| `patches/bank_073.asm` S140 banner, as first written: "`wWarpRegion` set by bank $71 HubWarp (the hub's room is region 0's in ARC CAP3a)" | ✏️ corrected in session (comment only) | the hub rows carry a region byte, and script warps set `wWarpRegion` too | bank $71 `HubWarp`; `emitters._regionize_ops` |
+| (S140 draft, caught before delivery) "region 0's step counters sit below the shared area" | ✏️ corrected in session | every region's counters share `wCustomStepRegional..$CFFF`, region 0's included; only reserved / explicit / global places' counters sit below | `Project.step_counter_allocation`; KEY_LESSONS S140 |
+| (note) a save made in region ≥ 1, CONTINUEd in a build without that region | ℹ️ behaviour, by design | it is a stale place: home (hub / Castle), region reset to 0 | PyBoy: the lodge 3-5 save in the plain build → the Castle |
+
+## S143 addendum (2026-10-11; places by name — ROADMAP ARC CAP4b)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `dwm/map_names.py`: `$0B $0E $11 $14 $15` = "Castle: Chest Room (variant)"; `$20-$22` unnamed | ⚠ wrong name (kept: generated JSON carries it) | all eight are the CASTLE's room data under unused map ids; the exits that seem to lead to them are gate entrances (gate flag 1 — the byte is a gate number); the editor shows "Castle (unused copy 1-8)" | `disassembly/bank_00b.asm` room table (`RoomSub_Castle_cont`, `$4C13`); `extracted/map_table.json` exits with `gate_flag` 1; `editor2/core/place_names.py` |
+| `dwm/map_names.py`: `$5F` unnamed | ✏️ named in the editor | the gate item shop's data (`$50`, `$77DD`) under an unused id: "Gate Floor: Item Shop (unused copy)" | bank $0B room table `$5F Room_5F (=mt$50)` |
+| ROOM_DATA_FORMAT "Sprite limits (S117b)": the party (8 objects a line) always adds to a room's NPCs | ⚠ incomplete | not in the Arena Battle room (`$5D`): its NPCs ARE the party (`$E0`, `$E1-$E3`) and the script holds the player | PyBoy S143 on the user's save (≤ 24 objects) |
+| PYBOY_DEBUGGING S109: "YES = up then A" | ⚠ prompt-specific | at the arena class confirmation the cursor starts on YES — UP wraps to NO | PyBoy S143 |
+| EDITOR_DESIGN §6.4 D (S133): destinations as `room:<name>` | ✏️ superseded (S142 decision, S143 build) | the stored `room:$XX` stays (the room's permanent number); the editor only SHOWS names | PROJECT_COMPILER §2.51 |
+
+## S144 addendum (2026-10-11; kept room states — ROADMAP ARC CAP4c)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| PROJECT_COMPILER §2.6 "S118c": "Make editable writes this form [`step_counter.vanilla`] for every screen" | ✏️ updated | only with "Every state, following the original game's story"; by default a copy keeps chosen states of its own (§2.52) | `Document.clone_vanilla(keep=)` |
+| `editor2/help/10_rooms.md`: "A copy of a game room follows the game's state … on for every copy" | ✏️ updated | only for a copy made with "Every state, following…"; a kept copy has no game counter | help S144 |
+| (S142 audit) "Make editable copies every story stage" — EDITOR_DESIGN §6.4 cost table | ✏️ superseded | S144 copies the chosen states; the 101 game rooms with the defaults: 51,412 → 30,140 B of scripts | `census_room_states.py` |
+| "Remove state" (Rooms tab) is a safe way to drop a state | ⚠ incomplete (S94 behaviour, kept) | later states move down one and nothing renumbers the scripts / rules that switch to them — a script can then index past the list (the S128 crash class); the confirm box now says so; Keep states… renumbers | `RemoveState` (app/rooms/commands.py), `room_states.apply` |
+| EVENT_FLAGS: 19 flags cleared somewhere (S124) | ✅ reproduced | 19 over 587 scripts; none of them is ON at any story point of `story_state` — so answering ON story flags is safe | `room_states.game_cleared_flags`, `test_compiler.test_s144` |
+| `editor2/core/story_state.py` (S132): "Starry Night = the ending flag `$00EE`, then the Castle's cascade" | ❌ incomplete (S144, measured) | the real ending sets `$00E4 $00E5 $00E9 $00EA $00EB $00ED $00EE $00EF $00F0` and 11 rooms' states the model lacked (Bazaar `$D93A` 4 not 2, Gate Hub `$D93D/E` 4 / 1, Farm `$D940` 1, Stable `$D947` 0, Arena Rooms `$D94E` 1, ceremony `$D951` 6, MedalMan `$D95E` 5, Queen `$D967` 2, bedroom `$D975` 1, white room `$D99A` 3); fixed: `run_ending` plays the measured chain | PyBoy (the ending played, CONTINUE in a fresh game); `census_story_state.py` step 30 |
+| ARCHITECTURE game modes: mode 4 = "map-script/cutscene engine" | ✏️ wrong name | the ending's credits + "TO BE CONTINUED" + its save prompt | PyBoy S144 |
+| EVENT_FLAGS: `$00E5` "set by no decoded script" | ✏️ found | the Farm's script 0 after its op `$3E` (word `$32`) | per-frame watch S144 |
+| `script_ops.TERMINAL` contains `$3E` | ❌ wrong (open box) | `$3E` yields and resumes; the decoder drops what follows it | `ScriptCmd3E_ChangeGameMode` (`ret`), PyBoy S144 |
+| bank $01 `CheckPaletteAnimActive`, bank $02 entry 3 (raw) | ✏️ annotated | the breeding ceremony's per-frame hook (map $08, `$D951` 7, no script) → its sky sequence; the last state `CeremonySkyDone` sets `$D951` := 8 + reloads the room; the `rst $00` table converted to `dw` (both trees, zero bytes) | build `1ca65793…` unchanged |
+
+## S145 addendum (2026-10-12; the Capacity tab + the 4 MB arc's acceptance — ROADMAP ARC CAP4d)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `extracted/capacities.json` `screens_per_room` (S91): "the CUSTOM pipeline currently accepts only 4x2 = 8 (screens keys '0'..'7')"; EDITOR_DESIGN §5.C "custom schema currently 8"; §6.4 E / ROADMAP CAP5 "screens per room 8 in the schema" | ❌ wrong (never enforced) | custom rooms take 16 (4 × 4): `validators` accepts screen keys 0-15; in the game a 4 × 4 custom room's every screen loads and draws == the editor preview, in regions 0 and 1 | `tools/walk_fresh_project.py` (ATLAS HALL 100 / 150), `test_compiler.test_s145` |
+| (S142 measure) "a 311-place project opens in 4-5 s" read as "the editor opens hundreds of places in seconds" | ⚠ incomplete | the S142 probe was 300 COPIES — identical layouts / tilesets, LZ memo hits; a fresh project of 160 rooms with their OWN tilesets opened in 22 s (the first space measurement LZ-compressed every distinct stream, 16 s, in a thread holding the interpreter); S145: 4.1 s to a ready window | `time_open.py` on the S144 / S145 code |
+| EDITOR_DESIGN §6.4 C / PROJECT_COMPILER §2.49 "the step counters … zeroed on a region change" (true) — but nothing named the per-region SIZE as a ceiling | ⚠ gap | every screen (one-state screens too) takes a counter byte; a region has 640 — 5 screens a room on average; 128 rooms × 6 screens stop the build, and `next_free_mapid` fills region 0 by map ids, not counters | `ctr_probe.py`, `test_compiler.test_s145`; now a Capacity row and a CAP5 box |
+| `capacities.json` `custom_mapids` "bank $71 binds first at ~950 places (15 B a place)" (S140, from the template) | ✅ measured | +15 B a place in bank $71, +3 in bank $76 (fresh projects of 20 / 40 rooms); 959 for the S145 acceptance project | `test_compiler.test_s145` |
+| `editor2/help/80_build.md` / `90_limits.md` (S135-S139): the $60 / $64 / $67 / $6C bars and the "new" bar | ✏️ superseded | two meters (ROM space, rooms) + the Capacity tab; the banks on the tab with Show technical ids | help S145 |
+
+## S146 addendum (2026-10-13; screens per group — ROADMAP ARC CAP5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `extracted/capacities.json` `screens_per_region`, EDITOR_DESIGN §6.4 E, PROJECT_COMPILER §2.53, help 81 / 90 (S145): "every screen of a custom room — one-state screens too — gets a one-byte counter; 640 screens a region" | ✏️ superseded (true S145) | S146: only screens with states (or a script-named / pinned counter) take a byte; one-state screens share `wCustomStepZero`; 640 screens WITH STATES a group; new rooms move on at 90 % | `test_compiler.test_s146`; `tools/walk_counters.py` |
+| EDITOR_DESIGN §6.4 B (S133 design): "a one-state screen reads a shared zero byte" | ✅ now true | was a design note never built (S134-S145 allocated every screen); built S146 | PROJECT_COMPILER §2.54 |
+| ROOM_DATA_FORMAT / known_RAM_map "$D998 shared by maze/conveyor/forest rooms" | ⚠ incomplete | 65 single-step screens (rooms $50 / $51 / $5F, the Coliseum, forest / maze / conveyor rooms …); no script word or instruction names it — always 0 | ROM scan S146; bank $0B annotation |
+| (S144 code) Play here "starts the screen in the state shown — your room: its counter from the build's game.sym" | ⚠ gap | a counter that is an EQU (a later region's room) is never in game.sym → "no build symbol for its counter"; S146 reads the build manifest's `step_counters` first | `walk_counters.py` playhere; `test_s146` |
+
+## S147 addendum (2026-10-13; songs at campaign scale — ROADMAP ARC CAP5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| SOUND_SYSTEM §1 / §2 / §8, PROJECT_COMPILER §2.9 (S116), PROJECT_STATE bank rows $71 / $74 / $75, `extracted/capacities.json` `song_slots`, help 61 / 90: "a song takes one id per channel; 95 ids; two song banks of 16,000 B; row 5 [split, $4001, $75]; CustomBGMChanTable" | ✏️ superseded (true S116-S146) | S147: one id per song (95 songs); bank $74 SongStart + the song directory; songs first fit in $74 / $75 / banks $80+; the master row is always `[$9E, $4003, $74]` (dummy records); no CustomBGMChanTable | SOUND_SYSTEM §11; `test_compiler.test_s147`; `census_sound_engine.py --custom` |
+| SOUND_SYSTEM §8 "~31 three-channel songs, ~15.9 KB" as the practical limit | ⚠ optimistic | measured S147 on the user's project: the 11th DWM2-size song stopped the build (first-fit per bank, songs of 1.5-11.5 KB); the DWM2 catalog is 31 songs / 57 KB | S147 audit (music.plan on the user's project + n catalog songs) |
+| (S119-S146 code) a cutscene's Music step / the cutscene editor's song list: "your song X" = its `first_id` | ⚠ broken for most songs | `first_id` is "auto" for every song added in the editor — the step lowered `F.val('auto')` and stopped the build; since S147 the step names the song and the build resolves its id | `test_s147` (a Music step by name) |
+| (S119-S146 code) "a room's talk cutscene" on a room with no scripts | ⚠ unbuildable | the lowering wired index 1 of an empty table (no index 0); fixed S147 (`cut:<room>:noentry`) | `test_s147`; KEY_LESSONS S147 |
+| validators: "this boss room is past the $7F room-music table — the floor before the boss plays the gate theme" | ⚠ stale since S138 | the room / battle song tables cover every id since S138 (256 rows; per place since S140); the warning still fires for a boss room past `$7F` with no song — harmless, not fixed S147 (outside the box) | PROJECT_COMPILER §2.47 |
+
+
+## S148 addendum (2026-10-15; where a script ends — ROADMAP ARC CAP4 "$3E" box)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| `script_ops.TERMINAL` contains `$3E` (S118; the S144 open box) | ✏️ fixed | the six ops whose handler clears `wScriptStateFlags` end a script (`$0F $3A $3B $43 $4F $58`); `$3E` yields and resumes; `TERMINAL` is checked against the handler analysis (`script_param_counts.py --check`) | `extracted/script_param_counts.json` `_ends_script`; census_cutscenes `yields` / `after_end` |
+| `tools/decompile_script.py` `$16` = "return"; `tools/extract_room.py` "goto / return: no fall-through" (S92-S147) | ❌ wrong | `$16` refresh_sprites redraws OAM + the BG map address and yields; the script goes on (PyBoy: the Castle's three `$16`). The copy tool stopped there and laid the copy out by address, so Make editable copies of the Castle (186 words), the Starry Shrine (2 ENDs) and the Priest gate floor (restore_bgm + END) fell into the next block | `tools/walk_replicas.py` (and `--negative`); `test_compiler.test_s148` |
+| BANK04_SCRIPT_ENGINE "Script State Flags": bit 0 cleared by "a room change ($0F/$3B/$43/$4F/$58)" | ⚠ incomplete | `$3A` (to the breeding scene) clears the byte too | handler bytes (`ScriptCmd3A_ToBreedingScene`) |
+| BANK04_SCRIPT_ENGINE "Script Data Bank Annotations" (S43): "Every `dw` word annotated: opcode names, text ID previews, RAM addresses" | ❌ wrong | the S43 generator decoded with the decompiler's arities (wrong for 36 ops) and guessed names: ~5,100 parameter words carried text previews, branch targets were bare numbers, the words they reach `db` bytes (8,983 db lines in bank $0C) — re-annotated S148 from the handler decoder (`tools/recomment_script_banks.py`) | byte-perfect rebuild; verify check 5 |
+| EVENT_FLAGS "Statistics" (S124): `$00E5` "set by no decoded script" | ✏️ fixed | the night Farm's scene sets it after its `$3E` (decoded since S148) | `cutscenes.Catalogue.flag_desc` |
+| PROJECT_STATE "The ending → the post-game" + `story_state.run_ending` (S144): `$00E5` added by hand | ✏️ superseded | `run_ending` plays the night Farm's entry scene (screen 1); the census of the ending still equal (steps 29-31 re-run S148) | `census_story_state.py --steps 29,30,31` |
+| `extracted/cutscene_census.json` (S118-S147 runs): `00/0@65` 8 model checks, `5D/0@132` 45 | ⚠ drift (not S148) | the same rows measure 16 / 36 on the S147 code in this sandbox too (the census environment, not the decoder); 0 mismatches either way | HEAD worktree run S148 |
+
+
+## S149 addendum (2026-10-16; battles at campaign scale — ROADMAP ARC CAP5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| MONSTER_DATA / bank_014 (S130): "`EnemyGroupTable` = the creation gender table ($14:$4A0F, 526 B, index = EID 0-525)"; "UnevolvedSkillMap entries $F2-$FF ($4A0F-$4A1C) are the first 14 bytes of EnemyGroupTable" | ❌ wrong | the constructor adds `$4A1D` (ROM bytes `c6 1d … ce 4a`); the table is `$4A1D-$4C1C`, 512 B = EIDs 0-511, right after the skill-map copy (which ends at `$4A1C`) and right before `EnemyStatsTable` (`$4C1D`); the first data line's address comment said `$4A0F` (fixed) | ROM bytes; PyBoy: project rows 519-532 read `EnemyStatsTable` row 0 (zeros) |
+| bank $14 entry table (S33): "Entry 3: Party monster slot init/clear" (`label14_401d`) | ❌ misnomer | entry 3 is the battle JOIN's constructor (bank $51 `$5CB4`, slot `$14` / `$28` patched): it clears the slot, sets the player as master, loads the row and runs entry 2's body (`Jump_014_4158`) — renamed `CreateJoinedMonster` (both trees) | PyBoy: the join ran the gender read once, entry 2's head never (`tools/walk_battles.py`) |
+| MONSTER_DATA "Project enemy rows" (S101) / PROJECT_COMPILER §2.18: project rows are copied by `CopyEnemyRowExt` "like any other row" | ⚠ incomplete | the stats copy was bounded; the CREATION was not — the gender read had no bound and the foreign-name tail compared the low byte only (rows 519-532 always male, later rows junk genders; EID 561 a rival's master name, 606 an egg) — fixed S149 (bank $14 `EnemyGenderCode` / `ForeignNamesGate`) | `tools/census_battles.py` (+ `--negative`) |
+| simulator/raising.py (S130): a project row's gender rolled ("eid < len(egt) else $FF") | ⚠ model ≠ game (S130-S148) | the game gave project rows a fixed / junk gender (above); S149 the game and the model agree: the row's own code (`Tables.genders`) | census_battles: 3,004 creations == the model |
+| PROJECT_STATE Open defects (S148): `walk_room_states.py` 9 / 780 FAIL "a warp-landing / save-state effect of the harness's `enter()`" | ✏️ resolved | a read-timing race: screens outside a room's view (Labyrinth 1, Forest Maze floors `$61` 2 / `$62` 1 — no exit of the game names them) are left by the game's camera 5-40 frames after a warp (the originals too); `enter()` read 4 frames late. It reads at the arrival frame: 789 / 789 on the user's current save | `tools/walk_room_states.py` (S149) |
+| ROADMAP CAP3b (S141): "Not walked: an arena match from two regions, a world in regions ≥ 1, a JOURNAL save inside a dive in region ≥ 1" | ✏️ walked S149 | all pass on the user's save (THE FAR WING, region 1): the lobby entered from region 1 keeps the region (a global place) and from GreatTree's redirect in region 0; a world in region 1; a JOURNAL save on a served gate floor in region 1 → CONTINUE there, inside the dive | `tools/walk_battles.py` (50 checks) |
+
+## S150 addendum (2026-10-17; the game's own texts — ROADMAP P3.6 / Phase F T-author)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| TEXT_SYSTEM "Text Storage": "Text pointer table at $400B" in every handler bank | ❌ wrong (S108 noted the id side) | the head after the far-call entries is the bank's MODE LIST + per-id tables wherever its words point; `annotate_text_slots.py` names each line | dialogue.json slots (measured) |
+| bank $41 entry comments (both trees, S33-era): entry 1 "fetch the pointer only", entry 2 "render" | ❌ wrong — ✏️ fixed S150 | entry 0 shows (CallTextEngine), entry 1 COPIES into `[$C837]` (RunTextHandler), entry 2 shows + waits; 47 call sites | the census's copy run; bytes |
+| `tools/dump_dialogue.py` / dialogue.json (S108): a text ends at the first $F0 (its docstring: "A string ends at its first $F0"); bank $4C = mode 0 only | ⚠ incomplete — ✏️ fixed S150 | `$FB $F0` is code $FB with its parameter byte $F0 (the battle tutorial); bank $4C modes 1-7 and bank $59's tutorial are text tables too | the S150 dump, its selftest |
+| TEXT_SYSTEM "Control-code parameters": battle codes "shown raw by the Dialogue tab" | ✏️ superseded | the Text tab writes them as `{ED}` / `{FC 10}` tokens (`textmark`) | — |
+| ROADMAP Phase F T-author: "same-size in place, or relocate" | ✏️ decided S150 | relocate (any length, text banks $80+); the user: "Samesize NOT preferred" | — |
+| PROJECT_STATE / patches bank_000 (S105): ROM0 $00F0 = `LoadModeBaseRedirect` | ✏️ moved S150 | $00F0 = `TextLevel1Hook` + `SaveBankAndSwitchCopy`; the nickname redirect is bank $60 entry 14 `TextOverride` | census: redirect 512 / 512; test_compiler |
+| EDITOR_DESIGN §5.2 (S109): the arena text "read-only on the Dialogue tab" | ✏️ superseded | editable on the Text tab like any text id | — |
+
+## S151 addendum (2026-10-17; items — ROADMAP E9)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| DATA_STRUCTURES "Shops (S117)" / both trees' ItemInfoTable comments: "+$03-$0A not decoded" | ✏️ fixed S151 | every byte placed (DATA_STRUCTURES "Items (S151)"): +3 used-up %, +4 field use, +5 the WHO window, +7 / +8 lines, +9 power, +11 bit 0 not sellable; +0 / +6 / +10 read by nothing | the byte scan of `$DA62-$DA6D` loads; census_items |
+| bank $03 jump table comments "Entry 2-8" (no meaning); `Jump_003_69ac` / `$6E31` decoded as code | ✏️ fixed S151 | entries 2-8 = the item routines (renamed `ItemLoadRecord` … `ItemConsumeRoll`); `$69AC` / `$6E31` = two 44-entry `dw` tables (`ItemUsableTable` / `ItemEffectTable`, re-sectioned in patches/, every handler named; disassembly/ comments) | build `1ca6579…` / example pin unchanged by the re-section |
+| ROM0 `SetupTilemapTransfer` ("Store source/dest for tilemap VRAM transfer") / `SetupVRAMParams` ("Store DE/HL as VRAM transfer parameters") | ❌ misnomers — commented S151 (names kept: hundreds of callers) | `SetupTilemapTransfer` SHOWS a text (bank $41 entry 0, H = mode, L = row); `SetupVRAMParams` COPIES a text into [DE] (bank $41 entry 1) | the S150 census; bank $52 / $54 item-name sites |
+| ROADMAP E9 (S72): "bits unlocated; likely near the item tables"; "what makes BeastTail single-slot/non-stacking" | ⚠ the consume half found (+3; 0 = permanent); "single-slot" UNRESOLVED | the bag holds one item per slot for every item (no stacking anywhere) — no class bit makes the BeastTail different; asked the user what the spec means | the record decode; the bag code (entries 5-7) |
+| editor2/help: `56_text.md` (S150 deliverable) | ⚠ missing in the repo (`56_dialogue.md`, the S108 Dialogue tab's help, still there) | re-created S151; `56_dialogue.md` deleted | `git ls-files editor2/help` |
+| S137 / services.py: "after the library's init_dialog an op $3C would only arm the NEXT box (another talk's)" | ⚠ not reproduced (S151 r2) | the gate guide's YES path runs `$3C / init_dialog / $3C / text` and the next plain talk from below still opened at the TOP; the egg appraiser's `$3C` before its farewell (after the screen) likewise — a `$3C` is not carried into another talk on the paths measured; `_bottom_boxes` still skips a text right after `init_dialog` | `walk_items.py services` (20 + 2 checks) |
+| PROJECT_COMPILER §2.39 / help 67: the bottom box "for the egg appraiser / namer / librarian" | ✏️ widened S151 r2 | every service and every shopkeeper (the Vault, farm, Medal Man, gate guide, shops opened at the top from below) | same |
+| validators.py (S91): "{n} NPCs with distinct sprites may exhaust the sprite-sheet VRAM budget" | ⚠ counted NPCs, not sprites — fixed S151 r3 | the sheet budget is per DIFFERENT sprite (repeats share a sheet — the NPC panel's own words); 4 NPCs of 3 sprites warned | the S151 demo hall |
+| help 20_npcs / ROOM_DATA_FORMAT "Sprite limits": the limits are sprites only | ⚠ incomplete — S151 r3 | the frame time: ≈13-14 of 154 lines per NPC on screen; 5+ with the party = half speed (measured) | `walk_items.py speed`, the lag rooms |
+
+## S152 addendum (2026-10-18; the opening — ROADMAP E3 a2)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| bank $01 S66 comment / CROSSBANK_ROOMS: the default-spawn table "107 entries", auto-label `NPCWalkDataTable` | ❌ WRONG — fixed S152 | 96 rows (maps $00-$5F; it ends where `ScanPartySlotTable` begins, $4686); renamed `DefaultSpawnTable`, re-sectioned as `dw x, y` rows in both trees (`tools/resection_default_spawn_01.py`); only a new game reads it | clean `1ca6579…` byte-perfect; the S152 PyBoy start (map $2F → (4, 11)) |
+| help 64 / S121: the Milly hook "the game goes on" after the whirl | ⚠ INCOMPLETE — fixed S152 | the replaced bedroom tail set `$0000` / `$D974` at its end; the hook did not, so the bedroom's scene counted as not done | `walk_opening.py --variant intro` (story check FAILED on `$0000` before the fix) |
+| help 90 (S109): "the announcer and the masters' words are text (not editable yet)" | ✏️ stale since S150 | game texts, editable on the Text tab | S150 |
+| services_doc (S126): a first-visit flag "created when new" | ❌ BUG — fixed S152 | the typed name was stored as the flag ("Pulio met") while the flag list holds slugs; the build refused it | `test_s152` |
+| MONSTER_DATA "Creation": the nickname cases | ⚠ INCOMPLETE — added S152 | every other row's monster has NO nickname (+$01 zero, "0000") | the S152 demo's first build |
+| cutscene_build (S119): `CELL_MIN = -3` "walking off the screen is allowed" (any actor) | ⚠ WRONG for the player — fixed S152 r2 | an NPC may walk off; the player's walk past the edge starts the scroll mid-walk and leaves him off the new screen; refused, help 63 / 75 say to warp | `walk_opening.py` (r1 build: 3 FAIL) |
+
+## S153 addendum (2026-10-18; the title screen and the ending — ROADMAP E5)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| disassembly bank $5F labels `DispatchEntry_5F_0`, `LoadFldUI_*`, `WriteFldUI_40eb`, `SaveFldUI_424a`, `LoadFldUI_4263` (auto-names: "field UI") | ❌ WRONG — renamed S153 (old names kept as aliases) | bank $5F = the ending (credits, TO BE CONTINUED) + the intro and the title: `EndingModeInit` … `TitleTick` (46 labels, both trees) | `tools/annotate_ending_5f.py`; clean `1ca6579…` byte-perfect |
+| ARCHITECTURE mode 4 row (S144): "its `$C0D8` machine asks after a button" | ⚠ INCOMPLETE — completed S153 | sub 0 the credits (27 pages, 5 s, then the bedroom by the warp mailbox), sub 1 TO BE CONTINUED (song $31; the save) | PyBoy on the original ROM |
+| ROADMAP E5 (S125): "likely special-cased rendering paths that must be located" | ✏️ answered S153 | the title is a plain BG tilemap + one palette, the credits are two text grids + one monster pose; nothing special-cased beyond bank $5F | DATA_STRUCTURES S153 |
+| cutscene editor TO BE CONTINUED help (S153 first draft): "CONTINUE comes back to this room: a scene "when <your flag>" can start the post-game" | ❌ WRONG — fixed S153 before delivery | CONTINUE runs no entry scene; a talk / step-on / examine scene or a door starts it | `walk_ending.py` (the first walk) |
+| `ending.py` docstring (S153 first draft): "CONTINUE comes back to the room the scene ran in" | ⚠ INCOMPLETE — fixed S153 | … and runs none of its entry scenes | same |
+| PYBOY_DEBUGGING (S152 recipe): START at frame 280 then A = NEW GAME | ⚠ INCOMPLETE — noted S153 | START does not skip the intro; the title arrives ~1,200 frames later (stage `$C88C` = 6) — A-tapping still reaches NEW GAME, a title screenshot needs the wait | `walk_ending.py` |
+
+
+## S154 addendum (2026-10-19; the memorial — ROADMAP E10)
+
+| File / claim | Verdict | What is true | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §15.3: "type t sits at packed position t+1 …; position 0 unused" | ❌ WRONG — corrected S154 | position 0 = resistance index 26 (record +$82), written FIRST by bank $51 `SaveBtlS_4404`; position 27 is the one never written | code-read (bank $51 `SaveBtlS_4404`; PyBoy `walk_memorial.py again`: a tag-8 fighter's bits 7-6 = 0) |
+| BATTLE_SKILL_SYSTEM skill +5: "a resistance slot 1-27 (1-based index)" | ⚠ INCOMPLETE — completed S154 | +5 = a packed POSITION: 1-26 = index 0-25; **0** (134 of 222 skills) = index 26 (always 0); 27 used by no skill | `extracted/skill_records.json` count |
+| `simulator/pacing.py` `pack_res`: index 26 at position 27 | ❌ WRONG — fixed S154 | position 0 (no difference while index 26 = 0) | the packer's code |
+| disassembly bank $58 FireSlash target row (no comment) | ✏️ annotated S154 | masks byte 0 `$C0` = position 0 (index 26), not Fire (`$30`): a vanilla off-by-one — FireSlash's smart pick only ties | code-read |
+| BREEDING_SYSTEM resistance inheritance (S130): the per-type tables' index not described | ⚠ INCOMPLETE — completed S154 | indexed by (p1 + p2) & 7: a sum of 7 has no row (runs into code); never reached in the game | code-read |
+| disassembly bank $0B `RoomEntry0_TilesetLoader` / `RoomEntry1_GraphicsLoader`: `ld a, [wMapID] / ld a, $08 / jr nz` after the sheet load | ✏️ annotated S154 | 7 dead bytes (the first load is overwritten; the `jr nz` falls through) — the memorial's regions | code-read + the walk (statues drawn at every load) |
+| `examples/s154_memorial_demo/build_demo.py` docstring (S154 first draft): "The statue stands blank and quiet." | ❌ WRONG — fixed S154 before delivery | the default empty words are "A blank statue, quiet and cold." (16 cells a line) | `memorial.DEFAULT_EMPTY` |
+| `editor2/app/rooms/tab.py` `_add_statue` (S154 first draft): the vocabulary release read `room['record']['tileset']` | ❌ WRONG — fixed S154 before delivery | a room drawing with a game sheet has no `tileset` until `_room_sheet` localizes it | `test_app` hung (KEY_LESSONS S154) |
+| help `77_memorial.md` §3 / §4 (S154 r1): "the statue takes 4 free tiles … a plinth at the bottom, colour 0 above it"; "colour 0: around the monster (the niche, the shadow)" | ⚠ SUPERSEDED — rewritten S154 r2 | a statue = the pedestal cell + the monster cell above; the monster cell holds a copy of the floor; the statue slot = the floor's colours + grey in an unused index; the r1 colour-0 area showed as a solid square (the user: "Currently its a grey square") | the user's test; `walk_memorial.py` see-through checks |
+
+## S155 addendum (2026-10-19; the new built-in custom skills — ROADMAP E11)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §13.9 / PROJECT_COMPILER §2.27: "`$DE/$DF` = the retired S45 POCs", "`$EA-$FE` = NEW skills (21)" | ⚠ SUPERSEDED S155 | `$DE` Repel / `$DF` LoneWolf / `$EB-$EE` Punish … Rust are built-ins, `$EA` held for Plunder, NEW = `$EF-$FE` (16) | §13.10 / §2.63 |
+| `editor2/core/balance.py` `_custom_skills`: Quake numbers from `extras['quake_power']` | ❌ WRONG — fixed S155 | `resolve` returns `extras['quake']` = {id: [min, range]}; the simulator's range is (min, min + range) | `test_s155_sim` |
+| PROJECT_COMPILER §2.21 / `species.py`: "19 eight-letter names + 19 four-letter nicknames fit" | ⚠ SUPERSEDED S155 (r3: 2 B over with "Blunt") | 1 B over (the S155 skill names spill 27 B into the same extents); two names a letter shorter fit | test_compiler `--rom` "19 species" |
+| `species._pack` docstring "small: <= 38 items, 5 bins"; called only for ≤ 40 strings | ⚠ INCOMPLETE — fixed S155 | 7 bins; ≤ 48 strings under a 200,000-state budget | code + timing (worst 0.43 s) |
+| bank $72 `EncountersHere72` (S155 first draft): `wRoomEncFlag` = "this room has encounters" | ❌ WRONG — fixed S155 before delivery | refreshed only per step: stale right after an arrival; asked from bank $71 entry 1 now | walk_skills.py `repel` (Cities_FOUNT) |
+| tools/walk_skills.py first draft: a monster record k at `$CAC1 + 149·k` for every k | ❌ WRONG — fixed S155 | slots 3-19 in SRAM `$A3BA + 149·(k − 3)` (known_RAM_map S60) | the gift found in SRAM |
+| known_RAM_map: no row for `$C93E` | ✏️ added S155 | bit 1 = the Repellant (bank $16 EncounterStep), + Repel | code-read + walk |
+| disassembly bank $57 / $53 / $58 / $16 (S155 hook sites) | ✏️ annotated S155 | comments only (the S155 patches; `AICat1AttackScore_67ba` = 20 + 10 per threshold) | clean build `1ca6579…` |
+| BATTLE_SKILL_SYSTEM §13.10 (S155 r1): "the hit message becomes `$FD` … `[INS 00]` = the target" for LoneWolf / Punish / Finish / Rupture | ⚠ SUPERSEDED S155 r2 | their line renders in the announce slot BEFORE the attack (`LineSlot72`), the hit keeps the game's message; `[INS 00]` there = the user (measured); Rust alone keeps the result line | walk_skills.py `numbers` (r2) |
+| bank $72 `LineReset72` comment: the cast-anim slot is "before the announce and the handler" | ❌ WRONG — fixed S155 r2 | measured: the announce renders as d9ed becomes 1 (d9ee 3); the `$da82` gate is polled in that slot AFTER it printed (f+46 on a 3-frame announce start) and before the attack animation (d9ee 5) | the r2 frame log |
+| BATTLE_SKILL_SYSTEM §13.10 / help 54 (S155): Rust / Blunt lowers ATK again on every landed cast ("Rust −9, −9 then `$BB` at ATK 1") | ⚠ SUPERSEDED S155 r5 | no stacking: a blunted slot fails (`wBlunted`), the AI skips it | walk_skills.py `numbers` / `bosses` (r5) |
+| disassembly bank $50 `jr_050_4945` (battle_command #2 "[INS 00] doesn't have any skill") | ✏️ annotated S155 r4 | it never fills `$C180` (ATK's target list leaves a foe's name: an original-game bug; patches `NoSkillName50`) | walk_skills.py `noskill` (PyBoy, the user's save) |
+| patches/bank_04c.asm (S2d-S155 r2): the `$4019[$FD]` row naming `CustomMsg_E0_MagicBurn` is "dead since S2e" (+ BATTLE_SKILL_SYSTEM §13.1, TEXT_SYSTEM "repointed there") | ❌ WRONG — fixed S155 r3 | the game renders a stock `$FD` through it after the poison tick (`$E1`): "… burns half its MP!" under every poison tick; the row is the vanilla `$5F6C` again | walk_skills.py `numbers` (the poison tick, r3); the negative ROM with the old row FAILs |
+| BATTLE_SKILL_SYSTEM §13.7 (Quake v4): the ally banner, then "the first ally's damage message" | ⚠ INCOMPLETE — fixed S155 r2 | the ally's damage sound + the party's shake played under the banner, 84 frames before its text; held now | the r2 frame log |
+
+## S156 addendum (2026-10-21; Plunder — ROADMAP E12)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| ROADMAP E12 plan (S155): Plunder "moved bit-for-bit to the caster's block (the stances with their round counters), a raised DEF / AGL as the amount over base" | ⚠ SUPERSEDED S156 | the user's answers (S155 Q14 "Yes" to "the foe drops back to base and you get one Upper's worth"; S156 "fresh", "only caster"): timed buffs fresh, the raised stat = one Upper / Speed on the caster | BATTLE_SKILL_SYSTEM §13.11 |
+| BATTLE_SKILL_SYSTEM §13.10 / PROJECT_COMPILER §2.63 / help 54: "`$EA` Plunder held — refused", "in battle Repel and Plunder do nothing", the AI "Repel / Plunder veto" | ⚠ SUPERSEDED S156 | Plunder is a built-in with its handler, AI rule and pick (§13.11, §2.64) | walk_plunder.py |
+| `custom_skills.TOKENS` (S155): `{name}` in Blunt's result line = `$F9 $00` (it printed the TARGET) | ⚠ SUPERSEDED S156 | at the result render `[INS 20]` = the caster (measured): Blunt's `{name}` = `$F9 $20` now (`RESULT_TOKENS`) | slot log, TEXT_SYSTEM |
+| PROJECT_COMPILER §2.63: "the S155 names spill 28 B" | ⚠ SUPERSEDED S156 | 36 B with Plunder (placed last) | `CS.layout` |
+
+## S157 addendum (2026-10-24; one-only items + the ROADMAP clean-up — ROADMAP E9)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| GATE_GENERATION §5 "Item tier by depth — tier $01 → item id RNG mod $0D + $07; tier $02 → RNG mod $1E + $28. So late gates draw from higher item ranges" | ❌ WRONG | those are GOLD amounts (a floor entry whose sub-kind is `$00`); the item id is the entry's sub-kind, chosen at build time from `FloorLayoutData` | bank $01 `jr_001_5aab` → `jr_001_5b22` adds `wGroundItemData` to the purse; PyBoy floors census S157 |
+| DATA_STRUCTURES "Items (S151)" / ROADMAP E9 "single-slot like BeastTail" open | ✅ ANSWERED S157 | the user's rule = ONE-ONLY (used up 0 % → at most one in bag + Vault, never in the random gates' tables, kept on loss) | user S157; DATA_STRUCTURES "One-only items (S157)" |
+| bank $04 `$6F44-$6F63` mgbdis code (`inc bc / inc b / ld b,$0c …` with a `jr nz, FindEmptySlotLoop`) | ❌ DATA | `ColiseumPrizesLow` / `ColiseumPrizesHigh`, 2 × 16 item ids (op `$5C` reads them) | re-sectioned both trees, `tools/resection_loot_lists.py`, clean `1ca6579…` |
+| ROADMAP boxes S2f, §13.4 follow-ups, S4, S3 [~], S2 [~], M3 [~], E4, E6, A′3, the 4 MB contingency, multi-screen editing [~], B6 / B8 / B9 [~] still open | ⚠ STALE | each already built by a later session (the box now names it) | ROADMAP clean-up S157 (user: "Also clean up roadmaps") |
+| EDITOR_DESIGN §9 G-E "'play this room' from the Rooms tab is still open"; G-F "the network / unlock half stays open" | ⚠ STALE | ▶ Play here S132 (P3.4); NG2 / NG3 / P3.14d / CAP3 built the network | ROADMAP P3.4, ARC NG, P3.14d, CAP3 |
+
+## S158 addendum (2026-10-28; breeding hints — ROADMAP E15)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| known_RAM_map / BREEDING_SYSTEM: `$CA94` = the library's "seen" bits | ❌ WRONG | "EVER OWNED": set when a monster is created in the roster (bank $14 `label14_40b4`), joins after a battle (bank $51 `SetBtlS_6928`) and for a bred egg's species (bank $16 `BreedCreateOffspring`); never set by only seeing one, never cleared | code-read S158 (the three `SetBitInArray` callers, commented both trees); PyBoy: the walk's egg set FangSlime's bit |
+| `Project` story checks: the label `'seen'` worded "monsters seen" | ⚠ WORDING | reads the same `$CA94` bits = ever owned; the label is kept (project files use it), the meaning is "owned at some time" | S158 (not changed: a rename would break projects) |
+| SRAM bank 3 above the memorial's list "free" | ✅ FREE but JUNK | never written by the game: the user's save holds `$FF` there — a store needs a magic (KEY_LESSONS S158) | PyBoy S158 |
+
+## S159 addendum (2026-10-28; resistances + Earth — ROADMAP E16)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| MONSTER_DATA field table: resistances' status hit "always / 85 % / 50 % / never" | ⚠ PARTIAL | that is CheckTargetGuardB (`$6710`) only; the status ladder `$6749` (Beat, SleepAll, Poison …) is 75 / 50 / 25 % / never, Kamikaze's `$6733` always / 75 / 40 % / never | simulator/damage.py ladders (S78-S130); BATTLE_SKILL_SYSTEM §15.3 S159 |
+| help 90 / memorial.py (S154): "every monster's 27th resistance must stay 0 while the project has statues" | ⚠ SUPERSEDED S159 | index 26 = Earth: levels 0-3 share +$82 with the tag (bank $79 masks `$F8`) | walk_earth.py `--memorial` 5 / 5, negative 3 FAIL |
+| (implicit, S111-S158) the Balance tab simulates the project's skill elements | ❌ WRONG | `Board.elem_override` was set only by the validators: element edits never reached a Balance number; monster resistance edits did (species info → `pack_res`) | S159 code-read; fixed (PROJECT_COMPILER §2.67) |
+| BATTLE_SKILL_SYSTEM §15.11.F10 (S130): `AIRule_4c13` "veto when EVERY live opponent has res level 3" (code-read) | ✅ MEASURED S159 | a Bang caster: 15 / 32 actions at Explosion 0, 0 / 26 at Explosion 3 (INT 200) | walk_earth.py `ai` control |
+| MONSTER_DATA type table: Heat = "Firebal/bane/bolt, LavaStaff" | ✅ / unverified | the Firebal line measured (census S111); LavaStaff (an item's battle skill) not measured | extracted/skill_element_census.json |
+
+## S160 addendum (2026-10-29; 30 new skills, the reclaimed ids — ROADMAP E13)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| bank $58 `SaveBtlFX_43ff` (S48 note): "a presentation router" | ❌ WRONG | the AI's DAMAGE ESTIMATE of `$DB8A` on one target (bank $54 entry 3 below `$37` / `$D9` / `$DD`, else bank $52 entry 3), called by the target pick of Attack's row `$41E9` for a party actor (`$DD0B` ≠ 0) or a link battle; nothing touches the animation | code-read + stub calls S160 (both trees commented) |
+| bank $54 entry 5 `SkillMagnitudeBySide` ($535F): a "side-power reader" of skills | ⚠ PARTIAL | its one caller is the battle ITEM pick (`$50:$5114`, the item's target lookup) | code-read S160 (bank $54 commented, both trees) |
+| help 54 (S111-S159): "Evolves from — up to 5 skills: a monster that knows ONE of them learns this one in its place" | ❌ WRONG | one prerequisite = in its place (code 1); two to five = a combination: the monster must know ALL of them, the skill is added (code 2) — and code 2 is fenced for custom ids (`$DA+`, S75; + the 14 reclaimed ids S160): such a skill is never learned | `simulator/raising.learn_scan` (census S130); walk_reclaim.py `learn` |
+| (implicit) learn rows: any skills may share an "Evolves from" | ❌ WRONG | two skills from one single prerequisite FREEZE the level up (bank $51 `LevelUpS04_LearnScan` code 1 finds nothing to replace) — the original data has none | walk_reclaim.py `freeze` (S160); compiler warning |
+| `extracted/skill_records.json` names of the item rows 199-212 | ⚠ OFFSET | six staff names for five staves: from about 200 the labels are one id late (204 "FIRESTAFF" is the WarpWing's battle skill, item 29 + `$AF`; 212 "COMEDYBK" is 211's); 176-198 are right. The battle skill of item n is n + `$AF` | S160: the records' +10 = 1 rows are exactly `$BC-$C1` / `$CC-$D3` (items 13-18 / 29-36); the JSON is not rewritten (its readers key by id) |
+| `tools/map_skill_id_buckets.py` — the `$db8a` range gates "for a new id" | ⚠ SCOPE | written for ids `>= $DE` (the first `cp` of each read); an id window below `$DE` needs the concrete ladder walk (BATTLE_SKILL_SYSTEM §13.12) | S160 |
+| S159 finding "an enemy with only a new skill on Bang never casts it" | ✅ WIDER S160 | INT-200 enemies whose four skills are all new (EvilSlash / Beserker / SquallHit / Whistle bases; Sleep / Sap / PsycheUp / BoltSlash) cast none in 19-20 actions each, `$EF+` and reclaimed alike | walk_reclaim.py `enemy` (ROADMAP E17) |
+
+
+## S161 addendum (2026-10-30; the enemy AI and new skills — ROADMAP E17; the E13 shared-parent note)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| S160: "INT-200 enemies whose four skills are all new cast none in 19-20 actions" (as evidence for E17) | ⚠ CONFOUNDED | measured with the S110 rig, which pins the RNG on EVERY battle frame: every decision of a battle was the same one; the STOCK twin (EvilSlash … Whistle) also cast none in that rig. The finding stands with a free RNG: a stock mage cast Bang 16 / 58, its new twin 0 / 50 | walk_mirror / the S161 measure (KEY_LESSONS S161) |
+| BATTLE_SKILL_SYSTEM §15.10 / `simulator/ai_rules.py`: the S81 rule membership is "AUTHORITATIVE" (240/240) | ⚠ SCOPE | authoritative on the S81 sweep's board (ONE party monster); with three live opponents (defending) the ROM gives Sleep +40 (model 0), Sap +30 (0), BoltSlash +25 / +5 (+35), PsycheUp a veto (+35) — every chain end of the four | walk_mirror `sim_check` on the STOCK caster (ROADMAP E17 note) |
+| ROADMAP E17 (S160): "the simulator's `core_alias` applies the BASE's id-keyed rules to a new skill" | ❌ WRONG for the AI | `core_alias` mapped the act-time rules (battle.py); the AI chain (`pacing.ChainRules`) evaluated the new skill's own id (no rule) — as the ROM did. Since S161 both judge it as its base | code-read S161 |
+| bank $57 `AIRule_4785` → `SkillView57` (S160) | ↻ SUPERSEDED | retired S161: during the chain `$DB8A` holds a new skill's BASE (`AIViewArm57`) | test_compiler test_s160 / test_s161 |
+| clean bank $51 `ld hl, DispatchAboveE2` in `LevelUpS04_LearnScan` | ❌ MISLABEL | the value `$0B03` is a text id ("…'s [old] becomes [new]!"), not the ROM0 label at `$0B03`; both trees now `ld hl, $0b03` (byte-identical) | S161 rebuild `1ca6579…` |
+| S155 `walk_skills.py`: "LoneWolf, a party of two" / "an enemy alone" read from the save | ⚠ SAVE-BOUND | true on the S155 save (two monsters, a piercable DEF); the user's 2026-10 save has three and high DEF — the walk now sets both (later S161) | `walk_skills.py` 33 / 33 (was 31 / 33 on S160 and S161 builds alike) |
+| BATTLE_SKILL_SYSTEM §13.13 (first S161 text): "the duplicate-group conversion's list still sees a new id as itself" | ↻ FIXED later S161 | `DupBase53` → `AIBaseOrSelf72`: a new skill is tested as its base; project enemy rows read `EnemyDupConvFlagTable_41df` past its 487 rows (open, ROADMAP E17 note) | `walk_mirror.py` `dupcast` (21 / 21 conversions) |
+
+## S162 addendum (2026-11-02; holds back group spells — ROADMAP E17 note "Project enemy rows")
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| `EnemyDupConvFlagTable_41df` "487 rows, 181 set" (bank $53 comment, TOOLS_AND_DATA, the S161 notes) / "182 of the 487 vanilla rows" (BATTLE_SKILL_SYSTEM §13.13 first S161 text) | ❌ OFF BY ONE | the table is 486 bytes (EIDs 0-485, 181 set); EID 486's byte is `CmpBtlC_43c5`'s first opcode `$FE` (non-zero: the 182nd "flag" was code); EID 486 is the Dracky boss's join row, never fought; the table was fake `nop` / `ld bc` code in both trees — re-sectioned S162 | S162: ROM bytes `$53:$41DF+486` = `$FE` at the `CmpBtlC_43c5` label; clean rebuild `1ca6579…` |
+| ROADMAP E17 note (later S161): "Proposed: a flag per project row (default: the copied source row's)" | ↻ BUILT S162 | `progression.enemies[].holds_group_spells` (absent = casts; a copy keeps the original row's); the user's rows read `$03` / `$FE` / `$03` before — all "holding" by accident | `walk_holds.py` 13 / 13 |
+
+
+## S163 addendum (2026-11-02; editor fixes + act-time id lists + the AI rule model on 1-3 opponent boards — ROADMAP E17 notes)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| ROOM_DATA_FORMAT / ROADMAP P3.0 (S91): "8 distinct light sheets all render; blanks on overflow" | ❌ WRONG (custom rooms) | the room-load cache holds 6 different sprites (bank $0B `Call_00b_4839`, `ld b, $06`); the 7th and later get tile base `$50` and are drawn with the FIRST sprite's picture — no blank | PyBoy S163, a custom town room with 8 different sprites |
+| `validators.py` (S91 / S151 r3): "more than 3 different sprites may exhaust the sheet budget" | ❌ STALE since S141 | sheets 4-6 of a custom room live in VRAM bank 1 since S141 and survive the windowed menus; the real limit is 6 (`formats.sheet_budget`) | the user's project: 19 build warnings → 7 with the palette fix |
+| `validators.py` palette check (colour 1 = `$6BFF`, colour 3 = black) over all 8 stored sub-palettes | ❌ WRONG | only slots 0-3 reach the ROM (S137: `emitters.palette_slots_asm` writes 32 B a palette, the game loads 4 — `CustomPalCheck` b = 4 / `LoadPal_46a1`); slots 4-7 are never emitted (a copy of a game room keeps zeros there — 6 false warnings on the user's project); the check now reads slots 0-3 | test_compiler `test_s163` |
+| BATTLE_SKILL_SYSTEM §15.10.5 / `ai_rules.py` (S81): the rule membership sets (e.g. `R_5FFD`, `R_6180`, `R_4D56`) | ❌ WRONG (as sets) | they were the ids SEEN firing on the S81 one-opponent board; the rule heads hold id ladders (re-read S163, `ai_rules.IDS_*`) and each rule runs only in the chains that list it (`ai_rules.CHAINS`) | `validate_rules_boards.py` 1,573 / 1,573; `rom_rules.py` 160 / 160 |
+| §15.10.5 (S81): "$4D56 +15 physical bonus" | ⚠ PARTIAL | +10 when the caster's ATK ≥ the opponents' "average DEF" — which the vanilla code never computes (`LoadBtlAI_7dbe` adds 0 into each entry: 1 or 2 live opponents → 0, otherwise `$FFFF`) — then +5 when ATK ≥ the lowest live DEF; on S81's one-opponent board always +15 | sm83run trace of bank $57; 1,573 chain ends |
+| §15.10.5 (S81): family cuts "+20 iff a live matching target is present" ($4C41) | ⚠ PARTIAL | the +20 tests the FIRST opposing slot only (`LoadBtlAI_44a7`'s loop `inc c / dec b / jr nz` jumps back to itself, not to the test — a vanilla bug); the $6848 veto scans all three correctly | the same |
+| §15.10.5 (S81): the status-class bonuses ($5FFD / $6180 / $61BC …) "fire for the skill" | ⚠ PARTIAL | each counts the eligible live opponents against their resistance level to the record element; `CallBtlAI_7d4d` counts the first opposing slot once before the loop (it is counted twice); bonus when count ≥ resistance sum | the same |
+| (implicit since S111 / S160): "a NEW skill runs its BASE's effect" | ⚠ PARTIAL until S163 | 49 act-time reads decide parts of an effect by the acting id (Vivify vs Revive, SickLick vs LushLicks, TailWind vs StormWind, hit ladders, routing …) — a new id matched none; fixed S163 (BATTLE_SKILL_SYSTEM §13.14) | `census_act_id_lists.py` (363 sites); `walk_actbase.py` 44 / 44, negative 16 FAIL |
+| (implicit): a census by BRANCHES finds every id decision | ❌ WRONG | SkillLushLicks / SickLick and SandStorm build the MESSAGE number from the id (`add $2F` / `add $30`) — no branch; the census also compares message writes (`$DD70` / `$DD71` / `$C822` / `$C823`) | the S163 census |
+| (implicit, S95): "a failed structural edit leaves no trace" | ⚠ PARTIAL until S163 | the document was restored, but a tileset sheet the op had already written stayed in `assets/` (the example's orphan `ts_28_0D.2bpp`; test_app left `ts_28_04.2bpp`); `SnapshotCommand` now removes the sheets a failed op created | test_app `s163_failed_op_assets` |
+| S163 (first delivery): the census of `$DB8A` / `$DB4F` / `$DCEC` reads found every act-time id decision | ❌ INCOMPLETE | the battle menu's WHO list copies the id into `$DD76` / `$C1C2` when it opens and compares the copy with Vivify / Revive frames later — beyond the census's run from the read; the user found it ("EVivify cannot select [the] dead monster"); fixed S163 r2 | PyBoy, the real menu; `walk_actbase.py` `menu` |
+
+## S164 addendum (2026-11-03; outstanding fixes — ROADMAP clean-up, E13 notes, E14, E17 note)
+
+| Claim | Verdict | Correct | Evidence |
+|---|---|---|---|
+| BATTLE_SKILL_SYSTEM §13.8 / KEY_LESSONS S75b: "without the code-2 fence any monster at the required level stat-learns a universal custom row" | ❌ WRONG | `SkillLearnScan` skips a row whose first prerequisite is `$FF` before testing any (code 2 needs 2-5 prerequisites all known); the S75 crash was the echo-RAM slot 40 | walk_combo `universal` (Mourn / Tremor never learned off the queue, fence open) |
+| help 54 / the compiler (S160): "a custom or new skill with two or more prerequisites is never learned" | ✅ was true, FIXED S164 | the fence lifted: a combination, learned beside its prerequisites (`$0B0F`) | walk_combo `combo` |
+| BATTLE_SKILL_SYSTEM §13.9 (S111): 41 bases a copy cannot run | ⚠ STALE since S163 | on the S163 engine 17 remain (138 same); the S111 compare also cut battles at a 700-frame window with idle-drifting rolls | `census_skill_clone.py --whole` |
+| BATTLE_SKILL_SYSTEM §15.10.5 (S159): "an enemy never casts a new Bang skill — not fixed" | ❌ STALE | fixed S161 (E17) | §13.13 |
+| ROADMAP S63 "CI runs only verify_integrity.py" | ⚠ INACCURATE | CI ran the clean + patched builds, not the verifier; S164 adds both the verifier and `test_compiler --rom` | `.github/workflows/verify.yml` |
+| TEXT_SYSTEM "Source re-section" (S43): bank $47 = 69 strings / 125 ids, mid-string entry points (`$4248` re-entering `$423e`) | ❌ WRONG (the pre-S108 map) | 56 strings, one per id `$03C8-$03FF` (the bank's single table `$4009`); region `$40C1-$5B74` | `resection_text_bank.py` re-run, `1ca6579…` |
+| ROADMAP: "`$DB42` bit6 SETTER — open", "+8/+9 consumers — open", "combat simulator — open", "S81 PARTIAL" | ❌ STALE | closed S130 / S90 / S130 / S90 | BATTLE_SKILL_SYSTEM tension roll, §15.11.F6 |
+| PROJECT_STATE rows: S148 `$3E` box, S116b player, S84 AI-commit, S121 hook test ROMs "NOT yet user-tested" | ❌ STALE | user-confirmed / user-reported later (Session Index quotes) | PROJECT_STATE Session Index |
+| ai_rules (S163): MultiCut takes no family bonus; `$551B` absent | ⚠ INCOMPLETE | MultiCut → `$4C41` row 7 (family 7, no veto); `$551B` decoded (BATTLE_SKILL_SYSTEM §15.10.5 "S164") | validate_ai_fixes (mutated boards) |
+| (implicit) "the S163 rule model is exact" | ⚠ ON THE CAPTURED BOARDS ONLY | 1,102 of 7,865 mutated chain starts differ for the original rules (ROADMAP E17 note) | validate_ai_fixes |
+
+## S165 addendum (2026-11-04; the 17 bases, the window words, the rule model on any board — ROADMAP E13 note, T-follow (a), E17 note)
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| S163: "the census … 0 unjudged roots" (act-time id reads) | ⚠ OVER THE ALLOWED BASES ONLY | the census projects held the 112 (then 138) bases the compiler allowed; with the refused 17 written into a ROM: 40 new roots, 24 reads | `census_act_id_lists.py --refused` |
+| S164: "138 bases a new skill may run" (the whole-battle census) | ⚠ INCOMPLETE | 11 of the 24 newly allowed still had id reads off the rig's path (turn order's defensive list, Imitate's check, the act-state ladder, HighJump / LifeSong / SuckAll / Ramming); fixed S165 — now 155, 0 differ | BATTLE_SKILL_SYSTEM §13.14 "S165" |
+| S164 ROADMAP T-follow: "the field menu's words are … WINDOW LAYOUT scripts in bank $15 (e.g. `$15:$6855` "INFO" …)" | ⚠ WRONG BANK | the field menu's streams are bank $07 (`WinLayout_07_704D` …), in the FIELD font's tile numbers; bank $15's `$6849` is a map / arena window in the text font | DATA_STRUCTURES "Window layout streams (S165)" |
+| ai_rules (S81 / S163): "`$5A4C` Cover / Guardian with a downed ally +20 [measured]"; `$4DF9` / `$4B8C` "omitted" | ⚠ PARTIAL | `$4B8C` modelled S165 (a −20 with a pointer slip); the other rules the corpus never fired (22, BATTLE_SKILL_SYSTEM §15.10.5 "S165") modelled — the mutated boards exact | `simulator/rule_gaps.py` |
+| validate_ai_fixes (S164): the board's traits / families from `monsters_full.json` | ❌ NOT WHAT THE ROM READS | the rules read the trait byte `$DB8B + slot` (made at the battle's start) and the build's own families (a project may move species) | rule_gaps (MetalCut / BirdBlow) |
+| ROADMAP T-follow (a) (S150): the INFO page's words, the HP / MP bar "no SaveBankAndSwitch call draws them" | ✓ CONFIRMED + LOCATED | layout streams `$07:$70F7` / `$71AF` drawn by `WinLayoutDraw07` | walk_window_words |
+
+## S166 addendum (2026-11-04; the other screens' window words, the packed rows, the tables' widths — ROADMAP T-follow (a) / (b) / (c))
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| bank $50 label `LoadPaletteFromDE` (`$50:$75F0`) | ❌ MISNOMER | it is entry B of the window-layout drawer (the 8th copy, DATA_STRUCTURES "Window layout streams"); labelled `WinLayoutDraw50` above it (the old label kept: no reference changes) | the census's byte pattern; PyBoy hook: the battle's FIGHT / ITEM window drawn through it |
+| S165 TEXT_SYSTEM: "the windows of banks $09 / $0A / $18 / $50 / $51 … their words read as other tiles" | ✓ CONFIRMED + MEASURED | every screen has the text font's typeface at its own tile numbers ("NO" = `$31 $32` / `$9D $9C` / `$A8 $A7`); a letter = a tile's 8 × 8 shape | `tools/census_window_layouts.py --services` |
+| S150 ROADMAP T-follow (b): "the field messages holding several menu words in one line (`PUT TAKEEXIT`, `ITEMGOLDEXIT`, `WHOINFOOKMONEGG` …) — which screens show them and how they are cut is NOT measured" | ✓ MEASURED (one correction) | text CANVASES: field 11 / 12 → the Vault (`$8A40`, 12 cells, cut 4 / 4 / 4), field 16 → Grandpa's EXIT (cells 1-4 of an 8-cell canvas), field 85 → the Vault's ITEM box; `WHOINFOOKMONEGG` (field 74) is NOT a field screen's: only bank $18 (the link mode) reads it; misc 9 has no reader found | the canvas hook at `$05B6` + the level-2 read at `$094F` (TEXT_SYSTEM "Text canvases (S166)") |
+| ROADMAP T-follow (c): "the editor warns only for dialogue" (no table width known) | ✓ CLOSED | measured canvases: battle messages / level-up lines / item descriptions / item use lines 2 × 18, item names / personalities 1 × 9 | `extracted/window_layouts.json` `text_widths` |
+| the battle's full-party WHO / INFO / OK "drawn from misc 10 / 27" (the S166 census's first attribution) | ⚠ ONLY PART | misc 10 `WHOSTROK` IS drawn into `$82-$8B` (level-2 read `$41:$7340`), but tiles `$83-$8A` are re-lettered before the window is drawn (an edited `Who` shows `WHO`): a writer that is not the text engine — not decoded; bank $51 windows excluded from editing | `tools/walk_window_words.py --services` (the S166 r0 run) + a VRAM read at the draw |
+| census canvas check "the tile still holds the canvas's bytes in EITHER VRAM bank" (S166 draft) | ❌ HARNESS BUG (fixed) | the canvas is written to ONE bank (VBK at the call): the other bank's unchanged bytes always "matched" — compare only the bank the engine wrote | KEY_LESSONS S166 |
+| ARCHITECTURE free space "$51 | $7B34 | 1,228 | 00 fill" (S128 placed `ArenaScriptType51` there; S161 `LearnUpgradeOrAdd51` after it, `$7B3A`) | ❌ WRONG BY ONE BYTE (S166 r2) | $51:$7B34 = the last byte (`$00`) of gfx `$5112` (the U N O letters of the battle YES / NO, `ld hl, $89c0 / ld de, $5112 / call WaitDMATransfer`): S128 overwrote it with `$FA` (`ld a, [wScriptMapType]`) → the O's bottom row `$FF $FA` = the user's "the NO has a bit of a glitch at the bottom" (on every build since S128). Restored (`db $00`); the routines at $7B35 / $7B3B; the free fill from $7B35, 1,227 B. The other 39 code-loaded streams: unchanged in the patched build | test_s166 `--rom` (all 40 streams vs the original); PyBoy join question: `$89C0` == the decode (r2 ROM), `…38FFFA` (the S166 ROM) |
+
+
+## S167 addendum (2026-11-05; the patch-space audit, a stale PySide wrapper, the Help tab)
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| patches/bank_000 (S63) "$3BC1 (17 unreferenced rst $38 bytes)"; KEY_LESSONS (S42) cited "the `$3BC1` unreferenced rst $38 run" as the SAFE padding example | ❌ LIVE DATA | `$3B83-$3C02` = the groove row table (8 × 16 steps, `AudioSetEDZero` `ld hl, $3B83 / add hl, de`); `$3BC2` is row 3 step 15, `$3BC3-$3BD2` row 4 — songs `$0C` / `$12` read `$3BC2` | the editor's sound engine with a read hook, 92 sounds × 3,600 frames; the S166 build's `$12` wrote other register values in 174 frames a minute (KEY_LESSONS S167); fixed (MapIDClampForPalette → `$3466`) |
+| clean-tree labels `AudioWavePatternData` ($3BC2), `ScreenTransA` / `B` / `C` / `ScreenTransitionSetup` / `D` ($3BF5-$3C01), `AudioLookup_3B89` / `3B97` / `3BA7` | ❌ MISNOMERS | mgbdis labels inside the groove table, named only by other misassembled data (banks $00 / $2B / $32 / $33 / $63) | renamed `GrooveRow<r>_<step>` (tools/resection_groove_00.py), clean `1ca6579…` |
+| ARCHITECTURE free space "$54 \| $7FC0 \| 64 \| 00 fill" | ⚠ A SUBSET | bank $54 is `$00` from `$56CA` to the end (10,550 B) after code that ends in `ret`; patched builds use `$56CA+` | tools/audit_patch_space.py |
+| ARCHITECTURE "$01 \| $7FD5 \| 42 \| FF fill" | ⚠ NOT FILL | `$7FD5` is the `$FF` that ends the 8th of 8 tile-string pages (`$7EE7-$7FD5`); harmless only because their reader, the screen `$01:$7DFF`, is unreachable (no call / jump / table entry) | byte search of bank $01 + ROM0; poisoned-ROM A/B identical |
+| ARCHITECTURE "$51 … 00 fill — large, investigate safety" | ✓ CLOSED | the stream before it ends at `$7B34` (S166 r2); nothing reads `$7B35+` | audit + poisoned-ROM A/B |
+| the S166 note "a test_app traceback (talk_editor BoxEditor's Insert menu: `QStandardItem.triggered`)" "not this session's code" | ✓ REAL, ROOT FOUND | Shiboken hands out a kept wrapper of a Qt-owned `QStandardItem` for the next C++ object at that address (`combo.model().item(i)` kept past `clear()`); intermittent | reproduced S167 (a `QStandardItem` from `QMenu.addAction` within ~400 calls); `editor2/app/qt_safe.py` |
+| help `00_start.md`: "Tabs marked with a roadmap box (Balance) are not built yet." | ❌ STALE | Balance built S130 | rewritten S167 |
+
+## S168 addendum (2026-11-05; page 2 — ROADMAP P3.3g)
+
+| Claim | Verdict | Truth | Evidence |
+|---|---|---|---|
+| ROOM_DATA_FORMAT (S102) "VRAM bank 1's tile area ($8000-$97FF, 384 tiles) is empty with no BG cell using attribute bit 3 — checked in GreatTree, Castle, … and the menu" (field only) | ✓ HOLDS FOR THE WHOLE GAME (measured) | seeded bank 1 at power-on: no write over the title, 8 gates' battles + the field menu, 519 cutscenes; no cell with bit 3 | `tools/census_vram_bank1.py` → `extracted/vram_bank1_census.json` (positive control reported) |
+| ROADMAP P3.3g (S103) "reuse the bank $73 entries 14-18 attr save/restore … and census every other overlay" | ✓ + ONE MORE | the boxes (bank $73) and every screen push (bank $77) take the free-colour path; the screen push also had to write attribute + tile per cell — tiles-then-attributes showed 2-6 frames of bank-1 letters | `tools/walk_page2.py` (KEY_LESSONS S168) |
+| help 13 / glossary / EDITOR_DESIGN "One room tileset = one 2 KB sheet = 128 slots … engine limit, per ROOM" | ❌ SUPERSEDED S168 | 256 (page 2 in VRAM bank 1, GBC only); the 48 shared tiles unchanged | PROJECT_COMPILER §2.76 |
+| Document code `t & 0x7F` = "the slot of a tile value" | ⚠ A LATENT QUIRK | a shared tile `$80-$AF` was counted as page-1 slot `t - $80` (and a remap of that slot rewrote it); kept for values < `$100` (`page2.slot_key`) so no project's numbers move; page-2 values map to slots 128-255 | test_compiler `test_s168` |
+
+**S168 r2 (the breeding menu's words over the floor):**
+
+| Claim | Status |
+|---|---|
+| ROOM_DATA_FORMAT S126 table "Grandpa (6) / a master (5) / Take… (11) — `$40-$7F`" | ✓ + MORE: the master's party list starts at `$38` (bank $09 `SetFld9_5f4d`, `$9380` + 8 × `$90`); PyBoy while the room shows: Grandpa `$40-$48` / `$61-$7A`, a master `$38-$3F` / `$78-$7C` — the S168 r2 note under the table |
+| PROJECT_STATE S168 "every window of the game opens over page-2 cells … letters and art must stay clean" (walk 55 / 55) | ❌ INCOMPLETE — the walk checked bank-1 letters only; Grandpa drew into page-1 slots the gallery used. r2: the room-art check, 62 / 62 |
+
+**S171 (the packaged app; the stray window):**
+
+| Claim | Verdict | Evidence |
+|---|---|---|
+| EDITOR_DESIGN §4 (S72) "PyInstaller `--windowed` (`.app` codesigned/notarized on macOS)" | ❌ SUPERSEDED S171 | the editor starts its own scripts with `sys.executable` (Playback server, ROM checker, Balance anchor) — a frozen app would start a second editor; a standalone CPython inside the app instead, ad hoc signed (no Developer ID, user decision) — EDITOR_DESIGN §4.1 |
+| PROJECT_COMPILER §3 pipeline "stage patches/ over disassembly/, `make`, … ALWAYS restore the tree" | ❌ SUPERSEDED S171 | the build assembles in a private temporary folder (disassembly/ = rgbasm's include path), no `make`; byte-identical (the pin, the user's project, game.sym) — test_compiler `test_s171` |
+| EDITOR_DESIGN §5.0 S169 "23 tab switches … leave the window unchanged" (offscreen) read as "no tab click opens a window" | ✓ for the size, ❌ for windows — the S169 run switched tabs only; two refreshes in one turn on the Arena class page left a top-level `FlagTerms` (KEY_LESSONS S171) | test_app `s171_app_window` |
+| EDITOR_DESIGN §5.1 S98 r2 / help 13_tilesets "Purge unused borrowed / own — remove every … metatile … placed nowhere" | ❌ SUPERSEDED S171 r5 | the Tileset tab parks them instead (*Park unplaced*, kept with their pictures, 0 slots) and imports park on their own when the sheet is full — EDITOR_DESIGN §5.1 "S171 r5", test_app `s171_parking` |
+| EDITOR_DESIGN §5.1 S171 r4 / help 10_rooms "painting a quarter with a colour of another row moves that quarter there — its other pixels take that row's closest colours"; recolour `quantize` "every pixel … to its closest colour" | ❌ SUPERSEDED S171 r6 | closest-colour renumbering merged colours (a flat quarter); a row change keeps the colour numbers and matching is one-to-one — EDITOR_DESIGN §5.1 "S171 r6", test_app `s171_recolour` |
+| EDITOR_DESIGN §5.1 S171 r6 / help 10_rooms "painting with another row's colour moves the quarter (colour numbers kept)"; Draw "swap a⇄b" buttons | ❌ SUPERSEDED S171 r7 | painting never moves a quarter (own row; shared colours map, others refused), *Recolour…* replaces the swaps — EDITOR_DESIGN §5.1 "S171 r7" |
+| bank $77 template header + PROJECT_COMPILER §2.39 (S126) "The library / farm CHECK / egg INFO full screens write their own attributes" | ⚠ HALF TRUE (S177, PyBoy vs the original ROM) | the library writes them (bank $17 entries 10 / 6 / 7) and then ScreenPush's free-colour / page-2 pass re-wrote every cell — the picture on palette 7, a letter in a room slot equal to `$C300` given the room's attribute (VRAM bank 1); the farm CHECK / egg INFO pages are bank $07's status page (never ScreenPush). Fixed S177: the Library pushes tiles only (KEY_LESSONS S177) |
+| ROOM_DATA_FORMAT / PYBOY_DEBUGGING S168 "the library (a full screen) — no letter read from bank 1" | ⚠ INCOMPLETE (S177) | `letters_from_bank1` checked font tiles ($80-$FF) only; a library letter drawn into a ROOM slot (< $80) on a bank-1 attribute passed. `tools/walk_library.py` checks every cell's attribute against the original's |
+| services.BORROWED_SLOTS use (S168 r2) "a room with such an NPC keeps those slots empty" (all its screens) | ❌ SUPERSEDED S177 | measured: the menu writes them only while its own screen shows and every slot is back after it — kept per screen (`services.screen_reservations`); the entry script's menus room-wide |

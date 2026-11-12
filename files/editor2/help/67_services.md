@@ -1,0 +1,146 @@
+# Services (Vault, farm, library, namer, Medal Man, eggs, gate guide, breeding)
+
+![The Services tab](img/tab_services.png)
+
+The game's **service NPCs** work in **any room** — yours too. Rooms tab →
+select an NPC → **Service…** → pick one:
+
+(S151 r2) Every service's words — and a shopkeeper's — open in the **bottom** box, wherever
+the player stands: the menus are drawn at the top for a bottom box (talked to from the
+lower half of the screen, the greeting used to open at the top and jump down when the
+menu appeared). Other people keep the game's rule (the box opposite the player).
+
+- **Vault keeper** — stores items and gold.
+- **Farm keeper** — drop off / pick up / check / separate / let monsters
+  sleep (Pulio's menu). (S152) Tick **hands over the first monster (once)** and he is
+  your Pulio: the first talk says his words, puts the monster you pick (species and
+  level) into the farm, opens the naming screen (or gives it the species' name), then
+  his menu — the player takes it with **PICK UP**. The flag you name (*first monster
+  given*) is ON from then on. See *Your own opening*.
+- **Librarian** — looks up the monsters met so far, family by family. (S137: the
+  librarian's words always open in the bottom box, as in the game's Library — talked to
+  from below, a top box used to show the library's longer lines twice.)
+- **Monster Namer** — renames a monster (not one another master named). Its
+  question is a YES / NO; the naming screen follows the list.
+- **Medal Man** — counts the TinyMedals the player brings and gives an egg
+  at each reward count (see *Medal Man* below).
+- **Egg appraiser** — evaluates and blesses eggs (for gold).
+- **Gate guide** — shows the list of **Travelers' Gates** (the one the guide
+  in the Gate Hub shows). It lists the original game's 31 gates; your own
+  gates and worlds are not on it.
+- **Grandpa (breeding)** and **Breeder (my monster)** — breeding in your
+  room; a breeder can offer a monster rolled from a **breeding pool** (the
+  Services tab's *Breeding pools* page). See *Breeding NPCs*.
+
+There is **one Vault, one farm and one medal count for the whole game**: an
+item stored with your Vault keeper is in the game's Vault too, and every
+farm keeper shows the same farm. You can have as many NPCs of one kind as
+you like.
+
+## Step by step
+
+1. Rooms tab → select the NPC → **Service…**.
+2. Pick the service. **Menu lines**: *the game's lines* (the original NPC's
+   words), a line set you made, or *a new line set…* (it gets a name; edit
+   its words on the **Services** tab).
+3. Optional: **says something else the first time** — what it says on the
+   first visit instead of its greeting, and the **flag** that remembers the
+   visit (made when new; it shows on the *Progression & Flags* tab).
+4. **Build** and talk to it.
+
+The NPC panel then shows *Service: …*. Service… again changes it.
+
+## The Services tab
+
+**Service NPCs** — every NPC you made a service NPC and every shopkeeper
+with its own lines; **Go to** (or a double-click) opens it on the Rooms tab.
+
+**Menu lines** — your **line sets**. A line set belongs to one service (or
+to the shop) and changes what its menu says:
+
+- **speaker** — the name before the `:` on every line that has one (empty =
+  the game's; `*` = `*:`; `hero` = the hero's name; at most 9 letters). The
+  game's words are wrapped again when the name is longer ("(re-flowed)").
+- **voice** — the letter blip: low (the King, bosses) or high (Pulio).
+- **every NPC of this kind speaks these lines** — the game's own NPCs too
+  (one set per kind).
+- **the lines** — each line shows the game's words and yours (orange).
+  Select one, type, **Apply**; **The game's words** puts it back. The box on
+  the right is the box as the game draws it. `{hero}` is the hero's name;
+  `{ins0}`..`{ins3}` are what the menu fills in (a monster's name, a count —
+  shown as `xxxx`; a long name takes more room, so keep a line with an insert
+  short). A box is 2 lines of 18 letters (the first line less the speaker's
+  name); a blank line starts a new box. Some lines end with a new line ("How
+  many?", "Anything else?" — the menu writes on the line after them): their
+  last box holds **one** line.
+
+A line too long for its box is shown in red and **stops the build** — the
+game would wrap it in the middle of a word.
+
+Some lines are said by the NPC (its greeting and farewell), the others by
+the menu while it is open; the line's header says which.
+
+**Shopkeepers** take a line set too: Rooms tab → NPC → **Shopkeeper…** →
+*Shop menu lines* ("What will you buy?", "Anything else?", …). Different
+shopkeepers can sell different lists and speak different lines.
+
+## Medal Man
+
+The **Medal Man** page sets the rewards — for every Medal Man, the game's
+too:
+
+- **Medals** — how many TinyMedals in all the player must have brought (at
+  most 999); each reward needs more than the one before.
+- **Egg** — any monster of the game, or one of your enemies (Enemies
+  dialog). The egg goes to the farm.
+- **What he says** — empty = the game's wording ("It's an egg of a … !
+  I'll send it to the farm!"); after the last reward he also says he has no
+  more rewards. Type ⏎ for a new line and ▸ for a new box.
+
+1 to 8 rewards. **Add reward**, **Remove**, **The game's rewards** (13 / 18
+/ 25 / 30 medals: ZapBird, Trumpeter, Spikerous, Metabble — the original
+list).
+
+Every edit is one Undo step.
+
+## Rooms with many NPCs
+
+The game's small menus (a shop, the Vault, the farm, the egg appraiser, the
+Monster Namer, Grandpa, a breeder) draw into the picture memory
+the 4th to 6th different NPC looks of a room used. Since S141 your rooms keep
+those NPCs' pictures in the Game Boy Color's second picture bank, so up to six
+different NPC looks stay intact while such a menu is open and after it (before,
+one NPC could vanish and another show letters). The game's own rooms are as they
+were. Nothing to do on your side.
+
+## The room's tiles under a menu
+
+Grandpa's and a breeder's screens (BREED / HATCH / EXIT, the monster lists),
+the farm's family icons and the egg appraiser's eggs are drawn into some of
+the ROOM's own tile slots while the room still shows — a floor or wall tile
+in those slots would show the menu's words (*"EXIT INFO"* over the floor).
+So the NPC's own SCREEN keeps them empty: breeding $38-$7F, farm $60-$6F,
+eggs $70-$78. Since S177 only that screen (and a podium that talks for the NPC is on
+the same screen): the menu cannot be open while another screen shows, and every
+such menu gives the slots back when it closes (measured: Grandpa's menu wrote 35
+of them and all were back after it), so the other screens of a big room may use
+them. A menu the room's ENTRY script opens keeps them on every screen. Making the
+NPC moves any tile on its screen in those slots to a free slot — page 2 first —
+with the same picture, and opening the project does it for you (a line in the
+log). The Tileset tab lists which screens keep which slots. If the sheet is
+completely full, Build warns which screen still has cells there.
+
+## The Library's colours (S177)
+
+The library is a full screen with its own colours: the monster's picture in its
+battle colours, the rest in the menu's cream. In a room with its own colours or
+page-2 tiles the build used to repaint every cell of it — the picture came out in
+the menu's colours, and a letter could show a piece of a floor tile. It now
+keeps the library's own colours, exactly as in the game's Library. Opening it
+wipes the room to the menu's cream first (S177 r2), so the room's page-2 tiles
+never flash as other tiles.
+
+A menu's words sometimes land in tile slots whose numbers equal the room's tiles
+under the window (Grandpa's monster names, for one). Since S177 r2 the build tells
+them apart by the window around them, so a name never shows a piece of the floor.
+
